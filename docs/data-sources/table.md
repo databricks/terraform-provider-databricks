@@ -45,6 +45,8 @@ This data source exports the following attributes:
   * `columns` - Array of ColumnInfo objects of the table's columns
   * `owner` - Current owner of the table
   * `comment` - Free-form text description
+  * `table_id` - The unique identifier of the table.
+
 
 ## Related Resources
 

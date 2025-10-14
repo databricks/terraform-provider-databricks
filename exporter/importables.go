@@ -2434,50 +2434,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[DEBUG] Skipping workspace %d because it doesn't match to the filter", ws.WorkspaceId)
 					continue
 				}
-				pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, ws.WorkspaceId)
+				wsIdString := strconv.FormatInt(ws.WorkspaceId, 10)
+				ic.Emit(&resource{
+					Resource: "databricks_mws_workspaces",
+					ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+					Name:     ws.WorkspaceName + "_" + wsIdString,
+				})
+				err = emitIdfedAndUsersSpsGroups(ic, ws.WorkspaceId)
 				if err != nil {
 					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
 						ws.WorkspaceId, err.Error())
 					continue
-				}
-				log.Printf("[DEBUG] Emitting permission assignments for workspace %d", ws.WorkspaceId)
-				for _, pa := range pas.PermissionAssignments {
-					perm := "unknown"
-					if len(pa.Permissions) > 0 {
-						perm = pa.Permissions[0].String()
-					}
-					nm := fmt.Sprintf("mws_pa_%d_%s_%s_%d", ws.WorkspaceId, pa.Principal.DisplayName,
-						perm, pa.Principal.PrincipalId)
-					// We  generate Data directly to avoid calling APIs
-					data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
-					paId := fmt.Sprintf("%d|%d", ws.WorkspaceId, pa.Principal.PrincipalId)
-					data = ic.generateNewData(data, "databricks_mws_permission_assignment", paId, pa)
-					data.Set("workspace_id", ws.WorkspaceId)
-					data.Set("principal_id", pa.Principal.PrincipalId)
-					ic.Emit(&resource{
-						Resource: "databricks_mws_permission_assignment",
-						ID:       paId,
-						Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
-						Data:     data,
-					})
-					// Emit principals
-					strPrincipalId := strconv.FormatInt(pa.Principal.PrincipalId, 10)
-					if pa.Principal.ServicePrincipalName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_service_principal",
-							ID:       strPrincipalId,
-						})
-					} else if pa.Principal.UserName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_user",
-							ID:       strPrincipalId,
-						})
-					} else if pa.Principal.GroupName != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_group",
-							ID:       strPrincipalId,
-						})
-					}
 				}
 			}
 			return nil
@@ -2486,6 +2453,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Resource: "databricks_service_principal", Path: "principal_id"},
 			{Resource: "databricks_user", Path: "principal_id"},
 			{Resource: "databricks_group", Path: "principal_id"},
+			{Resource: "databricks_mws_workspaces", Path: "workspace_id", Match: "workspace_id"},
 		},
 	},
 	"databricks_dashboard": {
@@ -2584,29 +2552,53 @@ var resourcesMap map[string]importable = map[string]importable{
 						}
 					}
 				case "SLACK":
-					if notificationDestination.Config.Slack != nil && pathString == "config.0.slack.0.url" {
-						return !notificationDestination.Config.Slack.UrlSet
+					if notificationDestination.Config.Slack != nil {
+						switch pathString {
+						case "config.0.slack.0.url":
+							return !notificationDestination.Config.Slack.UrlSet
+						case "config.0.slack.0.channel_id":
+							return !notificationDestination.Config.Slack.ChannelIdSet
+						case "config.0.slack.0.oauth_token":
+							return !notificationDestination.Config.Slack.OauthTokenSet
+						}
 					}
 				case "PAGERDUTY":
 					if notificationDestination.Config.Pagerduty != nil && pathString == "config.0.pagerduty.0.integration_key" {
 						return !notificationDestination.Config.Pagerduty.IntegrationKeySet
 					}
 				case "MICROSOFT_TEAMS":
-					if notificationDestination.Config.MicrosoftTeams != nil && pathString == "config.0.microsoft_teams.0.url" {
-						return !notificationDestination.Config.MicrosoftTeams.UrlSet
+					if notificationDestination.Config.MicrosoftTeams != nil {
+						switch pathString {
+						case "config.0.microsoft_teams.0.url":
+							return !notificationDestination.Config.MicrosoftTeams.UrlSet
+						case "config.0.microsoft_teams.0.channel_url":
+							return !notificationDestination.Config.MicrosoftTeams.ChannelUrlSet
+						case "config.0.microsoft_teams.0.auth_secret":
+							return !notificationDestination.Config.MicrosoftTeams.AuthSecretSet
+						case "config.0.microsoft_teams.0.tenant_id":
+							return !notificationDestination.Config.MicrosoftTeams.TenantIdSet
+						case "config.0.microsoft_teams.0.app_id":
+							return !notificationDestination.Config.MicrosoftTeams.AppIdSet
+						}
 					}
 				}
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
 		Depends: []reference{
-			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "config.microsoft_teams.url", Variable: true},
 			{Path: "config.pagerduty.integration_key", Variable: true},
 			{Path: "config.generic_webhook.url", Variable: true},
 			{Path: "config.generic_webhook.username", Variable: true},
 			{Path: "config.generic_webhook.password", Variable: true},
 			{Path: "config.slack.url", Variable: true},
+			{Path: "config.slack.channel_id", Variable: true},
+			{Path: "config.slack.oauth_token", Variable: true},
+			{Path: "config.microsoft_teams.url", Variable: true},
+			{Path: "config.microsoft_teams.channel_url", Variable: true},
+			{Path: "config.microsoft_teams.auth_secret", Variable: true},
+			{Path: "config.microsoft_teams.tenant_id", Variable: true},
+			{Path: "config.microsoft_teams.app_id", Variable: true},
+			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_online_table": {
@@ -3032,10 +3024,11 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[DEBUG] skipping mws_workspaces '%s' that is not running", workspace.WorkspaceName)
 					continue
 				}
+				wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
 				ic.Emit(&resource{
 					Resource: "databricks_mws_workspaces",
-					ID:       ic.accountClient.Config.AccountID + "/" + strconv.FormatInt(workspace.WorkspaceId, 10),
-					Name:     workspace.WorkspaceName,
+					ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+					Name:     workspace.WorkspaceName + "_" + wsIdString,
 				})
 			}
 			return nil
@@ -3079,6 +3072,13 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_mws_credentials",
 					ID:       ic.accountClient.Config.AccountID + "/" + workspace.CredentialsID,
 				})
+			}
+			if ic.isServiceEnabled("idfed") {
+				err := emitIdfedAndUsersSpsGroups(ic, workspace.WorkspaceID)
+				if err != nil {
+					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
+						workspace.WorkspaceID, err.Error())
+				}
 			}
 			return nil
 		},

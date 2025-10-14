@@ -44,8 +44,8 @@ func ResourceCatalog() common.Resource {
 			for _, v := range []string{"name", "connection_name", "share_name", "provider_name"} {
 				common.CustomizeSchemaPath(s, v).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			}
-			// can only have one of provider_name + share_name, connection_name or storage_root
-			common.CustomizeSchemaPath(s, "connection_name").SetConflictsWith([]string{"storage_root", "provider_name", "share_name"}).SetForceNew()
+			// can only have one of provider_name + share_name, connection_name
+			common.CustomizeSchemaPath(s, "connection_name").SetConflictsWith([]string{"provider_name", "share_name"}).SetForceNew()
 			for _, v := range []string{"provider_name", "share_name"} {
 				common.CustomizeSchemaPath(s, v).SetConflictsWith([]string{"connection_name", "storage_root"}).SetForceNew()
 			}
@@ -54,7 +54,7 @@ func ResourceCatalog() common.Resource {
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
 			for _, v := range []string{"catalog_type", "created_at", "created_by",
-				"updated_at", "updated_by", "securable_type", "full_name"} {
+				"updated_at", "updated_by", "securable_type", "full_name", "storage_location"} {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()

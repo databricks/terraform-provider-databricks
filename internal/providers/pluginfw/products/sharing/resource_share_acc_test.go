@@ -1,10 +1,17 @@
 package sharing_test
 
 import (
+	"context"
 	"fmt"
+	"maps"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const preTestTemplate = `
@@ -226,6 +233,194 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 				name = databricks_sql_table.mytable.id
 				data_object_type = "TABLE"
 				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	})
+}
+
+func shareUpdateWithName(name string) string {
+	return fmt.Sprintf(`resource "databricks_share_pluginframework" "myshare" {
+			name  = "%s"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "A"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`, name)
+}
+
+func shareCheckStateforID() func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		r, ok := s.RootModule().Resources["databricks_share_pluginframework.myshare"]
+		if !ok {
+			return fmt.Errorf("resource not found in state")
+		}
+		id := r.Primary.Attributes["id"]
+		name := r.Primary.Attributes["name"]
+		if id != name {
+			return fmt.Errorf("resource ID is not equal to the name. Attributes: %v", r.Primary.Attributes)
+		}
+		return nil
+	}
+}
+
+func TestUcAccUpdateShareName(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-before"),
+		Check:    shareCheckStateforID(),
+	}, acceptance.Step{
+		Template: preTestTemplate + shareUpdateWithName("{var.STICKY_RANDOM}-terraform-delta-share-after"),
+		Check:    shareCheckStateforID(),
+	})
+}
+
+const preTestTemplateSchema = `
+	resource "databricks_catalog" "sandbox" {
+		name         = "sandbox{var.STICKY_RANDOM}"
+		comment      = "this catalog is managed by terraform"
+		properties = {
+			purpose = "testing"
+		}
+	}
+	resource "databricks_schema" "schema1" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema1{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema2" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema2{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+	resource "databricks_schema" "schema3" {
+		catalog_name = databricks_catalog.sandbox.id
+		name         = "schema3{var.STICKY_RANDOM}"
+		comment      = "this database is managed by terraform"
+		properties = {
+			kind = "various"
+		}
+	}
+`
+
+func TestUcAccShareReorderObject(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+		PlanOnly: true,
+	}, acceptance.Step{
+		// Changing order of objects in the config leads to changes show up in plan as updates
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-reorder-terraform"
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+
+		}`,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
+	})
+}
+
+func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
+	shareName := ""
+	sharedObjectNameToAdd := ""
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
+		Check: func(s *terraform.State) error {
+			resources := s.RootModule().Resources
+			share := resources["databricks_share_pluginframework.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected to find databricks_share_pluginframework.myshare in resources keys: %v", maps.Keys(resources))
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+
+			schema := resources["databricks_schema.schema2"]
+			if schema == nil {
+				return fmt.Errorf("expected to find databricks_schema.schema2 in resources keys: %v", maps.Keys(resources))
+			}
+			sharedObjectNameToAdd = schema.Primary.Attributes["id"]
+			assert.NotEmpty(t, sharedObjectNameToAdd)
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+
+			// Add object to share outside terraform
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name: shareName,
+				Updates: []sharing.SharedDataObjectUpdate{
+					{
+						Action: sharing.SharedDataObjectUpdateActionAdd,
+						DataObject: &sharing.SharedDataObject{
+							Name:           sharedObjectNameToAdd,
+							DataObjectType: "SCHEMA",
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+		},
+		Template: preTestTemplateSchema + `
+		resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
 			}
 		}`,
 	})

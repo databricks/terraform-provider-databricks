@@ -1,18 +1,18 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package clean_room_asset
+package feature_engineering_feature
 
 import (
 	"context"
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/cleanrooms"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/cleanrooms_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -20,45 +20,43 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourceName = "clean_room_asset"
+const dataSourceName = "feature_engineering_feature"
 
-var _ datasource.DataSourceWithConfigure = &CleanRoomAssetDataSource{}
+var _ datasource.DataSourceWithConfigure = &FeatureDataSource{}
 
-func DataSourceCleanRoomAsset() datasource.DataSource {
-	return &CleanRoomAssetDataSource{}
+func DataSourceFeature() datasource.DataSource {
+	return &FeatureDataSource{}
 }
 
-type CleanRoomAssetDataSource struct {
+type FeatureDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-// CleanRoomAssetData extends the main model with additional fields.
-type CleanRoomAssetData struct {
-	cleanrooms_tf.CleanRoomAsset
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+// FeatureData extends the main model with additional fields.
+type FeatureData struct {
+	ml_tf.Feature
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CleanRoomAssetData struct. Container types (types.Map, types.List, types.Set) and
+// FeatureData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m CleanRoomAssetData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.CleanRoomAsset.GetComplexFieldTypes(ctx)
+func (m FeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.Feature.GetComplexFieldTypes(ctx)
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureData
 // only implements ToObjectValue() and Type().
-func (m CleanRoomAssetData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.CleanRoomAsset.ToObjectValue(ctx)
+func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	embeddedObj := m.Feature.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -68,10 +66,9 @@ func (m CleanRoomAssetData) ToObjectValue(ctx context.Context) basetypes.ObjectV
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m CleanRoomAssetData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.CleanRoomAsset.Type(ctx).(basetypes.ObjectType)
+func (m FeatureData) Type(ctx context.Context) attr.Type {
+	embeddedType := m.Feature.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -79,31 +76,30 @@ func (m CleanRoomAssetData) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CleanRoomAssetData) SyncFieldsDuringRead(ctx context.Context, existingState CleanRoomAssetData) {
-	m.CleanRoomAsset.SyncFieldsDuringRead(ctx, existingState.CleanRoomAsset)
+func (m *FeatureData) SyncFieldsDuringRead(ctx context.Context, existingState FeatureData) {
+	m.Feature.SyncFieldsDuringRead(ctx, existingState.Feature)
 }
 
-func (r *CleanRoomAssetDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *FeatureDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *CleanRoomAssetDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CleanRoomAssetData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
+func (r *FeatureDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		return c
 	})
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks CleanRoomAsset",
+		Description: "Terraform schema for Databricks Feature",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *CleanRoomAssetDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *FeatureDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *CleanRoomAssetDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *FeatureDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -112,30 +108,30 @@ func (r *CleanRoomAssetDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var config CleanRoomAssetData
+	var config FeatureData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest cleanrooms.GetCleanRoomAssetRequest
+	var readRequest ml.GetFeatureRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.CleanRoomAssets.Get(ctx, readRequest)
+	response, err := client.FeatureEngineering.GetFeature(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get clean_room_asset", err.Error())
+		resp.Diagnostics.AddError("failed to get feature_engineering_feature", err.Error())
 		return
 	}
 
-	var newState CleanRoomAssetData
+	var newState FeatureData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

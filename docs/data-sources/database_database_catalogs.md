@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_database_catalogs Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -11,7 +13,6 @@ subcategory: "Database Instances"
 The following arguments are supported:
 * `instance_name` (string, required) - Name of the instance to get database catalogs for
 * `page_size` (integer, optional) - Upper bound for items returned
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 
 ## Attributes

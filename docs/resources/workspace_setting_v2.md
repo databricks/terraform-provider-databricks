@@ -2,22 +2,34 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_setting_v2 Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
+
+[//]: # (todo: add public link to metadata api after production doc link available)
+See settings-metadata api for list of settings that can be modified using this resource. 
 
 ## Example Usage
+Getting a workspace level setting:
 
+```hcl
+resource "databricks_workspace_setting_v2" "this" {
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
+}
+```
 
 ## Arguments
 The following arguments are supported:
 * `aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional)
 * `aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional)
-* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - todo: Mark these Public after onboarded to DSL
+* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional)
 * `boolean_val` (BooleanMessage, optional)
-* `default_data_security_mode` (DefaultDataSecurityModeMessage, optional)
 * `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional)
 * `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional)
 * `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional)
-* `effective_default_data_security_mode` (DefaultDataSecurityModeMessage, optional)
 * `effective_personal_compute` (PersonalComputeMessage, optional)
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
 * `integer_val` (IntegerMessage, optional)
@@ -25,7 +37,6 @@ The following arguments are supported:
 * `personal_compute` (PersonalComputeMessage, optional)
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
 * `string_val` (StringMessage, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - . Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
@@ -59,9 +70,6 @@ The following arguments are supported:
 ### ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
 * `hours` (integer, optional)
 * `minutes` (integer, optional)
-
-### DefaultDataSecurityModeMessage
-* `status` (string, required) - . Possible values are: `NOT_SET`, `SINGLE_USER`, `USER_ISOLATION`
 
 ### IntegerMessage
 * `value` (integer, optional)

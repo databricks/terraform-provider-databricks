@@ -28,8 +28,7 @@ func DataSourceFeatureTags() datasource.DataSource {
 
 // FeatureTagsData extends the main model with additional fields.
 type FeatureTagsData struct {
-	MaterializedFeatures types.List   `tfsdk:"feature_tags"`
-	WorkspaceID          types.String `tfsdk:"workspace_id"`
+	MaterializedFeatures types.List `tfsdk:"feature_tags"`
 }
 
 func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -49,7 +48,6 @@ func (r *FeatureTagsDataSource) Metadata(ctx context.Context, req datasource.Met
 func (r *FeatureTagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetComputed("feature_tags")
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -102,6 +100,5 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var newState FeatureTagsData
 	newState.MaterializedFeatures = types.ListValueMust(ml_tf.FeatureTag{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

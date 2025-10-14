@@ -31,10 +31,10 @@ type AccessControl struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *AccessControl) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AccessControl) {
+func (to *AccessControl) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccessControl) {
 }
 
-func (toState *AccessControl) SyncFieldsDuringRead(ctx context.Context, fromState AccessControl) {
+func (to *AccessControl) SyncFieldsDuringRead(ctx context.Context, from AccessControl) {
 }
 
 func (c AccessControl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -126,23 +126,24 @@ type Alert struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (toState *Alert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Alert) {
-	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *Alert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Alert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				// Recursively sync the fields of Condition
+				toCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
 }
 
-func (toState *Alert) SyncFieldsDuringRead(ctx context.Context, fromState Alert) {
-	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *Alert) SyncFieldsDuringRead(ctx context.Context, from Alert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				toCondition.SyncFieldsDuringRead(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
@@ -266,39 +267,41 @@ type AlertCondition struct {
 	Threshold types.Object `tfsdk:"threshold"`
 }
 
-func (toState *AlertCondition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertCondition) {
-	if !fromPlan.Operand.IsNull() && !fromPlan.Operand.IsUnknown() {
-		if toStateOperand, ok := toState.GetOperand(ctx); ok {
-			if fromPlanOperand, ok := fromPlan.GetOperand(ctx); ok {
-				toStateOperand.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOperand)
-				toState.SetOperand(ctx, toStateOperand)
+func (to *AlertCondition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertCondition) {
+	if !from.Operand.IsNull() && !from.Operand.IsUnknown() {
+		if toOperand, ok := to.GetOperand(ctx); ok {
+			if fromOperand, ok := from.GetOperand(ctx); ok {
+				// Recursively sync the fields of Operand
+				toOperand.SyncFieldsDuringCreateOrUpdate(ctx, fromOperand)
+				to.SetOperand(ctx, toOperand)
 			}
 		}
 	}
-	if !fromPlan.Threshold.IsNull() && !fromPlan.Threshold.IsUnknown() {
-		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
-			if fromPlanThreshold, ok := fromPlan.GetThreshold(ctx); ok {
-				toStateThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanThreshold)
-				toState.SetThreshold(ctx, toStateThreshold)
+	if !from.Threshold.IsNull() && !from.Threshold.IsUnknown() {
+		if toThreshold, ok := to.GetThreshold(ctx); ok {
+			if fromThreshold, ok := from.GetThreshold(ctx); ok {
+				// Recursively sync the fields of Threshold
+				toThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromThreshold)
+				to.SetThreshold(ctx, toThreshold)
 			}
 		}
 	}
 }
 
-func (toState *AlertCondition) SyncFieldsDuringRead(ctx context.Context, fromState AlertCondition) {
-	if !fromState.Operand.IsNull() && !fromState.Operand.IsUnknown() {
-		if toStateOperand, ok := toState.GetOperand(ctx); ok {
-			if fromStateOperand, ok := fromState.GetOperand(ctx); ok {
-				toStateOperand.SyncFieldsDuringRead(ctx, fromStateOperand)
-				toState.SetOperand(ctx, toStateOperand)
+func (to *AlertCondition) SyncFieldsDuringRead(ctx context.Context, from AlertCondition) {
+	if !from.Operand.IsNull() && !from.Operand.IsUnknown() {
+		if toOperand, ok := to.GetOperand(ctx); ok {
+			if fromOperand, ok := from.GetOperand(ctx); ok {
+				toOperand.SyncFieldsDuringRead(ctx, fromOperand)
+				to.SetOperand(ctx, toOperand)
 			}
 		}
 	}
-	if !fromState.Threshold.IsNull() && !fromState.Threshold.IsUnknown() {
-		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
-			if fromStateThreshold, ok := fromState.GetThreshold(ctx); ok {
-				toStateThreshold.SyncFieldsDuringRead(ctx, fromStateThreshold)
-				toState.SetThreshold(ctx, toStateThreshold)
+	if !from.Threshold.IsNull() && !from.Threshold.IsUnknown() {
+		if toThreshold, ok := to.GetThreshold(ctx); ok {
+			if fromThreshold, ok := from.GetThreshold(ctx); ok {
+				toThreshold.SyncFieldsDuringRead(ctx, fromThreshold)
+				to.SetThreshold(ctx, toThreshold)
 			}
 		}
 	}
@@ -407,23 +410,24 @@ type AlertConditionOperand struct {
 	Column types.Object `tfsdk:"column"`
 }
 
-func (toState *AlertConditionOperand) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertConditionOperand) {
-	if !fromPlan.Column.IsNull() && !fromPlan.Column.IsUnknown() {
-		if toStateColumn, ok := toState.GetColumn(ctx); ok {
-			if fromPlanColumn, ok := fromPlan.GetColumn(ctx); ok {
-				toStateColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanColumn)
-				toState.SetColumn(ctx, toStateColumn)
+func (to *AlertConditionOperand) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertConditionOperand) {
+	if !from.Column.IsNull() && !from.Column.IsUnknown() {
+		if toColumn, ok := to.GetColumn(ctx); ok {
+			if fromColumn, ok := from.GetColumn(ctx); ok {
+				// Recursively sync the fields of Column
+				toColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromColumn)
+				to.SetColumn(ctx, toColumn)
 			}
 		}
 	}
 }
 
-func (toState *AlertConditionOperand) SyncFieldsDuringRead(ctx context.Context, fromState AlertConditionOperand) {
-	if !fromState.Column.IsNull() && !fromState.Column.IsUnknown() {
-		if toStateColumn, ok := toState.GetColumn(ctx); ok {
-			if fromStateColumn, ok := fromState.GetColumn(ctx); ok {
-				toStateColumn.SyncFieldsDuringRead(ctx, fromStateColumn)
-				toState.SetColumn(ctx, toStateColumn)
+func (to *AlertConditionOperand) SyncFieldsDuringRead(ctx context.Context, from AlertConditionOperand) {
+	if !from.Column.IsNull() && !from.Column.IsUnknown() {
+		if toColumn, ok := to.GetColumn(ctx); ok {
+			if fromColumn, ok := from.GetColumn(ctx); ok {
+				toColumn.SyncFieldsDuringRead(ctx, fromColumn)
+				to.SetColumn(ctx, toColumn)
 			}
 		}
 	}
@@ -497,23 +501,24 @@ type AlertConditionThreshold struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (toState *AlertConditionThreshold) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertConditionThreshold) {
-	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
-				toState.SetValue(ctx, toStateValue)
+func (to *AlertConditionThreshold) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertConditionThreshold) {
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				// Recursively sync the fields of Value
+				toValue.SyncFieldsDuringCreateOrUpdate(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
 }
 
-func (toState *AlertConditionThreshold) SyncFieldsDuringRead(ctx context.Context, fromState AlertConditionThreshold) {
-	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromStateValue, ok := fromState.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
-				toState.SetValue(ctx, toStateValue)
+func (to *AlertConditionThreshold) SyncFieldsDuringRead(ctx context.Context, from AlertConditionThreshold) {
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				toValue.SyncFieldsDuringRead(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
@@ -587,10 +592,10 @@ type AlertOperandColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *AlertOperandColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOperandColumn) {
+func (to *AlertOperandColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertOperandColumn) {
 }
 
-func (toState *AlertOperandColumn) SyncFieldsDuringRead(ctx context.Context, fromState AlertOperandColumn) {
+func (to *AlertOperandColumn) SyncFieldsDuringRead(ctx context.Context, from AlertOperandColumn) {
 }
 
 func (c AlertOperandColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -638,10 +643,10 @@ type AlertOperandValue struct {
 	StringValue types.String `tfsdk:"string_value"`
 }
 
-func (toState *AlertOperandValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOperandValue) {
+func (to *AlertOperandValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertOperandValue) {
 }
 
-func (toState *AlertOperandValue) SyncFieldsDuringRead(ctx context.Context, fromState AlertOperandValue) {
+func (to *AlertOperandValue) SyncFieldsDuringRead(ctx context.Context, from AlertOperandValue) {
 }
 
 func (c AlertOperandValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -715,10 +720,10 @@ type AlertOptions struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (toState *AlertOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertOptions) {
+func (to *AlertOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertOptions) {
 }
 
-func (toState *AlertOptions) SyncFieldsDuringRead(ctx context.Context, fromState AlertOptions) {
+func (to *AlertOptions) SyncFieldsDuringRead(ctx context.Context, from AlertOptions) {
 }
 
 func (c AlertOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -818,25 +823,38 @@ type AlertQuery struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
-func (toState *AlertQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertQuery) {
-	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *AlertQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertQuery) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
-func (toState *AlertQuery) SyncFieldsDuringRead(ctx context.Context, fromState AlertQuery) {
-	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *AlertQuery) SyncFieldsDuringRead(ctx context.Context, from AlertQuery) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
 	}
 }
 
@@ -1018,71 +1036,75 @@ type AlertV2 struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2) {
-	if !fromPlan.EffectiveRunAs.IsNull() && !fromPlan.EffectiveRunAs.IsUnknown() {
-		if toStateEffectiveRunAs, ok := toState.GetEffectiveRunAs(ctx); ok {
-			if fromPlanEffectiveRunAs, ok := fromPlan.GetEffectiveRunAs(ctx); ok {
-				toStateEffectiveRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEffectiveRunAs)
-				toState.SetEffectiveRunAs(ctx, toStateEffectiveRunAs)
+func (to *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2) {
+	if !from.EffectiveRunAs.IsNull() && !from.EffectiveRunAs.IsUnknown() {
+		if toEffectiveRunAs, ok := to.GetEffectiveRunAs(ctx); ok {
+			if fromEffectiveRunAs, ok := from.GetEffectiveRunAs(ctx); ok {
+				// Recursively sync the fields of EffectiveRunAs
+				toEffectiveRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveRunAs)
+				to.SetEffectiveRunAs(ctx, toEffectiveRunAs)
 			}
 		}
 	}
-	if !fromPlan.Evaluation.IsNull() && !fromPlan.Evaluation.IsUnknown() {
-		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
-			if fromPlanEvaluation, ok := fromPlan.GetEvaluation(ctx); ok {
-				toStateEvaluation.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEvaluation)
-				toState.SetEvaluation(ctx, toStateEvaluation)
+	if !from.Evaluation.IsNull() && !from.Evaluation.IsUnknown() {
+		if toEvaluation, ok := to.GetEvaluation(ctx); ok {
+			if fromEvaluation, ok := from.GetEvaluation(ctx); ok {
+				// Recursively sync the fields of Evaluation
+				toEvaluation.SyncFieldsDuringCreateOrUpdate(ctx, fromEvaluation)
+				to.SetEvaluation(ctx, toEvaluation)
 			}
 		}
 	}
-	if !fromPlan.RunAs.IsNull() && !fromPlan.RunAs.IsUnknown() {
-		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
-			if fromPlanRunAs, ok := fromPlan.GetRunAs(ctx); ok {
-				toStateRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanRunAs)
-				toState.SetRunAs(ctx, toStateRunAs)
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				// Recursively sync the fields of RunAs
+				toRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
 			}
 		}
 	}
-	if !fromPlan.Schedule.IsNull() && !fromPlan.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromPlanSchedule, ok := fromPlan.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
 }
 
-func (toState *AlertV2) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2) {
-	if !fromState.EffectiveRunAs.IsNull() && !fromState.EffectiveRunAs.IsUnknown() {
-		if toStateEffectiveRunAs, ok := toState.GetEffectiveRunAs(ctx); ok {
-			if fromStateEffectiveRunAs, ok := fromState.GetEffectiveRunAs(ctx); ok {
-				toStateEffectiveRunAs.SyncFieldsDuringRead(ctx, fromStateEffectiveRunAs)
-				toState.SetEffectiveRunAs(ctx, toStateEffectiveRunAs)
+func (to *AlertV2) SyncFieldsDuringRead(ctx context.Context, from AlertV2) {
+	if !from.EffectiveRunAs.IsNull() && !from.EffectiveRunAs.IsUnknown() {
+		if toEffectiveRunAs, ok := to.GetEffectiveRunAs(ctx); ok {
+			if fromEffectiveRunAs, ok := from.GetEffectiveRunAs(ctx); ok {
+				toEffectiveRunAs.SyncFieldsDuringRead(ctx, fromEffectiveRunAs)
+				to.SetEffectiveRunAs(ctx, toEffectiveRunAs)
 			}
 		}
 	}
-	if !fromState.Evaluation.IsNull() && !fromState.Evaluation.IsUnknown() {
-		if toStateEvaluation, ok := toState.GetEvaluation(ctx); ok {
-			if fromStateEvaluation, ok := fromState.GetEvaluation(ctx); ok {
-				toStateEvaluation.SyncFieldsDuringRead(ctx, fromStateEvaluation)
-				toState.SetEvaluation(ctx, toStateEvaluation)
+	if !from.Evaluation.IsNull() && !from.Evaluation.IsUnknown() {
+		if toEvaluation, ok := to.GetEvaluation(ctx); ok {
+			if fromEvaluation, ok := from.GetEvaluation(ctx); ok {
+				toEvaluation.SyncFieldsDuringRead(ctx, fromEvaluation)
+				to.SetEvaluation(ctx, toEvaluation)
 			}
 		}
 	}
-	if !fromState.RunAs.IsNull() && !fromState.RunAs.IsUnknown() {
-		if toStateRunAs, ok := toState.GetRunAs(ctx); ok {
-			if fromStateRunAs, ok := fromState.GetRunAs(ctx); ok {
-				toStateRunAs.SyncFieldsDuringRead(ctx, fromStateRunAs)
-				toState.SetRunAs(ctx, toStateRunAs)
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				toRunAs.SyncFieldsDuringRead(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
 			}
 		}
 	}
-	if !fromState.Schedule.IsNull() && !fromState.Schedule.IsUnknown() {
-		if toStateSchedule, ok := toState.GetSchedule(ctx); ok {
-			if fromStateSchedule, ok := fromState.GetSchedule(ctx); ok {
-				toStateSchedule.SyncFieldsDuringRead(ctx, fromStateSchedule)
-				toState.SetSchedule(ctx, toStateSchedule)
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
 			}
 		}
 	}
@@ -1278,7 +1300,8 @@ func (o *AlertV2) SetSchedule(ctx context.Context, v CronSchedule) {
 type AlertV2Evaluation struct {
 	// Operator used for comparison in alert evaluation.
 	ComparisonOperator types.String `tfsdk:"comparison_operator"`
-	// Alert state if result is empty.
+	// Alert state if result is empty. Please avoid setting this field to be
+	// `UNKNOWN` because `UNKNOWN` state is planned to be deprecated.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Timestamp of the last evaluation.
 	LastEvaluatedAt types.String `tfsdk:"last_evaluated_at"`
@@ -1292,55 +1315,58 @@ type AlertV2Evaluation struct {
 	Threshold types.Object `tfsdk:"threshold"`
 }
 
-func (toState *AlertV2Evaluation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Evaluation) {
-	if !fromPlan.Notification.IsNull() && !fromPlan.Notification.IsUnknown() {
-		if toStateNotification, ok := toState.GetNotification(ctx); ok {
-			if fromPlanNotification, ok := fromPlan.GetNotification(ctx); ok {
-				toStateNotification.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNotification)
-				toState.SetNotification(ctx, toStateNotification)
+func (to *AlertV2Evaluation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2Evaluation) {
+	if !from.Notification.IsNull() && !from.Notification.IsUnknown() {
+		if toNotification, ok := to.GetNotification(ctx); ok {
+			if fromNotification, ok := from.GetNotification(ctx); ok {
+				// Recursively sync the fields of Notification
+				toNotification.SyncFieldsDuringCreateOrUpdate(ctx, fromNotification)
+				to.SetNotification(ctx, toNotification)
 			}
 		}
 	}
-	if !fromPlan.Source.IsNull() && !fromPlan.Source.IsUnknown() {
-		if toStateSource, ok := toState.GetSource(ctx); ok {
-			if fromPlanSource, ok := fromPlan.GetSource(ctx); ok {
-				toStateSource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSource)
-				toState.SetSource(ctx, toStateSource)
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				// Recursively sync the fields of Source
+				toSource.SyncFieldsDuringCreateOrUpdate(ctx, fromSource)
+				to.SetSource(ctx, toSource)
 			}
 		}
 	}
-	if !fromPlan.Threshold.IsNull() && !fromPlan.Threshold.IsUnknown() {
-		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
-			if fromPlanThreshold, ok := fromPlan.GetThreshold(ctx); ok {
-				toStateThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanThreshold)
-				toState.SetThreshold(ctx, toStateThreshold)
+	if !from.Threshold.IsNull() && !from.Threshold.IsUnknown() {
+		if toThreshold, ok := to.GetThreshold(ctx); ok {
+			if fromThreshold, ok := from.GetThreshold(ctx); ok {
+				// Recursively sync the fields of Threshold
+				toThreshold.SyncFieldsDuringCreateOrUpdate(ctx, fromThreshold)
+				to.SetThreshold(ctx, toThreshold)
 			}
 		}
 	}
 }
 
-func (toState *AlertV2Evaluation) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Evaluation) {
-	if !fromState.Notification.IsNull() && !fromState.Notification.IsUnknown() {
-		if toStateNotification, ok := toState.GetNotification(ctx); ok {
-			if fromStateNotification, ok := fromState.GetNotification(ctx); ok {
-				toStateNotification.SyncFieldsDuringRead(ctx, fromStateNotification)
-				toState.SetNotification(ctx, toStateNotification)
+func (to *AlertV2Evaluation) SyncFieldsDuringRead(ctx context.Context, from AlertV2Evaluation) {
+	if !from.Notification.IsNull() && !from.Notification.IsUnknown() {
+		if toNotification, ok := to.GetNotification(ctx); ok {
+			if fromNotification, ok := from.GetNotification(ctx); ok {
+				toNotification.SyncFieldsDuringRead(ctx, fromNotification)
+				to.SetNotification(ctx, toNotification)
 			}
 		}
 	}
-	if !fromState.Source.IsNull() && !fromState.Source.IsUnknown() {
-		if toStateSource, ok := toState.GetSource(ctx); ok {
-			if fromStateSource, ok := fromState.GetSource(ctx); ok {
-				toStateSource.SyncFieldsDuringRead(ctx, fromStateSource)
-				toState.SetSource(ctx, toStateSource)
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				toSource.SyncFieldsDuringRead(ctx, fromSource)
+				to.SetSource(ctx, toSource)
 			}
 		}
 	}
-	if !fromState.Threshold.IsNull() && !fromState.Threshold.IsUnknown() {
-		if toStateThreshold, ok := toState.GetThreshold(ctx); ok {
-			if fromStateThreshold, ok := fromState.GetThreshold(ctx); ok {
-				toStateThreshold.SyncFieldsDuringRead(ctx, fromStateThreshold)
-				toState.SetThreshold(ctx, toStateThreshold)
+	if !from.Threshold.IsNull() && !from.Threshold.IsUnknown() {
+		if toThreshold, ok := to.GetThreshold(ctx); ok {
+			if fromThreshold, ok := from.GetThreshold(ctx); ok {
+				toThreshold.SyncFieldsDuringRead(ctx, fromThreshold)
+				to.SetThreshold(ctx, toThreshold)
 			}
 		}
 	}
@@ -1491,10 +1517,22 @@ type AlertV2Notification struct {
 	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
-func (toState *AlertV2Notification) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Notification) {
+func (to *AlertV2Notification) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2Notification) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
-func (toState *AlertV2Notification) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Notification) {
+func (to *AlertV2Notification) SyncFieldsDuringRead(ctx context.Context, from AlertV2Notification) {
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() && to.Subscriptions.IsNull() && len(from.Subscriptions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Subscriptions = from.Subscriptions
+	}
 }
 
 func (c AlertV2Notification) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1576,39 +1614,41 @@ type AlertV2Operand struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (toState *AlertV2Operand) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Operand) {
-	if !fromPlan.Column.IsNull() && !fromPlan.Column.IsUnknown() {
-		if toStateColumn, ok := toState.GetColumn(ctx); ok {
-			if fromPlanColumn, ok := fromPlan.GetColumn(ctx); ok {
-				toStateColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanColumn)
-				toState.SetColumn(ctx, toStateColumn)
+func (to *AlertV2Operand) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2Operand) {
+	if !from.Column.IsNull() && !from.Column.IsUnknown() {
+		if toColumn, ok := to.GetColumn(ctx); ok {
+			if fromColumn, ok := from.GetColumn(ctx); ok {
+				// Recursively sync the fields of Column
+				toColumn.SyncFieldsDuringCreateOrUpdate(ctx, fromColumn)
+				to.SetColumn(ctx, toColumn)
 			}
 		}
 	}
-	if !fromPlan.Value.IsNull() && !fromPlan.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromPlanValue, ok := fromPlan.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanValue)
-				toState.SetValue(ctx, toStateValue)
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				// Recursively sync the fields of Value
+				toValue.SyncFieldsDuringCreateOrUpdate(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
 }
 
-func (toState *AlertV2Operand) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Operand) {
-	if !fromState.Column.IsNull() && !fromState.Column.IsUnknown() {
-		if toStateColumn, ok := toState.GetColumn(ctx); ok {
-			if fromStateColumn, ok := fromState.GetColumn(ctx); ok {
-				toStateColumn.SyncFieldsDuringRead(ctx, fromStateColumn)
-				toState.SetColumn(ctx, toStateColumn)
+func (to *AlertV2Operand) SyncFieldsDuringRead(ctx context.Context, from AlertV2Operand) {
+	if !from.Column.IsNull() && !from.Column.IsUnknown() {
+		if toColumn, ok := to.GetColumn(ctx); ok {
+			if fromColumn, ok := from.GetColumn(ctx); ok {
+				toColumn.SyncFieldsDuringRead(ctx, fromColumn)
+				to.SetColumn(ctx, toColumn)
 			}
 		}
 	}
-	if !fromState.Value.IsNull() && !fromState.Value.IsUnknown() {
-		if toStateValue, ok := toState.GetValue(ctx); ok {
-			if fromStateValue, ok := fromState.GetValue(ctx); ok {
-				toStateValue.SyncFieldsDuringRead(ctx, fromStateValue)
-				toState.SetValue(ctx, toStateValue)
+	if !from.Value.IsNull() && !from.Value.IsUnknown() {
+		if toValue, ok := to.GetValue(ctx); ok {
+			if fromValue, ok := from.GetValue(ctx); ok {
+				toValue.SyncFieldsDuringRead(ctx, fromValue)
+				to.SetValue(ctx, toValue)
 			}
 		}
 	}
@@ -1715,10 +1755,10 @@ type AlertV2OperandColumn struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *AlertV2OperandColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2OperandColumn) {
+func (to *AlertV2OperandColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2OperandColumn) {
 }
 
-func (toState *AlertV2OperandColumn) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2OperandColumn) {
+func (to *AlertV2OperandColumn) SyncFieldsDuringRead(ctx context.Context, from AlertV2OperandColumn) {
 }
 
 func (c AlertV2OperandColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1772,10 +1812,10 @@ type AlertV2OperandValue struct {
 	StringValue types.String `tfsdk:"string_value"`
 }
 
-func (toState *AlertV2OperandValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2OperandValue) {
+func (to *AlertV2OperandValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2OperandValue) {
 }
 
-func (toState *AlertV2OperandValue) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2OperandValue) {
+func (to *AlertV2OperandValue) SyncFieldsDuringRead(ctx context.Context, from AlertV2OperandValue) {
 }
 
 func (c AlertV2OperandValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1830,10 +1870,10 @@ type AlertV2RunAs struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *AlertV2RunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2RunAs) {
+func (to *AlertV2RunAs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2RunAs) {
 }
 
-func (toState *AlertV2RunAs) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2RunAs) {
+func (to *AlertV2RunAs) SyncFieldsDuringRead(ctx context.Context, from AlertV2RunAs) {
 }
 
 func (c AlertV2RunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1882,10 +1922,10 @@ type AlertV2Subscription struct {
 	UserEmail types.String `tfsdk:"user_email"`
 }
 
-func (toState *AlertV2Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan AlertV2Subscription) {
+func (to *AlertV2Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2Subscription) {
 }
 
-func (toState *AlertV2Subscription) SyncFieldsDuringRead(ctx context.Context, fromState AlertV2Subscription) {
+func (to *AlertV2Subscription) SyncFieldsDuringRead(ctx context.Context, from AlertV2Subscription) {
 }
 
 func (c AlertV2Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1943,10 +1983,10 @@ type BaseChunkInfo struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (toState *BaseChunkInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan BaseChunkInfo) {
+func (to *BaseChunkInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BaseChunkInfo) {
 }
 
-func (toState *BaseChunkInfo) SyncFieldsDuringRead(ctx context.Context, fromState BaseChunkInfo) {
+func (to *BaseChunkInfo) SyncFieldsDuringRead(ctx context.Context, from BaseChunkInfo) {
 }
 
 func (c BaseChunkInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2001,6 +2041,18 @@ type CancelExecutionRequest struct {
 	StatementId types.String `tfsdk:"-"`
 }
 
+func (to *CancelExecutionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelExecutionRequest) {
+}
+
+func (to *CancelExecutionRequest) SyncFieldsDuringRead(ctx context.Context, from CancelExecutionRequest) {
+}
+
+func (c CancelExecutionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_id"] = attrs["statement_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelExecutionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2032,36 +2084,6 @@ func (o CancelExecutionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CancelExecutionResponse struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelExecutionResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CancelExecutionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelExecutionResponse
-// only implements ToObjectValue() and Type().
-func (o CancelExecutionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CancelExecutionResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Configures the channel name and DBSQL version of the warehouse.
 // CHANNEL_NAME_CUSTOM should be chosen only when `dbsql_version` is specified.
 type Channel struct {
@@ -2070,10 +2092,10 @@ type Channel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *Channel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Channel) {
+func (to *Channel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Channel) {
 }
 
-func (toState *Channel) SyncFieldsDuringRead(ctx context.Context, fromState Channel) {
+func (to *Channel) SyncFieldsDuringRead(ctx context.Context, from Channel) {
 }
 
 func (c Channel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2124,10 +2146,10 @@ type ChannelInfo struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *ChannelInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ChannelInfo) {
+func (to *ChannelInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ChannelInfo) {
 }
 
-func (toState *ChannelInfo) SyncFieldsDuringRead(ctx context.Context, fromState ChannelInfo) {
+func (to *ChannelInfo) SyncFieldsDuringRead(ctx context.Context, from ChannelInfo) {
 }
 
 func (c ChannelInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2192,10 +2214,10 @@ type ClientConfig struct {
 	HidePlotlyModeBar types.Bool `tfsdk:"hide_plotly_mode_bar"`
 }
 
-func (toState *ClientConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ClientConfig) {
+func (to *ClientConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClientConfig) {
 }
 
-func (toState *ClientConfig) SyncFieldsDuringRead(ctx context.Context, fromState ClientConfig) {
+func (to *ClientConfig) SyncFieldsDuringRead(ctx context.Context, from ClientConfig) {
 }
 
 func (c ClientConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2282,10 +2304,10 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text"`
 }
 
-func (toState *ColumnInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ColumnInfo) {
+func (to *ColumnInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnInfo) {
 }
 
-func (toState *ColumnInfo) SyncFieldsDuringRead(ctx context.Context, fromState ColumnInfo) {
+func (to *ColumnInfo) SyncFieldsDuringRead(ctx context.Context, from ColumnInfo) {
 }
 
 func (c ColumnInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2356,6 +2378,39 @@ type CreateAlert struct {
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
 	Rearm types.Int64 `tfsdk:"rearm"`
+}
+
+func (to *CreateAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (to *CreateAlert) SyncFieldsDuringRead(ctx context.Context, from CreateAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (c CreateAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["rearm"] = attrs["rearm"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlert.
@@ -2430,6 +2485,36 @@ type CreateAlertRequest struct {
 	// fail the request if the alert's display name conflicts with an existing
 	// alert's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
+}
+
+func (to *CreateAlertRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAlertRequest) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				// Recursively sync the fields of Alert
+				toAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (to *CreateAlertRequest) SyncFieldsDuringRead(ctx context.Context, from CreateAlertRequest) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				toAlert.SyncFieldsDuringRead(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (c CreateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertRequest.
@@ -2520,23 +2605,24 @@ type CreateAlertRequestAlert struct {
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
-func (toState *CreateAlertRequestAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateAlertRequestAlert) {
-	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *CreateAlertRequestAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAlertRequestAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				// Recursively sync the fields of Condition
+				toCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
 }
 
-func (toState *CreateAlertRequestAlert) SyncFieldsDuringRead(ctx context.Context, fromState CreateAlertRequestAlert) {
-	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *CreateAlertRequestAlert) SyncFieldsDuringRead(ctx context.Context, from CreateAlertRequestAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				toCondition.SyncFieldsDuringRead(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
@@ -2631,6 +2717,35 @@ type CreateAlertV2Request struct {
 	Alert types.Object `tfsdk:"alert"`
 }
 
+func (to *CreateAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAlertV2Request) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				// Recursively sync the fields of Alert
+				toAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (to *CreateAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from CreateAlertV2Request) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				toAlert.SyncFieldsDuringRead(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (c CreateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2696,6 +2811,36 @@ type CreateQueryRequest struct {
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
 
 	Query types.Object `tfsdk:"query"`
+}
+
+func (to *CreateQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateQueryRequest) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				// Recursively sync the fields of Query
+				toQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
+			}
+		}
+	}
+}
+
+func (to *CreateQueryRequest) SyncFieldsDuringRead(ctx context.Context, from CreateQueryRequest) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				toQuery.SyncFieldsDuringRead(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
+			}
+		}
+	}
+}
+
+func (c CreateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryRequest.
@@ -2785,10 +2930,34 @@ type CreateQueryRequestQuery struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *CreateQueryRequestQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateQueryRequestQuery) {
+func (to *CreateQueryRequestQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateQueryRequestQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
-func (toState *CreateQueryRequestQuery) SyncFieldsDuringRead(ctx context.Context, fromState CreateQueryRequestQuery) {
+func (to *CreateQueryRequestQuery) SyncFieldsDuringRead(ctx context.Context, from CreateQueryRequestQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
 func (c CreateQueryRequestQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2935,6 +3104,22 @@ type CreateQueryVisualizationsLegacyRequest struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
+func (to *CreateQueryVisualizationsLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateQueryVisualizationsLegacyRequest) {
+}
+
+func (to *CreateQueryVisualizationsLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from CreateQueryVisualizationsLegacyRequest) {
+}
+
+func (c CreateQueryVisualizationsLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["type"] = attrs["type"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryVisualizationsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2976,6 +3161,35 @@ func (o CreateQueryVisualizationsLegacyRequest) Type(ctx context.Context) attr.T
 
 type CreateVisualizationRequest struct {
 	Visualization types.Object `tfsdk:"visualization"`
+}
+
+func (to *CreateVisualizationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateVisualizationRequest) {
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				// Recursively sync the fields of Visualization
+				toVisualization.SyncFieldsDuringCreateOrUpdate(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
+			}
+		}
+	}
+}
+
+func (to *CreateVisualizationRequest) SyncFieldsDuringRead(ctx context.Context, from CreateVisualizationRequest) {
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				toVisualization.SyncFieldsDuringRead(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
+			}
+		}
+	}
+}
+
+func (c CreateVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["visualization"] = attrs["visualization"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVisualizationRequest.
@@ -3053,10 +3267,10 @@ type CreateVisualizationRequestVisualization struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *CreateVisualizationRequestVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateVisualizationRequestVisualization) {
+func (to *CreateVisualizationRequestVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateVisualizationRequestVisualization) {
 }
 
-func (toState *CreateVisualizationRequestVisualization) SyncFieldsDuringRead(ctx context.Context, fromState CreateVisualizationRequestVisualization) {
+func (to *CreateVisualizationRequestVisualization) SyncFieldsDuringRead(ctx context.Context, from CreateVisualizationRequestVisualization) {
 }
 
 func (c CreateVisualizationRequestVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3168,6 +3382,64 @@ type CreateWarehouseRequest struct {
 	Tags types.Object `tfsdk:"tags"`
 
 	WarehouseType types.String `tfsdk:"warehouse_type"`
+}
+
+func (to *CreateWarehouseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWarehouseRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of Tags
+				toTags.SyncFieldsDuringCreateOrUpdate(ctx, fromTags)
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+}
+
+func (to *CreateWarehouseRequest) SyncFieldsDuringRead(ctx context.Context, from CreateWarehouseRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				toTags.SyncFieldsDuringRead(ctx, fromTags)
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+}
+
+func (c CreateWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWarehouseRequest.
@@ -3283,10 +3555,10 @@ type CreateWarehouseResponse struct {
 	Id types.String `tfsdk:"id"`
 }
 
-func (toState *CreateWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CreateWarehouseResponse) {
+func (to *CreateWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWarehouseResponse) {
 }
 
-func (toState *CreateWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState CreateWarehouseResponse) {
+func (to *CreateWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from CreateWarehouseResponse) {
 }
 
 func (c CreateWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3339,6 +3611,39 @@ type CreateWidget struct {
 	VisualizationId types.String `tfsdk:"visualization_id"`
 	// Width of a widget
 	Width types.Int64 `tfsdk:"width"`
+}
+
+func (to *CreateWidget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWidget) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (to *CreateWidget) SyncFieldsDuringRead(ctx context.Context, from CreateWidget) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (c CreateWidget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["text"] = attrs["text"].SetOptional()
+	attrs["visualization_id"] = attrs["visualization_id"].SetOptional()
+	attrs["width"] = attrs["width"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWidget.
@@ -3422,10 +3727,10 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
-func (toState *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan CronSchedule) {
+func (to *CronSchedule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CronSchedule) {
 }
 
-func (toState *CronSchedule) SyncFieldsDuringRead(ctx context.Context, fromState CronSchedule) {
+func (to *CronSchedule) SyncFieldsDuringRead(ctx context.Context, from CronSchedule) {
 }
 
 func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3520,41 +3825,67 @@ type Dashboard struct {
 	Widgets types.List `tfsdk:"widgets"`
 }
 
-func (toState *Dashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Dashboard) {
-	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *Dashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dashboard) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				// Recursively sync the fields of User
+				toUser.SyncFieldsDuringCreateOrUpdate(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
+	}
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() && to.Widgets.IsNull() && len(from.Widgets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Widgets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Widgets = from.Widgets
 	}
 }
 
-func (toState *Dashboard) SyncFieldsDuringRead(ctx context.Context, fromState Dashboard) {
-	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *Dashboard) SyncFieldsDuringRead(ctx context.Context, from Dashboard) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromStateUser, ok := fromState.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				toUser.SyncFieldsDuringRead(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
+	}
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() && to.Widgets.IsNull() && len(from.Widgets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Widgets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Widgets = from.Widgets
 	}
 }
 
@@ -3767,6 +4098,33 @@ type DashboardEditContent struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
+func (to *DashboardEditContent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardEditContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (to *DashboardEditContent) SyncFieldsDuringRead(ctx context.Context, from DashboardEditContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (c DashboardEditContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardEditContent.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3841,10 +4199,10 @@ type DashboardOptions struct {
 	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at"`
 }
 
-func (toState *DashboardOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DashboardOptions) {
+func (to *DashboardOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardOptions) {
 }
 
-func (toState *DashboardOptions) SyncFieldsDuringRead(ctx context.Context, fromState DashboardOptions) {
+func (to *DashboardOptions) SyncFieldsDuringRead(ctx context.Context, from DashboardOptions) {
 }
 
 func (c DashboardOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3912,10 +4270,10 @@ type DataSource struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DataSource) {
+func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataSource) {
 }
 
-func (toState *DataSource) SyncFieldsDuringRead(ctx context.Context, fromState DataSource) {
+func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource) {
 }
 
 func (c DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3985,10 +4343,10 @@ type DateRange struct {
 	Start types.String `tfsdk:"start"`
 }
 
-func (toState *DateRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateRange) {
+func (to *DateRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DateRange) {
 }
 
-func (toState *DateRange) SyncFieldsDuringRead(ctx context.Context, fromState DateRange) {
+func (to *DateRange) SyncFieldsDuringRead(ctx context.Context, from DateRange) {
 }
 
 func (c DateRange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4043,23 +4401,24 @@ type DateRangeValue struct {
 	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week"`
 }
 
-func (toState *DateRangeValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateRangeValue) {
-	if !fromPlan.DateRangeValue.IsNull() && !fromPlan.DateRangeValue.IsUnknown() {
-		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
-			if fromPlanDateRangeValue, ok := fromPlan.GetDateRangeValue(ctx); ok {
-				toStateDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateRangeValue)
-				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+func (to *DateRangeValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DateRangeValue) {
+	if !from.DateRangeValue.IsNull() && !from.DateRangeValue.IsUnknown() {
+		if toDateRangeValue, ok := to.GetDateRangeValue(ctx); ok {
+			if fromDateRangeValue, ok := from.GetDateRangeValue(ctx); ok {
+				// Recursively sync the fields of DateRangeValue
+				toDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromDateRangeValue)
+				to.SetDateRangeValue(ctx, toDateRangeValue)
 			}
 		}
 	}
 }
 
-func (toState *DateRangeValue) SyncFieldsDuringRead(ctx context.Context, fromState DateRangeValue) {
-	if !fromState.DateRangeValue.IsNull() && !fromState.DateRangeValue.IsUnknown() {
-		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
-			if fromStateDateRangeValue, ok := fromState.GetDateRangeValue(ctx); ok {
-				toStateDateRangeValue.SyncFieldsDuringRead(ctx, fromStateDateRangeValue)
-				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+func (to *DateRangeValue) SyncFieldsDuringRead(ctx context.Context, from DateRangeValue) {
+	if !from.DateRangeValue.IsNull() && !from.DateRangeValue.IsUnknown() {
+		if toDateRangeValue, ok := to.GetDateRangeValue(ctx); ok {
+			if fromDateRangeValue, ok := from.GetDateRangeValue(ctx); ok {
+				toDateRangeValue.SyncFieldsDuringRead(ctx, fromDateRangeValue)
+				to.SetDateRangeValue(ctx, toDateRangeValue)
 			}
 		}
 	}
@@ -4148,10 +4507,10 @@ type DateValue struct {
 	Precision types.String `tfsdk:"precision"`
 }
 
-func (toState *DateValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DateValue) {
+func (to *DateValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DateValue) {
 }
 
-func (toState *DateValue) SyncFieldsDuringRead(ctx context.Context, fromState DateValue) {
+func (to *DateValue) SyncFieldsDuringRead(ctx context.Context, from DateValue) {
 }
 
 func (c DateValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4201,6 +4560,18 @@ type DeleteAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
+func (to *DeleteAlertsLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteAlertsLegacyRequest) {
+}
+
+func (to *DeleteAlertsLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteAlertsLegacyRequest) {
+}
+
+func (c DeleteAlertsLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_id"] = attrs["alert_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAlertsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4234,6 +4605,18 @@ func (o DeleteAlertsLegacyRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
+}
+
+func (to *DeleteDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDashboardRequest) {
+}
+
+func (to *DeleteDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteDashboardRequest) {
+}
+
+func (c DeleteDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardRequest.
@@ -4272,6 +4655,18 @@ type DeleteDashboardWidgetRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *DeleteDashboardWidgetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDashboardWidgetRequest) {
+}
+
+func (to *DeleteDashboardWidgetRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteDashboardWidgetRequest) {
+}
+
+func (c DeleteDashboardWidgetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardWidgetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4305,6 +4700,18 @@ func (o DeleteDashboardWidgetRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
+}
+
+func (to *DeleteQueriesLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteQueriesLegacyRequest) {
+}
+
+func (to *DeleteQueriesLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteQueriesLegacyRequest) {
+}
+
+func (c DeleteQueriesLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQueriesLegacyRequest.
@@ -4343,6 +4750,18 @@ type DeleteQueryVisualizationsLegacyRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *DeleteQueryVisualizationsLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteQueryVisualizationsLegacyRequest) {
+}
+
+func (to *DeleteQueryVisualizationsLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteQueryVisualizationsLegacyRequest) {
+}
+
+func (c DeleteQueryVisualizationsLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQueryVisualizationsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4377,10 +4796,10 @@ func (o DeleteQueryVisualizationsLegacyRequest) Type(ctx context.Context) attr.T
 type DeleteResponse struct {
 }
 
-func (toState *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteResponse) {
+func (to *DeleteResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteResponse) {
 }
 
-func (toState *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteResponse) {
+func (to *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteResponse) {
 }
 
 func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4419,6 +4838,18 @@ type DeleteVisualizationRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *DeleteVisualizationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteVisualizationRequest) {
+}
+
+func (to *DeleteVisualizationRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteVisualizationRequest) {
+}
+
+func (c DeleteVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteVisualizationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4455,6 +4886,18 @@ type DeleteWarehouseRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *DeleteWarehouseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWarehouseRequest) {
+}
+
+func (to *DeleteWarehouseRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteWarehouseRequest) {
+}
+
+func (c DeleteWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWarehouseRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4489,10 +4932,10 @@ func (o DeleteWarehouseRequest) Type(ctx context.Context) attr.Type {
 type DeleteWarehouseResponse struct {
 }
 
-func (toState *DeleteWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan DeleteWarehouseResponse) {
+func (to *DeleteWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWarehouseResponse) {
 }
 
-func (toState *DeleteWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState DeleteWarehouseResponse) {
+func (to *DeleteWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteWarehouseResponse) {
 }
 
 func (c DeleteWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4539,6 +4982,39 @@ type EditAlert struct {
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
 	Rearm types.Int64 `tfsdk:"rearm"`
+}
+
+func (to *EditAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (to *EditAlert) SyncFieldsDuringRead(ctx context.Context, from EditAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (c EditAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["rearm"] = attrs["rearm"].SetOptional()
+	attrs["alert_id"] = attrs["alert_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditAlert.
@@ -4669,6 +5145,65 @@ type EditWarehouseRequest struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
+func (to *EditWarehouseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditWarehouseRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of Tags
+				toTags.SyncFieldsDuringCreateOrUpdate(ctx, fromTags)
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+}
+
+func (to *EditWarehouseRequest) SyncFieldsDuringRead(ctx context.Context, from EditWarehouseRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				toTags.SyncFieldsDuringRead(ctx, fromTags)
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+}
+
+func (c EditWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditWarehouseRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4782,10 +5317,10 @@ func (o *EditWarehouseRequest) SetTags(ctx context.Context, v EndpointTags) {
 type EditWarehouseResponse struct {
 }
 
-func (toState *EditWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EditWarehouseResponse) {
+func (to *EditWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditWarehouseResponse) {
 }
 
-func (toState *EditWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState EditWarehouseResponse) {
+func (to *EditWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from EditWarehouseResponse) {
 }
 
 func (c EditWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4825,10 +5360,10 @@ func (o EditWarehouseResponse) Type(ctx context.Context) attr.Type {
 type Empty struct {
 }
 
-func (toState *Empty) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Empty) {
+func (to *Empty) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Empty) {
 }
 
-func (toState *Empty) SyncFieldsDuringRead(ctx context.Context, fromState Empty) {
+func (to *Empty) SyncFieldsDuringRead(ctx context.Context, from Empty) {
 }
 
 func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4869,10 +5404,10 @@ type EndpointConfPair struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *EndpointConfPair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointConfPair) {
+func (to *EndpointConfPair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointConfPair) {
 }
 
-func (toState *EndpointConfPair) SyncFieldsDuringRead(ctx context.Context, fromState EndpointConfPair) {
+func (to *EndpointConfPair) SyncFieldsDuringRead(ctx context.Context, from EndpointConfPair) {
 }
 
 func (c EndpointConfPair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4930,23 +5465,24 @@ type EndpointHealth struct {
 	Summary types.String `tfsdk:"summary"`
 }
 
-func (toState *EndpointHealth) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointHealth) {
-	if !fromPlan.FailureReason.IsNull() && !fromPlan.FailureReason.IsUnknown() {
-		if toStateFailureReason, ok := toState.GetFailureReason(ctx); ok {
-			if fromPlanFailureReason, ok := fromPlan.GetFailureReason(ctx); ok {
-				toStateFailureReason.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanFailureReason)
-				toState.SetFailureReason(ctx, toStateFailureReason)
+func (to *EndpointHealth) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointHealth) {
+	if !from.FailureReason.IsNull() && !from.FailureReason.IsUnknown() {
+		if toFailureReason, ok := to.GetFailureReason(ctx); ok {
+			if fromFailureReason, ok := from.GetFailureReason(ctx); ok {
+				// Recursively sync the fields of FailureReason
+				toFailureReason.SyncFieldsDuringCreateOrUpdate(ctx, fromFailureReason)
+				to.SetFailureReason(ctx, toFailureReason)
 			}
 		}
 	}
 }
 
-func (toState *EndpointHealth) SyncFieldsDuringRead(ctx context.Context, fromState EndpointHealth) {
-	if !fromState.FailureReason.IsNull() && !fromState.FailureReason.IsUnknown() {
-		if toStateFailureReason, ok := toState.GetFailureReason(ctx); ok {
-			if fromStateFailureReason, ok := fromState.GetFailureReason(ctx); ok {
-				toStateFailureReason.SyncFieldsDuringRead(ctx, fromStateFailureReason)
-				toState.SetFailureReason(ctx, toStateFailureReason)
+func (to *EndpointHealth) SyncFieldsDuringRead(ctx context.Context, from EndpointHealth) {
+	if !from.FailureReason.IsNull() && !from.FailureReason.IsUnknown() {
+		if toFailureReason, ok := to.GetFailureReason(ctx); ok {
+			if fromFailureReason, ok := from.GetFailureReason(ctx); ok {
+				toFailureReason.SyncFieldsDuringRead(ctx, fromFailureReason)
+				to.SetFailureReason(ctx, toFailureReason)
 			}
 		}
 	}
@@ -5105,71 +5641,75 @@ type EndpointInfo struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (toState *EndpointInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointInfo) {
-	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *EndpointInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointInfo) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromPlan.OdbcParams.IsNull() && !fromPlan.OdbcParams.IsUnknown() {
-		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
-			if fromPlanOdbcParams, ok := fromPlan.GetOdbcParams(ctx); ok {
-				toStateOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOdbcParams)
-				toState.SetOdbcParams(ctx, toStateOdbcParams)
+	if !from.OdbcParams.IsNull() && !from.OdbcParams.IsUnknown() {
+		if toOdbcParams, ok := to.GetOdbcParams(ctx); ok {
+			if fromOdbcParams, ok := from.GetOdbcParams(ctx); ok {
+				// Recursively sync the fields of OdbcParams
+				toOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromOdbcParams)
+				to.SetOdbcParams(ctx, toOdbcParams)
 			}
 		}
 	}
-	if !fromPlan.Tags.IsNull() && !fromPlan.Tags.IsUnknown() {
-		if toStateTags, ok := toState.GetTags(ctx); ok {
-			if fromPlanTags, ok := fromPlan.GetTags(ctx); ok {
-				toStateTags.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTags)
-				toState.SetTags(ctx, toStateTags)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of Tags
+				toTags.SyncFieldsDuringCreateOrUpdate(ctx, fromTags)
+				to.SetTags(ctx, toTags)
 			}
 		}
 	}
 }
 
-func (toState *EndpointInfo) SyncFieldsDuringRead(ctx context.Context, fromState EndpointInfo) {
-	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *EndpointInfo) SyncFieldsDuringRead(ctx context.Context, from EndpointInfo) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromState.OdbcParams.IsNull() && !fromState.OdbcParams.IsUnknown() {
-		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
-			if fromStateOdbcParams, ok := fromState.GetOdbcParams(ctx); ok {
-				toStateOdbcParams.SyncFieldsDuringRead(ctx, fromStateOdbcParams)
-				toState.SetOdbcParams(ctx, toStateOdbcParams)
+	if !from.OdbcParams.IsNull() && !from.OdbcParams.IsUnknown() {
+		if toOdbcParams, ok := to.GetOdbcParams(ctx); ok {
+			if fromOdbcParams, ok := from.GetOdbcParams(ctx); ok {
+				toOdbcParams.SyncFieldsDuringRead(ctx, fromOdbcParams)
+				to.SetOdbcParams(ctx, toOdbcParams)
 			}
 		}
 	}
-	if !fromState.Tags.IsNull() && !fromState.Tags.IsUnknown() {
-		if toStateTags, ok := toState.GetTags(ctx); ok {
-			if fromStateTags, ok := fromState.GetTags(ctx); ok {
-				toStateTags.SyncFieldsDuringRead(ctx, fromStateTags)
-				toState.SetTags(ctx, toStateTags)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				toTags.SyncFieldsDuringRead(ctx, fromTags)
+				to.SetTags(ctx, toTags)
 			}
 		}
 	}
@@ -5380,10 +5920,10 @@ type EndpointTagPair struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *EndpointTagPair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTagPair) {
+func (to *EndpointTagPair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointTagPair) {
 }
 
-func (toState *EndpointTagPair) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTagPair) {
+func (to *EndpointTagPair) SyncFieldsDuringRead(ctx context.Context, from EndpointTagPair) {
 }
 
 func (c EndpointTagPair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5430,10 +5970,22 @@ type EndpointTags struct {
 	CustomTags types.List `tfsdk:"custom_tags"`
 }
 
-func (toState *EndpointTags) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EndpointTags) {
+func (to *EndpointTags) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointTags) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
-func (toState *EndpointTags) SyncFieldsDuringRead(ctx context.Context, fromState EndpointTags) {
+func (to *EndpointTags) SyncFieldsDuringRead(ctx context.Context, from EndpointTags) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
 func (c EndpointTags) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5512,25 +6064,38 @@ type EnumValue struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (toState *EnumValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan EnumValue) {
-	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *EnumValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnumValue) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				// Recursively sync the fields of MultiValuesOptions
+				toMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
 	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
-func (toState *EnumValue) SyncFieldsDuringRead(ctx context.Context, fromState EnumValue) {
-	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *EnumValue) SyncFieldsDuringRead(ctx context.Context, from EnumValue) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				toMultiValuesOptions.SyncFieldsDuringRead(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
 	}
 }
 
@@ -5759,6 +6324,40 @@ type ExecuteStatementRequest struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
+func (to *ExecuteStatementRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExecuteStatementRequest) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+}
+
+func (to *ExecuteStatementRequest) SyncFieldsDuringRead(ctx context.Context, from ExecuteStatementRequest) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+}
+
+func (c ExecuteStatementRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["byte_limit"] = attrs["byte_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["disposition"] = attrs["disposition"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["on_wait_timeout"] = attrs["on_wait_timeout"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["row_limit"] = attrs["row_limit"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["statement"] = attrs["statement"].SetRequired()
+	attrs["wait_timeout"] = attrs["wait_timeout"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecuteStatementRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5873,10 +6472,10 @@ type ExternalLink struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (toState *ExternalLink) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalLink) {
+func (to *ExternalLink) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalLink) {
 }
 
-func (toState *ExternalLink) SyncFieldsDuringRead(ctx context.Context, fromState ExternalLink) {
+func (to *ExternalLink) SyncFieldsDuringRead(ctx context.Context, from ExternalLink) {
 }
 
 func (c ExternalLink) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5987,23 +6586,24 @@ type ExternalQuerySource struct {
 	SqlQueryId types.String `tfsdk:"sql_query_id"`
 }
 
-func (toState *ExternalQuerySource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalQuerySource) {
-	if !fromPlan.JobInfo.IsNull() && !fromPlan.JobInfo.IsUnknown() {
-		if toStateJobInfo, ok := toState.GetJobInfo(ctx); ok {
-			if fromPlanJobInfo, ok := fromPlan.GetJobInfo(ctx); ok {
-				toStateJobInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanJobInfo)
-				toState.SetJobInfo(ctx, toStateJobInfo)
+func (to *ExternalQuerySource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalQuerySource) {
+	if !from.JobInfo.IsNull() && !from.JobInfo.IsUnknown() {
+		if toJobInfo, ok := to.GetJobInfo(ctx); ok {
+			if fromJobInfo, ok := from.GetJobInfo(ctx); ok {
+				// Recursively sync the fields of JobInfo
+				toJobInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromJobInfo)
+				to.SetJobInfo(ctx, toJobInfo)
 			}
 		}
 	}
 }
 
-func (toState *ExternalQuerySource) SyncFieldsDuringRead(ctx context.Context, fromState ExternalQuerySource) {
-	if !fromState.JobInfo.IsNull() && !fromState.JobInfo.IsUnknown() {
-		if toStateJobInfo, ok := toState.GetJobInfo(ctx); ok {
-			if fromStateJobInfo, ok := fromState.GetJobInfo(ctx); ok {
-				toStateJobInfo.SyncFieldsDuringRead(ctx, fromStateJobInfo)
-				toState.SetJobInfo(ctx, toStateJobInfo)
+func (to *ExternalQuerySource) SyncFieldsDuringRead(ctx context.Context, from ExternalQuerySource) {
+	if !from.JobInfo.IsNull() && !from.JobInfo.IsUnknown() {
+		if toJobInfo, ok := to.GetJobInfo(ctx); ok {
+			if fromJobInfo, ok := from.GetJobInfo(ctx); ok {
+				toJobInfo.SyncFieldsDuringRead(ctx, fromJobInfo)
+				to.SetJobInfo(ctx, toJobInfo)
 			}
 		}
 	}
@@ -6101,10 +6701,10 @@ type ExternalQuerySourceJobInfo struct {
 	JobTaskRunId types.String `tfsdk:"job_task_run_id"`
 }
 
-func (toState *ExternalQuerySourceJobInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ExternalQuerySourceJobInfo) {
+func (to *ExternalQuerySourceJobInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalQuerySourceJobInfo) {
 }
 
-func (toState *ExternalQuerySourceJobInfo) SyncFieldsDuringRead(ctx context.Context, fromState ExternalQuerySourceJobInfo) {
+func (to *ExternalQuerySourceJobInfo) SyncFieldsDuringRead(ctx context.Context, from ExternalQuerySourceJobInfo) {
 }
 
 func (c ExternalQuerySourceJobInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6154,6 +6754,18 @@ type GetAlertRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *GetAlertRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAlertRequest) {
+}
+
+func (to *GetAlertRequest) SyncFieldsDuringRead(ctx context.Context, from GetAlertRequest) {
+}
+
+func (c GetAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6187,6 +6799,18 @@ func (o GetAlertRequest) Type(ctx context.Context) attr.Type {
 
 type GetAlertV2Request struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (to *GetAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAlertV2Request) {
+}
+
+func (to *GetAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from GetAlertV2Request) {
+}
+
+func (c GetAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertV2Request.
@@ -6224,6 +6848,18 @@ type GetAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
+func (to *GetAlertsLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAlertsLegacyRequest) {
+}
+
+func (to *GetAlertsLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from GetAlertsLegacyRequest) {
+}
+
+func (c GetAlertsLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_id"] = attrs["alert_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6258,6 +6894,17 @@ func (o GetAlertsLegacyRequest) Type(ctx context.Context) attr.Type {
 type GetConfigRequest struct {
 }
 
+func (to *GetConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetConfigRequest) {
+}
+
+func (to *GetConfigRequest) SyncFieldsDuringRead(ctx context.Context, from GetConfigRequest) {
+}
+
+func (c GetConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetConfigRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6287,6 +6934,18 @@ func (o GetConfigRequest) Type(ctx context.Context) attr.Type {
 
 type GetDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
+}
+
+func (to *GetDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDashboardRequest) {
+}
+
+func (to *GetDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from GetDashboardRequest) {
+}
+
+func (c GetDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardRequest.
@@ -6327,6 +6986,19 @@ type GetDbsqlPermissionRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (to *GetDbsqlPermissionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDbsqlPermissionRequest) {
+}
+
+func (to *GetDbsqlPermissionRequest) SyncFieldsDuringRead(ctx context.Context, from GetDbsqlPermissionRequest) {
+}
+
+func (c GetDbsqlPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDbsqlPermissionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6345,8 +7017,8 @@ func (o GetDbsqlPermissionRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"objectId":   o.ObjectId,
-			"objectType": o.ObjectType,
+			"object_id":   o.ObjectId,
+			"object_type": o.ObjectType,
 		})
 }
 
@@ -6354,14 +7026,26 @@ func (o GetDbsqlPermissionRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o GetDbsqlPermissionRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"objectId":   types.StringType,
-			"objectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
 
 type GetQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
+}
+
+func (to *GetQueriesLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetQueriesLegacyRequest) {
+}
+
+func (to *GetQueriesLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from GetQueriesLegacyRequest) {
+}
+
+func (c GetQueriesLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQueriesLegacyRequest.
@@ -6397,6 +7081,18 @@ func (o GetQueriesLegacyRequest) Type(ctx context.Context) attr.Type {
 
 type GetQueryRequest struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (to *GetQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetQueryRequest) {
+}
+
+func (to *GetQueryRequest) SyncFieldsDuringRead(ctx context.Context, from GetQueryRequest) {
+}
+
+func (c GetQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQueryRequest.
@@ -6438,10 +7134,22 @@ type GetResponse struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (toState *GetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetResponse) {
+func (to *GetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetResponse) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
-func (toState *GetResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetResponse) {
+func (to *GetResponse) SyncFieldsDuringRead(ctx context.Context, from GetResponse) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
 func (c GetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6523,6 +7231,18 @@ type GetStatementRequest struct {
 	StatementId types.String `tfsdk:"-"`
 }
 
+func (to *GetStatementRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetStatementRequest) {
+}
+
+func (to *GetStatementRequest) SyncFieldsDuringRead(ctx context.Context, from GetStatementRequest) {
+}
+
+func (c GetStatementRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_id"] = attrs["statement_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatementRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6559,6 +7279,19 @@ type GetStatementResultChunkNRequest struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
 	StatementId types.String `tfsdk:"-"`
+}
+
+func (to *GetStatementResultChunkNRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetStatementResultChunkNRequest) {
+}
+
+func (to *GetStatementResultChunkNRequest) SyncFieldsDuringRead(ctx context.Context, from GetStatementResultChunkNRequest) {
+}
+
+func (c GetStatementResultChunkNRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_id"] = attrs["statement_id"].SetRequired()
+	attrs["chunk_index"] = attrs["chunk_index"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatementResultChunkNRequest.
@@ -6599,6 +7332,18 @@ type GetWarehousePermissionLevelsRequest struct {
 	WarehouseId types.String `tfsdk:"-"`
 }
 
+func (to *GetWarehousePermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWarehousePermissionLevelsRequest) {
+}
+
+func (to *GetWarehousePermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, from GetWarehousePermissionLevelsRequest) {
+}
+
+func (c GetWarehousePermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehousePermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6635,10 +7380,22 @@ type GetWarehousePermissionLevelsResponse struct {
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
-func (toState *GetWarehousePermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWarehousePermissionLevelsResponse) {
+func (to *GetWarehousePermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWarehousePermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
 }
 
-func (toState *GetWarehousePermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetWarehousePermissionLevelsResponse) {
+func (to *GetWarehousePermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetWarehousePermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
 }
 
 func (c GetWarehousePermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -6713,6 +7470,18 @@ type GetWarehousePermissionsRequest struct {
 	WarehouseId types.String `tfsdk:"-"`
 }
 
+func (to *GetWarehousePermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWarehousePermissionsRequest) {
+}
+
+func (to *GetWarehousePermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from GetWarehousePermissionsRequest) {
+}
+
+func (c GetWarehousePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehousePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6747,6 +7516,18 @@ func (o GetWarehousePermissionsRequest) Type(ctx context.Context) attr.Type {
 type GetWarehouseRequest struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
+}
+
+func (to *GetWarehouseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWarehouseRequest) {
+}
+
+func (to *GetWarehouseRequest) SyncFieldsDuringRead(ctx context.Context, from GetWarehouseRequest) {
+}
+
+func (c GetWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehouseRequest.
@@ -6855,71 +7636,75 @@ type GetWarehouseResponse struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (toState *GetWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWarehouseResponse) {
-	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *GetWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWarehouseResponse) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromPlan.Health.IsNull() && !fromPlan.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromPlanHealth, ok := fromPlan.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				// Recursively sync the fields of Health
+				toHealth.SyncFieldsDuringCreateOrUpdate(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromPlan.OdbcParams.IsNull() && !fromPlan.OdbcParams.IsUnknown() {
-		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
-			if fromPlanOdbcParams, ok := fromPlan.GetOdbcParams(ctx); ok {
-				toStateOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOdbcParams)
-				toState.SetOdbcParams(ctx, toStateOdbcParams)
+	if !from.OdbcParams.IsNull() && !from.OdbcParams.IsUnknown() {
+		if toOdbcParams, ok := to.GetOdbcParams(ctx); ok {
+			if fromOdbcParams, ok := from.GetOdbcParams(ctx); ok {
+				// Recursively sync the fields of OdbcParams
+				toOdbcParams.SyncFieldsDuringCreateOrUpdate(ctx, fromOdbcParams)
+				to.SetOdbcParams(ctx, toOdbcParams)
 			}
 		}
 	}
-	if !fromPlan.Tags.IsNull() && !fromPlan.Tags.IsUnknown() {
-		if toStateTags, ok := toState.GetTags(ctx); ok {
-			if fromPlanTags, ok := fromPlan.GetTags(ctx); ok {
-				toStateTags.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTags)
-				toState.SetTags(ctx, toStateTags)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of Tags
+				toTags.SyncFieldsDuringCreateOrUpdate(ctx, fromTags)
+				to.SetTags(ctx, toTags)
 			}
 		}
 	}
 }
 
-func (toState *GetWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetWarehouseResponse) {
-	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *GetWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from GetWarehouseResponse) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromState.Health.IsNull() && !fromState.Health.IsUnknown() {
-		if toStateHealth, ok := toState.GetHealth(ctx); ok {
-			if fromStateHealth, ok := fromState.GetHealth(ctx); ok {
-				toStateHealth.SyncFieldsDuringRead(ctx, fromStateHealth)
-				toState.SetHealth(ctx, toStateHealth)
+	if !from.Health.IsNull() && !from.Health.IsUnknown() {
+		if toHealth, ok := to.GetHealth(ctx); ok {
+			if fromHealth, ok := from.GetHealth(ctx); ok {
+				toHealth.SyncFieldsDuringRead(ctx, fromHealth)
+				to.SetHealth(ctx, toHealth)
 			}
 		}
 	}
-	if !fromState.OdbcParams.IsNull() && !fromState.OdbcParams.IsUnknown() {
-		if toStateOdbcParams, ok := toState.GetOdbcParams(ctx); ok {
-			if fromStateOdbcParams, ok := fromState.GetOdbcParams(ctx); ok {
-				toStateOdbcParams.SyncFieldsDuringRead(ctx, fromStateOdbcParams)
-				toState.SetOdbcParams(ctx, toStateOdbcParams)
+	if !from.OdbcParams.IsNull() && !from.OdbcParams.IsUnknown() {
+		if toOdbcParams, ok := to.GetOdbcParams(ctx); ok {
+			if fromOdbcParams, ok := from.GetOdbcParams(ctx); ok {
+				toOdbcParams.SyncFieldsDuringRead(ctx, fromOdbcParams)
+				to.SetOdbcParams(ctx, toOdbcParams)
 			}
 		}
 	}
-	if !fromState.Tags.IsNull() && !fromState.Tags.IsUnknown() {
-		if toStateTags, ok := toState.GetTags(ctx); ok {
-			if fromStateTags, ok := fromState.GetTags(ctx); ok {
-				toStateTags.SyncFieldsDuringRead(ctx, fromStateTags)
-				toState.SetTags(ctx, toStateTags)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				toTags.SyncFieldsDuringRead(ctx, fromTags)
+				to.SetTags(ctx, toTags)
 			}
 		}
 	}
@@ -7127,6 +7912,17 @@ func (o *GetWarehouseResponse) SetTags(ctx context.Context, v EndpointTags) {
 type GetWorkspaceWarehouseConfigRequest struct {
 }
 
+func (to *GetWorkspaceWarehouseConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceWarehouseConfigRequest) {
+}
+
+func (to *GetWorkspaceWarehouseConfigRequest) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceWarehouseConfigRequest) {
+}
+
+func (c GetWorkspaceWarehouseConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceWarehouseConfigRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7182,71 +7978,99 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
 }
 
-func (toState *GetWorkspaceWarehouseConfigResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan GetWorkspaceWarehouseConfigResponse) {
-	if !fromPlan.Channel.IsNull() && !fromPlan.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromPlanChannel, ok := fromPlan.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *GetWorkspaceWarehouseConfigResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceWarehouseConfigResponse) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromPlan.ConfigParam.IsNull() && !fromPlan.ConfigParam.IsUnknown() {
-		if toStateConfigParam, ok := toState.GetConfigParam(ctx); ok {
-			if fromPlanConfigParam, ok := fromPlan.GetConfigParam(ctx); ok {
-				toStateConfigParam.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanConfigParam)
-				toState.SetConfigParam(ctx, toStateConfigParam)
+	if !from.ConfigParam.IsNull() && !from.ConfigParam.IsUnknown() {
+		if toConfigParam, ok := to.GetConfigParam(ctx); ok {
+			if fromConfigParam, ok := from.GetConfigParam(ctx); ok {
+				// Recursively sync the fields of ConfigParam
+				toConfigParam.SyncFieldsDuringCreateOrUpdate(ctx, fromConfigParam)
+				to.SetConfigParam(ctx, toConfigParam)
 			}
 		}
 	}
-	if !fromPlan.GlobalParam.IsNull() && !fromPlan.GlobalParam.IsUnknown() {
-		if toStateGlobalParam, ok := toState.GetGlobalParam(ctx); ok {
-			if fromPlanGlobalParam, ok := fromPlan.GetGlobalParam(ctx); ok {
-				toStateGlobalParam.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanGlobalParam)
-				toState.SetGlobalParam(ctx, toStateGlobalParam)
+	if !from.DataAccessConfig.IsNull() && !from.DataAccessConfig.IsUnknown() && to.DataAccessConfig.IsNull() && len(from.DataAccessConfig.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataAccessConfig, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataAccessConfig = from.DataAccessConfig
+	}
+	if !from.EnabledWarehouseTypes.IsNull() && !from.EnabledWarehouseTypes.IsUnknown() && to.EnabledWarehouseTypes.IsNull() && len(from.EnabledWarehouseTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnabledWarehouseTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnabledWarehouseTypes = from.EnabledWarehouseTypes
+	}
+	if !from.GlobalParam.IsNull() && !from.GlobalParam.IsUnknown() {
+		if toGlobalParam, ok := to.GetGlobalParam(ctx); ok {
+			if fromGlobalParam, ok := from.GetGlobalParam(ctx); ok {
+				// Recursively sync the fields of GlobalParam
+				toGlobalParam.SyncFieldsDuringCreateOrUpdate(ctx, fromGlobalParam)
+				to.SetGlobalParam(ctx, toGlobalParam)
 			}
 		}
 	}
-	if !fromPlan.SqlConfigurationParameters.IsNull() && !fromPlan.SqlConfigurationParameters.IsUnknown() {
-		if toStateSqlConfigurationParameters, ok := toState.GetSqlConfigurationParameters(ctx); ok {
-			if fromPlanSqlConfigurationParameters, ok := fromPlan.GetSqlConfigurationParameters(ctx); ok {
-				toStateSqlConfigurationParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSqlConfigurationParameters)
-				toState.SetSqlConfigurationParameters(ctx, toStateSqlConfigurationParameters)
+	if !from.SqlConfigurationParameters.IsNull() && !from.SqlConfigurationParameters.IsUnknown() {
+		if toSqlConfigurationParameters, ok := to.GetSqlConfigurationParameters(ctx); ok {
+			if fromSqlConfigurationParameters, ok := from.GetSqlConfigurationParameters(ctx); ok {
+				// Recursively sync the fields of SqlConfigurationParameters
+				toSqlConfigurationParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlConfigurationParameters)
+				to.SetSqlConfigurationParameters(ctx, toSqlConfigurationParameters)
 			}
 		}
 	}
 }
 
-func (toState *GetWorkspaceWarehouseConfigResponse) SyncFieldsDuringRead(ctx context.Context, fromState GetWorkspaceWarehouseConfigResponse) {
-	if !fromState.Channel.IsNull() && !fromState.Channel.IsUnknown() {
-		if toStateChannel, ok := toState.GetChannel(ctx); ok {
-			if fromStateChannel, ok := fromState.GetChannel(ctx); ok {
-				toStateChannel.SyncFieldsDuringRead(ctx, fromStateChannel)
-				toState.SetChannel(ctx, toStateChannel)
+func (to *GetWorkspaceWarehouseConfigResponse) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceWarehouseConfigResponse) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
 			}
 		}
 	}
-	if !fromState.ConfigParam.IsNull() && !fromState.ConfigParam.IsUnknown() {
-		if toStateConfigParam, ok := toState.GetConfigParam(ctx); ok {
-			if fromStateConfigParam, ok := fromState.GetConfigParam(ctx); ok {
-				toStateConfigParam.SyncFieldsDuringRead(ctx, fromStateConfigParam)
-				toState.SetConfigParam(ctx, toStateConfigParam)
+	if !from.ConfigParam.IsNull() && !from.ConfigParam.IsUnknown() {
+		if toConfigParam, ok := to.GetConfigParam(ctx); ok {
+			if fromConfigParam, ok := from.GetConfigParam(ctx); ok {
+				toConfigParam.SyncFieldsDuringRead(ctx, fromConfigParam)
+				to.SetConfigParam(ctx, toConfigParam)
 			}
 		}
 	}
-	if !fromState.GlobalParam.IsNull() && !fromState.GlobalParam.IsUnknown() {
-		if toStateGlobalParam, ok := toState.GetGlobalParam(ctx); ok {
-			if fromStateGlobalParam, ok := fromState.GetGlobalParam(ctx); ok {
-				toStateGlobalParam.SyncFieldsDuringRead(ctx, fromStateGlobalParam)
-				toState.SetGlobalParam(ctx, toStateGlobalParam)
+	if !from.DataAccessConfig.IsNull() && !from.DataAccessConfig.IsUnknown() && to.DataAccessConfig.IsNull() && len(from.DataAccessConfig.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataAccessConfig, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataAccessConfig = from.DataAccessConfig
+	}
+	if !from.EnabledWarehouseTypes.IsNull() && !from.EnabledWarehouseTypes.IsUnknown() && to.EnabledWarehouseTypes.IsNull() && len(from.EnabledWarehouseTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnabledWarehouseTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnabledWarehouseTypes = from.EnabledWarehouseTypes
+	}
+	if !from.GlobalParam.IsNull() && !from.GlobalParam.IsUnknown() {
+		if toGlobalParam, ok := to.GetGlobalParam(ctx); ok {
+			if fromGlobalParam, ok := from.GetGlobalParam(ctx); ok {
+				toGlobalParam.SyncFieldsDuringRead(ctx, fromGlobalParam)
+				to.SetGlobalParam(ctx, toGlobalParam)
 			}
 		}
 	}
-	if !fromState.SqlConfigurationParameters.IsNull() && !fromState.SqlConfigurationParameters.IsUnknown() {
-		if toStateSqlConfigurationParameters, ok := toState.GetSqlConfigurationParameters(ctx); ok {
-			if fromStateSqlConfigurationParameters, ok := fromState.GetSqlConfigurationParameters(ctx); ok {
-				toStateSqlConfigurationParameters.SyncFieldsDuringRead(ctx, fromStateSqlConfigurationParameters)
-				toState.SetSqlConfigurationParameters(ctx, toStateSqlConfigurationParameters)
+	if !from.SqlConfigurationParameters.IsNull() && !from.SqlConfigurationParameters.IsUnknown() {
+		if toSqlConfigurationParameters, ok := to.GetSqlConfigurationParameters(ctx); ok {
+			if fromSqlConfigurationParameters, ok := from.GetSqlConfigurationParameters(ctx); ok {
+				toSqlConfigurationParameters.SyncFieldsDuringRead(ctx, fromSqlConfigurationParameters)
+				to.SetSqlConfigurationParameters(ctx, toSqlConfigurationParameters)
 			}
 		}
 	}
@@ -7505,55 +8329,58 @@ type LegacyAlert struct {
 	User types.Object `tfsdk:"user"`
 }
 
-func (toState *LegacyAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyAlert) {
-	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *LegacyAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LegacyAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
-				toState.SetQuery(ctx, toStateQuery)
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				// Recursively sync the fields of Query
+				toQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
-	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				// Recursively sync the fields of User
+				toUser.SyncFieldsDuringCreateOrUpdate(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
 	}
 }
 
-func (toState *LegacyAlert) SyncFieldsDuringRead(ctx context.Context, fromState LegacyAlert) {
-	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *LegacyAlert) SyncFieldsDuringRead(ctx context.Context, from LegacyAlert) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
-				toState.SetQuery(ctx, toStateQuery)
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				toQuery.SyncFieldsDuringRead(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
-	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromStateUser, ok := fromState.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				toUser.SyncFieldsDuringRead(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
 	}
@@ -7776,57 +8603,84 @@ type LegacyQuery struct {
 	Visualizations types.List `tfsdk:"visualizations"`
 }
 
-func (toState *LegacyQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyQuery) {
-	if !fromPlan.LastModifiedBy.IsNull() && !fromPlan.LastModifiedBy.IsUnknown() {
-		if toStateLastModifiedBy, ok := toState.GetLastModifiedBy(ctx); ok {
-			if fromPlanLastModifiedBy, ok := fromPlan.GetLastModifiedBy(ctx); ok {
-				toStateLastModifiedBy.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanLastModifiedBy)
-				toState.SetLastModifiedBy(ctx, toStateLastModifiedBy)
+func (to *LegacyQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LegacyQuery) {
+	if !from.LastModifiedBy.IsNull() && !from.LastModifiedBy.IsUnknown() {
+		if toLastModifiedBy, ok := to.GetLastModifiedBy(ctx); ok {
+			if fromLastModifiedBy, ok := from.GetLastModifiedBy(ctx); ok {
+				// Recursively sync the fields of LastModifiedBy
+				toLastModifiedBy.SyncFieldsDuringCreateOrUpdate(ctx, fromLastModifiedBy)
+				to.SetLastModifiedBy(ctx, toLastModifiedBy)
 			}
 		}
 	}
-	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
-				toState.SetOptions(ctx, toStateOptions)
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromPlan.User.IsNull() && !fromPlan.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromPlanUser, ok := fromPlan.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				// Recursively sync the fields of User
+				toUser.SyncFieldsDuringCreateOrUpdate(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
+	}
+	if !from.Visualizations.IsNull() && !from.Visualizations.IsUnknown() && to.Visualizations.IsNull() && len(from.Visualizations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Visualizations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Visualizations = from.Visualizations
 	}
 }
 
-func (toState *LegacyQuery) SyncFieldsDuringRead(ctx context.Context, fromState LegacyQuery) {
-	if !fromState.LastModifiedBy.IsNull() && !fromState.LastModifiedBy.IsUnknown() {
-		if toStateLastModifiedBy, ok := toState.GetLastModifiedBy(ctx); ok {
-			if fromStateLastModifiedBy, ok := fromState.GetLastModifiedBy(ctx); ok {
-				toStateLastModifiedBy.SyncFieldsDuringRead(ctx, fromStateLastModifiedBy)
-				toState.SetLastModifiedBy(ctx, toStateLastModifiedBy)
+func (to *LegacyQuery) SyncFieldsDuringRead(ctx context.Context, from LegacyQuery) {
+	if !from.LastModifiedBy.IsNull() && !from.LastModifiedBy.IsUnknown() {
+		if toLastModifiedBy, ok := to.GetLastModifiedBy(ctx); ok {
+			if fromLastModifiedBy, ok := from.GetLastModifiedBy(ctx); ok {
+				toLastModifiedBy.SyncFieldsDuringRead(ctx, fromLastModifiedBy)
+				to.SetLastModifiedBy(ctx, toLastModifiedBy)
 			}
 		}
 	}
-	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
-				toState.SetOptions(ctx, toStateOptions)
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromState.User.IsNull() && !fromState.User.IsUnknown() {
-		if toStateUser, ok := toState.GetUser(ctx); ok {
-			if fromStateUser, ok := fromState.GetUser(ctx); ok {
-				toStateUser.SyncFieldsDuringRead(ctx, fromStateUser)
-				toState.SetUser(ctx, toStateUser)
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+	if !from.User.IsNull() && !from.User.IsUnknown() {
+		if toUser, ok := to.GetUser(ctx); ok {
+			if fromUser, ok := from.GetUser(ctx); ok {
+				toUser.SyncFieldsDuringRead(ctx, fromUser)
+				to.SetUser(ctx, toUser)
 			}
 		}
+	}
+	if !from.Visualizations.IsNull() && !from.Visualizations.IsUnknown() && to.Visualizations.IsNull() && len(from.Visualizations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Visualizations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Visualizations = from.Visualizations
 	}
 }
 
@@ -8100,23 +8954,24 @@ type LegacyVisualization struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
-func (toState *LegacyVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan LegacyVisualization) {
-	if !fromPlan.Query.IsNull() && !fromPlan.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromPlanQuery, ok := fromPlan.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuery)
-				toState.SetQuery(ctx, toStateQuery)
+func (to *LegacyVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LegacyVisualization) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				// Recursively sync the fields of Query
+				toQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
 }
 
-func (toState *LegacyVisualization) SyncFieldsDuringRead(ctx context.Context, fromState LegacyVisualization) {
-	if !fromState.Query.IsNull() && !fromState.Query.IsUnknown() {
-		if toStateQuery, ok := toState.GetQuery(ctx); ok {
-			if fromStateQuery, ok := fromState.GetQuery(ctx); ok {
-				toStateQuery.SyncFieldsDuringRead(ctx, fromStateQuery)
-				toState.SetQuery(ctx, toStateQuery)
+func (to *LegacyVisualization) SyncFieldsDuringRead(ctx context.Context, from LegacyVisualization) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				toQuery.SyncFieldsDuringRead(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
 			}
 		}
 	}
@@ -8213,6 +9068,19 @@ type ListAlertsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListAlertsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAlertsRequest) {
+}
+
+func (to *ListAlertsRequest) SyncFieldsDuringRead(ctx context.Context, from ListAlertsRequest) {
+}
+
+func (c ListAlertsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8252,10 +9120,22 @@ type ListAlertsResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *ListAlertsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsResponse) {
+func (to *ListAlertsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAlertsResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *ListAlertsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsResponse) {
+func (to *ListAlertsResponse) SyncFieldsDuringRead(ctx context.Context, from ListAlertsResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c ListAlertsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8372,23 +9252,24 @@ type ListAlertsResponseAlert struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (toState *ListAlertsResponseAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsResponseAlert) {
-	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *ListAlertsResponseAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAlertsResponseAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				// Recursively sync the fields of Condition
+				toCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
 }
 
-func (toState *ListAlertsResponseAlert) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsResponseAlert) {
-	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *ListAlertsResponseAlert) SyncFieldsDuringRead(ctx context.Context, from ListAlertsResponseAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				toCondition.SyncFieldsDuringRead(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
@@ -8503,6 +9384,19 @@ type ListAlertsV2Request struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListAlertsV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAlertsV2Request) {
+}
+
+func (to *ListAlertsV2Request) SyncFieldsDuringRead(ctx context.Context, from ListAlertsV2Request) {
+}
+
+func (c ListAlertsV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8537,18 +9431,45 @@ func (o ListAlertsV2Request) Type(ctx context.Context) attr.Type {
 }
 
 type ListAlertsV2Response struct {
-	NextPageToken types.String `tfsdk:"next_page_token"`
+	Alerts types.List `tfsdk:"alerts"`
 
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Deprecated. Use `alerts` instead.
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *ListAlertsV2Response) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListAlertsV2Response) {
+func (to *ListAlertsV2Response) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAlertsV2Response) {
+	if !from.Alerts.IsNull() && !from.Alerts.IsUnknown() && to.Alerts.IsNull() && len(from.Alerts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Alerts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Alerts = from.Alerts
+	}
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *ListAlertsV2Response) SyncFieldsDuringRead(ctx context.Context, fromState ListAlertsV2Response) {
+func (to *ListAlertsV2Response) SyncFieldsDuringRead(ctx context.Context, from ListAlertsV2Response) {
+	if !from.Alerts.IsNull() && !from.Alerts.IsUnknown() && to.Alerts.IsNull() && len(from.Alerts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Alerts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Alerts = from.Alerts
+	}
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c ListAlertsV2Response) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alerts"] = attrs["alerts"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["results"] = attrs["results"].SetOptional()
 
@@ -8564,6 +9485,7 @@ func (c ListAlertsV2Response) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (a ListAlertsV2Response) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"alerts":  reflect.TypeOf(AlertV2{}),
 		"results": reflect.TypeOf(AlertV2{}),
 	}
 }
@@ -8575,6 +9497,7 @@ func (o ListAlertsV2Response) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"alerts":          o.Alerts,
 			"next_page_token": o.NextPageToken,
 			"results":         o.Results,
 		})
@@ -8584,12 +9507,41 @@ func (o ListAlertsV2Response) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListAlertsV2Response) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"alerts": basetypes.ListType{
+				ElemType: AlertV2{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
 				ElemType: AlertV2{}.Type(ctx),
 			},
 		},
 	}
+}
+
+// GetAlerts returns the value of the Alerts field in ListAlertsV2Response as
+// a slice of AlertV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAlertsV2Response) GetAlerts(ctx context.Context) ([]AlertV2, bool) {
+	if o.Alerts.IsNull() || o.Alerts.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertV2
+	d := o.Alerts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlerts sets the value of the Alerts field in ListAlertsV2Response.
+func (o *ListAlertsV2Response) SetAlerts(ctx context.Context, v []AlertV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alerts"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Alerts = types.ListValueMust(t, vs)
 }
 
 // GetResults returns the value of the Results field in ListAlertsV2Response as
@@ -8627,6 +9579,21 @@ type ListDashboardsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Full text search term.
 	Q types.String `tfsdk:"-"`
+}
+
+func (to *ListDashboardsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDashboardsRequest) {
+}
+
+func (to *ListDashboardsRequest) SyncFieldsDuringRead(ctx context.Context, from ListDashboardsRequest) {
+}
+
+func (c ListDashboardsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page"] = attrs["page"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["q"] = attrs["q"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsRequest.
@@ -8690,6 +9657,21 @@ type ListQueriesLegacyRequest struct {
 	Q types.String `tfsdk:"-"`
 }
 
+func (to *ListQueriesLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueriesLegacyRequest) {
+}
+
+func (to *ListQueriesLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from ListQueriesLegacyRequest) {
+}
+
+func (c ListQueriesLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page"] = attrs["page"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["q"] = attrs["q"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueriesLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8731,6 +9713,19 @@ type ListQueriesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListQueriesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueriesRequest) {
+}
+
+func (to *ListQueriesRequest) SyncFieldsDuringRead(ctx context.Context, from ListQueriesRequest) {
+}
+
+func (c ListQueriesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueriesRequest.
@@ -8775,10 +9770,22 @@ type ListQueriesResponse struct {
 	Res types.List `tfsdk:"res"`
 }
 
-func (toState *ListQueriesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueriesResponse) {
+func (to *ListQueriesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueriesResponse) {
+	if !from.Res.IsNull() && !from.Res.IsUnknown() && to.Res.IsNull() && len(from.Res.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Res, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Res = from.Res
+	}
 }
 
-func (toState *ListQueriesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListQueriesResponse) {
+func (to *ListQueriesResponse) SyncFieldsDuringRead(ctx context.Context, from ListQueriesResponse) {
+	if !from.Res.IsNull() && !from.Res.IsUnknown() && to.Res.IsNull() && len(from.Res.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Res, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Res = from.Res
+	}
 }
 
 func (c ListQueriesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8873,6 +9880,38 @@ type ListQueryHistoryRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListQueryHistoryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueryHistoryRequest) {
+	if !from.FilterBy.IsNull() && !from.FilterBy.IsUnknown() {
+		if toFilterBy, ok := to.GetFilterBy(ctx); ok {
+			if fromFilterBy, ok := from.GetFilterBy(ctx); ok {
+				// Recursively sync the fields of FilterBy
+				toFilterBy.SyncFieldsDuringCreateOrUpdate(ctx, fromFilterBy)
+				to.SetFilterBy(ctx, toFilterBy)
+			}
+		}
+	}
+}
+
+func (to *ListQueryHistoryRequest) SyncFieldsDuringRead(ctx context.Context, from ListQueryHistoryRequest) {
+	if !from.FilterBy.IsNull() && !from.FilterBy.IsUnknown() {
+		if toFilterBy, ok := to.GetFilterBy(ctx); ok {
+			if fromFilterBy, ok := from.GetFilterBy(ctx); ok {
+				toFilterBy.SyncFieldsDuringRead(ctx, fromFilterBy)
+				to.SetFilterBy(ctx, toFilterBy)
+			}
+		}
+	}
+}
+
+func (c ListQueryHistoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_by"] = attrs["filter_by"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["include_metrics"] = attrs["include_metrics"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueryHistoryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8943,10 +9982,22 @@ type ListQueryObjectsResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *ListQueryObjectsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueryObjectsResponse) {
+func (to *ListQueryObjectsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueryObjectsResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *ListQueryObjectsResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListQueryObjectsResponse) {
+func (to *ListQueryObjectsResponse) SyncFieldsDuringRead(ctx context.Context, from ListQueryObjectsResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c ListQueryObjectsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9056,10 +10107,34 @@ type ListQueryObjectsResponseQuery struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *ListQueryObjectsResponseQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListQueryObjectsResponseQuery) {
+func (to *ListQueryObjectsResponseQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListQueryObjectsResponseQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
-func (toState *ListQueryObjectsResponseQuery) SyncFieldsDuringRead(ctx context.Context, fromState ListQueryObjectsResponseQuery) {
+func (to *ListQueryObjectsResponseQuery) SyncFieldsDuringRead(ctx context.Context, from ListQueryObjectsResponseQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
 func (c ListQueryObjectsResponseQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9206,6 +10281,17 @@ func (o *ListQueryObjectsResponseQuery) SetTags(ctx context.Context, v []types.S
 type ListRequest struct {
 }
 
+func (to *ListRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListRequest) {
+}
+
+func (to *ListRequest) SyncFieldsDuringRead(ctx context.Context, from ListRequest) {
+}
+
+func (c ListRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9244,10 +10330,22 @@ type ListResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *ListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListResponse) {
+func (to *ListResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *ListResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListResponse) {
+func (to *ListResponse) SyncFieldsDuringRead(ctx context.Context, from ListResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c ListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9334,6 +10432,20 @@ type ListVisualizationsForQueryRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (to *ListVisualizationsForQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListVisualizationsForQueryRequest) {
+}
+
+func (to *ListVisualizationsForQueryRequest) SyncFieldsDuringRead(ctx context.Context, from ListVisualizationsForQueryRequest) {
+}
+
+func (c ListVisualizationsForQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVisualizationsForQueryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9375,10 +10487,22 @@ type ListVisualizationsForQueryResponse struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *ListVisualizationsForQueryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListVisualizationsForQueryResponse) {
+func (to *ListVisualizationsForQueryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListVisualizationsForQueryResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *ListVisualizationsForQueryResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListVisualizationsForQueryResponse) {
+func (to *ListVisualizationsForQueryResponse) SyncFieldsDuringRead(ctx context.Context, from ListVisualizationsForQueryResponse) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c ListVisualizationsForQueryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9457,6 +10581,18 @@ type ListWarehousesRequest struct {
 	RunAsUserId types.Int64 `tfsdk:"-"`
 }
 
+func (to *ListWarehousesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWarehousesRequest) {
+}
+
+func (to *ListWarehousesRequest) SyncFieldsDuringRead(ctx context.Context, from ListWarehousesRequest) {
+}
+
+func (c ListWarehousesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_as_user_id"] = attrs["run_as_user_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWarehousesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9493,10 +10629,22 @@ type ListWarehousesResponse struct {
 	Warehouses types.List `tfsdk:"warehouses"`
 }
 
-func (toState *ListWarehousesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ListWarehousesResponse) {
+func (to *ListWarehousesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWarehousesResponse) {
+	if !from.Warehouses.IsNull() && !from.Warehouses.IsUnknown() && to.Warehouses.IsNull() && len(from.Warehouses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Warehouses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Warehouses = from.Warehouses
+	}
 }
 
-func (toState *ListWarehousesResponse) SyncFieldsDuringRead(ctx context.Context, fromState ListWarehousesResponse) {
+func (to *ListWarehousesResponse) SyncFieldsDuringRead(ctx context.Context, from ListWarehousesResponse) {
+	if !from.Warehouses.IsNull() && !from.Warehouses.IsUnknown() && to.Warehouses.IsNull() && len(from.Warehouses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Warehouses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Warehouses = from.Warehouses
+	}
 }
 
 func (c ListWarehousesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9576,10 +10724,10 @@ type MultiValuesOptions struct {
 	Suffix types.String `tfsdk:"suffix"`
 }
 
-func (toState *MultiValuesOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan MultiValuesOptions) {
+func (to *MultiValuesOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MultiValuesOptions) {
 }
 
-func (toState *MultiValuesOptions) SyncFieldsDuringRead(ctx context.Context, fromState MultiValuesOptions) {
+func (to *MultiValuesOptions) SyncFieldsDuringRead(ctx context.Context, from MultiValuesOptions) {
 }
 
 func (c MultiValuesOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9629,10 +10777,10 @@ type NumericValue struct {
 	Value types.Float64 `tfsdk:"value"`
 }
 
-func (toState *NumericValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan NumericValue) {
+func (to *NumericValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NumericValue) {
 }
 
-func (toState *NumericValue) SyncFieldsDuringRead(ctx context.Context, fromState NumericValue) {
+func (to *NumericValue) SyncFieldsDuringRead(ctx context.Context, from NumericValue) {
 }
 
 func (c NumericValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9682,10 +10830,10 @@ type OdbcParams struct {
 	Protocol types.String `tfsdk:"protocol"`
 }
 
-func (toState *OdbcParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan OdbcParams) {
+func (to *OdbcParams) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OdbcParams) {
 }
 
-func (toState *OdbcParams) SyncFieldsDuringRead(ctx context.Context, fromState OdbcParams) {
+func (to *OdbcParams) SyncFieldsDuringRead(ctx context.Context, from OdbcParams) {
 }
 
 func (c OdbcParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9737,16 +10885,16 @@ func (o OdbcParams) Type(ctx context.Context) attr.Type {
 type Parameter struct {
 	// List of valid parameter values, newline delimited. Only applies for
 	// dropdown list parameters.
-	EnumOptions types.String `tfsdk:"enumOptions"`
+	EnumOptions types.String `tfsdk:"enum_options"`
 	// If specified, allows multiple values to be selected for this parameter.
 	// Only applies to dropdown list and query-based dropdown list parameters.
-	MultiValuesOptions types.Object `tfsdk:"multiValuesOptions"`
+	MultiValuesOptions types.Object `tfsdk:"multi_values_options"`
 	// The literal parameter marker that appears between double curly braces in
 	// the query text.
 	Name types.String `tfsdk:"name"`
 	// The UUID of the query that provides the parameter values. Only applies
 	// for query-based dropdown list parameters.
-	QueryId types.String `tfsdk:"queryId"`
+	QueryId types.String `tfsdk:"query_id"`
 	// The text displayed in a parameter picking widget.
 	Title types.String `tfsdk:"title"`
 	// Parameters can have several different types.
@@ -9755,33 +10903,34 @@ type Parameter struct {
 	Value types.Object `tfsdk:"value"`
 }
 
-func (toState *Parameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Parameter) {
-	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *Parameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Parameter) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				// Recursively sync the fields of MultiValuesOptions
+				toMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
 	}
 }
 
-func (toState *Parameter) SyncFieldsDuringRead(ctx context.Context, fromState Parameter) {
-	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *Parameter) SyncFieldsDuringRead(ctx context.Context, from Parameter) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				toMultiValuesOptions.SyncFieldsDuringRead(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
 	}
 }
 
 func (c Parameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enumOptions"] = attrs["enumOptions"].SetOptional()
-	attrs["multiValuesOptions"] = attrs["multiValuesOptions"].SetOptional()
+	attrs["enum_options"] = attrs["enum_options"].SetOptional()
+	attrs["multi_values_options"] = attrs["multi_values_options"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["queryId"] = attrs["queryId"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
@@ -9798,7 +10947,7 @@ func (c Parameter) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (a Parameter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"multiValuesOptions": reflect.TypeOf(MultiValuesOptions{}),
+		"multi_values_options": reflect.TypeOf(MultiValuesOptions{}),
 	}
 }
 
@@ -9809,13 +10958,13 @@ func (o Parameter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"enumOptions":        o.EnumOptions,
-			"multiValuesOptions": o.MultiValuesOptions,
-			"name":               o.Name,
-			"queryId":            o.QueryId,
-			"title":              o.Title,
-			"type":               o.Type_,
-			"value":              o.Value,
+			"enum_options":         o.EnumOptions,
+			"multi_values_options": o.MultiValuesOptions,
+			"name":                 o.Name,
+			"query_id":             o.QueryId,
+			"title":                o.Title,
+			"type":                 o.Type_,
+			"value":                o.Value,
 		})
 }
 
@@ -9823,13 +10972,13 @@ func (o Parameter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Parameter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"enumOptions":        types.StringType,
-			"multiValuesOptions": MultiValuesOptions{}.Type(ctx),
-			"name":               types.StringType,
-			"queryId":            types.StringType,
-			"title":              types.StringType,
-			"type":               types.StringType,
-			"value":              types.ObjectType{},
+			"enum_options":         types.StringType,
+			"multi_values_options": MultiValuesOptions{}.Type(ctx),
+			"name":                 types.StringType,
+			"query_id":             types.StringType,
+			"title":                types.StringType,
+			"type":                 types.StringType,
+			"value":                types.ObjectType{},
 		},
 	}
 }
@@ -9898,10 +11047,34 @@ type Query struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *Query) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Query) {
+func (to *Query) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Query) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
-func (toState *Query) SyncFieldsDuringRead(ctx context.Context, fromState Query) {
+func (to *Query) SyncFieldsDuringRead(ctx context.Context, from Query) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
 func (c Query) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10057,25 +11230,38 @@ type QueryBackedValue struct {
 	Values types.List `tfsdk:"values"`
 }
 
-func (toState *QueryBackedValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryBackedValue) {
-	if !fromPlan.MultiValuesOptions.IsNull() && !fromPlan.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromPlanMultiValuesOptions, ok := fromPlan.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *QueryBackedValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryBackedValue) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				// Recursively sync the fields of MultiValuesOptions
+				toMultiValuesOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
 	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
 }
 
-func (toState *QueryBackedValue) SyncFieldsDuringRead(ctx context.Context, fromState QueryBackedValue) {
-	if !fromState.MultiValuesOptions.IsNull() && !fromState.MultiValuesOptions.IsUnknown() {
-		if toStateMultiValuesOptions, ok := toState.GetMultiValuesOptions(ctx); ok {
-			if fromStateMultiValuesOptions, ok := fromState.GetMultiValuesOptions(ctx); ok {
-				toStateMultiValuesOptions.SyncFieldsDuringRead(ctx, fromStateMultiValuesOptions)
-				toState.SetMultiValuesOptions(ctx, toStateMultiValuesOptions)
+func (to *QueryBackedValue) SyncFieldsDuringRead(ctx context.Context, from QueryBackedValue) {
+	if !from.MultiValuesOptions.IsNull() && !from.MultiValuesOptions.IsUnknown() {
+		if toMultiValuesOptions, ok := to.GetMultiValuesOptions(ctx); ok {
+			if fromMultiValuesOptions, ok := from.GetMultiValuesOptions(ctx); ok {
+				toMultiValuesOptions.SyncFieldsDuringRead(ctx, fromMultiValuesOptions)
+				to.SetMultiValuesOptions(ctx, toMultiValuesOptions)
 			}
 		}
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
 	}
 }
 
@@ -10206,6 +11392,37 @@ type QueryEditContent struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
+func (to *QueryEditContent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryEditContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (to *QueryEditContent) SyncFieldsDuringRead(ctx context.Context, from QueryEditContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (c QueryEditContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEditContent.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10298,25 +11515,74 @@ type QueryFilter struct {
 	WarehouseIds types.List `tfsdk:"warehouse_ids"`
 }
 
-func (toState *QueryFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryFilter) {
-	if !fromPlan.QueryStartTimeRange.IsNull() && !fromPlan.QueryStartTimeRange.IsUnknown() {
-		if toStateQueryStartTimeRange, ok := toState.GetQueryStartTimeRange(ctx); ok {
-			if fromPlanQueryStartTimeRange, ok := fromPlan.GetQueryStartTimeRange(ctx); ok {
-				toStateQueryStartTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryStartTimeRange)
-				toState.SetQueryStartTimeRange(ctx, toStateQueryStartTimeRange)
+func (to *QueryFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryFilter) {
+	if !from.QueryStartTimeRange.IsNull() && !from.QueryStartTimeRange.IsUnknown() {
+		if toQueryStartTimeRange, ok := to.GetQueryStartTimeRange(ctx); ok {
+			if fromQueryStartTimeRange, ok := from.GetQueryStartTimeRange(ctx); ok {
+				// Recursively sync the fields of QueryStartTimeRange
+				toQueryStartTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromQueryStartTimeRange)
+				to.SetQueryStartTimeRange(ctx, toQueryStartTimeRange)
 			}
 		}
 	}
+	if !from.StatementIds.IsNull() && !from.StatementIds.IsUnknown() && to.StatementIds.IsNull() && len(from.StatementIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for StatementIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.StatementIds = from.StatementIds
+	}
+	if !from.Statuses.IsNull() && !from.Statuses.IsUnknown() && to.Statuses.IsNull() && len(from.Statuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Statuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Statuses = from.Statuses
+	}
+	if !from.UserIds.IsNull() && !from.UserIds.IsUnknown() && to.UserIds.IsNull() && len(from.UserIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserIds = from.UserIds
+	}
+	if !from.WarehouseIds.IsNull() && !from.WarehouseIds.IsUnknown() && to.WarehouseIds.IsNull() && len(from.WarehouseIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WarehouseIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WarehouseIds = from.WarehouseIds
+	}
 }
 
-func (toState *QueryFilter) SyncFieldsDuringRead(ctx context.Context, fromState QueryFilter) {
-	if !fromState.QueryStartTimeRange.IsNull() && !fromState.QueryStartTimeRange.IsUnknown() {
-		if toStateQueryStartTimeRange, ok := toState.GetQueryStartTimeRange(ctx); ok {
-			if fromStateQueryStartTimeRange, ok := fromState.GetQueryStartTimeRange(ctx); ok {
-				toStateQueryStartTimeRange.SyncFieldsDuringRead(ctx, fromStateQueryStartTimeRange)
-				toState.SetQueryStartTimeRange(ctx, toStateQueryStartTimeRange)
+func (to *QueryFilter) SyncFieldsDuringRead(ctx context.Context, from QueryFilter) {
+	if !from.QueryStartTimeRange.IsNull() && !from.QueryStartTimeRange.IsUnknown() {
+		if toQueryStartTimeRange, ok := to.GetQueryStartTimeRange(ctx); ok {
+			if fromQueryStartTimeRange, ok := from.GetQueryStartTimeRange(ctx); ok {
+				toQueryStartTimeRange.SyncFieldsDuringRead(ctx, fromQueryStartTimeRange)
+				to.SetQueryStartTimeRange(ctx, toQueryStartTimeRange)
 			}
 		}
+	}
+	if !from.StatementIds.IsNull() && !from.StatementIds.IsUnknown() && to.StatementIds.IsNull() && len(from.StatementIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for StatementIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.StatementIds = from.StatementIds
+	}
+	if !from.Statuses.IsNull() && !from.Statuses.IsUnknown() && to.Statuses.IsNull() && len(from.Statuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Statuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Statuses = from.Statuses
+	}
+	if !from.UserIds.IsNull() && !from.UserIds.IsUnknown() && to.UserIds.IsNull() && len(from.UserIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserIds = from.UserIds
+	}
+	if !from.WarehouseIds.IsNull() && !from.WarehouseIds.IsUnknown() && to.WarehouseIds.IsNull() && len(from.WarehouseIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WarehouseIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WarehouseIds = from.WarehouseIds
 	}
 }
 
@@ -10577,55 +11843,58 @@ type QueryInfo struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *QueryInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryInfo) {
-	if !fromPlan.ChannelUsed.IsNull() && !fromPlan.ChannelUsed.IsUnknown() {
-		if toStateChannelUsed, ok := toState.GetChannelUsed(ctx); ok {
-			if fromPlanChannelUsed, ok := fromPlan.GetChannelUsed(ctx); ok {
-				toStateChannelUsed.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanChannelUsed)
-				toState.SetChannelUsed(ctx, toStateChannelUsed)
+func (to *QueryInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryInfo) {
+	if !from.ChannelUsed.IsNull() && !from.ChannelUsed.IsUnknown() {
+		if toChannelUsed, ok := to.GetChannelUsed(ctx); ok {
+			if fromChannelUsed, ok := from.GetChannelUsed(ctx); ok {
+				// Recursively sync the fields of ChannelUsed
+				toChannelUsed.SyncFieldsDuringCreateOrUpdate(ctx, fromChannelUsed)
+				to.SetChannelUsed(ctx, toChannelUsed)
 			}
 		}
 	}
-	if !fromPlan.Metrics.IsNull() && !fromPlan.Metrics.IsUnknown() {
-		if toStateMetrics, ok := toState.GetMetrics(ctx); ok {
-			if fromPlanMetrics, ok := fromPlan.GetMetrics(ctx); ok {
-				toStateMetrics.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanMetrics)
-				toState.SetMetrics(ctx, toStateMetrics)
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of Metrics
+				toMetrics.SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics)
+				to.SetMetrics(ctx, toMetrics)
 			}
 		}
 	}
-	if !fromPlan.QuerySource.IsNull() && !fromPlan.QuerySource.IsUnknown() {
-		if toStateQuerySource, ok := toState.GetQuerySource(ctx); ok {
-			if fromPlanQuerySource, ok := fromPlan.GetQuerySource(ctx); ok {
-				toStateQuerySource.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQuerySource)
-				toState.SetQuerySource(ctx, toStateQuerySource)
+	if !from.QuerySource.IsNull() && !from.QuerySource.IsUnknown() {
+		if toQuerySource, ok := to.GetQuerySource(ctx); ok {
+			if fromQuerySource, ok := from.GetQuerySource(ctx); ok {
+				// Recursively sync the fields of QuerySource
+				toQuerySource.SyncFieldsDuringCreateOrUpdate(ctx, fromQuerySource)
+				to.SetQuerySource(ctx, toQuerySource)
 			}
 		}
 	}
 }
 
-func (toState *QueryInfo) SyncFieldsDuringRead(ctx context.Context, fromState QueryInfo) {
-	if !fromState.ChannelUsed.IsNull() && !fromState.ChannelUsed.IsUnknown() {
-		if toStateChannelUsed, ok := toState.GetChannelUsed(ctx); ok {
-			if fromStateChannelUsed, ok := fromState.GetChannelUsed(ctx); ok {
-				toStateChannelUsed.SyncFieldsDuringRead(ctx, fromStateChannelUsed)
-				toState.SetChannelUsed(ctx, toStateChannelUsed)
+func (to *QueryInfo) SyncFieldsDuringRead(ctx context.Context, from QueryInfo) {
+	if !from.ChannelUsed.IsNull() && !from.ChannelUsed.IsUnknown() {
+		if toChannelUsed, ok := to.GetChannelUsed(ctx); ok {
+			if fromChannelUsed, ok := from.GetChannelUsed(ctx); ok {
+				toChannelUsed.SyncFieldsDuringRead(ctx, fromChannelUsed)
+				to.SetChannelUsed(ctx, toChannelUsed)
 			}
 		}
 	}
-	if !fromState.Metrics.IsNull() && !fromState.Metrics.IsUnknown() {
-		if toStateMetrics, ok := toState.GetMetrics(ctx); ok {
-			if fromStateMetrics, ok := fromState.GetMetrics(ctx); ok {
-				toStateMetrics.SyncFieldsDuringRead(ctx, fromStateMetrics)
-				toState.SetMetrics(ctx, toStateMetrics)
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				toMetrics.SyncFieldsDuringRead(ctx, fromMetrics)
+				to.SetMetrics(ctx, toMetrics)
 			}
 		}
 	}
-	if !fromState.QuerySource.IsNull() && !fromState.QuerySource.IsUnknown() {
-		if toStateQuerySource, ok := toState.GetQuerySource(ctx); ok {
-			if fromStateQuerySource, ok := fromState.GetQuerySource(ctx); ok {
-				toStateQuerySource.SyncFieldsDuringRead(ctx, fromStateQuerySource)
-				toState.SetQuerySource(ctx, toStateQuerySource)
+	if !from.QuerySource.IsNull() && !from.QuerySource.IsUnknown() {
+		if toQuerySource, ok := to.GetQuerySource(ctx); ok {
+			if fromQuerySource, ok := from.GetQuerySource(ctx); ok {
+				toQuerySource.SyncFieldsDuringRead(ctx, fromQuerySource)
+				to.SetQuerySource(ctx, toQuerySource)
 			}
 		}
 	}
@@ -10830,10 +12099,22 @@ type QueryList struct {
 	Results types.List `tfsdk:"results"`
 }
 
-func (toState *QueryList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryList) {
+func (to *QueryList) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryList) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
-func (toState *QueryList) SyncFieldsDuringRead(ctx context.Context, fromState QueryList) {
+func (to *QueryList) SyncFieldsDuringRead(ctx context.Context, from QueryList) {
+	if !from.Results.IsNull() && !from.Results.IsUnknown() && to.Results.IsNull() && len(from.Results.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Results, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Results = from.Results
+	}
 }
 
 func (c QueryList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10993,23 +12274,24 @@ type QueryMetrics struct {
 	WriteRemoteBytes types.Int64 `tfsdk:"write_remote_bytes"`
 }
 
-func (toState *QueryMetrics) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryMetrics) {
-	if !fromPlan.TaskTimeOverTimeRange.IsNull() && !fromPlan.TaskTimeOverTimeRange.IsUnknown() {
-		if toStateTaskTimeOverTimeRange, ok := toState.GetTaskTimeOverTimeRange(ctx); ok {
-			if fromPlanTaskTimeOverTimeRange, ok := fromPlan.GetTaskTimeOverTimeRange(ctx); ok {
-				toStateTaskTimeOverTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTaskTimeOverTimeRange)
-				toState.SetTaskTimeOverTimeRange(ctx, toStateTaskTimeOverTimeRange)
+func (to *QueryMetrics) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryMetrics) {
+	if !from.TaskTimeOverTimeRange.IsNull() && !from.TaskTimeOverTimeRange.IsUnknown() {
+		if toTaskTimeOverTimeRange, ok := to.GetTaskTimeOverTimeRange(ctx); ok {
+			if fromTaskTimeOverTimeRange, ok := from.GetTaskTimeOverTimeRange(ctx); ok {
+				// Recursively sync the fields of TaskTimeOverTimeRange
+				toTaskTimeOverTimeRange.SyncFieldsDuringCreateOrUpdate(ctx, fromTaskTimeOverTimeRange)
+				to.SetTaskTimeOverTimeRange(ctx, toTaskTimeOverTimeRange)
 			}
 		}
 	}
 }
 
-func (toState *QueryMetrics) SyncFieldsDuringRead(ctx context.Context, fromState QueryMetrics) {
-	if !fromState.TaskTimeOverTimeRange.IsNull() && !fromState.TaskTimeOverTimeRange.IsUnknown() {
-		if toStateTaskTimeOverTimeRange, ok := toState.GetTaskTimeOverTimeRange(ctx); ok {
-			if fromStateTaskTimeOverTimeRange, ok := fromState.GetTaskTimeOverTimeRange(ctx); ok {
-				toStateTaskTimeOverTimeRange.SyncFieldsDuringRead(ctx, fromStateTaskTimeOverTimeRange)
-				toState.SetTaskTimeOverTimeRange(ctx, toStateTaskTimeOverTimeRange)
+func (to *QueryMetrics) SyncFieldsDuringRead(ctx context.Context, from QueryMetrics) {
+	if !from.TaskTimeOverTimeRange.IsNull() && !from.TaskTimeOverTimeRange.IsUnknown() {
+		if toTaskTimeOverTimeRange, ok := to.GetTaskTimeOverTimeRange(ctx); ok {
+			if fromTaskTimeOverTimeRange, ok := from.GetTaskTimeOverTimeRange(ctx); ok {
+				toTaskTimeOverTimeRange.SyncFieldsDuringRead(ctx, fromTaskTimeOverTimeRange)
+				to.SetTaskTimeOverTimeRange(ctx, toTaskTimeOverTimeRange)
 			}
 		}
 	}
@@ -11173,10 +12455,22 @@ type QueryOptions struct {
 	Schema types.String `tfsdk:"schema"`
 }
 
-func (toState *QueryOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryOptions) {
+func (to *QueryOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryOptions) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
-func (toState *QueryOptions) SyncFieldsDuringRead(ctx context.Context, fromState QueryOptions) {
+func (to *QueryOptions) SyncFieldsDuringRead(ctx context.Context, from QueryOptions) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (c QueryOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11277,103 +12571,109 @@ type QueryParameter struct {
 	Title types.String `tfsdk:"title"`
 }
 
-func (toState *QueryParameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan QueryParameter) {
-	if !fromPlan.DateRangeValue.IsNull() && !fromPlan.DateRangeValue.IsUnknown() {
-		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
-			if fromPlanDateRangeValue, ok := fromPlan.GetDateRangeValue(ctx); ok {
-				toStateDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateRangeValue)
-				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+func (to *QueryParameter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryParameter) {
+	if !from.DateRangeValue.IsNull() && !from.DateRangeValue.IsUnknown() {
+		if toDateRangeValue, ok := to.GetDateRangeValue(ctx); ok {
+			if fromDateRangeValue, ok := from.GetDateRangeValue(ctx); ok {
+				// Recursively sync the fields of DateRangeValue
+				toDateRangeValue.SyncFieldsDuringCreateOrUpdate(ctx, fromDateRangeValue)
+				to.SetDateRangeValue(ctx, toDateRangeValue)
 			}
 		}
 	}
-	if !fromPlan.DateValue.IsNull() && !fromPlan.DateValue.IsUnknown() {
-		if toStateDateValue, ok := toState.GetDateValue(ctx); ok {
-			if fromPlanDateValue, ok := fromPlan.GetDateValue(ctx); ok {
-				toStateDateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanDateValue)
-				toState.SetDateValue(ctx, toStateDateValue)
+	if !from.DateValue.IsNull() && !from.DateValue.IsUnknown() {
+		if toDateValue, ok := to.GetDateValue(ctx); ok {
+			if fromDateValue, ok := from.GetDateValue(ctx); ok {
+				// Recursively sync the fields of DateValue
+				toDateValue.SyncFieldsDuringCreateOrUpdate(ctx, fromDateValue)
+				to.SetDateValue(ctx, toDateValue)
 			}
 		}
 	}
-	if !fromPlan.EnumValue.IsNull() && !fromPlan.EnumValue.IsUnknown() {
-		if toStateEnumValue, ok := toState.GetEnumValue(ctx); ok {
-			if fromPlanEnumValue, ok := fromPlan.GetEnumValue(ctx); ok {
-				toStateEnumValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanEnumValue)
-				toState.SetEnumValue(ctx, toStateEnumValue)
+	if !from.EnumValue.IsNull() && !from.EnumValue.IsUnknown() {
+		if toEnumValue, ok := to.GetEnumValue(ctx); ok {
+			if fromEnumValue, ok := from.GetEnumValue(ctx); ok {
+				// Recursively sync the fields of EnumValue
+				toEnumValue.SyncFieldsDuringCreateOrUpdate(ctx, fromEnumValue)
+				to.SetEnumValue(ctx, toEnumValue)
 			}
 		}
 	}
-	if !fromPlan.NumericValue.IsNull() && !fromPlan.NumericValue.IsUnknown() {
-		if toStateNumericValue, ok := toState.GetNumericValue(ctx); ok {
-			if fromPlanNumericValue, ok := fromPlan.GetNumericValue(ctx); ok {
-				toStateNumericValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanNumericValue)
-				toState.SetNumericValue(ctx, toStateNumericValue)
+	if !from.NumericValue.IsNull() && !from.NumericValue.IsUnknown() {
+		if toNumericValue, ok := to.GetNumericValue(ctx); ok {
+			if fromNumericValue, ok := from.GetNumericValue(ctx); ok {
+				// Recursively sync the fields of NumericValue
+				toNumericValue.SyncFieldsDuringCreateOrUpdate(ctx, fromNumericValue)
+				to.SetNumericValue(ctx, toNumericValue)
 			}
 		}
 	}
-	if !fromPlan.QueryBackedValue.IsNull() && !fromPlan.QueryBackedValue.IsUnknown() {
-		if toStateQueryBackedValue, ok := toState.GetQueryBackedValue(ctx); ok {
-			if fromPlanQueryBackedValue, ok := fromPlan.GetQueryBackedValue(ctx); ok {
-				toStateQueryBackedValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanQueryBackedValue)
-				toState.SetQueryBackedValue(ctx, toStateQueryBackedValue)
+	if !from.QueryBackedValue.IsNull() && !from.QueryBackedValue.IsUnknown() {
+		if toQueryBackedValue, ok := to.GetQueryBackedValue(ctx); ok {
+			if fromQueryBackedValue, ok := from.GetQueryBackedValue(ctx); ok {
+				// Recursively sync the fields of QueryBackedValue
+				toQueryBackedValue.SyncFieldsDuringCreateOrUpdate(ctx, fromQueryBackedValue)
+				to.SetQueryBackedValue(ctx, toQueryBackedValue)
 			}
 		}
 	}
-	if !fromPlan.TextValue.IsNull() && !fromPlan.TextValue.IsUnknown() {
-		if toStateTextValue, ok := toState.GetTextValue(ctx); ok {
-			if fromPlanTextValue, ok := fromPlan.GetTextValue(ctx); ok {
-				toStateTextValue.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanTextValue)
-				toState.SetTextValue(ctx, toStateTextValue)
+	if !from.TextValue.IsNull() && !from.TextValue.IsUnknown() {
+		if toTextValue, ok := to.GetTextValue(ctx); ok {
+			if fromTextValue, ok := from.GetTextValue(ctx); ok {
+				// Recursively sync the fields of TextValue
+				toTextValue.SyncFieldsDuringCreateOrUpdate(ctx, fromTextValue)
+				to.SetTextValue(ctx, toTextValue)
 			}
 		}
 	}
 }
 
-func (toState *QueryParameter) SyncFieldsDuringRead(ctx context.Context, fromState QueryParameter) {
-	if !fromState.DateRangeValue.IsNull() && !fromState.DateRangeValue.IsUnknown() {
-		if toStateDateRangeValue, ok := toState.GetDateRangeValue(ctx); ok {
-			if fromStateDateRangeValue, ok := fromState.GetDateRangeValue(ctx); ok {
-				toStateDateRangeValue.SyncFieldsDuringRead(ctx, fromStateDateRangeValue)
-				toState.SetDateRangeValue(ctx, toStateDateRangeValue)
+func (to *QueryParameter) SyncFieldsDuringRead(ctx context.Context, from QueryParameter) {
+	if !from.DateRangeValue.IsNull() && !from.DateRangeValue.IsUnknown() {
+		if toDateRangeValue, ok := to.GetDateRangeValue(ctx); ok {
+			if fromDateRangeValue, ok := from.GetDateRangeValue(ctx); ok {
+				toDateRangeValue.SyncFieldsDuringRead(ctx, fromDateRangeValue)
+				to.SetDateRangeValue(ctx, toDateRangeValue)
 			}
 		}
 	}
-	if !fromState.DateValue.IsNull() && !fromState.DateValue.IsUnknown() {
-		if toStateDateValue, ok := toState.GetDateValue(ctx); ok {
-			if fromStateDateValue, ok := fromState.GetDateValue(ctx); ok {
-				toStateDateValue.SyncFieldsDuringRead(ctx, fromStateDateValue)
-				toState.SetDateValue(ctx, toStateDateValue)
+	if !from.DateValue.IsNull() && !from.DateValue.IsUnknown() {
+		if toDateValue, ok := to.GetDateValue(ctx); ok {
+			if fromDateValue, ok := from.GetDateValue(ctx); ok {
+				toDateValue.SyncFieldsDuringRead(ctx, fromDateValue)
+				to.SetDateValue(ctx, toDateValue)
 			}
 		}
 	}
-	if !fromState.EnumValue.IsNull() && !fromState.EnumValue.IsUnknown() {
-		if toStateEnumValue, ok := toState.GetEnumValue(ctx); ok {
-			if fromStateEnumValue, ok := fromState.GetEnumValue(ctx); ok {
-				toStateEnumValue.SyncFieldsDuringRead(ctx, fromStateEnumValue)
-				toState.SetEnumValue(ctx, toStateEnumValue)
+	if !from.EnumValue.IsNull() && !from.EnumValue.IsUnknown() {
+		if toEnumValue, ok := to.GetEnumValue(ctx); ok {
+			if fromEnumValue, ok := from.GetEnumValue(ctx); ok {
+				toEnumValue.SyncFieldsDuringRead(ctx, fromEnumValue)
+				to.SetEnumValue(ctx, toEnumValue)
 			}
 		}
 	}
-	if !fromState.NumericValue.IsNull() && !fromState.NumericValue.IsUnknown() {
-		if toStateNumericValue, ok := toState.GetNumericValue(ctx); ok {
-			if fromStateNumericValue, ok := fromState.GetNumericValue(ctx); ok {
-				toStateNumericValue.SyncFieldsDuringRead(ctx, fromStateNumericValue)
-				toState.SetNumericValue(ctx, toStateNumericValue)
+	if !from.NumericValue.IsNull() && !from.NumericValue.IsUnknown() {
+		if toNumericValue, ok := to.GetNumericValue(ctx); ok {
+			if fromNumericValue, ok := from.GetNumericValue(ctx); ok {
+				toNumericValue.SyncFieldsDuringRead(ctx, fromNumericValue)
+				to.SetNumericValue(ctx, toNumericValue)
 			}
 		}
 	}
-	if !fromState.QueryBackedValue.IsNull() && !fromState.QueryBackedValue.IsUnknown() {
-		if toStateQueryBackedValue, ok := toState.GetQueryBackedValue(ctx); ok {
-			if fromStateQueryBackedValue, ok := fromState.GetQueryBackedValue(ctx); ok {
-				toStateQueryBackedValue.SyncFieldsDuringRead(ctx, fromStateQueryBackedValue)
-				toState.SetQueryBackedValue(ctx, toStateQueryBackedValue)
+	if !from.QueryBackedValue.IsNull() && !from.QueryBackedValue.IsUnknown() {
+		if toQueryBackedValue, ok := to.GetQueryBackedValue(ctx); ok {
+			if fromQueryBackedValue, ok := from.GetQueryBackedValue(ctx); ok {
+				toQueryBackedValue.SyncFieldsDuringRead(ctx, fromQueryBackedValue)
+				to.SetQueryBackedValue(ctx, toQueryBackedValue)
 			}
 		}
 	}
-	if !fromState.TextValue.IsNull() && !fromState.TextValue.IsUnknown() {
-		if toStateTextValue, ok := toState.GetTextValue(ctx); ok {
-			if fromStateTextValue, ok := fromState.GetTextValue(ctx); ok {
-				toStateTextValue.SyncFieldsDuringRead(ctx, fromStateTextValue)
-				toState.SetTextValue(ctx, toStateTextValue)
+	if !from.TextValue.IsNull() && !from.TextValue.IsUnknown() {
+		if toTextValue, ok := to.GetTextValue(ctx); ok {
+			if fromTextValue, ok := from.GetTextValue(ctx); ok {
+				toTextValue.SyncFieldsDuringRead(ctx, fromTextValue)
+				to.SetTextValue(ctx, toTextValue)
 			}
 		}
 	}
@@ -11622,6 +12922,37 @@ type QueryPostContent struct {
 	Tags types.List `tfsdk:"tags"`
 }
 
+func (to *QueryPostContent) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryPostContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (to *QueryPostContent) SyncFieldsDuringRead(ctx context.Context, from QueryPostContent) {
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
+}
+
+func (c QueryPostContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryPostContent.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11704,10 +13035,34 @@ type RepeatedEndpointConfPairs struct {
 	ConfigurationPairs types.List `tfsdk:"configuration_pairs"`
 }
 
-func (toState *RepeatedEndpointConfPairs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RepeatedEndpointConfPairs) {
+func (to *RepeatedEndpointConfPairs) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RepeatedEndpointConfPairs) {
+	if !from.ConfigPair.IsNull() && !from.ConfigPair.IsUnknown() && to.ConfigPair.IsNull() && len(from.ConfigPair.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ConfigPair, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ConfigPair = from.ConfigPair
+	}
+	if !from.ConfigurationPairs.IsNull() && !from.ConfigurationPairs.IsUnknown() && to.ConfigurationPairs.IsNull() && len(from.ConfigurationPairs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ConfigurationPairs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ConfigurationPairs = from.ConfigurationPairs
+	}
 }
 
-func (toState *RepeatedEndpointConfPairs) SyncFieldsDuringRead(ctx context.Context, fromState RepeatedEndpointConfPairs) {
+func (to *RepeatedEndpointConfPairs) SyncFieldsDuringRead(ctx context.Context, from RepeatedEndpointConfPairs) {
+	if !from.ConfigPair.IsNull() && !from.ConfigPair.IsUnknown() && to.ConfigPair.IsNull() && len(from.ConfigPair.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ConfigPair, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ConfigPair = from.ConfigPair
+	}
+	if !from.ConfigurationPairs.IsNull() && !from.ConfigurationPairs.IsUnknown() && to.ConfigurationPairs.IsNull() && len(from.ConfigurationPairs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ConfigurationPairs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ConfigurationPairs = from.ConfigurationPairs
+	}
 }
 
 func (c RepeatedEndpointConfPairs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11813,6 +13168,18 @@ type RestoreDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
+func (to *RestoreDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RestoreDashboardRequest) {
+}
+
+func (to *RestoreDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from RestoreDashboardRequest) {
+}
+
+func (c RestoreDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11846,6 +13213,18 @@ func (o RestoreDashboardRequest) Type(ctx context.Context) attr.Type {
 
 type RestoreQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
+}
+
+func (to *RestoreQueriesLegacyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RestoreQueriesLegacyRequest) {
+}
+
+func (to *RestoreQueriesLegacyRequest) SyncFieldsDuringRead(ctx context.Context, from RestoreQueriesLegacyRequest) {
+}
+
+func (c RestoreQueriesLegacyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreQueriesLegacyRequest.
@@ -11882,10 +13261,10 @@ func (o RestoreQueriesLegacyRequest) Type(ctx context.Context) attr.Type {
 type RestoreResponse struct {
 }
 
-func (toState *RestoreResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan RestoreResponse) {
+func (to *RestoreResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RestoreResponse) {
 }
 
-func (toState *RestoreResponse) SyncFieldsDuringRead(ctx context.Context, fromState RestoreResponse) {
+func (to *RestoreResponse) SyncFieldsDuringRead(ctx context.Context, from RestoreResponse) {
 }
 
 func (c RestoreResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11947,10 +13326,34 @@ type ResultData struct {
 	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
-func (toState *ResultData) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultData) {
+func (to *ResultData) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResultData) {
+	if !from.DataArray.IsNull() && !from.DataArray.IsUnknown() && to.DataArray.IsNull() && len(from.DataArray.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataArray, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataArray = from.DataArray
+	}
+	if !from.ExternalLinks.IsNull() && !from.ExternalLinks.IsUnknown() && to.ExternalLinks.IsNull() && len(from.ExternalLinks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExternalLinks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExternalLinks = from.ExternalLinks
+	}
 }
 
-func (toState *ResultData) SyncFieldsDuringRead(ctx context.Context, fromState ResultData) {
+func (to *ResultData) SyncFieldsDuringRead(ctx context.Context, from ResultData) {
+	if !from.DataArray.IsNull() && !from.DataArray.IsUnknown() && to.DataArray.IsNull() && len(from.DataArray.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataArray, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataArray = from.DataArray
+	}
+	if !from.ExternalLinks.IsNull() && !from.ExternalLinks.IsUnknown() && to.ExternalLinks.IsNull() && len(from.ExternalLinks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExternalLinks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExternalLinks = from.ExternalLinks
+	}
 }
 
 func (c ResultData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12092,23 +13495,36 @@ type ResultManifest struct {
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 
-func (toState *ResultManifest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultManifest) {
-	if !fromPlan.Schema.IsNull() && !fromPlan.Schema.IsUnknown() {
-		if toStateSchema, ok := toState.GetSchema(ctx); ok {
-			if fromPlanSchema, ok := fromPlan.GetSchema(ctx); ok {
-				toStateSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanSchema)
-				toState.SetSchema(ctx, toStateSchema)
+func (to *ResultManifest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResultManifest) {
+	if !from.Chunks.IsNull() && !from.Chunks.IsUnknown() && to.Chunks.IsNull() && len(from.Chunks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Chunks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Chunks = from.Chunks
+	}
+	if !from.Schema.IsNull() && !from.Schema.IsUnknown() {
+		if toSchema, ok := to.GetSchema(ctx); ok {
+			if fromSchema, ok := from.GetSchema(ctx); ok {
+				// Recursively sync the fields of Schema
+				toSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromSchema)
+				to.SetSchema(ctx, toSchema)
 			}
 		}
 	}
 }
 
-func (toState *ResultManifest) SyncFieldsDuringRead(ctx context.Context, fromState ResultManifest) {
-	if !fromState.Schema.IsNull() && !fromState.Schema.IsUnknown() {
-		if toStateSchema, ok := toState.GetSchema(ctx); ok {
-			if fromStateSchema, ok := fromState.GetSchema(ctx); ok {
-				toStateSchema.SyncFieldsDuringRead(ctx, fromStateSchema)
-				toState.SetSchema(ctx, toStateSchema)
+func (to *ResultManifest) SyncFieldsDuringRead(ctx context.Context, from ResultManifest) {
+	if !from.Chunks.IsNull() && !from.Chunks.IsUnknown() && to.Chunks.IsNull() && len(from.Chunks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Chunks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Chunks = from.Chunks
+	}
+	if !from.Schema.IsNull() && !from.Schema.IsUnknown() {
+		if toSchema, ok := to.GetSchema(ctx); ok {
+			if fromSchema, ok := from.GetSchema(ctx); ok {
+				toSchema.SyncFieldsDuringRead(ctx, fromSchema)
+				to.SetSchema(ctx, toSchema)
 			}
 		}
 	}
@@ -12232,10 +13648,22 @@ type ResultSchema struct {
 	Columns types.List `tfsdk:"columns"`
 }
 
-func (toState *ResultSchema) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ResultSchema) {
+func (to *ResultSchema) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResultSchema) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
-func (toState *ResultSchema) SyncFieldsDuringRead(ctx context.Context, fromState ResultSchema) {
+func (to *ResultSchema) SyncFieldsDuringRead(ctx context.Context, from ResultSchema) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
 }
 
 func (c ResultSchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12314,10 +13742,10 @@ type ServiceError struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (toState *ServiceError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan ServiceError) {
+func (to *ServiceError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServiceError) {
 }
 
-func (toState *ServiceError) SyncFieldsDuringRead(ctx context.Context, fromState ServiceError) {
+func (to *ServiceError) SyncFieldsDuringRead(ctx context.Context, from ServiceError) {
 }
 
 func (c ServiceError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12370,6 +13798,32 @@ type SetRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (to *SetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SetRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *SetRequest) SyncFieldsDuringRead(ctx context.Context, from SetRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (c SetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12391,8 +13845,8 @@ func (o SetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"access_control_list": o.AccessControlList,
-			"objectId":            o.ObjectId,
-			"objectType":          o.ObjectType,
+			"object_id":           o.ObjectId,
+			"object_type":         o.ObjectType,
 		})
 }
 
@@ -12403,8 +13857,8 @@ func (o SetRequest) Type(ctx context.Context) attr.Type {
 			"access_control_list": basetypes.ListType{
 				ElemType: AccessControl{}.Type(ctx),
 			},
-			"objectId":   types.StringType,
-			"objectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -12443,10 +13897,22 @@ type SetResponse struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (toState *SetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SetResponse) {
+func (to *SetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SetResponse) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
-func (toState *SetResponse) SyncFieldsDuringRead(ctx context.Context, fromState SetResponse) {
+func (to *SetResponse) SyncFieldsDuringRead(ctx context.Context, from SetResponse) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
 func (c SetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12548,6 +14014,118 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	SecurityPolicy types.String `tfsdk:"security_policy"`
 	// SQL configuration parameters
 	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
+}
+
+func (to *SetWorkspaceWarehouseConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SetWorkspaceWarehouseConfigRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				// Recursively sync the fields of Channel
+				toChannel.SyncFieldsDuringCreateOrUpdate(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.ConfigParam.IsNull() && !from.ConfigParam.IsUnknown() {
+		if toConfigParam, ok := to.GetConfigParam(ctx); ok {
+			if fromConfigParam, ok := from.GetConfigParam(ctx); ok {
+				// Recursively sync the fields of ConfigParam
+				toConfigParam.SyncFieldsDuringCreateOrUpdate(ctx, fromConfigParam)
+				to.SetConfigParam(ctx, toConfigParam)
+			}
+		}
+	}
+	if !from.DataAccessConfig.IsNull() && !from.DataAccessConfig.IsUnknown() && to.DataAccessConfig.IsNull() && len(from.DataAccessConfig.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataAccessConfig, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataAccessConfig = from.DataAccessConfig
+	}
+	if !from.EnabledWarehouseTypes.IsNull() && !from.EnabledWarehouseTypes.IsUnknown() && to.EnabledWarehouseTypes.IsNull() && len(from.EnabledWarehouseTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnabledWarehouseTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnabledWarehouseTypes = from.EnabledWarehouseTypes
+	}
+	if !from.GlobalParam.IsNull() && !from.GlobalParam.IsUnknown() {
+		if toGlobalParam, ok := to.GetGlobalParam(ctx); ok {
+			if fromGlobalParam, ok := from.GetGlobalParam(ctx); ok {
+				// Recursively sync the fields of GlobalParam
+				toGlobalParam.SyncFieldsDuringCreateOrUpdate(ctx, fromGlobalParam)
+				to.SetGlobalParam(ctx, toGlobalParam)
+			}
+		}
+	}
+	if !from.SqlConfigurationParameters.IsNull() && !from.SqlConfigurationParameters.IsUnknown() {
+		if toSqlConfigurationParameters, ok := to.GetSqlConfigurationParameters(ctx); ok {
+			if fromSqlConfigurationParameters, ok := from.GetSqlConfigurationParameters(ctx); ok {
+				// Recursively sync the fields of SqlConfigurationParameters
+				toSqlConfigurationParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlConfigurationParameters)
+				to.SetSqlConfigurationParameters(ctx, toSqlConfigurationParameters)
+			}
+		}
+	}
+}
+
+func (to *SetWorkspaceWarehouseConfigRequest) SyncFieldsDuringRead(ctx context.Context, from SetWorkspaceWarehouseConfigRequest) {
+	if !from.Channel.IsNull() && !from.Channel.IsUnknown() {
+		if toChannel, ok := to.GetChannel(ctx); ok {
+			if fromChannel, ok := from.GetChannel(ctx); ok {
+				toChannel.SyncFieldsDuringRead(ctx, fromChannel)
+				to.SetChannel(ctx, toChannel)
+			}
+		}
+	}
+	if !from.ConfigParam.IsNull() && !from.ConfigParam.IsUnknown() {
+		if toConfigParam, ok := to.GetConfigParam(ctx); ok {
+			if fromConfigParam, ok := from.GetConfigParam(ctx); ok {
+				toConfigParam.SyncFieldsDuringRead(ctx, fromConfigParam)
+				to.SetConfigParam(ctx, toConfigParam)
+			}
+		}
+	}
+	if !from.DataAccessConfig.IsNull() && !from.DataAccessConfig.IsUnknown() && to.DataAccessConfig.IsNull() && len(from.DataAccessConfig.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DataAccessConfig, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DataAccessConfig = from.DataAccessConfig
+	}
+	if !from.EnabledWarehouseTypes.IsNull() && !from.EnabledWarehouseTypes.IsUnknown() && to.EnabledWarehouseTypes.IsNull() && len(from.EnabledWarehouseTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnabledWarehouseTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnabledWarehouseTypes = from.EnabledWarehouseTypes
+	}
+	if !from.GlobalParam.IsNull() && !from.GlobalParam.IsUnknown() {
+		if toGlobalParam, ok := to.GetGlobalParam(ctx); ok {
+			if fromGlobalParam, ok := from.GetGlobalParam(ctx); ok {
+				toGlobalParam.SyncFieldsDuringRead(ctx, fromGlobalParam)
+				to.SetGlobalParam(ctx, toGlobalParam)
+			}
+		}
+	}
+	if !from.SqlConfigurationParameters.IsNull() && !from.SqlConfigurationParameters.IsUnknown() {
+		if toSqlConfigurationParameters, ok := to.GetSqlConfigurationParameters(ctx); ok {
+			if fromSqlConfigurationParameters, ok := from.GetSqlConfigurationParameters(ctx); ok {
+				toSqlConfigurationParameters.SyncFieldsDuringRead(ctx, fromSqlConfigurationParameters)
+				to.SetSqlConfigurationParameters(ctx, toSqlConfigurationParameters)
+			}
+		}
+	}
+}
+
+func (c SetWorkspaceWarehouseConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["config_param"] = attrs["config_param"].SetOptional()
+	attrs["data_access_config"] = attrs["data_access_config"].SetOptional()
+	attrs["enabled_warehouse_types"] = attrs["enabled_warehouse_types"].SetOptional()
+	attrs["global_param"] = attrs["global_param"].SetOptional()
+	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["security_policy"] = attrs["security_policy"].SetOptional()
+	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetWorkspaceWarehouseConfigRequest.
@@ -12763,10 +14341,10 @@ func (o *SetWorkspaceWarehouseConfigRequest) SetSqlConfigurationParameters(ctx c
 type SetWorkspaceWarehouseConfigResponse struct {
 }
 
-func (toState *SetWorkspaceWarehouseConfigResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan SetWorkspaceWarehouseConfigResponse) {
+func (to *SetWorkspaceWarehouseConfigResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SetWorkspaceWarehouseConfigResponse) {
 }
 
-func (toState *SetWorkspaceWarehouseConfigResponse) SyncFieldsDuringRead(ctx context.Context, fromState SetWorkspaceWarehouseConfigResponse) {
+func (to *SetWorkspaceWarehouseConfigResponse) SyncFieldsDuringRead(ctx context.Context, from SetWorkspaceWarehouseConfigResponse) {
 }
 
 func (c SetWorkspaceWarehouseConfigResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12806,6 +14384,18 @@ type StartRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *StartRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartRequest) {
+}
+
+func (to *StartRequest) SyncFieldsDuringRead(ctx context.Context, from StartRequest) {
+}
+
+func (c StartRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12840,10 +14430,10 @@ func (o StartRequest) Type(ctx context.Context) attr.Type {
 type StartWarehouseResponse struct {
 }
 
-func (toState *StartWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StartWarehouseResponse) {
+func (to *StartWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartWarehouseResponse) {
 }
 
-func (toState *StartWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState StartWarehouseResponse) {
+func (to *StartWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from StartWarehouseResponse) {
 }
 
 func (c StartWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12894,10 +14484,10 @@ type StatementParameterListItem struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *StatementParameterListItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementParameterListItem) {
+func (to *StatementParameterListItem) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StatementParameterListItem) {
 }
 
-func (toState *StatementParameterListItem) SyncFieldsDuringRead(ctx context.Context, fromState StatementParameterListItem) {
+func (to *StatementParameterListItem) SyncFieldsDuringRead(ctx context.Context, from StatementParameterListItem) {
 }
 
 func (c StatementParameterListItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -12954,55 +14544,58 @@ type StatementResponse struct {
 	Status types.Object `tfsdk:"status"`
 }
 
-func (toState *StatementResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementResponse) {
-	if !fromPlan.Manifest.IsNull() && !fromPlan.Manifest.IsUnknown() {
-		if toStateManifest, ok := toState.GetManifest(ctx); ok {
-			if fromPlanManifest, ok := fromPlan.GetManifest(ctx); ok {
-				toStateManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanManifest)
-				toState.SetManifest(ctx, toStateManifest)
+func (to *StatementResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StatementResponse) {
+	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+		if toManifest, ok := to.GetManifest(ctx); ok {
+			if fromManifest, ok := from.GetManifest(ctx); ok {
+				// Recursively sync the fields of Manifest
+				toManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromManifest)
+				to.SetManifest(ctx, toManifest)
 			}
 		}
 	}
-	if !fromPlan.Result.IsNull() && !fromPlan.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromPlanResult, ok := fromPlan.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanResult)
-				toState.SetResult(ctx, toStateResult)
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				// Recursively sync the fields of Result
+				toResult.SyncFieldsDuringCreateOrUpdate(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
-	if !fromPlan.Status.IsNull() && !fromPlan.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromPlanStatus, ok := fromPlan.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
 }
 
-func (toState *StatementResponse) SyncFieldsDuringRead(ctx context.Context, fromState StatementResponse) {
-	if !fromState.Manifest.IsNull() && !fromState.Manifest.IsUnknown() {
-		if toStateManifest, ok := toState.GetManifest(ctx); ok {
-			if fromStateManifest, ok := fromState.GetManifest(ctx); ok {
-				toStateManifest.SyncFieldsDuringRead(ctx, fromStateManifest)
-				toState.SetManifest(ctx, toStateManifest)
+func (to *StatementResponse) SyncFieldsDuringRead(ctx context.Context, from StatementResponse) {
+	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+		if toManifest, ok := to.GetManifest(ctx); ok {
+			if fromManifest, ok := from.GetManifest(ctx); ok {
+				toManifest.SyncFieldsDuringRead(ctx, fromManifest)
+				to.SetManifest(ctx, toManifest)
 			}
 		}
 	}
-	if !fromState.Result.IsNull() && !fromState.Result.IsUnknown() {
-		if toStateResult, ok := toState.GetResult(ctx); ok {
-			if fromStateResult, ok := fromState.GetResult(ctx); ok {
-				toStateResult.SyncFieldsDuringRead(ctx, fromStateResult)
-				toState.SetResult(ctx, toStateResult)
+	if !from.Result.IsNull() && !from.Result.IsUnknown() {
+		if toResult, ok := to.GetResult(ctx); ok {
+			if fromResult, ok := from.GetResult(ctx); ok {
+				toResult.SyncFieldsDuringRead(ctx, fromResult)
+				to.SetResult(ctx, toResult)
 			}
 		}
 	}
-	if !fromState.Status.IsNull() && !fromState.Status.IsUnknown() {
-		if toStateStatus, ok := toState.GetStatus(ctx); ok {
-			if fromStateStatus, ok := fromState.GetStatus(ctx); ok {
-				toStateStatus.SyncFieldsDuringRead(ctx, fromStateStatus)
-				toState.SetStatus(ctx, toStateStatus)
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
 			}
 		}
 	}
@@ -13141,23 +14734,24 @@ type StatementStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
-func (toState *StatementStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StatementStatus) {
-	if !fromPlan.Error.IsNull() && !fromPlan.Error.IsUnknown() {
-		if toStateError, ok := toState.GetError(ctx); ok {
-			if fromPlanError, ok := fromPlan.GetError(ctx); ok {
-				toStateError.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanError)
-				toState.SetError(ctx, toStateError)
+func (to *StatementStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StatementStatus) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
 			}
 		}
 	}
 }
 
-func (toState *StatementStatus) SyncFieldsDuringRead(ctx context.Context, fromState StatementStatus) {
-	if !fromState.Error.IsNull() && !fromState.Error.IsUnknown() {
-		if toStateError, ok := toState.GetError(ctx); ok {
-			if fromStateError, ok := fromState.GetError(ctx); ok {
-				toStateError.SyncFieldsDuringRead(ctx, fromStateError)
-				toState.SetError(ctx, toStateError)
+func (to *StatementStatus) SyncFieldsDuringRead(ctx context.Context, from StatementStatus) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
 			}
 		}
 	}
@@ -13235,6 +14829,18 @@ type StopRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *StopRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StopRequest) {
+}
+
+func (to *StopRequest) SyncFieldsDuringRead(ctx context.Context, from StopRequest) {
+}
+
+func (c StopRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13269,10 +14875,10 @@ func (o StopRequest) Type(ctx context.Context) attr.Type {
 type StopWarehouseResponse struct {
 }
 
-func (toState *StopWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan StopWarehouseResponse) {
+func (to *StopWarehouseResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StopWarehouseResponse) {
 }
 
-func (toState *StopWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, fromState StopWarehouseResponse) {
+func (to *StopWarehouseResponse) SyncFieldsDuringRead(ctx context.Context, from StopWarehouseResponse) {
 }
 
 func (c StopWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13311,10 +14917,10 @@ type Success struct {
 	Message types.String `tfsdk:"message"`
 }
 
-func (toState *Success) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Success) {
+func (to *Success) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Success) {
 }
 
-func (toState *Success) SyncFieldsDuringRead(ctx context.Context, fromState Success) {
+func (to *Success) SyncFieldsDuringRead(ctx context.Context, from Success) {
 }
 
 func (c Success) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13362,10 +14968,22 @@ type TaskTimeOverRange struct {
 	Interval types.Int64 `tfsdk:"interval"`
 }
 
-func (toState *TaskTimeOverRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskTimeOverRange) {
+func (to *TaskTimeOverRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TaskTimeOverRange) {
+	if !from.Entries.IsNull() && !from.Entries.IsUnknown() && to.Entries.IsNull() && len(from.Entries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Entries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Entries = from.Entries
+	}
 }
 
-func (toState *TaskTimeOverRange) SyncFieldsDuringRead(ctx context.Context, fromState TaskTimeOverRange) {
+func (to *TaskTimeOverRange) SyncFieldsDuringRead(ctx context.Context, from TaskTimeOverRange) {
+	if !from.Entries.IsNull() && !from.Entries.IsUnknown() && to.Entries.IsNull() && len(from.Entries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Entries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Entries = from.Entries
+	}
 }
 
 func (c TaskTimeOverRange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13444,10 +15062,10 @@ type TaskTimeOverRangeEntry struct {
 	TaskCompletedTimeMs types.Int64 `tfsdk:"task_completed_time_ms"`
 }
 
-func (toState *TaskTimeOverRangeEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TaskTimeOverRangeEntry) {
+func (to *TaskTimeOverRangeEntry) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TaskTimeOverRangeEntry) {
 }
 
-func (toState *TaskTimeOverRangeEntry) SyncFieldsDuringRead(ctx context.Context, fromState TaskTimeOverRangeEntry) {
+func (to *TaskTimeOverRangeEntry) SyncFieldsDuringRead(ctx context.Context, from TaskTimeOverRangeEntry) {
 }
 
 func (c TaskTimeOverRangeEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13497,10 +15115,10 @@ type TerminationReason struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *TerminationReason) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TerminationReason) {
+func (to *TerminationReason) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TerminationReason) {
 }
 
-func (toState *TerminationReason) SyncFieldsDuringRead(ctx context.Context, fromState TerminationReason) {
+func (to *TerminationReason) SyncFieldsDuringRead(ctx context.Context, from TerminationReason) {
 }
 
 func (c TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13580,10 +15198,10 @@ type TextValue struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func (toState *TextValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TextValue) {
+func (to *TextValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TextValue) {
 }
 
-func (toState *TextValue) SyncFieldsDuringRead(ctx context.Context, fromState TextValue) {
+func (to *TextValue) SyncFieldsDuringRead(ctx context.Context, from TextValue) {
 }
 
 func (c TextValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13630,10 +15248,10 @@ type TimeRange struct {
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
 }
 
-func (toState *TimeRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TimeRange) {
+func (to *TimeRange) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TimeRange) {
 }
 
-func (toState *TimeRange) SyncFieldsDuringRead(ctx context.Context, fromState TimeRange) {
+func (to *TimeRange) SyncFieldsDuringRead(ctx context.Context, from TimeRange) {
 }
 
 func (c TimeRange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13681,10 +15299,10 @@ type TransferOwnershipObjectId struct {
 	NewOwner types.String `tfsdk:"new_owner"`
 }
 
-func (toState *TransferOwnershipObjectId) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan TransferOwnershipObjectId) {
+func (to *TransferOwnershipObjectId) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TransferOwnershipObjectId) {
 }
 
-func (toState *TransferOwnershipObjectId) SyncFieldsDuringRead(ctx context.Context, fromState TransferOwnershipObjectId) {
+func (to *TransferOwnershipObjectId) SyncFieldsDuringRead(ctx context.Context, from TransferOwnershipObjectId) {
 }
 
 func (c TransferOwnershipObjectId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13733,6 +15351,37 @@ type TransferOwnershipRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (to *TransferOwnershipRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TransferOwnershipRequest) {
+	if !from.ObjectId.IsNull() && !from.ObjectId.IsUnknown() {
+		if toObjectId, ok := to.GetObjectId(ctx); ok {
+			if fromObjectId, ok := from.GetObjectId(ctx); ok {
+				// Recursively sync the fields of ObjectId
+				toObjectId.SyncFieldsDuringCreateOrUpdate(ctx, fromObjectId)
+				to.SetObjectId(ctx, toObjectId)
+			}
+		}
+	}
+}
+
+func (to *TransferOwnershipRequest) SyncFieldsDuringRead(ctx context.Context, from TransferOwnershipRequest) {
+	if !from.ObjectId.IsNull() && !from.ObjectId.IsUnknown() {
+		if toObjectId, ok := to.GetObjectId(ctx); ok {
+			if fromObjectId, ok := from.GetObjectId(ctx); ok {
+				toObjectId.SyncFieldsDuringRead(ctx, fromObjectId)
+				to.SetObjectId(ctx, toObjectId)
+			}
+		}
+	}
+}
+
+func (c TransferOwnershipRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["new_owner"] = attrs["new_owner"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransferOwnershipRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13742,7 +15391,7 @@ type TransferOwnershipRequest struct {
 // SDK values.
 func (a TransferOwnershipRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"objectId": reflect.TypeOf(TransferOwnershipObjectId{}),
+		"object_id": reflect.TypeOf(TransferOwnershipObjectId{}),
 	}
 }
 
@@ -13753,9 +15402,9 @@ func (o TransferOwnershipRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"new_owner":  o.NewOwner,
-			"objectId":   o.ObjectId,
-			"objectType": o.ObjectType,
+			"new_owner":   o.NewOwner,
+			"object_id":   o.ObjectId,
+			"object_type": o.ObjectType,
 		})
 }
 
@@ -13763,9 +15412,9 @@ func (o TransferOwnershipRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o TransferOwnershipRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"new_owner":  types.StringType,
-			"objectId":   TransferOwnershipObjectId{}.Type(ctx),
-			"objectType": types.StringType,
+			"new_owner":   types.StringType,
+			"object_id":   TransferOwnershipObjectId{}.Type(ctx),
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -13797,6 +15446,18 @@ func (o *TransferOwnershipRequest) SetObjectId(ctx context.Context, v TransferOw
 
 type TrashAlertRequest struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (to *TrashAlertRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TrashAlertRequest) {
+}
+
+func (to *TrashAlertRequest) SyncFieldsDuringRead(ctx context.Context, from TrashAlertRequest) {
+}
+
+func (c TrashAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashAlertRequest.
@@ -13834,6 +15495,18 @@ type TrashAlertV2Request struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (to *TrashAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TrashAlertV2Request) {
+}
+
+func (to *TrashAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from TrashAlertV2Request) {
+}
+
+func (c TrashAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashAlertV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13867,6 +15540,18 @@ func (o TrashAlertV2Request) Type(ctx context.Context) attr.Type {
 
 type TrashQueryRequest struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (to *TrashQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TrashQueryRequest) {
+}
+
+func (to *TrashQueryRequest) SyncFieldsDuringRead(ctx context.Context, from TrashQueryRequest) {
+}
+
+func (c TrashQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashQueryRequest.
@@ -13920,6 +15605,38 @@ type UpdateAlertRequest struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (to *UpdateAlertRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAlertRequest) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				// Recursively sync the fields of Alert
+				toAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (to *UpdateAlertRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateAlertRequest) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				toAlert.SyncFieldsDuringRead(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (c UpdateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertRequest.
@@ -14015,23 +15732,24 @@ type UpdateAlertRequestAlert struct {
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
-func (toState *UpdateAlertRequestAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateAlertRequestAlert) {
-	if !fromPlan.Condition.IsNull() && !fromPlan.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromPlanCondition, ok := fromPlan.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *UpdateAlertRequestAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAlertRequestAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				// Recursively sync the fields of Condition
+				toCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
 }
 
-func (toState *UpdateAlertRequestAlert) SyncFieldsDuringRead(ctx context.Context, fromState UpdateAlertRequestAlert) {
-	if !fromState.Condition.IsNull() && !fromState.Condition.IsUnknown() {
-		if toStateCondition, ok := toState.GetCondition(ctx); ok {
-			if fromStateCondition, ok := fromState.GetCondition(ctx); ok {
-				toStateCondition.SyncFieldsDuringRead(ctx, fromStateCondition)
-				toState.SetCondition(ctx, toStateCondition)
+func (to *UpdateAlertRequestAlert) SyncFieldsDuringRead(ctx context.Context, from UpdateAlertRequestAlert) {
+	if !from.Condition.IsNull() && !from.Condition.IsUnknown() {
+		if toCondition, ok := to.GetCondition(ctx); ok {
+			if fromCondition, ok := from.GetCondition(ctx); ok {
+				toCondition.SyncFieldsDuringRead(ctx, fromCondition)
+				to.SetCondition(ctx, toCondition)
 			}
 		}
 	}
@@ -14140,6 +15858,37 @@ type UpdateAlertV2Request struct {
 	UpdateMask types.String `tfsdk:"-"`
 }
 
+func (to *UpdateAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAlertV2Request) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				// Recursively sync the fields of Alert
+				toAlert.SyncFieldsDuringCreateOrUpdate(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (to *UpdateAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from UpdateAlertV2Request) {
+	if !from.Alert.IsNull() && !from.Alert.IsUnknown() {
+		if toAlert, ok := to.GetAlert(ctx); ok {
+			if fromAlert, ok := from.GetAlert(ctx); ok {
+				toAlert.SyncFieldsDuringRead(ctx, fromAlert)
+				to.SetAlert(ctx, toAlert)
+			}
+		}
+	}
+}
+
+func (c UpdateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetRequired()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14223,6 +15972,38 @@ type UpdateQueryRequest struct {
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (to *UpdateQueryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateQueryRequest) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				// Recursively sync the fields of Query
+				toQuery.SyncFieldsDuringCreateOrUpdate(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
+			}
+		}
+	}
+}
+
+func (to *UpdateQueryRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateQueryRequest) {
+	if !from.Query.IsNull() && !from.Query.IsUnknown() {
+		if toQuery, ok := to.GetQuery(ctx); ok {
+			if fromQuery, ok := from.GetQuery(ctx); ok {
+				toQuery.SyncFieldsDuringRead(ctx, fromQuery)
+				to.SetQuery(ctx, toQuery)
+			}
+		}
+	}
+}
+
+func (c UpdateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateQueryRequest.
@@ -14316,10 +16097,34 @@ type UpdateQueryRequestQuery struct {
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
-func (toState *UpdateQueryRequestQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateQueryRequestQuery) {
+func (to *UpdateQueryRequestQuery) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateQueryRequestQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
-func (toState *UpdateQueryRequestQuery) SyncFieldsDuringRead(ctx context.Context, fromState UpdateQueryRequestQuery) {
+func (to *UpdateQueryRequestQuery) SyncFieldsDuringRead(ctx context.Context, from UpdateQueryRequestQuery) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
 func (c UpdateQueryRequestQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14451,10 +16256,10 @@ func (o *UpdateQueryRequestQuery) SetTags(ctx context.Context, v []types.String)
 type UpdateResponse struct {
 }
 
-func (toState *UpdateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateResponse) {
+func (to *UpdateResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateResponse) {
 }
 
-func (toState *UpdateResponse) SyncFieldsDuringRead(ctx context.Context, fromState UpdateResponse) {
+func (to *UpdateResponse) SyncFieldsDuringRead(ctx context.Context, from UpdateResponse) {
 }
 
 func (c UpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14505,6 +16310,37 @@ type UpdateVisualizationRequest struct {
 	UpdateMask types.String `tfsdk:"update_mask"`
 
 	Visualization types.Object `tfsdk:"visualization"`
+}
+
+func (to *UpdateVisualizationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateVisualizationRequest) {
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				// Recursively sync the fields of Visualization
+				toVisualization.SyncFieldsDuringCreateOrUpdate(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
+			}
+		}
+	}
+}
+
+func (to *UpdateVisualizationRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateVisualizationRequest) {
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				toVisualization.SyncFieldsDuringRead(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
+			}
+		}
+	}
+}
+
+func (c UpdateVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["visualization"] = attrs["visualization"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateVisualizationRequest.
@@ -14584,10 +16420,10 @@ type UpdateVisualizationRequestVisualization struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
-func (toState *UpdateVisualizationRequestVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan UpdateVisualizationRequestVisualization) {
+func (to *UpdateVisualizationRequestVisualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateVisualizationRequestVisualization) {
 }
 
-func (toState *UpdateVisualizationRequestVisualization) SyncFieldsDuringRead(ctx context.Context, fromState UpdateVisualizationRequestVisualization) {
+func (to *UpdateVisualizationRequestVisualization) SyncFieldsDuringRead(ctx context.Context, from UpdateVisualizationRequestVisualization) {
 }
 
 func (c UpdateVisualizationRequestVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14651,6 +16487,40 @@ type UpdateWidgetRequest struct {
 	VisualizationId types.String `tfsdk:"visualization_id"`
 	// Width of a widget
 	Width types.Int64 `tfsdk:"width"`
+}
+
+func (to *UpdateWidgetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWidgetRequest) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (to *UpdateWidgetRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateWidgetRequest) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (c UpdateWidgetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["text"] = attrs["text"].SetOptional()
+	attrs["visualization_id"] = attrs["visualization_id"].SetOptional()
+	attrs["width"] = attrs["width"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWidgetRequest.
@@ -14729,10 +16599,10 @@ type User struct {
 	Name types.String `tfsdk:"name"`
 }
 
-func (toState *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan User) {
+func (to *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from User) {
 }
 
-func (toState *User) SyncFieldsDuringRead(ctx context.Context, fromState User) {
+func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 }
 
 func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14801,10 +16671,10 @@ type Visualization struct {
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
-func (toState *Visualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Visualization) {
+func (to *Visualization) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Visualization) {
 }
 
-func (toState *Visualization) SyncFieldsDuringRead(ctx context.Context, fromState Visualization) {
+func (to *Visualization) SyncFieldsDuringRead(ctx context.Context, from Visualization) {
 }
 
 func (c Visualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14876,10 +16746,10 @@ type WarehouseAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *WarehouseAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseAccessControlRequest) {
+func (to *WarehouseAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehouseAccessControlRequest) {
 }
 
-func (toState *WarehouseAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseAccessControlRequest) {
+func (to *WarehouseAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from WarehouseAccessControlRequest) {
 }
 
 func (c WarehouseAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14941,10 +16811,22 @@ type WarehouseAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name"`
 }
 
-func (toState *WarehouseAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseAccessControlResponse) {
+func (to *WarehouseAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehouseAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
 }
 
-func (toState *WarehouseAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseAccessControlResponse) {
+func (to *WarehouseAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from WarehouseAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
 }
 
 func (c WarehouseAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15034,10 +16916,22 @@ type WarehousePermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (toState *WarehousePermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermission) {
+func (to *WarehousePermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehousePermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
 }
 
-func (toState *WarehousePermission) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermission) {
+func (to *WarehousePermission) SyncFieldsDuringRead(ctx context.Context, from WarehousePermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
 }
 
 func (c WarehousePermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15121,10 +17015,22 @@ type WarehousePermissions struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
-func (toState *WarehousePermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermissions) {
+func (to *WarehousePermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehousePermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
-func (toState *WarehousePermissions) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermissions) {
+func (to *WarehousePermissions) SyncFieldsDuringRead(ctx context.Context, from WarehousePermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
 }
 
 func (c WarehousePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15206,10 +17112,10 @@ type WarehousePermissionsDescription struct {
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
-func (toState *WarehousePermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehousePermissionsDescription) {
+func (to *WarehousePermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehousePermissionsDescription) {
 }
 
-func (toState *WarehousePermissionsDescription) SyncFieldsDuringRead(ctx context.Context, fromState WarehousePermissionsDescription) {
+func (to *WarehousePermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from WarehousePermissionsDescription) {
 }
 
 func (c WarehousePermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15256,6 +17162,31 @@ type WarehousePermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
+}
+
+func (to *WarehousePermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehousePermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *WarehousePermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from WarehousePermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (c WarehousePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehousePermissionsRequest.
@@ -15329,10 +17260,10 @@ type WarehouseTypePair struct {
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
-func (toState *WarehouseTypePair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WarehouseTypePair) {
+func (to *WarehouseTypePair) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WarehouseTypePair) {
 }
 
-func (toState *WarehouseTypePair) SyncFieldsDuringRead(ctx context.Context, fromState WarehouseTypePair) {
+func (to *WarehouseTypePair) SyncFieldsDuringRead(ctx context.Context, from WarehouseTypePair) {
 }
 
 func (c WarehouseTypePair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -15390,39 +17321,41 @@ type Widget struct {
 	Width types.Int64 `tfsdk:"width"`
 }
 
-func (toState *Widget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan Widget) {
-	if !fromPlan.Options.IsNull() && !fromPlan.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromPlanOptions, ok := fromPlan.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *Widget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Widget) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromPlan.Visualization.IsNull() && !fromPlan.Visualization.IsUnknown() {
-		if toStateVisualization, ok := toState.GetVisualization(ctx); ok {
-			if fromPlanVisualization, ok := fromPlan.GetVisualization(ctx); ok {
-				toStateVisualization.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanVisualization)
-				toState.SetVisualization(ctx, toStateVisualization)
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				// Recursively sync the fields of Visualization
+				toVisualization.SyncFieldsDuringCreateOrUpdate(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
 			}
 		}
 	}
 }
 
-func (toState *Widget) SyncFieldsDuringRead(ctx context.Context, fromState Widget) {
-	if !fromState.Options.IsNull() && !fromState.Options.IsUnknown() {
-		if toStateOptions, ok := toState.GetOptions(ctx); ok {
-			if fromStateOptions, ok := fromState.GetOptions(ctx); ok {
-				toStateOptions.SyncFieldsDuringRead(ctx, fromStateOptions)
-				toState.SetOptions(ctx, toStateOptions)
+func (to *Widget) SyncFieldsDuringRead(ctx context.Context, from Widget) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
 			}
 		}
 	}
-	if !fromState.Visualization.IsNull() && !fromState.Visualization.IsUnknown() {
-		if toStateVisualization, ok := toState.GetVisualization(ctx); ok {
-			if fromStateVisualization, ok := fromState.GetVisualization(ctx); ok {
-				toStateVisualization.SyncFieldsDuringRead(ctx, fromStateVisualization)
-				toState.SetVisualization(ctx, toStateVisualization)
+	if !from.Visualization.IsNull() && !from.Visualization.IsUnknown() {
+		if toVisualization, ok := to.GetVisualization(ctx); ok {
+			if fromVisualization, ok := from.GetVisualization(ctx); ok {
+				toVisualization.SyncFieldsDuringRead(ctx, fromVisualization)
+				to.SetVisualization(ctx, toVisualization)
 			}
 		}
 	}
@@ -15533,11 +17466,11 @@ type WidgetOptions struct {
 	// Custom description of the widget
 	Description types.String `tfsdk:"description"`
 	// Whether this widget is hidden on the dashboard.
-	IsHidden types.Bool `tfsdk:"isHidden"`
+	IsHidden types.Bool `tfsdk:"is_hidden"`
 	// How parameters used by the visualization in this widget relate to other
 	// widgets on the dashboard. Databricks does not recommend modifying this
 	// definition in JSON.
-	ParameterMappings types.Object `tfsdk:"parameterMappings"`
+	ParameterMappings types.Object `tfsdk:"parameter_mappings"`
 	// Coordinates of this widget on a dashboard. This portion of the API
 	// changes frequently and is unsupported.
 	Position types.Object `tfsdk:"position"`
@@ -15547,23 +17480,24 @@ type WidgetOptions struct {
 	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
-func (toState *WidgetOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetOptions) {
-	if !fromPlan.Position.IsNull() && !fromPlan.Position.IsUnknown() {
-		if toStatePosition, ok := toState.GetPosition(ctx); ok {
-			if fromPlanPosition, ok := fromPlan.GetPosition(ctx); ok {
-				toStatePosition.SyncFieldsDuringCreateOrUpdate(ctx, fromPlanPosition)
-				toState.SetPosition(ctx, toStatePosition)
+func (to *WidgetOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WidgetOptions) {
+	if !from.Position.IsNull() && !from.Position.IsUnknown() {
+		if toPosition, ok := to.GetPosition(ctx); ok {
+			if fromPosition, ok := from.GetPosition(ctx); ok {
+				// Recursively sync the fields of Position
+				toPosition.SyncFieldsDuringCreateOrUpdate(ctx, fromPosition)
+				to.SetPosition(ctx, toPosition)
 			}
 		}
 	}
 }
 
-func (toState *WidgetOptions) SyncFieldsDuringRead(ctx context.Context, fromState WidgetOptions) {
-	if !fromState.Position.IsNull() && !fromState.Position.IsUnknown() {
-		if toStatePosition, ok := toState.GetPosition(ctx); ok {
-			if fromStatePosition, ok := fromState.GetPosition(ctx); ok {
-				toStatePosition.SyncFieldsDuringRead(ctx, fromStatePosition)
-				toState.SetPosition(ctx, toStatePosition)
+func (to *WidgetOptions) SyncFieldsDuringRead(ctx context.Context, from WidgetOptions) {
+	if !from.Position.IsNull() && !from.Position.IsUnknown() {
+		if toPosition, ok := to.GetPosition(ctx); ok {
+			if fromPosition, ok := from.GetPosition(ctx); ok {
+				toPosition.SyncFieldsDuringRead(ctx, fromPosition)
+				to.SetPosition(ctx, toPosition)
 			}
 		}
 	}
@@ -15572,8 +17506,8 @@ func (toState *WidgetOptions) SyncFieldsDuringRead(ctx context.Context, fromStat
 func (c WidgetOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["isHidden"] = attrs["isHidden"].SetOptional()
-	attrs["parameterMappings"] = attrs["parameterMappings"].SetOptional()
+	attrs["is_hidden"] = attrs["is_hidden"].SetOptional()
+	attrs["parameter_mappings"] = attrs["parameter_mappings"].SetOptional()
 	attrs["position"] = attrs["position"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
@@ -15601,13 +17535,13 @@ func (o WidgetOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"created_at":        o.CreatedAt,
-			"description":       o.Description,
-			"isHidden":          o.IsHidden,
-			"parameterMappings": o.ParameterMappings,
-			"position":          o.Position,
-			"title":             o.Title,
-			"updated_at":        o.UpdatedAt,
+			"created_at":         o.CreatedAt,
+			"description":        o.Description,
+			"is_hidden":          o.IsHidden,
+			"parameter_mappings": o.ParameterMappings,
+			"position":           o.Position,
+			"title":              o.Title,
+			"updated_at":         o.UpdatedAt,
 		})
 }
 
@@ -15615,13 +17549,13 @@ func (o WidgetOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o WidgetOptions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"created_at":        types.StringType,
-			"description":       types.StringType,
-			"isHidden":          types.BoolType,
-			"parameterMappings": types.ObjectType{},
-			"position":          WidgetPosition{}.Type(ctx),
-			"title":             types.StringType,
-			"updated_at":        types.StringType,
+			"created_at":         types.StringType,
+			"description":        types.StringType,
+			"is_hidden":          types.BoolType,
+			"parameter_mappings": types.ObjectType{},
+			"position":           WidgetPosition{}.Type(ctx),
+			"title":              types.StringType,
+			"updated_at":         types.StringType,
 		},
 	}
 }
@@ -15655,29 +17589,29 @@ func (o *WidgetOptions) SetPosition(ctx context.Context, v WidgetPosition) {
 // frequently and is unsupported.
 type WidgetPosition struct {
 	// reserved for internal use
-	AutoHeight types.Bool `tfsdk:"autoHeight"`
+	AutoHeight types.Bool `tfsdk:"auto_height"`
 	// column in the dashboard grid. Values start with 0
 	Col types.Int64 `tfsdk:"col"`
 	// row in the dashboard grid. Values start with 0
 	Row types.Int64 `tfsdk:"row"`
 	// width of the widget measured in dashboard grid cells
-	SizeX types.Int64 `tfsdk:"sizeX"`
+	SizeX types.Int64 `tfsdk:"size_x"`
 	// height of the widget measured in dashboard grid cells
-	SizeY types.Int64 `tfsdk:"sizeY"`
+	SizeY types.Int64 `tfsdk:"size_y"`
 }
 
-func (toState *WidgetPosition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fromPlan WidgetPosition) {
+func (to *WidgetPosition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WidgetPosition) {
 }
 
-func (toState *WidgetPosition) SyncFieldsDuringRead(ctx context.Context, fromState WidgetPosition) {
+func (to *WidgetPosition) SyncFieldsDuringRead(ctx context.Context, from WidgetPosition) {
 }
 
 func (c WidgetPosition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["autoHeight"] = attrs["autoHeight"].SetOptional()
+	attrs["auto_height"] = attrs["auto_height"].SetOptional()
 	attrs["col"] = attrs["col"].SetOptional()
 	attrs["row"] = attrs["row"].SetOptional()
-	attrs["sizeX"] = attrs["sizeX"].SetOptional()
-	attrs["sizeY"] = attrs["sizeY"].SetOptional()
+	attrs["size_x"] = attrs["size_x"].SetOptional()
+	attrs["size_y"] = attrs["size_y"].SetOptional()
 
 	return attrs
 }
@@ -15700,11 +17634,11 @@ func (o WidgetPosition) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"autoHeight": o.AutoHeight,
-			"col":        o.Col,
-			"row":        o.Row,
-			"sizeX":      o.SizeX,
-			"sizeY":      o.SizeY,
+			"auto_height": o.AutoHeight,
+			"col":         o.Col,
+			"row":         o.Row,
+			"size_x":      o.SizeX,
+			"size_y":      o.SizeY,
 		})
 }
 
@@ -15712,11 +17646,11 @@ func (o WidgetPosition) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o WidgetPosition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoHeight": types.BoolType,
-			"col":        types.Int64Type,
-			"row":        types.Int64Type,
-			"sizeX":      types.Int64Type,
-			"sizeY":      types.Int64Type,
+			"auto_height": types.BoolType,
+			"col":         types.Int64Type,
+			"row":         types.Int64Type,
+			"size_x":      types.Int64Type,
+			"size_y":      types.Int64Type,
 		},
 	}
 }

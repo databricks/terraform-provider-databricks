@@ -4,6 +4,8 @@
 # Generated files:
 .codegen/_openapi_sha
 .release_metadata.json
+.github/workflows/next-changelog.yml
+tagging.py
 
 # Binary files
 **/*.zip

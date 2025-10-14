@@ -1,24 +1,25 @@
 # NEXT CHANGELOG
 
-## Release v1.89.0
+## Release v1.92.0
 
 ### Breaking Changes
 
+* Remove stale resources/datasources/documentation related to Clean Room services.
+
 ### New Features and Improvements
 
-* Document and handle additional Microsoft Teams options in `databricks_notification_destination` ([#4990](https://github.com/databricks/terraform-provider-databricks/pull/4990))
 * Optimize `databricks_grant` and `databricks_grants` to not call the `Update` API if the requested permissions are already granted ([#5095](https://github.com/databricks/terraform-provider-databricks/pull/5095))
+* Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
 
 ### Bug Fixes
 
-* Fix regression with `databricks_group` data source introduced by a recent change ([#4995](https://github.com/databricks/terraform-provider-databricks/pull/4995))
+* Fixed syncing of effective fields in plugin framework implementation of share resource ([#4969](https://github.com/databricks/terraform-provider-databricks/pull/4969))
+* Mark `storage_location` as read-only in `databricks_catalog` ([#5075](https://github.com/databricks/terraform-provider-databricks/pull/5075))
 
 ### Documentation
 
-* Document `continuous.task_retry_mode` in `databricks_job` ([#4993](https://github.com/databricks/terraform-provider-databricks/pull/4993))
+* Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
 
 ### Exporter
-
-* Improve handling of dependencies for vector search index ([#4989](https://github.com/databricks/terraform-provider-databricks/pull/4989)).
 
 ### Internal Changes

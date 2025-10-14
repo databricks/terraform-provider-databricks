@@ -35,7 +35,6 @@ type AlertV2DataSource struct {
 // AlertV2Data extends the main model with additional fields.
 type AlertV2Data struct {
 	sql_tf.AlertV2
-	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -58,7 +57,6 @@ func (m AlertV2Data) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 func (m AlertV2Data) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	embeddedObj := m.AlertV2.ToObjectValue(ctx)
 	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
@@ -71,7 +69,6 @@ func (m AlertV2Data) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AlertV2Data) Type(ctx context.Context) attr.Type {
 	embeddedType := m.AlertV2.Type(ctx).(basetypes.ObjectType)
 	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
 
 	return types.ObjectType{AttrTypes: attrTypes}
 }
@@ -89,7 +86,6 @@ func (r *AlertV2DataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (r *AlertV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
 		return c
 	})
 	resp.Schema = schema.Schema{

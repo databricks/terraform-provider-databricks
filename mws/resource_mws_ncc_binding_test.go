@@ -14,7 +14,10 @@ func TestResourceNccBindingCreate(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
 				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					NetworkConnectivityConfigId: "ncc_id",
+					CustomerFacingWorkspace: provisioning.Workspace{
+						NetworkConnectivityConfigId: "ncc_id",
+					},
+					UpdateMask: "network_connectivity_config_id",
 				},
 			},
 			{
@@ -44,7 +47,10 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
 				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					NetworkConnectivityConfigId: "new_ncc_id",
+					CustomerFacingWorkspace: provisioning.Workspace{
+						NetworkConnectivityConfigId: "new_ncc_id",
+					},
+					UpdateMask: "network_connectivity_config_id",
 				},
 			},
 			{

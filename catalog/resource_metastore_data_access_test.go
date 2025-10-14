@@ -184,7 +184,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "bcd",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "def",
@@ -202,7 +202,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -222,7 +222,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},
@@ -251,7 +251,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "bcd",
 						AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 							AccessConnectorId: "def",
@@ -269,7 +269,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -289,7 +289,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},
@@ -318,7 +318,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name:                        "bcd",
 						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 					},
@@ -337,7 +337,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -357,7 +357,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},

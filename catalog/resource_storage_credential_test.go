@@ -219,7 +219,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials",
 				ExpectedRequest: &catalog.AccountsCreateStorageCredential{
 					MetastoreId: "metastore_id",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "storage_credential_name",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
@@ -236,17 +236,13 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name",
 				ExpectedRequest: &catalog.AccountsUpdateStorageCredential{
-					CredentialInfo: &catalog.UpdateStorageCredential{
-						Name:  "storage_credential_name",
+					MetastoreId:           "metastore_id",
+					StorageCredentialName: "storage_credential_name",
+					CredentialInfo: &catalog.UpdateAccountsStorageCredential{
 						Owner: "administrators",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
 						},
-					},
-				},
-				Response: &catalog.AccountsStorageCredentialInfo{
-					CredentialInfo: &catalog.StorageCredentialInfo{
-						Name: "storage_credential_name",
 					},
 				},
 			},

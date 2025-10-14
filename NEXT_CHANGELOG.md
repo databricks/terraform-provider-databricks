@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Document and handle additional Microsoft Teams options in `databricks_notification_destination` ([#4990](https://github.com/databricks/terraform-provider-databricks/pull/4990))
+* Optimize `databricks_grant` and `databricks_grants` to not call the `Update` API if the requested permissions are already granted ([#5095](https://github.com/databricks/terraform-provider-databricks/pull/5095))
 
 ### Bug Fixes
 

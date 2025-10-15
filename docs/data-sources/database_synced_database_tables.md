@@ -13,6 +13,10 @@ subcategory: "Database Instances"
 The following arguments are supported:
 * `instance_name` (string, required) - Name of the instance to get synced tables for
 * `page_size` (integer, optional) - Upper bound for items returned
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes
@@ -37,6 +41,7 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `name` (string) - Full three-part (catalog, schema, table) name of the table
 * `spec` (SyncedTableSpec)
+* `table_serving_url` (string) - Data serving REST API URL for this table
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
   state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
   may be in "PROVISIONING" as it runs asynchronously). Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`
@@ -47,6 +52,7 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
 * `delta_commit_version` (integer) - The Delta Lake commit version that was last successfully synced
 
 ### NewPipelineSpec
+* `budget_policy_id` (string) - Budget policy of this pipeline
 * `storage_catalog` (string) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).

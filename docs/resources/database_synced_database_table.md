@@ -131,8 +131,13 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### NewPipelineSpec
+* `budget_policy_id` (string, optional) - Budget policy of this pipeline
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).
@@ -173,6 +178,7 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
   tables inside database catalogs is inferred database instance associated with the catalog
 * `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+* `table_serving_url` (string) - Data serving REST API URL for this table
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
   state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
   may be in "PROVISIONING" as it runs asynchronously). Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`

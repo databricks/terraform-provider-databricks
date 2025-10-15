@@ -33,6 +33,7 @@ type ColumnInfo struct {
 }
 
 type TableInfo struct {
+	common.Namespace
 	Name                  string            `json:"name"`
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
@@ -71,6 +72,7 @@ func ResourceTable() common.Resource {
 			for _, field := range caseInsensitiveFields {
 				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{

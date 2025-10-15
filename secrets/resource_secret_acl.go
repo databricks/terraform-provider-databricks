@@ -41,7 +41,7 @@ func ResourceSecretACL() common.Resource {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -58,7 +58,7 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -76,7 +76,7 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

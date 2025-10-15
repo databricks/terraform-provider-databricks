@@ -12,6 +12,7 @@ import (
 
 func DataAwsUnityCatalogAssumeRolePolicy() common.Resource {
 	type AwsUcAssumeRolePolicy struct {
+		common.Namespace
 		RoleName           string `json:"role_name"`
 		UnityCatalogIamArn string `json:"unity_catalog_iam_arn,omitempty" tf:"computed"`
 		ExternalId         string `json:"external_id"`

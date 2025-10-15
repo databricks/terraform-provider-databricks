@@ -25,6 +25,7 @@ func getPool(poolsAPI InstancePoolsAPI, name string) (*InstancePoolAndStats, err
 // DataSourceInstancePool returns information about instance pool specified by name
 func DataSourceInstancePool() common.Resource {
 	type poolDetails struct {
+		common.Namespace
 		Name       string                `json:"name"`
 		Attributes *InstancePoolAndStats `json:"pool_info,omitempty" tf:"computed"`
 	}

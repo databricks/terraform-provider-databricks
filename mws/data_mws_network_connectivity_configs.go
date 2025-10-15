@@ -10,10 +10,12 @@ import (
 
 func DataSourceMwsNetworkConnectivityConfigs() common.Resource {
 	type mwsNetworkConnectivityConfiguration struct {
+		common.Namespace
 		Names []string `json:"names" tf:"computed,optional"`
 	}
 
 	type mwsNetworkConnectivityConfigurationParams struct {
+		common.Namespace
 		Names  []string `json:"names" tf:"computed,optional"`
 		Region string   `json:"region" tf:"optional"`
 	}

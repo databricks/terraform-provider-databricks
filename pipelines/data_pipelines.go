@@ -12,6 +12,7 @@ import (
 
 func DataSourcePipelines() common.Resource {
 	type pipelinesData struct {
+		common.Namespace
 		PipelineNameContains string   `json:"pipeline_name,omitempty"`
 		Ids                  []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}

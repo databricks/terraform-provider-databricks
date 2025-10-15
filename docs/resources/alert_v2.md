@@ -83,6 +83,10 @@ The following arguments are supported:
   Deprecated: Use `run_as` field instead. This field will be removed in a future release
 * `schedule` (CronSchedule, optional)
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`

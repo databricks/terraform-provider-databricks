@@ -8,6 +8,7 @@
 
 ### New Features and Improvements
 
+* Bugbash
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
 * Perform workspace-level permission assignment by `user_name`, `group_name`, or `service_principal_name` ([#5068](https://github.com/databricks/terraform-provider-databricks/pull/5068)).
 

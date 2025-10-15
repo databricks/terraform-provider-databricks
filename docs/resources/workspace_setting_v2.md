@@ -37,6 +37,10 @@ The following arguments are supported:
 * `personal_compute` (PersonalComputeMessage, optional)
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
 * `string_val` (StringMessage, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - . Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`

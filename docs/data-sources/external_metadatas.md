@@ -20,6 +20,10 @@ data "databricks_external_metadatas" "all" {
 The following arguments are supported:
 * `page_size` (integer, optional) - Specifies the maximum number of external metadata objects to return in a single response.
   The value must be less than or equal to 1000
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

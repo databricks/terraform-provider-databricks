@@ -14,6 +14,10 @@ The following arguments are supported:
 * `feature_name` (string, required)
 * `table_name` (string, required)
 * `page_size` (integer, optional) - The maximum number of results to return
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

@@ -20,6 +20,10 @@ data "databricks_database_instance" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:
@@ -28,7 +32,9 @@ The following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
+* `custom_tags` (list of CustomTag) - Custom tags associated with the instance. This field is only included on create and update responses
 * `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity
+* `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance
 * `effective_enable_pg_native_login` (boolean) - Whether the instance has PG native password login enabled
 * `effective_enable_readable_secondaries` (boolean) - Whether secondaries serving read-only traffic are enabled. Defaults to false
 * `effective_node_count` (integer) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
@@ -36,6 +42,7 @@ The following attributes are exported:
 * `effective_retention_window_in_days` (integer) - The retention window for the instance. This is the time window in days
   for which the historical data is retained
 * `effective_stopped` (boolean) - Whether the instance is stopped
+* `effective_usage_policy_id` (string) - The policy that is applied to the instance
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on the instance. Defaults to false
 * `enable_readable_secondaries` (boolean) - Whether to enable secondaries to serve read-only traffic. Defaults to false
 * `name` (string) - The name of the instance. This is the unique identifier for the instance
@@ -55,6 +62,11 @@ The following attributes are exported:
 * `state` (string) - The current state of the instance. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
 * `stopped` (boolean) - Whether to stop the instance. An input only param, see effective_stopped for the output
 * `uid` (string) - An immutable UUID identifier for the instance
+* `usage_policy_id` (string) - The desired usage policy to associate with the instance
+
+### CustomTag
+* `key` (string) - The key of the custom tag
+* `value` (string) - The value of the custom tag
 
 ### DatabaseInstanceRef
 * `branch_time` (string) - Branch time of the ref database instance.

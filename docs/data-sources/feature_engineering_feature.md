@@ -12,6 +12,10 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

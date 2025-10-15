@@ -32,6 +32,10 @@ The following arguments are supported:
 * `tag_key` (string, required)
 * `description` (string, optional)
 * `values` (list of Value, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### Value
 * `name` (string, required)

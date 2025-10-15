@@ -10,6 +10,7 @@ import (
 )
 
 type modelsData struct {
+	common.Namespace
 	Names []string `json:"names,omitempty" tf:"computed"`
 }
 

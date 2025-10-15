@@ -12,6 +12,7 @@ import (
 // DataSourceClusterPolicy returns information about cluster policy specified by name
 func DataSourceClusterPolicy() common.Resource {
 	resource := common.WorkspaceData(func(ctx context.Context, data *struct {
+		common.Namespace
 		Id                              string `json:"id,omitempty" tf:"computed"`
 		Name                            string `json:"name,omitempty" tf:"computed"`
 		Definition                      string `json:"definition,omitempty" tf:"computed"`

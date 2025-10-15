@@ -15,6 +15,10 @@ The following arguments are supported:
 * `name` (string, optional) - Name of the federation policy. A recipient can have multiple policies with different names.
   The name must contain only lowercase alphanumeric characters, numbers, and hyphens
 * `oidc_policy` (OidcFederationPolicy, optional) - Specifies the policy to use for validating OIDC claims in the federated tokens
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### OidcFederationPolicy
 * `issuer` (string, required) - The required token issuer, as specified in the 'iss' claim of federated tokens

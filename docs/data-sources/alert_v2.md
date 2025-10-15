@@ -26,6 +26,10 @@ data "databricks_alert_v2" "this" {
 ## Arguments
 The following arguments are supported:
 * `id` (string, required) - UUID identifying the alert
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

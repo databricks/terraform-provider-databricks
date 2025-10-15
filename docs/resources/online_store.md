@@ -14,6 +14,10 @@ The following arguments are supported:
 * `capacity` (string, required) - The capacity of the online store. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
 * `read_replica_count` (integer, optional) - The number of read replicas for the online store. Defaults to 0
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

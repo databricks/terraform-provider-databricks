@@ -96,7 +96,7 @@ func (to *BaseJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BaseJob_
 	}
 }
 
-func (c BaseJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BaseJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
@@ -118,7 +118,7 @@ func (c BaseJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BaseJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BaseJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"settings":      reflect.TypeOf(JobSettings_SdkV2{}),
 		"trigger_state": reflect.TypeOf(TriggerStateProto_SdkV2{}),
@@ -128,23 +128,23 @@ func (a BaseJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BaseJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o BaseJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BaseJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"created_time":               o.CreatedTime,
-			"creator_user_name":          o.CreatorUserName,
-			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
-			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
-			"has_more":                   o.HasMore,
-			"job_id":                     o.JobId,
-			"settings":                   o.Settings,
-			"trigger_state":              o.TriggerState,
+			"created_time":               m.CreatedTime,
+			"creator_user_name":          m.CreatorUserName,
+			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  m.EffectiveUsagePolicyId,
+			"has_more":                   m.HasMore,
+			"job_id":                     m.JobId,
+			"settings":                   m.Settings,
+			"trigger_state":              m.TriggerState,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"created_time":               types.Int64Type,
@@ -166,13 +166,13 @@ func (o BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSettings returns the value of the Settings field in BaseJob_SdkV2 as
 // a JobSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseJob_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
+func (m *BaseJob_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 	var e JobSettings_SdkV2
-	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+	if m.Settings.IsNull() || m.Settings.IsUnknown() {
 		return e, false
 	}
 	var v []JobSettings_SdkV2
-	d := o.Settings.ElementsAs(ctx, &v, true)
+	d := m.Settings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -183,22 +183,22 @@ func (o *BaseJob_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, boo
 }
 
 // SetSettings sets the value of the Settings field in BaseJob_SdkV2.
-func (o *BaseJob_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
+func (m *BaseJob_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
-	o.Settings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	m.Settings = types.ListValueMust(t, vs)
 }
 
 // GetTriggerState returns the value of the TriggerState field in BaseJob_SdkV2 as
 // a TriggerStateProto_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseJob_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_SdkV2, bool) {
+func (m *BaseJob_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_SdkV2, bool) {
 	var e TriggerStateProto_SdkV2
-	if o.TriggerState.IsNull() || o.TriggerState.IsUnknown() {
+	if m.TriggerState.IsNull() || m.TriggerState.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerStateProto_SdkV2
-	d := o.TriggerState.ElementsAs(ctx, &v, true)
+	d := m.TriggerState.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -209,10 +209,10 @@ func (o *BaseJob_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_
 }
 
 // SetTriggerState sets the value of the TriggerState field in BaseJob_SdkV2.
-func (o *BaseJob_SdkV2) SetTriggerState(ctx context.Context, v TriggerStateProto_SdkV2) {
+func (m *BaseJob_SdkV2) SetTriggerState(ctx context.Context, v TriggerStateProto_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_state"]
-	o.TriggerState = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_state"]
+	m.TriggerState = types.ListValueMust(t, vs)
 }
 
 type BaseRun_SdkV2 struct {
@@ -543,7 +543,7 @@ func (to *BaseRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BaseRun_
 	}
 }
 
-func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
 	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
@@ -597,7 +597,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a BaseRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m BaseRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance_SdkV2{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec_SdkV2{}),
@@ -617,49 +617,49 @@ func (a BaseRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, BaseRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o BaseRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m BaseRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":               o.AttemptNumber,
-			"cleanup_duration":             o.CleanupDuration,
-			"cluster_instance":             o.ClusterInstance,
-			"cluster_spec":                 o.ClusterSpec,
-			"creator_user_name":            o.CreatorUserName,
-			"description":                  o.Description,
-			"effective_performance_target": o.EffectivePerformanceTarget,
-			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
-			"end_time":                     o.EndTime,
-			"execution_duration":           o.ExecutionDuration,
-			"git_source":                   o.GitSource,
-			"has_more":                     o.HasMore,
-			"job_clusters":                 o.JobClusters,
-			"job_id":                       o.JobId,
-			"job_parameters":               o.JobParameters,
-			"job_run_id":                   o.JobRunId,
-			"number_in_job":                o.NumberInJob,
-			"original_attempt_run_id":      o.OriginalAttemptRunId,
-			"overriding_parameters":        o.OverridingParameters,
-			"queue_duration":               o.QueueDuration,
-			"repair_history":               o.RepairHistory,
-			"run_duration":                 o.RunDuration,
-			"run_id":                       o.RunId,
-			"run_name":                     o.RunName,
-			"run_page_url":                 o.RunPageUrl,
-			"run_type":                     o.RunType,
-			"schedule":                     o.Schedule,
-			"setup_duration":               o.SetupDuration,
-			"start_time":                   o.StartTime,
-			"state":                        o.State,
-			"status":                       o.Status,
-			"tasks":                        o.Tasks,
-			"trigger":                      o.Trigger,
-			"trigger_info":                 o.TriggerInfo,
+			"attempt_number":               m.AttemptNumber,
+			"cleanup_duration":             m.CleanupDuration,
+			"cluster_instance":             m.ClusterInstance,
+			"cluster_spec":                 m.ClusterSpec,
+			"creator_user_name":            m.CreatorUserName,
+			"description":                  m.Description,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
+			"end_time":                     m.EndTime,
+			"execution_duration":           m.ExecutionDuration,
+			"git_source":                   m.GitSource,
+			"has_more":                     m.HasMore,
+			"job_clusters":                 m.JobClusters,
+			"job_id":                       m.JobId,
+			"job_parameters":               m.JobParameters,
+			"job_run_id":                   m.JobRunId,
+			"number_in_job":                m.NumberInJob,
+			"original_attempt_run_id":      m.OriginalAttemptRunId,
+			"overriding_parameters":        m.OverridingParameters,
+			"queue_duration":               m.QueueDuration,
+			"repair_history":               m.RepairHistory,
+			"run_duration":                 m.RunDuration,
+			"run_id":                       m.RunId,
+			"run_name":                     m.RunName,
+			"run_page_url":                 m.RunPageUrl,
+			"run_type":                     m.RunType,
+			"schedule":                     m.Schedule,
+			"setup_duration":               m.SetupDuration,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"tasks":                        m.Tasks,
+			"trigger":                      m.Trigger,
+			"trigger_info":                 m.TriggerInfo,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
+func (m BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attempt_number":   types.Int64Type,
@@ -727,13 +727,13 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 // GetClusterInstance returns the value of the ClusterInstance field in BaseRun_SdkV2 as
 // a ClusterInstance_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
 	var e ClusterInstance_SdkV2
-	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+	if m.ClusterInstance.IsNull() || m.ClusterInstance.IsUnknown() {
 		return e, false
 	}
 	var v []ClusterInstance_SdkV2
-	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	d := m.ClusterInstance.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -744,22 +744,22 @@ func (o *BaseRun_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
+func (m *BaseRun_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
-	o.ClusterInstance = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	m.ClusterInstance = types.ListValueMust(t, vs)
 }
 
 // GetClusterSpec returns the value of the ClusterSpec field in BaseRun_SdkV2 as
 // a ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, bool) {
 	var e ClusterSpec_SdkV2
-	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+	if m.ClusterSpec.IsNull() || m.ClusterSpec.IsUnknown() {
 		return e, false
 	}
 	var v []ClusterSpec_SdkV2
-	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	d := m.ClusterSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -770,22 +770,22 @@ func (o *BaseRun_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, 
 }
 
 // SetClusterSpec sets the value of the ClusterSpec field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetClusterSpec(ctx context.Context, v ClusterSpec_SdkV2) {
+func (m *BaseRun_SdkV2) SetClusterSpec(ctx context.Context, v ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
-	o.ClusterSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	m.ClusterSpec = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in BaseRun_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -796,21 +796,21 @@ func (o *BaseRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool
 }
 
 // SetGitSource sets the value of the GitSource field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *BaseRun_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetJobClusters returns the value of the JobClusters field in BaseRun_SdkV2 as
 // a slice of JobCluster_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
-	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+func (m *BaseRun_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
+	if m.JobClusters.IsNull() || m.JobClusters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobCluster_SdkV2
-	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	d := m.JobClusters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -818,25 +818,25 @@ func (o *BaseRun_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2,
 }
 
 // SetJobClusters sets the value of the JobClusters field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
+func (m *BaseRun_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobClusters = types.ListValueMust(t, vs)
+	m.JobClusters = types.ListValueMust(t, vs)
 }
 
 // GetJobParameters returns the value of the JobParameters field in BaseRun_SdkV2 as
 // a slice of JobParameter_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_SdkV2, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *BaseRun_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_SdkV2, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobParameter_SdkV2
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -844,26 +844,26 @@ func (o *BaseRun_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_Sd
 }
 
 // SetJobParameters sets the value of the JobParameters field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetJobParameters(ctx context.Context, v []JobParameter_SdkV2) {
+func (m *BaseRun_SdkV2) SetJobParameters(ctx context.Context, v []JobParameter_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.ListValueMust(t, vs)
+	m.JobParameters = types.ListValueMust(t, vs)
 }
 
 // GetOverridingParameters returns the value of the OverridingParameters field in BaseRun_SdkV2 as
 // a RunParameters_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetOverridingParameters(ctx context.Context) (RunParameters_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetOverridingParameters(ctx context.Context) (RunParameters_SdkV2, bool) {
 	var e RunParameters_SdkV2
-	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+	if m.OverridingParameters.IsNull() || m.OverridingParameters.IsUnknown() {
 		return e, false
 	}
 	var v []RunParameters_SdkV2
-	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	d := m.OverridingParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -874,21 +874,21 @@ func (o *BaseRun_SdkV2) GetOverridingParameters(ctx context.Context) (RunParamet
 }
 
 // SetOverridingParameters sets the value of the OverridingParameters field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetOverridingParameters(ctx context.Context, v RunParameters_SdkV2) {
+func (m *BaseRun_SdkV2) SetOverridingParameters(ctx context.Context, v RunParameters_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
-	o.OverridingParameters = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	m.OverridingParameters = types.ListValueMust(t, vs)
 }
 
 // GetRepairHistory returns the value of the RepairHistory field in BaseRun_SdkV2 as
 // a slice of RepairHistoryItem_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem_SdkV2, bool) {
-	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+func (m *BaseRun_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem_SdkV2, bool) {
+	if m.RepairHistory.IsNull() || m.RepairHistory.IsUnknown() {
 		return nil, false
 	}
 	var v []RepairHistoryItem_SdkV2
-	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	d := m.RepairHistory.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -896,26 +896,26 @@ func (o *BaseRun_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryIt
 }
 
 // SetRepairHistory sets the value of the RepairHistory field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetRepairHistory(ctx context.Context, v []RepairHistoryItem_SdkV2) {
+func (m *BaseRun_SdkV2) SetRepairHistory(ctx context.Context, v []RepairHistoryItem_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.RepairHistory = types.ListValueMust(t, vs)
+	m.RepairHistory = types.ListValueMust(t, vs)
 }
 
 // GetSchedule returns the value of the Schedule field in BaseRun_SdkV2 as
 // a CronSchedule_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
 	var e CronSchedule_SdkV2
-	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+	if m.Schedule.IsNull() || m.Schedule.IsUnknown() {
 		return e, false
 	}
 	var v []CronSchedule_SdkV2
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := m.Schedule.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -926,22 +926,22 @@ func (o *BaseRun_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bo
 }
 
 // SetSchedule sets the value of the Schedule field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
+func (m *BaseRun_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	m.Schedule = types.ListValueMust(t, vs)
 }
 
 // GetState returns the value of the State field in BaseRun_SdkV2 as
 // a RunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 	var e RunState_SdkV2
-	if o.State.IsNull() || o.State.IsUnknown() {
+	if m.State.IsNull() || m.State.IsUnknown() {
 		return e, false
 	}
 	var v []RunState_SdkV2
-	d := o.State.ElementsAs(ctx, &v, true)
+	d := m.State.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -952,22 +952,22 @@ func (o *BaseRun_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 }
 
 // SetState sets the value of the State field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
+func (m *BaseRun_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
-	o.State = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	m.State = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in BaseRun_SdkV2 as
 // a RunStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 	var e RunStatus_SdkV2
-	if o.Status.IsNull() || o.Status.IsUnknown() {
+	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
 	var v []RunStatus_SdkV2
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := m.Status.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -978,21 +978,21 @@ func (o *BaseRun_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 }
 
 // SetStatus sets the value of the Status field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
+func (m *BaseRun_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
 }
 
 // GetTasks returns the value of the Tasks field in BaseRun_SdkV2 as
 // a slice of RunTask_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
-	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+func (m *BaseRun_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
+	if m.Tasks.IsNull() || m.Tasks.IsUnknown() {
 		return nil, false
 	}
 	var v []RunTask_SdkV2
-	d := o.Tasks.ElementsAs(ctx, &v, true)
+	d := m.Tasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1000,26 +1000,26 @@ func (o *BaseRun_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
 }
 
 // SetTasks sets the value of the Tasks field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetTasks(ctx context.Context, v []RunTask_SdkV2) {
+func (m *BaseRun_SdkV2) SetTasks(ctx context.Context, v []RunTask_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tasks = types.ListValueMust(t, vs)
+	m.Tasks = types.ListValueMust(t, vs)
 }
 
 // GetTriggerInfo returns the value of the TriggerInfo field in BaseRun_SdkV2 as
 // a TriggerInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *BaseRun_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, bool) {
+func (m *BaseRun_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, bool) {
 	var e TriggerInfo_SdkV2
-	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+	if m.TriggerInfo.IsNull() || m.TriggerInfo.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerInfo_SdkV2
-	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	d := m.TriggerInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1030,10 +1030,10 @@ func (o *BaseRun_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, 
 }
 
 // SetTriggerInfo sets the value of the TriggerInfo field in BaseRun_SdkV2.
-func (o *BaseRun_SdkV2) SetTriggerInfo(ctx context.Context, v TriggerInfo_SdkV2) {
+func (m *BaseRun_SdkV2) SetTriggerInfo(ctx context.Context, v TriggerInfo_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
-	o.TriggerInfo = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	m.TriggerInfo = types.ListValueMust(t, vs)
 }
 
 type CancelAllRuns_SdkV2 struct {
@@ -1050,7 +1050,7 @@ func (to *CancelAllRuns_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *CancelAllRuns_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CancelAllRuns_SdkV2) {
 }
 
-func (c CancelAllRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CancelAllRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 
@@ -1064,24 +1064,24 @@ func (c CancelAllRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CancelAllRuns_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CancelAllRuns_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CancelAllRuns_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CancelAllRuns_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CancelAllRuns_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_queued_runs": o.AllQueuedRuns,
-			"job_id":          o.JobId,
+			"all_queued_runs": m.AllQueuedRuns,
+			"job_id":          m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CancelAllRuns_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CancelAllRuns_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_queued_runs": types.BoolType,
@@ -1101,7 +1101,7 @@ func (to *CancelRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *CancelRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CancelRun_SdkV2) {
 }
 
-func (c CancelRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CancelRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
@@ -1114,23 +1114,23 @@ func (c CancelRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CancelRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CancelRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CancelRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CancelRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CancelRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CancelRun_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CancelRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -1156,7 +1156,7 @@ func (to *CleanRoomTaskRunState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 func (to *CleanRoomTaskRunState_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomTaskRunState_SdkV2) {
 }
 
-func (c CleanRoomTaskRunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CleanRoomTaskRunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
 	attrs["result_state"] = attrs["result_state"].SetOptional()
 
@@ -1170,24 +1170,24 @@ func (c CleanRoomTaskRunState_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomTaskRunState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomTaskRunState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomTaskRunState_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomTaskRunState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CleanRoomTaskRunState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"life_cycle_state": o.LifeCycleState,
-			"result_state":     o.ResultState,
+			"life_cycle_state": m.LifeCycleState,
+			"result_state":     m.ResultState,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomTaskRunState_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CleanRoomTaskRunState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"life_cycle_state": types.StringType,
@@ -1215,7 +1215,7 @@ func (to *CleanRoomsNotebookTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *CleanRoomsNotebookTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CleanRoomsNotebookTask_SdkV2) {
 }
 
-func (c CleanRoomsNotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CleanRoomsNotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 	attrs["notebook_base_parameters"] = attrs["notebook_base_parameters"].SetOptional()
@@ -1231,7 +1231,7 @@ func (c CleanRoomsNotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomsNotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomsNotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"notebook_base_parameters": reflect.TypeOf(types.String{}),
 	}
@@ -1240,19 +1240,19 @@ func (a CleanRoomsNotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomsNotebookTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomsNotebookTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CleanRoomsNotebookTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"clean_room_name":          o.CleanRoomName,
-			"etag":                     o.Etag,
-			"notebook_base_parameters": o.NotebookBaseParameters,
-			"notebook_name":            o.NotebookName,
+			"clean_room_name":          m.CleanRoomName,
+			"etag":                     m.Etag,
+			"notebook_base_parameters": m.NotebookBaseParameters,
+			"notebook_name":            m.NotebookName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomsNotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CleanRoomsNotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
@@ -1268,12 +1268,12 @@ func (o CleanRoomsNotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetNotebookBaseParameters returns the value of the NotebookBaseParameters field in CleanRoomsNotebookTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomsNotebookTask_SdkV2) GetNotebookBaseParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.NotebookBaseParameters.IsNull() || o.NotebookBaseParameters.IsUnknown() {
+func (m *CleanRoomsNotebookTask_SdkV2) GetNotebookBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.NotebookBaseParameters.IsNull() || m.NotebookBaseParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NotebookBaseParameters.ElementsAs(ctx, &v, true)
+	d := m.NotebookBaseParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1281,14 +1281,14 @@ func (o *CleanRoomsNotebookTask_SdkV2) GetNotebookBaseParameters(ctx context.Con
 }
 
 // SetNotebookBaseParameters sets the value of the NotebookBaseParameters field in CleanRoomsNotebookTask_SdkV2.
-func (o *CleanRoomsNotebookTask_SdkV2) SetNotebookBaseParameters(ctx context.Context, v map[string]types.String) {
+func (m *CleanRoomsNotebookTask_SdkV2) SetNotebookBaseParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_base_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_base_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NotebookBaseParameters = types.MapValueMust(t, vs)
+	m.NotebookBaseParameters = types.MapValueMust(t, vs)
 }
 
 type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 struct {
@@ -1357,7 +1357,7 @@ func (to *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SyncFieldsDu
 	}
 }
 
-func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_room_job_run_state"] = attrs["clean_room_job_run_state"].SetOptional()
 	attrs["clean_room_job_run_state"] = attrs["clean_room_job_run_state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["notebook_output"] = attrs["notebook_output"].SetOptional()
@@ -1375,7 +1375,7 @@ func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ApplySchemaCus
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_room_job_run_state": reflect.TypeOf(CleanRoomTaskRunState_SdkV2{}),
 		"notebook_output":          reflect.TypeOf(NotebookOutput_SdkV2{}),
@@ -1386,18 +1386,18 @@ func (a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetComplexFiel
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"clean_room_job_run_state": o.CleanRoomJobRunState,
-			"notebook_output":          o.NotebookOutput,
-			"output_schema_info":       o.OutputSchemaInfo,
+			"clean_room_job_run_state": m.CleanRoomJobRunState,
+			"notebook_output":          m.NotebookOutput,
+			"output_schema_info":       m.OutputSchemaInfo,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_job_run_state": basetypes.ListType{
@@ -1416,13 +1416,13 @@ func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) Type(ctx conte
 // GetCleanRoomJobRunState returns the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
 // a CleanRoomTaskRunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetCleanRoomJobRunState(ctx context.Context) (CleanRoomTaskRunState_SdkV2, bool) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetCleanRoomJobRunState(ctx context.Context) (CleanRoomTaskRunState_SdkV2, bool) {
 	var e CleanRoomTaskRunState_SdkV2
-	if o.CleanRoomJobRunState.IsNull() || o.CleanRoomJobRunState.IsUnknown() {
+	if m.CleanRoomJobRunState.IsNull() || m.CleanRoomJobRunState.IsUnknown() {
 		return e, false
 	}
 	var v []CleanRoomTaskRunState_SdkV2
-	d := o.CleanRoomJobRunState.ElementsAs(ctx, &v, true)
+	d := m.CleanRoomJobRunState.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1433,22 +1433,22 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetCleanRoomJ
 }
 
 // SetCleanRoomJobRunState sets the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetCleanRoomJobRunState(ctx context.Context, v CleanRoomTaskRunState_SdkV2) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetCleanRoomJobRunState(ctx context.Context, v CleanRoomTaskRunState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room_job_run_state"]
-	o.CleanRoomJobRunState = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room_job_run_state"]
+	m.CleanRoomJobRunState = types.ListValueMust(t, vs)
 }
 
 // GetNotebookOutput returns the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
 // a NotebookOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput_SdkV2, bool) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput_SdkV2, bool) {
 	var e NotebookOutput_SdkV2
-	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+	if m.NotebookOutput.IsNull() || m.NotebookOutput.IsUnknown() {
 		return e, false
 	}
 	var v []NotebookOutput_SdkV2
-	d := o.NotebookOutput.ElementsAs(ctx, &v, true)
+	d := m.NotebookOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1459,22 +1459,22 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetNotebookOu
 }
 
 // SetNotebookOutput sets the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetNotebookOutput(ctx context.Context, v NotebookOutput_SdkV2) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetNotebookOutput(ctx context.Context, v NotebookOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
-	o.NotebookOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
+	m.NotebookOutput = types.ListValueMust(t, vs)
 }
 
 // GetOutputSchemaInfo returns the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
 // a OutputSchemaInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetOutputSchemaInfo(ctx context.Context) (OutputSchemaInfo_SdkV2, bool) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetOutputSchemaInfo(ctx context.Context) (OutputSchemaInfo_SdkV2, bool) {
 	var e OutputSchemaInfo_SdkV2
-	if o.OutputSchemaInfo.IsNull() || o.OutputSchemaInfo.IsUnknown() {
+	if m.OutputSchemaInfo.IsNull() || m.OutputSchemaInfo.IsUnknown() {
 		return e, false
 	}
 	var v []OutputSchemaInfo_SdkV2
-	d := o.OutputSchemaInfo.ElementsAs(ctx, &v, true)
+	d := m.OutputSchemaInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1485,10 +1485,10 @@ func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetOutputSche
 }
 
 // SetOutputSchemaInfo sets the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
-func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetOutputSchemaInfo(ctx context.Context, v OutputSchemaInfo_SdkV2) {
+func (m *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetOutputSchemaInfo(ctx context.Context, v OutputSchemaInfo_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_schema_info"]
-	o.OutputSchemaInfo = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["output_schema_info"]
+	m.OutputSchemaInfo = types.ListValueMust(t, vs)
 }
 
 type ClusterInstance_SdkV2 struct {
@@ -1518,7 +1518,7 @@ func (to *ClusterInstance_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *ClusterInstance_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ClusterInstance_SdkV2) {
 }
 
-func (c ClusterInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ClusterInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
 	attrs["spark_context_id"] = attrs["spark_context_id"].SetOptional()
 
@@ -1532,24 +1532,24 @@ func (c ClusterInstance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ClusterInstance_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ClusterInstance_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ClusterInstance_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ClusterInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ClusterInstance_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cluster_id":       o.ClusterId,
-			"spark_context_id": o.SparkContextId,
+			"cluster_id":       m.ClusterId,
+			"spark_context_id": m.SparkContextId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ClusterInstance_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ClusterInstance_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id":       types.StringType,
@@ -1610,7 +1610,7 @@ func (to *ClusterSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Clus
 	}
 }
 
-func (c ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
 	attrs["library"] = attrs["library"].SetOptional()
@@ -1627,7 +1627,7 @@ func (c ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ClusterSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ClusterSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"library":     reflect.TypeOf(compute_tf.Library_SdkV2{}),
 		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
@@ -1637,19 +1637,19 @@ func (a ClusterSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ClusterSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ClusterSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ClusterSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"existing_cluster_id": o.ExistingClusterId,
-			"job_cluster_key":     o.JobClusterKey,
-			"library":             o.Libraries,
-			"new_cluster":         o.NewCluster,
+			"existing_cluster_id": m.ExistingClusterId,
+			"job_cluster_key":     m.JobClusterKey,
+			"library":             m.Libraries,
+			"new_cluster":         m.NewCluster,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"existing_cluster_id": types.StringType,
@@ -1667,12 +1667,12 @@ func (o ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
 // GetLibraries returns the value of the Libraries field in ClusterSpec_SdkV2 as
 // a slice of compute_tf.Library_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ClusterSpec_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
-	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+func (m *ClusterSpec_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
+	if m.Libraries.IsNull() || m.Libraries.IsUnknown() {
 		return nil, false
 	}
 	var v []compute_tf.Library_SdkV2
-	d := o.Libraries.ElementsAs(ctx, &v, true)
+	d := m.Libraries.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1680,26 +1680,26 @@ func (o *ClusterSpec_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Libr
 }
 
 // SetLibraries sets the value of the Libraries field in ClusterSpec_SdkV2.
-func (o *ClusterSpec_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
+func (m *ClusterSpec_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Libraries = types.ListValueMust(t, vs)
+	m.Libraries = types.ListValueMust(t, vs)
 }
 
 // GetNewCluster returns the value of the NewCluster field in ClusterSpec_SdkV2 as
 // a compute_tf.ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ClusterSpec_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
+func (m *ClusterSpec_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
 	var e compute_tf.ClusterSpec_SdkV2
-	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+	if m.NewCluster.IsNull() || m.NewCluster.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.ClusterSpec_SdkV2
-	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	d := m.NewCluster.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1710,10 +1710,10 @@ func (o *ClusterSpec_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.Clust
 }
 
 // SetNewCluster sets the value of the NewCluster field in ClusterSpec_SdkV2.
-func (o *ClusterSpec_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
+func (m *ClusterSpec_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
-	o.NewCluster = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	m.NewCluster = types.ListValueMust(t, vs)
 }
 
 type ComputeConfig_SdkV2 struct {
@@ -1731,7 +1731,7 @@ func (to *ComputeConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *ComputeConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComputeConfig_SdkV2) {
 }
 
-func (c ComputeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ComputeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["gpu_node_pool_id"] = attrs["gpu_node_pool_id"].SetOptional()
 	attrs["gpu_type"] = attrs["gpu_type"].SetOptional()
 	attrs["num_gpus"] = attrs["num_gpus"].SetRequired()
@@ -1746,25 +1746,25 @@ func (c ComputeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ComputeConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ComputeConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ComputeConfig_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ComputeConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ComputeConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"gpu_node_pool_id": o.GpuNodePoolId,
-			"gpu_type":         o.GpuType,
-			"num_gpus":         o.NumGpus,
+			"gpu_node_pool_id": m.GpuNodePoolId,
+			"gpu_type":         m.GpuType,
+			"num_gpus":         m.NumGpus,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ComputeConfig_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ComputeConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"gpu_node_pool_id": types.StringType,
@@ -1800,7 +1800,7 @@ func (to *ConditionTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *ConditionTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ConditionTask_SdkV2) {
 }
 
-func (c ConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["left"] = attrs["left"].SetRequired()
 	attrs["op"] = attrs["op"].SetRequired()
 	attrs["right"] = attrs["right"].SetRequired()
@@ -1815,25 +1815,25 @@ func (c ConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ConditionTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ConditionTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ConditionTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ConditionTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ConditionTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"left":  o.Left,
-			"op":    o.Op,
-			"right": o.Right,
+			"left":  m.Left,
+			"op":    m.Op,
+			"right": m.Right,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ConditionTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ConditionTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"left":  types.StringType,
@@ -1858,7 +1858,7 @@ func (to *Continuous_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *Continuous_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Continuous_SdkV2) {
 }
 
-func (c Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
@@ -1872,24 +1872,24 @@ func (c Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Continuous_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Continuous_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Continuous_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status":    o.PauseStatus,
-			"task_retry_mode": o.TaskRetryMode,
+			"pause_status":    m.PauseStatus,
+			"task_retry_mode": m.TaskRetryMode,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Continuous_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Continuous_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pause_status":    types.StringType,
@@ -2273,7 +2273,7 @@ func (to *CreateJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Create
 	}
 }
 
-func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].SetOptional()
@@ -2322,7 +2322,7 @@ func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list":   reflect.TypeOf(JobAccessControlRequest_SdkV2{}),
 		"continuous":            reflect.TypeOf(Continuous_SdkV2{}),
@@ -2347,41 +2347,41 @@ func (a CreateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list":   o.AccessControlList,
-			"budget_policy_id":      o.BudgetPolicyId,
-			"continuous":            o.Continuous,
-			"deployment":            o.Deployment,
-			"description":           o.Description,
-			"edit_mode":             o.EditMode,
-			"email_notifications":   o.EmailNotifications,
-			"environment":           o.Environments,
-			"format":                o.Format,
-			"git_source":            o.GitSource,
-			"health":                o.Health,
-			"job_cluster":           o.JobClusters,
-			"max_concurrent_runs":   o.MaxConcurrentRuns,
-			"name":                  o.Name,
-			"notification_settings": o.NotificationSettings,
-			"parameter":             o.Parameters,
-			"performance_target":    o.PerformanceTarget,
-			"queue":                 o.Queue,
-			"run_as":                o.RunAs,
-			"schedule":              o.Schedule,
-			"tags":                  o.Tags,
-			"task":                  o.Tasks,
-			"timeout_seconds":       o.TimeoutSeconds,
-			"trigger":               o.Trigger,
-			"usage_policy_id":       o.UsagePolicyId,
-			"webhook_notifications": o.WebhookNotifications,
+			"access_control_list":   m.AccessControlList,
+			"budget_policy_id":      m.BudgetPolicyId,
+			"continuous":            m.Continuous,
+			"deployment":            m.Deployment,
+			"description":           m.Description,
+			"edit_mode":             m.EditMode,
+			"email_notifications":   m.EmailNotifications,
+			"environment":           m.Environments,
+			"format":                m.Format,
+			"git_source":            m.GitSource,
+			"health":                m.Health,
+			"job_cluster":           m.JobClusters,
+			"max_concurrent_runs":   m.MaxConcurrentRuns,
+			"name":                  m.Name,
+			"notification_settings": m.NotificationSettings,
+			"parameter":             m.Parameters,
+			"performance_target":    m.PerformanceTarget,
+			"queue":                 m.Queue,
+			"run_as":                m.RunAs,
+			"schedule":              m.Schedule,
+			"tags":                  m.Tags,
+			"task":                  m.Tasks,
+			"timeout_seconds":       m.TimeoutSeconds,
+			"trigger":               m.Trigger,
+			"usage_policy_id":       m.UsagePolicyId,
+			"webhook_notifications": m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -2451,12 +2451,12 @@ func (o CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in CreateJob_SdkV2 as
 // a slice of JobAccessControlRequest_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *CreateJob_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []JobAccessControlRequest_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2464,26 +2464,26 @@ func (o *CreateJob_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccess
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
+func (m *CreateJob_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // GetContinuous returns the value of the Continuous field in CreateJob_SdkV2 as
 // a Continuous_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2, bool) {
 	var e Continuous_SdkV2
-	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+	if m.Continuous.IsNull() || m.Continuous.IsUnknown() {
 		return e, false
 	}
 	var v []Continuous_SdkV2
-	d := o.Continuous.ElementsAs(ctx, &v, true)
+	d := m.Continuous.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2494,22 +2494,22 @@ func (o *CreateJob_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2, 
 }
 
 // SetContinuous sets the value of the Continuous field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetContinuous(ctx context.Context, v Continuous_SdkV2) {
+func (m *CreateJob_SdkV2) SetContinuous(ctx context.Context, v Continuous_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
-	o.Continuous = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	m.Continuous = types.ListValueMust(t, vs)
 }
 
 // GetDeployment returns the value of the Deployment field in CreateJob_SdkV2 as
 // a JobDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_SdkV2, bool) {
 	var e JobDeployment_SdkV2
-	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+	if m.Deployment.IsNull() || m.Deployment.IsUnknown() {
 		return e, false
 	}
 	var v []JobDeployment_SdkV2
-	d := o.Deployment.ElementsAs(ctx, &v, true)
+	d := m.Deployment.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2520,22 +2520,22 @@ func (o *CreateJob_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_SdkV
 }
 
 // SetDeployment sets the value of the Deployment field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetDeployment(ctx context.Context, v JobDeployment_SdkV2) {
+func (m *CreateJob_SdkV2) SetDeployment(ctx context.Context, v JobDeployment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
-	o.Deployment = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	m.Deployment = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in CreateJob_SdkV2 as
 // a JobEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
 	var e JobEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []JobEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2546,21 +2546,21 @@ func (o *CreateJob_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNo
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
+func (m *CreateJob_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in CreateJob_SdkV2 as
 // a slice of JobEnvironment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
-	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+func (m *CreateJob_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
+	if m.Environments.IsNull() || m.Environments.IsUnknown() {
 		return nil, false
 	}
 	var v []JobEnvironment_SdkV2
-	d := o.Environments.ElementsAs(ctx, &v, true)
+	d := m.Environments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2568,26 +2568,26 @@ func (o *CreateJob_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment
 }
 
 // SetEnvironments sets the value of the Environments field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
+func (m *CreateJob_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Environments = types.ListValueMust(t, vs)
+	m.Environments = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in CreateJob_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2598,22 +2598,22 @@ func (o *CreateJob_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bo
 }
 
 // SetGitSource sets the value of the GitSource field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *CreateJob_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in CreateJob_SdkV2 as
 // a JobsHealthRules_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
 	var e JobsHealthRules_SdkV2
-	if o.Health.IsNull() || o.Health.IsUnknown() {
+	if m.Health.IsNull() || m.Health.IsUnknown() {
 		return e, false
 	}
 	var v []JobsHealthRules_SdkV2
-	d := o.Health.ElementsAs(ctx, &v, true)
+	d := m.Health.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2624,21 +2624,21 @@ func (o *CreateJob_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2,
 }
 
 // SetHealth sets the value of the Health field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
+func (m *CreateJob_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
-	o.Health = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	m.Health = types.ListValueMust(t, vs)
 }
 
 // GetJobClusters returns the value of the JobClusters field in CreateJob_SdkV2 as
 // a slice of JobCluster_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
-	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+func (m *CreateJob_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
+	if m.JobClusters.IsNull() || m.JobClusters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobCluster_SdkV2
-	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	d := m.JobClusters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2646,26 +2646,26 @@ func (o *CreateJob_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV
 }
 
 // SetJobClusters sets the value of the JobClusters field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
+func (m *CreateJob_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobClusters = types.ListValueMust(t, vs)
+	m.JobClusters = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in CreateJob_SdkV2 as
 // a JobNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
 	var e JobNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []JobNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2676,21 +2676,21 @@ func (o *CreateJob_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotif
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
+func (m *CreateJob_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in CreateJob_SdkV2 as
 // a slice of JobParameterDefinition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDefinition_SdkV2, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *CreateJob_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDefinition_SdkV2, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobParameterDefinition_SdkV2
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2698,26 +2698,26 @@ func (o *CreateJob_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDefi
 }
 
 // SetParameters sets the value of the Parameters field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetParameters(ctx context.Context, v []JobParameterDefinition_SdkV2) {
+func (m *CreateJob_SdkV2) SetParameters(ctx context.Context, v []JobParameterDefinition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 // GetQueue returns the value of the Queue field in CreateJob_SdkV2 as
 // a QueueSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
 	var e QueueSettings_SdkV2
-	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+	if m.Queue.IsNull() || m.Queue.IsUnknown() {
 		return e, false
 	}
 	var v []QueueSettings_SdkV2
-	d := o.Queue.ElementsAs(ctx, &v, true)
+	d := m.Queue.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2728,22 +2728,22 @@ func (o *CreateJob_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bo
 }
 
 // SetQueue sets the value of the Queue field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
+func (m *CreateJob_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
-	o.Queue = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	m.Queue = types.ListValueMust(t, vs)
 }
 
 // GetRunAs returns the value of the RunAs field in CreateJob_SdkV2 as
 // a JobRunAs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
 	var e JobRunAs_SdkV2
-	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+	if m.RunAs.IsNull() || m.RunAs.IsUnknown() {
 		return e, false
 	}
 	var v []JobRunAs_SdkV2
-	d := o.RunAs.ElementsAs(ctx, &v, true)
+	d := m.RunAs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2754,22 +2754,22 @@ func (o *CreateJob_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
 }
 
 // SetRunAs sets the value of the RunAs field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
+func (m *CreateJob_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
-	o.RunAs = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	m.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetSchedule returns the value of the Schedule field in CreateJob_SdkV2 as
 // a CronSchedule_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
 	var e CronSchedule_SdkV2
-	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+	if m.Schedule.IsNull() || m.Schedule.IsUnknown() {
 		return e, false
 	}
 	var v []CronSchedule_SdkV2
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := m.Schedule.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2780,21 +2780,21 @@ func (o *CreateJob_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, 
 }
 
 // SetSchedule sets the value of the Schedule field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
+func (m *CreateJob_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	m.Schedule = types.ListValueMust(t, vs)
 }
 
 // GetTags returns the value of the Tags field in CreateJob_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+func (m *CreateJob_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Tags.ElementsAs(ctx, &v, true)
+	d := m.Tags.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2802,25 +2802,25 @@ func (o *CreateJob_SdkV2) GetTags(ctx context.Context) (map[string]types.String,
 }
 
 // SetTags sets the value of the Tags field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+func (m *CreateJob_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.MapValueMust(t, vs)
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 // GetTasks returns the value of the Tasks field in CreateJob_SdkV2 as
 // a slice of Task_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
-	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+func (m *CreateJob_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
+	if m.Tasks.IsNull() || m.Tasks.IsUnknown() {
 		return nil, false
 	}
 	var v []Task_SdkV2
-	d := o.Tasks.ElementsAs(ctx, &v, true)
+	d := m.Tasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2828,26 +2828,26 @@ func (o *CreateJob_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
 }
 
 // SetTasks sets the value of the Tasks field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetTasks(ctx context.Context, v []Task_SdkV2) {
+func (m *CreateJob_SdkV2) SetTasks(ctx context.Context, v []Task_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tasks = types.ListValueMust(t, vs)
+	m.Tasks = types.ListValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in CreateJob_SdkV2 as
 // a TriggerSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_SdkV2, bool) {
 	var e TriggerSettings_SdkV2
-	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+	if m.Trigger.IsNull() || m.Trigger.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerSettings_SdkV2
-	d := o.Trigger.ElementsAs(ctx, &v, true)
+	d := m.Trigger.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2858,22 +2858,22 @@ func (o *CreateJob_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_SdkV2
 }
 
 // SetTrigger sets the value of the Trigger field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetTrigger(ctx context.Context, v TriggerSettings_SdkV2) {
+func (m *CreateJob_SdkV2) SetTrigger(ctx context.Context, v TriggerSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
-	o.Trigger = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	m.Trigger = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in CreateJob_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateJob_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *CreateJob_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2884,10 +2884,10 @@ func (o *CreateJob_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookN
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in CreateJob_SdkV2.
-func (o *CreateJob_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *CreateJob_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 // Job was created successfully
@@ -2902,7 +2902,7 @@ func (to *CreateResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *CreateResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateResponse_SdkV2) {
 }
 
-func (c CreateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 
 	return attrs
@@ -2915,23 +2915,23 @@ func (c CreateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id": m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.Int64Type,
@@ -2960,7 +2960,7 @@ func (to *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CronSchedule_SdkV2) {
 }
 
-func (c CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
 	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
@@ -2975,25 +2975,25 @@ func (c CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CronSchedule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CronSchedule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CronSchedule_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CronSchedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CronSchedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status":           o.PauseStatus,
-			"quartz_cron_expression": o.QuartzCronExpression,
-			"timezone_id":            o.TimezoneId,
+			"pause_status":           m.PauseStatus,
+			"quartz_cron_expression": m.QuartzCronExpression,
+			"timezone_id":            m.TimezoneId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pause_status":           types.StringType,
@@ -3027,7 +3027,7 @@ func (to *DashboardPageSnapshot_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c DashboardPageSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DashboardPageSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_display_name"] = attrs["page_display_name"].SetOptional()
 	attrs["widget_error_details"] = attrs["widget_error_details"].SetComputed()
 
@@ -3041,7 +3041,7 @@ func (c DashboardPageSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DashboardPageSnapshot_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DashboardPageSnapshot_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"widget_error_details": reflect.TypeOf(WidgetErrorDetail_SdkV2{}),
 	}
@@ -3050,17 +3050,17 @@ func (a DashboardPageSnapshot_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardPageSnapshot_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DashboardPageSnapshot_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DashboardPageSnapshot_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_display_name":    o.PageDisplayName,
-			"widget_error_details": o.WidgetErrorDetails,
+			"page_display_name":    m.PageDisplayName,
+			"widget_error_details": m.WidgetErrorDetails,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DashboardPageSnapshot_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DashboardPageSnapshot_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_display_name": types.StringType,
@@ -3074,12 +3074,12 @@ func (o DashboardPageSnapshot_SdkV2) Type(ctx context.Context) attr.Type {
 // GetWidgetErrorDetails returns the value of the WidgetErrorDetails field in DashboardPageSnapshot_SdkV2 as
 // a slice of WidgetErrorDetail_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DashboardPageSnapshot_SdkV2) GetWidgetErrorDetails(ctx context.Context) ([]WidgetErrorDetail_SdkV2, bool) {
-	if o.WidgetErrorDetails.IsNull() || o.WidgetErrorDetails.IsUnknown() {
+func (m *DashboardPageSnapshot_SdkV2) GetWidgetErrorDetails(ctx context.Context) ([]WidgetErrorDetail_SdkV2, bool) {
+	if m.WidgetErrorDetails.IsNull() || m.WidgetErrorDetails.IsUnknown() {
 		return nil, false
 	}
 	var v []WidgetErrorDetail_SdkV2
-	d := o.WidgetErrorDetails.ElementsAs(ctx, &v, true)
+	d := m.WidgetErrorDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3087,14 +3087,14 @@ func (o *DashboardPageSnapshot_SdkV2) GetWidgetErrorDetails(ctx context.Context)
 }
 
 // SetWidgetErrorDetails sets the value of the WidgetErrorDetails field in DashboardPageSnapshot_SdkV2.
-func (o *DashboardPageSnapshot_SdkV2) SetWidgetErrorDetails(ctx context.Context, v []WidgetErrorDetail_SdkV2) {
+func (m *DashboardPageSnapshot_SdkV2) SetWidgetErrorDetails(ctx context.Context, v []WidgetErrorDetail_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_error_details"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_error_details"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.WidgetErrorDetails = types.ListValueMust(t, vs)
+	m.WidgetErrorDetails = types.ListValueMust(t, vs)
 }
 
 // Configures the Lakeview Dashboard job task type.
@@ -3132,7 +3132,7 @@ func (to *DashboardTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Da
 	}
 }
 
-func (c DashboardTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DashboardTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
 	attrs["subscription"] = attrs["subscription"].SetOptional()
 	attrs["subscription"] = attrs["subscription"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -3148,7 +3148,7 @@ func (c DashboardTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DashboardTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DashboardTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscription": reflect.TypeOf(Subscription_SdkV2{}),
 	}
@@ -3157,18 +3157,18 @@ func (a DashboardTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DashboardTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DashboardTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard_id": o.DashboardId,
-			"subscription": o.Subscription,
-			"warehouse_id": o.WarehouseId,
+			"dashboard_id": m.DashboardId,
+			"subscription": m.Subscription,
+			"warehouse_id": m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DashboardTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DashboardTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -3183,13 +3183,13 @@ func (o DashboardTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSubscription returns the value of the Subscription field in DashboardTask_SdkV2 as
 // a Subscription_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DashboardTask_SdkV2) GetSubscription(ctx context.Context) (Subscription_SdkV2, bool) {
+func (m *DashboardTask_SdkV2) GetSubscription(ctx context.Context) (Subscription_SdkV2, bool) {
 	var e Subscription_SdkV2
-	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
+	if m.Subscription.IsNull() || m.Subscription.IsUnknown() {
 		return e, false
 	}
 	var v []Subscription_SdkV2
-	d := o.Subscription.ElementsAs(ctx, &v, true)
+	d := m.Subscription.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3200,10 +3200,10 @@ func (o *DashboardTask_SdkV2) GetSubscription(ctx context.Context) (Subscription
 }
 
 // SetSubscription sets the value of the Subscription field in DashboardTask_SdkV2.
-func (o *DashboardTask_SdkV2) SetSubscription(ctx context.Context, v Subscription_SdkV2) {
+func (m *DashboardTask_SdkV2) SetSubscription(ctx context.Context, v Subscription_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscription"]
-	o.Subscription = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscription"]
+	m.Subscription = types.ListValueMust(t, vs)
 }
 
 type DashboardTaskOutput_SdkV2 struct {
@@ -3229,7 +3229,7 @@ func (to *DashboardTaskOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c DashboardTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DashboardTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_snapshots"] = attrs["page_snapshots"].SetOptional()
 
 	return attrs
@@ -3242,7 +3242,7 @@ func (c DashboardTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DashboardTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DashboardTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"page_snapshots": reflect.TypeOf(DashboardPageSnapshot_SdkV2{}),
 	}
@@ -3251,16 +3251,16 @@ func (a DashboardTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardTaskOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DashboardTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DashboardTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_snapshots": o.PageSnapshots,
+			"page_snapshots": m.PageSnapshots,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DashboardTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DashboardTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_snapshots": basetypes.ListType{
@@ -3273,12 +3273,12 @@ func (o DashboardTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetPageSnapshots returns the value of the PageSnapshots field in DashboardTaskOutput_SdkV2 as
 // a slice of DashboardPageSnapshot_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DashboardTaskOutput_SdkV2) GetPageSnapshots(ctx context.Context) ([]DashboardPageSnapshot_SdkV2, bool) {
-	if o.PageSnapshots.IsNull() || o.PageSnapshots.IsUnknown() {
+func (m *DashboardTaskOutput_SdkV2) GetPageSnapshots(ctx context.Context) ([]DashboardPageSnapshot_SdkV2, bool) {
+	if m.PageSnapshots.IsNull() || m.PageSnapshots.IsUnknown() {
 		return nil, false
 	}
 	var v []DashboardPageSnapshot_SdkV2
-	d := o.PageSnapshots.ElementsAs(ctx, &v, true)
+	d := m.PageSnapshots.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3286,14 +3286,14 @@ func (o *DashboardTaskOutput_SdkV2) GetPageSnapshots(ctx context.Context) ([]Das
 }
 
 // SetPageSnapshots sets the value of the PageSnapshots field in DashboardTaskOutput_SdkV2.
-func (o *DashboardTaskOutput_SdkV2) SetPageSnapshots(ctx context.Context, v []DashboardPageSnapshot_SdkV2) {
+func (m *DashboardTaskOutput_SdkV2) SetPageSnapshots(ctx context.Context, v []DashboardPageSnapshot_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["page_snapshots"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["page_snapshots"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PageSnapshots = types.ListValueMust(t, vs)
+	m.PageSnapshots = types.ListValueMust(t, vs)
 }
 
 // Format of response retrieved from dbt Cloud, for inclusion in output
@@ -3315,7 +3315,7 @@ func (to *DbtCloudJobRunStep_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *DbtCloudJobRunStep_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtCloudJobRunStep_SdkV2) {
 }
 
-func (c DbtCloudJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtCloudJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["index"] = attrs["index"].SetOptional()
 	attrs["logs"] = attrs["logs"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -3331,26 +3331,26 @@ func (c DbtCloudJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtCloudJobRunStep_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtCloudJobRunStep_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtCloudJobRunStep_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtCloudJobRunStep_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtCloudJobRunStep_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index":  o.Index,
-			"logs":   o.Logs,
-			"name":   o.Name,
-			"status": o.Status,
+			"index":  m.Index,
+			"logs":   m.Logs,
+			"name":   m.Name,
+			"status": m.Status,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtCloudJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtCloudJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index":  types.Int64Type,
@@ -3376,7 +3376,7 @@ func (to *DbtCloudTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *DbtCloudTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtCloudTask_SdkV2) {
 }
 
-func (c DbtCloudTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtCloudTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_resource_name"] = attrs["connection_resource_name"].SetOptional()
 	attrs["dbt_cloud_job_id"] = attrs["dbt_cloud_job_id"].SetOptional()
 
@@ -3390,24 +3390,24 @@ func (c DbtCloudTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtCloudTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtCloudTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtCloudTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtCloudTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtCloudTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_resource_name": o.ConnectionResourceName,
-			"dbt_cloud_job_id":         o.DbtCloudJobId,
+			"connection_resource_name": m.ConnectionResourceName,
+			"dbt_cloud_job_id":         m.DbtCloudJobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtCloudTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtCloudTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_resource_name": types.StringType,
@@ -3444,7 +3444,7 @@ func (to *DbtCloudTaskOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c DbtCloudTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtCloudTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_cloud_job_run_id"] = attrs["dbt_cloud_job_run_id"].SetOptional()
 	attrs["dbt_cloud_job_run_output"] = attrs["dbt_cloud_job_run_output"].SetOptional()
 	attrs["dbt_cloud_job_run_url"] = attrs["dbt_cloud_job_run_url"].SetOptional()
@@ -3459,7 +3459,7 @@ func (c DbtCloudTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtCloudTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtCloudTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_cloud_job_run_output": reflect.TypeOf(DbtCloudJobRunStep_SdkV2{}),
 	}
@@ -3468,18 +3468,18 @@ func (a DbtCloudTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtCloudTaskOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtCloudTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtCloudTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_cloud_job_run_id":     o.DbtCloudJobRunId,
-			"dbt_cloud_job_run_output": o.DbtCloudJobRunOutput,
-			"dbt_cloud_job_run_url":    o.DbtCloudJobRunUrl,
+			"dbt_cloud_job_run_id":     m.DbtCloudJobRunId,
+			"dbt_cloud_job_run_output": m.DbtCloudJobRunOutput,
+			"dbt_cloud_job_run_url":    m.DbtCloudJobRunUrl,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtCloudTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtCloudTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_cloud_job_run_id": types.Int64Type,
@@ -3494,12 +3494,12 @@ func (o DbtCloudTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtCloudJobRunOutput returns the value of the DbtCloudJobRunOutput field in DbtCloudTaskOutput_SdkV2 as
 // a slice of DbtCloudJobRunStep_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DbtCloudTaskOutput_SdkV2) GetDbtCloudJobRunOutput(ctx context.Context) ([]DbtCloudJobRunStep_SdkV2, bool) {
-	if o.DbtCloudJobRunOutput.IsNull() || o.DbtCloudJobRunOutput.IsUnknown() {
+func (m *DbtCloudTaskOutput_SdkV2) GetDbtCloudJobRunOutput(ctx context.Context) ([]DbtCloudJobRunStep_SdkV2, bool) {
+	if m.DbtCloudJobRunOutput.IsNull() || m.DbtCloudJobRunOutput.IsUnknown() {
 		return nil, false
 	}
 	var v []DbtCloudJobRunStep_SdkV2
-	d := o.DbtCloudJobRunOutput.ElementsAs(ctx, &v, true)
+	d := m.DbtCloudJobRunOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3507,14 +3507,14 @@ func (o *DbtCloudTaskOutput_SdkV2) GetDbtCloudJobRunOutput(ctx context.Context) 
 }
 
 // SetDbtCloudJobRunOutput sets the value of the DbtCloudJobRunOutput field in DbtCloudTaskOutput_SdkV2.
-func (o *DbtCloudTaskOutput_SdkV2) SetDbtCloudJobRunOutput(ctx context.Context, v []DbtCloudJobRunStep_SdkV2) {
+func (m *DbtCloudTaskOutput_SdkV2) SetDbtCloudJobRunOutput(ctx context.Context, v []DbtCloudJobRunStep_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_job_run_output"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_job_run_output"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtCloudJobRunOutput = types.ListValueMust(t, vs)
+	m.DbtCloudJobRunOutput = types.ListValueMust(t, vs)
 }
 
 type DbtOutput_SdkV2 struct {
@@ -3533,7 +3533,7 @@ func (to *DbtOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *DbtOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtOutput_SdkV2) {
 }
 
-func (c DbtOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifacts_headers"] = attrs["artifacts_headers"].SetOptional()
 	attrs["artifacts_link"] = attrs["artifacts_link"].SetOptional()
 
@@ -3547,7 +3547,7 @@ func (c DbtOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"artifacts_headers": reflect.TypeOf(types.String{}),
 	}
@@ -3556,17 +3556,17 @@ func (a DbtOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"artifacts_headers": o.ArtifactsHeaders,
-			"artifacts_link":    o.ArtifactsLink,
+			"artifacts_headers": m.ArtifactsHeaders,
+			"artifacts_link":    m.ArtifactsLink,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"artifacts_headers": basetypes.MapType{
@@ -3580,12 +3580,12 @@ func (o DbtOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetArtifactsHeaders returns the value of the ArtifactsHeaders field in DbtOutput_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DbtOutput_SdkV2) GetArtifactsHeaders(ctx context.Context) (map[string]types.String, bool) {
-	if o.ArtifactsHeaders.IsNull() || o.ArtifactsHeaders.IsUnknown() {
+func (m *DbtOutput_SdkV2) GetArtifactsHeaders(ctx context.Context) (map[string]types.String, bool) {
+	if m.ArtifactsHeaders.IsNull() || m.ArtifactsHeaders.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.ArtifactsHeaders.ElementsAs(ctx, &v, true)
+	d := m.ArtifactsHeaders.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3593,14 +3593,14 @@ func (o *DbtOutput_SdkV2) GetArtifactsHeaders(ctx context.Context) (map[string]t
 }
 
 // SetArtifactsHeaders sets the value of the ArtifactsHeaders field in DbtOutput_SdkV2.
-func (o *DbtOutput_SdkV2) SetArtifactsHeaders(ctx context.Context, v map[string]types.String) {
+func (m *DbtOutput_SdkV2) SetArtifactsHeaders(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.ArtifactsHeaders = types.MapValueMust(t, vs)
+	m.ArtifactsHeaders = types.MapValueMust(t, vs)
 }
 
 // Format of response retrieved from dbt platform, for inclusion in output
@@ -3627,7 +3627,7 @@ func (to *DbtPlatformJobRunStep_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 func (to *DbtPlatformJobRunStep_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformJobRunStep_SdkV2) {
 }
 
-func (c DbtPlatformJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtPlatformJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["index"] = attrs["index"].SetOptional()
 	attrs["logs"] = attrs["logs"].SetOptional()
 	attrs["logs_truncated"] = attrs["logs_truncated"].SetOptional()
@@ -3645,28 +3645,28 @@ func (c DbtPlatformJobRunStep_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtPlatformJobRunStep_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtPlatformJobRunStep_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformJobRunStep_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtPlatformJobRunStep_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtPlatformJobRunStep_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"index":          o.Index,
-			"logs":           o.Logs,
-			"logs_truncated": o.LogsTruncated,
-			"name":           o.Name,
-			"name_truncated": o.NameTruncated,
-			"status":         o.Status,
+			"index":          m.Index,
+			"logs":           m.Logs,
+			"logs_truncated": m.LogsTruncated,
+			"name":           m.Name,
+			"name_truncated": m.NameTruncated,
+			"status":         m.Status,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtPlatformJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtPlatformJobRunStep_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index":          types.Int64Type,
@@ -3694,7 +3694,7 @@ func (to *DbtPlatformTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *DbtPlatformTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformTask_SdkV2) {
 }
 
-func (c DbtPlatformTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtPlatformTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_resource_name"] = attrs["connection_resource_name"].SetOptional()
 	attrs["dbt_platform_job_id"] = attrs["dbt_platform_job_id"].SetOptional()
 
@@ -3708,24 +3708,24 @@ func (c DbtPlatformTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtPlatformTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtPlatformTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtPlatformTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtPlatformTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_resource_name": o.ConnectionResourceName,
-			"dbt_platform_job_id":      o.DbtPlatformJobId,
+			"connection_resource_name": m.ConnectionResourceName,
+			"dbt_platform_job_id":      m.DbtPlatformJobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtPlatformTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtPlatformTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_resource_name": types.StringType,
@@ -3765,7 +3765,7 @@ func (to *DbtPlatformTaskOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c DbtPlatformTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtPlatformTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_platform_job_run_id"] = attrs["dbt_platform_job_run_id"].SetOptional()
 	attrs["dbt_platform_job_run_output"] = attrs["dbt_platform_job_run_output"].SetOptional()
 	attrs["dbt_platform_job_run_url"] = attrs["dbt_platform_job_run_url"].SetOptional()
@@ -3781,7 +3781,7 @@ func (c DbtPlatformTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtPlatformTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtPlatformTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_platform_job_run_output": reflect.TypeOf(DbtPlatformJobRunStep_SdkV2{}),
 	}
@@ -3790,19 +3790,19 @@ func (a DbtPlatformTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtPlatformTaskOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtPlatformTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtPlatformTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_platform_job_run_id":     o.DbtPlatformJobRunId,
-			"dbt_platform_job_run_output": o.DbtPlatformJobRunOutput,
-			"dbt_platform_job_run_url":    o.DbtPlatformJobRunUrl,
-			"steps_truncated":             o.StepsTruncated,
+			"dbt_platform_job_run_id":     m.DbtPlatformJobRunId,
+			"dbt_platform_job_run_output": m.DbtPlatformJobRunOutput,
+			"dbt_platform_job_run_url":    m.DbtPlatformJobRunUrl,
+			"steps_truncated":             m.StepsTruncated,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtPlatformTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtPlatformTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_platform_job_run_id": types.StringType,
@@ -3818,12 +3818,12 @@ func (o DbtPlatformTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtPlatformJobRunOutput returns the value of the DbtPlatformJobRunOutput field in DbtPlatformTaskOutput_SdkV2 as
 // a slice of DbtPlatformJobRunStep_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DbtPlatformTaskOutput_SdkV2) GetDbtPlatformJobRunOutput(ctx context.Context) ([]DbtPlatformJobRunStep_SdkV2, bool) {
-	if o.DbtPlatformJobRunOutput.IsNull() || o.DbtPlatformJobRunOutput.IsUnknown() {
+func (m *DbtPlatformTaskOutput_SdkV2) GetDbtPlatformJobRunOutput(ctx context.Context) ([]DbtPlatformJobRunStep_SdkV2, bool) {
+	if m.DbtPlatformJobRunOutput.IsNull() || m.DbtPlatformJobRunOutput.IsUnknown() {
 		return nil, false
 	}
 	var v []DbtPlatformJobRunStep_SdkV2
-	d := o.DbtPlatformJobRunOutput.ElementsAs(ctx, &v, true)
+	d := m.DbtPlatformJobRunOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3831,14 +3831,14 @@ func (o *DbtPlatformTaskOutput_SdkV2) GetDbtPlatformJobRunOutput(ctx context.Con
 }
 
 // SetDbtPlatformJobRunOutput sets the value of the DbtPlatformJobRunOutput field in DbtPlatformTaskOutput_SdkV2.
-func (o *DbtPlatformTaskOutput_SdkV2) SetDbtPlatformJobRunOutput(ctx context.Context, v []DbtPlatformJobRunStep_SdkV2) {
+func (m *DbtPlatformTaskOutput_SdkV2) SetDbtPlatformJobRunOutput(ctx context.Context, v []DbtPlatformJobRunStep_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_job_run_output"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_job_run_output"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtPlatformJobRunOutput = types.ListValueMust(t, vs)
+	m.DbtPlatformJobRunOutput = types.ListValueMust(t, vs)
 }
 
 type DbtTask_SdkV2 struct {
@@ -3884,7 +3884,7 @@ func (to *DbtTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 func (to *DbtTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DbtTask_SdkV2) {
 }
 
-func (c DbtTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DbtTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["commands"] = attrs["commands"].SetRequired()
 	attrs["profiles_directory"] = attrs["profiles_directory"].SetOptional()
@@ -3903,7 +3903,7 @@ func (c DbtTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DbtTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DbtTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"commands": reflect.TypeOf(types.String{}),
 	}
@@ -3912,22 +3912,22 @@ func (a DbtTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DbtTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DbtTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DbtTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":            o.Catalog,
-			"commands":           o.Commands,
-			"profiles_directory": o.ProfilesDirectory,
-			"project_directory":  o.ProjectDirectory,
-			"schema":             o.Schema,
-			"source":             o.Source,
-			"warehouse_id":       o.WarehouseId,
+			"catalog":            m.Catalog,
+			"commands":           m.Commands,
+			"profiles_directory": m.ProfilesDirectory,
+			"project_directory":  m.ProjectDirectory,
+			"schema":             m.Schema,
+			"source":             m.Source,
+			"warehouse_id":       m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DbtTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DbtTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"catalog": types.StringType,
@@ -3946,12 +3946,12 @@ func (o DbtTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCommands returns the value of the Commands field in DbtTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *DbtTask_SdkV2) GetCommands(ctx context.Context) ([]types.String, bool) {
-	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+func (m *DbtTask_SdkV2) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if m.Commands.IsNull() || m.Commands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Commands.ElementsAs(ctx, &v, true)
+	d := m.Commands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3959,14 +3959,14 @@ func (o *DbtTask_SdkV2) GetCommands(ctx context.Context) ([]types.String, bool) 
 }
 
 // SetCommands sets the value of the Commands field in DbtTask_SdkV2.
-func (o *DbtTask_SdkV2) SetCommands(ctx context.Context, v []types.String) {
+func (m *DbtTask_SdkV2) SetCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Commands = types.ListValueMust(t, vs)
+	m.Commands = types.ListValueMust(t, vs)
 }
 
 type DeleteJob_SdkV2 struct {
@@ -3980,7 +3980,7 @@ func (to *DeleteJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *DeleteJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteJob_SdkV2) {
 }
 
-func (c DeleteJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 
 	return attrs
@@ -3993,23 +3993,23 @@ func (c DeleteJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id": m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DeleteJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.Int64Type,
@@ -4028,7 +4028,7 @@ func (to *DeleteRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *DeleteRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteRun_SdkV2) {
 }
 
-func (c DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
@@ -4041,23 +4041,23 @@ func (c DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteRun_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DeleteRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -4089,7 +4089,7 @@ func (to *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) S
 func (to *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) {
 }
 
-func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["field"] = attrs["field"].SetOptional()
 	attrs["new_value"] = attrs["new_value"].SetOptional()
 	attrs["previous_value"] = attrs["previous_value"].SetOptional()
@@ -4104,25 +4104,25 @@ func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) App
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2
 // only implements ToObjectValue() and Type().
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"field":          o.Field,
-			"new_value":      o.NewValue,
-			"previous_value": o.PreviousValue,
+			"field":          m.Field,
+			"new_value":      m.NewValue,
+			"previous_value": m.PreviousValue,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) Type(ctx context.Context) attr.Type {
+func (m EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"field":          types.StringType,
@@ -4146,7 +4146,7 @@ func (to *EnforcePolicyComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 func (to *EnforcePolicyComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceRequest_SdkV2) {
 }
 
-func (c EnforcePolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m EnforcePolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 
@@ -4160,24 +4160,24 @@ func (c EnforcePolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a EnforcePolicyComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m EnforcePolicyComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o EnforcePolicyComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m EnforcePolicyComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id":        o.JobId,
-			"validate_only": o.ValidateOnly,
+			"job_id":        m.JobId,
+			"validate_only": m.ValidateOnly,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m EnforcePolicyComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id":        types.Int64Type,
@@ -4238,7 +4238,7 @@ func (to *EnforcePolicyComplianceResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 	}
 }
 
-func (c EnforcePolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m EnforcePolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["has_changes"] = attrs["has_changes"].SetOptional()
 	attrs["job_cluster_changes"] = attrs["job_cluster_changes"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
@@ -4254,7 +4254,7 @@ func (c EnforcePolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a EnforcePolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m EnforcePolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"job_cluster_changes": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2{}),
 		"settings":            reflect.TypeOf(JobSettings_SdkV2{}),
@@ -4264,18 +4264,18 @@ func (a EnforcePolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o EnforcePolicyComplianceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m EnforcePolicyComplianceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"has_changes":         o.HasChanges,
-			"job_cluster_changes": o.JobClusterChanges,
-			"settings":            o.Settings,
+			"has_changes":         m.HasChanges,
+			"job_cluster_changes": m.JobClusterChanges,
+			"settings":            m.Settings,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m EnforcePolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"has_changes": types.BoolType,
@@ -4292,12 +4292,12 @@ func (o EnforcePolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Ty
 // GetJobClusterChanges returns the value of the JobClusterChanges field in EnforcePolicyComplianceResponse_SdkV2 as
 // a slice of EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *EnforcePolicyComplianceResponse_SdkV2) GetJobClusterChanges(ctx context.Context) ([]EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2, bool) {
-	if o.JobClusterChanges.IsNull() || o.JobClusterChanges.IsUnknown() {
+func (m *EnforcePolicyComplianceResponse_SdkV2) GetJobClusterChanges(ctx context.Context) ([]EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2, bool) {
+	if m.JobClusterChanges.IsNull() || m.JobClusterChanges.IsUnknown() {
 		return nil, false
 	}
 	var v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2
-	d := o.JobClusterChanges.ElementsAs(ctx, &v, true)
+	d := m.JobClusterChanges.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4305,26 +4305,26 @@ func (o *EnforcePolicyComplianceResponse_SdkV2) GetJobClusterChanges(ctx context
 }
 
 // SetJobClusterChanges sets the value of the JobClusterChanges field in EnforcePolicyComplianceResponse_SdkV2.
-func (o *EnforcePolicyComplianceResponse_SdkV2) SetJobClusterChanges(ctx context.Context, v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) {
+func (m *EnforcePolicyComplianceResponse_SdkV2) SetJobClusterChanges(ctx context.Context, v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster_changes"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster_changes"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobClusterChanges = types.ListValueMust(t, vs)
+	m.JobClusterChanges = types.ListValueMust(t, vs)
 }
 
 // GetSettings returns the value of the Settings field in EnforcePolicyComplianceResponse_SdkV2 as
 // a JobSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *EnforcePolicyComplianceResponse_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
+func (m *EnforcePolicyComplianceResponse_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 	var e JobSettings_SdkV2
-	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+	if m.Settings.IsNull() || m.Settings.IsUnknown() {
 		return e, false
 	}
 	var v []JobSettings_SdkV2
-	d := o.Settings.ElementsAs(ctx, &v, true)
+	d := m.Settings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4335,10 +4335,10 @@ func (o *EnforcePolicyComplianceResponse_SdkV2) GetSettings(ctx context.Context)
 }
 
 // SetSettings sets the value of the Settings field in EnforcePolicyComplianceResponse_SdkV2.
-func (o *EnforcePolicyComplianceResponse_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
+func (m *EnforcePolicyComplianceResponse_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
-	o.Settings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	m.Settings = types.ListValueMust(t, vs)
 }
 
 // Run was exported successfully.
@@ -4367,7 +4367,7 @@ func (to *ExportRunOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c ExportRunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ExportRunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["views"] = attrs["views"].SetOptional()
 
 	return attrs
@@ -4380,7 +4380,7 @@ func (c ExportRunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ExportRunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ExportRunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"views": reflect.TypeOf(ViewItem_SdkV2{}),
 	}
@@ -4389,16 +4389,16 @@ func (a ExportRunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ExportRunOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ExportRunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ExportRunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"views": o.Views,
+			"views": m.Views,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ExportRunOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ExportRunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"views": basetypes.ListType{
@@ -4411,12 +4411,12 @@ func (o ExportRunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetViews returns the value of the Views field in ExportRunOutput_SdkV2 as
 // a slice of ViewItem_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ExportRunOutput_SdkV2) GetViews(ctx context.Context) ([]ViewItem_SdkV2, bool) {
-	if o.Views.IsNull() || o.Views.IsUnknown() {
+func (m *ExportRunOutput_SdkV2) GetViews(ctx context.Context) ([]ViewItem_SdkV2, bool) {
+	if m.Views.IsNull() || m.Views.IsUnknown() {
 		return nil, false
 	}
 	var v []ViewItem_SdkV2
-	d := o.Views.ElementsAs(ctx, &v, true)
+	d := m.Views.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4424,14 +4424,14 @@ func (o *ExportRunOutput_SdkV2) GetViews(ctx context.Context) ([]ViewItem_SdkV2,
 }
 
 // SetViews sets the value of the Views field in ExportRunOutput_SdkV2.
-func (o *ExportRunOutput_SdkV2) SetViews(ctx context.Context, v []ViewItem_SdkV2) {
+func (m *ExportRunOutput_SdkV2) SetViews(ctx context.Context, v []ViewItem_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["views"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["views"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Views = types.ListValueMust(t, vs)
+	m.Views = types.ListValueMust(t, vs)
 }
 
 type ExportRunRequest_SdkV2 struct {
@@ -4447,7 +4447,7 @@ func (to *ExportRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *ExportRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExportRunRequest_SdkV2) {
 }
 
-func (c ExportRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ExportRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 	attrs["views_to_export"] = attrs["views_to_export"].SetOptional()
 
@@ -4461,24 +4461,24 @@ func (c ExportRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ExportRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ExportRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ExportRunRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ExportRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ExportRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id":          o.RunId,
-			"views_to_export": o.ViewsToExport,
+			"run_id":          m.RunId,
+			"views_to_export": m.ViewsToExport,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ExportRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ExportRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id":          types.Int64Type,
@@ -4508,7 +4508,7 @@ func (to *FileArrivalTriggerConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(
 func (to *FileArrivalTriggerConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FileArrivalTriggerConfiguration_SdkV2) {
 }
 
-func (c FileArrivalTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m FileArrivalTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
 	attrs["url"] = attrs["url"].SetRequired()
 	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
@@ -4523,25 +4523,25 @@ func (c FileArrivalTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a FileArrivalTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m FileArrivalTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FileArrivalTriggerConfiguration_SdkV2
 // only implements ToObjectValue() and Type().
-func (o FileArrivalTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m FileArrivalTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
-			"url":                               o.Url,
-			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+			"min_time_between_triggers_seconds": m.MinTimeBetweenTriggersSeconds,
+			"url":                               m.Url,
+			"wait_after_last_change_seconds":    m.WaitAfterLastChangeSeconds,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+func (m FileArrivalTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"min_time_between_triggers_seconds": types.Int64Type,
@@ -4563,7 +4563,7 @@ func (to *FileArrivalTriggerState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *FileArrivalTriggerState_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FileArrivalTriggerState_SdkV2) {
 }
 
-func (c FileArrivalTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m FileArrivalTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["using_file_events"] = attrs["using_file_events"].SetOptional()
 
 	return attrs
@@ -4576,23 +4576,23 @@ func (c FileArrivalTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a FileArrivalTriggerState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m FileArrivalTriggerState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FileArrivalTriggerState_SdkV2
 // only implements ToObjectValue() and Type().
-func (o FileArrivalTriggerState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m FileArrivalTriggerState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"using_file_events": o.UsingFileEvents,
+			"using_file_events": m.UsingFileEvents,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerState_SdkV2) Type(ctx context.Context) attr.Type {
+func (m FileArrivalTriggerState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"using_file_events": types.BoolType,
@@ -4642,7 +4642,7 @@ func (to *ForEachStats_SdkV2) SyncFieldsDuringRead(ctx context.Context, from For
 	}
 }
 
-func (c ForEachStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ForEachStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["error_message_stats"] = attrs["error_message_stats"].SetOptional()
 	attrs["task_run_stats"] = attrs["task_run_stats"].SetOptional()
 	attrs["task_run_stats"] = attrs["task_run_stats"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4657,7 +4657,7 @@ func (c ForEachStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ForEachStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ForEachStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"error_message_stats": reflect.TypeOf(ForEachTaskErrorMessageStats_SdkV2{}),
 		"task_run_stats":      reflect.TypeOf(ForEachTaskTaskRunStats_SdkV2{}),
@@ -4667,17 +4667,17 @@ func (a ForEachStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachStats_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ForEachStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ForEachStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"error_message_stats": o.ErrorMessageStats,
-			"task_run_stats":      o.TaskRunStats,
+			"error_message_stats": m.ErrorMessageStats,
+			"task_run_stats":      m.TaskRunStats,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ForEachStats_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ForEachStats_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error_message_stats": basetypes.ListType{
@@ -4693,12 +4693,12 @@ func (o ForEachStats_SdkV2) Type(ctx context.Context) attr.Type {
 // GetErrorMessageStats returns the value of the ErrorMessageStats field in ForEachStats_SdkV2 as
 // a slice of ForEachTaskErrorMessageStats_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ForEachStats_SdkV2) GetErrorMessageStats(ctx context.Context) ([]ForEachTaskErrorMessageStats_SdkV2, bool) {
-	if o.ErrorMessageStats.IsNull() || o.ErrorMessageStats.IsUnknown() {
+func (m *ForEachStats_SdkV2) GetErrorMessageStats(ctx context.Context) ([]ForEachTaskErrorMessageStats_SdkV2, bool) {
+	if m.ErrorMessageStats.IsNull() || m.ErrorMessageStats.IsUnknown() {
 		return nil, false
 	}
 	var v []ForEachTaskErrorMessageStats_SdkV2
-	d := o.ErrorMessageStats.ElementsAs(ctx, &v, true)
+	d := m.ErrorMessageStats.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4706,26 +4706,26 @@ func (o *ForEachStats_SdkV2) GetErrorMessageStats(ctx context.Context) ([]ForEac
 }
 
 // SetErrorMessageStats sets the value of the ErrorMessageStats field in ForEachStats_SdkV2.
-func (o *ForEachStats_SdkV2) SetErrorMessageStats(ctx context.Context, v []ForEachTaskErrorMessageStats_SdkV2) {
+func (m *ForEachStats_SdkV2) SetErrorMessageStats(ctx context.Context, v []ForEachTaskErrorMessageStats_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_message_stats"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["error_message_stats"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.ErrorMessageStats = types.ListValueMust(t, vs)
+	m.ErrorMessageStats = types.ListValueMust(t, vs)
 }
 
 // GetTaskRunStats returns the value of the TaskRunStats field in ForEachStats_SdkV2 as
 // a ForEachTaskTaskRunStats_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ForEachStats_SdkV2) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunStats_SdkV2, bool) {
+func (m *ForEachStats_SdkV2) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunStats_SdkV2, bool) {
 	var e ForEachTaskTaskRunStats_SdkV2
-	if o.TaskRunStats.IsNull() || o.TaskRunStats.IsUnknown() {
+	if m.TaskRunStats.IsNull() || m.TaskRunStats.IsUnknown() {
 		return e, false
 	}
 	var v []ForEachTaskTaskRunStats_SdkV2
-	d := o.TaskRunStats.ElementsAs(ctx, &v, true)
+	d := m.TaskRunStats.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4736,10 +4736,10 @@ func (o *ForEachStats_SdkV2) GetTaskRunStats(ctx context.Context) (ForEachTaskTa
 }
 
 // SetTaskRunStats sets the value of the TaskRunStats field in ForEachStats_SdkV2.
-func (o *ForEachStats_SdkV2) SetTaskRunStats(ctx context.Context, v ForEachTaskTaskRunStats_SdkV2) {
+func (m *ForEachStats_SdkV2) SetTaskRunStats(ctx context.Context, v ForEachTaskTaskRunStats_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_stats"]
-	o.TaskRunStats = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_stats"]
+	m.TaskRunStats = types.ListValueMust(t, vs)
 }
 
 type ForEachTask_SdkV2 struct {
@@ -4777,7 +4777,7 @@ func (to *ForEachTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ForE
 	}
 }
 
-func (c ForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["concurrency"] = attrs["concurrency"].SetOptional()
 	attrs["inputs"] = attrs["inputs"].SetRequired()
 	attrs["task"] = attrs["task"].SetRequired()
@@ -4793,7 +4793,7 @@ func (c ForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"task": reflect.TypeOf(Task_SdkV2{}),
 	}
@@ -4802,18 +4802,18 @@ func (a ForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ForEachTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ForEachTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"concurrency": o.Concurrency,
-			"inputs":      o.Inputs,
-			"task":        o.Task,
+			"concurrency": m.Concurrency,
+			"inputs":      m.Inputs,
+			"task":        m.Task,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"concurrency": types.Int64Type,
@@ -4828,13 +4828,13 @@ func (o ForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetTask returns the value of the Task field in ForEachTask_SdkV2 as
 // a Task_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
+func (m *ForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
 	var e Task_SdkV2
-	if o.Task.IsNull() || o.Task.IsUnknown() {
+	if m.Task.IsNull() || m.Task.IsUnknown() {
 		return e, false
 	}
 	var v []Task_SdkV2
-	d := o.Task.ElementsAs(ctx, &v, true)
+	d := m.Task.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4845,10 +4845,10 @@ func (o *ForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
 }
 
 // SetTask sets the value of the Task field in ForEachTask_SdkV2.
-func (o *ForEachTask_SdkV2) SetTask(ctx context.Context, v Task_SdkV2) {
+func (m *ForEachTask_SdkV2) SetTask(ctx context.Context, v Task_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
-	o.Task = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	m.Task = types.ListValueMust(t, vs)
 }
 
 type ForEachTaskErrorMessageStats_SdkV2 struct {
@@ -4867,7 +4867,7 @@ func (to *ForEachTaskErrorMessageStats_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 func (to *ForEachTaskErrorMessageStats_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ForEachTaskErrorMessageStats_SdkV2) {
 }
 
-func (c ForEachTaskErrorMessageStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ForEachTaskErrorMessageStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["count"] = attrs["count"].SetOptional()
 	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["termination_category"] = attrs["termination_category"].SetOptional()
@@ -4882,25 +4882,25 @@ func (c ForEachTaskErrorMessageStats_SdkV2) ApplySchemaCustomizations(attrs map[
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ForEachTaskErrorMessageStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ForEachTaskErrorMessageStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTaskErrorMessageStats_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ForEachTaskErrorMessageStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ForEachTaskErrorMessageStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"count":                o.Count,
-			"error_message":        o.ErrorMessage,
-			"termination_category": o.TerminationCategory,
+			"count":                m.Count,
+			"error_message":        m.ErrorMessage,
+			"termination_category": m.TerminationCategory,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ForEachTaskErrorMessageStats_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"count":                types.Int64Type,
@@ -4932,7 +4932,7 @@ func (to *ForEachTaskTaskRunStats_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *ForEachTaskTaskRunStats_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ForEachTaskTaskRunStats_SdkV2) {
 }
 
-func (c ForEachTaskTaskRunStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ForEachTaskTaskRunStats_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active_iterations"] = attrs["active_iterations"].SetOptional()
 	attrs["completed_iterations"] = attrs["completed_iterations"].SetOptional()
 	attrs["failed_iterations"] = attrs["failed_iterations"].SetOptional()
@@ -4950,28 +4950,28 @@ func (c ForEachTaskTaskRunStats_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ForEachTaskTaskRunStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ForEachTaskTaskRunStats_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTaskTaskRunStats_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ForEachTaskTaskRunStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ForEachTaskTaskRunStats_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active_iterations":    o.ActiveIterations,
-			"completed_iterations": o.CompletedIterations,
-			"failed_iterations":    o.FailedIterations,
-			"scheduled_iterations": o.ScheduledIterations,
-			"succeeded_iterations": o.SucceededIterations,
-			"total_iterations":     o.TotalIterations,
+			"active_iterations":    m.ActiveIterations,
+			"completed_iterations": m.CompletedIterations,
+			"failed_iterations":    m.FailedIterations,
+			"scheduled_iterations": m.ScheduledIterations,
+			"succeeded_iterations": m.SucceededIterations,
+			"total_iterations":     m.TotalIterations,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ForEachTaskTaskRunStats_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active_iterations":    types.Int64Type,
@@ -5041,7 +5041,7 @@ func (to *GenAiComputeTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c GenAiComputeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GenAiComputeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["command"] = attrs["command"].SetOptional()
 	attrs["compute"] = attrs["compute"].SetOptional()
 	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5062,7 +5062,7 @@ func (c GenAiComputeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GenAiComputeTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GenAiComputeTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"compute": reflect.TypeOf(ComputeConfig_SdkV2{}),
 	}
@@ -5071,23 +5071,23 @@ func (a GenAiComputeTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GenAiComputeTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GenAiComputeTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GenAiComputeTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"command":                   o.Command,
-			"compute":                   o.Compute,
-			"dl_runtime_image":          o.DlRuntimeImage,
-			"mlflow_experiment_name":    o.MlflowExperimentName,
-			"source":                    o.Source,
-			"training_script_path":      o.TrainingScriptPath,
-			"yaml_parameters":           o.YamlParameters,
-			"yaml_parameters_file_path": o.YamlParametersFilePath,
+			"command":                   m.Command,
+			"compute":                   m.Compute,
+			"dl_runtime_image":          m.DlRuntimeImage,
+			"mlflow_experiment_name":    m.MlflowExperimentName,
+			"source":                    m.Source,
+			"training_script_path":      m.TrainingScriptPath,
+			"yaml_parameters":           m.YamlParameters,
+			"yaml_parameters_file_path": m.YamlParametersFilePath,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GenAiComputeTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GenAiComputeTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"command": types.StringType,
@@ -5107,13 +5107,13 @@ func (o GenAiComputeTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCompute returns the value of the Compute field in GenAiComputeTask_SdkV2 as
 // a ComputeConfig_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GenAiComputeTask_SdkV2) GetCompute(ctx context.Context) (ComputeConfig_SdkV2, bool) {
+func (m *GenAiComputeTask_SdkV2) GetCompute(ctx context.Context) (ComputeConfig_SdkV2, bool) {
 	var e ComputeConfig_SdkV2
-	if o.Compute.IsNull() || o.Compute.IsUnknown() {
+	if m.Compute.IsNull() || m.Compute.IsUnknown() {
 		return e, false
 	}
 	var v []ComputeConfig_SdkV2
-	d := o.Compute.ElementsAs(ctx, &v, true)
+	d := m.Compute.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5124,10 +5124,10 @@ func (o *GenAiComputeTask_SdkV2) GetCompute(ctx context.Context) (ComputeConfig_
 }
 
 // SetCompute sets the value of the Compute field in GenAiComputeTask_SdkV2.
-func (o *GenAiComputeTask_SdkV2) SetCompute(ctx context.Context, v ComputeConfig_SdkV2) {
+func (m *GenAiComputeTask_SdkV2) SetCompute(ctx context.Context, v ComputeConfig_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
-	o.Compute = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	m.Compute = types.ListValueMust(t, vs)
 }
 
 type GetJobPermissionLevelsRequest_SdkV2 struct {
@@ -5141,7 +5141,7 @@ func (to *GetJobPermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 func (to *GetJobPermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionLevelsRequest_SdkV2) {
 }
 
-func (c GetJobPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetJobPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 
 	return attrs
@@ -5154,23 +5154,23 @@ func (c GetJobPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetJobPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetJobPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionLevelsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetJobPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetJobPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id": m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetJobPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.StringType,
@@ -5201,7 +5201,7 @@ func (to *GetJobPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c GetJobPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetJobPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
 	return attrs
@@ -5214,7 +5214,7 @@ func (c GetJobPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetJobPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetJobPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(JobPermissionsDescription_SdkV2{}),
 	}
@@ -5223,16 +5223,16 @@ func (a GetJobPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionLevelsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetJobPermissionLevelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetJobPermissionLevelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": o.PermissionLevels,
+			"permission_levels": m.PermissionLevels,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetJobPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
@@ -5245,12 +5245,12 @@ func (o GetJobPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 // GetPermissionLevels returns the value of the PermissionLevels field in GetJobPermissionLevelsResponse_SdkV2 as
 // a slice of JobPermissionsDescription_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetJobPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.Context) ([]JobPermissionsDescription_SdkV2, bool) {
-	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+func (m *GetJobPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.Context) ([]JobPermissionsDescription_SdkV2, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
 		return nil, false
 	}
 	var v []JobPermissionsDescription_SdkV2
-	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5258,14 +5258,14 @@ func (o *GetJobPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.C
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetJobPermissionLevelsResponse_SdkV2.
-func (o *GetJobPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Context, v []JobPermissionsDescription_SdkV2) {
+func (m *GetJobPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Context, v []JobPermissionsDescription_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PermissionLevels = types.ListValueMust(t, vs)
+	m.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 type GetJobPermissionsRequest_SdkV2 struct {
@@ -5279,7 +5279,7 @@ func (to *GetJobPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *GetJobPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionsRequest_SdkV2) {
 }
 
-func (c GetJobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetJobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 
 	return attrs
@@ -5292,23 +5292,23 @@ func (c GetJobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetJobPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetJobPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetJobPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetJobPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id": m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetJobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.StringType,
@@ -5331,7 +5331,7 @@ func (to *GetJobRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *GetJobRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetJobRequest_SdkV2) {
 }
 
-func (c GetJobRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetJobRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -5345,24 +5345,24 @@ func (c GetJobRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetJobRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetJobRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id":     o.JobId,
-			"page_token": o.PageToken,
+			"job_id":     m.JobId,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetJobRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetJobRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id":     types.Int64Type,
@@ -5382,7 +5382,7 @@ func (to *GetPolicyComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *GetPolicyComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPolicyComplianceRequest_SdkV2) {
 }
 
-func (c GetPolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 
 	return attrs
@@ -5395,23 +5395,23 @@ func (c GetPolicyComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPolicyComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPolicyComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPolicyComplianceRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetPolicyComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPolicyComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id": m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetPolicyComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.Int64Type,
@@ -5439,7 +5439,7 @@ func (to *GetPolicyComplianceResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 func (to *GetPolicyComplianceResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPolicyComplianceResponse_SdkV2) {
 }
 
-func (c GetPolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
 	attrs["violations"] = attrs["violations"].SetOptional()
 
@@ -5453,7 +5453,7 @@ func (c GetPolicyComplianceResponse_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"violations": reflect.TypeOf(types.String{}),
 	}
@@ -5462,17 +5462,17 @@ func (a GetPolicyComplianceResponse_SdkV2) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPolicyComplianceResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetPolicyComplianceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPolicyComplianceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_compliant": o.IsCompliant,
-			"violations":   o.Violations,
+			"is_compliant": m.IsCompliant,
+			"violations":   m.Violations,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetPolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_compliant": types.BoolType,
@@ -5486,12 +5486,12 @@ func (o GetPolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetViolations returns the value of the Violations field in GetPolicyComplianceResponse_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetPolicyComplianceResponse_SdkV2) GetViolations(ctx context.Context) (map[string]types.String, bool) {
-	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+func (m *GetPolicyComplianceResponse_SdkV2) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if m.Violations.IsNull() || m.Violations.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Violations.ElementsAs(ctx, &v, true)
+	d := m.Violations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5499,14 +5499,14 @@ func (o *GetPolicyComplianceResponse_SdkV2) GetViolations(ctx context.Context) (
 }
 
 // SetViolations sets the value of the Violations field in GetPolicyComplianceResponse_SdkV2.
-func (o *GetPolicyComplianceResponse_SdkV2) SetViolations(ctx context.Context, v map[string]types.String) {
+func (m *GetPolicyComplianceResponse_SdkV2) SetViolations(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Violations = types.MapValueMust(t, vs)
+	m.Violations = types.MapValueMust(t, vs)
 }
 
 type GetRunOutputRequest_SdkV2 struct {
@@ -5520,7 +5520,7 @@ func (to *GetRunOutputRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *GetRunOutputRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRunOutputRequest_SdkV2) {
 }
 
-func (c GetRunOutputRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetRunOutputRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
@@ -5533,23 +5533,23 @@ func (c GetRunOutputRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetRunOutputRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetRunOutputRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetRunOutputRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetRunOutputRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetRunOutputRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetRunOutputRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -5576,7 +5576,7 @@ func (to *GetRunRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *GetRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRunRequest_SdkV2) {
 }
 
-func (c GetRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 	attrs["include_history"] = attrs["include_history"].SetOptional()
 	attrs["include_resolved_values"] = attrs["include_resolved_values"].SetOptional()
@@ -5592,26 +5592,26 @@ func (c GetRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetRunRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_history":         o.IncludeHistory,
-			"include_resolved_values": o.IncludeResolvedValues,
-			"page_token":              o.PageToken,
-			"run_id":                  o.RunId,
+			"include_history":         m.IncludeHistory,
+			"include_resolved_values": m.IncludeResolvedValues,
+			"page_token":              m.PageToken,
+			"run_id":                  m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"include_history":         types.BoolType,
@@ -5637,7 +5637,7 @@ func (to *GitSnapshot_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *GitSnapshot_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GitSnapshot_SdkV2) {
 }
 
-func (c GitSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GitSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["used_commit"] = attrs["used_commit"].SetOptional()
 
 	return attrs
@@ -5650,23 +5650,23 @@ func (c GitSnapshot_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GitSnapshot_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GitSnapshot_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GitSnapshot_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GitSnapshot_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GitSnapshot_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"used_commit": o.UsedCommit,
+			"used_commit": m.UsedCommit,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GitSnapshot_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GitSnapshot_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"used_commit": types.StringType,
@@ -5746,7 +5746,7 @@ func (to *GitSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GitSou
 	}
 }
 
-func (c GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["commit"] = attrs["commit"].SetOptional()
 	attrs["provider"] = attrs["provider"].SetRequired()
@@ -5767,7 +5767,7 @@ func (c GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GitSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GitSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"git_snapshot": reflect.TypeOf(GitSnapshot_SdkV2{}),
 		"job_source":   reflect.TypeOf(JobSource_SdkV2{}),
@@ -5777,22 +5777,22 @@ func (a GitSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GitSource_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GitSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GitSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch":       o.GitBranch,
-			"commit":       o.GitCommit,
-			"provider":     o.GitProvider,
-			"git_snapshot": o.GitSnapshot,
-			"tag":          o.GitTag,
-			"url":          o.GitUrl,
-			"job_source":   o.JobSource,
+			"branch":       m.GitBranch,
+			"commit":       m.GitCommit,
+			"provider":     m.GitProvider,
+			"git_snapshot": m.GitSnapshot,
+			"tag":          m.GitTag,
+			"url":          m.GitUrl,
+			"job_source":   m.JobSource,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GitSource_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GitSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch":   types.StringType,
@@ -5813,13 +5813,13 @@ func (o GitSource_SdkV2) Type(ctx context.Context) attr.Type {
 // GetGitSnapshot returns the value of the GitSnapshot field in GitSource_SdkV2 as
 // a GitSnapshot_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GitSource_SdkV2) GetGitSnapshot(ctx context.Context) (GitSnapshot_SdkV2, bool) {
+func (m *GitSource_SdkV2) GetGitSnapshot(ctx context.Context) (GitSnapshot_SdkV2, bool) {
 	var e GitSnapshot_SdkV2
-	if o.GitSnapshot.IsNull() || o.GitSnapshot.IsUnknown() {
+	if m.GitSnapshot.IsNull() || m.GitSnapshot.IsUnknown() {
 		return e, false
 	}
 	var v []GitSnapshot_SdkV2
-	d := o.GitSnapshot.ElementsAs(ctx, &v, true)
+	d := m.GitSnapshot.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5830,22 +5830,22 @@ func (o *GitSource_SdkV2) GetGitSnapshot(ctx context.Context) (GitSnapshot_SdkV2
 }
 
 // SetGitSnapshot sets the value of the GitSnapshot field in GitSource_SdkV2.
-func (o *GitSource_SdkV2) SetGitSnapshot(ctx context.Context, v GitSnapshot_SdkV2) {
+func (m *GitSource_SdkV2) SetGitSnapshot(ctx context.Context, v GitSnapshot_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_snapshot"]
-	o.GitSnapshot = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_snapshot"]
+	m.GitSnapshot = types.ListValueMust(t, vs)
 }
 
 // GetJobSource returns the value of the JobSource field in GitSource_SdkV2 as
 // a JobSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GitSource_SdkV2) GetJobSource(ctx context.Context) (JobSource_SdkV2, bool) {
+func (m *GitSource_SdkV2) GetJobSource(ctx context.Context) (JobSource_SdkV2, bool) {
 	var e JobSource_SdkV2
-	if o.JobSource.IsNull() || o.JobSource.IsUnknown() {
+	if m.JobSource.IsNull() || m.JobSource.IsUnknown() {
 		return e, false
 	}
 	var v []JobSource_SdkV2
-	d := o.JobSource.ElementsAs(ctx, &v, true)
+	d := m.JobSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5856,10 +5856,10 @@ func (o *GitSource_SdkV2) GetJobSource(ctx context.Context) (JobSource_SdkV2, bo
 }
 
 // SetJobSource sets the value of the JobSource field in GitSource_SdkV2.
-func (o *GitSource_SdkV2) SetJobSource(ctx context.Context, v JobSource_SdkV2) {
+func (m *GitSource_SdkV2) SetJobSource(ctx context.Context, v JobSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_source"]
-	o.JobSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_source"]
+	m.JobSource = types.ListValueMust(t, vs)
 }
 
 // Job was retrieved successfully.
@@ -5944,7 +5944,7 @@ func (to *Job_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Job_SdkV2) {
 	}
 }
 
-func (c Job_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Job_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
@@ -5968,7 +5968,7 @@ func (c Job_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Job_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Job_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"settings":      reflect.TypeOf(JobSettings_SdkV2{}),
 		"trigger_state": reflect.TypeOf(TriggerStateProto_SdkV2{}),
@@ -5978,25 +5978,25 @@ func (a Job_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Job_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Job_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Job_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"created_time":               o.CreatedTime,
-			"creator_user_name":          o.CreatorUserName,
-			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
-			"effective_usage_policy_id":  o.EffectiveUsagePolicyId,
-			"has_more":                   o.HasMore,
-			"job_id":                     o.JobId,
-			"next_page_token":            o.NextPageToken,
-			"run_as_user_name":           o.RunAsUserName,
-			"settings":                   o.Settings,
-			"trigger_state":              o.TriggerState,
+			"created_time":               m.CreatedTime,
+			"creator_user_name":          m.CreatorUserName,
+			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":  m.EffectiveUsagePolicyId,
+			"has_more":                   m.HasMore,
+			"job_id":                     m.JobId,
+			"next_page_token":            m.NextPageToken,
+			"run_as_user_name":           m.RunAsUserName,
+			"settings":                   m.Settings,
+			"trigger_state":              m.TriggerState,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Job_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Job_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"created_time":               types.Int64Type,
@@ -6020,13 +6020,13 @@ func (o Job_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSettings returns the value of the Settings field in Job_SdkV2 as
 // a JobSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Job_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
+func (m *Job_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 	var e JobSettings_SdkV2
-	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+	if m.Settings.IsNull() || m.Settings.IsUnknown() {
 		return e, false
 	}
 	var v []JobSettings_SdkV2
-	d := o.Settings.ElementsAs(ctx, &v, true)
+	d := m.Settings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6037,22 +6037,22 @@ func (o *Job_SdkV2) GetSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 }
 
 // SetSettings sets the value of the Settings field in Job_SdkV2.
-func (o *Job_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
+func (m *Job_SdkV2) SetSettings(ctx context.Context, v JobSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
-	o.Settings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	m.Settings = types.ListValueMust(t, vs)
 }
 
 // GetTriggerState returns the value of the TriggerState field in Job_SdkV2 as
 // a TriggerStateProto_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Job_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_SdkV2, bool) {
+func (m *Job_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_SdkV2, bool) {
 	var e TriggerStateProto_SdkV2
-	if o.TriggerState.IsNull() || o.TriggerState.IsUnknown() {
+	if m.TriggerState.IsNull() || m.TriggerState.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerStateProto_SdkV2
-	d := o.TriggerState.ElementsAs(ctx, &v, true)
+	d := m.TriggerState.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6063,10 +6063,10 @@ func (o *Job_SdkV2) GetTriggerState(ctx context.Context) (TriggerStateProto_SdkV
 }
 
 // SetTriggerState sets the value of the TriggerState field in Job_SdkV2.
-func (o *Job_SdkV2) SetTriggerState(ctx context.Context, v TriggerStateProto_SdkV2) {
+func (m *Job_SdkV2) SetTriggerState(ctx context.Context, v TriggerStateProto_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_state"]
-	o.TriggerState = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_state"]
+	m.TriggerState = types.ListValueMust(t, vs)
 }
 
 type JobAccessControlRequest_SdkV2 struct {
@@ -6086,7 +6086,7 @@ func (to *JobAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *JobAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobAccessControlRequest_SdkV2) {
 }
 
-func (c JobAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
@@ -6102,26 +6102,26 @@ func (c JobAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobAccessControlRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobAccessControlRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobAccessControlRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobAccessControlRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobAccessControlRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             o.GroupName,
-			"permission_level":       o.PermissionLevel,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -6163,7 +6163,7 @@ func (to *JobAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 	}
 }
 
-func (c JobAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
@@ -6180,7 +6180,7 @@ func (c JobAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(JobPermission_SdkV2{}),
 	}
@@ -6189,20 +6189,20 @@ func (a JobAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobAccessControlResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobAccessControlResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobAccessControlResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        o.AllPermissions,
-			"display_name":           o.DisplayName,
-			"group_name":             o.GroupName,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
@@ -6219,12 +6219,12 @@ func (o JobAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAllPermissions returns the value of the AllPermissions field in JobAccessControlResponse_SdkV2 as
 // a slice of JobPermission_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) ([]JobPermission_SdkV2, bool) {
-	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+func (m *JobAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) ([]JobPermission_SdkV2, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
 		return nil, false
 	}
 	var v []JobPermission_SdkV2
-	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6232,14 +6232,14 @@ func (o *JobAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) 
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in JobAccessControlResponse_SdkV2.
-func (o *JobAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v []JobPermission_SdkV2) {
+func (m *JobAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v []JobPermission_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AllPermissions = types.ListValueMust(t, vs)
+	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type JobCluster_SdkV2 struct {
@@ -6274,7 +6274,7 @@ func (to *JobCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobCl
 	}
 }
 
-func (c JobCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetRequired()
 	attrs["new_cluster"] = attrs["new_cluster"].SetRequired()
 	attrs["new_cluster"] = attrs["new_cluster"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6289,7 +6289,7 @@ func (c JobCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobCluster_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobCluster_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
 	}
@@ -6298,17 +6298,17 @@ func (a JobCluster_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobCluster_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobCluster_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobCluster_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_cluster_key": o.JobClusterKey,
-			"new_cluster":     o.NewCluster,
+			"job_cluster_key": m.JobClusterKey,
+			"new_cluster":     m.NewCluster,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobCluster_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobCluster_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_cluster_key": types.StringType,
@@ -6322,13 +6322,13 @@ func (o JobCluster_SdkV2) Type(ctx context.Context) attr.Type {
 // GetNewCluster returns the value of the NewCluster field in JobCluster_SdkV2 as
 // a compute_tf.ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobCluster_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
+func (m *JobCluster_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
 	var e compute_tf.ClusterSpec_SdkV2
-	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+	if m.NewCluster.IsNull() || m.NewCluster.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.ClusterSpec_SdkV2
-	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	d := m.NewCluster.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6339,10 +6339,10 @@ func (o *JobCluster_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.Cluste
 }
 
 // SetNewCluster sets the value of the NewCluster field in JobCluster_SdkV2.
-func (o *JobCluster_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
+func (m *JobCluster_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
-	o.NewCluster = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	m.NewCluster = types.ListValueMust(t, vs)
 }
 
 type JobCompliance_SdkV2 struct {
@@ -6364,7 +6364,7 @@ func (to *JobCompliance_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *JobCompliance_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobCompliance_SdkV2) {
 }
 
-func (c JobCompliance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobCompliance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 	attrs["violations"] = attrs["violations"].SetOptional()
@@ -6379,7 +6379,7 @@ func (c JobCompliance_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobCompliance_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobCompliance_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"violations": reflect.TypeOf(types.String{}),
 	}
@@ -6388,18 +6388,18 @@ func (a JobCompliance_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompliance_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobCompliance_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobCompliance_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_compliant": o.IsCompliant,
-			"job_id":       o.JobId,
-			"violations":   o.Violations,
+			"is_compliant": m.IsCompliant,
+			"job_id":       m.JobId,
+			"violations":   m.Violations,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobCompliance_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobCompliance_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_compliant": types.BoolType,
@@ -6414,12 +6414,12 @@ func (o JobCompliance_SdkV2) Type(ctx context.Context) attr.Type {
 // GetViolations returns the value of the Violations field in JobCompliance_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobCompliance_SdkV2) GetViolations(ctx context.Context) (map[string]types.String, bool) {
-	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+func (m *JobCompliance_SdkV2) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if m.Violations.IsNull() || m.Violations.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Violations.ElementsAs(ctx, &v, true)
+	d := m.Violations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6427,14 +6427,14 @@ func (o *JobCompliance_SdkV2) GetViolations(ctx context.Context) (map[string]typ
 }
 
 // SetViolations sets the value of the Violations field in JobCompliance_SdkV2.
-func (o *JobCompliance_SdkV2) SetViolations(ctx context.Context, v map[string]types.String) {
+func (m *JobCompliance_SdkV2) SetViolations(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Violations = types.MapValueMust(t, vs)
+	m.Violations = types.MapValueMust(t, vs)
 }
 
 type JobDeployment_SdkV2 struct {
@@ -6452,7 +6452,7 @@ func (to *JobDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *JobDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobDeployment_SdkV2) {
 }
 
-func (c JobDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["kind"] = attrs["kind"].SetRequired()
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
@@ -6466,24 +6466,24 @@ func (c JobDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobDeployment_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"kind":               o.Kind,
-			"metadata_file_path": o.MetadataFilePath,
+			"kind":               m.Kind,
+			"metadata_file_path": m.MetadataFilePath,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobDeployment_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"kind":               types.StringType,
@@ -6594,7 +6594,7 @@ func (to *JobEmailNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c JobEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
@@ -6612,7 +6612,7 @@ func (c JobEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
 		"on_failure":                             reflect.TypeOf(types.String{}),
@@ -6625,21 +6625,21 @@ func (a JobEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobEmailNotifications_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobEmailNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobEmailNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"no_alert_for_skipped_runs":              o.NoAlertForSkippedRuns,
-			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
-			"on_failure":                             o.OnFailure,
-			"on_start":                               o.OnStart,
-			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
-			"on_success":                             o.OnSuccess,
+			"no_alert_for_skipped_runs":              m.NoAlertForSkippedRuns,
+			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
+			"on_failure":                             m.OnFailure,
+			"on_start":                               m.OnStart,
+			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
+			"on_success":                             m.OnSuccess,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"no_alert_for_skipped_runs": types.BoolType,
@@ -6665,12 +6665,12 @@ func (o JobEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 // GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
-	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+func (m *JobEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if m.OnDurationWarningThresholdExceeded.IsNull() || m.OnDurationWarningThresholdExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6678,25 +6678,25 @@ func (o *JobEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx 
 }
 
 // SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications_SdkV2.
-func (o *JobEmailNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+func (m *JobEmailNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+	m.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnFailure returns the value of the OnFailure field in JobEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]types.String, bool) {
-	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+func (m *JobEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if m.OnFailure.IsNull() || m.OnFailure.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	d := m.OnFailure.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6704,25 +6704,25 @@ func (o *JobEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]types
 }
 
 // SetOnFailure sets the value of the OnFailure field in JobEmailNotifications_SdkV2.
-func (o *JobEmailNotifications_SdkV2) SetOnFailure(ctx context.Context, v []types.String) {
+func (m *JobEmailNotifications_SdkV2) SetOnFailure(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnFailure = types.ListValueMust(t, vs)
+	m.OnFailure = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in JobEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.String, bool) {
-	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+func (m *JobEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if m.OnStart.IsNull() || m.OnStart.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnStart.ElementsAs(ctx, &v, true)
+	d := m.OnStart.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6730,25 +6730,25 @@ func (o *JobEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.S
 }
 
 // SetOnStart sets the value of the OnStart field in JobEmailNotifications_SdkV2.
-func (o *JobEmailNotifications_SdkV2) SetOnStart(ctx context.Context, v []types.String) {
+func (m *JobEmailNotifications_SdkV2) SetOnStart(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStart = types.ListValueMust(t, vs)
+	m.OnStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in JobEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
-	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+func (m *JobEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if m.OnStreamingBacklogExceeded.IsNull() || m.OnStreamingBacklogExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6756,25 +6756,25 @@ func (o *JobEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.
 }
 
 // SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in JobEmailNotifications_SdkV2.
-func (o *JobEmailNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+func (m *JobEmailNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+	m.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnSuccess returns the value of the OnSuccess field in JobEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
-	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+func (m *JobEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if m.OnSuccess.IsNull() || m.OnSuccess.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	d := m.OnSuccess.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6782,14 +6782,14 @@ func (o *JobEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]types
 }
 
 // SetOnSuccess sets the value of the OnSuccess field in JobEmailNotifications_SdkV2.
-func (o *JobEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []types.String) {
+func (m *JobEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnSuccess = types.ListValueMust(t, vs)
+	m.OnSuccess = types.ListValueMust(t, vs)
 }
 
 type JobEnvironment_SdkV2 struct {
@@ -6822,7 +6822,7 @@ func (to *JobEnvironment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from J
 	}
 }
 
-func (c JobEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["environment_key"] = attrs["environment_key"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6837,7 +6837,7 @@ func (c JobEnvironment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"spec": reflect.TypeOf(compute_tf.Environment_SdkV2{}),
 	}
@@ -6846,17 +6846,17 @@ func (a JobEnvironment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobEnvironment_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobEnvironment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobEnvironment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"environment_key": o.EnvironmentKey,
-			"spec":            o.Spec,
+			"environment_key": m.EnvironmentKey,
+			"spec":            m.Spec,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"environment_key": types.StringType,
@@ -6870,13 +6870,13 @@ func (o JobEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSpec returns the value of the Spec field in JobEnvironment_SdkV2 as
 // a compute_tf.Environment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobEnvironment_SdkV2) GetSpec(ctx context.Context) (compute_tf.Environment_SdkV2, bool) {
+func (m *JobEnvironment_SdkV2) GetSpec(ctx context.Context) (compute_tf.Environment_SdkV2, bool) {
 	var e compute_tf.Environment_SdkV2
-	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.Environment_SdkV2
-	d := o.Spec.ElementsAs(ctx, &v, true)
+	d := m.Spec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6887,10 +6887,10 @@ func (o *JobEnvironment_SdkV2) GetSpec(ctx context.Context) (compute_tf.Environm
 }
 
 // SetSpec sets the value of the Spec field in JobEnvironment_SdkV2.
-func (o *JobEnvironment_SdkV2) SetSpec(ctx context.Context, v compute_tf.Environment_SdkV2) {
+func (m *JobEnvironment_SdkV2) SetSpec(ctx context.Context, v compute_tf.Environment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
-	o.Spec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	m.Spec = types.ListValueMust(t, vs)
 }
 
 type JobNotificationSettings_SdkV2 struct {
@@ -6908,7 +6908,7 @@ func (to *JobNotificationSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *JobNotificationSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobNotificationSettings_SdkV2) {
 }
 
-func (c JobNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["no_alert_for_canceled_runs"] = attrs["no_alert_for_canceled_runs"].SetOptional()
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 
@@ -6922,24 +6922,24 @@ func (c JobNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobNotificationSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobNotificationSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobNotificationSettings_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobNotificationSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobNotificationSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"no_alert_for_canceled_runs": o.NoAlertForCanceledRuns,
-			"no_alert_for_skipped_runs":  o.NoAlertForSkippedRuns,
+			"no_alert_for_canceled_runs": m.NoAlertForCanceledRuns,
+			"no_alert_for_skipped_runs":  m.NoAlertForSkippedRuns,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobNotificationSettings_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobNotificationSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"no_alert_for_canceled_runs": types.BoolType,
@@ -6963,7 +6963,7 @@ func (to *JobParameter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *JobParameter_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobParameter_SdkV2) {
 }
 
-func (c JobParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["default"] = attrs["default"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
@@ -6978,25 +6978,25 @@ func (c JobParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobParameter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobParameter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobParameter_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobParameter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobParameter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"default": o.Default,
-			"name":    o.Name,
-			"value":   o.Value,
+			"default": m.Default,
+			"name":    m.Name,
+			"value":   m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobParameter_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobParameter_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"default": types.StringType,
@@ -7020,7 +7020,7 @@ func (to *JobParameterDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *JobParameterDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobParameterDefinition_SdkV2) {
 }
 
-func (c JobParameterDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobParameterDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["default"] = attrs["default"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 
@@ -7034,24 +7034,24 @@ func (c JobParameterDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobParameterDefinition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobParameterDefinition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobParameterDefinition_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobParameterDefinition_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobParameterDefinition_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"default": o.Default,
-			"name":    o.Name,
+			"default": m.Default,
+			"name":    m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobParameterDefinition_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobParameterDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"default": types.StringType,
@@ -7086,7 +7086,7 @@ func (to *JobPermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Jo
 	}
 }
 
-func (c JobPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
@@ -7101,7 +7101,7 @@ func (c JobPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
@@ -7110,18 +7110,18 @@ func (a JobPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermission_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobPermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobPermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             o.Inherited,
-			"inherited_from_object": o.InheritedFromObject,
-			"permission_level":      o.PermissionLevel,
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobPermission_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobPermission_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -7136,12 +7136,12 @@ func (o JobPermission_SdkV2) Type(ctx context.Context) attr.Type {
 // GetInheritedFromObject returns the value of the InheritedFromObject field in JobPermission_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+func (m *JobPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7149,14 +7149,14 @@ func (o *JobPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]typ
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in JobPermission_SdkV2.
-func (o *JobPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []types.String) {
+func (m *JobPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.InheritedFromObject = types.ListValueMust(t, vs)
+	m.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
 type JobPermissions_SdkV2 struct {
@@ -7185,7 +7185,7 @@ func (to *JobPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from J
 	}
 }
 
-func (c JobPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
 	attrs["object_type"] = attrs["object_type"].SetOptional()
@@ -7200,7 +7200,7 @@ func (c JobPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(JobAccessControlResponse_SdkV2{}),
 	}
@@ -7209,18 +7209,18 @@ func (a JobPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissions_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"object_id":           o.ObjectId,
-			"object_type":         o.ObjectType,
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobPermissions_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -7235,12 +7235,12 @@ func (o JobPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in JobPermissions_SdkV2 as
 // a slice of JobAccessControlResponse_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlResponse_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *JobPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlResponse_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []JobAccessControlResponse_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7248,14 +7248,14 @@ func (o *JobPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]JobA
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in JobPermissions_SdkV2.
-func (o *JobPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlResponse_SdkV2) {
+func (m *JobPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlResponse_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type JobPermissionsDescription_SdkV2 struct {
@@ -7270,7 +7270,7 @@ func (to *JobPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 func (to *JobPermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobPermissionsDescription_SdkV2) {
 }
 
-func (c JobPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
@@ -7284,24 +7284,24 @@ func (c JobPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobPermissionsDescription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobPermissionsDescription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissionsDescription_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobPermissionsDescription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobPermissionsDescription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      o.Description,
-			"permission_level": o.PermissionLevel,
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -7334,7 +7334,7 @@ func (to *JobPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c JobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 
@@ -7348,7 +7348,7 @@ func (c JobPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(JobAccessControlRequest_SdkV2{}),
 	}
@@ -7357,17 +7357,17 @@ func (a JobPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissionsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"job_id":              o.JobId,
+			"access_control_list": m.AccessControlList,
+			"job_id":              m.JobId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -7381,12 +7381,12 @@ func (o JobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in JobPermissionsRequest_SdkV2 as
 // a slice of JobAccessControlRequest_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *JobPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []JobAccessControlRequest_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7394,14 +7394,14 @@ func (o *JobPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) 
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in JobPermissionsRequest_SdkV2.
-func (o *JobPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
+func (m *JobPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // Write-only setting. Specifies the user or service principal that the job runs
@@ -7424,7 +7424,7 @@ func (to *JobRunAs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 func (to *JobRunAs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobRunAs_SdkV2) {
 }
 
-func (c JobRunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobRunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -7438,24 +7438,24 @@ func (c JobRunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobRunAs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobRunAs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobRunAs_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobRunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobRunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobRunAs_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobRunAs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"service_principal_name": types.StringType,
@@ -7825,7 +7825,7 @@ func (to *JobSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobS
 	}
 }
 
-func (c JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -7873,7 +7873,7 @@ func (c JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous":            reflect.TypeOf(Continuous_SdkV2{}),
 		"deployment":            reflect.TypeOf(JobDeployment_SdkV2{}),
@@ -7897,40 +7897,40 @@ func (a JobSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobSettings_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_policy_id":      o.BudgetPolicyId,
-			"continuous":            o.Continuous,
-			"deployment":            o.Deployment,
-			"description":           o.Description,
-			"edit_mode":             o.EditMode,
-			"email_notifications":   o.EmailNotifications,
-			"environment":           o.Environments,
-			"format":                o.Format,
-			"git_source":            o.GitSource,
-			"health":                o.Health,
-			"job_cluster":           o.JobClusters,
-			"max_concurrent_runs":   o.MaxConcurrentRuns,
-			"name":                  o.Name,
-			"notification_settings": o.NotificationSettings,
-			"parameter":             o.Parameters,
-			"performance_target":    o.PerformanceTarget,
-			"queue":                 o.Queue,
-			"run_as":                o.RunAs,
-			"schedule":              o.Schedule,
-			"tags":                  o.Tags,
-			"task":                  o.Tasks,
-			"timeout_seconds":       o.TimeoutSeconds,
-			"trigger":               o.Trigger,
-			"usage_policy_id":       o.UsagePolicyId,
-			"webhook_notifications": o.WebhookNotifications,
+			"budget_policy_id":      m.BudgetPolicyId,
+			"continuous":            m.Continuous,
+			"deployment":            m.Deployment,
+			"description":           m.Description,
+			"edit_mode":             m.EditMode,
+			"email_notifications":   m.EmailNotifications,
+			"environment":           m.Environments,
+			"format":                m.Format,
+			"git_source":            m.GitSource,
+			"health":                m.Health,
+			"job_cluster":           m.JobClusters,
+			"max_concurrent_runs":   m.MaxConcurrentRuns,
+			"name":                  m.Name,
+			"notification_settings": m.NotificationSettings,
+			"parameter":             m.Parameters,
+			"performance_target":    m.PerformanceTarget,
+			"queue":                 m.Queue,
+			"run_as":                m.RunAs,
+			"schedule":              m.Schedule,
+			"tags":                  m.Tags,
+			"task":                  m.Tasks,
+			"timeout_seconds":       m.TimeoutSeconds,
+			"trigger":               m.Trigger,
+			"usage_policy_id":       m.UsagePolicyId,
+			"webhook_notifications": m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_policy_id": types.StringType,
@@ -7997,13 +7997,13 @@ func (o JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
 // GetContinuous returns the value of the Continuous field in JobSettings_SdkV2 as
 // a Continuous_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2, bool) {
 	var e Continuous_SdkV2
-	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+	if m.Continuous.IsNull() || m.Continuous.IsUnknown() {
 		return e, false
 	}
 	var v []Continuous_SdkV2
-	d := o.Continuous.ElementsAs(ctx, &v, true)
+	d := m.Continuous.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8014,22 +8014,22 @@ func (o *JobSettings_SdkV2) GetContinuous(ctx context.Context) (Continuous_SdkV2
 }
 
 // SetContinuous sets the value of the Continuous field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetContinuous(ctx context.Context, v Continuous_SdkV2) {
+func (m *JobSettings_SdkV2) SetContinuous(ctx context.Context, v Continuous_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
-	o.Continuous = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	m.Continuous = types.ListValueMust(t, vs)
 }
 
 // GetDeployment returns the value of the Deployment field in JobSettings_SdkV2 as
 // a JobDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_SdkV2, bool) {
 	var e JobDeployment_SdkV2
-	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+	if m.Deployment.IsNull() || m.Deployment.IsUnknown() {
 		return e, false
 	}
 	var v []JobDeployment_SdkV2
-	d := o.Deployment.ElementsAs(ctx, &v, true)
+	d := m.Deployment.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8040,22 +8040,22 @@ func (o *JobSettings_SdkV2) GetDeployment(ctx context.Context) (JobDeployment_Sd
 }
 
 // SetDeployment sets the value of the Deployment field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetDeployment(ctx context.Context, v JobDeployment_SdkV2) {
+func (m *JobSettings_SdkV2) SetDeployment(ctx context.Context, v JobDeployment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
-	o.Deployment = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	m.Deployment = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in JobSettings_SdkV2 as
 // a JobEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
 	var e JobEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []JobEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8066,21 +8066,21 @@ func (o *JobSettings_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmail
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
+func (m *JobSettings_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in JobSettings_SdkV2 as
 // a slice of JobEnvironment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
-	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+func (m *JobSettings_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
+	if m.Environments.IsNull() || m.Environments.IsUnknown() {
 		return nil, false
 	}
 	var v []JobEnvironment_SdkV2
-	d := o.Environments.ElementsAs(ctx, &v, true)
+	d := m.Environments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8088,26 +8088,26 @@ func (o *JobSettings_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironme
 }
 
 // SetEnvironments sets the value of the Environments field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
+func (m *JobSettings_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Environments = types.ListValueMust(t, vs)
+	m.Environments = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in JobSettings_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8118,22 +8118,22 @@ func (o *JobSettings_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, 
 }
 
 // SetGitSource sets the value of the GitSource field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *JobSettings_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in JobSettings_SdkV2 as
 // a JobsHealthRules_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
 	var e JobsHealthRules_SdkV2
-	if o.Health.IsNull() || o.Health.IsUnknown() {
+	if m.Health.IsNull() || m.Health.IsUnknown() {
 		return e, false
 	}
 	var v []JobsHealthRules_SdkV2
-	d := o.Health.ElementsAs(ctx, &v, true)
+	d := m.Health.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8144,21 +8144,21 @@ func (o *JobSettings_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV
 }
 
 // SetHealth sets the value of the Health field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
+func (m *JobSettings_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
-	o.Health = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	m.Health = types.ListValueMust(t, vs)
 }
 
 // GetJobClusters returns the value of the JobClusters field in JobSettings_SdkV2 as
 // a slice of JobCluster_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
-	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+func (m *JobSettings_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
+	if m.JobClusters.IsNull() || m.JobClusters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobCluster_SdkV2
-	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	d := m.JobClusters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8166,26 +8166,26 @@ func (o *JobSettings_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_Sd
 }
 
 // SetJobClusters sets the value of the JobClusters field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
+func (m *JobSettings_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobClusters = types.ListValueMust(t, vs)
+	m.JobClusters = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in JobSettings_SdkV2 as
 // a JobNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
 	var e JobNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []JobNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8196,21 +8196,21 @@ func (o *JobSettings_SdkV2) GetNotificationSettings(ctx context.Context) (JobNot
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
+func (m *JobSettings_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in JobSettings_SdkV2 as
 // a slice of JobParameterDefinition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDefinition_SdkV2, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *JobSettings_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDefinition_SdkV2, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobParameterDefinition_SdkV2
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8218,26 +8218,26 @@ func (o *JobSettings_SdkV2) GetParameters(ctx context.Context) ([]JobParameterDe
 }
 
 // SetParameters sets the value of the Parameters field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetParameters(ctx context.Context, v []JobParameterDefinition_SdkV2) {
+func (m *JobSettings_SdkV2) SetParameters(ctx context.Context, v []JobParameterDefinition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 // GetQueue returns the value of the Queue field in JobSettings_SdkV2 as
 // a QueueSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
 	var e QueueSettings_SdkV2
-	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+	if m.Queue.IsNull() || m.Queue.IsUnknown() {
 		return e, false
 	}
 	var v []QueueSettings_SdkV2
-	d := o.Queue.ElementsAs(ctx, &v, true)
+	d := m.Queue.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8248,22 +8248,22 @@ func (o *JobSettings_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, 
 }
 
 // SetQueue sets the value of the Queue field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
+func (m *JobSettings_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
-	o.Queue = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	m.Queue = types.ListValueMust(t, vs)
 }
 
 // GetRunAs returns the value of the RunAs field in JobSettings_SdkV2 as
 // a JobRunAs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
 	var e JobRunAs_SdkV2
-	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+	if m.RunAs.IsNull() || m.RunAs.IsUnknown() {
 		return e, false
 	}
 	var v []JobRunAs_SdkV2
-	d := o.RunAs.ElementsAs(ctx, &v, true)
+	d := m.RunAs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8274,22 +8274,22 @@ func (o *JobSettings_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool)
 }
 
 // SetRunAs sets the value of the RunAs field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
+func (m *JobSettings_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
-	o.RunAs = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	m.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetSchedule returns the value of the Schedule field in JobSettings_SdkV2 as
 // a CronSchedule_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
 	var e CronSchedule_SdkV2
-	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+	if m.Schedule.IsNull() || m.Schedule.IsUnknown() {
 		return e, false
 	}
 	var v []CronSchedule_SdkV2
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := m.Schedule.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8300,21 +8300,21 @@ func (o *JobSettings_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2
 }
 
 // SetSchedule sets the value of the Schedule field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
+func (m *JobSettings_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	m.Schedule = types.ListValueMust(t, vs)
 }
 
 // GetTags returns the value of the Tags field in JobSettings_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+func (m *JobSettings_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Tags.ElementsAs(ctx, &v, true)
+	d := m.Tags.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8322,25 +8322,25 @@ func (o *JobSettings_SdkV2) GetTags(ctx context.Context) (map[string]types.Strin
 }
 
 // SetTags sets the value of the Tags field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+func (m *JobSettings_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.MapValueMust(t, vs)
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 // GetTasks returns the value of the Tasks field in JobSettings_SdkV2 as
 // a slice of Task_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
-	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+func (m *JobSettings_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
+	if m.Tasks.IsNull() || m.Tasks.IsUnknown() {
 		return nil, false
 	}
 	var v []Task_SdkV2
-	d := o.Tasks.ElementsAs(ctx, &v, true)
+	d := m.Tasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8348,26 +8348,26 @@ func (o *JobSettings_SdkV2) GetTasks(ctx context.Context) ([]Task_SdkV2, bool) {
 }
 
 // SetTasks sets the value of the Tasks field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetTasks(ctx context.Context, v []Task_SdkV2) {
+func (m *JobSettings_SdkV2) SetTasks(ctx context.Context, v []Task_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tasks = types.ListValueMust(t, vs)
+	m.Tasks = types.ListValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in JobSettings_SdkV2 as
 // a TriggerSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_SdkV2, bool) {
 	var e TriggerSettings_SdkV2
-	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+	if m.Trigger.IsNull() || m.Trigger.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerSettings_SdkV2
-	d := o.Trigger.ElementsAs(ctx, &v, true)
+	d := m.Trigger.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8378,22 +8378,22 @@ func (o *JobSettings_SdkV2) GetTrigger(ctx context.Context) (TriggerSettings_Sdk
 }
 
 // SetTrigger sets the value of the Trigger field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetTrigger(ctx context.Context, v TriggerSettings_SdkV2) {
+func (m *JobSettings_SdkV2) SetTrigger(ctx context.Context, v TriggerSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
-	o.Trigger = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	m.Trigger = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in JobSettings_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobSettings_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *JobSettings_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8404,10 +8404,10 @@ func (o *JobSettings_SdkV2) GetWebhookNotifications(ctx context.Context) (Webhoo
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in JobSettings_SdkV2.
-func (o *JobSettings_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *JobSettings_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 // The source of the job specification in the remote repository when the job is
@@ -8435,7 +8435,7 @@ func (to *JobSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *JobSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobSource_SdkV2) {
 }
 
-func (c JobSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dirty_state"] = attrs["dirty_state"].SetOptional()
 	attrs["import_from_git_branch"] = attrs["import_from_git_branch"].SetRequired()
 	attrs["job_config_path"] = attrs["job_config_path"].SetRequired()
@@ -8450,25 +8450,25 @@ func (c JobSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobSource_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dirty_state":            o.DirtyState,
-			"import_from_git_branch": o.ImportFromGitBranch,
-			"job_config_path":        o.JobConfigPath,
+			"dirty_state":            m.DirtyState,
+			"import_from_git_branch": m.ImportFromGitBranch,
+			"job_config_path":        m.JobConfigPath,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobSource_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dirty_state":            types.StringType,
@@ -8493,7 +8493,7 @@ func (to *JobsHealthRule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *JobsHealthRule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobsHealthRule_SdkV2) {
 }
 
-func (c JobsHealthRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobsHealthRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metric"] = attrs["metric"].SetRequired()
 	attrs["op"] = attrs["op"].SetRequired()
 	attrs["value"] = attrs["value"].SetRequired()
@@ -8508,25 +8508,25 @@ func (c JobsHealthRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobsHealthRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobsHealthRule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobsHealthRule_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobsHealthRule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobsHealthRule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"metric": o.Metric,
-			"op":     o.Op,
-			"value":  o.Value,
+			"metric": m.Metric,
+			"op":     m.Op,
+			"value":  m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobsHealthRule_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobsHealthRule_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metric": types.StringType,
@@ -8559,7 +8559,7 @@ func (to *JobsHealthRules_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c JobsHealthRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m JobsHealthRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["rules"] = attrs["rules"].SetOptional()
 
 	return attrs
@@ -8572,7 +8572,7 @@ func (c JobsHealthRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a JobsHealthRules_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m JobsHealthRules_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"rules": reflect.TypeOf(JobsHealthRule_SdkV2{}),
 	}
@@ -8581,16 +8581,16 @@ func (a JobsHealthRules_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, JobsHealthRules_SdkV2
 // only implements ToObjectValue() and Type().
-func (o JobsHealthRules_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m JobsHealthRules_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"rules": o.Rules,
+			"rules": m.Rules,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o JobsHealthRules_SdkV2) Type(ctx context.Context) attr.Type {
+func (m JobsHealthRules_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"rules": basetypes.ListType{
@@ -8603,12 +8603,12 @@ func (o JobsHealthRules_SdkV2) Type(ctx context.Context) attr.Type {
 // GetRules returns the value of the Rules field in JobsHealthRules_SdkV2 as
 // a slice of JobsHealthRule_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *JobsHealthRules_SdkV2) GetRules(ctx context.Context) ([]JobsHealthRule_SdkV2, bool) {
-	if o.Rules.IsNull() || o.Rules.IsUnknown() {
+func (m *JobsHealthRules_SdkV2) GetRules(ctx context.Context) ([]JobsHealthRule_SdkV2, bool) {
+	if m.Rules.IsNull() || m.Rules.IsUnknown() {
 		return nil, false
 	}
 	var v []JobsHealthRule_SdkV2
-	d := o.Rules.ElementsAs(ctx, &v, true)
+	d := m.Rules.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8616,14 +8616,14 @@ func (o *JobsHealthRules_SdkV2) GetRules(ctx context.Context) ([]JobsHealthRule_
 }
 
 // SetRules sets the value of the Rules field in JobsHealthRules_SdkV2.
-func (o *JobsHealthRules_SdkV2) SetRules(ctx context.Context, v []JobsHealthRule_SdkV2) {
+func (m *JobsHealthRules_SdkV2) SetRules(ctx context.Context, v []JobsHealthRule_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Rules = types.ListValueMust(t, vs)
+	m.Rules = types.ListValueMust(t, vs)
 }
 
 type ListJobComplianceForPolicyResponse_SdkV2 struct {
@@ -8657,7 +8657,7 @@ func (to *ListJobComplianceForPolicyResponse_SdkV2) SyncFieldsDuringRead(ctx con
 	}
 }
 
-func (c ListJobComplianceForPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListJobComplianceForPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["jobs"] = attrs["jobs"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
@@ -8672,7 +8672,7 @@ func (c ListJobComplianceForPolicyResponse_SdkV2) ApplySchemaCustomizations(attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListJobComplianceForPolicyResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListJobComplianceForPolicyResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"jobs": reflect.TypeOf(JobCompliance_SdkV2{}),
 	}
@@ -8681,18 +8681,18 @@ func (a ListJobComplianceForPolicyResponse_SdkV2) GetComplexFieldTypes(ctx conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobComplianceForPolicyResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListJobComplianceForPolicyResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListJobComplianceForPolicyResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"jobs":            o.Jobs,
-			"next_page_token": o.NextPageToken,
-			"prev_page_token": o.PrevPageToken,
+			"jobs":            m.Jobs,
+			"next_page_token": m.NextPageToken,
+			"prev_page_token": m.PrevPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListJobComplianceForPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"jobs": basetypes.ListType{
@@ -8707,12 +8707,12 @@ func (o ListJobComplianceForPolicyResponse_SdkV2) Type(ctx context.Context) attr
 // GetJobs returns the value of the Jobs field in ListJobComplianceForPolicyResponse_SdkV2 as
 // a slice of JobCompliance_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListJobComplianceForPolicyResponse_SdkV2) GetJobs(ctx context.Context) ([]JobCompliance_SdkV2, bool) {
-	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+func (m *ListJobComplianceForPolicyResponse_SdkV2) GetJobs(ctx context.Context) ([]JobCompliance_SdkV2, bool) {
+	if m.Jobs.IsNull() || m.Jobs.IsUnknown() {
 		return nil, false
 	}
 	var v []JobCompliance_SdkV2
-	d := o.Jobs.ElementsAs(ctx, &v, true)
+	d := m.Jobs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8720,14 +8720,14 @@ func (o *ListJobComplianceForPolicyResponse_SdkV2) GetJobs(ctx context.Context) 
 }
 
 // SetJobs sets the value of the Jobs field in ListJobComplianceForPolicyResponse_SdkV2.
-func (o *ListJobComplianceForPolicyResponse_SdkV2) SetJobs(ctx context.Context, v []JobCompliance_SdkV2) {
+func (m *ListJobComplianceForPolicyResponse_SdkV2) SetJobs(ctx context.Context, v []JobCompliance_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Jobs = types.ListValueMust(t, vs)
+	m.Jobs = types.ListValueMust(t, vs)
 }
 
 type ListJobComplianceRequest_SdkV2 struct {
@@ -8748,7 +8748,7 @@ func (to *ListJobComplianceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *ListJobComplianceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListJobComplianceRequest_SdkV2) {
 }
 
-func (c ListJobComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListJobComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
@@ -8763,25 +8763,25 @@ func (c ListJobComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListJobComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListJobComplianceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobComplianceRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListJobComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListJobComplianceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
-			"policy_id":  o.PolicyId,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"policy_id":  m.PolicyId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListJobComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -8816,7 +8816,7 @@ func (to *ListJobsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *ListJobsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListJobsRequest_SdkV2) {
 }
 
-func (c ListJobsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListJobsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["limit"] = attrs["limit"].SetOptional()
 	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
@@ -8833,27 +8833,27 @@ func (c ListJobsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListJobsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListJobsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListJobsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListJobsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"expand_tasks": o.ExpandTasks,
-			"limit":        o.Limit,
-			"name":         o.Name,
-			"offset":       o.Offset,
-			"page_token":   o.PageToken,
+			"expand_tasks": m.ExpandTasks,
+			"limit":        m.Limit,
+			"name":         m.Name,
+			"offset":       m.Offset,
+			"page_token":   m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListJobsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListJobsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"expand_tasks": types.BoolType,
@@ -8898,7 +8898,7 @@ func (to *ListJobsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c ListJobsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListJobsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["jobs"] = attrs["jobs"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
@@ -8914,7 +8914,7 @@ func (c ListJobsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListJobsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListJobsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"jobs": reflect.TypeOf(BaseJob_SdkV2{}),
 	}
@@ -8923,19 +8923,19 @@ func (a ListJobsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListJobsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListJobsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"has_more":        o.HasMore,
-			"jobs":            o.Jobs,
-			"next_page_token": o.NextPageToken,
-			"prev_page_token": o.PrevPageToken,
+			"has_more":        m.HasMore,
+			"jobs":            m.Jobs,
+			"next_page_token": m.NextPageToken,
+			"prev_page_token": m.PrevPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListJobsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListJobsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"has_more": types.BoolType,
@@ -8951,12 +8951,12 @@ func (o ListJobsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetJobs returns the value of the Jobs field in ListJobsResponse_SdkV2 as
 // a slice of BaseJob_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListJobsResponse_SdkV2) GetJobs(ctx context.Context) ([]BaseJob_SdkV2, bool) {
-	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+func (m *ListJobsResponse_SdkV2) GetJobs(ctx context.Context) ([]BaseJob_SdkV2, bool) {
+	if m.Jobs.IsNull() || m.Jobs.IsUnknown() {
 		return nil, false
 	}
 	var v []BaseJob_SdkV2
-	d := o.Jobs.ElementsAs(ctx, &v, true)
+	d := m.Jobs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8964,14 +8964,14 @@ func (o *ListJobsResponse_SdkV2) GetJobs(ctx context.Context) ([]BaseJob_SdkV2, 
 }
 
 // SetJobs sets the value of the Jobs field in ListJobsResponse_SdkV2.
-func (o *ListJobsResponse_SdkV2) SetJobs(ctx context.Context, v []BaseJob_SdkV2) {
+func (m *ListJobsResponse_SdkV2) SetJobs(ctx context.Context, v []BaseJob_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Jobs = types.ListValueMust(t, vs)
+	m.Jobs = types.ListValueMust(t, vs)
 }
 
 type ListRunsRequest_SdkV2 struct {
@@ -9021,7 +9021,7 @@ func (to *ListRunsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *ListRunsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRunsRequest_SdkV2) {
 }
 
-func (c ListRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["active_only"] = attrs["active_only"].SetOptional()
 	attrs["completed_only"] = attrs["completed_only"].SetOptional()
@@ -9043,32 +9043,32 @@ func (c ListRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListRunsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListRunsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListRunsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListRunsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListRunsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active_only":     o.ActiveOnly,
-			"completed_only":  o.CompletedOnly,
-			"expand_tasks":    o.ExpandTasks,
-			"job_id":          o.JobId,
-			"limit":           o.Limit,
-			"offset":          o.Offset,
-			"page_token":      o.PageToken,
-			"run_type":        o.RunType,
-			"start_time_from": o.StartTimeFrom,
-			"start_time_to":   o.StartTimeTo,
+			"active_only":     m.ActiveOnly,
+			"completed_only":  m.CompletedOnly,
+			"expand_tasks":    m.ExpandTasks,
+			"job_id":          m.JobId,
+			"limit":           m.Limit,
+			"offset":          m.Offset,
+			"page_token":      m.PageToken,
+			"run_type":        m.RunType,
+			"start_time_from": m.StartTimeFrom,
+			"start_time_to":   m.StartTimeTo,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListRunsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListRunsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active_only":     types.BoolType,
@@ -9118,7 +9118,7 @@ func (to *ListRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c ListRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
@@ -9134,7 +9134,7 @@ func (c ListRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListRunsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListRunsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"runs": reflect.TypeOf(BaseRun_SdkV2{}),
 	}
@@ -9143,19 +9143,19 @@ func (a ListRunsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListRunsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListRunsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListRunsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"has_more":        o.HasMore,
-			"next_page_token": o.NextPageToken,
-			"prev_page_token": o.PrevPageToken,
-			"runs":            o.Runs,
+			"has_more":        m.HasMore,
+			"next_page_token": m.NextPageToken,
+			"prev_page_token": m.PrevPageToken,
+			"runs":            m.Runs,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"has_more":        types.BoolType,
@@ -9171,12 +9171,12 @@ func (o ListRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetRuns returns the value of the Runs field in ListRunsResponse_SdkV2 as
 // a slice of BaseRun_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListRunsResponse_SdkV2) GetRuns(ctx context.Context) ([]BaseRun_SdkV2, bool) {
-	if o.Runs.IsNull() || o.Runs.IsUnknown() {
+func (m *ListRunsResponse_SdkV2) GetRuns(ctx context.Context) ([]BaseRun_SdkV2, bool) {
+	if m.Runs.IsNull() || m.Runs.IsUnknown() {
 		return nil, false
 	}
 	var v []BaseRun_SdkV2
-	d := o.Runs.ElementsAs(ctx, &v, true)
+	d := m.Runs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9184,14 +9184,132 @@ func (o *ListRunsResponse_SdkV2) GetRuns(ctx context.Context) ([]BaseRun_SdkV2, 
 }
 
 // SetRuns sets the value of the Runs field in ListRunsResponse_SdkV2.
-func (o *ListRunsResponse_SdkV2) SetRuns(ctx context.Context, v []BaseRun_SdkV2) {
+func (m *ListRunsResponse_SdkV2) SetRuns(ctx context.Context, v []BaseRun_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Runs = types.ListValueMust(t, vs)
+	m.Runs = types.ListValueMust(t, vs)
+}
+
+type ModelTriggerConfiguration_SdkV2 struct {
+	// Aliases of the model versions to monitor. Can only be used in conjunction
+	// with condition MODEL_ALIAS_SET.
+	Aliases types.List `tfsdk:"aliases"`
+	// The condition based on which to trigger a job run.
+	Condition types.String `tfsdk:"condition"`
+	// If set, the trigger starts a run only after the specified amount of time
+	// has passed since the last time the trigger fired. The minimum allowed
+	// value is 60 seconds.
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
+	// Name of the securable to monitor ("mycatalog.myschema.mymodel" in the
+	// case of model-level triggers, "mycatalog.myschema" in the case of
+	// schema-level triggers) or empty in the case of metastore-level triggers.
+	SecurableName types.String `tfsdk:"securable_name"`
+	// If set, the trigger starts a run only after no model updates have
+	// occurred for the specified time and can be used to wait for a series of
+	// model updates before triggering a run. The minimum allowed value is 60
+	// seconds.
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
+}
+
+func (to *ModelTriggerConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelTriggerConfiguration_SdkV2) {
+	if !from.Aliases.IsNull() && !from.Aliases.IsUnknown() && to.Aliases.IsNull() && len(from.Aliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Aliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Aliases = from.Aliases
+	}
+}
+
+func (to *ModelTriggerConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelTriggerConfiguration_SdkV2) {
+	if !from.Aliases.IsNull() && !from.Aliases.IsUnknown() && to.Aliases.IsNull() && len(from.Aliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Aliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Aliases = from.Aliases
+	}
+}
+
+func (m ModelTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aliases"] = attrs["aliases"].SetOptional()
+	attrs["condition"] = attrs["condition"].SetRequired()
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["securable_name"] = attrs["securable_name"].SetOptional()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aliases": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelTriggerConfiguration_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aliases":                           m.Aliases,
+			"condition":                         m.Condition,
+			"min_time_between_triggers_seconds": m.MinTimeBetweenTriggersSeconds,
+			"securable_name":                    m.SecurableName,
+			"wait_after_last_change_seconds":    m.WaitAfterLastChangeSeconds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"securable_name":                    types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
+		},
+	}
+}
+
+// GetAliases returns the value of the Aliases field in ModelTriggerConfiguration_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelTriggerConfiguration_SdkV2) GetAliases(ctx context.Context) ([]types.String, bool) {
+	if m.Aliases.IsNull() || m.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in ModelTriggerConfiguration_SdkV2.
+func (m *ModelTriggerConfiguration_SdkV2) SetAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Aliases = types.ListValueMust(t, vs)
 }
 
 type NotebookOutput_SdkV2 struct {
@@ -9212,7 +9330,7 @@ func (to *NotebookOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *NotebookOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NotebookOutput_SdkV2) {
 }
 
-func (c NotebookOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m NotebookOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["result"] = attrs["result"].SetOptional()
 	attrs["truncated"] = attrs["truncated"].SetOptional()
 
@@ -9226,24 +9344,24 @@ func (c NotebookOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a NotebookOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m NotebookOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, NotebookOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o NotebookOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m NotebookOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"result":    o.Result,
-			"truncated": o.Truncated,
+			"result":    m.Result,
+			"truncated": m.Truncated,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o NotebookOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m NotebookOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"result":    types.StringType,
@@ -9299,7 +9417,7 @@ func (to *NotebookTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *NotebookTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from NotebookTask_SdkV2) {
 }
 
-func (c NotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m NotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["base_parameters"] = attrs["base_parameters"].SetOptional()
 	attrs["notebook_path"] = attrs["notebook_path"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
@@ -9315,7 +9433,7 @@ func (c NotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a NotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m NotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"base_parameters": reflect.TypeOf(types.String{}),
 	}
@@ -9324,19 +9442,19 @@ func (a NotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, NotebookTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o NotebookTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m NotebookTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"base_parameters": o.BaseParameters,
-			"notebook_path":   o.NotebookPath,
-			"source":          o.Source,
-			"warehouse_id":    o.WarehouseId,
+			"base_parameters": m.BaseParameters,
+			"notebook_path":   m.NotebookPath,
+			"source":          m.Source,
+			"warehouse_id":    m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o NotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m NotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"base_parameters": basetypes.MapType{
@@ -9352,12 +9470,12 @@ func (o NotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetBaseParameters returns the value of the BaseParameters field in NotebookTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *NotebookTask_SdkV2) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+func (m *NotebookTask_SdkV2) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.BaseParameters.IsNull() || m.BaseParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	d := m.BaseParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9365,14 +9483,14 @@ func (o *NotebookTask_SdkV2) GetBaseParameters(ctx context.Context) (map[string]
 }
 
 // SetBaseParameters sets the value of the BaseParameters field in NotebookTask_SdkV2.
-func (o *NotebookTask_SdkV2) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+func (m *NotebookTask_SdkV2) SetBaseParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.BaseParameters = types.MapValueMust(t, vs)
+	m.BaseParameters = types.MapValueMust(t, vs)
 }
 
 // Stores the catalog name, schema name, and the output schema expiration time
@@ -9392,7 +9510,7 @@ func (to *OutputSchemaInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *OutputSchemaInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from OutputSchemaInfo_SdkV2) {
 }
 
-func (c OutputSchemaInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m OutputSchemaInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
 	attrs["schema_name"] = attrs["schema_name"].SetOptional()
@@ -9407,25 +9525,25 @@ func (c OutputSchemaInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a OutputSchemaInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m OutputSchemaInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, OutputSchemaInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o OutputSchemaInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m OutputSchemaInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog_name":    o.CatalogName,
-			"expiration_time": o.ExpirationTime,
-			"schema_name":     o.SchemaName,
+			"catalog_name":    m.CatalogName,
+			"expiration_time": m.ExpirationTime,
+			"schema_name":     m.SchemaName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o OutputSchemaInfo_SdkV2) Type(ctx context.Context) attr.Type {
+func (m OutputSchemaInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"catalog_name":    types.StringType,
@@ -9448,7 +9566,7 @@ func (to *PeriodicTriggerConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 func (to *PeriodicTriggerConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PeriodicTriggerConfiguration_SdkV2) {
 }
 
-func (c PeriodicTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PeriodicTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["interval"] = attrs["interval"].SetRequired()
 	attrs["unit"] = attrs["unit"].SetRequired()
 
@@ -9462,24 +9580,24 @@ func (c PeriodicTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PeriodicTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PeriodicTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PeriodicTriggerConfiguration_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PeriodicTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PeriodicTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"interval": o.Interval,
-			"unit":     o.Unit,
+			"interval": m.Interval,
+			"unit":     m.Unit,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PeriodicTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"interval": types.Int64Type,
@@ -9499,7 +9617,7 @@ func (to *PipelineParams_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *PipelineParams_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineParams_SdkV2) {
 }
 
-func (c PipelineParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PipelineParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 
 	return attrs
@@ -9512,23 +9630,23 @@ func (c PipelineParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PipelineParams_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PipelineParams_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PipelineParams_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PipelineParams_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PipelineParams_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_refresh": o.FullRefresh,
+			"full_refresh": m.FullRefresh,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PipelineParams_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PipelineParams_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_refresh": types.BoolType,
@@ -9549,7 +9667,7 @@ func (to *PipelineTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *PipelineTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineTask_SdkV2) {
 }
 
-func (c PipelineTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PipelineTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 
@@ -9563,24 +9681,24 @@ func (c PipelineTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PipelineTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PipelineTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PipelineTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PipelineTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PipelineTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_refresh": o.FullRefresh,
-			"pipeline_id":  o.PipelineId,
+			"full_refresh": m.FullRefresh,
+			"pipeline_id":  m.PipelineId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PipelineTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PipelineTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_refresh": types.BoolType,
@@ -9608,7 +9726,7 @@ func (to *PowerBiModel_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *PowerBiModel_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PowerBiModel_SdkV2) {
 }
 
-func (c PowerBiModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PowerBiModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["authentication_method"] = attrs["authentication_method"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["overwrite_existing"] = attrs["overwrite_existing"].SetOptional()
@@ -9625,27 +9743,27 @@ func (c PowerBiModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PowerBiModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PowerBiModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiModel_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PowerBiModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PowerBiModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"authentication_method": o.AuthenticationMethod,
-			"model_name":            o.ModelName,
-			"overwrite_existing":    o.OverwriteExisting,
-			"storage_mode":          o.StorageMode,
-			"workspace_name":        o.WorkspaceName,
+			"authentication_method": m.AuthenticationMethod,
+			"model_name":            m.ModelName,
+			"overwrite_existing":    m.OverwriteExisting,
+			"storage_mode":          m.StorageMode,
+			"workspace_name":        m.WorkspaceName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PowerBiModel_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PowerBiModel_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"authentication_method": types.StringType,
@@ -9674,7 +9792,7 @@ func (to *PowerBiTable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *PowerBiTable_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PowerBiTable_SdkV2) {
 }
 
-func (c PowerBiTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PowerBiTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
@@ -9690,26 +9808,26 @@ func (c PowerBiTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PowerBiTable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PowerBiTable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiTable_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PowerBiTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PowerBiTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":      o.Catalog,
-			"name":         o.Name,
-			"schema":       o.Schema,
-			"storage_mode": o.StorageMode,
+			"catalog":      m.Catalog,
+			"name":         m.Name,
+			"schema":       m.Schema,
+			"storage_mode": m.StorageMode,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PowerBiTable_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PowerBiTable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"catalog":      types.StringType,
@@ -9769,7 +9887,7 @@ func (to *PowerBiTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Powe
 	}
 }
 
-func (c PowerBiTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PowerBiTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_resource_name"] = attrs["connection_resource_name"].SetOptional()
 	attrs["power_bi_model"] = attrs["power_bi_model"].SetOptional()
 	attrs["power_bi_model"] = attrs["power_bi_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -9787,7 +9905,7 @@ func (c PowerBiTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PowerBiTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PowerBiTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"power_bi_model": reflect.TypeOf(PowerBiModel_SdkV2{}),
 		"tables":         reflect.TypeOf(PowerBiTable_SdkV2{}),
@@ -9797,20 +9915,20 @@ func (a PowerBiTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PowerBiTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PowerBiTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_resource_name": o.ConnectionResourceName,
-			"power_bi_model":           o.PowerBiModel,
-			"refresh_after_update":     o.RefreshAfterUpdate,
-			"tables":                   o.Tables,
-			"warehouse_id":             o.WarehouseId,
+			"connection_resource_name": m.ConnectionResourceName,
+			"power_bi_model":           m.PowerBiModel,
+			"refresh_after_update":     m.RefreshAfterUpdate,
+			"tables":                   m.Tables,
+			"warehouse_id":             m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PowerBiTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PowerBiTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_resource_name": types.StringType,
@@ -9829,13 +9947,13 @@ func (o PowerBiTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetPowerBiModel returns the value of the PowerBiModel field in PowerBiTask_SdkV2 as
 // a PowerBiModel_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PowerBiTask_SdkV2) GetPowerBiModel(ctx context.Context) (PowerBiModel_SdkV2, bool) {
+func (m *PowerBiTask_SdkV2) GetPowerBiModel(ctx context.Context) (PowerBiModel_SdkV2, bool) {
 	var e PowerBiModel_SdkV2
-	if o.PowerBiModel.IsNull() || o.PowerBiModel.IsUnknown() {
+	if m.PowerBiModel.IsNull() || m.PowerBiModel.IsUnknown() {
 		return e, false
 	}
 	var v []PowerBiModel_SdkV2
-	d := o.PowerBiModel.ElementsAs(ctx, &v, true)
+	d := m.PowerBiModel.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9846,21 +9964,21 @@ func (o *PowerBiTask_SdkV2) GetPowerBiModel(ctx context.Context) (PowerBiModel_S
 }
 
 // SetPowerBiModel sets the value of the PowerBiModel field in PowerBiTask_SdkV2.
-func (o *PowerBiTask_SdkV2) SetPowerBiModel(ctx context.Context, v PowerBiModel_SdkV2) {
+func (m *PowerBiTask_SdkV2) SetPowerBiModel(ctx context.Context, v PowerBiModel_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_model"]
-	o.PowerBiModel = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_model"]
+	m.PowerBiModel = types.ListValueMust(t, vs)
 }
 
 // GetTables returns the value of the Tables field in PowerBiTask_SdkV2 as
 // a slice of PowerBiTable_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PowerBiTask_SdkV2) GetTables(ctx context.Context) ([]PowerBiTable_SdkV2, bool) {
-	if o.Tables.IsNull() || o.Tables.IsUnknown() {
+func (m *PowerBiTask_SdkV2) GetTables(ctx context.Context) ([]PowerBiTable_SdkV2, bool) {
+	if m.Tables.IsNull() || m.Tables.IsUnknown() {
 		return nil, false
 	}
 	var v []PowerBiTable_SdkV2
-	d := o.Tables.ElementsAs(ctx, &v, true)
+	d := m.Tables.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9868,14 +9986,14 @@ func (o *PowerBiTask_SdkV2) GetTables(ctx context.Context) ([]PowerBiTable_SdkV2
 }
 
 // SetTables sets the value of the Tables field in PowerBiTask_SdkV2.
-func (o *PowerBiTask_SdkV2) SetTables(ctx context.Context, v []PowerBiTable_SdkV2) {
+func (m *PowerBiTask_SdkV2) SetTables(ctx context.Context, v []PowerBiTable_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tables = types.ListValueMust(t, vs)
+	m.Tables = types.ListValueMust(t, vs)
 }
 
 type PythonWheelTask_SdkV2 struct {
@@ -9912,7 +10030,7 @@ func (to *PythonWheelTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c PythonWheelTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PythonWheelTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["entry_point"] = attrs["entry_point"].SetRequired()
 	attrs["named_parameters"] = attrs["named_parameters"].SetOptional()
 	attrs["package_name"] = attrs["package_name"].SetRequired()
@@ -9928,7 +10046,7 @@ func (c PythonWheelTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PythonWheelTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PythonWheelTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"named_parameters": reflect.TypeOf(types.String{}),
 		"parameters":       reflect.TypeOf(types.String{}),
@@ -9938,19 +10056,19 @@ func (a PythonWheelTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PythonWheelTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PythonWheelTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PythonWheelTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entry_point":      o.EntryPoint,
-			"named_parameters": o.NamedParameters,
-			"package_name":     o.PackageName,
-			"parameters":       o.Parameters,
+			"entry_point":      m.EntryPoint,
+			"named_parameters": m.NamedParameters,
+			"package_name":     m.PackageName,
+			"parameters":       m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PythonWheelTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m PythonWheelTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"entry_point": types.StringType,
@@ -9968,12 +10086,12 @@ func (o PythonWheelTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetNamedParameters returns the value of the NamedParameters field in PythonWheelTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PythonWheelTask_SdkV2) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+func (m *PythonWheelTask_SdkV2) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.NamedParameters.IsNull() || m.NamedParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	d := m.NamedParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9981,25 +10099,25 @@ func (o *PythonWheelTask_SdkV2) GetNamedParameters(ctx context.Context) (map[str
 }
 
 // SetNamedParameters sets the value of the NamedParameters field in PythonWheelTask_SdkV2.
-func (o *PythonWheelTask_SdkV2) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+func (m *PythonWheelTask_SdkV2) SetNamedParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NamedParameters = types.MapValueMust(t, vs)
+	m.NamedParameters = types.MapValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in PythonWheelTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PythonWheelTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *PythonWheelTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10007,14 +10125,14 @@ func (o *PythonWheelTask_SdkV2) GetParameters(ctx context.Context) ([]types.Stri
 }
 
 // SetParameters sets the value of the Parameters field in PythonWheelTask_SdkV2.
-func (o *PythonWheelTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *PythonWheelTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type QueueDetails_SdkV2 struct {
@@ -10030,7 +10148,7 @@ func (to *QueueDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *QueueDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QueueDetails_SdkV2) {
 }
 
-func (c QueueDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m QueueDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
 
@@ -10044,24 +10162,24 @@ func (c QueueDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a QueueDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m QueueDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, QueueDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o QueueDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m QueueDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"code":    o.Code,
-			"message": o.Message,
+			"code":    m.Code,
+			"message": m.Message,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o QueueDetails_SdkV2) Type(ctx context.Context) attr.Type {
+func (m QueueDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"code":    types.StringType,
@@ -10081,7 +10199,7 @@ func (to *QueueSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *QueueSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from QueueSettings_SdkV2) {
 }
 
-func (c QueueSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m QueueSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["enabled"] = attrs["enabled"].SetRequired()
 
 	return attrs
@@ -10094,23 +10212,23 @@ func (c QueueSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a QueueSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m QueueSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, QueueSettings_SdkV2
 // only implements ToObjectValue() and Type().
-func (o QueueSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m QueueSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"enabled": o.Enabled,
+			"enabled": m.Enabled,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o QueueSettings_SdkV2) Type(ctx context.Context) attr.Type {
+func (m QueueSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"enabled": types.BoolType,
@@ -10199,7 +10317,7 @@ func (to *RepairHistoryItem_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c RepairHistoryItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RepairHistoryItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
@@ -10221,7 +10339,7 @@ func (c RepairHistoryItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RepairHistoryItem_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RepairHistoryItem_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"state":        reflect.TypeOf(RunState_SdkV2{}),
 		"status":       reflect.TypeOf(RunStatus_SdkV2{}),
@@ -10232,23 +10350,23 @@ func (a RepairHistoryItem_SdkV2) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RepairHistoryItem_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RepairHistoryItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RepairHistoryItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"effective_performance_target": o.EffectivePerformanceTarget,
-			"end_time":                     o.EndTime,
-			"id":                           o.Id,
-			"start_time":                   o.StartTime,
-			"state":                        o.State,
-			"status":                       o.Status,
-			"task_run_ids":                 o.TaskRunIds,
-			"type":                         o.Type_,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"end_time":                     m.EndTime,
+			"id":                           m.Id,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"task_run_ids":                 m.TaskRunIds,
+			"type":                         m.Type_,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RepairHistoryItem_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RepairHistoryItem_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"effective_performance_target": types.StringType,
@@ -10272,13 +10390,13 @@ func (o RepairHistoryItem_SdkV2) Type(ctx context.Context) attr.Type {
 // GetState returns the value of the State field in RepairHistoryItem_SdkV2 as
 // a RunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairHistoryItem_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
+func (m *RepairHistoryItem_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 	var e RunState_SdkV2
-	if o.State.IsNull() || o.State.IsUnknown() {
+	if m.State.IsNull() || m.State.IsUnknown() {
 		return e, false
 	}
 	var v []RunState_SdkV2
-	d := o.State.ElementsAs(ctx, &v, true)
+	d := m.State.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10289,22 +10407,22 @@ func (o *RepairHistoryItem_SdkV2) GetState(ctx context.Context) (RunState_SdkV2,
 }
 
 // SetState sets the value of the State field in RepairHistoryItem_SdkV2.
-func (o *RepairHistoryItem_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
+func (m *RepairHistoryItem_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
-	o.State = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	m.State = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in RepairHistoryItem_SdkV2 as
 // a RunStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairHistoryItem_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
+func (m *RepairHistoryItem_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 	var e RunStatus_SdkV2
-	if o.Status.IsNull() || o.Status.IsUnknown() {
+	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
 	var v []RunStatus_SdkV2
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := m.Status.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10315,21 +10433,21 @@ func (o *RepairHistoryItem_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV
 }
 
 // SetStatus sets the value of the Status field in RepairHistoryItem_SdkV2.
-func (o *RepairHistoryItem_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
+func (m *RepairHistoryItem_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
 }
 
 // GetTaskRunIds returns the value of the TaskRunIds field in RepairHistoryItem_SdkV2 as
 // a slice of types.Int64 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairHistoryItem_SdkV2) GetTaskRunIds(ctx context.Context) ([]types.Int64, bool) {
-	if o.TaskRunIds.IsNull() || o.TaskRunIds.IsUnknown() {
+func (m *RepairHistoryItem_SdkV2) GetTaskRunIds(ctx context.Context) ([]types.Int64, bool) {
+	if m.TaskRunIds.IsNull() || m.TaskRunIds.IsUnknown() {
 		return nil, false
 	}
 	var v []types.Int64
-	d := o.TaskRunIds.ElementsAs(ctx, &v, true)
+	d := m.TaskRunIds.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10337,14 +10455,14 @@ func (o *RepairHistoryItem_SdkV2) GetTaskRunIds(ctx context.Context) ([]types.In
 }
 
 // SetTaskRunIds sets the value of the TaskRunIds field in RepairHistoryItem_SdkV2.
-func (o *RepairHistoryItem_SdkV2) SetTaskRunIds(ctx context.Context, v []types.Int64) {
+func (m *RepairHistoryItem_SdkV2) SetTaskRunIds(ctx context.Context, v []types.Int64) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_ids"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_ids"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.TaskRunIds = types.ListValueMust(t, vs)
+	m.TaskRunIds = types.ListValueMust(t, vs)
 }
 
 type RepairRun_SdkV2 struct {
@@ -10542,7 +10660,7 @@ func (to *RepairRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Repair
 	}
 }
 
-func (c RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
@@ -10570,7 +10688,7 @@ func (c RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RepairRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RepairRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.String{}),
 		"jar_params":          reflect.TypeOf(types.String{}),
@@ -10588,30 +10706,30 @@ func (a RepairRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RepairRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RepairRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RepairRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_commands":           o.DbtCommands,
-			"jar_params":             o.JarParams,
-			"job_parameters":         o.JobParameters,
-			"latest_repair_id":       o.LatestRepairId,
-			"notebook_params":        o.NotebookParams,
-			"performance_target":     o.PerformanceTarget,
-			"pipeline_params":        o.PipelineParams,
-			"python_named_params":    o.PythonNamedParams,
-			"python_params":          o.PythonParams,
-			"rerun_all_failed_tasks": o.RerunAllFailedTasks,
-			"rerun_dependent_tasks":  o.RerunDependentTasks,
-			"rerun_tasks":            o.RerunTasks,
-			"run_id":                 o.RunId,
-			"spark_submit_params":    o.SparkSubmitParams,
-			"sql_params":             o.SqlParams,
+			"dbt_commands":           m.DbtCommands,
+			"jar_params":             m.JarParams,
+			"job_parameters":         m.JobParameters,
+			"latest_repair_id":       m.LatestRepairId,
+			"notebook_params":        m.NotebookParams,
+			"performance_target":     m.PerformanceTarget,
+			"pipeline_params":        m.PipelineParams,
+			"python_named_params":    m.PythonNamedParams,
+			"python_params":          m.PythonParams,
+			"rerun_all_failed_tasks": m.RerunAllFailedTasks,
+			"rerun_dependent_tasks":  m.RerunDependentTasks,
+			"rerun_tasks":            m.RerunTasks,
+			"run_id":                 m.RunId,
+			"spark_submit_params":    m.SparkSubmitParams,
+			"sql_params":             m.SqlParams,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RepairRun_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RepairRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_commands": basetypes.ListType{
@@ -10656,12 +10774,12 @@ func (o RepairRun_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtCommands returns the value of the DbtCommands field in RepairRun_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
-	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+func (m *RepairRun_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if m.DbtCommands.IsNull() || m.DbtCommands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	d := m.DbtCommands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10669,25 +10787,25 @@ func (o *RepairRun_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, b
 }
 
 // SetDbtCommands sets the value of the DbtCommands field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
+func (m *RepairRun_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtCommands = types.ListValueMust(t, vs)
+	m.DbtCommands = types.ListValueMust(t, vs)
 }
 
 // GetJarParams returns the value of the JarParams field in RepairRun_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
-	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if m.JarParams.IsNull() || m.JarParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.JarParams.ElementsAs(ctx, &v, true)
+	d := m.JarParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10695,25 +10813,25 @@ func (o *RepairRun_SdkV2) GetJarParams(ctx context.Context) ([]types.String, boo
 }
 
 // SetJarParams sets the value of the JarParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
+func (m *RepairRun_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JarParams = types.ListValueMust(t, vs)
+	m.JarParams = types.ListValueMust(t, vs)
 }
 
 // GetJobParameters returns the value of the JobParameters field in RepairRun_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *RepairRun_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10721,25 +10839,25 @@ func (o *RepairRun_SdkV2) GetJobParameters(ctx context.Context) (map[string]type
 }
 
 // SetJobParameters sets the value of the JobParameters field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
+func (m *RepairRun_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.MapValueMust(t, vs)
+	m.JobParameters = types.MapValueMust(t, vs)
 }
 
 // GetNotebookParams returns the value of the NotebookParams field in RepairRun_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.NotebookParams.IsNull() || m.NotebookParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	d := m.NotebookParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10747,26 +10865,26 @@ func (o *RepairRun_SdkV2) GetNotebookParams(ctx context.Context) (map[string]typ
 }
 
 // SetNotebookParams sets the value of the NotebookParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+func (m *RepairRun_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NotebookParams = types.MapValueMust(t, vs)
+	m.NotebookParams = types.MapValueMust(t, vs)
 }
 
 // GetPipelineParams returns the value of the PipelineParams field in RepairRun_SdkV2 as
 // a PipelineParams_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
+func (m *RepairRun_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
 	var e PipelineParams_SdkV2
-	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+	if m.PipelineParams.IsNull() || m.PipelineParams.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineParams_SdkV2
-	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	d := m.PipelineParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10777,21 +10895,21 @@ func (o *RepairRun_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
+func (m *RepairRun_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
-	o.PipelineParams = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	m.PipelineParams = types.ListValueMust(t, vs)
 }
 
 // GetPythonNamedParams returns the value of the PythonNamedParams field in RepairRun_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.PythonNamedParams.IsNull() || m.PythonNamedParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	d := m.PythonNamedParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10799,25 +10917,25 @@ func (o *RepairRun_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]
 }
 
 // SetPythonNamedParams sets the value of the PythonNamedParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+func (m *RepairRun_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonNamedParams = types.MapValueMust(t, vs)
+	m.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
 // GetPythonParams returns the value of the PythonParams field in RepairRun_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
-	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if m.PythonParams.IsNull() || m.PythonParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	d := m.PythonParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10825,25 +10943,25 @@ func (o *RepairRun_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, 
 }
 
 // SetPythonParams sets the value of the PythonParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
+func (m *RepairRun_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonParams = types.ListValueMust(t, vs)
+	m.PythonParams = types.ListValueMust(t, vs)
 }
 
 // GetRerunTasks returns the value of the RerunTasks field in RepairRun_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetRerunTasks(ctx context.Context) ([]types.String, bool) {
-	if o.RerunTasks.IsNull() || o.RerunTasks.IsUnknown() {
+func (m *RepairRun_SdkV2) GetRerunTasks(ctx context.Context) ([]types.String, bool) {
+	if m.RerunTasks.IsNull() || m.RerunTasks.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.RerunTasks.ElementsAs(ctx, &v, true)
+	d := m.RerunTasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10851,25 +10969,25 @@ func (o *RepairRun_SdkV2) GetRerunTasks(ctx context.Context) ([]types.String, bo
 }
 
 // SetRerunTasks sets the value of the RerunTasks field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetRerunTasks(ctx context.Context, v []types.String) {
+func (m *RepairRun_SdkV2) SetRerunTasks(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rerun_tasks"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rerun_tasks"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.RerunTasks = types.ListValueMust(t, vs)
+	m.RerunTasks = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitParams returns the value of the SparkSubmitParams field in RepairRun_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
-	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if m.SparkSubmitParams.IsNull() || m.SparkSubmitParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10877,25 +10995,25 @@ func (o *RepairRun_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.Str
 }
 
 // SetSparkSubmitParams sets the value of the SparkSubmitParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+func (m *RepairRun_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SparkSubmitParams = types.ListValueMust(t, vs)
+	m.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
 // GetSqlParams returns the value of the SqlParams field in RepairRun_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RepairRun_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+func (m *RepairRun_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.SqlParams.IsNull() || m.SqlParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	d := m.SqlParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10903,14 +11021,14 @@ func (o *RepairRun_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.St
 }
 
 // SetSqlParams sets the value of the SqlParams field in RepairRun_SdkV2.
-func (o *RepairRun_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
+func (m *RepairRun_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlParams = types.MapValueMust(t, vs)
+	m.SqlParams = types.MapValueMust(t, vs)
 }
 
 // Run repair was initiated.
@@ -10926,7 +11044,7 @@ func (to *RepairRunResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *RepairRunResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RepairRunResponse_SdkV2) {
 }
 
-func (c RepairRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RepairRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["repair_id"] = attrs["repair_id"].SetOptional()
 
 	return attrs
@@ -10939,23 +11057,23 @@ func (c RepairRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RepairRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RepairRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RepairRunResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RepairRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RepairRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"repair_id": o.RepairId,
+			"repair_id": m.RepairId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RepairRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RepairRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"repair_id": types.Int64Type,
@@ -10997,7 +11115,7 @@ func (to *ResetJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResetJo
 	}
 }
 
-func (c ResetJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResetJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 	attrs["new_settings"] = attrs["new_settings"].SetRequired()
 	attrs["new_settings"] = attrs["new_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -11012,7 +11130,7 @@ func (c ResetJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResetJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResetJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"new_settings": reflect.TypeOf(JobSettings_SdkV2{}),
 	}
@@ -11021,17 +11139,17 @@ func (a ResetJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResetJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResetJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResetJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id":       o.JobId,
-			"new_settings": o.NewSettings,
+			"job_id":       m.JobId,
+			"new_settings": m.NewSettings,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResetJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResetJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.Int64Type,
@@ -11045,13 +11163,13 @@ func (o ResetJob_SdkV2) Type(ctx context.Context) attr.Type {
 // GetNewSettings returns the value of the NewSettings field in ResetJob_SdkV2 as
 // a JobSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResetJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
+func (m *ResetJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 	var e JobSettings_SdkV2
-	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+	if m.NewSettings.IsNull() || m.NewSettings.IsUnknown() {
 		return e, false
 	}
 	var v []JobSettings_SdkV2
-	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	d := m.NewSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11062,10 +11180,10 @@ func (o *ResetJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2,
 }
 
 // SetNewSettings sets the value of the NewSettings field in ResetJob_SdkV2.
-func (o *ResetJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV2) {
+func (m *ResetJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
-	o.NewSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	m.NewSettings = types.ListValueMust(t, vs)
 }
 
 type ResolvedConditionTaskValues_SdkV2 struct {
@@ -11080,7 +11198,7 @@ func (to *ResolvedConditionTaskValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 func (to *ResolvedConditionTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedConditionTaskValues_SdkV2) {
 }
 
-func (c ResolvedConditionTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedConditionTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["left"] = attrs["left"].SetOptional()
 	attrs["right"] = attrs["right"].SetOptional()
 
@@ -11094,24 +11212,24 @@ func (c ResolvedConditionTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedConditionTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedConditionTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedConditionTaskValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedConditionTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedConditionTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"left":  o.Left,
-			"right": o.Right,
+			"left":  m.Left,
+			"right": m.Right,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedConditionTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"left":  types.StringType,
@@ -11142,7 +11260,7 @@ func (to *ResolvedDbtTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c ResolvedDbtTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedDbtTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["commands"] = attrs["commands"].SetOptional()
 
 	return attrs
@@ -11155,7 +11273,7 @@ func (c ResolvedDbtTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedDbtTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedDbtTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"commands": reflect.TypeOf(types.String{}),
 	}
@@ -11164,16 +11282,16 @@ func (a ResolvedDbtTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedDbtTaskValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedDbtTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedDbtTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"commands": o.Commands,
+			"commands": m.Commands,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedDbtTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"commands": basetypes.ListType{
@@ -11186,12 +11304,12 @@ func (o ResolvedDbtTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCommands returns the value of the Commands field in ResolvedDbtTaskValues_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedDbtTaskValues_SdkV2) GetCommands(ctx context.Context) ([]types.String, bool) {
-	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+func (m *ResolvedDbtTaskValues_SdkV2) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if m.Commands.IsNull() || m.Commands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Commands.ElementsAs(ctx, &v, true)
+	d := m.Commands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11199,14 +11317,14 @@ func (o *ResolvedDbtTaskValues_SdkV2) GetCommands(ctx context.Context) ([]types.
 }
 
 // SetCommands sets the value of the Commands field in ResolvedDbtTaskValues_SdkV2.
-func (o *ResolvedDbtTaskValues_SdkV2) SetCommands(ctx context.Context, v []types.String) {
+func (m *ResolvedDbtTaskValues_SdkV2) SetCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Commands = types.ListValueMust(t, vs)
+	m.Commands = types.ListValueMust(t, vs)
 }
 
 type ResolvedNotebookTaskValues_SdkV2 struct {
@@ -11219,7 +11337,7 @@ func (to *ResolvedNotebookTaskValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *ResolvedNotebookTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedNotebookTaskValues_SdkV2) {
 }
 
-func (c ResolvedNotebookTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedNotebookTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["base_parameters"] = attrs["base_parameters"].SetOptional()
 
 	return attrs
@@ -11232,7 +11350,7 @@ func (c ResolvedNotebookTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedNotebookTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedNotebookTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"base_parameters": reflect.TypeOf(types.String{}),
 	}
@@ -11241,16 +11359,16 @@ func (a ResolvedNotebookTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedNotebookTaskValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedNotebookTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedNotebookTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"base_parameters": o.BaseParameters,
+			"base_parameters": m.BaseParameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedNotebookTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"base_parameters": basetypes.MapType{
@@ -11263,12 +11381,12 @@ func (o ResolvedNotebookTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetBaseParameters returns the value of the BaseParameters field in ResolvedNotebookTaskValues_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedNotebookTaskValues_SdkV2) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+func (m *ResolvedNotebookTaskValues_SdkV2) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.BaseParameters.IsNull() || m.BaseParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	d := m.BaseParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11276,14 +11394,14 @@ func (o *ResolvedNotebookTaskValues_SdkV2) GetBaseParameters(ctx context.Context
 }
 
 // SetBaseParameters sets the value of the BaseParameters field in ResolvedNotebookTaskValues_SdkV2.
-func (o *ResolvedNotebookTaskValues_SdkV2) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+func (m *ResolvedNotebookTaskValues_SdkV2) SetBaseParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.BaseParameters = types.MapValueMust(t, vs)
+	m.BaseParameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedParamPairValues_SdkV2 struct {
@@ -11296,7 +11414,7 @@ func (to *ResolvedParamPairValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *ResolvedParamPairValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedParamPairValues_SdkV2) {
 }
 
-func (c ResolvedParamPairValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedParamPairValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 
 	return attrs
@@ -11309,7 +11427,7 @@ func (c ResolvedParamPairValues_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedParamPairValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedParamPairValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.String{}),
 	}
@@ -11318,16 +11436,16 @@ func (a ResolvedParamPairValues_SdkV2) GetComplexFieldTypes(ctx context.Context)
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedParamPairValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedParamPairValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedParamPairValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"parameters": o.Parameters,
+			"parameters": m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedParamPairValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"parameters": basetypes.MapType{
@@ -11340,12 +11458,12 @@ func (o ResolvedParamPairValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetParameters returns the value of the Parameters field in ResolvedParamPairValues_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedParamPairValues_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *ResolvedParamPairValues_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11353,14 +11471,14 @@ func (o *ResolvedParamPairValues_SdkV2) GetParameters(ctx context.Context) (map[
 }
 
 // SetParameters sets the value of the Parameters field in ResolvedParamPairValues_SdkV2.
-func (o *ResolvedParamPairValues_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+func (m *ResolvedParamPairValues_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.MapValueMust(t, vs)
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedPythonWheelTaskValues_SdkV2 struct {
@@ -11387,7 +11505,7 @@ func (to *ResolvedPythonWheelTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.
 	}
 }
 
-func (c ResolvedPythonWheelTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedPythonWheelTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["named_parameters"] = attrs["named_parameters"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 
@@ -11401,7 +11519,7 @@ func (c ResolvedPythonWheelTaskValues_SdkV2) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedPythonWheelTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedPythonWheelTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"named_parameters": reflect.TypeOf(types.String{}),
 		"parameters":       reflect.TypeOf(types.String{}),
@@ -11411,17 +11529,17 @@ func (a ResolvedPythonWheelTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Co
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedPythonWheelTaskValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedPythonWheelTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedPythonWheelTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"named_parameters": o.NamedParameters,
-			"parameters":       o.Parameters,
+			"named_parameters": m.NamedParameters,
+			"parameters":       m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedPythonWheelTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"named_parameters": basetypes.MapType{
@@ -11437,12 +11555,12 @@ func (o ResolvedPythonWheelTaskValues_SdkV2) Type(ctx context.Context) attr.Type
 // GetNamedParameters returns the value of the NamedParameters field in ResolvedPythonWheelTaskValues_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedPythonWheelTaskValues_SdkV2) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+func (m *ResolvedPythonWheelTaskValues_SdkV2) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.NamedParameters.IsNull() || m.NamedParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	d := m.NamedParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11450,25 +11568,25 @@ func (o *ResolvedPythonWheelTaskValues_SdkV2) GetNamedParameters(ctx context.Con
 }
 
 // SetNamedParameters sets the value of the NamedParameters field in ResolvedPythonWheelTaskValues_SdkV2.
-func (o *ResolvedPythonWheelTaskValues_SdkV2) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+func (m *ResolvedPythonWheelTaskValues_SdkV2) SetNamedParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NamedParameters = types.MapValueMust(t, vs)
+	m.NamedParameters = types.MapValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in ResolvedPythonWheelTaskValues_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedPythonWheelTaskValues_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *ResolvedPythonWheelTaskValues_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11476,14 +11594,14 @@ func (o *ResolvedPythonWheelTaskValues_SdkV2) GetParameters(ctx context.Context)
 }
 
 // SetParameters sets the value of the Parameters field in ResolvedPythonWheelTaskValues_SdkV2.
-func (o *ResolvedPythonWheelTaskValues_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *ResolvedPythonWheelTaskValues_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type ResolvedRunJobTaskValues_SdkV2 struct {
@@ -11498,7 +11616,7 @@ func (to *ResolvedRunJobTaskValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *ResolvedRunJobTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedRunJobTaskValues_SdkV2) {
 }
 
-func (c ResolvedRunJobTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedRunJobTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 
@@ -11512,7 +11630,7 @@ func (c ResolvedRunJobTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedRunJobTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedRunJobTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"job_parameters": reflect.TypeOf(types.String{}),
 		"parameters":     reflect.TypeOf(types.String{}),
@@ -11522,17 +11640,17 @@ func (a ResolvedRunJobTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedRunJobTaskValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedRunJobTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedRunJobTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_parameters": o.JobParameters,
-			"parameters":     o.Parameters,
+			"job_parameters": m.JobParameters,
+			"parameters":     m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedRunJobTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"job_parameters": basetypes.MapType{
@@ -11548,12 +11666,12 @@ func (o ResolvedRunJobTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetJobParameters returns the value of the JobParameters field in ResolvedRunJobTaskValues_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedRunJobTaskValues_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *ResolvedRunJobTaskValues_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11561,25 +11679,25 @@ func (o *ResolvedRunJobTaskValues_SdkV2) GetJobParameters(ctx context.Context) (
 }
 
 // SetJobParameters sets the value of the JobParameters field in ResolvedRunJobTaskValues_SdkV2.
-func (o *ResolvedRunJobTaskValues_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
+func (m *ResolvedRunJobTaskValues_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.MapValueMust(t, vs)
+	m.JobParameters = types.MapValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in ResolvedRunJobTaskValues_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedRunJobTaskValues_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *ResolvedRunJobTaskValues_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11587,14 +11705,14 @@ func (o *ResolvedRunJobTaskValues_SdkV2) GetParameters(ctx context.Context) (map
 }
 
 // SetParameters sets the value of the Parameters field in ResolvedRunJobTaskValues_SdkV2.
-func (o *ResolvedRunJobTaskValues_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+func (m *ResolvedRunJobTaskValues_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.MapValueMust(t, vs)
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedStringParamsValues_SdkV2 struct {
@@ -11619,7 +11737,7 @@ func (to *ResolvedStringParamsValues_SdkV2) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c ResolvedStringParamsValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedStringParamsValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 
 	return attrs
@@ -11632,7 +11750,7 @@ func (c ResolvedStringParamsValues_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedStringParamsValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedStringParamsValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.String{}),
 	}
@@ -11641,16 +11759,16 @@ func (a ResolvedStringParamsValues_SdkV2) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedStringParamsValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedStringParamsValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedStringParamsValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"parameters": o.Parameters,
+			"parameters": m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedStringParamsValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"parameters": basetypes.ListType{
@@ -11663,12 +11781,12 @@ func (o ResolvedStringParamsValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetParameters returns the value of the Parameters field in ResolvedStringParamsValues_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedStringParamsValues_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *ResolvedStringParamsValues_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11676,14 +11794,14 @@ func (o *ResolvedStringParamsValues_SdkV2) GetParameters(ctx context.Context) ([
 }
 
 // SetParameters sets the value of the Parameters field in ResolvedStringParamsValues_SdkV2.
-func (o *ResolvedStringParamsValues_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *ResolvedStringParamsValues_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type ResolvedValues_SdkV2 struct {
@@ -11884,7 +12002,7 @@ func (to *ResolvedValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from R
 	}
 }
 
-func (c ResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
@@ -11916,7 +12034,7 @@ func (c ResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolvedValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolvedValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues_SdkV2{}),
 		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues_SdkV2{}),
@@ -11934,25 +12052,25 @@ func (a ResolvedValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedValues_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolvedValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolvedValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"condition_task":    o.ConditionTask,
-			"dbt_task":          o.DbtTask,
-			"notebook_task":     o.NotebookTask,
-			"python_wheel_task": o.PythonWheelTask,
-			"run_job_task":      o.RunJobTask,
-			"simulation_task":   o.SimulationTask,
-			"spark_jar_task":    o.SparkJarTask,
-			"spark_python_task": o.SparkPythonTask,
-			"spark_submit_task": o.SparkSubmitTask,
-			"sql_task":          o.SqlTask,
+			"condition_task":    m.ConditionTask,
+			"dbt_task":          m.DbtTask,
+			"notebook_task":     m.NotebookTask,
+			"python_wheel_task": m.PythonWheelTask,
+			"run_job_task":      m.RunJobTask,
+			"simulation_task":   m.SimulationTask,
+			"spark_jar_task":    m.SparkJarTask,
+			"spark_python_task": m.SparkPythonTask,
+			"spark_submit_task": m.SparkSubmitTask,
+			"sql_task":          m.SqlTask,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition_task": basetypes.ListType{
@@ -11992,13 +12110,13 @@ func (o ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 // GetConditionTask returns the value of the ConditionTask field in ResolvedValues_SdkV2 as
 // a ResolvedConditionTaskValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetConditionTask(ctx context.Context) (ResolvedConditionTaskValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetConditionTask(ctx context.Context) (ResolvedConditionTaskValues_SdkV2, bool) {
 	var e ResolvedConditionTaskValues_SdkV2
-	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+	if m.ConditionTask.IsNull() || m.ConditionTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedConditionTaskValues_SdkV2
-	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	d := m.ConditionTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12009,22 +12127,22 @@ func (o *ResolvedValues_SdkV2) GetConditionTask(ctx context.Context) (ResolvedCo
 }
 
 // SetConditionTask sets the value of the ConditionTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetConditionTask(ctx context.Context, v ResolvedConditionTaskValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetConditionTask(ctx context.Context, v ResolvedConditionTaskValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
-	o.ConditionTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	m.ConditionTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in ResolvedValues_SdkV2 as
 // a ResolvedDbtTaskValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues_SdkV2, bool) {
 	var e ResolvedDbtTaskValues_SdkV2
-	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+	if m.DbtTask.IsNull() || m.DbtTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedDbtTaskValues_SdkV2
-	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	d := m.DbtTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12035,22 +12153,22 @@ func (o *ResolvedValues_SdkV2) GetDbtTask(ctx context.Context) (ResolvedDbtTaskV
 }
 
 // SetDbtTask sets the value of the DbtTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetDbtTask(ctx context.Context, v ResolvedDbtTaskValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetDbtTask(ctx context.Context, v ResolvedDbtTaskValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
-	o.DbtTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	m.DbtTask = types.ListValueMust(t, vs)
 }
 
 // GetNotebookTask returns the value of the NotebookTask field in ResolvedValues_SdkV2 as
 // a ResolvedNotebookTaskValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetNotebookTask(ctx context.Context) (ResolvedNotebookTaskValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetNotebookTask(ctx context.Context) (ResolvedNotebookTaskValues_SdkV2, bool) {
 	var e ResolvedNotebookTaskValues_SdkV2
-	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+	if m.NotebookTask.IsNull() || m.NotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedNotebookTaskValues_SdkV2
-	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	d := m.NotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12061,22 +12179,22 @@ func (o *ResolvedValues_SdkV2) GetNotebookTask(ctx context.Context) (ResolvedNot
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetNotebookTask(ctx context.Context, v ResolvedNotebookTaskValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetNotebookTask(ctx context.Context, v ResolvedNotebookTaskValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
-	o.NotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	m.NotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in ResolvedValues_SdkV2 as
 // a ResolvedPythonWheelTaskValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetPythonWheelTask(ctx context.Context) (ResolvedPythonWheelTaskValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetPythonWheelTask(ctx context.Context) (ResolvedPythonWheelTaskValues_SdkV2, bool) {
 	var e ResolvedPythonWheelTaskValues_SdkV2
-	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+	if m.PythonWheelTask.IsNull() || m.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedPythonWheelTaskValues_SdkV2
-	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	d := m.PythonWheelTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12087,22 +12205,22 @@ func (o *ResolvedValues_SdkV2) GetPythonWheelTask(ctx context.Context) (Resolved
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetPythonWheelTask(ctx context.Context, v ResolvedPythonWheelTaskValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetPythonWheelTask(ctx context.Context, v ResolvedPythonWheelTaskValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
-	o.PythonWheelTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	m.PythonWheelTask = types.ListValueMust(t, vs)
 }
 
 // GetRunJobTask returns the value of the RunJobTask field in ResolvedValues_SdkV2 as
 // a ResolvedRunJobTaskValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskValues_SdkV2, bool) {
 	var e ResolvedRunJobTaskValues_SdkV2
-	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+	if m.RunJobTask.IsNull() || m.RunJobTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedRunJobTaskValues_SdkV2
-	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	d := m.RunJobTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12113,22 +12231,22 @@ func (o *ResolvedValues_SdkV2) GetRunJobTask(ctx context.Context) (ResolvedRunJo
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetRunJobTask(ctx context.Context, v ResolvedRunJobTaskValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetRunJobTask(ctx context.Context, v ResolvedRunJobTaskValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
-	o.RunJobTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	m.RunJobTask = types.ListValueMust(t, vs)
 }
 
 // GetSimulationTask returns the value of the SimulationTask field in ResolvedValues_SdkV2 as
 // a ResolvedParamPairValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetSimulationTask(ctx context.Context) (ResolvedParamPairValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetSimulationTask(ctx context.Context) (ResolvedParamPairValues_SdkV2, bool) {
 	var e ResolvedParamPairValues_SdkV2
-	if o.SimulationTask.IsNull() || o.SimulationTask.IsUnknown() {
+	if m.SimulationTask.IsNull() || m.SimulationTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedParamPairValues_SdkV2
-	d := o.SimulationTask.ElementsAs(ctx, &v, true)
+	d := m.SimulationTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12139,22 +12257,22 @@ func (o *ResolvedValues_SdkV2) GetSimulationTask(ctx context.Context) (ResolvedP
 }
 
 // SetSimulationTask sets the value of the SimulationTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetSimulationTask(ctx context.Context, v ResolvedParamPairValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetSimulationTask(ctx context.Context, v ResolvedParamPairValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["simulation_task"]
-	o.SimulationTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["simulation_task"]
+	m.SimulationTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkJarTask returns the value of the SparkJarTask field in ResolvedValues_SdkV2 as
 // a ResolvedStringParamsValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetSparkJarTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetSparkJarTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
 	var e ResolvedStringParamsValues_SdkV2
-	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+	if m.SparkJarTask.IsNull() || m.SparkJarTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedStringParamsValues_SdkV2
-	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	d := m.SparkJarTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12165,22 +12283,22 @@ func (o *ResolvedValues_SdkV2) GetSparkJarTask(ctx context.Context) (ResolvedStr
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetSparkJarTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetSparkJarTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
-	o.SparkJarTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	m.SparkJarTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkPythonTask returns the value of the SparkPythonTask field in ResolvedValues_SdkV2 as
 // a ResolvedStringParamsValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetSparkPythonTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetSparkPythonTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
 	var e ResolvedStringParamsValues_SdkV2
-	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+	if m.SparkPythonTask.IsNull() || m.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedStringParamsValues_SdkV2
-	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	d := m.SparkPythonTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12191,22 +12309,22 @@ func (o *ResolvedValues_SdkV2) GetSparkPythonTask(ctx context.Context) (Resolved
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetSparkPythonTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetSparkPythonTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
-	o.SparkPythonTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	m.SparkPythonTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitTask returns the value of the SparkSubmitTask field in ResolvedValues_SdkV2 as
 // a ResolvedStringParamsValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetSparkSubmitTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetSparkSubmitTask(ctx context.Context) (ResolvedStringParamsValues_SdkV2, bool) {
 	var e ResolvedStringParamsValues_SdkV2
-	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+	if m.SparkSubmitTask.IsNull() || m.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedStringParamsValues_SdkV2
-	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12217,22 +12335,22 @@ func (o *ResolvedValues_SdkV2) GetSparkSubmitTask(ctx context.Context) (Resolved
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetSparkSubmitTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetSparkSubmitTask(ctx context.Context, v ResolvedStringParamsValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
-	o.SparkSubmitTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	m.SparkSubmitTask = types.ListValueMust(t, vs)
 }
 
 // GetSqlTask returns the value of the SqlTask field in ResolvedValues_SdkV2 as
 // a ResolvedParamPairValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolvedValues_SdkV2) GetSqlTask(ctx context.Context) (ResolvedParamPairValues_SdkV2, bool) {
+func (m *ResolvedValues_SdkV2) GetSqlTask(ctx context.Context) (ResolvedParamPairValues_SdkV2, bool) {
 	var e ResolvedParamPairValues_SdkV2
-	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+	if m.SqlTask.IsNull() || m.SqlTask.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedParamPairValues_SdkV2
-	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	d := m.SqlTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12243,10 +12361,10 @@ func (o *ResolvedValues_SdkV2) GetSqlTask(ctx context.Context) (ResolvedParamPai
 }
 
 // SetSqlTask sets the value of the SqlTask field in ResolvedValues_SdkV2.
-func (o *ResolvedValues_SdkV2) SetSqlTask(ctx context.Context, v ResolvedParamPairValues_SdkV2) {
+func (m *ResolvedValues_SdkV2) SetSqlTask(ctx context.Context, v ResolvedParamPairValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
-	o.SqlTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	m.SqlTask = types.ListValueMust(t, vs)
 }
 
 // Run was retrieved successfully
@@ -12595,7 +12713,7 @@ func (to *Run_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Run_SdkV2) {
 	}
 }
 
-func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
 	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
@@ -12651,7 +12769,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Run_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Run_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance_SdkV2{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec_SdkV2{}),
@@ -12672,51 +12790,51 @@ func (a Run_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Run_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Run_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Run_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":               o.AttemptNumber,
-			"cleanup_duration":             o.CleanupDuration,
-			"cluster_instance":             o.ClusterInstance,
-			"cluster_spec":                 o.ClusterSpec,
-			"creator_user_name":            o.CreatorUserName,
-			"description":                  o.Description,
-			"effective_performance_target": o.EffectivePerformanceTarget,
-			"effective_usage_policy_id":    o.EffectiveUsagePolicyId,
-			"end_time":                     o.EndTime,
-			"execution_duration":           o.ExecutionDuration,
-			"git_source":                   o.GitSource,
-			"has_more":                     o.HasMore,
-			"iterations":                   o.Iterations,
-			"job_clusters":                 o.JobClusters,
-			"job_id":                       o.JobId,
-			"job_parameters":               o.JobParameters,
-			"job_run_id":                   o.JobRunId,
-			"next_page_token":              o.NextPageToken,
-			"number_in_job":                o.NumberInJob,
-			"original_attempt_run_id":      o.OriginalAttemptRunId,
-			"overriding_parameters":        o.OverridingParameters,
-			"queue_duration":               o.QueueDuration,
-			"repair_history":               o.RepairHistory,
-			"run_duration":                 o.RunDuration,
-			"run_id":                       o.RunId,
-			"run_name":                     o.RunName,
-			"run_page_url":                 o.RunPageUrl,
-			"run_type":                     o.RunType,
-			"schedule":                     o.Schedule,
-			"setup_duration":               o.SetupDuration,
-			"start_time":                   o.StartTime,
-			"state":                        o.State,
-			"status":                       o.Status,
-			"tasks":                        o.Tasks,
-			"trigger":                      o.Trigger,
-			"trigger_info":                 o.TriggerInfo,
+			"attempt_number":               m.AttemptNumber,
+			"cleanup_duration":             m.CleanupDuration,
+			"cluster_instance":             m.ClusterInstance,
+			"cluster_spec":                 m.ClusterSpec,
+			"creator_user_name":            m.CreatorUserName,
+			"description":                  m.Description,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
+			"end_time":                     m.EndTime,
+			"execution_duration":           m.ExecutionDuration,
+			"git_source":                   m.GitSource,
+			"has_more":                     m.HasMore,
+			"iterations":                   m.Iterations,
+			"job_clusters":                 m.JobClusters,
+			"job_id":                       m.JobId,
+			"job_parameters":               m.JobParameters,
+			"job_run_id":                   m.JobRunId,
+			"next_page_token":              m.NextPageToken,
+			"number_in_job":                m.NumberInJob,
+			"original_attempt_run_id":      m.OriginalAttemptRunId,
+			"overriding_parameters":        m.OverridingParameters,
+			"queue_duration":               m.QueueDuration,
+			"repair_history":               m.RepairHistory,
+			"run_duration":                 m.RunDuration,
+			"run_id":                       m.RunId,
+			"run_name":                     m.RunName,
+			"run_page_url":                 m.RunPageUrl,
+			"run_type":                     m.RunType,
+			"schedule":                     m.Schedule,
+			"setup_duration":               m.SetupDuration,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"tasks":                        m.Tasks,
+			"trigger":                      m.Trigger,
+			"trigger_info":                 m.TriggerInfo,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Run_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attempt_number":   types.Int64Type,
@@ -12788,13 +12906,13 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 // GetClusterInstance returns the value of the ClusterInstance field in Run_SdkV2 as
 // a ClusterInstance_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
+func (m *Run_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
 	var e ClusterInstance_SdkV2
-	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+	if m.ClusterInstance.IsNull() || m.ClusterInstance.IsUnknown() {
 		return e, false
 	}
 	var v []ClusterInstance_SdkV2
-	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	d := m.ClusterInstance.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12805,22 +12923,22 @@ func (o *Run_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_Sdk
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in Run_SdkV2.
-func (o *Run_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
+func (m *Run_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
-	o.ClusterInstance = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	m.ClusterInstance = types.ListValueMust(t, vs)
 }
 
 // GetClusterSpec returns the value of the ClusterSpec field in Run_SdkV2 as
 // a ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, bool) {
+func (m *Run_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, bool) {
 	var e ClusterSpec_SdkV2
-	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+	if m.ClusterSpec.IsNull() || m.ClusterSpec.IsUnknown() {
 		return e, false
 	}
 	var v []ClusterSpec_SdkV2
-	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	d := m.ClusterSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12831,22 +12949,22 @@ func (o *Run_SdkV2) GetClusterSpec(ctx context.Context) (ClusterSpec_SdkV2, bool
 }
 
 // SetClusterSpec sets the value of the ClusterSpec field in Run_SdkV2.
-func (o *Run_SdkV2) SetClusterSpec(ctx context.Context, v ClusterSpec_SdkV2) {
+func (m *Run_SdkV2) SetClusterSpec(ctx context.Context, v ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
-	o.ClusterSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	m.ClusterSpec = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in Run_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *Run_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12857,21 +12975,21 @@ func (o *Run_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 }
 
 // SetGitSource sets the value of the GitSource field in Run_SdkV2.
-func (o *Run_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *Run_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetIterations returns the value of the Iterations field in Run_SdkV2 as
 // a slice of RunTask_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetIterations(ctx context.Context) ([]RunTask_SdkV2, bool) {
-	if o.Iterations.IsNull() || o.Iterations.IsUnknown() {
+func (m *Run_SdkV2) GetIterations(ctx context.Context) ([]RunTask_SdkV2, bool) {
+	if m.Iterations.IsNull() || m.Iterations.IsUnknown() {
 		return nil, false
 	}
 	var v []RunTask_SdkV2
-	d := o.Iterations.ElementsAs(ctx, &v, true)
+	d := m.Iterations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12879,25 +12997,25 @@ func (o *Run_SdkV2) GetIterations(ctx context.Context) ([]RunTask_SdkV2, bool) {
 }
 
 // SetIterations sets the value of the Iterations field in Run_SdkV2.
-func (o *Run_SdkV2) SetIterations(ctx context.Context, v []RunTask_SdkV2) {
+func (m *Run_SdkV2) SetIterations(ctx context.Context, v []RunTask_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["iterations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["iterations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Iterations = types.ListValueMust(t, vs)
+	m.Iterations = types.ListValueMust(t, vs)
 }
 
 // GetJobClusters returns the value of the JobClusters field in Run_SdkV2 as
 // a slice of JobCluster_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
-	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+func (m *Run_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, bool) {
+	if m.JobClusters.IsNull() || m.JobClusters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobCluster_SdkV2
-	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	d := m.JobClusters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12905,25 +13023,25 @@ func (o *Run_SdkV2) GetJobClusters(ctx context.Context) ([]JobCluster_SdkV2, boo
 }
 
 // SetJobClusters sets the value of the JobClusters field in Run_SdkV2.
-func (o *Run_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
+func (m *Run_SdkV2) SetJobClusters(ctx context.Context, v []JobCluster_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobClusters = types.ListValueMust(t, vs)
+	m.JobClusters = types.ListValueMust(t, vs)
 }
 
 // GetJobParameters returns the value of the JobParameters field in Run_SdkV2 as
 // a slice of JobParameter_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_SdkV2, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *Run_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_SdkV2, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v []JobParameter_SdkV2
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12931,26 +13049,26 @@ func (o *Run_SdkV2) GetJobParameters(ctx context.Context) ([]JobParameter_SdkV2,
 }
 
 // SetJobParameters sets the value of the JobParameters field in Run_SdkV2.
-func (o *Run_SdkV2) SetJobParameters(ctx context.Context, v []JobParameter_SdkV2) {
+func (m *Run_SdkV2) SetJobParameters(ctx context.Context, v []JobParameter_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.ListValueMust(t, vs)
+	m.JobParameters = types.ListValueMust(t, vs)
 }
 
 // GetOverridingParameters returns the value of the OverridingParameters field in Run_SdkV2 as
 // a RunParameters_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetOverridingParameters(ctx context.Context) (RunParameters_SdkV2, bool) {
+func (m *Run_SdkV2) GetOverridingParameters(ctx context.Context) (RunParameters_SdkV2, bool) {
 	var e RunParameters_SdkV2
-	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+	if m.OverridingParameters.IsNull() || m.OverridingParameters.IsUnknown() {
 		return e, false
 	}
 	var v []RunParameters_SdkV2
-	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	d := m.OverridingParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12961,21 +13079,21 @@ func (o *Run_SdkV2) GetOverridingParameters(ctx context.Context) (RunParameters_
 }
 
 // SetOverridingParameters sets the value of the OverridingParameters field in Run_SdkV2.
-func (o *Run_SdkV2) SetOverridingParameters(ctx context.Context, v RunParameters_SdkV2) {
+func (m *Run_SdkV2) SetOverridingParameters(ctx context.Context, v RunParameters_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
-	o.OverridingParameters = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	m.OverridingParameters = types.ListValueMust(t, vs)
 }
 
 // GetRepairHistory returns the value of the RepairHistory field in Run_SdkV2 as
 // a slice of RepairHistoryItem_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem_SdkV2, bool) {
-	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+func (m *Run_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem_SdkV2, bool) {
+	if m.RepairHistory.IsNull() || m.RepairHistory.IsUnknown() {
 		return nil, false
 	}
 	var v []RepairHistoryItem_SdkV2
-	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	d := m.RepairHistory.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12983,26 +13101,26 @@ func (o *Run_SdkV2) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem_S
 }
 
 // SetRepairHistory sets the value of the RepairHistory field in Run_SdkV2.
-func (o *Run_SdkV2) SetRepairHistory(ctx context.Context, v []RepairHistoryItem_SdkV2) {
+func (m *Run_SdkV2) SetRepairHistory(ctx context.Context, v []RepairHistoryItem_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.RepairHistory = types.ListValueMust(t, vs)
+	m.RepairHistory = types.ListValueMust(t, vs)
 }
 
 // GetSchedule returns the value of the Schedule field in Run_SdkV2 as
 // a CronSchedule_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
+func (m *Run_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
 	var e CronSchedule_SdkV2
-	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+	if m.Schedule.IsNull() || m.Schedule.IsUnknown() {
 		return e, false
 	}
 	var v []CronSchedule_SdkV2
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := m.Schedule.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13013,22 +13131,22 @@ func (o *Run_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) 
 }
 
 // SetSchedule sets the value of the Schedule field in Run_SdkV2.
-func (o *Run_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
+func (m *Run_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	m.Schedule = types.ListValueMust(t, vs)
 }
 
 // GetState returns the value of the State field in Run_SdkV2 as
 // a RunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
+func (m *Run_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 	var e RunState_SdkV2
-	if o.State.IsNull() || o.State.IsUnknown() {
+	if m.State.IsNull() || m.State.IsUnknown() {
 		return e, false
 	}
 	var v []RunState_SdkV2
-	d := o.State.ElementsAs(ctx, &v, true)
+	d := m.State.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13039,22 +13157,22 @@ func (o *Run_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 }
 
 // SetState sets the value of the State field in Run_SdkV2.
-func (o *Run_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
+func (m *Run_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
-	o.State = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	m.State = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in Run_SdkV2 as
 // a RunStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
+func (m *Run_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 	var e RunStatus_SdkV2
-	if o.Status.IsNull() || o.Status.IsUnknown() {
+	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
 	var v []RunStatus_SdkV2
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := m.Status.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13065,21 +13183,21 @@ func (o *Run_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 }
 
 // SetStatus sets the value of the Status field in Run_SdkV2.
-func (o *Run_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
+func (m *Run_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
 }
 
 // GetTasks returns the value of the Tasks field in Run_SdkV2 as
 // a slice of RunTask_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
-	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+func (m *Run_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
+	if m.Tasks.IsNull() || m.Tasks.IsUnknown() {
 		return nil, false
 	}
 	var v []RunTask_SdkV2
-	d := o.Tasks.ElementsAs(ctx, &v, true)
+	d := m.Tasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13087,26 +13205,26 @@ func (o *Run_SdkV2) GetTasks(ctx context.Context) ([]RunTask_SdkV2, bool) {
 }
 
 // SetTasks sets the value of the Tasks field in Run_SdkV2.
-func (o *Run_SdkV2) SetTasks(ctx context.Context, v []RunTask_SdkV2) {
+func (m *Run_SdkV2) SetTasks(ctx context.Context, v []RunTask_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tasks = types.ListValueMust(t, vs)
+	m.Tasks = types.ListValueMust(t, vs)
 }
 
 // GetTriggerInfo returns the value of the TriggerInfo field in Run_SdkV2 as
 // a TriggerInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Run_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, bool) {
+func (m *Run_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, bool) {
 	var e TriggerInfo_SdkV2
-	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+	if m.TriggerInfo.IsNull() || m.TriggerInfo.IsUnknown() {
 		return e, false
 	}
 	var v []TriggerInfo_SdkV2
-	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	d := m.TriggerInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13117,10 +13235,10 @@ func (o *Run_SdkV2) GetTriggerInfo(ctx context.Context) (TriggerInfo_SdkV2, bool
 }
 
 // SetTriggerInfo sets the value of the TriggerInfo field in Run_SdkV2.
-func (o *Run_SdkV2) SetTriggerInfo(ctx context.Context, v TriggerInfo_SdkV2) {
+func (m *Run_SdkV2) SetTriggerInfo(ctx context.Context, v TriggerInfo_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
-	o.TriggerInfo = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	m.TriggerInfo = types.ListValueMust(t, vs)
 }
 
 type RunConditionTask_SdkV2 struct {
@@ -13152,7 +13270,7 @@ func (to *RunConditionTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *RunConditionTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunConditionTask_SdkV2) {
 }
 
-func (c RunConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["left"] = attrs["left"].SetRequired()
 	attrs["op"] = attrs["op"].SetRequired()
 	attrs["outcome"] = attrs["outcome"].SetOptional()
@@ -13168,26 +13286,26 @@ func (c RunConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunConditionTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunConditionTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunConditionTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunConditionTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunConditionTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"left":    o.Left,
-			"op":      o.Op,
-			"outcome": o.Outcome,
-			"right":   o.Right,
+			"left":    m.Left,
+			"op":      m.Op,
+			"outcome": m.Outcome,
+			"right":   m.Right,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunConditionTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunConditionTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"left":    types.StringType,
@@ -13253,7 +13371,7 @@ func (to *RunForEachTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from R
 	}
 }
 
-func (c RunForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["concurrency"] = attrs["concurrency"].SetOptional()
 	attrs["inputs"] = attrs["inputs"].SetRequired()
 	attrs["stats"] = attrs["stats"].SetOptional()
@@ -13271,7 +13389,7 @@ func (c RunForEachTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"stats": reflect.TypeOf(ForEachStats_SdkV2{}),
 		"task":  reflect.TypeOf(Task_SdkV2{}),
@@ -13281,19 +13399,19 @@ func (a RunForEachTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunForEachTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunForEachTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunForEachTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"concurrency": o.Concurrency,
-			"inputs":      o.Inputs,
-			"stats":       o.Stats,
-			"task":        o.Task,
+			"concurrency": m.Concurrency,
+			"inputs":      m.Inputs,
+			"stats":       m.Stats,
+			"task":        m.Task,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"concurrency": types.Int64Type,
@@ -13311,13 +13429,13 @@ func (o RunForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetStats returns the value of the Stats field in RunForEachTask_SdkV2 as
 // a ForEachStats_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunForEachTask_SdkV2) GetStats(ctx context.Context) (ForEachStats_SdkV2, bool) {
+func (m *RunForEachTask_SdkV2) GetStats(ctx context.Context) (ForEachStats_SdkV2, bool) {
 	var e ForEachStats_SdkV2
-	if o.Stats.IsNull() || o.Stats.IsUnknown() {
+	if m.Stats.IsNull() || m.Stats.IsUnknown() {
 		return e, false
 	}
 	var v []ForEachStats_SdkV2
-	d := o.Stats.ElementsAs(ctx, &v, true)
+	d := m.Stats.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13328,22 +13446,22 @@ func (o *RunForEachTask_SdkV2) GetStats(ctx context.Context) (ForEachStats_SdkV2
 }
 
 // SetStats sets the value of the Stats field in RunForEachTask_SdkV2.
-func (o *RunForEachTask_SdkV2) SetStats(ctx context.Context, v ForEachStats_SdkV2) {
+func (m *RunForEachTask_SdkV2) SetStats(ctx context.Context, v ForEachStats_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
-	o.Stats = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
+	m.Stats = types.ListValueMust(t, vs)
 }
 
 // GetTask returns the value of the Task field in RunForEachTask_SdkV2 as
 // a Task_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
+func (m *RunForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
 	var e Task_SdkV2
-	if o.Task.IsNull() || o.Task.IsUnknown() {
+	if m.Task.IsNull() || m.Task.IsUnknown() {
 		return e, false
 	}
 	var v []Task_SdkV2
-	d := o.Task.ElementsAs(ctx, &v, true)
+	d := m.Task.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13354,10 +13472,10 @@ func (o *RunForEachTask_SdkV2) GetTask(ctx context.Context) (Task_SdkV2, bool) {
 }
 
 // SetTask sets the value of the Task field in RunForEachTask_SdkV2.
-func (o *RunForEachTask_SdkV2) SetTask(ctx context.Context, v Task_SdkV2) {
+func (m *RunForEachTask_SdkV2) SetTask(ctx context.Context, v Task_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
-	o.Task = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	m.Task = types.ListValueMust(t, vs)
 }
 
 type RunJobOutput_SdkV2 struct {
@@ -13371,7 +13489,7 @@ func (to *RunJobOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *RunJobOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunJobOutput_SdkV2) {
 }
 
-func (c RunJobOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunJobOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 
 	return attrs
@@ -13384,23 +13502,23 @@ func (c RunJobOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunJobOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunJobOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunJobOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunJobOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunJobOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunJobOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunJobOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -13568,7 +13686,7 @@ func (to *RunJobTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunJo
 	}
 }
 
-func (c RunJobTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunJobTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
@@ -13591,7 +13709,7 @@ func (c RunJobTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunJobTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunJobTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.String{}),
 		"jar_params":          reflect.TypeOf(types.String{}),
@@ -13608,25 +13726,25 @@ func (a RunJobTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunJobTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunJobTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunJobTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_commands":        o.DbtCommands,
-			"jar_params":          o.JarParams,
-			"job_id":              o.JobId,
-			"job_parameters":      o.JobParameters,
-			"notebook_params":     o.NotebookParams,
-			"pipeline_params":     o.PipelineParams,
-			"python_named_params": o.PythonNamedParams,
-			"python_params":       o.PythonParams,
-			"spark_submit_params": o.SparkSubmitParams,
-			"sql_params":          o.SqlParams,
+			"dbt_commands":        m.DbtCommands,
+			"jar_params":          m.JarParams,
+			"job_id":              m.JobId,
+			"job_parameters":      m.JobParameters,
+			"notebook_params":     m.NotebookParams,
+			"pipeline_params":     m.PipelineParams,
+			"python_named_params": m.PythonNamedParams,
+			"python_params":       m.PythonParams,
+			"spark_submit_params": m.SparkSubmitParams,
+			"sql_params":          m.SqlParams,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunJobTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunJobTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_commands": basetypes.ListType{
@@ -13664,12 +13782,12 @@ func (o RunJobTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtCommands returns the value of the DbtCommands field in RunJobTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
-	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if m.DbtCommands.IsNull() || m.DbtCommands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	d := m.DbtCommands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13677,25 +13795,25 @@ func (o *RunJobTask_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, 
 }
 
 // SetDbtCommands sets the value of the DbtCommands field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
+func (m *RunJobTask_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtCommands = types.ListValueMust(t, vs)
+	m.DbtCommands = types.ListValueMust(t, vs)
 }
 
 // GetJarParams returns the value of the JarParams field in RunJobTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
-	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if m.JarParams.IsNull() || m.JarParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.JarParams.ElementsAs(ctx, &v, true)
+	d := m.JarParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13703,25 +13821,25 @@ func (o *RunJobTask_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bo
 }
 
 // SetJarParams sets the value of the JarParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
+func (m *RunJobTask_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JarParams = types.ListValueMust(t, vs)
+	m.JarParams = types.ListValueMust(t, vs)
 }
 
 // GetJobParameters returns the value of the JobParameters field in RunJobTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13729,25 +13847,25 @@ func (o *RunJobTask_SdkV2) GetJobParameters(ctx context.Context) (map[string]typ
 }
 
 // SetJobParameters sets the value of the JobParameters field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
+func (m *RunJobTask_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.MapValueMust(t, vs)
+	m.JobParameters = types.MapValueMust(t, vs)
 }
 
 // GetNotebookParams returns the value of the NotebookParams field in RunJobTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.NotebookParams.IsNull() || m.NotebookParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	d := m.NotebookParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13755,26 +13873,26 @@ func (o *RunJobTask_SdkV2) GetNotebookParams(ctx context.Context) (map[string]ty
 }
 
 // SetNotebookParams sets the value of the NotebookParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+func (m *RunJobTask_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NotebookParams = types.MapValueMust(t, vs)
+	m.NotebookParams = types.MapValueMust(t, vs)
 }
 
 // GetPipelineParams returns the value of the PipelineParams field in RunJobTask_SdkV2 as
 // a PipelineParams_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
+func (m *RunJobTask_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
 	var e PipelineParams_SdkV2
-	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+	if m.PipelineParams.IsNull() || m.PipelineParams.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineParams_SdkV2
-	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	d := m.PipelineParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13785,21 +13903,21 @@ func (o *RunJobTask_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParam
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
+func (m *RunJobTask_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
-	o.PipelineParams = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	m.PipelineParams = types.ListValueMust(t, vs)
 }
 
 // GetPythonNamedParams returns the value of the PythonNamedParams field in RunJobTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.PythonNamedParams.IsNull() || m.PythonNamedParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	d := m.PythonNamedParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13807,25 +13925,25 @@ func (o *RunJobTask_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string
 }
 
 // SetPythonNamedParams sets the value of the PythonNamedParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+func (m *RunJobTask_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonNamedParams = types.MapValueMust(t, vs)
+	m.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
 // GetPythonParams returns the value of the PythonParams field in RunJobTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
-	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if m.PythonParams.IsNull() || m.PythonParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	d := m.PythonParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13833,25 +13951,25 @@ func (o *RunJobTask_SdkV2) GetPythonParams(ctx context.Context) ([]types.String,
 }
 
 // SetPythonParams sets the value of the PythonParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
+func (m *RunJobTask_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonParams = types.ListValueMust(t, vs)
+	m.PythonParams = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunJobTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
-	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if m.SparkSubmitParams.IsNull() || m.SparkSubmitParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13859,25 +13977,25 @@ func (o *RunJobTask_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.St
 }
 
 // SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+func (m *RunJobTask_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SparkSubmitParams = types.ListValueMust(t, vs)
+	m.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
 // GetSqlParams returns the value of the SqlParams field in RunJobTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunJobTask_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+func (m *RunJobTask_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.SqlParams.IsNull() || m.SqlParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	d := m.SqlParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13885,14 +14003,14 @@ func (o *RunJobTask_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.S
 }
 
 // SetSqlParams sets the value of the SqlParams field in RunJobTask_SdkV2.
-func (o *RunJobTask_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
+func (m *RunJobTask_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlParams = types.MapValueMust(t, vs)
+	m.SqlParams = types.MapValueMust(t, vs)
 }
 
 type RunNow_SdkV2 struct {
@@ -14114,7 +14232,7 @@ func (to *RunNow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunNow_Sd
 	}
 }
 
-func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
 	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
@@ -14142,7 +14260,7 @@ func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunNow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunNow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.String{}),
 		"jar_params":          reflect.TypeOf(types.String{}),
@@ -14161,29 +14279,29 @@ func (a RunNow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refle
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunNow_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunNow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunNow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_commands":        o.DbtCommands,
-			"idempotency_token":   o.IdempotencyToken,
-			"jar_params":          o.JarParams,
-			"job_id":              o.JobId,
-			"job_parameters":      o.JobParameters,
-			"notebook_params":     o.NotebookParams,
-			"only":                o.Only,
-			"performance_target":  o.PerformanceTarget,
-			"pipeline_params":     o.PipelineParams,
-			"python_named_params": o.PythonNamedParams,
-			"python_params":       o.PythonParams,
-			"queue":               o.Queue,
-			"spark_submit_params": o.SparkSubmitParams,
-			"sql_params":          o.SqlParams,
+			"dbt_commands":        m.DbtCommands,
+			"idempotency_token":   m.IdempotencyToken,
+			"jar_params":          m.JarParams,
+			"job_id":              m.JobId,
+			"job_parameters":      m.JobParameters,
+			"notebook_params":     m.NotebookParams,
+			"only":                m.Only,
+			"performance_target":  m.PerformanceTarget,
+			"pipeline_params":     m.PipelineParams,
+			"python_named_params": m.PythonNamedParams,
+			"python_params":       m.PythonParams,
+			"queue":               m.Queue,
+			"spark_submit_params": m.SparkSubmitParams,
+			"sql_params":          m.SqlParams,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunNow_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunNow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_commands": basetypes.ListType{
@@ -14229,12 +14347,12 @@ func (o RunNow_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtCommands returns the value of the DbtCommands field in RunNow_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
-	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+func (m *RunNow_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if m.DbtCommands.IsNull() || m.DbtCommands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	d := m.DbtCommands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14242,25 +14360,25 @@ func (o *RunNow_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool
 }
 
 // SetDbtCommands sets the value of the DbtCommands field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
+func (m *RunNow_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtCommands = types.ListValueMust(t, vs)
+	m.DbtCommands = types.ListValueMust(t, vs)
 }
 
 // GetJarParams returns the value of the JarParams field in RunNow_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
-	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if m.JarParams.IsNull() || m.JarParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.JarParams.ElementsAs(ctx, &v, true)
+	d := m.JarParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14268,25 +14386,25 @@ func (o *RunNow_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) 
 }
 
 // SetJarParams sets the value of the JarParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
+func (m *RunNow_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JarParams = types.ListValueMust(t, vs)
+	m.JarParams = types.ListValueMust(t, vs)
 }
 
 // GetJobParameters returns the value of the JobParameters field in RunNow_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+func (m *RunNow_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.JobParameters.IsNull() || m.JobParameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	d := m.JobParameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14294,25 +14412,25 @@ func (o *RunNow_SdkV2) GetJobParameters(ctx context.Context) (map[string]types.S
 }
 
 // SetJobParameters sets the value of the JobParameters field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
+func (m *RunNow_SdkV2) SetJobParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JobParameters = types.MapValueMust(t, vs)
+	m.JobParameters = types.MapValueMust(t, vs)
 }
 
 // GetNotebookParams returns the value of the NotebookParams field in RunNow_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.NotebookParams.IsNull() || m.NotebookParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	d := m.NotebookParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14320,25 +14438,25 @@ func (o *RunNow_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.
 }
 
 // SetNotebookParams sets the value of the NotebookParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+func (m *RunNow_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NotebookParams = types.MapValueMust(t, vs)
+	m.NotebookParams = types.MapValueMust(t, vs)
 }
 
 // GetOnly returns the value of the Only field in RunNow_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetOnly(ctx context.Context) ([]types.String, bool) {
-	if o.Only.IsNull() || o.Only.IsUnknown() {
+func (m *RunNow_SdkV2) GetOnly(ctx context.Context) ([]types.String, bool) {
+	if m.Only.IsNull() || m.Only.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Only.ElementsAs(ctx, &v, true)
+	d := m.Only.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14346,26 +14464,26 @@ func (o *RunNow_SdkV2) GetOnly(ctx context.Context) ([]types.String, bool) {
 }
 
 // SetOnly sets the value of the Only field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetOnly(ctx context.Context, v []types.String) {
+func (m *RunNow_SdkV2) SetOnly(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["only"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["only"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Only = types.ListValueMust(t, vs)
+	m.Only = types.ListValueMust(t, vs)
 }
 
 // GetPipelineParams returns the value of the PipelineParams field in RunNow_SdkV2 as
 // a PipelineParams_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
+func (m *RunNow_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
 	var e PipelineParams_SdkV2
-	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+	if m.PipelineParams.IsNull() || m.PipelineParams.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineParams_SdkV2
-	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	d := m.PipelineParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14376,21 +14494,21 @@ func (o *RunNow_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_Sd
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
+func (m *RunNow_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
-	o.PipelineParams = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	m.PipelineParams = types.ListValueMust(t, vs)
 }
 
 // GetPythonNamedParams returns the value of the PythonNamedParams field in RunNow_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.PythonNamedParams.IsNull() || m.PythonNamedParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	d := m.PythonNamedParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14398,25 +14516,25 @@ func (o *RunNow_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]typ
 }
 
 // SetPythonNamedParams sets the value of the PythonNamedParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+func (m *RunNow_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonNamedParams = types.MapValueMust(t, vs)
+	m.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
 // GetPythonParams returns the value of the PythonParams field in RunNow_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
-	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if m.PythonParams.IsNull() || m.PythonParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	d := m.PythonParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14424,26 +14542,26 @@ func (o *RunNow_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, boo
 }
 
 // SetPythonParams sets the value of the PythonParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
+func (m *RunNow_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonParams = types.ListValueMust(t, vs)
+	m.PythonParams = types.ListValueMust(t, vs)
 }
 
 // GetQueue returns the value of the Queue field in RunNow_SdkV2 as
 // a QueueSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
+func (m *RunNow_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
 	var e QueueSettings_SdkV2
-	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+	if m.Queue.IsNull() || m.Queue.IsUnknown() {
 		return e, false
 	}
 	var v []QueueSettings_SdkV2
-	d := o.Queue.ElementsAs(ctx, &v, true)
+	d := m.Queue.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14454,21 +14572,21 @@ func (o *RunNow_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool)
 }
 
 // SetQueue sets the value of the Queue field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
+func (m *RunNow_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
-	o.Queue = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	m.Queue = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunNow_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
-	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if m.SparkSubmitParams.IsNull() || m.SparkSubmitParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14476,25 +14594,25 @@ func (o *RunNow_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String
 }
 
 // SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+func (m *RunNow_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SparkSubmitParams = types.ListValueMust(t, vs)
+	m.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
 // GetSqlParams returns the value of the SqlParams field in RunNow_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunNow_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+func (m *RunNow_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.SqlParams.IsNull() || m.SqlParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	d := m.SqlParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14502,14 +14620,14 @@ func (o *RunNow_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.Strin
 }
 
 // SetSqlParams sets the value of the SqlParams field in RunNow_SdkV2.
-func (o *RunNow_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
+func (m *RunNow_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlParams = types.MapValueMust(t, vs)
+	m.SqlParams = types.MapValueMust(t, vs)
 }
 
 // Run was started successfully.
@@ -14527,7 +14645,7 @@ func (to *RunNowResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *RunNowResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunNowResponse_SdkV2) {
 }
 
-func (c RunNowResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunNowResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["number_in_job"] = attrs["number_in_job"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 
@@ -14541,24 +14659,24 @@ func (c RunNowResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunNowResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunNowResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunNowResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunNowResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunNowResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"number_in_job": o.NumberInJob,
-			"run_id":        o.RunId,
+			"number_in_job": m.NumberInJob,
+			"run_id":        m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunNowResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunNowResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"number_in_job": types.Int64Type,
@@ -14774,7 +14892,7 @@ func (to *RunOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunOut
 	}
 }
 
-func (c RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
 	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
@@ -14809,7 +14927,7 @@ func (c RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2{}),
 		"dashboard_output":            reflect.TypeOf(DashboardTaskOutput_SdkV2{}),
@@ -14826,29 +14944,29 @@ func (a RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"clean_rooms_notebook_output": o.CleanRoomsNotebookOutput,
-			"dashboard_output":            o.DashboardOutput,
-			"dbt_cloud_output":            o.DbtCloudOutput,
-			"dbt_output":                  o.DbtOutput,
-			"dbt_platform_output":         o.DbtPlatformOutput,
-			"error":                       o.Error,
-			"error_trace":                 o.ErrorTrace,
-			"info":                        o.Info,
-			"logs":                        o.Logs,
-			"logs_truncated":              o.LogsTruncated,
-			"metadata":                    o.Metadata,
-			"notebook_output":             o.NotebookOutput,
-			"run_job_output":              o.RunJobOutput,
-			"sql_output":                  o.SqlOutput,
+			"clean_rooms_notebook_output": m.CleanRoomsNotebookOutput,
+			"dashboard_output":            m.DashboardOutput,
+			"dbt_cloud_output":            m.DbtCloudOutput,
+			"dbt_output":                  m.DbtOutput,
+			"dbt_platform_output":         m.DbtPlatformOutput,
+			"error":                       m.Error,
+			"error_trace":                 m.ErrorTrace,
+			"info":                        m.Info,
+			"logs":                        m.Logs,
+			"logs_truncated":              m.LogsTruncated,
+			"metadata":                    m.Metadata,
+			"notebook_output":             m.NotebookOutput,
+			"run_job_output":              m.RunJobOutput,
+			"sql_output":                  m.SqlOutput,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_output": basetypes.ListType{
@@ -14890,13 +15008,13 @@ func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCleanRoomsNotebookOutput returns the value of the CleanRoomsNotebookOutput field in RunOutput_SdkV2 as
 // a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2, bool) {
 	var e CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
-	if o.CleanRoomsNotebookOutput.IsNull() || o.CleanRoomsNotebookOutput.IsUnknown() {
+	if m.CleanRoomsNotebookOutput.IsNull() || m.CleanRoomsNotebookOutput.IsUnknown() {
 		return e, false
 	}
 	var v []CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
-	d := o.CleanRoomsNotebookOutput.ElementsAs(ctx, &v, true)
+	d := m.CleanRoomsNotebookOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14907,22 +15025,22 @@ func (o *RunOutput_SdkV2) GetCleanRoomsNotebookOutput(ctx context.Context) (Clea
 }
 
 // SetCleanRoomsNotebookOutput sets the value of the CleanRoomsNotebookOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetCleanRoomsNotebookOutput(ctx context.Context, v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetCleanRoomsNotebookOutput(ctx context.Context, v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_output"]
-	o.CleanRoomsNotebookOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_output"]
+	m.CleanRoomsNotebookOutput = types.ListValueMust(t, vs)
 }
 
 // GetDashboardOutput returns the value of the DashboardOutput field in RunOutput_SdkV2 as
 // a DashboardTaskOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetDashboardOutput(ctx context.Context) (DashboardTaskOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetDashboardOutput(ctx context.Context) (DashboardTaskOutput_SdkV2, bool) {
 	var e DashboardTaskOutput_SdkV2
-	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
+	if m.DashboardOutput.IsNull() || m.DashboardOutput.IsUnknown() {
 		return e, false
 	}
 	var v []DashboardTaskOutput_SdkV2
-	d := o.DashboardOutput.ElementsAs(ctx, &v, true)
+	d := m.DashboardOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14933,22 +15051,22 @@ func (o *RunOutput_SdkV2) GetDashboardOutput(ctx context.Context) (DashboardTask
 }
 
 // SetDashboardOutput sets the value of the DashboardOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetDashboardOutput(ctx context.Context, v DashboardTaskOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetDashboardOutput(ctx context.Context, v DashboardTaskOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
-	o.DashboardOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
+	m.DashboardOutput = types.ListValueMust(t, vs)
 }
 
 // GetDbtCloudOutput returns the value of the DbtCloudOutput field in RunOutput_SdkV2 as
 // a DbtCloudTaskOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetDbtCloudOutput(ctx context.Context) (DbtCloudTaskOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetDbtCloudOutput(ctx context.Context) (DbtCloudTaskOutput_SdkV2, bool) {
 	var e DbtCloudTaskOutput_SdkV2
-	if o.DbtCloudOutput.IsNull() || o.DbtCloudOutput.IsUnknown() {
+	if m.DbtCloudOutput.IsNull() || m.DbtCloudOutput.IsUnknown() {
 		return e, false
 	}
 	var v []DbtCloudTaskOutput_SdkV2
-	d := o.DbtCloudOutput.ElementsAs(ctx, &v, true)
+	d := m.DbtCloudOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14959,22 +15077,22 @@ func (o *RunOutput_SdkV2) GetDbtCloudOutput(ctx context.Context) (DbtCloudTaskOu
 }
 
 // SetDbtCloudOutput sets the value of the DbtCloudOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetDbtCloudOutput(ctx context.Context, v DbtCloudTaskOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetDbtCloudOutput(ctx context.Context, v DbtCloudTaskOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_output"]
-	o.DbtCloudOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_output"]
+	m.DbtCloudOutput = types.ListValueMust(t, vs)
 }
 
 // GetDbtOutput returns the value of the DbtOutput field in RunOutput_SdkV2 as
 // a DbtOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetDbtOutput(ctx context.Context) (DbtOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetDbtOutput(ctx context.Context) (DbtOutput_SdkV2, bool) {
 	var e DbtOutput_SdkV2
-	if o.DbtOutput.IsNull() || o.DbtOutput.IsUnknown() {
+	if m.DbtOutput.IsNull() || m.DbtOutput.IsUnknown() {
 		return e, false
 	}
 	var v []DbtOutput_SdkV2
-	d := o.DbtOutput.ElementsAs(ctx, &v, true)
+	d := m.DbtOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14985,22 +15103,22 @@ func (o *RunOutput_SdkV2) GetDbtOutput(ctx context.Context) (DbtOutput_SdkV2, bo
 }
 
 // SetDbtOutput sets the value of the DbtOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetDbtOutput(ctx context.Context, v DbtOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetDbtOutput(ctx context.Context, v DbtOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_output"]
-	o.DbtOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_output"]
+	m.DbtOutput = types.ListValueMust(t, vs)
 }
 
 // GetDbtPlatformOutput returns the value of the DbtPlatformOutput field in RunOutput_SdkV2 as
 // a DbtPlatformTaskOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetDbtPlatformOutput(ctx context.Context) (DbtPlatformTaskOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetDbtPlatformOutput(ctx context.Context) (DbtPlatformTaskOutput_SdkV2, bool) {
 	var e DbtPlatformTaskOutput_SdkV2
-	if o.DbtPlatformOutput.IsNull() || o.DbtPlatformOutput.IsUnknown() {
+	if m.DbtPlatformOutput.IsNull() || m.DbtPlatformOutput.IsUnknown() {
 		return e, false
 	}
 	var v []DbtPlatformTaskOutput_SdkV2
-	d := o.DbtPlatformOutput.ElementsAs(ctx, &v, true)
+	d := m.DbtPlatformOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15011,22 +15129,22 @@ func (o *RunOutput_SdkV2) GetDbtPlatformOutput(ctx context.Context) (DbtPlatform
 }
 
 // SetDbtPlatformOutput sets the value of the DbtPlatformOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetDbtPlatformOutput(ctx context.Context, v DbtPlatformTaskOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetDbtPlatformOutput(ctx context.Context, v DbtPlatformTaskOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_output"]
-	o.DbtPlatformOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_output"]
+	m.DbtPlatformOutput = types.ListValueMust(t, vs)
 }
 
 // GetMetadata returns the value of the Metadata field in RunOutput_SdkV2 as
 // a Run_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetMetadata(ctx context.Context) (Run_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetMetadata(ctx context.Context) (Run_SdkV2, bool) {
 	var e Run_SdkV2
-	if o.Metadata.IsNull() || o.Metadata.IsUnknown() {
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
 		return e, false
 	}
 	var v []Run_SdkV2
-	d := o.Metadata.ElementsAs(ctx, &v, true)
+	d := m.Metadata.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15037,22 +15155,22 @@ func (o *RunOutput_SdkV2) GetMetadata(ctx context.Context) (Run_SdkV2, bool) {
 }
 
 // SetMetadata sets the value of the Metadata field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetMetadata(ctx context.Context, v Run_SdkV2) {
+func (m *RunOutput_SdkV2) SetMetadata(ctx context.Context, v Run_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
-	o.Metadata = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	m.Metadata = types.ListValueMust(t, vs)
 }
 
 // GetNotebookOutput returns the value of the NotebookOutput field in RunOutput_SdkV2 as
 // a NotebookOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput_SdkV2, bool) {
 	var e NotebookOutput_SdkV2
-	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+	if m.NotebookOutput.IsNull() || m.NotebookOutput.IsUnknown() {
 		return e, false
 	}
 	var v []NotebookOutput_SdkV2
-	d := o.NotebookOutput.ElementsAs(ctx, &v, true)
+	d := m.NotebookOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15063,22 +15181,22 @@ func (o *RunOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput
 }
 
 // SetNotebookOutput sets the value of the NotebookOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetNotebookOutput(ctx context.Context, v NotebookOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetNotebookOutput(ctx context.Context, v NotebookOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
-	o.NotebookOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
+	m.NotebookOutput = types.ListValueMust(t, vs)
 }
 
 // GetRunJobOutput returns the value of the RunJobOutput field in RunOutput_SdkV2 as
 // a RunJobOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetRunJobOutput(ctx context.Context) (RunJobOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetRunJobOutput(ctx context.Context) (RunJobOutput_SdkV2, bool) {
 	var e RunJobOutput_SdkV2
-	if o.RunJobOutput.IsNull() || o.RunJobOutput.IsUnknown() {
+	if m.RunJobOutput.IsNull() || m.RunJobOutput.IsUnknown() {
 		return e, false
 	}
 	var v []RunJobOutput_SdkV2
-	d := o.RunJobOutput.ElementsAs(ctx, &v, true)
+	d := m.RunJobOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15089,22 +15207,22 @@ func (o *RunOutput_SdkV2) GetRunJobOutput(ctx context.Context) (RunJobOutput_Sdk
 }
 
 // SetRunJobOutput sets the value of the RunJobOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetRunJobOutput(ctx context.Context, v RunJobOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetRunJobOutput(ctx context.Context, v RunJobOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_output"]
-	o.RunJobOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_output"]
+	m.RunJobOutput = types.ListValueMust(t, vs)
 }
 
 // GetSqlOutput returns the value of the SqlOutput field in RunOutput_SdkV2 as
 // a SqlOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunOutput_SdkV2) GetSqlOutput(ctx context.Context) (SqlOutput_SdkV2, bool) {
+func (m *RunOutput_SdkV2) GetSqlOutput(ctx context.Context) (SqlOutput_SdkV2, bool) {
 	var e SqlOutput_SdkV2
-	if o.SqlOutput.IsNull() || o.SqlOutput.IsUnknown() {
+	if m.SqlOutput.IsNull() || m.SqlOutput.IsUnknown() {
 		return e, false
 	}
 	var v []SqlOutput_SdkV2
-	d := o.SqlOutput.ElementsAs(ctx, &v, true)
+	d := m.SqlOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15115,10 +15233,10 @@ func (o *RunOutput_SdkV2) GetSqlOutput(ctx context.Context) (SqlOutput_SdkV2, bo
 }
 
 // SetSqlOutput sets the value of the SqlOutput field in RunOutput_SdkV2.
-func (o *RunOutput_SdkV2) SetSqlOutput(ctx context.Context, v SqlOutput_SdkV2) {
+func (m *RunOutput_SdkV2) SetSqlOutput(ctx context.Context, v SqlOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_output"]
-	o.SqlOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_output"]
+	m.SqlOutput = types.ListValueMust(t, vs)
 }
 
 type RunParameters_SdkV2 struct {
@@ -15277,7 +15395,7 @@ func (to *RunParameters_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ru
 	}
 }
 
-func (c RunParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
@@ -15298,7 +15416,7 @@ func (c RunParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.String{}),
 		"jar_params":          reflect.TypeOf(types.String{}),
@@ -15314,23 +15432,23 @@ func (a RunParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunParameters_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunParameters_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunParameters_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_commands":        o.DbtCommands,
-			"jar_params":          o.JarParams,
-			"notebook_params":     o.NotebookParams,
-			"pipeline_params":     o.PipelineParams,
-			"python_named_params": o.PythonNamedParams,
-			"python_params":       o.PythonParams,
-			"spark_submit_params": o.SparkSubmitParams,
-			"sql_params":          o.SqlParams,
+			"dbt_commands":        m.DbtCommands,
+			"jar_params":          m.JarParams,
+			"notebook_params":     m.NotebookParams,
+			"pipeline_params":     m.PipelineParams,
+			"python_named_params": m.PythonNamedParams,
+			"python_params":       m.PythonParams,
+			"spark_submit_params": m.SparkSubmitParams,
+			"sql_params":          m.SqlParams,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunParameters_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunParameters_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_commands": basetypes.ListType{
@@ -15364,12 +15482,12 @@ func (o RunParameters_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDbtCommands returns the value of the DbtCommands field in RunParameters_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
-	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+func (m *RunParameters_SdkV2) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if m.DbtCommands.IsNull() || m.DbtCommands.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	d := m.DbtCommands.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15377,25 +15495,25 @@ func (o *RunParameters_SdkV2) GetDbtCommands(ctx context.Context) ([]types.Strin
 }
 
 // SetDbtCommands sets the value of the DbtCommands field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
+func (m *RunParameters_SdkV2) SetDbtCommands(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DbtCommands = types.ListValueMust(t, vs)
+	m.DbtCommands = types.ListValueMust(t, vs)
 }
 
 // GetJarParams returns the value of the JarParams field in RunParameters_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
-	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if m.JarParams.IsNull() || m.JarParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.JarParams.ElementsAs(ctx, &v, true)
+	d := m.JarParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15403,25 +15521,25 @@ func (o *RunParameters_SdkV2) GetJarParams(ctx context.Context) ([]types.String,
 }
 
 // SetJarParams sets the value of the JarParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
+func (m *RunParameters_SdkV2) SetJarParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.JarParams = types.ListValueMust(t, vs)
+	m.JarParams = types.ListValueMust(t, vs)
 }
 
 // GetNotebookParams returns the value of the NotebookParams field in RunParameters_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.NotebookParams.IsNull() || m.NotebookParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	d := m.NotebookParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15429,26 +15547,26 @@ func (o *RunParameters_SdkV2) GetNotebookParams(ctx context.Context) (map[string
 }
 
 // SetNotebookParams sets the value of the NotebookParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+func (m *RunParameters_SdkV2) SetNotebookParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.NotebookParams = types.MapValueMust(t, vs)
+	m.NotebookParams = types.MapValueMust(t, vs)
 }
 
 // GetPipelineParams returns the value of the PipelineParams field in RunParameters_SdkV2 as
 // a PipelineParams_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
+func (m *RunParameters_SdkV2) GetPipelineParams(ctx context.Context) (PipelineParams_SdkV2, bool) {
 	var e PipelineParams_SdkV2
-	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+	if m.PipelineParams.IsNull() || m.PipelineParams.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineParams_SdkV2
-	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	d := m.PipelineParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15459,21 +15577,21 @@ func (o *RunParameters_SdkV2) GetPipelineParams(ctx context.Context) (PipelinePa
 }
 
 // SetPipelineParams sets the value of the PipelineParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
+func (m *RunParameters_SdkV2) SetPipelineParams(ctx context.Context, v PipelineParams_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
-	o.PipelineParams = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	m.PipelineParams = types.ListValueMust(t, vs)
 }
 
 // GetPythonNamedParams returns the value of the PythonNamedParams field in RunParameters_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.PythonNamedParams.IsNull() || m.PythonNamedParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	d := m.PythonNamedParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15481,25 +15599,25 @@ func (o *RunParameters_SdkV2) GetPythonNamedParams(ctx context.Context) (map[str
 }
 
 // SetPythonNamedParams sets the value of the PythonNamedParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+func (m *RunParameters_SdkV2) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonNamedParams = types.MapValueMust(t, vs)
+	m.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
 // GetPythonParams returns the value of the PythonParams field in RunParameters_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
-	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if m.PythonParams.IsNull() || m.PythonParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	d := m.PythonParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15507,25 +15625,25 @@ func (o *RunParameters_SdkV2) GetPythonParams(ctx context.Context) ([]types.Stri
 }
 
 // SetPythonParams sets the value of the PythonParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
+func (m *RunParameters_SdkV2) SetPythonParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PythonParams = types.ListValueMust(t, vs)
+	m.PythonParams = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunParameters_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
-	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if m.SparkSubmitParams.IsNull() || m.SparkSubmitParams.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15533,25 +15651,25 @@ func (o *RunParameters_SdkV2) GetSparkSubmitParams(ctx context.Context) ([]types
 }
 
 // SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+func (m *RunParameters_SdkV2) SetSparkSubmitParams(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SparkSubmitParams = types.ListValueMust(t, vs)
+	m.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
 // GetSqlParams returns the value of the SqlParams field in RunParameters_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunParameters_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
-	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+func (m *RunParameters_SdkV2) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if m.SqlParams.IsNull() || m.SqlParams.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	d := m.SqlParams.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15559,14 +15677,14 @@ func (o *RunParameters_SdkV2) GetSqlParams(ctx context.Context) (map[string]type
 }
 
 // SetSqlParams sets the value of the SqlParams field in RunParameters_SdkV2.
-func (o *RunParameters_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
+func (m *RunParameters_SdkV2) SetSqlParams(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlParams = types.MapValueMust(t, vs)
+	m.SqlParams = types.MapValueMust(t, vs)
 }
 
 // The current state of the run.
@@ -15595,7 +15713,7 @@ func (to *RunState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 func (to *RunState_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunState_SdkV2) {
 }
 
-func (c RunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
 	attrs["queue_reason"] = attrs["queue_reason"].SetOptional()
 	attrs["result_state"] = attrs["result_state"].SetOptional()
@@ -15612,27 +15730,27 @@ func (c RunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunState_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"life_cycle_state":           o.LifeCycleState,
-			"queue_reason":               o.QueueReason,
-			"result_state":               o.ResultState,
-			"state_message":              o.StateMessage,
-			"user_cancelled_or_timedout": o.UserCancelledOrTimedout,
+			"life_cycle_state":           m.LifeCycleState,
+			"queue_reason":               m.QueueReason,
+			"result_state":               m.ResultState,
+			"state_message":              m.StateMessage,
+			"user_cancelled_or_timedout": m.UserCancelledOrTimedout,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunState_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"life_cycle_state":           types.StringType,
@@ -15695,7 +15813,7 @@ func (to *RunStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunSta
 	}
 }
 
-func (c RunStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["queue_details"] = attrs["queue_details"].SetOptional()
 	attrs["queue_details"] = attrs["queue_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetOptional()
@@ -15712,7 +15830,7 @@ func (c RunStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"queue_details":       reflect.TypeOf(QueueDetails_SdkV2{}),
 		"termination_details": reflect.TypeOf(TerminationDetails_SdkV2{}),
@@ -15722,18 +15840,18 @@ func (a RunStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunStatus_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"queue_details":       o.QueueDetails,
-			"state":               o.State,
-			"termination_details": o.TerminationDetails,
+			"queue_details":       m.QueueDetails,
+			"state":               m.State,
+			"termination_details": m.TerminationDetails,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunStatus_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"queue_details": basetypes.ListType{
@@ -15750,13 +15868,13 @@ func (o RunStatus_SdkV2) Type(ctx context.Context) attr.Type {
 // GetQueueDetails returns the value of the QueueDetails field in RunStatus_SdkV2 as
 // a QueueDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunStatus_SdkV2) GetQueueDetails(ctx context.Context) (QueueDetails_SdkV2, bool) {
+func (m *RunStatus_SdkV2) GetQueueDetails(ctx context.Context) (QueueDetails_SdkV2, bool) {
 	var e QueueDetails_SdkV2
-	if o.QueueDetails.IsNull() || o.QueueDetails.IsUnknown() {
+	if m.QueueDetails.IsNull() || m.QueueDetails.IsUnknown() {
 		return e, false
 	}
 	var v []QueueDetails_SdkV2
-	d := o.QueueDetails.ElementsAs(ctx, &v, true)
+	d := m.QueueDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15767,22 +15885,22 @@ func (o *RunStatus_SdkV2) GetQueueDetails(ctx context.Context) (QueueDetails_Sdk
 }
 
 // SetQueueDetails sets the value of the QueueDetails field in RunStatus_SdkV2.
-func (o *RunStatus_SdkV2) SetQueueDetails(ctx context.Context, v QueueDetails_SdkV2) {
+func (m *RunStatus_SdkV2) SetQueueDetails(ctx context.Context, v QueueDetails_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue_details"]
-	o.QueueDetails = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["queue_details"]
+	m.QueueDetails = types.ListValueMust(t, vs)
 }
 
 // GetTerminationDetails returns the value of the TerminationDetails field in RunStatus_SdkV2 as
 // a TerminationDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunStatus_SdkV2) GetTerminationDetails(ctx context.Context) (TerminationDetails_SdkV2, bool) {
+func (m *RunStatus_SdkV2) GetTerminationDetails(ctx context.Context) (TerminationDetails_SdkV2, bool) {
 	var e TerminationDetails_SdkV2
-	if o.TerminationDetails.IsNull() || o.TerminationDetails.IsUnknown() {
+	if m.TerminationDetails.IsNull() || m.TerminationDetails.IsUnknown() {
 		return e, false
 	}
 	var v []TerminationDetails_SdkV2
-	d := o.TerminationDetails.ElementsAs(ctx, &v, true)
+	d := m.TerminationDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15793,10 +15911,10 @@ func (o *RunStatus_SdkV2) GetTerminationDetails(ctx context.Context) (Terminatio
 }
 
 // SetTerminationDetails sets the value of the TerminationDetails field in RunStatus_SdkV2.
-func (o *RunStatus_SdkV2) SetTerminationDetails(ctx context.Context, v TerminationDetails_SdkV2) {
+func (m *RunStatus_SdkV2) SetTerminationDetails(ctx context.Context, v TerminationDetails_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_details"]
-	o.TerminationDetails = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_details"]
+	m.TerminationDetails = types.ListValueMust(t, vs)
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -15847,6 +15965,9 @@ type RunTask_SdkV2 struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -16450,7 +16571,7 @@ func (to *RunTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunTask_
 	}
 }
 
-func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -16469,6 +16590,7 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -16534,7 +16656,7 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"cluster_instance":          reflect.TypeOf(ClusterInstance_SdkV2{}),
@@ -16570,61 +16692,62 @@ func (a RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RunTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":               o.AttemptNumber,
-			"clean_rooms_notebook_task":    o.CleanRoomsNotebookTask,
-			"cleanup_duration":             o.CleanupDuration,
-			"cluster_instance":             o.ClusterInstance,
-			"condition_task":               o.ConditionTask,
-			"dashboard_task":               o.DashboardTask,
-			"dbt_cloud_task":               o.DbtCloudTask,
-			"dbt_platform_task":            o.DbtPlatformTask,
-			"dbt_task":                     o.DbtTask,
-			"depends_on":                   o.DependsOn,
-			"description":                  o.Description,
-			"effective_performance_target": o.EffectivePerformanceTarget,
-			"email_notifications":          o.EmailNotifications,
-			"end_time":                     o.EndTime,
-			"environment_key":              o.EnvironmentKey,
-			"execution_duration":           o.ExecutionDuration,
-			"existing_cluster_id":          o.ExistingClusterId,
-			"for_each_task":                o.ForEachTask,
-			"gen_ai_compute_task":          o.GenAiComputeTask,
-			"git_source":                   o.GitSource,
-			"job_cluster_key":              o.JobClusterKey,
-			"library":                      o.Libraries,
-			"new_cluster":                  o.NewCluster,
-			"notebook_task":                o.NotebookTask,
-			"notification_settings":        o.NotificationSettings,
-			"pipeline_task":                o.PipelineTask,
-			"power_bi_task":                o.PowerBiTask,
-			"python_wheel_task":            o.PythonWheelTask,
-			"queue_duration":               o.QueueDuration,
-			"resolved_values":              o.ResolvedValues,
-			"run_duration":                 o.RunDuration,
-			"run_id":                       o.RunId,
-			"run_if":                       o.RunIf,
-			"run_job_task":                 o.RunJobTask,
-			"run_page_url":                 o.RunPageUrl,
-			"setup_duration":               o.SetupDuration,
-			"spark_jar_task":               o.SparkJarTask,
-			"spark_python_task":            o.SparkPythonTask,
-			"spark_submit_task":            o.SparkSubmitTask,
-			"sql_task":                     o.SqlTask,
-			"start_time":                   o.StartTime,
-			"state":                        o.State,
-			"status":                       o.Status,
-			"task_key":                     o.TaskKey,
-			"timeout_seconds":              o.TimeoutSeconds,
-			"webhook_notifications":        o.WebhookNotifications,
+			"attempt_number":               m.AttemptNumber,
+			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
+			"cleanup_duration":             m.CleanupDuration,
+			"cluster_instance":             m.ClusterInstance,
+			"condition_task":               m.ConditionTask,
+			"dashboard_task":               m.DashboardTask,
+			"dbt_cloud_task":               m.DbtCloudTask,
+			"dbt_platform_task":            m.DbtPlatformTask,
+			"dbt_task":                     m.DbtTask,
+			"depends_on":                   m.DependsOn,
+			"description":                  m.Description,
+			"disabled":                     m.Disabled,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"email_notifications":          m.EmailNotifications,
+			"end_time":                     m.EndTime,
+			"environment_key":              m.EnvironmentKey,
+			"execution_duration":           m.ExecutionDuration,
+			"existing_cluster_id":          m.ExistingClusterId,
+			"for_each_task":                m.ForEachTask,
+			"gen_ai_compute_task":          m.GenAiComputeTask,
+			"git_source":                   m.GitSource,
+			"job_cluster_key":              m.JobClusterKey,
+			"library":                      m.Libraries,
+			"new_cluster":                  m.NewCluster,
+			"notebook_task":                m.NotebookTask,
+			"notification_settings":        m.NotificationSettings,
+			"pipeline_task":                m.PipelineTask,
+			"power_bi_task":                m.PowerBiTask,
+			"python_wheel_task":            m.PythonWheelTask,
+			"queue_duration":               m.QueueDuration,
+			"resolved_values":              m.ResolvedValues,
+			"run_duration":                 m.RunDuration,
+			"run_id":                       m.RunId,
+			"run_if":                       m.RunIf,
+			"run_job_task":                 m.RunJobTask,
+			"run_page_url":                 m.RunPageUrl,
+			"setup_duration":               m.SetupDuration,
+			"spark_jar_task":               m.SparkJarTask,
+			"spark_python_task":            m.SparkPythonTask,
+			"spark_submit_task":            m.SparkSubmitTask,
+			"sql_task":                     m.SqlTask,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"task_key":                     m.TaskKey,
+			"timeout_seconds":              m.TimeoutSeconds,
+			"webhook_notifications":        m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attempt_number": types.Int64Type,
@@ -16654,6 +16777,7 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
 			"description":                  types.StringType,
+			"disabled":                     types.BoolType,
 			"effective_performance_target": types.StringType,
 			"email_notifications": basetypes.ListType{
 				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
@@ -16736,13 +16860,13 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in RunTask_SdkV2 as
 // a CleanRoomsNotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
 	var e CleanRoomsNotebookTask_SdkV2
-	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+	if m.CleanRoomsNotebookTask.IsNull() || m.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask_SdkV2
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := m.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16753,22 +16877,22 @@ func (o *RunTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoo
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+func (m *RunTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	m.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetClusterInstance returns the value of the ClusterInstance field in RunTask_SdkV2 as
 // a ClusterInstance_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance_SdkV2, bool) {
 	var e ClusterInstance_SdkV2
-	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+	if m.ClusterInstance.IsNull() || m.ClusterInstance.IsUnknown() {
 		return e, false
 	}
 	var v []ClusterInstance_SdkV2
-	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	d := m.ClusterInstance.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16779,22 +16903,22 @@ func (o *RunTask_SdkV2) GetClusterInstance(ctx context.Context) (ClusterInstance
 }
 
 // SetClusterInstance sets the value of the ClusterInstance field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
+func (m *RunTask_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstance_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
-	o.ClusterInstance = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	m.ClusterInstance = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in RunTask_SdkV2 as
 // a RunConditionTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetConditionTask(ctx context.Context) (RunConditionTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetConditionTask(ctx context.Context) (RunConditionTask_SdkV2, bool) {
 	var e RunConditionTask_SdkV2
-	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+	if m.ConditionTask.IsNull() || m.ConditionTask.IsUnknown() {
 		return e, false
 	}
 	var v []RunConditionTask_SdkV2
-	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	d := m.ConditionTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16805,22 +16929,22 @@ func (o *RunTask_SdkV2) GetConditionTask(ctx context.Context) (RunConditionTask_
 }
 
 // SetConditionTask sets the value of the ConditionTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetConditionTask(ctx context.Context, v RunConditionTask_SdkV2) {
+func (m *RunTask_SdkV2) SetConditionTask(ctx context.Context, v RunConditionTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
-	o.ConditionTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	m.ConditionTask = types.ListValueMust(t, vs)
 }
 
 // GetDashboardTask returns the value of the DashboardTask field in RunTask_SdkV2 as
 // a DashboardTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
 	var e DashboardTask_SdkV2
-	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+	if m.DashboardTask.IsNull() || m.DashboardTask.IsUnknown() {
 		return e, false
 	}
 	var v []DashboardTask_SdkV2
-	d := o.DashboardTask.ElementsAs(ctx, &v, true)
+	d := m.DashboardTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16831,22 +16955,22 @@ func (o *RunTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_Sdk
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
+func (m *RunTask_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
-	o.DashboardTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
+	m.DashboardTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtCloudTask returns the value of the DbtCloudTask field in RunTask_SdkV2 as
 // a DbtCloudTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
 	var e DbtCloudTask_SdkV2
-	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
+	if m.DbtCloudTask.IsNull() || m.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtCloudTask_SdkV2
-	d := o.DbtCloudTask.ElementsAs(ctx, &v, true)
+	d := m.DbtCloudTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16857,22 +16981,22 @@ func (o *RunTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
+func (m *RunTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
-	o.DbtCloudTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
+	m.DbtCloudTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtPlatformTask returns the value of the DbtPlatformTask field in RunTask_SdkV2 as
 // a DbtPlatformTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
 	var e DbtPlatformTask_SdkV2
-	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+	if m.DbtPlatformTask.IsNull() || m.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtPlatformTask_SdkV2
-	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	d := m.DbtPlatformTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16883,22 +17007,22 @@ func (o *RunTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+func (m *RunTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
-	o.DbtPlatformTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	m.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in RunTask_SdkV2 as
 // a DbtTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
 	var e DbtTask_SdkV2
-	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+	if m.DbtTask.IsNull() || m.DbtTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtTask_SdkV2
-	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	d := m.DbtTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16909,21 +17033,21 @@ func (o *RunTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
 }
 
 // SetDbtTask sets the value of the DbtTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
+func (m *RunTask_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
-	o.DbtTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	m.DbtTask = types.ListValueMust(t, vs)
 }
 
 // GetDependsOn returns the value of the DependsOn field in RunTask_SdkV2 as
 // a slice of TaskDependency_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
-	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+func (m *RunTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
+	if m.DependsOn.IsNull() || m.DependsOn.IsUnknown() {
 		return nil, false
 	}
 	var v []TaskDependency_SdkV2
-	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	d := m.DependsOn.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16931,26 +17055,26 @@ func (o *RunTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV
 }
 
 // SetDependsOn sets the value of the DependsOn field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
+func (m *RunTask_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DependsOn = types.ListValueMust(t, vs)
+	m.DependsOn = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in RunTask_SdkV2 as
 // a JobEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
 	var e JobEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []JobEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16961,22 +17085,22 @@ func (o *RunTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNoti
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
+func (m *RunTask_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetForEachTask returns the value of the ForEachTask field in RunTask_SdkV2 as
 // a RunForEachTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetForEachTask(ctx context.Context) (RunForEachTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetForEachTask(ctx context.Context) (RunForEachTask_SdkV2, bool) {
 	var e RunForEachTask_SdkV2
-	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+	if m.ForEachTask.IsNull() || m.ForEachTask.IsUnknown() {
 		return e, false
 	}
 	var v []RunForEachTask_SdkV2
-	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	d := m.ForEachTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16987,22 +17111,22 @@ func (o *RunTask_SdkV2) GetForEachTask(ctx context.Context) (RunForEachTask_SdkV
 }
 
 // SetForEachTask sets the value of the ForEachTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetForEachTask(ctx context.Context, v RunForEachTask_SdkV2) {
+func (m *RunTask_SdkV2) SetForEachTask(ctx context.Context, v RunForEachTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
-	o.ForEachTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	m.ForEachTask = types.ListValueMust(t, vs)
 }
 
 // GetGenAiComputeTask returns the value of the GenAiComputeTask field in RunTask_SdkV2 as
 // a GenAiComputeTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
 	var e GenAiComputeTask_SdkV2
-	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+	if m.GenAiComputeTask.IsNull() || m.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
 	var v []GenAiComputeTask_SdkV2
-	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	d := m.GenAiComputeTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17013,22 +17137,22 @@ func (o *RunTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTa
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+func (m *RunTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
-	o.GenAiComputeTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	m.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in RunTask_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17039,21 +17163,21 @@ func (o *RunTask_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool
 }
 
 // SetGitSource sets the value of the GitSource field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *RunTask_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetLibraries returns the value of the Libraries field in RunTask_SdkV2 as
 // a slice of compute_tf.Library_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
-	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+func (m *RunTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
+	if m.Libraries.IsNull() || m.Libraries.IsUnknown() {
 		return nil, false
 	}
 	var v []compute_tf.Library_SdkV2
-	d := o.Libraries.ElementsAs(ctx, &v, true)
+	d := m.Libraries.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17061,26 +17185,26 @@ func (o *RunTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_
 }
 
 // SetLibraries sets the value of the Libraries field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
+func (m *RunTask_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Libraries = types.ListValueMust(t, vs)
+	m.Libraries = types.ListValueMust(t, vs)
 }
 
 // GetNewCluster returns the value of the NewCluster field in RunTask_SdkV2 as
 // a compute_tf.ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
 	var e compute_tf.ClusterSpec_SdkV2
-	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+	if m.NewCluster.IsNull() || m.NewCluster.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.ClusterSpec_SdkV2
-	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	d := m.NewCluster.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17091,22 +17215,22 @@ func (o *RunTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSp
 }
 
 // SetNewCluster sets the value of the NewCluster field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
+func (m *RunTask_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
-	o.NewCluster = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	m.NewCluster = types.ListValueMust(t, vs)
 }
 
 // GetNotebookTask returns the value of the NotebookTask field in RunTask_SdkV2 as
 // a NotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
 	var e NotebookTask_SdkV2
-	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+	if m.NotebookTask.IsNull() || m.NotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []NotebookTask_SdkV2
-	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	d := m.NotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17117,22 +17241,22 @@ func (o *RunTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
+func (m *RunTask_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
-	o.NotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	m.NotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in RunTask_SdkV2 as
 // a TaskNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
 	var e TaskNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []TaskNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17143,22 +17267,22 @@ func (o *RunTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotifi
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
+func (m *RunTask_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetPipelineTask returns the value of the PipelineTask field in RunTask_SdkV2 as
 // a PipelineTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
 	var e PipelineTask_SdkV2
-	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+	if m.PipelineTask.IsNull() || m.PipelineTask.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineTask_SdkV2
-	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	d := m.PipelineTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17169,22 +17293,22 @@ func (o *RunTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
+func (m *RunTask_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
-	o.PipelineTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	m.PipelineTask = types.ListValueMust(t, vs)
 }
 
 // GetPowerBiTask returns the value of the PowerBiTask field in RunTask_SdkV2 as
 // a PowerBiTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
 	var e PowerBiTask_SdkV2
-	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+	if m.PowerBiTask.IsNull() || m.PowerBiTask.IsUnknown() {
 		return e, false
 	}
 	var v []PowerBiTask_SdkV2
-	d := o.PowerBiTask.ElementsAs(ctx, &v, true)
+	d := m.PowerBiTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17195,22 +17319,22 @@ func (o *RunTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, 
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
+func (m *RunTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
-	o.PowerBiTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
+	m.PowerBiTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in RunTask_SdkV2 as
 // a PythonWheelTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
 	var e PythonWheelTask_SdkV2
-	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+	if m.PythonWheelTask.IsNull() || m.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
 	var v []PythonWheelTask_SdkV2
-	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	d := m.PythonWheelTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17221,22 +17345,22 @@ func (o *RunTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
+func (m *RunTask_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
-	o.PythonWheelTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	m.PythonWheelTask = types.ListValueMust(t, vs)
 }
 
 // GetResolvedValues returns the value of the ResolvedValues field in RunTask_SdkV2 as
 // a ResolvedValues_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetResolvedValues(ctx context.Context) (ResolvedValues_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetResolvedValues(ctx context.Context) (ResolvedValues_SdkV2, bool) {
 	var e ResolvedValues_SdkV2
-	if o.ResolvedValues.IsNull() || o.ResolvedValues.IsUnknown() {
+	if m.ResolvedValues.IsNull() || m.ResolvedValues.IsUnknown() {
 		return e, false
 	}
 	var v []ResolvedValues_SdkV2
-	d := o.ResolvedValues.ElementsAs(ctx, &v, true)
+	d := m.ResolvedValues.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17247,22 +17371,22 @@ func (o *RunTask_SdkV2) GetResolvedValues(ctx context.Context) (ResolvedValues_S
 }
 
 // SetResolvedValues sets the value of the ResolvedValues field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetResolvedValues(ctx context.Context, v ResolvedValues_SdkV2) {
+func (m *RunTask_SdkV2) SetResolvedValues(ctx context.Context, v ResolvedValues_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resolved_values"]
-	o.ResolvedValues = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resolved_values"]
+	m.ResolvedValues = types.ListValueMust(t, vs)
 }
 
 // GetRunJobTask returns the value of the RunJobTask field in RunTask_SdkV2 as
 // a RunJobTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
 	var e RunJobTask_SdkV2
-	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+	if m.RunJobTask.IsNull() || m.RunJobTask.IsUnknown() {
 		return e, false
 	}
 	var v []RunJobTask_SdkV2
-	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	d := m.RunJobTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17273,22 +17397,22 @@ func (o *RunTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bo
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
+func (m *RunTask_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
-	o.RunJobTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	m.RunJobTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkJarTask returns the value of the SparkJarTask field in RunTask_SdkV2 as
 // a SparkJarTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
 	var e SparkJarTask_SdkV2
-	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+	if m.SparkJarTask.IsNull() || m.SparkJarTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkJarTask_SdkV2
-	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	d := m.SparkJarTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17299,22 +17423,22 @@ func (o *RunTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
+func (m *RunTask_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
-	o.SparkJarTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	m.SparkJarTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkPythonTask returns the value of the SparkPythonTask field in RunTask_SdkV2 as
 // a SparkPythonTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
 	var e SparkPythonTask_SdkV2
-	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+	if m.SparkPythonTask.IsNull() || m.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkPythonTask_SdkV2
-	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	d := m.SparkPythonTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17325,22 +17449,22 @@ func (o *RunTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
+func (m *RunTask_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
-	o.SparkPythonTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	m.SparkPythonTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitTask returns the value of the SparkSubmitTask field in RunTask_SdkV2 as
 // a SparkSubmitTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
 	var e SparkSubmitTask_SdkV2
-	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+	if m.SparkSubmitTask.IsNull() || m.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkSubmitTask_SdkV2
-	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17351,22 +17475,22 @@ func (o *RunTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
+func (m *RunTask_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
-	o.SparkSubmitTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	m.SparkSubmitTask = types.ListValueMust(t, vs)
 }
 
 // GetSqlTask returns the value of the SqlTask field in RunTask_SdkV2 as
 // a SqlTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
 	var e SqlTask_SdkV2
-	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+	if m.SqlTask.IsNull() || m.SqlTask.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTask_SdkV2
-	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	d := m.SqlTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17377,22 +17501,22 @@ func (o *RunTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
 }
 
 // SetSqlTask sets the value of the SqlTask field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
+func (m *RunTask_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
-	o.SqlTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	m.SqlTask = types.ListValueMust(t, vs)
 }
 
 // GetState returns the value of the State field in RunTask_SdkV2 as
 // a RunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 	var e RunState_SdkV2
-	if o.State.IsNull() || o.State.IsUnknown() {
+	if m.State.IsNull() || m.State.IsUnknown() {
 		return e, false
 	}
 	var v []RunState_SdkV2
-	d := o.State.ElementsAs(ctx, &v, true)
+	d := m.State.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17403,22 +17527,22 @@ func (o *RunTask_SdkV2) GetState(ctx context.Context) (RunState_SdkV2, bool) {
 }
 
 // SetState sets the value of the State field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
+func (m *RunTask_SdkV2) SetState(ctx context.Context, v RunState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
-	o.State = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	m.State = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in RunTask_SdkV2 as
 // a RunStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 	var e RunStatus_SdkV2
-	if o.Status.IsNull() || o.Status.IsUnknown() {
+	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
 	var v []RunStatus_SdkV2
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := m.Status.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17429,22 +17553,22 @@ func (o *RunTask_SdkV2) GetStatus(ctx context.Context) (RunStatus_SdkV2, bool) {
 }
 
 // SetStatus sets the value of the Status field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
+func (m *RunTask_SdkV2) SetStatus(ctx context.Context, v RunStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in RunTask_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RunTask_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *RunTask_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17455,10 +17579,10 @@ func (o *RunTask_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNot
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in RunTask_SdkV2.
-func (o *RunTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *RunTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 type SparkJarTask_SdkV2 struct {
@@ -17500,7 +17624,7 @@ func (to *SparkJarTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Spa
 	}
 }
 
-func (c SparkJarTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SparkJarTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["jar_uri"] = attrs["jar_uri"].SetOptional()
 	attrs["main_class_name"] = attrs["main_class_name"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
@@ -17516,7 +17640,7 @@ func (c SparkJarTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SparkJarTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SparkJarTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.String{}),
 	}
@@ -17525,19 +17649,19 @@ func (a SparkJarTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SparkJarTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SparkJarTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SparkJarTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"jar_uri":         o.JarUri,
-			"main_class_name": o.MainClassName,
-			"parameters":      o.Parameters,
-			"run_as_repl":     o.RunAsRepl,
+			"jar_uri":         m.JarUri,
+			"main_class_name": m.MainClassName,
+			"parameters":      m.Parameters,
+			"run_as_repl":     m.RunAsRepl,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SparkJarTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SparkJarTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"jar_uri":         types.StringType,
@@ -17553,12 +17677,12 @@ func (o SparkJarTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetParameters returns the value of the Parameters field in SparkJarTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SparkJarTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *SparkJarTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17566,14 +17690,14 @@ func (o *SparkJarTask_SdkV2) GetParameters(ctx context.Context) ([]types.String,
 }
 
 // SetParameters sets the value of the Parameters field in SparkJarTask_SdkV2.
-func (o *SparkJarTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *SparkJarTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type SparkPythonTask_SdkV2 struct {
@@ -17620,7 +17744,7 @@ func (to *SparkPythonTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c SparkPythonTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SparkPythonTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["python_file"] = attrs["python_file"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
@@ -17635,7 +17759,7 @@ func (c SparkPythonTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SparkPythonTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SparkPythonTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.String{}),
 	}
@@ -17644,18 +17768,18 @@ func (a SparkPythonTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SparkPythonTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SparkPythonTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SparkPythonTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"parameters":  o.Parameters,
-			"python_file": o.PythonFile,
-			"source":      o.Source,
+			"parameters":  m.Parameters,
+			"python_file": m.PythonFile,
+			"source":      m.Source,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SparkPythonTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SparkPythonTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"parameters": basetypes.ListType{
@@ -17670,12 +17794,12 @@ func (o SparkPythonTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetParameters returns the value of the Parameters field in SparkPythonTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SparkPythonTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *SparkPythonTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17683,14 +17807,14 @@ func (o *SparkPythonTask_SdkV2) GetParameters(ctx context.Context) ([]types.Stri
 }
 
 // SetParameters sets the value of the Parameters field in SparkPythonTask_SdkV2.
-func (o *SparkPythonTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *SparkPythonTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type SparkSubmitTask_SdkV2 struct {
@@ -17721,7 +17845,7 @@ func (to *SparkSubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c SparkSubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SparkSubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 
 	return attrs
@@ -17734,7 +17858,7 @@ func (c SparkSubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SparkSubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SparkSubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.String{}),
 	}
@@ -17743,16 +17867,16 @@ func (a SparkSubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SparkSubmitTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SparkSubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SparkSubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"parameters": o.Parameters,
+			"parameters": m.Parameters,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SparkSubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SparkSubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"parameters": basetypes.ListType{
@@ -17765,12 +17889,12 @@ func (o SparkSubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetParameters returns the value of the Parameters field in SparkSubmitTask_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SparkSubmitTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *SparkSubmitTask_SdkV2) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17778,14 +17902,14 @@ func (o *SparkSubmitTask_SdkV2) GetParameters(ctx context.Context) ([]types.Stri
 }
 
 // SetParameters sets the value of the Parameters field in SparkSubmitTask_SdkV2.
-func (o *SparkSubmitTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
+func (m *SparkSubmitTask_SdkV2) SetParameters(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.ListValueMust(t, vs)
+	m.Parameters = types.ListValueMust(t, vs)
 }
 
 type SqlAlertOutput_SdkV2 struct {
@@ -17819,7 +17943,7 @@ func (to *SqlAlertOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from S
 	}
 }
 
-func (c SqlAlertOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlAlertOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_state"] = attrs["alert_state"].SetOptional()
 	attrs["output_link"] = attrs["output_link"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
@@ -17836,7 +17960,7 @@ func (c SqlAlertOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlAlertOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlAlertOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"sql_statements": reflect.TypeOf(SqlStatementOutput_SdkV2{}),
 	}
@@ -17845,20 +17969,20 @@ func (a SqlAlertOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlAlertOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlAlertOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlAlertOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert_state":    o.AlertState,
-			"output_link":    o.OutputLink,
-			"query_text":     o.QueryText,
-			"sql_statements": o.SqlStatements,
-			"warehouse_id":   o.WarehouseId,
+			"alert_state":    m.AlertState,
+			"output_link":    m.OutputLink,
+			"query_text":     m.QueryText,
+			"sql_statements": m.SqlStatements,
+			"warehouse_id":   m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlAlertOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlAlertOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_state": types.StringType,
@@ -17875,12 +17999,12 @@ func (o SqlAlertOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSqlStatements returns the value of the SqlStatements field in SqlAlertOutput_SdkV2 as
 // a slice of SqlStatementOutput_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlAlertOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput_SdkV2, bool) {
-	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+func (m *SqlAlertOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput_SdkV2, bool) {
+	if m.SqlStatements.IsNull() || m.SqlStatements.IsUnknown() {
 		return nil, false
 	}
 	var v []SqlStatementOutput_SdkV2
-	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	d := m.SqlStatements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17888,14 +18012,14 @@ func (o *SqlAlertOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlState
 }
 
 // SetSqlStatements sets the value of the SqlStatements field in SqlAlertOutput_SdkV2.
-func (o *SqlAlertOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStatementOutput_SdkV2) {
+func (m *SqlAlertOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStatementOutput_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlStatements = types.ListValueMust(t, vs)
+	m.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlDashboardOutput_SdkV2 struct {
@@ -17923,7 +18047,7 @@ func (to *SqlDashboardOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c SqlDashboardOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlDashboardOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 	attrs["widgets"] = attrs["widgets"].SetOptional()
 
@@ -17937,7 +18061,7 @@ func (c SqlDashboardOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlDashboardOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlDashboardOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"widgets": reflect.TypeOf(SqlDashboardWidgetOutput_SdkV2{}),
 	}
@@ -17946,17 +18070,17 @@ func (a SqlDashboardOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlDashboardOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlDashboardOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlDashboardOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"warehouse_id": o.WarehouseId,
-			"widgets":      o.Widgets,
+			"warehouse_id": m.WarehouseId,
+			"widgets":      m.Widgets,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlDashboardOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"warehouse_id": types.StringType,
@@ -17970,12 +18094,12 @@ func (o SqlDashboardOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetWidgets returns the value of the Widgets field in SqlDashboardOutput_SdkV2 as
 // a slice of SqlDashboardWidgetOutput_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlDashboardOutput_SdkV2) GetWidgets(ctx context.Context) ([]SqlDashboardWidgetOutput_SdkV2, bool) {
-	if o.Widgets.IsNull() || o.Widgets.IsUnknown() {
+func (m *SqlDashboardOutput_SdkV2) GetWidgets(ctx context.Context) ([]SqlDashboardWidgetOutput_SdkV2, bool) {
+	if m.Widgets.IsNull() || m.Widgets.IsUnknown() {
 		return nil, false
 	}
 	var v []SqlDashboardWidgetOutput_SdkV2
-	d := o.Widgets.ElementsAs(ctx, &v, true)
+	d := m.Widgets.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -17983,14 +18107,14 @@ func (o *SqlDashboardOutput_SdkV2) GetWidgets(ctx context.Context) ([]SqlDashboa
 }
 
 // SetWidgets sets the value of the Widgets field in SqlDashboardOutput_SdkV2.
-func (o *SqlDashboardOutput_SdkV2) SetWidgets(ctx context.Context, v []SqlDashboardWidgetOutput_SdkV2) {
+func (m *SqlDashboardOutput_SdkV2) SetWidgets(ctx context.Context, v []SqlDashboardWidgetOutput_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Widgets = types.ListValueMust(t, vs)
+	m.Widgets = types.ListValueMust(t, vs)
 }
 
 type SqlDashboardWidgetOutput_SdkV2 struct {
@@ -18033,7 +18157,7 @@ func (to *SqlDashboardWidgetOutput_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 	}
 }
 
-func (c SqlDashboardWidgetOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlDashboardWidgetOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["error"] = attrs["error"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -18053,7 +18177,7 @@ func (c SqlDashboardWidgetOutput_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlDashboardWidgetOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlDashboardWidgetOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"error": reflect.TypeOf(SqlOutputError_SdkV2{}),
 	}
@@ -18062,22 +18186,22 @@ func (a SqlDashboardWidgetOutput_SdkV2) GetComplexFieldTypes(ctx context.Context
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlDashboardWidgetOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlDashboardWidgetOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlDashboardWidgetOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"end_time":     o.EndTime,
-			"error":        o.Error,
-			"output_link":  o.OutputLink,
-			"start_time":   o.StartTime,
-			"status":       o.Status,
-			"widget_id":    o.WidgetId,
-			"widget_title": o.WidgetTitle,
+			"end_time":     m.EndTime,
+			"error":        m.Error,
+			"output_link":  m.OutputLink,
+			"start_time":   m.StartTime,
+			"status":       m.Status,
+			"widget_id":    m.WidgetId,
+			"widget_title": m.WidgetTitle,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlDashboardWidgetOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"end_time": types.Int64Type,
@@ -18096,13 +18220,13 @@ func (o SqlDashboardWidgetOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetError returns the value of the Error field in SqlDashboardWidgetOutput_SdkV2 as
 // a SqlOutputError_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlDashboardWidgetOutput_SdkV2) GetError(ctx context.Context) (SqlOutputError_SdkV2, bool) {
+func (m *SqlDashboardWidgetOutput_SdkV2) GetError(ctx context.Context) (SqlOutputError_SdkV2, bool) {
 	var e SqlOutputError_SdkV2
-	if o.Error.IsNull() || o.Error.IsUnknown() {
+	if m.Error.IsNull() || m.Error.IsUnknown() {
 		return e, false
 	}
 	var v []SqlOutputError_SdkV2
-	d := o.Error.ElementsAs(ctx, &v, true)
+	d := m.Error.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18113,10 +18237,10 @@ func (o *SqlDashboardWidgetOutput_SdkV2) GetError(ctx context.Context) (SqlOutpu
 }
 
 // SetError sets the value of the Error field in SqlDashboardWidgetOutput_SdkV2.
-func (o *SqlDashboardWidgetOutput_SdkV2) SetError(ctx context.Context, v SqlOutputError_SdkV2) {
+func (m *SqlDashboardWidgetOutput_SdkV2) SetError(ctx context.Context, v SqlOutputError_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
-	o.Error = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	m.Error = types.ListValueMust(t, vs)
 }
 
 type SqlOutput_SdkV2 struct {
@@ -18185,7 +18309,7 @@ func (to *SqlOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlOut
 	}
 }
 
-func (c SqlOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_output"] = attrs["alert_output"].SetOptional()
 	attrs["alert_output"] = attrs["alert_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
@@ -18203,7 +18327,7 @@ func (c SqlOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_output":     reflect.TypeOf(SqlAlertOutput_SdkV2{}),
 		"dashboard_output": reflect.TypeOf(SqlDashboardOutput_SdkV2{}),
@@ -18214,18 +18338,18 @@ func (a SqlOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert_output":     o.AlertOutput,
-			"dashboard_output": o.DashboardOutput,
-			"query_output":     o.QueryOutput,
+			"alert_output":     m.AlertOutput,
+			"dashboard_output": m.DashboardOutput,
+			"query_output":     m.QueryOutput,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_output": basetypes.ListType{
@@ -18244,13 +18368,13 @@ func (o SqlOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAlertOutput returns the value of the AlertOutput field in SqlOutput_SdkV2 as
 // a SqlAlertOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlOutput_SdkV2) GetAlertOutput(ctx context.Context) (SqlAlertOutput_SdkV2, bool) {
+func (m *SqlOutput_SdkV2) GetAlertOutput(ctx context.Context) (SqlAlertOutput_SdkV2, bool) {
 	var e SqlAlertOutput_SdkV2
-	if o.AlertOutput.IsNull() || o.AlertOutput.IsUnknown() {
+	if m.AlertOutput.IsNull() || m.AlertOutput.IsUnknown() {
 		return e, false
 	}
 	var v []SqlAlertOutput_SdkV2
-	d := o.AlertOutput.ElementsAs(ctx, &v, true)
+	d := m.AlertOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18261,22 +18385,22 @@ func (o *SqlOutput_SdkV2) GetAlertOutput(ctx context.Context) (SqlAlertOutput_Sd
 }
 
 // SetAlertOutput sets the value of the AlertOutput field in SqlOutput_SdkV2.
-func (o *SqlOutput_SdkV2) SetAlertOutput(ctx context.Context, v SqlAlertOutput_SdkV2) {
+func (m *SqlOutput_SdkV2) SetAlertOutput(ctx context.Context, v SqlAlertOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_output"]
-	o.AlertOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_output"]
+	m.AlertOutput = types.ListValueMust(t, vs)
 }
 
 // GetDashboardOutput returns the value of the DashboardOutput field in SqlOutput_SdkV2 as
 // a SqlDashboardOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlOutput_SdkV2) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput_SdkV2, bool) {
+func (m *SqlOutput_SdkV2) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput_SdkV2, bool) {
 	var e SqlDashboardOutput_SdkV2
-	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
+	if m.DashboardOutput.IsNull() || m.DashboardOutput.IsUnknown() {
 		return e, false
 	}
 	var v []SqlDashboardOutput_SdkV2
-	d := o.DashboardOutput.ElementsAs(ctx, &v, true)
+	d := m.DashboardOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18287,22 +18411,22 @@ func (o *SqlOutput_SdkV2) GetDashboardOutput(ctx context.Context) (SqlDashboardO
 }
 
 // SetDashboardOutput sets the value of the DashboardOutput field in SqlOutput_SdkV2.
-func (o *SqlOutput_SdkV2) SetDashboardOutput(ctx context.Context, v SqlDashboardOutput_SdkV2) {
+func (m *SqlOutput_SdkV2) SetDashboardOutput(ctx context.Context, v SqlDashboardOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
-	o.DashboardOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
+	m.DashboardOutput = types.ListValueMust(t, vs)
 }
 
 // GetQueryOutput returns the value of the QueryOutput field in SqlOutput_SdkV2 as
 // a SqlQueryOutput_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlOutput_SdkV2) GetQueryOutput(ctx context.Context) (SqlQueryOutput_SdkV2, bool) {
+func (m *SqlOutput_SdkV2) GetQueryOutput(ctx context.Context) (SqlQueryOutput_SdkV2, bool) {
 	var e SqlQueryOutput_SdkV2
-	if o.QueryOutput.IsNull() || o.QueryOutput.IsUnknown() {
+	if m.QueryOutput.IsNull() || m.QueryOutput.IsUnknown() {
 		return e, false
 	}
 	var v []SqlQueryOutput_SdkV2
-	d := o.QueryOutput.ElementsAs(ctx, &v, true)
+	d := m.QueryOutput.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18313,10 +18437,10 @@ func (o *SqlOutput_SdkV2) GetQueryOutput(ctx context.Context) (SqlQueryOutput_Sd
 }
 
 // SetQueryOutput sets the value of the QueryOutput field in SqlOutput_SdkV2.
-func (o *SqlOutput_SdkV2) SetQueryOutput(ctx context.Context, v SqlQueryOutput_SdkV2) {
+func (m *SqlOutput_SdkV2) SetQueryOutput(ctx context.Context, v SqlQueryOutput_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_output"]
-	o.QueryOutput = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["query_output"]
+	m.QueryOutput = types.ListValueMust(t, vs)
 }
 
 type SqlOutputError_SdkV2 struct {
@@ -18330,7 +18454,7 @@ func (to *SqlOutputError_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *SqlOutputError_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlOutputError_SdkV2) {
 }
 
-func (c SqlOutputError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlOutputError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetOptional()
 
 	return attrs
@@ -18343,23 +18467,23 @@ func (c SqlOutputError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlOutputError_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlOutputError_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlOutputError_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlOutputError_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlOutputError_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": o.Message,
+			"message": m.Message,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlOutputError_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlOutputError_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
@@ -18398,7 +18522,7 @@ func (to *SqlQueryOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from S
 	}
 }
 
-func (c SqlQueryOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlQueryOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
 	attrs["output_link"] = attrs["output_link"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
@@ -18415,7 +18539,7 @@ func (c SqlQueryOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlQueryOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlQueryOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"sql_statements": reflect.TypeOf(SqlStatementOutput_SdkV2{}),
 	}
@@ -18424,20 +18548,20 @@ func (a SqlQueryOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlQueryOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlQueryOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlQueryOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"endpoint_id":    o.EndpointId,
-			"output_link":    o.OutputLink,
-			"query_text":     o.QueryText,
-			"sql_statements": o.SqlStatements,
-			"warehouse_id":   o.WarehouseId,
+			"endpoint_id":    m.EndpointId,
+			"output_link":    m.OutputLink,
+			"query_text":     m.QueryText,
+			"sql_statements": m.SqlStatements,
+			"warehouse_id":   m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlQueryOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlQueryOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_id": types.StringType,
@@ -18454,12 +18578,12 @@ func (o SqlQueryOutput_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSqlStatements returns the value of the SqlStatements field in SqlQueryOutput_SdkV2 as
 // a slice of SqlStatementOutput_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlQueryOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput_SdkV2, bool) {
-	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+func (m *SqlQueryOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput_SdkV2, bool) {
+	if m.SqlStatements.IsNull() || m.SqlStatements.IsUnknown() {
 		return nil, false
 	}
 	var v []SqlStatementOutput_SdkV2
-	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	d := m.SqlStatements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18467,14 +18591,14 @@ func (o *SqlQueryOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlState
 }
 
 // SetSqlStatements sets the value of the SqlStatements field in SqlQueryOutput_SdkV2.
-func (o *SqlQueryOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStatementOutput_SdkV2) {
+func (m *SqlQueryOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStatementOutput_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.SqlStatements = types.ListValueMust(t, vs)
+	m.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlStatementOutput_SdkV2 struct {
@@ -18488,7 +18612,7 @@ func (to *SqlStatementOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *SqlStatementOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlStatementOutput_SdkV2) {
 }
 
-func (c SqlStatementOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlStatementOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["lookup_key"] = attrs["lookup_key"].SetOptional()
 
 	return attrs
@@ -18501,23 +18625,23 @@ func (c SqlStatementOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlStatementOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlStatementOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementOutput_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlStatementOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlStatementOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"lookup_key": o.LookupKey,
+			"lookup_key": m.LookupKey,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlStatementOutput_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlStatementOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"lookup_key": types.StringType,
@@ -18619,7 +18743,7 @@ func (to *SqlTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlTask_
 	}
 }
 
-func (c SqlTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert"] = attrs["alert"].SetOptional()
 	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard"] = attrs["dashboard"].SetOptional()
@@ -18641,7 +18765,7 @@ func (c SqlTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert":      reflect.TypeOf(SqlTaskAlert_SdkV2{}),
 		"dashboard":  reflect.TypeOf(SqlTaskDashboard_SdkV2{}),
@@ -18654,21 +18778,21 @@ func (a SqlTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert":        o.Alert,
-			"dashboard":    o.Dashboard,
-			"file":         o.File,
-			"parameters":   o.Parameters,
-			"query":        o.Query,
-			"warehouse_id": o.WarehouseId,
+			"alert":        m.Alert,
+			"dashboard":    m.Dashboard,
+			"file":         m.File,
+			"parameters":   m.Parameters,
+			"query":        m.Query,
+			"warehouse_id": m.WarehouseId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert": basetypes.ListType{
@@ -18694,13 +18818,13 @@ func (o SqlTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAlert returns the value of the Alert field in SqlTask_SdkV2 as
 // a SqlTaskAlert_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTask_SdkV2) GetAlert(ctx context.Context) (SqlTaskAlert_SdkV2, bool) {
+func (m *SqlTask_SdkV2) GetAlert(ctx context.Context) (SqlTaskAlert_SdkV2, bool) {
 	var e SqlTaskAlert_SdkV2
-	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+	if m.Alert.IsNull() || m.Alert.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTaskAlert_SdkV2
-	d := o.Alert.ElementsAs(ctx, &v, true)
+	d := m.Alert.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18711,22 +18835,22 @@ func (o *SqlTask_SdkV2) GetAlert(ctx context.Context) (SqlTaskAlert_SdkV2, bool)
 }
 
 // SetAlert sets the value of the Alert field in SqlTask_SdkV2.
-func (o *SqlTask_SdkV2) SetAlert(ctx context.Context, v SqlTaskAlert_SdkV2) {
+func (m *SqlTask_SdkV2) SetAlert(ctx context.Context, v SqlTaskAlert_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
-	o.Alert = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
+	m.Alert = types.ListValueMust(t, vs)
 }
 
 // GetDashboard returns the value of the Dashboard field in SqlTask_SdkV2 as
 // a SqlTaskDashboard_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTask_SdkV2) GetDashboard(ctx context.Context) (SqlTaskDashboard_SdkV2, bool) {
+func (m *SqlTask_SdkV2) GetDashboard(ctx context.Context) (SqlTaskDashboard_SdkV2, bool) {
 	var e SqlTaskDashboard_SdkV2
-	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
+	if m.Dashboard.IsNull() || m.Dashboard.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTaskDashboard_SdkV2
-	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	d := m.Dashboard.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18737,22 +18861,22 @@ func (o *SqlTask_SdkV2) GetDashboard(ctx context.Context) (SqlTaskDashboard_SdkV
 }
 
 // SetDashboard sets the value of the Dashboard field in SqlTask_SdkV2.
-func (o *SqlTask_SdkV2) SetDashboard(ctx context.Context, v SqlTaskDashboard_SdkV2) {
+func (m *SqlTask_SdkV2) SetDashboard(ctx context.Context, v SqlTaskDashboard_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
-	o.Dashboard = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
+	m.Dashboard = types.ListValueMust(t, vs)
 }
 
 // GetFile returns the value of the File field in SqlTask_SdkV2 as
 // a SqlTaskFile_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTask_SdkV2) GetFile(ctx context.Context) (SqlTaskFile_SdkV2, bool) {
+func (m *SqlTask_SdkV2) GetFile(ctx context.Context) (SqlTaskFile_SdkV2, bool) {
 	var e SqlTaskFile_SdkV2
-	if o.File.IsNull() || o.File.IsUnknown() {
+	if m.File.IsNull() || m.File.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTaskFile_SdkV2
-	d := o.File.ElementsAs(ctx, &v, true)
+	d := m.File.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18763,21 +18887,21 @@ func (o *SqlTask_SdkV2) GetFile(ctx context.Context) (SqlTaskFile_SdkV2, bool) {
 }
 
 // SetFile sets the value of the File field in SqlTask_SdkV2.
-func (o *SqlTask_SdkV2) SetFile(ctx context.Context, v SqlTaskFile_SdkV2) {
+func (m *SqlTask_SdkV2) SetFile(ctx context.Context, v SqlTaskFile_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
-	o.File = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	m.File = types.ListValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in SqlTask_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTask_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
-	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+func (m *SqlTask_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
 		return nil, false
 	}
 	var v map[string]types.String
-	d := o.Parameters.ElementsAs(ctx, &v, true)
+	d := m.Parameters.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18785,26 +18909,26 @@ func (o *SqlTask_SdkV2) GetParameters(ctx context.Context) (map[string]types.Str
 }
 
 // SetParameters sets the value of the Parameters field in SqlTask_SdkV2.
-func (o *SqlTask_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+func (m *SqlTask_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Parameters = types.MapValueMust(t, vs)
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 // GetQuery returns the value of the Query field in SqlTask_SdkV2 as
 // a SqlTaskQuery_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTask_SdkV2) GetQuery(ctx context.Context) (SqlTaskQuery_SdkV2, bool) {
+func (m *SqlTask_SdkV2) GetQuery(ctx context.Context) (SqlTaskQuery_SdkV2, bool) {
 	var e SqlTaskQuery_SdkV2
-	if o.Query.IsNull() || o.Query.IsUnknown() {
+	if m.Query.IsNull() || m.Query.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTaskQuery_SdkV2
-	d := o.Query.ElementsAs(ctx, &v, true)
+	d := m.Query.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18815,10 +18939,10 @@ func (o *SqlTask_SdkV2) GetQuery(ctx context.Context) (SqlTaskQuery_SdkV2, bool)
 }
 
 // SetQuery sets the value of the Query field in SqlTask_SdkV2.
-func (o *SqlTask_SdkV2) SetQuery(ctx context.Context, v SqlTaskQuery_SdkV2) {
+func (m *SqlTask_SdkV2) SetQuery(ctx context.Context, v SqlTaskQuery_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
-	o.Query = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	m.Query = types.ListValueMust(t, vs)
 }
 
 type SqlTaskAlert_SdkV2 struct {
@@ -18848,7 +18972,7 @@ func (to *SqlTaskAlert_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sql
 	}
 }
 
-func (c SqlTaskAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTaskAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_id"] = attrs["alert_id"].SetRequired()
 	attrs["pause_subscriptions"] = attrs["pause_subscriptions"].SetOptional()
 	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
@@ -18863,7 +18987,7 @@ func (c SqlTaskAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTaskAlert_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTaskAlert_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriptions": reflect.TypeOf(SqlTaskSubscription_SdkV2{}),
 	}
@@ -18872,18 +18996,18 @@ func (a SqlTaskAlert_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskAlert_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTaskAlert_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTaskAlert_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert_id":            o.AlertId,
-			"pause_subscriptions": o.PauseSubscriptions,
-			"subscriptions":       o.Subscriptions,
+			"alert_id":            m.AlertId,
+			"pause_subscriptions": m.PauseSubscriptions,
+			"subscriptions":       m.Subscriptions,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTaskAlert_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTaskAlert_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_id":            types.StringType,
@@ -18898,12 +19022,12 @@ func (o SqlTaskAlert_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSubscriptions returns the value of the Subscriptions field in SqlTaskAlert_SdkV2 as
 // a slice of SqlTaskSubscription_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTaskAlert_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription_SdkV2, bool) {
-	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+func (m *SqlTaskAlert_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription_SdkV2, bool) {
+	if m.Subscriptions.IsNull() || m.Subscriptions.IsUnknown() {
 		return nil, false
 	}
 	var v []SqlTaskSubscription_SdkV2
-	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	d := m.Subscriptions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -18911,14 +19035,14 @@ func (o *SqlTaskAlert_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTaskSub
 }
 
 // SetSubscriptions sets the value of the Subscriptions field in SqlTaskAlert_SdkV2.
-func (o *SqlTaskAlert_SdkV2) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription_SdkV2) {
+func (m *SqlTaskAlert_SdkV2) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Subscriptions = types.ListValueMust(t, vs)
+	m.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskDashboard_SdkV2 struct {
@@ -18951,7 +19075,7 @@ func (to *SqlTaskDashboard_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c SqlTaskDashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTaskDashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
 	attrs["pause_subscriptions"] = attrs["pause_subscriptions"].SetOptional()
@@ -18967,7 +19091,7 @@ func (c SqlTaskDashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTaskDashboard_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTaskDashboard_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriptions": reflect.TypeOf(SqlTaskSubscription_SdkV2{}),
 	}
@@ -18976,19 +19100,19 @@ func (a SqlTaskDashboard_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskDashboard_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTaskDashboard_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTaskDashboard_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_subject":      o.CustomSubject,
-			"dashboard_id":        o.DashboardId,
-			"pause_subscriptions": o.PauseSubscriptions,
-			"subscriptions":       o.Subscriptions,
+			"custom_subject":      m.CustomSubject,
+			"dashboard_id":        m.DashboardId,
+			"pause_subscriptions": m.PauseSubscriptions,
+			"subscriptions":       m.Subscriptions,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTaskDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"custom_subject":      types.StringType,
@@ -19004,12 +19128,12 @@ func (o SqlTaskDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSubscriptions returns the value of the Subscriptions field in SqlTaskDashboard_SdkV2 as
 // a slice of SqlTaskSubscription_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SqlTaskDashboard_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription_SdkV2, bool) {
-	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+func (m *SqlTaskDashboard_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription_SdkV2, bool) {
+	if m.Subscriptions.IsNull() || m.Subscriptions.IsUnknown() {
 		return nil, false
 	}
 	var v []SqlTaskSubscription_SdkV2
-	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	d := m.Subscriptions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19017,14 +19141,14 @@ func (o *SqlTaskDashboard_SdkV2) GetSubscriptions(ctx context.Context) ([]SqlTas
 }
 
 // SetSubscriptions sets the value of the Subscriptions field in SqlTaskDashboard_SdkV2.
-func (o *SqlTaskDashboard_SdkV2) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription_SdkV2) {
+func (m *SqlTaskDashboard_SdkV2) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Subscriptions = types.ListValueMust(t, vs)
+	m.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskFile_SdkV2 struct {
@@ -19048,7 +19172,7 @@ func (to *SqlTaskFile_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *SqlTaskFile_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlTaskFile_SdkV2) {
 }
 
-func (c SqlTaskFile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTaskFile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["path"] = attrs["path"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
 
@@ -19062,24 +19186,24 @@ func (c SqlTaskFile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTaskFile_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTaskFile_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskFile_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTaskFile_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTaskFile_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path":   o.Path,
-			"source": o.Source,
+			"path":   m.Path,
+			"source": m.Source,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTaskFile_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTaskFile_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path":   types.StringType,
@@ -19099,7 +19223,7 @@ func (to *SqlTaskQuery_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *SqlTaskQuery_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlTaskQuery_SdkV2) {
 }
 
-func (c SqlTaskQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTaskQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["query_id"] = attrs["query_id"].SetRequired()
 
 	return attrs
@@ -19112,23 +19236,23 @@ func (c SqlTaskQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTaskQuery_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTaskQuery_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskQuery_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTaskQuery_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTaskQuery_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"query_id": o.QueryId,
+			"query_id": m.QueryId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTaskQuery_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTaskQuery_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query_id": types.StringType,
@@ -19154,7 +19278,7 @@ func (to *SqlTaskSubscription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *SqlTaskSubscription_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlTaskSubscription_SdkV2) {
 }
 
-func (c SqlTaskSubscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SqlTaskSubscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["destination_id"] = attrs["destination_id"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -19168,24 +19292,24 @@ func (c SqlTaskSubscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SqlTaskSubscription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SqlTaskSubscription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskSubscription_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SqlTaskSubscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SqlTaskSubscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"destination_id": o.DestinationId,
-			"user_name":      o.UserName,
+			"destination_id": m.DestinationId,
+			"user_name":      m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SqlTaskSubscription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_id": types.StringType,
@@ -19437,7 +19561,7 @@ func (to *SubmitRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submit
 	}
 }
 
-func (c SubmitRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SubmitRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
@@ -19475,7 +19599,7 @@ func (c SubmitRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SubmitRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SubmitRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list":   reflect.TypeOf(JobAccessControlRequest_SdkV2{}),
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications_SdkV2{}),
@@ -19493,30 +19617,30 @@ func (a SubmitRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SubmitRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SubmitRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list":   o.AccessControlList,
-			"budget_policy_id":      o.BudgetPolicyId,
-			"email_notifications":   o.EmailNotifications,
-			"environments":          o.Environments,
-			"git_source":            o.GitSource,
-			"health":                o.Health,
-			"idempotency_token":     o.IdempotencyToken,
-			"notification_settings": o.NotificationSettings,
-			"queue":                 o.Queue,
-			"run_as":                o.RunAs,
-			"run_name":              o.RunName,
-			"tasks":                 o.Tasks,
-			"timeout_seconds":       o.TimeoutSeconds,
-			"usage_policy_id":       o.UsagePolicyId,
-			"webhook_notifications": o.WebhookNotifications,
+			"access_control_list":   m.AccessControlList,
+			"budget_policy_id":      m.BudgetPolicyId,
+			"email_notifications":   m.EmailNotifications,
+			"environments":          m.Environments,
+			"git_source":            m.GitSource,
+			"health":                m.Health,
+			"idempotency_token":     m.IdempotencyToken,
+			"notification_settings": m.NotificationSettings,
+			"queue":                 m.Queue,
+			"run_as":                m.RunAs,
+			"run_name":              m.RunName,
+			"tasks":                 m.Tasks,
+			"timeout_seconds":       m.TimeoutSeconds,
+			"usage_policy_id":       m.UsagePolicyId,
+			"webhook_notifications": m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SubmitRun_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SubmitRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -19561,12 +19685,12 @@ func (o SubmitRun_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in SubmitRun_SdkV2 as
 // a slice of JobAccessControlRequest_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *SubmitRun_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []JobAccessControlRequest_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19574,26 +19698,26 @@ func (o *SubmitRun_SdkV2) GetAccessControlList(ctx context.Context) ([]JobAccess
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
+func (m *SubmitRun_SdkV2) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in SubmitRun_SdkV2 as
 // a JobEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
 	var e JobEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []JobEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19604,21 +19728,21 @@ func (o *SubmitRun_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNo
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
+func (m *SubmitRun_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in SubmitRun_SdkV2 as
 // a slice of JobEnvironment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
-	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+func (m *SubmitRun_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment_SdkV2, bool) {
+	if m.Environments.IsNull() || m.Environments.IsUnknown() {
 		return nil, false
 	}
 	var v []JobEnvironment_SdkV2
-	d := o.Environments.ElementsAs(ctx, &v, true)
+	d := m.Environments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19626,26 +19750,26 @@ func (o *SubmitRun_SdkV2) GetEnvironments(ctx context.Context) ([]JobEnvironment
 }
 
 // SetEnvironments sets the value of the Environments field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
+func (m *SubmitRun_SdkV2) SetEnvironments(ctx context.Context, v []JobEnvironment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environments"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environments"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Environments = types.ListValueMust(t, vs)
+	m.Environments = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in SubmitRun_SdkV2 as
 // a GitSource_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
 	var e GitSource_SdkV2
-	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
 		return e, false
 	}
 	var v []GitSource_SdkV2
-	d := o.GitSource.ElementsAs(ctx, &v, true)
+	d := m.GitSource.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19656,22 +19780,22 @@ func (o *SubmitRun_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bo
 }
 
 // SetGitSource sets the value of the GitSource field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+func (m *SubmitRun_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
-	o.GitSource = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in SubmitRun_SdkV2 as
 // a JobsHealthRules_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
 	var e JobsHealthRules_SdkV2
-	if o.Health.IsNull() || o.Health.IsUnknown() {
+	if m.Health.IsNull() || m.Health.IsUnknown() {
 		return e, false
 	}
 	var v []JobsHealthRules_SdkV2
-	d := o.Health.ElementsAs(ctx, &v, true)
+	d := m.Health.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19682,22 +19806,22 @@ func (o *SubmitRun_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2,
 }
 
 // SetHealth sets the value of the Health field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
+func (m *SubmitRun_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
-	o.Health = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	m.Health = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in SubmitRun_SdkV2 as
 // a JobNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotificationSettings_SdkV2, bool) {
 	var e JobNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []JobNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19708,22 +19832,22 @@ func (o *SubmitRun_SdkV2) GetNotificationSettings(ctx context.Context) (JobNotif
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
+func (m *SubmitRun_SdkV2) SetNotificationSettings(ctx context.Context, v JobNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetQueue returns the value of the Queue field in SubmitRun_SdkV2 as
 // a QueueSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bool) {
 	var e QueueSettings_SdkV2
-	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+	if m.Queue.IsNull() || m.Queue.IsUnknown() {
 		return e, false
 	}
 	var v []QueueSettings_SdkV2
-	d := o.Queue.ElementsAs(ctx, &v, true)
+	d := m.Queue.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19734,22 +19858,22 @@ func (o *SubmitRun_SdkV2) GetQueue(ctx context.Context) (QueueSettings_SdkV2, bo
 }
 
 // SetQueue sets the value of the Queue field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
+func (m *SubmitRun_SdkV2) SetQueue(ctx context.Context, v QueueSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
-	o.Queue = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	m.Queue = types.ListValueMust(t, vs)
 }
 
 // GetRunAs returns the value of the RunAs field in SubmitRun_SdkV2 as
 // a JobRunAs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
 	var e JobRunAs_SdkV2
-	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+	if m.RunAs.IsNull() || m.RunAs.IsUnknown() {
 		return e, false
 	}
 	var v []JobRunAs_SdkV2
-	d := o.RunAs.ElementsAs(ctx, &v, true)
+	d := m.RunAs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19760,21 +19884,21 @@ func (o *SubmitRun_SdkV2) GetRunAs(ctx context.Context) (JobRunAs_SdkV2, bool) {
 }
 
 // SetRunAs sets the value of the RunAs field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
+func (m *SubmitRun_SdkV2) SetRunAs(ctx context.Context, v JobRunAs_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
-	o.RunAs = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	m.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetTasks returns the value of the Tasks field in SubmitRun_SdkV2 as
 // a slice of SubmitTask_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetTasks(ctx context.Context) ([]SubmitTask_SdkV2, bool) {
-	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+func (m *SubmitRun_SdkV2) GetTasks(ctx context.Context) ([]SubmitTask_SdkV2, bool) {
+	if m.Tasks.IsNull() || m.Tasks.IsUnknown() {
 		return nil, false
 	}
 	var v []SubmitTask_SdkV2
-	d := o.Tasks.ElementsAs(ctx, &v, true)
+	d := m.Tasks.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19782,26 +19906,26 @@ func (o *SubmitRun_SdkV2) GetTasks(ctx context.Context) ([]SubmitTask_SdkV2, boo
 }
 
 // SetTasks sets the value of the Tasks field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetTasks(ctx context.Context, v []SubmitTask_SdkV2) {
+func (m *SubmitRun_SdkV2) SetTasks(ctx context.Context, v []SubmitTask_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tasks = types.ListValueMust(t, vs)
+	m.Tasks = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitRun_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitRun_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *SubmitRun_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -19812,10 +19936,10 @@ func (o *SubmitRun_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookN
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitRun_SdkV2.
-func (o *SubmitRun_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *SubmitRun_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 // Run was created and started successfully.
@@ -19830,7 +19954,7 @@ func (to *SubmitRunResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *SubmitRunResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SubmitRunResponse_SdkV2) {
 }
 
-func (c SubmitRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SubmitRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 
 	return attrs
@@ -19843,23 +19967,23 @@ func (c SubmitRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SubmitRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SubmitRunResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitRunResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SubmitRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SubmitRunResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -19896,6 +20020,9 @@ type SubmitTask_SdkV2 struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.List `tfsdk:"email_notifications"`
@@ -20373,7 +20500,7 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submi
 	}
 }
 
-func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
@@ -20388,6 +20515,7 @@ func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
@@ -20437,7 +20565,7 @@ func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
@@ -20469,45 +20597,46 @@ func (a SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitTask_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
-			"condition_task":            o.ConditionTask,
-			"dashboard_task":            o.DashboardTask,
-			"dbt_cloud_task":            o.DbtCloudTask,
-			"dbt_platform_task":         o.DbtPlatformTask,
-			"dbt_task":                  o.DbtTask,
-			"depends_on":                o.DependsOn,
-			"description":               o.Description,
-			"email_notifications":       o.EmailNotifications,
-			"environment_key":           o.EnvironmentKey,
-			"existing_cluster_id":       o.ExistingClusterId,
-			"for_each_task":             o.ForEachTask,
-			"gen_ai_compute_task":       o.GenAiComputeTask,
-			"health":                    o.Health,
-			"library":                   o.Libraries,
-			"new_cluster":               o.NewCluster,
-			"notebook_task":             o.NotebookTask,
-			"notification_settings":     o.NotificationSettings,
-			"pipeline_task":             o.PipelineTask,
-			"power_bi_task":             o.PowerBiTask,
-			"python_wheel_task":         o.PythonWheelTask,
-			"run_if":                    o.RunIf,
-			"run_job_task":              o.RunJobTask,
-			"spark_jar_task":            o.SparkJarTask,
-			"spark_python_task":         o.SparkPythonTask,
-			"spark_submit_task":         o.SparkSubmitTask,
-			"sql_task":                  o.SqlTask,
-			"task_key":                  o.TaskKey,
-			"timeout_seconds":           o.TimeoutSeconds,
-			"webhook_notifications":     o.WebhookNotifications,
+			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
+			"condition_task":            m.ConditionTask,
+			"dashboard_task":            m.DashboardTask,
+			"dbt_cloud_task":            m.DbtCloudTask,
+			"dbt_platform_task":         m.DbtPlatformTask,
+			"dbt_task":                  m.DbtTask,
+			"depends_on":                m.DependsOn,
+			"description":               m.Description,
+			"disabled":                  m.Disabled,
+			"email_notifications":       m.EmailNotifications,
+			"environment_key":           m.EnvironmentKey,
+			"existing_cluster_id":       m.ExistingClusterId,
+			"for_each_task":             m.ForEachTask,
+			"gen_ai_compute_task":       m.GenAiComputeTask,
+			"health":                    m.Health,
+			"library":                   m.Libraries,
+			"new_cluster":               m.NewCluster,
+			"notebook_task":             m.NotebookTask,
+			"notification_settings":     m.NotificationSettings,
+			"pipeline_task":             m.PipelineTask,
+			"power_bi_task":             m.PowerBiTask,
+			"python_wheel_task":         m.PythonWheelTask,
+			"run_if":                    m.RunIf,
+			"run_job_task":              m.RunJobTask,
+			"spark_jar_task":            m.SparkJarTask,
+			"spark_python_task":         m.SparkPythonTask,
+			"spark_submit_task":         m.SparkSubmitTask,
+			"sql_task":                  m.SqlTask,
+			"task_key":                  m.TaskKey,
+			"timeout_seconds":           m.TimeoutSeconds,
+			"webhook_notifications":     m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
@@ -20532,6 +20661,7 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
+			"disabled":    types.BoolType,
 			"email_notifications": basetypes.ListType{
 				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
@@ -20595,13 +20725,13 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in SubmitTask_SdkV2 as
 // a CleanRoomsNotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
 	var e CleanRoomsNotebookTask_SdkV2
-	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+	if m.CleanRoomsNotebookTask.IsNull() || m.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask_SdkV2
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := m.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20612,22 +20742,22 @@ func (o *SubmitTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (Clean
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	m.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in SubmitTask_SdkV2 as
 // a ConditionTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_SdkV2, bool) {
 	var e ConditionTask_SdkV2
-	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+	if m.ConditionTask.IsNull() || m.ConditionTask.IsUnknown() {
 		return e, false
 	}
 	var v []ConditionTask_SdkV2
-	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	d := m.ConditionTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20638,22 +20768,22 @@ func (o *SubmitTask_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_
 }
 
 // SetConditionTask sets the value of the ConditionTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetConditionTask(ctx context.Context, v ConditionTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetConditionTask(ctx context.Context, v ConditionTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
-	o.ConditionTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	m.ConditionTask = types.ListValueMust(t, vs)
 }
 
 // GetDashboardTask returns the value of the DashboardTask field in SubmitTask_SdkV2 as
 // a DashboardTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
 	var e DashboardTask_SdkV2
-	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+	if m.DashboardTask.IsNull() || m.DashboardTask.IsUnknown() {
 		return e, false
 	}
 	var v []DashboardTask_SdkV2
-	d := o.DashboardTask.ElementsAs(ctx, &v, true)
+	d := m.DashboardTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20664,22 +20794,22 @@ func (o *SubmitTask_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
-	o.DashboardTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
+	m.DashboardTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtCloudTask returns the value of the DbtCloudTask field in SubmitTask_SdkV2 as
 // a DbtCloudTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
 	var e DbtCloudTask_SdkV2
-	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
+	if m.DbtCloudTask.IsNull() || m.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtCloudTask_SdkV2
-	d := o.DbtCloudTask.ElementsAs(ctx, &v, true)
+	d := m.DbtCloudTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20690,22 +20820,22 @@ func (o *SubmitTask_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_Sd
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
-	o.DbtCloudTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
+	m.DbtCloudTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtPlatformTask returns the value of the DbtPlatformTask field in SubmitTask_SdkV2 as
 // a DbtPlatformTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
 	var e DbtPlatformTask_SdkV2
-	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+	if m.DbtPlatformTask.IsNull() || m.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtPlatformTask_SdkV2
-	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	d := m.DbtPlatformTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20716,22 +20846,22 @@ func (o *SubmitTask_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformT
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
-	o.DbtPlatformTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	m.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in SubmitTask_SdkV2 as
 // a DbtTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
 	var e DbtTask_SdkV2
-	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+	if m.DbtTask.IsNull() || m.DbtTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtTask_SdkV2
-	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	d := m.DbtTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20742,21 +20872,21 @@ func (o *SubmitTask_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool)
 }
 
 // SetDbtTask sets the value of the DbtTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
-	o.DbtTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	m.DbtTask = types.ListValueMust(t, vs)
 }
 
 // GetDependsOn returns the value of the DependsOn field in SubmitTask_SdkV2 as
 // a slice of TaskDependency_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
-	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+func (m *SubmitTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
+	if m.DependsOn.IsNull() || m.DependsOn.IsUnknown() {
 		return nil, false
 	}
 	var v []TaskDependency_SdkV2
-	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	d := m.DependsOn.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20764,26 +20894,26 @@ func (o *SubmitTask_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_S
 }
 
 // SetDependsOn sets the value of the DependsOn field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
+func (m *SubmitTask_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DependsOn = types.ListValueMust(t, vs)
+	m.DependsOn = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in SubmitTask_SdkV2 as
 // a JobEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailNotifications_SdkV2, bool) {
 	var e JobEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []JobEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20794,22 +20924,22 @@ func (o *SubmitTask_SdkV2) GetEmailNotifications(ctx context.Context) (JobEmailN
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
+func (m *SubmitTask_SdkV2) SetEmailNotifications(ctx context.Context, v JobEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetForEachTask returns the value of the ForEachTask field in SubmitTask_SdkV2 as
 // a ForEachTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV2, bool) {
 	var e ForEachTask_SdkV2
-	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+	if m.ForEachTask.IsNull() || m.ForEachTask.IsUnknown() {
 		return e, false
 	}
 	var v []ForEachTask_SdkV2
-	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	d := m.ForEachTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20820,22 +20950,22 @@ func (o *SubmitTask_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV
 }
 
 // SetForEachTask sets the value of the ForEachTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
-	o.ForEachTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	m.ForEachTask = types.ListValueMust(t, vs)
 }
 
 // GetGenAiComputeTask returns the value of the GenAiComputeTask field in SubmitTask_SdkV2 as
 // a GenAiComputeTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
 	var e GenAiComputeTask_SdkV2
-	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+	if m.GenAiComputeTask.IsNull() || m.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
 	var v []GenAiComputeTask_SdkV2
-	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	d := m.GenAiComputeTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20846,22 +20976,22 @@ func (o *SubmitTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComput
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
-	o.GenAiComputeTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	m.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in SubmitTask_SdkV2 as
 // a JobsHealthRules_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
 	var e JobsHealthRules_SdkV2
-	if o.Health.IsNull() || o.Health.IsUnknown() {
+	if m.Health.IsNull() || m.Health.IsUnknown() {
 		return e, false
 	}
 	var v []JobsHealthRules_SdkV2
-	d := o.Health.ElementsAs(ctx, &v, true)
+	d := m.Health.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20872,21 +21002,21 @@ func (o *SubmitTask_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2
 }
 
 // SetHealth sets the value of the Health field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
+func (m *SubmitTask_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
-	o.Health = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	m.Health = types.ListValueMust(t, vs)
 }
 
 // GetLibraries returns the value of the Libraries field in SubmitTask_SdkV2 as
 // a slice of compute_tf.Library_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
-	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+func (m *SubmitTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
+	if m.Libraries.IsNull() || m.Libraries.IsUnknown() {
 		return nil, false
 	}
 	var v []compute_tf.Library_SdkV2
-	d := o.Libraries.ElementsAs(ctx, &v, true)
+	d := m.Libraries.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20894,26 +21024,26 @@ func (o *SubmitTask_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Libra
 }
 
 // SetLibraries sets the value of the Libraries field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
+func (m *SubmitTask_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Libraries = types.ListValueMust(t, vs)
+	m.Libraries = types.ListValueMust(t, vs)
 }
 
 // GetNewCluster returns the value of the NewCluster field in SubmitTask_SdkV2 as
 // a compute_tf.ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
 	var e compute_tf.ClusterSpec_SdkV2
-	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+	if m.NewCluster.IsNull() || m.NewCluster.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.ClusterSpec_SdkV2
-	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	d := m.NewCluster.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20924,22 +21054,22 @@ func (o *SubmitTask_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.Cluste
 }
 
 // SetNewCluster sets the value of the NewCluster field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
+func (m *SubmitTask_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
-	o.NewCluster = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	m.NewCluster = types.ListValueMust(t, vs)
 }
 
 // GetNotebookTask returns the value of the NotebookTask field in SubmitTask_SdkV2 as
 // a NotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
 	var e NotebookTask_SdkV2
-	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+	if m.NotebookTask.IsNull() || m.NotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []NotebookTask_SdkV2
-	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	d := m.NotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20950,22 +21080,22 @@ func (o *SubmitTask_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_Sd
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
-	o.NotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	m.NotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in SubmitTask_SdkV2 as
 // a TaskNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
 	var e TaskNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []TaskNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -20976,22 +21106,22 @@ func (o *SubmitTask_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNot
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
+func (m *SubmitTask_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetPipelineTask returns the value of the PipelineTask field in SubmitTask_SdkV2 as
 // a PipelineTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
 	var e PipelineTask_SdkV2
-	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+	if m.PipelineTask.IsNull() || m.PipelineTask.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineTask_SdkV2
-	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	d := m.PipelineTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21002,22 +21132,22 @@ func (o *SubmitTask_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_Sd
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
-	o.PipelineTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	m.PipelineTask = types.ListValueMust(t, vs)
 }
 
 // GetPowerBiTask returns the value of the PowerBiTask field in SubmitTask_SdkV2 as
 // a PowerBiTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
 	var e PowerBiTask_SdkV2
-	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+	if m.PowerBiTask.IsNull() || m.PowerBiTask.IsUnknown() {
 		return e, false
 	}
 	var v []PowerBiTask_SdkV2
-	d := o.PowerBiTask.ElementsAs(ctx, &v, true)
+	d := m.PowerBiTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21028,22 +21158,22 @@ func (o *SubmitTask_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
-	o.PowerBiTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
+	m.PowerBiTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in SubmitTask_SdkV2 as
 // a PythonWheelTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
 	var e PythonWheelTask_SdkV2
-	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+	if m.PythonWheelTask.IsNull() || m.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
 	var v []PythonWheelTask_SdkV2
-	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	d := m.PythonWheelTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21054,22 +21184,22 @@ func (o *SubmitTask_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelT
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
-	o.PythonWheelTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	m.PythonWheelTask = types.ListValueMust(t, vs)
 }
 
 // GetRunJobTask returns the value of the RunJobTask field in SubmitTask_SdkV2 as
 // a RunJobTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
 	var e RunJobTask_SdkV2
-	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+	if m.RunJobTask.IsNull() || m.RunJobTask.IsUnknown() {
 		return e, false
 	}
 	var v []RunJobTask_SdkV2
-	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	d := m.RunJobTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21080,22 +21210,22 @@ func (o *SubmitTask_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2,
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
-	o.RunJobTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	m.RunJobTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkJarTask returns the value of the SparkJarTask field in SubmitTask_SdkV2 as
 // a SparkJarTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
 	var e SparkJarTask_SdkV2
-	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+	if m.SparkJarTask.IsNull() || m.SparkJarTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkJarTask_SdkV2
-	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	d := m.SparkJarTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21106,22 +21236,22 @@ func (o *SubmitTask_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_Sd
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
-	o.SparkJarTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	m.SparkJarTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkPythonTask returns the value of the SparkPythonTask field in SubmitTask_SdkV2 as
 // a SparkPythonTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
 	var e SparkPythonTask_SdkV2
-	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+	if m.SparkPythonTask.IsNull() || m.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkPythonTask_SdkV2
-	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	d := m.SparkPythonTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21132,22 +21262,22 @@ func (o *SubmitTask_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonT
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
-	o.SparkPythonTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	m.SparkPythonTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitTask returns the value of the SparkSubmitTask field in SubmitTask_SdkV2 as
 // a SparkSubmitTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
 	var e SparkSubmitTask_SdkV2
-	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+	if m.SparkSubmitTask.IsNull() || m.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkSubmitTask_SdkV2
-	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21158,22 +21288,22 @@ func (o *SubmitTask_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitT
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
-	o.SparkSubmitTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	m.SparkSubmitTask = types.ListValueMust(t, vs)
 }
 
 // GetSqlTask returns the value of the SqlTask field in SubmitTask_SdkV2 as
 // a SqlTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
 	var e SqlTask_SdkV2
-	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+	if m.SqlTask.IsNull() || m.SqlTask.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTask_SdkV2
-	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	d := m.SqlTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21184,22 +21314,22 @@ func (o *SubmitTask_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool)
 }
 
 // SetSqlTask sets the value of the SqlTask field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
+func (m *SubmitTask_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
-	o.SqlTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	m.SqlTask = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitTask_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SubmitTask_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *SubmitTask_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21210,10 +21340,10 @@ func (o *SubmitTask_SdkV2) GetWebhookNotifications(ctx context.Context) (Webhook
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitTask_SdkV2.
-func (o *SubmitTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *SubmitTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 type Subscription_SdkV2 struct {
@@ -21244,7 +21374,7 @@ func (to *Subscription_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sub
 	}
 }
 
-func (c Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
 	attrs["paused"] = attrs["paused"].SetOptional()
 	attrs["subscribers"] = attrs["subscribers"].SetOptional()
@@ -21259,7 +21389,7 @@ func (c Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Subscription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Subscription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscribers": reflect.TypeOf(SubscriptionSubscriber_SdkV2{}),
 	}
@@ -21268,18 +21398,18 @@ func (a Subscription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Subscription_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_subject": o.CustomSubject,
-			"paused":         o.Paused,
-			"subscribers":    o.Subscribers,
+			"custom_subject": m.CustomSubject,
+			"paused":         m.Paused,
+			"subscribers":    m.Subscribers,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"custom_subject": types.StringType,
@@ -21294,12 +21424,12 @@ func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 // GetSubscribers returns the value of the Subscribers field in Subscription_SdkV2 as
 // a slice of SubscriptionSubscriber_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Subscription_SdkV2) GetSubscribers(ctx context.Context) ([]SubscriptionSubscriber_SdkV2, bool) {
-	if o.Subscribers.IsNull() || o.Subscribers.IsUnknown() {
+func (m *Subscription_SdkV2) GetSubscribers(ctx context.Context) ([]SubscriptionSubscriber_SdkV2, bool) {
+	if m.Subscribers.IsNull() || m.Subscribers.IsUnknown() {
 		return nil, false
 	}
 	var v []SubscriptionSubscriber_SdkV2
-	d := o.Subscribers.ElementsAs(ctx, &v, true)
+	d := m.Subscribers.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21307,14 +21437,14 @@ func (o *Subscription_SdkV2) GetSubscribers(ctx context.Context) ([]Subscription
 }
 
 // SetSubscribers sets the value of the Subscribers field in Subscription_SdkV2.
-func (o *Subscription_SdkV2) SetSubscribers(ctx context.Context, v []SubscriptionSubscriber_SdkV2) {
+func (m *Subscription_SdkV2) SetSubscribers(ctx context.Context, v []SubscriptionSubscriber_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscribers"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscribers"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Subscribers = types.ListValueMust(t, vs)
+	m.Subscribers = types.ListValueMust(t, vs)
 }
 
 type SubscriptionSubscriber_SdkV2 struct {
@@ -21332,7 +21462,7 @@ func (to *SubscriptionSubscriber_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *SubscriptionSubscriber_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SubscriptionSubscriber_SdkV2) {
 }
 
-func (c SubscriptionSubscriber_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SubscriptionSubscriber_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["destination_id"] = attrs["destination_id"].SetComputed()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -21346,24 +21476,24 @@ func (c SubscriptionSubscriber_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SubscriptionSubscriber_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SubscriptionSubscriber_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionSubscriber_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SubscriptionSubscriber_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SubscriptionSubscriber_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"destination_id": o.DestinationId,
-			"user_name":      o.UserName,
+			"destination_id": m.DestinationId,
+			"user_name":      m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SubscriptionSubscriber_SdkV2) Type(ctx context.Context) attr.Type {
+func (m SubscriptionSubscriber_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_id": types.StringType,
@@ -21387,7 +21517,7 @@ func (to *TableState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *TableState_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableState_SdkV2) {
 }
 
-func (c TableState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TableState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["has_seen_updates"] = attrs["has_seen_updates"].SetOptional()
 	attrs["table_name"] = attrs["table_name"].SetOptional()
 
@@ -21401,24 +21531,24 @@ func (c TableState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TableState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TableState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TableState_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TableState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TableState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"has_seen_updates": o.HasSeenUpdates,
-			"table_name":       o.TableName,
+			"has_seen_updates": m.HasSeenUpdates,
+			"table_name":       m.TableName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TableState_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TableState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"has_seen_updates": types.BoolType,
@@ -21451,7 +21581,7 @@ func (to *TableTriggerState_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c TableTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TableTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["last_seen_table_states"] = attrs["last_seen_table_states"].SetOptional()
 	attrs["using_scalable_monitoring"] = attrs["using_scalable_monitoring"].SetOptional()
 
@@ -21465,7 +21595,7 @@ func (c TableTriggerState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TableTriggerState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TableTriggerState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"last_seen_table_states": reflect.TypeOf(TableState_SdkV2{}),
 	}
@@ -21474,17 +21604,17 @@ func (a TableTriggerState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TableTriggerState_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TableTriggerState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TableTriggerState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"last_seen_table_states":    o.LastSeenTableStates,
-			"using_scalable_monitoring": o.UsingScalableMonitoring,
+			"last_seen_table_states":    m.LastSeenTableStates,
+			"using_scalable_monitoring": m.UsingScalableMonitoring,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TableTriggerState_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TableTriggerState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_seen_table_states": basetypes.ListType{
@@ -21498,12 +21628,12 @@ func (o TableTriggerState_SdkV2) Type(ctx context.Context) attr.Type {
 // GetLastSeenTableStates returns the value of the LastSeenTableStates field in TableTriggerState_SdkV2 as
 // a slice of TableState_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TableTriggerState_SdkV2) GetLastSeenTableStates(ctx context.Context) ([]TableState_SdkV2, bool) {
-	if o.LastSeenTableStates.IsNull() || o.LastSeenTableStates.IsUnknown() {
+func (m *TableTriggerState_SdkV2) GetLastSeenTableStates(ctx context.Context) ([]TableState_SdkV2, bool) {
+	if m.LastSeenTableStates.IsNull() || m.LastSeenTableStates.IsUnknown() {
 		return nil, false
 	}
 	var v []TableState_SdkV2
-	d := o.LastSeenTableStates.ElementsAs(ctx, &v, true)
+	d := m.LastSeenTableStates.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21511,14 +21641,14 @@ func (o *TableTriggerState_SdkV2) GetLastSeenTableStates(ctx context.Context) ([
 }
 
 // SetLastSeenTableStates sets the value of the LastSeenTableStates field in TableTriggerState_SdkV2.
-func (o *TableTriggerState_SdkV2) SetLastSeenTableStates(ctx context.Context, v []TableState_SdkV2) {
+func (m *TableTriggerState_SdkV2) SetLastSeenTableStates(ctx context.Context, v []TableState_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["last_seen_table_states"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["last_seen_table_states"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.LastSeenTableStates = types.ListValueMust(t, vs)
+	m.LastSeenTableStates = types.ListValueMust(t, vs)
 }
 
 type TableUpdateTriggerConfiguration_SdkV2 struct {
@@ -21556,7 +21686,7 @@ func (to *TableUpdateTriggerConfiguration_SdkV2) SyncFieldsDuringRead(ctx contex
 	}
 }
 
-func (c TableUpdateTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TableUpdateTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["condition"] = attrs["condition"].SetOptional()
 	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
 	attrs["table_names"] = attrs["table_names"].SetOptional()
@@ -21572,7 +21702,7 @@ func (c TableUpdateTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TableUpdateTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TableUpdateTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table_names": reflect.TypeOf(types.String{}),
 	}
@@ -21581,19 +21711,19 @@ func (a TableUpdateTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TableUpdateTriggerConfiguration_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TableUpdateTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TableUpdateTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"condition":                         o.Condition,
-			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
-			"table_names":                       o.TableNames,
-			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+			"condition":                         m.Condition,
+			"min_time_between_triggers_seconds": m.MinTimeBetweenTriggersSeconds,
+			"table_names":                       m.TableNames,
+			"wait_after_last_change_seconds":    m.WaitAfterLastChangeSeconds,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TableUpdateTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition":                         types.StringType,
@@ -21609,12 +21739,12 @@ func (o TableUpdateTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Ty
 // GetTableNames returns the value of the TableNames field in TableUpdateTriggerConfiguration_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TableUpdateTriggerConfiguration_SdkV2) GetTableNames(ctx context.Context) ([]types.String, bool) {
-	if o.TableNames.IsNull() || o.TableNames.IsUnknown() {
+func (m *TableUpdateTriggerConfiguration_SdkV2) GetTableNames(ctx context.Context) ([]types.String, bool) {
+	if m.TableNames.IsNull() || m.TableNames.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.TableNames.ElementsAs(ctx, &v, true)
+	d := m.TableNames.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -21622,14 +21752,14 @@ func (o *TableUpdateTriggerConfiguration_SdkV2) GetTableNames(ctx context.Contex
 }
 
 // SetTableNames sets the value of the TableNames field in TableUpdateTriggerConfiguration_SdkV2.
-func (o *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Context, v []types.String) {
+func (m *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.TableNames = types.ListValueMust(t, vs)
+	m.TableNames = types.ListValueMust(t, vs)
 }
 
 type Task_SdkV2 struct {
@@ -22164,7 +22294,7 @@ func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2)
 	}
 }
 
-func (c Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
@@ -22234,7 +22364,7 @@ func (c Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
@@ -22266,51 +22396,51 @@ func (a Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Task_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
-			"condition_task":            o.ConditionTask,
-			"dashboard_task":            o.DashboardTask,
-			"dbt_cloud_task":            o.DbtCloudTask,
-			"dbt_platform_task":         o.DbtPlatformTask,
-			"dbt_task":                  o.DbtTask,
-			"depends_on":                o.DependsOn,
-			"description":               o.Description,
-			"disable_auto_optimization": o.DisableAutoOptimization,
-			"disabled":                  o.Disabled,
-			"email_notifications":       o.EmailNotifications,
-			"environment_key":           o.EnvironmentKey,
-			"existing_cluster_id":       o.ExistingClusterId,
-			"for_each_task":             o.ForEachTask,
-			"gen_ai_compute_task":       o.GenAiComputeTask,
-			"health":                    o.Health,
-			"job_cluster_key":           o.JobClusterKey,
-			"library":                   o.Libraries,
-			"max_retries":               o.MaxRetries,
-			"min_retry_interval_millis": o.MinRetryIntervalMillis,
-			"new_cluster":               o.NewCluster,
-			"notebook_task":             o.NotebookTask,
-			"notification_settings":     o.NotificationSettings,
-			"pipeline_task":             o.PipelineTask,
-			"power_bi_task":             o.PowerBiTask,
-			"python_wheel_task":         o.PythonWheelTask,
-			"retry_on_timeout":          o.RetryOnTimeout,
-			"run_if":                    o.RunIf,
-			"run_job_task":              o.RunJobTask,
-			"spark_jar_task":            o.SparkJarTask,
-			"spark_python_task":         o.SparkPythonTask,
-			"spark_submit_task":         o.SparkSubmitTask,
-			"sql_task":                  o.SqlTask,
-			"task_key":                  o.TaskKey,
-			"timeout_seconds":           o.TimeoutSeconds,
-			"webhook_notifications":     o.WebhookNotifications,
+			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
+			"condition_task":            m.ConditionTask,
+			"dashboard_task":            m.DashboardTask,
+			"dbt_cloud_task":            m.DbtCloudTask,
+			"dbt_platform_task":         m.DbtPlatformTask,
+			"dbt_task":                  m.DbtTask,
+			"depends_on":                m.DependsOn,
+			"description":               m.Description,
+			"disable_auto_optimization": m.DisableAutoOptimization,
+			"disabled":                  m.Disabled,
+			"email_notifications":       m.EmailNotifications,
+			"environment_key":           m.EnvironmentKey,
+			"existing_cluster_id":       m.ExistingClusterId,
+			"for_each_task":             m.ForEachTask,
+			"gen_ai_compute_task":       m.GenAiComputeTask,
+			"health":                    m.Health,
+			"job_cluster_key":           m.JobClusterKey,
+			"library":                   m.Libraries,
+			"max_retries":               m.MaxRetries,
+			"min_retry_interval_millis": m.MinRetryIntervalMillis,
+			"new_cluster":               m.NewCluster,
+			"notebook_task":             m.NotebookTask,
+			"notification_settings":     m.NotificationSettings,
+			"pipeline_task":             m.PipelineTask,
+			"power_bi_task":             m.PowerBiTask,
+			"python_wheel_task":         m.PythonWheelTask,
+			"retry_on_timeout":          m.RetryOnTimeout,
+			"run_if":                    m.RunIf,
+			"run_job_task":              m.RunJobTask,
+			"spark_jar_task":            m.SparkJarTask,
+			"spark_python_task":         m.SparkPythonTask,
+			"spark_submit_task":         m.SparkSubmitTask,
+			"sql_task":                  m.SqlTask,
+			"task_key":                  m.TaskKey,
+			"timeout_seconds":           m.TimeoutSeconds,
+			"webhook_notifications":     m.WebhookNotifications,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Task_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
@@ -22404,13 +22534,13 @@ func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in Task_SdkV2 as
 // a CleanRoomsNotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
 	var e CleanRoomsNotebookTask_SdkV2
-	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+	if m.CleanRoomsNotebookTask.IsNull() || m.CleanRoomsNotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask_SdkV2
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := m.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22421,22 +22551,22 @@ func (o *Task_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsN
 }
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+func (m *Task_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	m.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in Task_SdkV2 as
 // a ConditionTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_SdkV2, bool) {
 	var e ConditionTask_SdkV2
-	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+	if m.ConditionTask.IsNull() || m.ConditionTask.IsUnknown() {
 		return e, false
 	}
 	var v []ConditionTask_SdkV2
-	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	d := m.ConditionTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22447,22 +22577,22 @@ func (o *Task_SdkV2) GetConditionTask(ctx context.Context) (ConditionTask_SdkV2,
 }
 
 // SetConditionTask sets the value of the ConditionTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetConditionTask(ctx context.Context, v ConditionTask_SdkV2) {
+func (m *Task_SdkV2) SetConditionTask(ctx context.Context, v ConditionTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
-	o.ConditionTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	m.ConditionTask = types.ListValueMust(t, vs)
 }
 
 // GetDashboardTask returns the value of the DashboardTask field in Task_SdkV2 as
 // a DashboardTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2, bool) {
 	var e DashboardTask_SdkV2
-	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+	if m.DashboardTask.IsNull() || m.DashboardTask.IsUnknown() {
 		return e, false
 	}
 	var v []DashboardTask_SdkV2
-	d := o.DashboardTask.ElementsAs(ctx, &v, true)
+	d := m.DashboardTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22473,22 +22603,22 @@ func (o *Task_SdkV2) GetDashboardTask(ctx context.Context) (DashboardTask_SdkV2,
 }
 
 // SetDashboardTask sets the value of the DashboardTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
+func (m *Task_SdkV2) SetDashboardTask(ctx context.Context, v DashboardTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
-	o.DashboardTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_task"]
+	m.DashboardTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtCloudTask returns the value of the DbtCloudTask field in Task_SdkV2 as
 // a DbtCloudTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, bool) {
 	var e DbtCloudTask_SdkV2
-	if o.DbtCloudTask.IsNull() || o.DbtCloudTask.IsUnknown() {
+	if m.DbtCloudTask.IsNull() || m.DbtCloudTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtCloudTask_SdkV2
-	d := o.DbtCloudTask.ElementsAs(ctx, &v, true)
+	d := m.DbtCloudTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22499,22 +22629,22 @@ func (o *Task_SdkV2) GetDbtCloudTask(ctx context.Context) (DbtCloudTask_SdkV2, b
 }
 
 // SetDbtCloudTask sets the value of the DbtCloudTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
+func (m *Task_SdkV2) SetDbtCloudTask(ctx context.Context, v DbtCloudTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
-	o.DbtCloudTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_cloud_task"]
+	m.DbtCloudTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtPlatformTask returns the value of the DbtPlatformTask field in Task_SdkV2 as
 // a DbtPlatformTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_SdkV2, bool) {
 	var e DbtPlatformTask_SdkV2
-	if o.DbtPlatformTask.IsNull() || o.DbtPlatformTask.IsUnknown() {
+	if m.DbtPlatformTask.IsNull() || m.DbtPlatformTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtPlatformTask_SdkV2
-	d := o.DbtPlatformTask.ElementsAs(ctx, &v, true)
+	d := m.DbtPlatformTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22525,22 +22655,22 @@ func (o *Task_SdkV2) GetDbtPlatformTask(ctx context.Context) (DbtPlatformTask_Sd
 }
 
 // SetDbtPlatformTask sets the value of the DbtPlatformTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
+func (m *Task_SdkV2) SetDbtPlatformTask(ctx context.Context, v DbtPlatformTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
-	o.DbtPlatformTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_platform_task"]
+	m.DbtPlatformTask = types.ListValueMust(t, vs)
 }
 
 // GetDbtTask returns the value of the DbtTask field in Task_SdkV2 as
 // a DbtTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
 	var e DbtTask_SdkV2
-	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+	if m.DbtTask.IsNull() || m.DbtTask.IsUnknown() {
 		return e, false
 	}
 	var v []DbtTask_SdkV2
-	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	d := m.DbtTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22551,21 +22681,21 @@ func (o *Task_SdkV2) GetDbtTask(ctx context.Context) (DbtTask_SdkV2, bool) {
 }
 
 // SetDbtTask sets the value of the DbtTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
+func (m *Task_SdkV2) SetDbtTask(ctx context.Context, v DbtTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
-	o.DbtTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	m.DbtTask = types.ListValueMust(t, vs)
 }
 
 // GetDependsOn returns the value of the DependsOn field in Task_SdkV2 as
 // a slice of TaskDependency_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
-	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+func (m *Task_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, bool) {
+	if m.DependsOn.IsNull() || m.DependsOn.IsUnknown() {
 		return nil, false
 	}
 	var v []TaskDependency_SdkV2
-	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	d := m.DependsOn.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22573,26 +22703,26 @@ func (o *Task_SdkV2) GetDependsOn(ctx context.Context) ([]TaskDependency_SdkV2, 
 }
 
 // SetDependsOn sets the value of the DependsOn field in Task_SdkV2.
-func (o *Task_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
+func (m *Task_SdkV2) SetDependsOn(ctx context.Context, v []TaskDependency_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.DependsOn = types.ListValueMust(t, vs)
+	m.DependsOn = types.ListValueMust(t, vs)
 }
 
 // GetEmailNotifications returns the value of the EmailNotifications field in Task_SdkV2 as
 // a TaskEmailNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetEmailNotifications(ctx context.Context) (TaskEmailNotifications_SdkV2, bool) {
+func (m *Task_SdkV2) GetEmailNotifications(ctx context.Context) (TaskEmailNotifications_SdkV2, bool) {
 	var e TaskEmailNotifications_SdkV2
-	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+	if m.EmailNotifications.IsNull() || m.EmailNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []TaskEmailNotifications_SdkV2
-	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	d := m.EmailNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22603,22 +22733,22 @@ func (o *Task_SdkV2) GetEmailNotifications(ctx context.Context) (TaskEmailNotifi
 }
 
 // SetEmailNotifications sets the value of the EmailNotifications field in Task_SdkV2.
-func (o *Task_SdkV2) SetEmailNotifications(ctx context.Context, v TaskEmailNotifications_SdkV2) {
+func (m *Task_SdkV2) SetEmailNotifications(ctx context.Context, v TaskEmailNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
-	o.EmailNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	m.EmailNotifications = types.ListValueMust(t, vs)
 }
 
 // GetForEachTask returns the value of the ForEachTask field in Task_SdkV2 as
 // a ForEachTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV2, bool) {
 	var e ForEachTask_SdkV2
-	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+	if m.ForEachTask.IsNull() || m.ForEachTask.IsUnknown() {
 		return e, false
 	}
 	var v []ForEachTask_SdkV2
-	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	d := m.ForEachTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22629,22 +22759,22 @@ func (o *Task_SdkV2) GetForEachTask(ctx context.Context) (ForEachTask_SdkV2, boo
 }
 
 // SetForEachTask sets the value of the ForEachTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_SdkV2) {
+func (m *Task_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
-	o.ForEachTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	m.ForEachTask = types.ListValueMust(t, vs)
 }
 
 // GetGenAiComputeTask returns the value of the GenAiComputeTask field in Task_SdkV2 as
 // a GenAiComputeTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
 	var e GenAiComputeTask_SdkV2
-	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+	if m.GenAiComputeTask.IsNull() || m.GenAiComputeTask.IsUnknown() {
 		return e, false
 	}
 	var v []GenAiComputeTask_SdkV2
-	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	d := m.GenAiComputeTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22655,22 +22785,22 @@ func (o *Task_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_
 }
 
 // SetGenAiComputeTask sets the value of the GenAiComputeTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+func (m *Task_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
-	o.GenAiComputeTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	m.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in Task_SdkV2 as
 // a JobsHealthRules_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
+func (m *Task_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool) {
 	var e JobsHealthRules_SdkV2
-	if o.Health.IsNull() || o.Health.IsUnknown() {
+	if m.Health.IsNull() || m.Health.IsUnknown() {
 		return e, false
 	}
 	var v []JobsHealthRules_SdkV2
-	d := o.Health.ElementsAs(ctx, &v, true)
+	d := m.Health.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22681,21 +22811,21 @@ func (o *Task_SdkV2) GetHealth(ctx context.Context) (JobsHealthRules_SdkV2, bool
 }
 
 // SetHealth sets the value of the Health field in Task_SdkV2.
-func (o *Task_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
+func (m *Task_SdkV2) SetHealth(ctx context.Context, v JobsHealthRules_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
-	o.Health = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	m.Health = types.ListValueMust(t, vs)
 }
 
 // GetLibraries returns the value of the Libraries field in Task_SdkV2 as
 // a slice of compute_tf.Library_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
-	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+func (m *Task_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_SdkV2, bool) {
+	if m.Libraries.IsNull() || m.Libraries.IsUnknown() {
 		return nil, false
 	}
 	var v []compute_tf.Library_SdkV2
-	d := o.Libraries.ElementsAs(ctx, &v, true)
+	d := m.Libraries.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22703,26 +22833,26 @@ func (o *Task_SdkV2) GetLibraries(ctx context.Context) ([]compute_tf.Library_Sdk
 }
 
 // SetLibraries sets the value of the Libraries field in Task_SdkV2.
-func (o *Task_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
+func (m *Task_SdkV2) SetLibraries(ctx context.Context, v []compute_tf.Library_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Libraries = types.ListValueMust(t, vs)
+	m.Libraries = types.ListValueMust(t, vs)
 }
 
 // GetNewCluster returns the value of the NewCluster field in Task_SdkV2 as
 // a compute_tf.ClusterSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
+func (m *Task_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_SdkV2, bool) {
 	var e compute_tf.ClusterSpec_SdkV2
-	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+	if m.NewCluster.IsNull() || m.NewCluster.IsUnknown() {
 		return e, false
 	}
 	var v []compute_tf.ClusterSpec_SdkV2
-	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	d := m.NewCluster.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22733,22 +22863,22 @@ func (o *Task_SdkV2) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec_
 }
 
 // SetNewCluster sets the value of the NewCluster field in Task_SdkV2.
-func (o *Task_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
+func (m *Task_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
-	o.NewCluster = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	m.NewCluster = types.ListValueMust(t, vs)
 }
 
 // GetNotebookTask returns the value of the NotebookTask field in Task_SdkV2 as
 // a NotebookTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, bool) {
 	var e NotebookTask_SdkV2
-	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+	if m.NotebookTask.IsNull() || m.NotebookTask.IsUnknown() {
 		return e, false
 	}
 	var v []NotebookTask_SdkV2
-	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	d := m.NotebookTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22759,22 +22889,22 @@ func (o *Task_SdkV2) GetNotebookTask(ctx context.Context) (NotebookTask_SdkV2, b
 }
 
 // SetNotebookTask sets the value of the NotebookTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
+func (m *Task_SdkV2) SetNotebookTask(ctx context.Context, v NotebookTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
-	o.NotebookTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	m.NotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetNotificationSettings returns the value of the NotificationSettings field in Task_SdkV2 as
 // a TaskNotificationSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
+func (m *Task_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings_SdkV2, bool) {
 	var e TaskNotificationSettings_SdkV2
-	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
 		return e, false
 	}
 	var v []TaskNotificationSettings_SdkV2
-	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	d := m.NotificationSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22785,22 +22915,22 @@ func (o *Task_SdkV2) GetNotificationSettings(ctx context.Context) (TaskNotificat
 }
 
 // SetNotificationSettings sets the value of the NotificationSettings field in Task_SdkV2.
-func (o *Task_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
+func (m *Task_SdkV2) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
-	o.NotificationSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	m.NotificationSettings = types.ListValueMust(t, vs)
 }
 
 // GetPipelineTask returns the value of the PipelineTask field in Task_SdkV2 as
 // a PipelineTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, bool) {
 	var e PipelineTask_SdkV2
-	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+	if m.PipelineTask.IsNull() || m.PipelineTask.IsUnknown() {
 		return e, false
 	}
 	var v []PipelineTask_SdkV2
-	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	d := m.PipelineTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22811,22 +22941,22 @@ func (o *Task_SdkV2) GetPipelineTask(ctx context.Context) (PipelineTask_SdkV2, b
 }
 
 // SetPipelineTask sets the value of the PipelineTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
+func (m *Task_SdkV2) SetPipelineTask(ctx context.Context, v PipelineTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
-	o.PipelineTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	m.PipelineTask = types.ListValueMust(t, vs)
 }
 
 // GetPowerBiTask returns the value of the PowerBiTask field in Task_SdkV2 as
 // a PowerBiTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, bool) {
 	var e PowerBiTask_SdkV2
-	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+	if m.PowerBiTask.IsNull() || m.PowerBiTask.IsUnknown() {
 		return e, false
 	}
 	var v []PowerBiTask_SdkV2
-	d := o.PowerBiTask.ElementsAs(ctx, &v, true)
+	d := m.PowerBiTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22837,22 +22967,22 @@ func (o *Task_SdkV2) GetPowerBiTask(ctx context.Context) (PowerBiTask_SdkV2, boo
 }
 
 // SetPowerBiTask sets the value of the PowerBiTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
+func (m *Task_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
-	o.PowerBiTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
+	m.PowerBiTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in Task_SdkV2 as
 // a PythonWheelTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_SdkV2, bool) {
 	var e PythonWheelTask_SdkV2
-	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+	if m.PythonWheelTask.IsNull() || m.PythonWheelTask.IsUnknown() {
 		return e, false
 	}
 	var v []PythonWheelTask_SdkV2
-	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	d := m.PythonWheelTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22863,22 +22993,22 @@ func (o *Task_SdkV2) GetPythonWheelTask(ctx context.Context) (PythonWheelTask_Sd
 }
 
 // SetPythonWheelTask sets the value of the PythonWheelTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
+func (m *Task_SdkV2) SetPythonWheelTask(ctx context.Context, v PythonWheelTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
-	o.PythonWheelTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	m.PythonWheelTask = types.ListValueMust(t, vs)
 }
 
 // GetRunJobTask returns the value of the RunJobTask field in Task_SdkV2 as
 // a RunJobTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool) {
 	var e RunJobTask_SdkV2
-	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+	if m.RunJobTask.IsNull() || m.RunJobTask.IsUnknown() {
 		return e, false
 	}
 	var v []RunJobTask_SdkV2
-	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	d := m.RunJobTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22889,22 +23019,22 @@ func (o *Task_SdkV2) GetRunJobTask(ctx context.Context) (RunJobTask_SdkV2, bool)
 }
 
 // SetRunJobTask sets the value of the RunJobTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
+func (m *Task_SdkV2) SetRunJobTask(ctx context.Context, v RunJobTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
-	o.RunJobTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	m.RunJobTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkJarTask returns the value of the SparkJarTask field in Task_SdkV2 as
 // a SparkJarTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, bool) {
 	var e SparkJarTask_SdkV2
-	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+	if m.SparkJarTask.IsNull() || m.SparkJarTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkJarTask_SdkV2
-	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	d := m.SparkJarTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22915,22 +23045,22 @@ func (o *Task_SdkV2) GetSparkJarTask(ctx context.Context) (SparkJarTask_SdkV2, b
 }
 
 // SetSparkJarTask sets the value of the SparkJarTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
+func (m *Task_SdkV2) SetSparkJarTask(ctx context.Context, v SparkJarTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
-	o.SparkJarTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	m.SparkJarTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkPythonTask returns the value of the SparkPythonTask field in Task_SdkV2 as
 // a SparkPythonTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_SdkV2, bool) {
 	var e SparkPythonTask_SdkV2
-	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+	if m.SparkPythonTask.IsNull() || m.SparkPythonTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkPythonTask_SdkV2
-	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	d := m.SparkPythonTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22941,22 +23071,22 @@ func (o *Task_SdkV2) GetSparkPythonTask(ctx context.Context) (SparkPythonTask_Sd
 }
 
 // SetSparkPythonTask sets the value of the SparkPythonTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
+func (m *Task_SdkV2) SetSparkPythonTask(ctx context.Context, v SparkPythonTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
-	o.SparkPythonTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	m.SparkPythonTask = types.ListValueMust(t, vs)
 }
 
 // GetSparkSubmitTask returns the value of the SparkSubmitTask field in Task_SdkV2 as
 // a SparkSubmitTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_SdkV2, bool) {
 	var e SparkSubmitTask_SdkV2
-	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+	if m.SparkSubmitTask.IsNull() || m.SparkSubmitTask.IsUnknown() {
 		return e, false
 	}
 	var v []SparkSubmitTask_SdkV2
-	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	d := m.SparkSubmitTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22967,22 +23097,22 @@ func (o *Task_SdkV2) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask_Sd
 }
 
 // SetSparkSubmitTask sets the value of the SparkSubmitTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
+func (m *Task_SdkV2) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
-	o.SparkSubmitTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	m.SparkSubmitTask = types.ListValueMust(t, vs)
 }
 
 // GetSqlTask returns the value of the SqlTask field in Task_SdkV2 as
 // a SqlTask_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
+func (m *Task_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
 	var e SqlTask_SdkV2
-	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+	if m.SqlTask.IsNull() || m.SqlTask.IsUnknown() {
 		return e, false
 	}
 	var v []SqlTask_SdkV2
-	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	d := m.SqlTask.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -22993,22 +23123,22 @@ func (o *Task_SdkV2) GetSqlTask(ctx context.Context) (SqlTask_SdkV2, bool) {
 }
 
 // SetSqlTask sets the value of the SqlTask field in Task_SdkV2.
-func (o *Task_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
+func (m *Task_SdkV2) SetSqlTask(ctx context.Context, v SqlTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
-	o.SqlTask = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	m.SqlTask = types.ListValueMust(t, vs)
 }
 
 // GetWebhookNotifications returns the value of the WebhookNotifications field in Task_SdkV2 as
 // a WebhookNotifications_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Task_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
+func (m *Task_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifications_SdkV2, bool) {
 	var e WebhookNotifications_SdkV2
-	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+	if m.WebhookNotifications.IsNull() || m.WebhookNotifications.IsUnknown() {
 		return e, false
 	}
 	var v []WebhookNotifications_SdkV2
-	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	d := m.WebhookNotifications.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23019,10 +23149,10 @@ func (o *Task_SdkV2) GetWebhookNotifications(ctx context.Context) (WebhookNotifi
 }
 
 // SetWebhookNotifications sets the value of the WebhookNotifications field in Task_SdkV2.
-func (o *Task_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
+func (m *Task_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNotifications_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
-	o.WebhookNotifications = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	m.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 type TaskDependency_SdkV2 struct {
@@ -23039,7 +23169,7 @@ func (to *TaskDependency_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *TaskDependency_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TaskDependency_SdkV2) {
 }
 
-func (c TaskDependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TaskDependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["outcome"] = attrs["outcome"].SetOptional()
 	attrs["task_key"] = attrs["task_key"].SetRequired()
 
@@ -23053,24 +23183,24 @@ func (c TaskDependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TaskDependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TaskDependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TaskDependency_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TaskDependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TaskDependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"outcome":  o.Outcome,
-			"task_key": o.TaskKey,
+			"outcome":  m.Outcome,
+			"task_key": m.TaskKey,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TaskDependency_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TaskDependency_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"outcome":  types.StringType,
@@ -23181,7 +23311,7 @@ func (to *TaskEmailNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context
 	}
 }
 
-func (c TaskEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TaskEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
@@ -23199,7 +23329,7 @@ func (c TaskEmailNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TaskEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TaskEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
 		"on_failure":                             reflect.TypeOf(types.String{}),
@@ -23212,21 +23342,21 @@ func (a TaskEmailNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TaskEmailNotifications_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TaskEmailNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TaskEmailNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"no_alert_for_skipped_runs":              o.NoAlertForSkippedRuns,
-			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
-			"on_failure":                             o.OnFailure,
-			"on_start":                               o.OnStart,
-			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
-			"on_success":                             o.OnSuccess,
+			"no_alert_for_skipped_runs":              m.NoAlertForSkippedRuns,
+			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
+			"on_failure":                             m.OnFailure,
+			"on_start":                               m.OnStart,
+			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
+			"on_success":                             m.OnSuccess,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TaskEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"no_alert_for_skipped_runs": types.BoolType,
@@ -23252,12 +23382,12 @@ func (o TaskEmailNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 // GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TaskEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
-	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+func (m *TaskEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if m.OnDurationWarningThresholdExceeded.IsNull() || m.OnDurationWarningThresholdExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23265,25 +23395,25 @@ func (o *TaskEmailNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx
 }
 
 // SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications_SdkV2.
-func (o *TaskEmailNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+func (m *TaskEmailNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+	m.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnFailure returns the value of the OnFailure field in TaskEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TaskEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]types.String, bool) {
-	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+func (m *TaskEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if m.OnFailure.IsNull() || m.OnFailure.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	d := m.OnFailure.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23291,25 +23421,25 @@ func (o *TaskEmailNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]type
 }
 
 // SetOnFailure sets the value of the OnFailure field in TaskEmailNotifications_SdkV2.
-func (o *TaskEmailNotifications_SdkV2) SetOnFailure(ctx context.Context, v []types.String) {
+func (m *TaskEmailNotifications_SdkV2) SetOnFailure(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnFailure = types.ListValueMust(t, vs)
+	m.OnFailure = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in TaskEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TaskEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.String, bool) {
-	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+func (m *TaskEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if m.OnStart.IsNull() || m.OnStart.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnStart.ElementsAs(ctx, &v, true)
+	d := m.OnStart.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23317,25 +23447,25 @@ func (o *TaskEmailNotifications_SdkV2) GetOnStart(ctx context.Context) ([]types.
 }
 
 // SetOnStart sets the value of the OnStart field in TaskEmailNotifications_SdkV2.
-func (o *TaskEmailNotifications_SdkV2) SetOnStart(ctx context.Context, v []types.String) {
+func (m *TaskEmailNotifications_SdkV2) SetOnStart(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStart = types.ListValueMust(t, vs)
+	m.OnStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TaskEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
-	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+func (m *TaskEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if m.OnStreamingBacklogExceeded.IsNull() || m.OnStreamingBacklogExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23343,25 +23473,25 @@ func (o *TaskEmailNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context
 }
 
 // SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications_SdkV2.
-func (o *TaskEmailNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+func (m *TaskEmailNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+	m.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnSuccess returns the value of the OnSuccess field in TaskEmailNotifications_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TaskEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
-	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+func (m *TaskEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if m.OnSuccess.IsNull() || m.OnSuccess.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	d := m.OnSuccess.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23369,14 +23499,14 @@ func (o *TaskEmailNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]type
 }
 
 // SetOnSuccess sets the value of the OnSuccess field in TaskEmailNotifications_SdkV2.
-func (o *TaskEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []types.String) {
+func (m *TaskEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnSuccess = types.ListValueMust(t, vs)
+	m.OnSuccess = types.ListValueMust(t, vs)
 }
 
 type TaskNotificationSettings_SdkV2 struct {
@@ -23398,7 +23528,7 @@ func (to *TaskNotificationSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *TaskNotificationSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TaskNotificationSettings_SdkV2) {
 }
 
-func (c TaskNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TaskNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_on_last_attempt"] = attrs["alert_on_last_attempt"].SetOptional()
 	attrs["no_alert_for_canceled_runs"] = attrs["no_alert_for_canceled_runs"].SetOptional()
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
@@ -23413,25 +23543,25 @@ func (c TaskNotificationSettings_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TaskNotificationSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TaskNotificationSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TaskNotificationSettings_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TaskNotificationSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TaskNotificationSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert_on_last_attempt":      o.AlertOnLastAttempt,
-			"no_alert_for_canceled_runs": o.NoAlertForCanceledRuns,
-			"no_alert_for_skipped_runs":  o.NoAlertForSkippedRuns,
+			"alert_on_last_attempt":      m.AlertOnLastAttempt,
+			"no_alert_for_canceled_runs": m.NoAlertForCanceledRuns,
+			"no_alert_for_skipped_runs":  m.NoAlertForSkippedRuns,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TaskNotificationSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_on_last_attempt":      types.BoolType,
@@ -23456,7 +23586,7 @@ func (to *TerminationDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *TerminationDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TerminationDetails_SdkV2) {
 }
 
-func (c TerminationDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TerminationDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
@@ -23471,25 +23601,25 @@ func (c TerminationDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TerminationDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TerminationDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TerminationDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TerminationDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TerminationDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"code":    o.Code,
-			"message": o.Message,
-			"type":    o.Type_,
+			"code":    m.Code,
+			"message": m.Message,
+			"type":    m.Type_,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TerminationDetails_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TerminationDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"code":    types.StringType,
@@ -23511,7 +23641,7 @@ func (to *TriggerInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *TriggerInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TriggerInfo_SdkV2) {
 }
 
-func (c TriggerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TriggerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 
 	return attrs
@@ -23524,23 +23654,23 @@ func (c TriggerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TriggerInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TriggerInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TriggerInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TriggerInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": o.RunId,
+			"run_id": m.RunId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TriggerInfo_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TriggerInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
@@ -23551,6 +23681,8 @@ func (o TriggerInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type TriggerSettings_SdkV2 struct {
 	// File arrival trigger settings.
 	FileArrival types.List `tfsdk:"file_arrival"`
+
+	Model types.List `tfsdk:"model"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
@@ -23568,6 +23700,15 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.Model.IsNull() && !from.Model.IsUnknown() {
+		if toModel, ok := to.GetModel(ctx); ok {
+			if fromModel, ok := from.GetModel(ctx); ok {
+				// Recursively sync the fields of Model
+				toModel.SyncFieldsDuringCreateOrUpdate(ctx, fromModel)
+				to.SetModel(ctx, toModel)
 			}
 		}
 	}
@@ -23609,6 +23750,14 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.Model.IsNull() && !from.Model.IsUnknown() {
+		if toModel, ok := to.GetModel(ctx); ok {
+			if fromModel, ok := from.GetModel(ctx); ok {
+				toModel.SyncFieldsDuringRead(ctx, fromModel)
+				to.SetModel(ctx, toModel)
+			}
+		}
+	}
 	if !from.Periodic.IsNull() && !from.Periodic.IsUnknown() {
 		if toPeriodic, ok := to.GetPeriodic(ctx); ok {
 			if fromPeriodic, ok := from.GetPeriodic(ctx); ok {
@@ -23635,9 +23784,11 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["model"] = attrs["model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -23656,9 +23807,10 @@ func (c TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
+		"model":        reflect.TypeOf(ModelTriggerConfiguration_SdkV2{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
 		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
@@ -23668,24 +23820,28 @@ func (a TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerSettings_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival": o.FileArrival,
-			"pause_status": o.PauseStatus,
-			"periodic":     o.Periodic,
-			"table":        o.Table,
-			"table_update": o.TableUpdate,
+			"file_arrival": m.FileArrival,
+			"model":        m.Model,
+			"pause_status": m.PauseStatus,
+			"periodic":     m.Periodic,
+			"table":        m.Table,
+			"table_update": m.TableUpdate,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": basetypes.ListType{
 				ElemType: FileArrivalTriggerConfiguration_SdkV2{}.Type(ctx),
+			},
+			"model": basetypes.ListType{
+				ElemType: ModelTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
@@ -23704,13 +23860,13 @@ func (o TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 // GetFileArrival returns the value of the FileArrival field in TriggerSettings_SdkV2 as
 // a FileArrivalTriggerConfiguration_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerSettings_SdkV2) GetFileArrival(ctx context.Context) (FileArrivalTriggerConfiguration_SdkV2, bool) {
+func (m *TriggerSettings_SdkV2) GetFileArrival(ctx context.Context) (FileArrivalTriggerConfiguration_SdkV2, bool) {
 	var e FileArrivalTriggerConfiguration_SdkV2
-	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
+	if m.FileArrival.IsNull() || m.FileArrival.IsUnknown() {
 		return e, false
 	}
 	var v []FileArrivalTriggerConfiguration_SdkV2
-	d := o.FileArrival.ElementsAs(ctx, &v, true)
+	d := m.FileArrival.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23721,22 +23877,48 @@ func (o *TriggerSettings_SdkV2) GetFileArrival(ctx context.Context) (FileArrival
 }
 
 // SetFileArrival sets the value of the FileArrival field in TriggerSettings_SdkV2.
-func (o *TriggerSettings_SdkV2) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration_SdkV2) {
+func (m *TriggerSettings_SdkV2) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
-	o.FileArrival = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
+	m.FileArrival = types.ListValueMust(t, vs)
+}
+
+// GetModel returns the value of the Model field in TriggerSettings_SdkV2 as
+// a ModelTriggerConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerSettings_SdkV2) GetModel(ctx context.Context) (ModelTriggerConfiguration_SdkV2, bool) {
+	var e ModelTriggerConfiguration_SdkV2
+	if m.Model.IsNull() || m.Model.IsUnknown() {
+		return e, false
+	}
+	var v []ModelTriggerConfiguration_SdkV2
+	d := m.Model.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModel sets the value of the Model field in TriggerSettings_SdkV2.
+func (m *TriggerSettings_SdkV2) SetModel(ctx context.Context, v ModelTriggerConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["model"]
+	m.Model = types.ListValueMust(t, vs)
 }
 
 // GetPeriodic returns the value of the Periodic field in TriggerSettings_SdkV2 as
 // a PeriodicTriggerConfiguration_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerSettings_SdkV2) GetPeriodic(ctx context.Context) (PeriodicTriggerConfiguration_SdkV2, bool) {
+func (m *TriggerSettings_SdkV2) GetPeriodic(ctx context.Context) (PeriodicTriggerConfiguration_SdkV2, bool) {
 	var e PeriodicTriggerConfiguration_SdkV2
-	if o.Periodic.IsNull() || o.Periodic.IsUnknown() {
+	if m.Periodic.IsNull() || m.Periodic.IsUnknown() {
 		return e, false
 	}
 	var v []PeriodicTriggerConfiguration_SdkV2
-	d := o.Periodic.ElementsAs(ctx, &v, true)
+	d := m.Periodic.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23747,22 +23929,22 @@ func (o *TriggerSettings_SdkV2) GetPeriodic(ctx context.Context) (PeriodicTrigge
 }
 
 // SetPeriodic sets the value of the Periodic field in TriggerSettings_SdkV2.
-func (o *TriggerSettings_SdkV2) SetPeriodic(ctx context.Context, v PeriodicTriggerConfiguration_SdkV2) {
+func (m *TriggerSettings_SdkV2) SetPeriodic(ctx context.Context, v PeriodicTriggerConfiguration_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
-	o.Periodic = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
+	m.Periodic = types.ListValueMust(t, vs)
 }
 
 // GetTable returns the value of the Table field in TriggerSettings_SdkV2 as
 // a TableUpdateTriggerConfiguration_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerSettings_SdkV2) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
+func (m *TriggerSettings_SdkV2) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
 	var e TableUpdateTriggerConfiguration_SdkV2
-	if o.Table.IsNull() || o.Table.IsUnknown() {
+	if m.Table.IsNull() || m.Table.IsUnknown() {
 		return e, false
 	}
 	var v []TableUpdateTriggerConfiguration_SdkV2
-	d := o.Table.ElementsAs(ctx, &v, true)
+	d := m.Table.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23773,22 +23955,22 @@ func (o *TriggerSettings_SdkV2) GetTable(ctx context.Context) (TableUpdateTrigge
 }
 
 // SetTable sets the value of the Table field in TriggerSettings_SdkV2.
-func (o *TriggerSettings_SdkV2) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
+func (m *TriggerSettings_SdkV2) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	o.Table = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	m.Table = types.ListValueMust(t, vs)
 }
 
 // GetTableUpdate returns the value of the TableUpdate field in TriggerSettings_SdkV2 as
 // a TableUpdateTriggerConfiguration_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerSettings_SdkV2) GetTableUpdate(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
+func (m *TriggerSettings_SdkV2) GetTableUpdate(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
 	var e TableUpdateTriggerConfiguration_SdkV2
-	if o.TableUpdate.IsNull() || o.TableUpdate.IsUnknown() {
+	if m.TableUpdate.IsNull() || m.TableUpdate.IsUnknown() {
 		return e, false
 	}
 	var v []TableUpdateTriggerConfiguration_SdkV2
-	d := o.TableUpdate.ElementsAs(ctx, &v, true)
+	d := m.TableUpdate.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23799,10 +23981,10 @@ func (o *TriggerSettings_SdkV2) GetTableUpdate(ctx context.Context) (TableUpdate
 }
 
 // SetTableUpdate sets the value of the TableUpdate field in TriggerSettings_SdkV2.
-func (o *TriggerSettings_SdkV2) SetTableUpdate(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
+func (m *TriggerSettings_SdkV2) SetTableUpdate(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_update"]
-	o.TableUpdate = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table_update"]
+	m.TableUpdate = types.ListValueMust(t, vs)
 }
 
 type TriggerStateProto_SdkV2 struct {
@@ -23851,7 +24033,7 @@ func (to *TriggerStateProto_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table"] = attrs["table"].SetOptional()
@@ -23867,7 +24049,7 @@ func (c TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a TriggerStateProto_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m TriggerStateProto_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerState_SdkV2{}),
 		"table":        reflect.TypeOf(TableTriggerState_SdkV2{}),
@@ -23877,17 +24059,17 @@ func (a TriggerStateProto_SdkV2) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerStateProto_SdkV2
 // only implements ToObjectValue() and Type().
-func (o TriggerStateProto_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m TriggerStateProto_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival": o.FileArrival,
-			"table":        o.Table,
+			"file_arrival": m.FileArrival,
+			"table":        m.Table,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o TriggerStateProto_SdkV2) Type(ctx context.Context) attr.Type {
+func (m TriggerStateProto_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": basetypes.ListType{
@@ -23903,13 +24085,13 @@ func (o TriggerStateProto_SdkV2) Type(ctx context.Context) attr.Type {
 // GetFileArrival returns the value of the FileArrival field in TriggerStateProto_SdkV2 as
 // a FileArrivalTriggerState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerStateProto_SdkV2) GetFileArrival(ctx context.Context) (FileArrivalTriggerState_SdkV2, bool) {
+func (m *TriggerStateProto_SdkV2) GetFileArrival(ctx context.Context) (FileArrivalTriggerState_SdkV2, bool) {
 	var e FileArrivalTriggerState_SdkV2
-	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
+	if m.FileArrival.IsNull() || m.FileArrival.IsUnknown() {
 		return e, false
 	}
 	var v []FileArrivalTriggerState_SdkV2
-	d := o.FileArrival.ElementsAs(ctx, &v, true)
+	d := m.FileArrival.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23920,22 +24102,22 @@ func (o *TriggerStateProto_SdkV2) GetFileArrival(ctx context.Context) (FileArriv
 }
 
 // SetFileArrival sets the value of the FileArrival field in TriggerStateProto_SdkV2.
-func (o *TriggerStateProto_SdkV2) SetFileArrival(ctx context.Context, v FileArrivalTriggerState_SdkV2) {
+func (m *TriggerStateProto_SdkV2) SetFileArrival(ctx context.Context, v FileArrivalTriggerState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
-	o.FileArrival = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
+	m.FileArrival = types.ListValueMust(t, vs)
 }
 
 // GetTable returns the value of the Table field in TriggerStateProto_SdkV2 as
 // a TableTriggerState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *TriggerStateProto_SdkV2) GetTable(ctx context.Context) (TableTriggerState_SdkV2, bool) {
+func (m *TriggerStateProto_SdkV2) GetTable(ctx context.Context) (TableTriggerState_SdkV2, bool) {
 	var e TableTriggerState_SdkV2
-	if o.Table.IsNull() || o.Table.IsUnknown() {
+	if m.Table.IsNull() || m.Table.IsUnknown() {
 		return e, false
 	}
 	var v []TableTriggerState_SdkV2
-	d := o.Table.ElementsAs(ctx, &v, true)
+	d := m.Table.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -23946,10 +24128,10 @@ func (o *TriggerStateProto_SdkV2) GetTable(ctx context.Context) (TableTriggerSta
 }
 
 // SetTable sets the value of the Table field in TriggerStateProto_SdkV2.
-func (o *TriggerStateProto_SdkV2) SetTable(ctx context.Context, v TableTriggerState_SdkV2) {
+func (m *TriggerStateProto_SdkV2) SetTable(ctx context.Context, v TableTriggerState_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	o.Table = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	m.Table = types.ListValueMust(t, vs)
 }
 
 type UpdateJob_SdkV2 struct {
@@ -24008,7 +24190,7 @@ func (to *UpdateJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Update
 	}
 }
 
-func (c UpdateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
 	attrs["new_settings"] = attrs["new_settings"].SetOptional()
@@ -24024,7 +24206,7 @@ func (c UpdateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"fields_to_remove": reflect.TypeOf(types.String{}),
 		"new_settings":     reflect.TypeOf(JobSettings_SdkV2{}),
@@ -24034,18 +24216,18 @@ func (a UpdateJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"fields_to_remove": o.FieldsToRemove,
-			"job_id":           o.JobId,
-			"new_settings":     o.NewSettings,
+			"fields_to_remove": m.FieldsToRemove,
+			"job_id":           m.JobId,
+			"new_settings":     m.NewSettings,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m UpdateJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"fields_to_remove": basetypes.ListType{
@@ -24062,12 +24244,12 @@ func (o UpdateJob_SdkV2) Type(ctx context.Context) attr.Type {
 // GetFieldsToRemove returns the value of the FieldsToRemove field in UpdateJob_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateJob_SdkV2) GetFieldsToRemove(ctx context.Context) ([]types.String, bool) {
-	if o.FieldsToRemove.IsNull() || o.FieldsToRemove.IsUnknown() {
+func (m *UpdateJob_SdkV2) GetFieldsToRemove(ctx context.Context) ([]types.String, bool) {
+	if m.FieldsToRemove.IsNull() || m.FieldsToRemove.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.FieldsToRemove.ElementsAs(ctx, &v, true)
+	d := m.FieldsToRemove.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24075,26 +24257,26 @@ func (o *UpdateJob_SdkV2) GetFieldsToRemove(ctx context.Context) ([]types.String
 }
 
 // SetFieldsToRemove sets the value of the FieldsToRemove field in UpdateJob_SdkV2.
-func (o *UpdateJob_SdkV2) SetFieldsToRemove(ctx context.Context, v []types.String) {
+func (m *UpdateJob_SdkV2) SetFieldsToRemove(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields_to_remove"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["fields_to_remove"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.FieldsToRemove = types.ListValueMust(t, vs)
+	m.FieldsToRemove = types.ListValueMust(t, vs)
 }
 
 // GetNewSettings returns the value of the NewSettings field in UpdateJob_SdkV2 as
 // a JobSettings_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
+func (m *UpdateJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2, bool) {
 	var e JobSettings_SdkV2
-	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+	if m.NewSettings.IsNull() || m.NewSettings.IsUnknown() {
 		return e, false
 	}
 	var v []JobSettings_SdkV2
-	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	d := m.NewSettings.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24105,10 +24287,10 @@ func (o *UpdateJob_SdkV2) GetNewSettings(ctx context.Context) (JobSettings_SdkV2
 }
 
 // SetNewSettings sets the value of the NewSettings field in UpdateJob_SdkV2.
-func (o *UpdateJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV2) {
+func (m *UpdateJob_SdkV2) SetNewSettings(ctx context.Context, v JobSettings_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
-	o.NewSettings = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	m.NewSettings = types.ListValueMust(t, vs)
 }
 
 type ViewItem_SdkV2 struct {
@@ -24128,7 +24310,7 @@ func (to *ViewItem_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 func (to *ViewItem_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ViewItem_SdkV2) {
 }
 
-func (c ViewItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ViewItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
@@ -24143,25 +24325,25 @@ func (c ViewItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ViewItem_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ViewItem_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ViewItem_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ViewItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ViewItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content": o.Content,
-			"name":    o.Name,
-			"type":    o.Type_,
+			"content": m.Content,
+			"name":    m.Name,
+			"type":    m.Type_,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ViewItem_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ViewItem_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content": types.StringType,
@@ -24181,7 +24363,7 @@ func (to *Webhook_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 func (to *Webhook_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Webhook_SdkV2) {
 }
 
-func (c Webhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Webhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -24194,23 +24376,23 @@ func (c Webhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Webhook_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Webhook_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Webhook_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Webhook_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Webhook_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Webhook_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Webhook_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -24311,7 +24493,7 @@ func (to *WebhookNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c WebhookNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WebhookNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
 	attrs["on_start"] = attrs["on_start"].SetOptional()
@@ -24328,7 +24510,7 @@ func (c WebhookNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WebhookNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WebhookNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(Webhook_SdkV2{}),
 		"on_failure":                             reflect.TypeOf(Webhook_SdkV2{}),
@@ -24341,20 +24523,20 @@ func (a WebhookNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WebhookNotifications_SdkV2
 // only implements ToObjectValue() and Type().
-func (o WebhookNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WebhookNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
-			"on_failure":                             o.OnFailure,
-			"on_start":                               o.OnStart,
-			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
-			"on_success":                             o.OnSuccess,
+			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
+			"on_failure":                             m.OnFailure,
+			"on_start":                               m.OnStart,
+			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
+			"on_success":                             m.OnSuccess,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WebhookNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+func (m WebhookNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"on_duration_warning_threshold_exceeded": basetypes.ListType{
@@ -24379,12 +24561,12 @@ func (o WebhookNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 // GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications_SdkV2 as
 // a slice of Webhook_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WebhookNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]Webhook_SdkV2, bool) {
-	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+func (m *WebhookNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]Webhook_SdkV2, bool) {
+	if m.OnDurationWarningThresholdExceeded.IsNull() || m.OnDurationWarningThresholdExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []Webhook_SdkV2
-	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24392,25 +24574,25 @@ func (o *WebhookNotifications_SdkV2) GetOnDurationWarningThresholdExceeded(ctx c
 }
 
 // SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications_SdkV2.
-func (o *WebhookNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []Webhook_SdkV2) {
+func (m *WebhookNotifications_SdkV2) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []Webhook_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+	m.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnFailure returns the value of the OnFailure field in WebhookNotifications_SdkV2 as
 // a slice of Webhook_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WebhookNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]Webhook_SdkV2, bool) {
-	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+func (m *WebhookNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]Webhook_SdkV2, bool) {
+	if m.OnFailure.IsNull() || m.OnFailure.IsUnknown() {
 		return nil, false
 	}
 	var v []Webhook_SdkV2
-	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	d := m.OnFailure.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24418,25 +24600,25 @@ func (o *WebhookNotifications_SdkV2) GetOnFailure(ctx context.Context) ([]Webhoo
 }
 
 // SetOnFailure sets the value of the OnFailure field in WebhookNotifications_SdkV2.
-func (o *WebhookNotifications_SdkV2) SetOnFailure(ctx context.Context, v []Webhook_SdkV2) {
+func (m *WebhookNotifications_SdkV2) SetOnFailure(ctx context.Context, v []Webhook_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnFailure = types.ListValueMust(t, vs)
+	m.OnFailure = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in WebhookNotifications_SdkV2 as
 // a slice of Webhook_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WebhookNotifications_SdkV2) GetOnStart(ctx context.Context) ([]Webhook_SdkV2, bool) {
-	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+func (m *WebhookNotifications_SdkV2) GetOnStart(ctx context.Context) ([]Webhook_SdkV2, bool) {
+	if m.OnStart.IsNull() || m.OnStart.IsUnknown() {
 		return nil, false
 	}
 	var v []Webhook_SdkV2
-	d := o.OnStart.ElementsAs(ctx, &v, true)
+	d := m.OnStart.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24444,25 +24626,25 @@ func (o *WebhookNotifications_SdkV2) GetOnStart(ctx context.Context) ([]Webhook_
 }
 
 // SetOnStart sets the value of the OnStart field in WebhookNotifications_SdkV2.
-func (o *WebhookNotifications_SdkV2) SetOnStart(ctx context.Context, v []Webhook_SdkV2) {
+func (m *WebhookNotifications_SdkV2) SetOnStart(ctx context.Context, v []Webhook_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStart = types.ListValueMust(t, vs)
+	m.OnStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in WebhookNotifications_SdkV2 as
 // a slice of Webhook_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WebhookNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]Webhook_SdkV2, bool) {
-	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+func (m *WebhookNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.Context) ([]Webhook_SdkV2, bool) {
+	if m.OnStreamingBacklogExceeded.IsNull() || m.OnStreamingBacklogExceeded.IsUnknown() {
 		return nil, false
 	}
 	var v []Webhook_SdkV2
-	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	d := m.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24470,25 +24652,25 @@ func (o *WebhookNotifications_SdkV2) GetOnStreamingBacklogExceeded(ctx context.C
 }
 
 // SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in WebhookNotifications_SdkV2.
-func (o *WebhookNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []Webhook_SdkV2) {
+func (m *WebhookNotifications_SdkV2) SetOnStreamingBacklogExceeded(ctx context.Context, v []Webhook_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+	m.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
 // GetOnSuccess returns the value of the OnSuccess field in WebhookNotifications_SdkV2 as
 // a slice of Webhook_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WebhookNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]Webhook_SdkV2, bool) {
-	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+func (m *WebhookNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]Webhook_SdkV2, bool) {
+	if m.OnSuccess.IsNull() || m.OnSuccess.IsUnknown() {
 		return nil, false
 	}
 	var v []Webhook_SdkV2
-	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	d := m.OnSuccess.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -24496,14 +24678,14 @@ func (o *WebhookNotifications_SdkV2) GetOnSuccess(ctx context.Context) ([]Webhoo
 }
 
 // SetOnSuccess sets the value of the OnSuccess field in WebhookNotifications_SdkV2.
-func (o *WebhookNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []Webhook_SdkV2) {
+func (m *WebhookNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []Webhook_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.OnSuccess = types.ListValueMust(t, vs)
+	m.OnSuccess = types.ListValueMust(t, vs)
 }
 
 type WidgetErrorDetail_SdkV2 struct {
@@ -24516,7 +24698,7 @@ func (to *WidgetErrorDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *WidgetErrorDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WidgetErrorDetail_SdkV2) {
 }
 
-func (c WidgetErrorDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WidgetErrorDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 
 	return attrs
@@ -24529,23 +24711,23 @@ func (c WidgetErrorDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WidgetErrorDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WidgetErrorDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WidgetErrorDetail_SdkV2
 // only implements ToObjectValue() and Type().
-func (o WidgetErrorDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WidgetErrorDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": o.Message,
+			"message": m.Message,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WidgetErrorDetail_SdkV2) Type(ctx context.Context) attr.Type {
+func (m WidgetErrorDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,

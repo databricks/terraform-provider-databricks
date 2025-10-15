@@ -18,6 +18,10 @@ The following arguments are supported:
 * `max_results` (integer, optional) - Optional.  Maximum number of policies to return on a single page (page length).
   - When not set or set to 0, the page length is set to a server configured value (recommended);
   - When set to a value greater than 0, the page length is the minimum of this value and a server configured value;
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

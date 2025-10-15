@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type QualityMonitorsData struct {
 
 func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"quality_monitors": reflect.TypeOf(qualitymonitorv2_tf.QualityMonitor{}),
+		"quality_monitors": reflect.TypeOf(QualityMonitorData{}),
 	}
+}
+
+func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
+	return attrs
 }
 
 type QualityMonitorsDataSource struct {
@@ -46,10 +50,7 @@ func (r *QualityMonitorsDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *QualityMonitorsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("quality_monitors")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks QualityMonitor",
 		Attributes:  attrs,
@@ -64,12 +65,6 @@ func (r *QualityMonitorsDataSource) Configure(ctx context.Context, req datasourc
 func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config QualityMonitorsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -82,6 +77,13 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.QualityMonitorV2.ListQualityMonitorAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list quality_monitors_v2", err.Error())
@@ -90,7 +92,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var quality_monitor qualitymonitorv2_tf.QualityMonitor
+		var quality_monitor QualityMonitorData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &quality_monitor)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +101,6 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	var newState QualityMonitorsData
-	newState.QualityMonitorV2 = types.ListValueMust(qualitymonitorv2_tf.QualityMonitor{}.Type(ctx), results)
+	newState.QualityMonitorV2 = types.ListValueMust(QualityMonitorData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

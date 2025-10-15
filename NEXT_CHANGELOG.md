@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 * Mark `storage_location` as read-only in `databricks_catalog` ([#5075](https://github.com/databricks/terraform-provider-databricks/pull/5075))
+* Fix Inconsistent Plan Errors in Permissions Resource ([#5091](https://github.com/databricks/terraform-provider-databricks/pull/5091))
 
 ### Documentation
 

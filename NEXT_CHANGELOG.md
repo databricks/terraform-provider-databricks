@@ -10,6 +10,7 @@
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
 * Add `data_quality_monitor` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
 * Add `data_quality_refresh` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
+* Perform workspace-level permission assignment by `user_name`, `group_name`, or `service_principal_name` ([#5068](https://github.com/databricks/terraform-provider-databricks/pull/5068)).
 
 ### Bug Fixes
 

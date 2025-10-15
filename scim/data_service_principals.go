@@ -11,6 +11,7 @@ import (
 // DataSourceServicePrincipals searches for service principals based on display_name
 func DataSourceServicePrincipals() common.Resource {
 	type spnsData struct {
+		common.Namespace
 		DisplayNameContains string   `json:"display_name_contains,omitempty" tf:"computed"`
 		ApplicationIDs      []string `json:"application_ids,omitempty" tf:"computed,slice_set"`
 	}

@@ -7,6 +7,7 @@ import (
 )
 
 type currentConfig struct {
+	common.Namespace
 	IsAccount bool   `json:"is_account,omitempty" tf:"computed"`
 	AccountId string `json:"account_id,omitempty" tf:"computed"`
 	Host      string `json:"host,omitempty" tf:"computed"`

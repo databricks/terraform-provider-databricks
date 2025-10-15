@@ -13,6 +13,7 @@ import (
 )
 
 type StorageCredentialInfo struct {
+	common.Namespace
 	Name                        string                                       `json:"name" tf:"force_new"`
 	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
 	Comment                     string                                       `json:"comment,omitempty"`
@@ -36,6 +37,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		}
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
+		common.NamespaceCustomizeSchemaMap(m)
 		return adjustDataAccessSchema(m)
 	})
 
@@ -75,6 +77,9 @@ func parseStorageCredentialId(d *schema.ResourceData) (metastoreId, storageCrede
 func ResourceStorageCredential() common.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
 

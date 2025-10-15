@@ -10,14 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type GroupEntity struct {
+	common.Namespace
+	DisplayName string `json:"display_name"`
+	ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
+	URL         string `json:"url,omitempty" tf:"computed"`
+}
+
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
-	type entity struct {
-		DisplayName string `json:"display_name"`
-		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
-		URL         string `json:"url,omitempty" tf:"computed"`
-	}
-	groupSchema := common.StructToSchema(entity{},
+	groupSchema := common.StructToSchema(GroupEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
@@ -32,10 +34,15 @@ func ResourceGroup() common.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
+		Schema: groupSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
@@ -73,7 +80,6 @@ func ResourceGroup() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
-		Schema: groupSchema,
 	}
 }
 

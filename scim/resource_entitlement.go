@@ -9,24 +9,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type EntitlementEntity struct {
+	common.Namespace
+	GroupId string `json:"group_id,omitempty" tf:"force_new"`
+	UserId  string `json:"user_id,omitempty" tf:"force_new"`
+	SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
+}
+
 // ResourceGroup manages user groups
 func ResourceEntitlements() common.Resource {
-	type entity struct {
-		GroupId string `json:"group_id,omitempty" tf:"force_new"`
-		UserId  string `json:"user_id,omitempty" tf:"force_new"`
-		SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
-	}
-	entitlementSchema := common.StructToSchema(entity{},
+	entitlementSchema := common.StructToSchema(EntitlementEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			alof := []string{"group_id", "user_id", "service_principal_id"}
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
+		Schema: entitlementSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config.IsAccountClient() {
 				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
@@ -77,7 +84,6 @@ func ResourceEntitlements() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "remove")
 		},
-		Schema: entitlementSchema,
 	}
 }
 

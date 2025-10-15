@@ -16,6 +16,7 @@ import (
 
 type ServicePrincipalSecret struct {
 	oauth2.CreateServicePrincipalSecretResponse
+	common.Namespace
 	ServicePrincipalId string `json:"service_principal_id" tf:"force_new"`
 	Lifetime           string `json:"lifetime,omitempty" tf:"computed,force_new"`
 }
@@ -40,10 +41,14 @@ func ResourceServicePrincipalSecret() common.Resource {
 			m["secret"].Computed = true
 			m["secret"].Sensitive = true
 			m["status"].Computed = true
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: spnSecretSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
 			return true
 		},

@@ -31,6 +31,9 @@ const (
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create:        resourceClusterCreate,
 		Read:          resourceClusterRead,
 		Update:        resourceClusterUpdate,
@@ -275,6 +278,7 @@ type LibraryWithAlias struct {
 
 type ClusterSpec struct {
 	compute.ClusterSpec
+	common.Namespace
 	LibraryWithAlias
 }
 
@@ -323,6 +327,7 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 }
 
 func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("enable_elastic_disk").SetComputed()
 	s.SchemaPath("enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
@@ -388,7 +393,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -480,7 +485,7 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -532,7 +537,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -697,7 +702,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}

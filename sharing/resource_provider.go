@@ -18,6 +18,7 @@ func NewProvidersAPI(ctx context.Context, m interface{}) ProvidersAPI {
 }
 
 type ProviderInfo struct {
+	common.Namespace
 	Name                string `json:"name" tf:"force_new"`
 	Comment             string `json:"comment,omitempty"`
 	AuthenticationType  string `json:"authentication_type"`
@@ -53,6 +54,7 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 func ResourceProvider() common.Resource {
 	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -63,6 +65,9 @@ func ResourceProvider() common.Resource {
 	}
 	return common.Resource{
 		Schema: providerSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)

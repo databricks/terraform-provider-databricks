@@ -14,6 +14,7 @@ import (
 // DataAwsCrossaccountPolicy defines the cross-account policy
 func DataAwsCrossaccountPolicy() common.Resource {
 	type AwsCrossAccountPolicy struct {
+		common.Namespace
 		PolicyType      string   `json:"policy_type,omitempty" tf:"default:managed"`
 		PassRole        []string `json:"pass_roles,omitempty"`
 		JSON            string   `json:"json" tf:"computed"`

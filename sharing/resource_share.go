@@ -12,9 +12,11 @@ import (
 
 type ShareInfo struct {
 	sharing.ShareInfo
+	common.Namespace
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("name").SetRequired()
 	s.SchemaPath("name").SetForceNew()
 	s.SchemaPath("name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -154,8 +156,11 @@ func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, nil)
 	return common.Resource{
 		Schema: shareSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -184,7 +189,7 @@ func ResourceShare() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -193,7 +198,7 @@ func ResourceShare() common.Resource {
 				Name:              d.Id(),
 				IncludeSharedData: true,
 			})
-			si := ShareInfo{*shareInfo}
+			si := ShareInfo{ShareInfo: *shareInfo}
 			si.sortSharesByName()
 			si.suppressCDFEnabledDiff()
 			if err != nil {
@@ -203,7 +208,7 @@ func ResourceShare() common.Resource {
 			return common.StructToData(si, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -216,7 +221,7 @@ func ResourceShare() common.Resource {
 				return err
 			}
 
-			beforeSi := ShareInfo{*si}
+			beforeSi := ShareInfo{ShareInfo: *si}
 			beforeSi.sortSharesByName()
 			beforeSi.suppressCDFEnabledDiff()
 			var afterSi ShareInfo
@@ -263,7 +268,7 @@ func ResourceShare() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

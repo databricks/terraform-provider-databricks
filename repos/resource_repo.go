@@ -31,6 +31,7 @@ type ReposSparseCheckout struct {
 
 // ReposInformation provides information about given repository
 type ReposInformation struct {
+	common.Namespace
 	ID             int64                `json:"id"`
 	Url            string               `json:"url" tf:"force_new"`
 	Provider       string               `json:"provider,omitempty" tf:"computed,alias:git_provider,force_new"`
@@ -183,12 +184,16 @@ func ResourceRepo() common.Resource {
 		}
 
 		delete(s, "id")
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			reposAPI := NewReposAPI(ctx, c)
 			var repo ReposInformation

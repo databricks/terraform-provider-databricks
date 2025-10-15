@@ -5,7 +5,7 @@
 ### Breaking Changes
 
 * Remove stale resources/datasources/documentation related to Clean Room services.
-  
+
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
@@ -18,6 +18,7 @@
 ### Documentation
 
 * Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
+* Document output attributes in `databricks_storage_credential` ([#5093](https://github.com/databricks/terraform-provider-databricks/pull/5093))
 
 ### Exporter
 

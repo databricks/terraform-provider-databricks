@@ -150,7 +150,7 @@ func ResourceSystemSchema() common.Resource {
 			return safeDisable(ctx, w, metastoreSummary.MetastoreId, schemaName)
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

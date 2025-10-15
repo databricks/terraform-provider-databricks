@@ -250,7 +250,7 @@ func ResourceGrant() common.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

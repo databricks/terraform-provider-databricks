@@ -248,7 +248,7 @@ func ResourceCatalog() common.Resource {
 					}
 				}
 			}
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

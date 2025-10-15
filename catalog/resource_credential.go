@@ -189,7 +189,7 @@ func ResourceCredential() common.Resource {
 			})
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

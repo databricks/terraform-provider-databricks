@@ -130,7 +130,7 @@ func ResourceRegisteredModel() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

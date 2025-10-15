@@ -103,7 +103,7 @@ func ResourceOnlineTable() common.Resource {
 			Create: schema.DefaultTimeout(onlineTableDefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

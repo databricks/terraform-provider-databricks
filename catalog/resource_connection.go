@@ -177,7 +177,7 @@ func ResourceConnection() common.Resource {
 			return w.Connections.DeleteByName(ctx, connName)
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

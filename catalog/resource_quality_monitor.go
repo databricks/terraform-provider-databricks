@@ -145,7 +145,7 @@ func ResourceQualityMonitor() common.Resource {
 			Create: schema.DefaultTimeout(qualityMonitorDefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 	}
 }

@@ -534,5 +534,6 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 		finalObjects = append(finalObjects, newStateObjects[i])
 	}
 	newState.SetObjects(ctx, finalObjects)
+	newState.ProviderConfig = existingState.ProviderConfig
 	return newState, d
 }

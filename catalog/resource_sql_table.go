@@ -665,7 +665,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("comment") && d.Get("table_type") == "VIEW" {
 				d.ForceNew("comment")
 			}
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)

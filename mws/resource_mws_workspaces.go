@@ -80,6 +80,7 @@ type externalCustomerInfo struct {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
+	common.Namespace
 	AccountID                           string                   `json:"account_id"`
 	WorkspaceName                       string                   `json:"workspace_name"`
 	DeploymentName                      string                   `json:"deployment_name,omitempty"`
@@ -381,6 +382,7 @@ func (s SensitiveString) String() string {
 
 // ephemeral entity to use with StructToData()
 type WorkspaceToken struct {
+	common.Namespace
 	WorkspaceURL string `json:"workspace_url,omitempty"`
 	Token        *Token `json:"token,omitempty"`
 }
@@ -560,6 +562,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "compute_mode").SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"SERVERLESS"}, false)))
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
@@ -693,7 +696,7 @@ func ResourceMwsWorkspaces() common.Resource {
 					}
 				}
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),

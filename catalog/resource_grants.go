@@ -23,6 +23,7 @@ type PrivilegeAssignment struct {
 // PermissionsList reflects it's shape on terraform resource with
 // privilege_assignments column renamed to `grant` block for simplicity
 type PermissionsList struct {
+	common.Namespace
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 
@@ -155,12 +156,16 @@ func ResourceGrants() common.Resource {
 			for field := range permissions.Mappings {
 				s[field].AtLeastOneOf = alof
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -204,7 +209,7 @@ func ResourceGrants() common.Resource {
 			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -222,7 +227,7 @@ func ResourceGrants() common.Resource {
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

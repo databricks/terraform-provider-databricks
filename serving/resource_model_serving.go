@@ -131,9 +131,14 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+type CreateServingEndpoint struct {
+	serving.CreateServingEndpoint
+	common.Namespace
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			// Use the newer CustomizeSchemaPath approach for better maintainability
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
@@ -182,12 +187,13 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -210,7 +216,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			var sOrig serving.ServingEndpointDetailed
 			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
@@ -242,7 +248,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -266,7 +272,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -278,6 +284,9 @@ func ResourceModelServing() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

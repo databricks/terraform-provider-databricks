@@ -14,6 +14,7 @@ import (
 
 type Dashboard struct {
 	dashboards.Dashboard
+	common.Namespace
 	EmbedCredentials        bool   `json:"embed_credentials,omitempty"`
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
@@ -29,6 +30,7 @@ func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) b
 }
 
 func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	// Required fields
 	s.SchemaPath("display_name").SetRequired()
 	s.SchemaPath("parent_path").SetRequired()
@@ -65,8 +67,11 @@ var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
 func ResourceDashboard() common.Resource {
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -115,7 +120,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -138,7 +143,7 @@ func ResourceDashboard() common.Resource {
 			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -181,7 +186,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

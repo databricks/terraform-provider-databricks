@@ -14,6 +14,7 @@ import (
 // DataSourceGroup returns information about group specified by display name
 func DataSourceGroup() common.Resource {
 	type entity struct {
+		common.Namespace
 		DisplayName       string   `json:"display_name"`
 		Recursive         bool     `json:"recursive,omitempty"`
 		Members           []string `json:"members,omitempty" tf:"slice_set,computed"`

@@ -14,6 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type UnityCatalogPrivilegeAssignment struct {
+	permissions.UnityCatalogPrivilegeAssignment
+	common.Namespace
+}
+
 // diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
 func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAssignment, existing []catalog.PrivilegeAssignment) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
@@ -127,7 +132,7 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 }
 
 func ResourceGrant() common.Resource {
-	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
+	s := common.StructToSchema(UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
@@ -150,13 +155,14 @@ func ResourceGrant() common.Resource {
 					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -203,7 +209,7 @@ func ResourceGrant() common.Resource {
 			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -228,7 +234,7 @@ func ResourceGrant() common.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -242,6 +248,9 @@ func ResourceGrant() common.Resource {
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

@@ -17,6 +17,7 @@ type LogDelivery struct {
 
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
+	common.Namespace
 	AccountID              string  `json:"account_id" tf:"force_new"`
 	ConfigID               string  `json:"config_id,omitempty" tf:"computed,force_new"`
 	CredentialsID          string  `json:"credentials_id" tf:"force_new"`
@@ -75,10 +76,14 @@ func ResourceMwsLogDelivery() common.Resource {
 				k, old, new string, d *schema.ResourceData) bool {
 				return false
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
 			common.DataToStructPointer(d, s, &ldc)

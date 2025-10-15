@@ -19,6 +19,7 @@
 ### Documentation
 
 * Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
+* Document output attributes in `databricks_storage_credential` ([#5093](https://github.com/databricks/terraform-provider-databricks/pull/5093))
 
 ### Exporter
 

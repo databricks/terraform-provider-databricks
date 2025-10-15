@@ -9,11 +9,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type sparkVersionRequestWrapper struct {
+	common.Namespace
+	compute.SparkVersionRequest
+}
+
 // DataSourceSparkVersion returns DBR version matching to the specification
 func DataSourceSparkVersion() common.Resource {
-	return common.WorkspaceDataWithCustomizeFunc(func(ctx context.Context, data *compute.SparkVersionRequest, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithCustomizeFunc(func(ctx context.Context, data *sparkVersionRequestWrapper, w *databricks.WorkspaceClient) error {
 		data.Id = ""
-		version, err := w.Clusters.SelectSparkVersion(ctx, *data)
+		version, err := w.Clusters.SelectSparkVersion(ctx, data.SparkVersionRequest)
 		if err != nil {
 			return err
 		}

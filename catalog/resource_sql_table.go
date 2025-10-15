@@ -45,6 +45,7 @@ const IdentityColumnAlways IdentityColumn = "always"
 const IdentityColumnDefault IdentityColumn = "default"
 
 type SqlTableInfo struct {
+	common.Namespace
 	Name                  string            `json:"name"`
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
@@ -71,6 +72,7 @@ type SqlTableInfo struct {
 }
 
 func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
 		s.SchemaPath(field).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -175,7 +177,7 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	ti.exec = c.CommandExecutor(ctx)
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -663,7 +665,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("comment") && d.Get("table_type") == "VIEW" {
 				d.ForceNew("comment")
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
@@ -675,7 +677,7 @@ func ResourceSqlTable() common.Resource {
 				return err
 			}
 			if ti.Owner != "" {
-				w, err := c.WorkspaceClient()
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -695,7 +697,7 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -729,7 +731,7 @@ func ResourceSqlTable() common.Resource {
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

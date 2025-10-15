@@ -341,7 +341,7 @@ func ResourceNotebook() common.Resource {
 					oldFormat = "SOURCE"
 				}
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

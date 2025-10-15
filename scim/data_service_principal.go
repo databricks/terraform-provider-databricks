@@ -11,6 +11,7 @@ import (
 // DataSourceServicePrincipal returns information about the spn specified by the application_id, id, display_name, or scim_id
 func DataSourceServicePrincipal() common.Resource {
 	type spnData struct {
+		common.Namespace
 		ApplicationID  string `json:"application_id,omitempty" tf:"computed"`
 		DisplayName    string `json:"display_name,omitempty" tf:"computed"`
 		SpID           string `json:"sp_id,omitempty" tf:"computed"`

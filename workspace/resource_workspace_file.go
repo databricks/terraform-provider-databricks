@@ -37,7 +37,7 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func ResourceWorkspaceFile() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

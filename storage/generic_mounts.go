@@ -12,6 +12,7 @@ import (
 
 // TODO: add support for encryption parameters in S3
 type GenericMount struct {
+	common.Namespace
 	URI     string                     `json:"uri,omitempty" tf:"force_new"`
 	Options map[string]string          `json:"extra_configs,omitempty" tf:"force_new"`
 	Abfs    *AzureADLSGen2MountGeneric `json:"abfs,omitempty" tf:"force_new,suppress_diff"`

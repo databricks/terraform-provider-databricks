@@ -12,6 +12,7 @@ import (
 )
 
 type NodeTypeRequest struct {
+	common.Namespace
 	compute.NodeTypeRequest
 	Arm bool `json:"arm,omitempty"`
 }

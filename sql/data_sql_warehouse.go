@@ -12,6 +12,7 @@ import (
 // Note that these fields are both marked as computed/optional because users can specify either the name or the ID
 // of the warehouse to retrieve.
 type sqlWarehouseDataParams struct {
+	common.Namespace
 	Id   string `json:"id" tf:"computed,optional"`
 	Name string `json:"name" tf:"computed,optional"`
 }

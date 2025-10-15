@@ -14,6 +14,7 @@ import (
 // Need a struct for Query because there are aliases we need and it'll be needed in the create method.
 type QueryStruct struct {
 	sql.Query
+	common.Namespace
 }
 
 var queryAliasMap = map[string]string{
@@ -27,6 +28,7 @@ func (QueryStruct) Aliases() map[string]map[string]string {
 }
 
 func (QueryStruct) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(m)
 	m.SchemaPath("display_name").SetRequired().SetValidateFunc(validation.StringIsNotWhiteSpace)
 	m.SchemaPath("query_text").SetRequired()
 	m.SchemaPath("warehouse_id").SetRequired().SetValidateFunc(validation.StringIsNotWhiteSpace)
@@ -92,8 +94,11 @@ func (queryUpdateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.C
 func ResourceQuery() common.Resource {
 	s := common.StructToSchema(QueryStruct{}, nil)
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -121,7 +126,7 @@ func ResourceQuery() common.Resource {
 			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -137,7 +142,7 @@ func ResourceQuery() common.Resource {
 			return common.StructToData(QueryStruct{Query: *apiQuery}, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -160,7 +165,7 @@ func ResourceQuery() common.Resource {
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

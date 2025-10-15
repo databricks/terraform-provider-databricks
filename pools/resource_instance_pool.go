@@ -73,6 +73,7 @@ type AwsInstancePoolFleetAttributes struct {
 
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
+	common.Namespace
 	InstancePoolID                     string                          `json:"instance_pool_id,omitempty" tf:"computed"`
 	InstancePoolName                   string                          `json:"instance_pool_name"`
 	MinIdleInstances                   int32                           `json:"min_idle_instances,omitempty"`
@@ -246,10 +247,14 @@ func ResourceInstancePool() common.Resource {
 			v.ForceNew = true
 		}
 
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)

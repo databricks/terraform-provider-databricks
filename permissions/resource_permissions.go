@@ -158,8 +158,13 @@ func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, exist
 }
 
 // ResourcePermissions definition
+type PermissionsEntity struct {
+	entity.PermissionsEntity
+	common.Namespace
+}
+
 func ResourcePermissions() common.Resource {
-	s := common.StructToSchema(entity.PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, mapping := range allResourcePermissions() {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
@@ -174,11 +179,15 @@ func ResourcePermissions() common.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff) error {
+			if err := common.NamespaceCustomizeDiff(diff); err != nil {
+				return err
+			}
 			mapping, _, err := getResourcePermissionsFromState(diff)
 			if err != nil {
 				// This preserves current behavior but is likely only exercised in tests where
@@ -238,7 +247,7 @@ func ResourcePermissions() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

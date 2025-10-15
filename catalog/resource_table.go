@@ -33,6 +33,7 @@ type ColumnInfo struct {
 }
 
 type TableInfo struct {
+	common.Namespace
 	Name                  string            `json:"name"`
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
@@ -71,6 +72,7 @@ func ResourceTable() common.Resource {
 			for _, field := range caseInsensitiveFields {
 				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
@@ -80,9 +82,9 @@ func ResourceTable() common.Resource {
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			if d.Get("table_type") != "EXTERNAL" {
-				return nil
+				return common.NamespaceCustomizeDiff(d)
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti TableInfo

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/marshal"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/docs"
 )
 
@@ -73,6 +74,7 @@ type GcpNetworkInfo struct {
 
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
+	common.Namespace
 	AccountID        string               `json:"account_id" tf:"force_new"`
 	NetworkID        string               `json:"network_id,omitempty" tf:"computed"`
 	NetworkName      string               `json:"network_name" tf:"force_new"`
@@ -98,6 +100,7 @@ type GcpVpcEndpointInfo struct {
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint
 type VPCEndpoint struct {
+	common.Namespace
 	VPCEndpointID           string              `json:"vpc_endpoint_id,omitempty" tf:"computed"`
 	AwsVPCEndpointID        string              `json:"aws_vpc_endpoint_id,omitempty"`
 	AccountID               string              `json:"account_id,omitempty"`

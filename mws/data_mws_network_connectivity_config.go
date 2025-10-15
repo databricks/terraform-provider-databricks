@@ -10,10 +10,12 @@ import (
 
 func DataSourceMwsNetworkConnectivityConfig() common.Resource {
 	type mwsNetworkConnectivityConfiguration struct {
+		common.Namespace
 		settings.NetworkConnectivityConfiguration
 	}
 
 	type mwsNetworkConnectivityConfigurationParams struct {
+		common.Namespace
 		Name string `json:"name"`
 	}
 

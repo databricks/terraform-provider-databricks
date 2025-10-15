@@ -12,6 +12,7 @@ import (
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
 type ExternalLocationInfo struct {
 	catalog.ExternalLocationInfo
+	common.Namespace
 	SkipValidation bool `json:"skip_validation,omitempty"`
 }
 
@@ -57,12 +58,16 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "subscription_id").SetRequired()
 			common.CustomizeSchemaPath(m, "file_event_queue").SetMaxItems(1)
 
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -95,7 +100,7 @@ func ResourceExternalLocation() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, el.Name, bindings.BindingsSecurableTypeExternalLocation)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -107,7 +112,7 @@ func ResourceExternalLocation() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_update").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -184,7 +189,7 @@ func ResourceExternalLocation() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -25,12 +25,18 @@ type GcpKeyInfo struct {
 // CustomerManagedKey contains key information and metadata for BYOK for E2
 // You must specify either AwsKeyInfo for AWS or GcpKeyInfo for GCP, but not both
 type CustomerManagedKey struct {
+	common.Namespace
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty" tf:"force_new,conflicts:gcp_key_info"`
 	GcpKeyInfo           *GcpKeyInfo `json:"gcp_key_info,omitempty" tf:"force_new,conflicts:aws_key_info"`
 	AccountID            string      `json:"account_id" tf:"force_new"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 	UseCases             []string    `json:"use_cases"`
+}
+
+func (CustomerManagedKey) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
+	return s
 }
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
@@ -75,6 +81,9 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 	s := common.StructToSchema(CustomerManagedKey{}, nil)
 	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
 			common.DataToStructPointer(d, s, &cmk)

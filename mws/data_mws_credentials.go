@@ -9,6 +9,7 @@ import (
 
 func DataSourceMwsCredentials() common.Resource {
 	type mwsCredentialsData struct {
+		common.Namespace
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
 	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {

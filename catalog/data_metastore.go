@@ -12,6 +12,7 @@ import (
 
 func DataSourceMetastore() common.Resource {
 	type AccountMetastoreByID struct {
+		common.Namespace
 		Id          string                 `json:"id,omitempty" tf:"computed"`
 		MetastoreId string                 `json:"metastore_id,omitempty" tf:"computed"`
 		Name        string                 `json:"name,omitempty" tf:"computed"`

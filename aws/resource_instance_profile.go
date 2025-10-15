@@ -18,6 +18,7 @@ import (
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
+	common.Namespace
 	InstanceProfileArn    string `json:"instance_profile_arn"`
 	IamRoleArn            string `json:"iam_role_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
@@ -157,10 +158,14 @@ func ResourceInstanceProfile() common.Resource {
 				}
 				return false
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: instanceProfileSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
 			if err != nil {

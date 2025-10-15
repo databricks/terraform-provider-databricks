@@ -16,7 +16,7 @@ func TestSharesData(t *testing.T) {
 				Response: Shares{
 					Shares: []ShareInfo{
 						{
-							sharing.ShareInfo{
+							ShareInfo: sharing.ShareInfo{
 								Name: "a",
 								Objects: []sharing.SharedDataObject{
 									{

@@ -23,6 +23,7 @@ type AlertOptions struct {
 }
 
 type AlertEntity struct {
+	common.Namespace
 	Name      string        `json:"name"`
 	QueryId   string        `json:"query_id"`
 	Rearm     int           `json:"rearm,omitempty"`
@@ -125,12 +126,16 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.LegacyAlert, s map[string]*sch
 func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.MustSchemaPath(m, "options", "op").ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -147,7 +152,7 @@ func ResourceSqlAlert() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -160,7 +165,7 @@ func ResourceSqlAlert() common.Resource {
 			return a.fromAPIObject(apiAlert, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -172,7 +177,7 @@ func ResourceSqlAlert() common.Resource {
 			return w.AlertsLegacy.Update(ctx, ca)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}

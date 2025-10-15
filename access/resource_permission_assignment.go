@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -27,18 +28,15 @@ type Permissions struct {
 func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentEntity) (principalInfo, error) {
 	if assignment.PrincipalId != 0 {
 		var resp permissionAssignmentResponseItem
-		path := fmt.Sprintf("/preview/permissionassignments/principals/%d", assignment.PrincipalId)
-		err := a.client.PutWithResponse(a.context, path, Permissions{Permissions: assignment.Permissions}, &resp)
-		if err != nil {
-			return principalInfo{}, err
+		path := fmt.Sprintf("/api/2.0/preview/permissionassignments/principals/%d", assignment.PrincipalId)
+		err := a.client.Do(a.context, http.MethodPut, path, nil, nil,
+			Permissions{Permissions: assignment.Permissions}, &resp)
+		if err == nil && resp.Error != "" {
+			err = errors.New(resp.Error)
 		}
-		if resp.Error != "" {
-			return principalInfo{}, errors.New(resp.Error)
-		}
-		return resp.Principal, nil
+		return resp.Principal, err
 	} else {
 		var principal permissionAssignmentResponse
-		path := "/preview/permissionassignments"
 		request := permissionAssignmentRequest{
 			PermissionAssignments: []permissionAssignmentRequestItem{
 				{
@@ -51,7 +49,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 				},
 			},
 		}
-		err := a.client.Post(a.context, path, request, &principal)
+		err := a.client.Post(a.context, "/preview/permissionassignments", request, &principal)
 		if err != nil {
 			return principalInfo{}, err
 		}

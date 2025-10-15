@@ -13,6 +13,10 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `key` (string, required)
 * `value` (string, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

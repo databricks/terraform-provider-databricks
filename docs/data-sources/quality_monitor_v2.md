@@ -27,6 +27,10 @@ data "databricks_quality_monitor_v2" "this" {
 The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:
@@ -35,5 +39,6 @@ The following attributes are exported:
 * `object_type` (string) - The type of the monitored object. Can be one of the following: schema
 
 ### AnomalyDetectionConfig
+* `job_type` (string) - The type of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN`, `ANOMALY_DETECTION_JOB_TYPE_NORMAL`
 * `last_run_id` (string) - Run id of the last run of the workflow
 * `latest_run_status` (string) - The status of the last run of the workflow. Possible values are: `ANOMALY_DETECTION_RUN_STATUS_CANCELED`, `ANOMALY_DETECTION_RUN_STATUS_FAILED`, `ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED`, `ANOMALY_DETECTION_RUN_STATUS_PENDING`, `ANOMALY_DETECTION_RUN_STATUS_RUNNING`, `ANOMALY_DETECTION_RUN_STATUS_SUCCESS`, `ANOMALY_DETECTION_RUN_STATUS_UNKNOWN`, `ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR`

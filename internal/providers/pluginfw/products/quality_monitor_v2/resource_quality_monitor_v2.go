@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -38,9 +39,46 @@ type QualityMonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // QualityMonitor extends the main model with additional fields.
 type QualityMonitor struct {
-	qualitymonitorv2_tf.QualityMonitor
+	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
+	// The uuid of the request object. For example, schema id.
+	ObjectId types.String `tfsdk:"object_id"`
+	// The type of the monitored object. Can be one of the following: schema.
+	ObjectType     types.String `tfsdk:"object_type"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +89,10 @@ type QualityMonitor struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.QualityMonitor.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"anomaly_detection_config": reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+		"provider_config":          reflect.TypeOf(ProviderConfig{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +102,98 @@ func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitor
 // only implements ToObjectValue() and Type().
 func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.QualityMonitor.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"anomaly_detection_config": m.AnomalyDetectionConfig,
+			"object_id":   m.ObjectId,
+			"object_type": m.ObjectType,
+
+			"provider_config": m.ProviderConfig,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m QualityMonitor) Type(ctx context.Context) attr.Type {
-	embeddedType := m.QualityMonitor.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan QualityMonitor) {
-	m.QualityMonitor.SyncFieldsDuringCreateOrUpdate(ctx, plan.QualityMonitor)
+func (to *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QualityMonitor) {
+	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+				// Recursively sync the fields of AnomalyDetectionConfig
+				toAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAnomalyDetectionConfig)
+				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
+			}
+		}
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitor) {
-	m.QualityMonitor.SyncFieldsDuringRead(ctx, existingState.QualityMonitor)
+func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from QualityMonitor) {
+	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+				toAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromAnomalyDetectionConfig)
+				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
+			}
+		}
+	}
+	to.ProviderConfig = from.ProviderConfig
+
+}
+
+func (m QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+
+	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
+}
+
+// GetAnomalyDetectionConfig returns the value of the AnomalyDetectionConfig field in QualityMonitor as
+// a qualitymonitorv2_tf.AnomalyDetectionConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (qualitymonitorv2_tf.AnomalyDetectionConfig, bool) {
+	var e qualitymonitorv2_tf.AnomalyDetectionConfig
+	if m.AnomalyDetectionConfig.IsNull() || m.AnomalyDetectionConfig.IsUnknown() {
+		return e, false
+	}
+	var v qualitymonitorv2_tf.AnomalyDetectionConfig
+	d := m.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAnomalyDetectionConfig sets the value of the AnomalyDetectionConfig field in QualityMonitor.
+func (m *QualityMonitor) SetAnomalyDetectionConfig(ctx context.Context, v qualitymonitorv2_tf.AnomalyDetectionConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.AnomalyDetectionConfig = vs
 }
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,11 +201,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitor{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_type")
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object_id")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, QualityMonitor{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks quality_monitor_v2",
 		Attributes:  attrs,
@@ -115,12 +214,6 @@ func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-
 	var quality_monitor qualitymonitorv2.QualityMonitor
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
@@ -134,6 +227,20 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor
 		ObjectType:     plan.ObjectType.ValueString(),
 	}
 
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update quality_monitor_v2", err.Error())
@@ -153,11 +260,6 @@ func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var plan QualityMonitor
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -172,6 +274,21 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 
 	createRequest := qualitymonitorv2.CreateQualityMonitorRequest{
 		QualityMonitor: quality_monitor,
+	}
+
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	response, err := client.QualityMonitorV2.CreateQualityMonitor(ctx, createRequest)
@@ -199,12 +316,6 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var existingState QualityMonitor
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -217,6 +328,20 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.QualityMonitorV2.GetQualityMonitor(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -254,12 +379,6 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var state QualityMonitor
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -272,6 +391,20 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.QualityMonitorV2.DeleteQualityMonitor(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete quality_monitor_v2", err.Error())

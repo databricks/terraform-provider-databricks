@@ -20,6 +20,10 @@ data "databricks_workspace_setting_v2" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Name of the setting
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

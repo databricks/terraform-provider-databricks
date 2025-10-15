@@ -20,6 +20,10 @@ data "databricks_rfa_access_request_destinations" "customer_data_schema" {
 
 ## Arguments
 The following arguments are supported:
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

@@ -20,6 +20,10 @@ data "databricks_tag_policy" "example_tag_policy" {
 ## Arguments
 The following arguments are supported:
 * `tag_key` (string, required)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 The following attributes are exported:

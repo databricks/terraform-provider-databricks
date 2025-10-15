@@ -12,7 +12,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -32,9 +31,42 @@ type FeatureTagDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	return attrs
+}
+
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // FeatureTagData extends the main model with additional fields.
 type FeatureTagData struct {
-	ml_tf.FeatureTag
+	Key types.String `tfsdk:"key"`
+
+	Value              types.String `tfsdk:"value"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +77,9 @@ type FeatureTagData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.FeatureTag.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +89,43 @@ func (m FeatureTagData) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureTagData
 // only implements ToObjectValue() and Type().
 func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.FeatureTag.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"key": m.Key,
+			"value": m.Value,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m FeatureTagData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.FeatureTag.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"key": types.StringType,
+			"value": types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *FeatureTagData) SyncFieldsDuringRead(ctx context.Context, existingState FeatureTagData) {
-	m.FeatureTag.SyncFieldsDuringRead(ctx, existingState.FeatureTag)
+func (to *FeatureTagData) SyncFieldsDuringRead(ctx context.Context, from FeatureTagData) {
+	to.ProviderConfigData = from.ProviderConfigData
+
+}
+
+func (m FeatureTagData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +133,7 @@ func (r *FeatureTagDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *FeatureTagDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,
@@ -102,12 +148,6 @@ func (r *FeatureTagDataSource) Configure(ctx context.Context, req datasource.Con
 func (r *FeatureTagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config FeatureTagData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -116,6 +156,21 @@ func (r *FeatureTagDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var readRequest ml.GetFeatureTagRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

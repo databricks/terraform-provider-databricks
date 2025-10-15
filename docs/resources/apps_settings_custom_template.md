@@ -106,6 +106,10 @@ The following arguments are supported:
   It must be unique within the workspace
 * `path` (string, required) - The path to the template within the Git repository
 * `description` (string, optional) - The description of the template
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### AppManifest
 * `name` (string, required) - Name of the app defined by manifest author / publisher

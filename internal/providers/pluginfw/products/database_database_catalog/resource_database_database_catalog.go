@@ -14,12 +14,12 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,9 +38,54 @@ type DatabaseCatalogResource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // DatabaseCatalog extends the main model with additional fields.
 type DatabaseCatalog struct {
-	database_tf.DatabaseCatalog
+	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
+	// The branch_id of the database branch associated with the catalog.
+	DatabaseBranchId types.String `tfsdk:"database_branch_id"`
+	// The name of the DatabaseInstance housing the database.
+	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
+	// The name of the database (in a instance) associated with the catalog.
+	DatabaseName types.String `tfsdk:"database_name"`
+	// The project_id of the database project associated with the catalog.
+	DatabaseProjectId types.String `tfsdk:"database_project_id"`
+	// The name of the catalog in UC.
+	Name types.String `tfsdk:"name"`
+
+	Uid            types.String `tfsdk:"uid"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +96,9 @@ type DatabaseCatalog struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.DatabaseCatalog.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +108,77 @@ func (m DatabaseCatalog) GetComplexFieldTypes(ctx context.Context) map[string]re
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCatalog
 // only implements ToObjectValue() and Type().
 func (m DatabaseCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.DatabaseCatalog.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_database_if_not_exists": m.CreateDatabaseIfNotExists,
+			"database_branch_id":     m.DatabaseBranchId,
+			"database_instance_name": m.DatabaseInstanceName,
+			"database_name":          m.DatabaseName,
+			"database_project_id":    m.DatabaseProjectId,
+			"name":                   m.Name,
+			"uid":                    m.Uid,
+
+			"provider_config": m.ProviderConfig,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
-	embeddedType := m.DatabaseCatalog.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_database_if_not_exists": types.BoolType,
+			"database_branch_id":     types.StringType,
+			"database_instance_name": types.StringType,
+			"database_name":          types.StringType,
+			"database_project_id":    types.StringType,
+			"name":                   types.StringType,
+			"uid":                    types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan DatabaseCatalog) {
-	m.DatabaseCatalog.SyncFieldsDuringCreateOrUpdate(ctx, plan.DatabaseCatalog)
+func (to *DatabaseCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseCatalog) {
+	if !from.CreateDatabaseIfNotExists.IsUnknown() && !from.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfNotExists = from.CreateDatabaseIfNotExists
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalog) {
-	m.DatabaseCatalog.SyncFieldsDuringRead(ctx, existingState.DatabaseCatalog)
+func (to *DatabaseCatalog) SyncFieldsDuringRead(ctx context.Context, from DatabaseCatalog) {
+	if !from.CreateDatabaseIfNotExists.IsUnknown() && !from.CreateDatabaseIfNotExists.IsNull() {
+		// CreateDatabaseIfNotExists is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfNotExists = from.CreateDatabaseIfNotExists
+	}
+	to.ProviderConfig = from.ProviderConfig
+
+}
+
+func (m DatabaseCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetOptional()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetComputed()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["database_branch_id"] = attrs["database_branch_id"].SetOptional()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetRequired()
+	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["database_project_id"] = attrs["database_project_id"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["uid"] = attrs["uid"].SetComputed()
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +186,7 @@ func (r *DatabaseCatalogResource) Metadata(ctx context.Context, req resource.Met
 }
 
 func (r *DatabaseCatalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DatabaseCatalog{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks database_database_catalog",
 		Attributes:  attrs,
@@ -114,12 +199,6 @@ func (r *DatabaseCatalogResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatalog, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-
 	var database_catalog database.DatabaseCatalog
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_catalog)...)
@@ -130,9 +209,23 @@ func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatal
 	updateRequest := database.UpdateDatabaseCatalogRequest{
 		DatabaseCatalog: database_catalog,
 		Name:            plan.Name.ValueString(),
-		UpdateMask:      "create_database_if_not_exists,database_instance_name,database_name",
+		UpdateMask:      "create_database_if_not_exists,database_branch_id,database_instance_name,database_name,database_project_id",
 	}
 
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.Database.UpdateDatabaseCatalog(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update database_database_catalog", err.Error())
@@ -152,11 +245,6 @@ func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatal
 func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var plan DatabaseCatalog
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -171,6 +259,21 @@ func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.Creat
 
 	createRequest := database.CreateDatabaseCatalogRequest{
 		Catalog: database_catalog,
+	}
+
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	response, err := client.Database.CreateDatabaseCatalog(ctx, createRequest)
@@ -198,12 +301,6 @@ func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.Creat
 func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var existingState DatabaseCatalog
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -216,6 +313,20 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.Database.GetDatabaseCatalog(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -253,12 +364,6 @@ func (r *DatabaseCatalogResource) Update(ctx context.Context, req resource.Updat
 func (r *DatabaseCatalogResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var state DatabaseCatalog
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -271,6 +376,20 @@ func (r *DatabaseCatalogResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.Database.DeleteDatabaseCatalog(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_database_catalog", err.Error())

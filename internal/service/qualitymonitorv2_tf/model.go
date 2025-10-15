@@ -23,6 +23,8 @@ import (
 )
 
 type AnomalyDetectionConfig struct {
+	// The type of the last run of the workflow.
+	JobType types.String `tfsdk:"job_type"`
 	// Run id of the last run of the workflow
 	LastRunId types.String `tfsdk:"last_run_id"`
 	// The status of the last run of the workflow.
@@ -35,7 +37,8 @@ func (to *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *AnomalyDetectionConfig) SyncFieldsDuringRead(ctx context.Context, from AnomalyDetectionConfig) {
 }
 
-func (c AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_type"] = attrs["job_type"].SetComputed()
 	attrs["last_run_id"] = attrs["last_run_id"].SetComputed()
 	attrs["latest_run_status"] = attrs["latest_run_status"].SetComputed()
 
@@ -49,26 +52,28 @@ func (c AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AnomalyDetectionConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AnomalyDetectionConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AnomalyDetectionConfig
 // only implements ToObjectValue() and Type().
-func (o AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"last_run_id":       o.LastRunId,
-			"latest_run_status": o.LatestRunStatus,
+			"job_type":          m.JobType,
+			"last_run_id":       m.LastRunId,
+			"latest_run_status": m.LatestRunStatus,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
+func (m AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"job_type":          types.StringType,
 			"last_run_id":       types.StringType,
 			"latest_run_status": types.StringType,
 		},
@@ -102,7 +107,7 @@ func (to *CreateQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c CreateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
 
 	return attrs
@@ -115,7 +120,7 @@ func (c CreateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitor": reflect.TypeOf(QualityMonitor{}),
 	}
@@ -124,16 +129,16 @@ func (a CreateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateQualityMonitorRequest
 // only implements ToObjectValue() and Type().
-func (o CreateQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"quality_monitor": o.QualityMonitor,
+			"quality_monitor": m.QualityMonitor,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
+func (m CreateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"quality_monitor": QualityMonitor{}.Type(ctx),
@@ -144,13 +149,13 @@ func (o CreateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 // GetQualityMonitor returns the value of the QualityMonitor field in CreateQualityMonitorRequest as
 // a QualityMonitor value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (QualityMonitor, bool) {
+func (m *CreateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (QualityMonitor, bool) {
 	var e QualityMonitor
-	if o.QualityMonitor.IsNull() || o.QualityMonitor.IsUnknown() {
+	if m.QualityMonitor.IsNull() || m.QualityMonitor.IsUnknown() {
 		return e, false
 	}
 	var v QualityMonitor
-	d := o.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -161,9 +166,9 @@ func (o *CreateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 }
 
 // SetQualityMonitor sets the value of the QualityMonitor field in CreateQualityMonitorRequest.
-func (o *CreateQualityMonitorRequest) SetQualityMonitor(ctx context.Context, v QualityMonitor) {
+func (m *CreateQualityMonitorRequest) SetQualityMonitor(ctx context.Context, v QualityMonitor) {
 	vs := v.ToObjectValue(ctx)
-	o.QualityMonitor = vs
+	m.QualityMonitor = vs
 }
 
 type DeleteQualityMonitorRequest struct {
@@ -179,7 +184,7 @@ func (to *DeleteQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx contex
 func (to *DeleteQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteQualityMonitorRequest) {
 }
 
-func (c DeleteQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 
@@ -193,24 +198,24 @@ func (c DeleteQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteQualityMonitorRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"object_id":   o.ObjectId,
-			"object_type": o.ObjectType,
+			"object_id":   m.ObjectId,
+			"object_type": m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteQualityMonitorRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"object_id":   types.StringType,
@@ -232,7 +237,7 @@ func (to *GetQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *GetQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, from GetQualityMonitorRequest) {
 }
 
-func (c GetQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 
@@ -246,24 +251,24 @@ func (c GetQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetQualityMonitorRequest
 // only implements ToObjectValue() and Type().
-func (o GetQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"object_id":   o.ObjectId,
-			"object_type": o.ObjectType,
+			"object_id":   m.ObjectId,
+			"object_type": m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetQualityMonitorRequest) Type(ctx context.Context) attr.Type {
+func (m GetQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"object_id":   types.StringType,
@@ -284,7 +289,7 @@ func (to *ListQualityMonitorRequest) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *ListQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context, from ListQualityMonitorRequest) {
 }
 
-func (c ListQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -298,24 +303,24 @@ func (c ListQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListQualityMonitorRequest
 // only implements ToObjectValue() and Type().
-func (o ListQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListQualityMonitorRequest) Type(ctx context.Context) attr.Type {
+func (m ListQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -348,7 +353,7 @@ func (to *ListQualityMonitorResponse) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c ListQualityMonitorResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListQualityMonitorResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["quality_monitors"] = attrs["quality_monitors"].SetOptional()
 
@@ -362,7 +367,7 @@ func (c ListQualityMonitorResponse) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListQualityMonitorResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListQualityMonitorResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitors": reflect.TypeOf(QualityMonitor{}),
 	}
@@ -371,17 +376,17 @@ func (a ListQualityMonitorResponse) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListQualityMonitorResponse
 // only implements ToObjectValue() and Type().
-func (o ListQualityMonitorResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListQualityMonitorResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"next_page_token":  o.NextPageToken,
-			"quality_monitors": o.QualityMonitors,
+			"next_page_token":  m.NextPageToken,
+			"quality_monitors": m.QualityMonitors,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListQualityMonitorResponse) Type(ctx context.Context) attr.Type {
+func (m ListQualityMonitorResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
@@ -395,12 +400,12 @@ func (o ListQualityMonitorResponse) Type(ctx context.Context) attr.Type {
 // GetQualityMonitors returns the value of the QualityMonitors field in ListQualityMonitorResponse as
 // a slice of QualityMonitor values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListQualityMonitorResponse) GetQualityMonitors(ctx context.Context) ([]QualityMonitor, bool) {
-	if o.QualityMonitors.IsNull() || o.QualityMonitors.IsUnknown() {
+func (m *ListQualityMonitorResponse) GetQualityMonitors(ctx context.Context) ([]QualityMonitor, bool) {
+	if m.QualityMonitors.IsNull() || m.QualityMonitors.IsUnknown() {
 		return nil, false
 	}
 	var v []QualityMonitor
-	d := o.QualityMonitors.ElementsAs(ctx, &v, true)
+	d := m.QualityMonitors.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -408,14 +413,14 @@ func (o *ListQualityMonitorResponse) GetQualityMonitors(ctx context.Context) ([]
 }
 
 // SetQualityMonitors sets the value of the QualityMonitors field in ListQualityMonitorResponse.
-func (o *ListQualityMonitorResponse) SetQualityMonitors(ctx context.Context, v []QualityMonitor) {
+func (m *ListQualityMonitorResponse) SetQualityMonitors(ctx context.Context, v []QualityMonitor) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["quality_monitors"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["quality_monitors"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.QualityMonitors = types.ListValueMust(t, vs)
+	m.QualityMonitors = types.ListValueMust(t, vs)
 }
 
 type QualityMonitor struct {
@@ -449,7 +454,7 @@ func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from Quality
 	}
 }
 
-func (c QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
@@ -464,7 +469,7 @@ func (c QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"anomaly_detection_config": reflect.TypeOf(AnomalyDetectionConfig{}),
 	}
@@ -473,18 +478,18 @@ func (a QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitor
 // only implements ToObjectValue() and Type().
-func (o QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"anomaly_detection_config": o.AnomalyDetectionConfig,
-			"object_id":                o.ObjectId,
-			"object_type":              o.ObjectType,
+			"anomaly_detection_config": m.AnomalyDetectionConfig,
+			"object_id":                m.ObjectId,
+			"object_type":              m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o QualityMonitor) Type(ctx context.Context) attr.Type {
+func (m QualityMonitor) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"anomaly_detection_config": AnomalyDetectionConfig{}.Type(ctx),
@@ -497,13 +502,13 @@ func (o QualityMonitor) Type(ctx context.Context) attr.Type {
 // GetAnomalyDetectionConfig returns the value of the AnomalyDetectionConfig field in QualityMonitor as
 // a AnomalyDetectionConfig value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (AnomalyDetectionConfig, bool) {
+func (m *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (AnomalyDetectionConfig, bool) {
 	var e AnomalyDetectionConfig
-	if o.AnomalyDetectionConfig.IsNull() || o.AnomalyDetectionConfig.IsUnknown() {
+	if m.AnomalyDetectionConfig.IsNull() || m.AnomalyDetectionConfig.IsUnknown() {
 		return e, false
 	}
 	var v AnomalyDetectionConfig
-	d := o.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -514,9 +519,9 @@ func (o *QualityMonitor) GetAnomalyDetectionConfig(ctx context.Context) (Anomaly
 }
 
 // SetAnomalyDetectionConfig sets the value of the AnomalyDetectionConfig field in QualityMonitor.
-func (o *QualityMonitor) SetAnomalyDetectionConfig(ctx context.Context, v AnomalyDetectionConfig) {
+func (m *QualityMonitor) SetAnomalyDetectionConfig(ctx context.Context, v AnomalyDetectionConfig) {
 	vs := v.ToObjectValue(ctx)
-	o.AnomalyDetectionConfig = vs
+	m.AnomalyDetectionConfig = vs
 }
 
 type UpdateQualityMonitorRequest struct {
@@ -551,7 +556,7 @@ func (to *UpdateQualityMonitorRequest) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c UpdateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["quality_monitor"] = attrs["quality_monitor"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
@@ -566,7 +571,7 @@ func (c UpdateQualityMonitorRequest) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitor": reflect.TypeOf(QualityMonitor{}),
 	}
@@ -575,18 +580,18 @@ func (a UpdateQualityMonitorRequest) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateQualityMonitorRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateQualityMonitorRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"object_id":       o.ObjectId,
-			"object_type":     o.ObjectType,
-			"quality_monitor": o.QualityMonitor,
+			"object_id":       m.ObjectId,
+			"object_type":     m.ObjectType,
+			"quality_monitor": m.QualityMonitor,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"object_id":       types.StringType,
@@ -599,13 +604,13 @@ func (o UpdateQualityMonitorRequest) Type(ctx context.Context) attr.Type {
 // GetQualityMonitor returns the value of the QualityMonitor field in UpdateQualityMonitorRequest as
 // a QualityMonitor value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (QualityMonitor, bool) {
+func (m *UpdateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (QualityMonitor, bool) {
 	var e QualityMonitor
-	if o.QualityMonitor.IsNull() || o.QualityMonitor.IsUnknown() {
+	if m.QualityMonitor.IsNull() || m.QualityMonitor.IsUnknown() {
 		return e, false
 	}
 	var v QualityMonitor
-	d := o.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.QualityMonitor.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -616,7 +621,7 @@ func (o *UpdateQualityMonitorRequest) GetQualityMonitor(ctx context.Context) (Qu
 }
 
 // SetQualityMonitor sets the value of the QualityMonitor field in UpdateQualityMonitorRequest.
-func (o *UpdateQualityMonitorRequest) SetQualityMonitor(ctx context.Context, v QualityMonitor) {
+func (m *UpdateQualityMonitorRequest) SetQualityMonitor(ctx context.Context, v QualityMonitor) {
 	vs := v.ToObjectValue(ctx)
-	o.QualityMonitor = vs
+	m.QualityMonitor = vs
 }

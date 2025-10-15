@@ -52,6 +52,10 @@ The following arguments are supported:
 * `entity_type` (string, required) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
 * `tag_key` (string, required) - The key of the tag
 * `tag_value` (string, optional) - The value of the tag
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

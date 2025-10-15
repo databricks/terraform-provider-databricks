@@ -13,6 +13,10 @@ subcategory: "Delta Sharing"
 The following arguments are supported:
 * `recipient_name` (string, required) - Name of the recipient. This is the name of the recipient for which the policies are being listed
 * `max_results` (integer, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

@@ -32,9 +32,55 @@ type CustomTemplateDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	return attrs
+}
+
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // CustomTemplateData extends the main model with additional fields.
 type CustomTemplateData struct {
-	apps_tf.CustomTemplate
+	Creator types.String `tfsdk:"creator"`
+	// The description of the template.
+	Description types.String `tfsdk:"description"`
+	// The Git provider of the template.
+	GitProvider types.String `tfsdk:"git_provider"`
+	// The Git repository URL that the template resides in.
+	GitRepo types.String `tfsdk:"git_repo"`
+	// The manifest of the template. It defines fields and default values when
+	// installing the template.
+	Manifest types.Object `tfsdk:"manifest"`
+	// The name of the template. It must contain only alphanumeric characters,
+	// hyphens, underscores, and whitespaces. It must be unique within the
+	// workspace.
+	Name types.String `tfsdk:"name"`
+	// The path to the template within the Git repository.
+	Path               types.String `tfsdk:"path"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +91,10 @@ type CustomTemplateData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m CustomTemplateData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.CustomTemplate.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"manifest":        reflect.TypeOf(apps_tf.AppManifest{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +104,58 @@ func (m CustomTemplateData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTemplateData
 // only implements ToObjectValue() and Type().
 func (m CustomTemplateData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.CustomTemplate.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"creator": m.Creator,
+			"description":  m.Description,
+			"git_provider": m.GitProvider,
+			"git_repo":     m.GitRepo,
+			"manifest":     m.Manifest,
+			"name":         m.Name,
+			"path":         m.Path,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m CustomTemplateData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.CustomTemplate.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"creator": types.StringType,
+			"description":  types.StringType,
+			"git_provider": types.StringType,
+			"git_repo":     types.StringType,
+			"manifest":     apps_tf.AppManifest{}.Type(ctx),
+			"name":         types.StringType,
+			"path":         types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *CustomTemplateData) SyncFieldsDuringRead(ctx context.Context, existingState CustomTemplateData) {
-	m.CustomTemplate.SyncFieldsDuringRead(ctx, existingState.CustomTemplate)
+func (to *CustomTemplateData) SyncFieldsDuringRead(ctx context.Context, from CustomTemplateData) {
+	to.ProviderConfigData = from.ProviderConfigData
+
+}
+
+func (m CustomTemplateData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_repo"] = attrs["git_repo"].SetRequired()
+	attrs["manifest"] = attrs["manifest"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *CustomTemplateDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +163,7 @@ func (r *CustomTemplateDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *CustomTemplateDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplateData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplateData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CustomTemplate",
 		Attributes:  attrs,
@@ -102,12 +178,6 @@ func (r *CustomTemplateDataSource) Configure(ctx context.Context, req datasource
 func (r *CustomTemplateDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config CustomTemplateData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -116,6 +186,21 @@ func (r *CustomTemplateDataSource) Read(ctx context.Context, req datasource.Read
 
 	var readRequest apps.GetCustomTemplateRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

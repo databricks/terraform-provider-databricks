@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -38,9 +39,53 @@ type TagPolicyResource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // TagPolicy extends the main model with additional fields.
 type TagPolicy struct {
-	tags_tf.TagPolicy
+	// Timestamp when the tag policy was created
+	CreateTime types.String `tfsdk:"create_time"`
+
+	Description types.String `tfsdk:"description"`
+
+	Id types.String `tfsdk:"id"`
+
+	TagKey types.String `tfsdk:"tag_key"`
+	// Timestamp when the tag policy was last updated
+	UpdateTime types.String `tfsdk:"update_time"`
+
+	Values         types.List   `tfsdk:"values"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +96,10 @@ type TagPolicy struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.TagPolicy.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"values":          reflect.TypeOf(tags_tf.Value{}),
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +109,105 @@ func (m TagPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicy
 // only implements ToObjectValue() and Type().
 func (m TagPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.TagPolicy.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"description": m.Description,
+			"id":          m.Id,
+			"tag_key":     m.TagKey,
+			"update_time": m.UpdateTime,
+			"values":      m.Values,
+
+			"provider_config": m.ProviderConfig,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m TagPolicy) Type(ctx context.Context) attr.Type {
-	embeddedType := m.TagPolicy.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+			"description": types.StringType,
+			"id":          types.StringType,
+			"tag_key":     types.StringType,
+			"update_time": types.StringType,
+			"values": basetypes.ListType{
+				ElemType: tags_tf.Value{}.Type(ctx),
+			},
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *TagPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan TagPolicy) {
-	m.TagPolicy.SyncFieldsDuringCreateOrUpdate(ctx, plan.TagPolicy)
+func (to *TagPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagPolicy) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *TagPolicy) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicy) {
-	m.TagPolicy.SyncFieldsDuringRead(ctx, existingState.TagPolicy)
+func (to *TagPolicy) SyncFieldsDuringRead(ctx context.Context, from TagPolicy) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	to.ProviderConfig = from.ProviderConfig
+
+}
+
+func (m TagPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["values"] = attrs["values"].SetOptional()
+
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
+}
+
+// GetValues returns the value of the Values field in TagPolicy as
+// a slice of tags_tf.Value values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagPolicy) GetValues(ctx context.Context) ([]tags_tf.Value, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []tags_tf.Value
+	d := m.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in TagPolicy.
+func (m *TagPolicy) SetValues(ctx context.Context, v []tags_tf.Value) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Values = types.ListValueMust(t, vs)
 }
 
 func (r *TagPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +215,7 @@ func (r *TagPolicyResource) Metadata(ctx context.Context, req resource.MetadataR
 }
 
 func (r *TagPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "tag_key")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagPolicy{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks tag_policy",
 		Attributes:  attrs,
@@ -114,12 +228,6 @@ func (r *TagPolicyResource) Configure(ctx context.Context, req resource.Configur
 }
 
 func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-
 	var tag_policy tags.TagPolicy
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_policy)...)
@@ -133,6 +241,20 @@ func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *d
 		UpdateMask: "description,values",
 	}
 
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.TagPolicies.UpdateTagPolicy(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update tag_policy", err.Error())
@@ -152,11 +274,6 @@ func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *d
 func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var plan TagPolicy
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -171,6 +288,21 @@ func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateReque
 
 	createRequest := tags.CreateTagPolicyRequest{
 		TagPolicy: tag_policy,
+	}
+
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	response, err := client.TagPolicies.CreateTagPolicy(ctx, createRequest)
@@ -198,12 +330,6 @@ func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateReque
 func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var existingState TagPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -216,6 +342,20 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.TagPolicies.GetTagPolicy(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -253,12 +393,6 @@ func (r *TagPolicyResource) Update(ctx context.Context, req resource.UpdateReque
 func (r *TagPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var state TagPolicy
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -271,6 +405,20 @@ func (r *TagPolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.TagPolicies.DeleteTagPolicy(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete tag_policy", err.Error())

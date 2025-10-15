@@ -12,6 +12,10 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -38,9 +39,87 @@ type AlertV2Resource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // AlertV2 extends the main model with additional fields.
 type AlertV2 struct {
-	sql_tf.AlertV2
+	// The timestamp indicating when the alert was created.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Custom description for the alert. support mustache template.
+	CustomDescription types.String `tfsdk:"custom_description"`
+	// Custom summary for the alert. support mustache template.
+	CustomSummary types.String `tfsdk:"custom_summary"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name"`
+	// The actual identity that will be used to execute the alert. This is an
+	// output-only field that shows the resolved run-as identity after applying
+	// permissions and defaults.
+	EffectiveRunAs types.Object `tfsdk:"effective_run_as"`
+
+	Evaluation types.Object `tfsdk:"evaluation"`
+	// UUID identifying the alert.
+	Id types.String `tfsdk:"id"`
+	// Indicates whether the query is trashed.
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
+	// The owner's username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
+	// The workspace path of the folder containing the alert. Can only be set on
+	// create, and cannot be updated.
+	ParentPath types.String `tfsdk:"parent_path"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text"`
+	// Specifies the identity that will be used to run the alert. This field
+	// allows you to configure alerts to run as a specific user or service
+	// principal. - For user identity: Set `user_name` to the email of an active
+	// workspace user. Users can only set this to their own email. - For service
+	// principal: Set `service_principal_name` to the application ID. Requires
+	// the `servicePrincipal/user` role. If not specified, the alert will run as
+	// the request user.
+	RunAs types.Object `tfsdk:"run_as"`
+	// The run as username or application ID of service principal. On Create and
+	// Update, this field can be set to application ID of an active service
+	// principal. Setting this field requires the servicePrincipal/user role.
+	// Deprecated: Use `run_as` field instead. This field will be removed in a
+	// future release.
+	RunAsUserName types.String `tfsdk:"run_as_user_name"`
+
+	Schedule types.Object `tfsdk:"schedule"`
+	// The timestamp indicating when the alert was updated.
+	UpdateTime types.String `tfsdk:"update_time"`
+	// ID of the SQL warehouse attached to the alert.
+	WarehouseId    types.String `tfsdk:"warehouse_id"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -51,7 +130,13 @@ type AlertV2 struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.AlertV2.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"effective_run_as": reflect.TypeOf(sql_tf.AlertV2RunAs{}),
+		"evaluation":       reflect.TypeOf(sql_tf.AlertV2Evaluation{}),
+		"run_as":           reflect.TypeOf(sql_tf.AlertV2RunAs{}),
+		"schedule":         reflect.TypeOf(sql_tf.CronSchedule{}),
+		"provider_config":  reflect.TypeOf(ProviderConfig{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -61,36 +146,262 @@ func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2
 // only implements ToObjectValue() and Type().
 func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.AlertV2.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"custom_description": m.CustomDescription,
+			"custom_summary":     m.CustomSummary,
+			"display_name":       m.DisplayName,
+			"effective_run_as":   m.EffectiveRunAs,
+			"evaluation":         m.Evaluation,
+			"id":                 m.Id,
+			"lifecycle_state":    m.LifecycleState,
+			"owner_user_name":    m.OwnerUserName,
+			"parent_path":        m.ParentPath,
+			"query_text":         m.QueryText,
+			"run_as":             m.RunAs,
+			"run_as_user_name":   m.RunAsUserName,
+			"schedule":           m.Schedule,
+			"update_time":        m.UpdateTime,
+			"warehouse_id":       m.WarehouseId,
+
+			"provider_config": m.ProviderConfig,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m AlertV2) Type(ctx context.Context) attr.Type {
-	embeddedType := m.AlertV2.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+			"custom_description": types.StringType,
+			"custom_summary":     types.StringType,
+			"display_name":       types.StringType,
+			"effective_run_as":   sql_tf.AlertV2RunAs{}.Type(ctx),
+			"evaluation":         sql_tf.AlertV2Evaluation{}.Type(ctx),
+			"id":                 types.StringType,
+			"lifecycle_state":    types.StringType,
+			"owner_user_name":    types.StringType,
+			"parent_path":        types.StringType,
+			"query_text":         types.StringType,
+			"run_as":             sql_tf.AlertV2RunAs{}.Type(ctx),
+			"run_as_user_name":   types.StringType,
+			"schedule":           sql_tf.CronSchedule{}.Type(ctx),
+			"update_time":        types.StringType,
+			"warehouse_id":       types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (m *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, plan AlertV2) {
-	m.AlertV2.SyncFieldsDuringCreateOrUpdate(ctx, plan.AlertV2)
+func (to *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertV2) {
+	if !from.EffectiveRunAs.IsNull() && !from.EffectiveRunAs.IsUnknown() {
+		if toEffectiveRunAs, ok := to.GetEffectiveRunAs(ctx); ok {
+			if fromEffectiveRunAs, ok := from.GetEffectiveRunAs(ctx); ok {
+				// Recursively sync the fields of EffectiveRunAs
+				toEffectiveRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveRunAs)
+				to.SetEffectiveRunAs(ctx, toEffectiveRunAs)
+			}
+		}
+	}
+	if !from.Evaluation.IsNull() && !from.Evaluation.IsUnknown() {
+		if toEvaluation, ok := to.GetEvaluation(ctx); ok {
+			if fromEvaluation, ok := from.GetEvaluation(ctx); ok {
+				// Recursively sync the fields of Evaluation
+				toEvaluation.SyncFieldsDuringCreateOrUpdate(ctx, fromEvaluation)
+				to.SetEvaluation(ctx, toEvaluation)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				// Recursively sync the fields of RunAs
+				toRunAs.SyncFieldsDuringCreateOrUpdate(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				// Recursively sync the fields of Schedule
+				toSchedule.SyncFieldsDuringCreateOrUpdate(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
+			}
+		}
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *AlertV2) SyncFieldsDuringRead(ctx context.Context, existingState AlertV2) {
-	m.AlertV2.SyncFieldsDuringRead(ctx, existingState.AlertV2)
+func (to *AlertV2) SyncFieldsDuringRead(ctx context.Context, from AlertV2) {
+	if !from.EffectiveRunAs.IsNull() && !from.EffectiveRunAs.IsUnknown() {
+		if toEffectiveRunAs, ok := to.GetEffectiveRunAs(ctx); ok {
+			if fromEffectiveRunAs, ok := from.GetEffectiveRunAs(ctx); ok {
+				toEffectiveRunAs.SyncFieldsDuringRead(ctx, fromEffectiveRunAs)
+				to.SetEffectiveRunAs(ctx, toEffectiveRunAs)
+			}
+		}
+	}
+	if !from.Evaluation.IsNull() && !from.Evaluation.IsUnknown() {
+		if toEvaluation, ok := to.GetEvaluation(ctx); ok {
+			if fromEvaluation, ok := from.GetEvaluation(ctx); ok {
+				toEvaluation.SyncFieldsDuringRead(ctx, fromEvaluation)
+				to.SetEvaluation(ctx, toEvaluation)
+			}
+		}
+	}
+	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
+		if toRunAs, ok := to.GetRunAs(ctx); ok {
+			if fromRunAs, ok := from.GetRunAs(ctx); ok {
+				toRunAs.SyncFieldsDuringRead(ctx, fromRunAs)
+				to.SetRunAs(ctx, toRunAs)
+			}
+		}
+	}
+	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
+		if toSchedule, ok := to.GetSchedule(ctx); ok {
+			if fromSchedule, ok := from.GetSchedule(ctx); ok {
+				toSchedule.SyncFieldsDuringRead(ctx, fromSchedule)
+				to.SetSchedule(ctx, toSchedule)
+			}
+		}
+	}
+	to.ProviderConfig = from.ProviderConfig
+
+}
+
+func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["custom_description"] = attrs["custom_description"].SetOptional()
+	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
+	attrs["evaluation"] = attrs["evaluation"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
+}
+
+// GetEffectiveRunAs returns the value of the EffectiveRunAs field in AlertV2 as
+// a sql_tf.AlertV2RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertV2) GetEffectiveRunAs(ctx context.Context) (sql_tf.AlertV2RunAs, bool) {
+	var e sql_tf.AlertV2RunAs
+	if m.EffectiveRunAs.IsNull() || m.EffectiveRunAs.IsUnknown() {
+		return e, false
+	}
+	var v sql_tf.AlertV2RunAs
+	d := m.EffectiveRunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveRunAs sets the value of the EffectiveRunAs field in AlertV2.
+func (m *AlertV2) SetEffectiveRunAs(ctx context.Context, v sql_tf.AlertV2RunAs) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveRunAs = vs
+}
+
+// GetEvaluation returns the value of the Evaluation field in AlertV2 as
+// a sql_tf.AlertV2Evaluation value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertV2) GetEvaluation(ctx context.Context) (sql_tf.AlertV2Evaluation, bool) {
+	var e sql_tf.AlertV2Evaluation
+	if m.Evaluation.IsNull() || m.Evaluation.IsUnknown() {
+		return e, false
+	}
+	var v sql_tf.AlertV2Evaluation
+	d := m.Evaluation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvaluation sets the value of the Evaluation field in AlertV2.
+func (m *AlertV2) SetEvaluation(ctx context.Context, v sql_tf.AlertV2Evaluation) {
+	vs := v.ToObjectValue(ctx)
+	m.Evaluation = vs
+}
+
+// GetRunAs returns the value of the RunAs field in AlertV2 as
+// a sql_tf.AlertV2RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertV2) GetRunAs(ctx context.Context) (sql_tf.AlertV2RunAs, bool) {
+	var e sql_tf.AlertV2RunAs
+	if m.RunAs.IsNull() || m.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v sql_tf.AlertV2RunAs
+	d := m.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRunAs sets the value of the RunAs field in AlertV2.
+func (m *AlertV2) SetRunAs(ctx context.Context, v sql_tf.AlertV2RunAs) {
+	vs := v.ToObjectValue(ctx)
+	m.RunAs = vs
+}
+
+// GetSchedule returns the value of the Schedule field in AlertV2 as
+// a sql_tf.CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertV2) GetSchedule(ctx context.Context) (sql_tf.CronSchedule, bool) {
+	var e sql_tf.CronSchedule
+	if m.Schedule.IsNull() || m.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v sql_tf.CronSchedule
+	d := m.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchedule sets the value of the Schedule field in AlertV2.
+func (m *AlertV2) SetSchedule(ctx context.Context, v sql_tf.CronSchedule) {
+	vs := v.ToObjectValue(ctx)
+	m.Schedule = vs
 }
 
 func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,10 +409,7 @@ func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AlertV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "id")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, AlertV2{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks alert_v2",
 		Attributes:  attrs,
@@ -114,12 +422,6 @@ func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-
 	var alert_v2 sql.AlertV2
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
@@ -133,6 +435,20 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
 	}
 
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update alert_v2", err.Error())
@@ -152,11 +468,6 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	var plan AlertV2
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -171,6 +482,21 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 
 	createRequest := sql.CreateAlertV2Request{
 		Alert: alert_v2,
+	}
+
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	response, err := client.AlertsV2.CreateAlert(ctx, createRequest)
@@ -198,12 +524,6 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var existingState AlertV2
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -216,6 +536,20 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.AlertsV2.GetAlert(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -253,12 +587,6 @@ func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest
 func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var state AlertV2
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -271,6 +599,20 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())

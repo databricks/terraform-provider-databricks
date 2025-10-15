@@ -25,6 +25,10 @@ data "databricks_alert_v2" "all" {}
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 
 ## Attributes

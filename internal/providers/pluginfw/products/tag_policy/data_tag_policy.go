@@ -32,9 +32,51 @@ type TagPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	return attrs
+}
+
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // TagPolicyData extends the main model with additional fields.
 type TagPolicyData struct {
-	tags_tf.TagPolicy
+	// Timestamp when the tag policy was created
+	CreateTime types.String `tfsdk:"create_time"`
+
+	Description types.String `tfsdk:"description"`
+
+	Id types.String `tfsdk:"id"`
+
+	TagKey types.String `tfsdk:"tag_key"`
+	// Timestamp when the tag policy was last updated
+	UpdateTime types.String `tfsdk:"update_time"`
+
+	Values             types.List   `tfsdk:"values"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +87,10 @@ type TagPolicyData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m TagPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.TagPolicy.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"values":          reflect.TypeOf(tags_tf.Value{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +100,57 @@ func (m TagPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // interfere with how the plugin framework retrieves and sets values in state. Thus, TagPolicyData
 // only implements ToObjectValue() and Type().
 func (m TagPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.TagPolicy.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"description": m.Description,
+			"id":          m.Id,
+			"tag_key":     m.TagKey,
+			"update_time": m.UpdateTime,
+			"values":      m.Values,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m TagPolicyData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.TagPolicy.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+			"description": types.StringType,
+			"id":          types.StringType,
+			"tag_key":     types.StringType,
+			"update_time": types.StringType,
+			"values": basetypes.ListType{
+				ElemType: tags_tf.Value{}.Type(ctx),
+			},
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (m *TagPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState TagPolicyData) {
-	m.TagPolicy.SyncFieldsDuringRead(ctx, existingState.TagPolicy)
+func (to *TagPolicyData) SyncFieldsDuringRead(ctx context.Context, from TagPolicyData) {
+	to.ProviderConfigData = from.ProviderConfigData
+
+}
+
+func (m TagPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["values"] = attrs["values"].SetOptional()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *TagPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +158,7 @@ func (r *TagPolicyDataSource) Metadata(ctx context.Context, req datasource.Metad
 }
 
 func (r *TagPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagPolicyData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks TagPolicy",
 		Attributes:  attrs,
@@ -102,12 +173,6 @@ func (r *TagPolicyDataSource) Configure(ctx context.Context, req datasource.Conf
 func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config TagPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -116,6 +181,21 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	var readRequest tags.GetTagPolicyRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProvider(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

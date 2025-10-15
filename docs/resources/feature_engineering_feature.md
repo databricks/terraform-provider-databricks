@@ -17,6 +17,10 @@ The following arguments are supported:
 * `source` (DataSource, required) - The data source of the feature
 * `time_window` (TimeWindow, required) - The time window in which the feature is computed
 * `description` (string, optional) - The description of the feature
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional)

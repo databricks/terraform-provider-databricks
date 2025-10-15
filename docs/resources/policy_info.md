@@ -36,6 +36,10 @@ The following arguments are supported:
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
 * `when_condition` (string, optional) - Optional condition when the policy should take effect
+* `provider_config` (ProviderConfig, optional) - Namespace containing arguments which can be used to configure the provider
+
+### ProviderConfig
+* `workspace_id` (string, required) - Workspace ID of the resource
 
 ### ColumnMaskOptions
 * `function_name` (string, required) - The fully qualified name of the column mask function.

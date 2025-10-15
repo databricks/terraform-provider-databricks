@@ -5,7 +5,7 @@
 ### Breaking Changes
 
 * Remove stale resources/datasources/documentation related to Clean Room services.
-* databricks\_permissions resource no longer updates permissions on delete. This is to mitigate an issue with incorrect IS\_OWNER being set.
+* databricks\_permissions resource no longer updates permissions on delete. This is to mitigate an issue with incorrect IS\_OWNER being set ([#5096](https://github.com/databricks/terraform-provider-databricks/pull/5096))
 
 ### New Features and Improvements
 

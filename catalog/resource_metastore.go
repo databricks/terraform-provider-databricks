@@ -13,30 +13,17 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func updateForceSendFields(req *catalog.UpdateMetastore) {
+// This and the next function should be updated together to keep them in sync.
+func updateForceSendFieldsWorkspaceLevel(req *catalog.UpdateMetastore) {
 	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
 		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
 	}
 }
 
-func toCreateAccountsMetastore(create *catalog.CreateMetastore) *catalog.CreateAccountsMetastore {
-	return &catalog.CreateAccountsMetastore{
-		Name:            create.Name,
-		Region:          create.Region,
-		StorageRoot:     create.StorageRoot,
-		ForceSendFields: create.ForceSendFields,
-	}
-}
-
-func toUpdateAccountsMetastore(update *catalog.UpdateMetastore) *catalog.UpdateAccountsMetastore {
-	return &catalog.UpdateAccountsMetastore{
-		DeltaSharingOrganizationName:                update.DeltaSharingOrganizationName,
-		DeltaSharingRecipientTokenLifetimeInSeconds: update.DeltaSharingRecipientTokenLifetimeInSeconds,
-		DeltaSharingScope:                           update.DeltaSharingScope,
-		Owner:                                       update.Owner,
-		PrivilegeModelVersion:                       update.PrivilegeModelVersion,
-		StorageRootCredentialId:                     update.StorageRootCredentialId,
-		ForceSendFields:                             update.ForceSendFields,
+// This and the previous function should be updated together to keep them in sync.
+func updateForceSendFieldsAccountLevel(req *catalog.UpdateAccountsMetastore) {
+	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
+		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
 	}
 }
 
@@ -93,19 +80,19 @@ func ResourceMetastore() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var create catalog.CreateMetastore
-			var update catalog.UpdateMetastore
-			common.DataToStructPointer(d, s, &create)
-			common.DataToStructPointer(d, s, &update)
-			updateForceSendFields(&update)
-			emptyRequest, err := common.IsRequestEmpty(update)
-			if err != nil {
-				return err
-			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				var create catalog.CreateAccountsMetastore
+				var update catalog.UpdateAccountsMetastore
+				common.DataToStructPointer(d, s, &create)
+				common.DataToStructPointer(d, s, &update)
+				updateForceSendFieldsAccountLevel(&update)
+				emptyRequest, err := common.IsRequestEmpty(update)
+				if err != nil {
+					return err
+				}
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
-						MetastoreInfo: toCreateAccountsMetastore(&create),
+						MetastoreInfo: &create,
 					})
 				if err != nil {
 					return err
@@ -116,13 +103,22 @@ func ResourceMetastore() common.Resource {
 				}
 				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   mi.MetastoreInfo.MetastoreId,
-					MetastoreInfo: toUpdateAccountsMetastore(&update),
+					MetastoreInfo: &update,
 				})
 				if err != nil {
 					return err
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
+				var create catalog.CreateMetastore
+				var update catalog.UpdateMetastore
+				common.DataToStructPointer(d, s, &create)
+				common.DataToStructPointer(d, s, &update)
+				updateForceSendFieldsWorkspaceLevel(&update)
+				emptyRequest, err := common.IsRequestEmpty(update)
+				if err != nil {
+					return err
+				}
 				mi, err := w.Metastores.Create(ctx, create)
 				if err != nil {
 					return err
@@ -155,20 +151,18 @@ func ResourceMetastore() common.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var update catalog.UpdateMetastore
-			common.DataToStructPointer(d, s, &update)
-			update.Id = d.Id()
-			updateForceSendFields(&update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				var update catalog.UpdateAccountsMetastore
+				common.DataToStructPointer(d, s, &update)
+				updateForceSendFieldsAccountLevel(&update)
 				if d.HasChange("owner") {
-					ownerUpdate := catalog.UpdateMetastore{
-						Id:    update.Id,
+					ownerUpdate := catalog.UpdateAccountsMetastore{
 						Owner: update.Owner,
 					}
 					_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 						MetastoreId:   d.Id(),
-						MetastoreInfo: toUpdateAccountsMetastore(&ownerUpdate),
+						MetastoreInfo: &ownerUpdate,
 					})
 					if err != nil {
 						return err
@@ -182,19 +176,18 @@ func ResourceMetastore() common.Resource {
 				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
-					MetastoreInfo: toUpdateAccountsMetastore(&update),
+					MetastoreInfo: &update,
 				})
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
 						old, new := d.GetChange("owner")
-						rollbackUpdate := catalog.UpdateMetastore{
-							Id:    update.Id,
+						rollbackUpdate := catalog.UpdateAccountsMetastore{
 							Owner: old.(string),
 						}
 						_, rollbackErr := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 							MetastoreId:   d.Id(),
-							MetastoreInfo: toUpdateAccountsMetastore(&rollbackUpdate),
+							MetastoreInfo: &rollbackUpdate,
 						})
 						if rollbackErr != nil {
 							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -204,6 +197,10 @@ func ResourceMetastore() common.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
+				var update catalog.UpdateMetastore
+				common.DataToStructPointer(d, s, &update)
+				update.Id = d.Id()
+				updateForceSendFieldsWorkspaceLevel(&update)
 				if d.HasChange("owner") {
 					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 						Id:    update.Id,

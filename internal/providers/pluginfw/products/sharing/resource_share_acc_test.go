@@ -8,9 +8,12 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -293,6 +296,13 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 				data_object_type = "SCHEMA"
 			}
 		}`,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				common.CheckResourceUpdate{Address: "databricks_share.myshare"},
+				common.CheckResourceNoDelete{Address: "databricks_share.myshare"},
+				common.CheckResourceNoCreate{Address: "databricks_share.myshare"},
+			},
+		},
 	})
 }
 

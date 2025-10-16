@@ -33,7 +33,7 @@ func ResourceMetastoreAssignment() common.Resource {
 			create.WorkspaceId = workspaceId
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				err := acc.MetastoreAssignments.Create(ctx,
+				_, err := acc.MetastoreAssignments.Create(ctx,
 					catalog.AccountsCreateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
 						MetastoreId:         metastoreId,
@@ -90,12 +90,13 @@ func ResourceMetastoreAssignment() common.Resource {
 			update.WorkspaceId = workspaceId
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.MetastoreAssignments.Update(ctx,
+				_, err := acc.MetastoreAssignments.Update(ctx,
 					catalog.AccountsUpdateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
 						MetastoreId:         metastoreId,
 						MetastoreAssignment: &update,
 					})
+				return err
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.UpdateAssignment(ctx, update)
 			})
@@ -110,7 +111,8 @@ func ResourceMetastoreAssignment() common.Resource {
 				return err
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.MetastoreAssignments.DeleteByWorkspaceIdAndMetastoreId(ctx, workspaceId, metastoreId)
+				_, err := acc.MetastoreAssignments.DeleteByWorkspaceIdAndMetastoreId(ctx, workspaceId, metastoreId)
+				return err
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.Unassign(ctx, catalog.UnassignRequest{
 					MetastoreId: metastoreId,

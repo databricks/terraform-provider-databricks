@@ -34,7 +34,11 @@ type QualityMonitorDataSource struct {
 
 // QualityMonitorData extends the main model with additional fields.
 type QualityMonitorData struct {
-	qualitymonitorv2_tf.QualityMonitor
+	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
+	// The uuid of the request object. For example, schema id.
+	ObjectId types.String `tfsdk:"object_id"`
+	// The type of the monitored object. Can be one of the following: schema.
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +49,9 @@ type QualityMonitorData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m QualityMonitorData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.QualityMonitor.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"anomaly_detection_config": reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +61,33 @@ func (m QualityMonitorData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, QualityMonitorData
 // only implements ToObjectValue() and Type().
 func (m QualityMonitorData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.QualityMonitor.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"anomaly_detection_config": m.AnomalyDetectionConfig,
+			"object_id":                m.ObjectId,
+			"object_type":              m.ObjectType,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m QualityMonitorData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.QualityMonitor.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *QualityMonitorData) SyncFieldsDuringRead(ctx context.Context, existingState QualityMonitorData) {
-	m.QualityMonitor.SyncFieldsDuringRead(ctx, existingState.QualityMonitor)
+func (m QualityMonitorData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
+
+	return attrs
 }
 
 func (r *QualityMonitorDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +95,7 @@ func (r *QualityMonitorDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *QualityMonitorDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks QualityMonitor",
 		Attributes:  attrs,
@@ -102,12 +110,6 @@ func (r *QualityMonitorDataSource) Configure(ctx context.Context, req datasource
 func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config QualityMonitorData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -116,6 +118,13 @@ func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.Read
 
 	var readRequest qualitymonitorv2.GetQualityMonitorRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -136,8 +145,6 @@ func (r *QualityMonitorDataSource) Read(ctx context.Context, req datasource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

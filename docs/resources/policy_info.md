@@ -83,5 +83,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_policy_info "on_securable_type,on_securable_fullname,name"
+terraform import databricks_policy_info.this "on_securable_type,on_securable_fullname,name"
 ```

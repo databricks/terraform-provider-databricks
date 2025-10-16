@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/billing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type BudgetPoliciesData struct {
 
 func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
+		"policies": reflect.TypeOf(BudgetPolicyData{}),
 	}
+}
+
+func (m BudgetPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policies"] = attrs["policies"].SetComputed()
+	return attrs
 }
 
 type BudgetPoliciesDataSource struct {
@@ -46,10 +50,7 @@ func (r *BudgetPoliciesDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *BudgetPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("policies")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks BudgetPolicy",
 		Attributes:  attrs,
@@ -64,12 +65,6 @@ func (r *BudgetPoliciesDataSource) Configure(ctx context.Context, req datasource
 func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetAccountClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config BudgetPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -82,6 +77,13 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
+	client, clientDiags := r.Client.GetAccountClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.BudgetPolicy.ListAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list budget_policies", err.Error())
@@ -90,7 +92,7 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var budget_policy billing_tf.BudgetPolicy
+		var budget_policy BudgetPolicyData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &budget_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +101,6 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	var newState BudgetPoliciesData
-	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), results)
+	newState.BudgetPolicy = types.ListValueMust(BudgetPolicyData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

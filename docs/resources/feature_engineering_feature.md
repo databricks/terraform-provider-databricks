@@ -38,8 +38,7 @@ The following arguments are supported:
 * `duration` (string, required) - The duration of the time window
 * `offset` (string, optional) - The offset of the time window
 
-## Attributes
-In addition to the above arguments, the following attributes are exported:
+
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
@@ -52,5 +51,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_feature_engineering_feature "full_name"
+terraform import databricks_feature_engineering_feature.this "full_name"
 ```

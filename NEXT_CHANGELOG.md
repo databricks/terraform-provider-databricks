@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.93.0
+## Release v1.94.0
 
 ### Breaking Changes
 
@@ -13,5 +13,3 @@
 ### Exporter
 
 ### Internal Changes
-
-* Make plugin framework implementation of share resource as default ([#4967](https://github.com/databricks/terraform-provider-databricks/pull/4967))

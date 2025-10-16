@@ -266,7 +266,6 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
 			object {
 				name = databricks_schema.schema1.id
 				comment = "original comment"
@@ -283,7 +282,6 @@ func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
 		Template: preTestTemplateSchema +
 			`resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			owner = "account users"
 			object {
 				name = databricks_schema.schema1.id
 				comment = "updated comment"
@@ -341,7 +339,6 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					owner = "account users"
 					object {
 						name = databricks_schema.schema1.id
 						comment = "Shared schema object for migration test"
@@ -360,7 +357,6 @@ func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
 			Template: preTestTemplateSchema + `
 				resource "databricks_share" "myshare" {
 					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					owner = "account users"
 					object {
 						name = databricks_schema.schema1.id
 						comment = "Updated comment for schema object after migration"

@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
+* Added `deployment_names` attribute to `databricks_mws_workspaces` data block ([#5100](https://github.com/databricks/terraform-provider-databricks/pull/5100))
 
 ### Bug Fixes
 

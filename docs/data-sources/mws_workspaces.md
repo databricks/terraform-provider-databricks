@@ -22,6 +22,10 @@ data "databricks_mws_workspaces" "all" {}
 output "all_mws_workspaces" {
   value = data.databricks_mws_workspaces.all.ids
 }
+
+output "all_mws_workspaces_deployment_names" {
+  value = data.databricks_mws_workspaces.all.deployment_names
+}
 ```
 
 ## Attribute Reference
@@ -31,6 +35,7 @@ output "all_mws_workspaces" {
 This data source exports the following attributes:
 
 * `ids` - name-to-id map for all of the workspaces in the account
+* `deployment_names` - name-to-deployment-names map for all of the workspaces in the account
 
 ## Related Resources
 

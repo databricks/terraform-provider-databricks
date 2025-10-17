@@ -9,28 +9,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type SchemaInfo struct {
-	Name                         string            `json:"name" tf:"force_new"`
-	CatalogName                  string            `json:"catalog_name" tf:"force_new"`
-	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`
-	Comment                      string            `json:"comment,omitempty"`
-	Properties                   map[string]string `json:"properties,omitempty"`
-	EnablePredictiveOptimization string            `json:"enable_predictive_optimization,omitempty" tf:"computed"`
-	Owner                        string            `json:"owner,omitempty" tf:"computed"`
-	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
-	FullName                     string            `json:"full_name,omitempty" tf:"computed"`
-	SchemaID                     string            `json:"schema_id" tf:"computed"`
-}
-
 func ResourceSchema() common.Resource {
-	s := common.StructToSchema(SchemaInfo{},
+	s := common.StructToSchema(catalog.SchemaInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			delete(s, "full_name")
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			}
+
+			// Mark fields as force_new
+			for _, v := range []string{"name", "catalog_name", "storage_root"} {
+				common.CustomizeSchemaPath(s, v).SetForceNew()
+			}
+
+			// Mark optional and computed fields (user can set, but has default from backend)
+			for _, v := range []string{"metastore_id", "enable_predictive_optimization", "owner"} {
+				common.CustomizeSchemaPath(s, v).SetComputed()
+			}
+
+			// Set read-only fields (returned by backend, not settable by user)
+			// Note: SetReadOnly() implies SetComputed(), so no need to call both
+			for _, v := range []string{"schema_id", "browse_only", "catalog_type",
+				"created_at", "created_by", "storage_location", "updated_at", "updated_by",
+				"effective_predictive_optimization_flag", "full_name"} {
+				common.CustomizeSchemaPath(s, v).SetReadOnly()
+			}
+
 			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
 			s["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -38,6 +43,7 @@ func ResourceSchema() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+
 			return s
 		})
 	return common.Resource{

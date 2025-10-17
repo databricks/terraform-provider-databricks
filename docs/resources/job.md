@@ -430,12 +430,17 @@ This block describes the queue settings of the job:
 
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `periodic` - (Optional) configuration block to define a trigger for Periodic Triggers consisting of the following attributes:
-  * `interval` - (Required) Specifies the interval at which the job should run. This value is required.
-  * `unit` - (Required) Options are {"DAYS", "HOURS", "WEEKS"}.
+  * `interval` - (Required, integer) Specifies the interval at which the job should run.
+  * `unit` - (Required, string) The unit of time for the interval.  Possible values are: `DAYS`, `HOURS`, `WEEKS`.
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
-  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
-  * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
+  * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `wait_after_last_change_seconds` - (Optional, integer) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
+* `table_update` - (Optional) configuration block to define a trigger for [Table Updates](TODO) consisting of following attributes:
+  * `table_names` - (Required) A non-empty list of tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`.
+  * `condition` - (Required, string) The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`.
+  * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `wait_after_last_change_seconds` - (Optional, integer) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
 ### git_source Configuration Block
 

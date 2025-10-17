@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Document `table_update` trigger in `databricks_job` resource ([#5107](https://github.com/databricks/terraform-provider-databricks/pull/5107))
+
 ### Exporter
 
 ### Internal Changes

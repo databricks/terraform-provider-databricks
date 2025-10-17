@@ -29,6 +29,7 @@ The following attributes are exported:
   * `app_status` attribute
     * `state` - State of the application.
     * `message` - Application status message
+  * `compute_size` - (Optional) A string specifying compute size for the App.
   * `url` - The URL of the app once it is deployed.
   * `create_time` - The creation time of the app.
   * `creator` - The email of the user that created the app.
@@ -71,6 +72,10 @@ Exactly one of the following attributes will be provided:
   * `database_name` - The name of database.
   * `instance_name` - The name of database instance.
   * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
+* `genie_space` attribute
+  * `name` - The name of Genie Space.
+  * ``permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.
+  * `space_id` - The unique ID of Genie Space.
 
 ## Related Resources
 

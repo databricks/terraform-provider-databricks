@@ -15,6 +15,7 @@ import (
 type InstancePoolAwsAttributes struct {
 	Availability        clusters.Availability `json:"availability,omitempty" tf:"force_new"`
 	ZoneID              string                `json:"zone_id,omitempty" tf:"computed,force_new"`
+	InstanceProfileArn  string                `json:"instance_profile_arn,omitempty" tf:"force_new"`
 	SpotBidPricePercent int32                 `json:"spot_bid_price_percent,omitempty" tf:"force_new"`
 }
 

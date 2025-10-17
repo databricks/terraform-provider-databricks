@@ -2,8 +2,6 @@
 # Created by https://www.gitignore.io/api/go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=go,python,terraform,virtualenv,pycharm+iml,intellij+all,visualstudiocode
 
-common/testdata/.azure
-
 ### Go ###
 # Binaries for programs and plugins
 *.exe
@@ -346,3 +344,8 @@ provider/completeness.md
 
 # VS Code debugging binaries
 __debug_bin*
+
+common/testdata/.azure
+
+# Claude local memory
+CLAUDE.local.md

@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
+
 ### Documentation
 
 ### Exporter

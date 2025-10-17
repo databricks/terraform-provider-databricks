@@ -436,7 +436,7 @@ This block describes the queue settings of the job:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
   * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional, integer) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
-* `table_update` - (Optional) configuration block to define a trigger for [Table Updates](TODO) consisting of following attributes:
+* `table_update` - (Optional) configuration block to define a trigger for [Table Updates](https://docs.databricks.com/aws/en/jobs/trigger-table-update) consisting of following attributes:
   * `table_names` - (Required) A non-empty list of tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`.
   * `condition` - (Required, string) The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`.
   * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.

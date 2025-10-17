@@ -32,8 +32,7 @@ The following arguments are supported:
   the workspace will use 'default-policy'
 * `workspace_id` (integer, optional) - The workspace ID
 
-## Attributes
-In addition to the above arguments, the following attributes are exported:
+
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
@@ -46,5 +45,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_network_option "workspace_id"
+terraform import databricks_workspace_network_option.this "workspace_id"
 ```

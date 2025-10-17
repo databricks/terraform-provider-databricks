@@ -42,7 +42,7 @@ The following attributes are exported:
 * `string_val` (StringMessage)
 
 ### AibiDashboardEmbeddingAccessPolicy
-* `access_policy_type` (string) - . Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
+* `access_policy_type` (string) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
 
 ### AibiDashboardEmbeddingApprovedDomains
 * `approved_domains` (list of string)
@@ -66,8 +66,8 @@ The following attributes are exported:
 * `week_day_based_schedule` (ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule)
 
 ### ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
-* `day_of_week` (string) - . Possible values are: `FRIDAY`, `MONDAY`, `SATURDAY`, `SUNDAY`, `THURSDAY`, `TUESDAY`, `WEDNESDAY`
-* `frequency` (string) - . Possible values are: `EVERY_WEEK`, `FIRST_AND_THIRD_OF_MONTH`, `FIRST_OF_MONTH`, `FOURTH_OF_MONTH`, `SECOND_AND_FOURTH_OF_MONTH`, `SECOND_OF_MONTH`, `THIRD_OF_MONTH`
+* `day_of_week` (string) - Possible values are: `FRIDAY`, `MONDAY`, `SATURDAY`, `SUNDAY`, `THURSDAY`, `TUESDAY`, `WEDNESDAY`
+* `frequency` (string) - Possible values are: `EVERY_WEEK`, `FIRST_AND_THIRD_OF_MONTH`, `FIRST_OF_MONTH`, `FOURTH_OF_MONTH`, `SECOND_AND_FOURTH_OF_MONTH`, `SECOND_OF_MONTH`, `THIRD_OF_MONTH`
 * `window_start_time` (ClusterAutoRestartMessageMaintenanceWindowWindowStartTime)
 
 ### ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
@@ -78,10 +78,10 @@ The following attributes are exported:
 * `value` (integer)
 
 ### PersonalComputeMessage
-* `value` (string) - . Possible values are: `DELEGATE`, `ON`
+* `value` (string) - Possible values are: `DELEGATE`, `ON`
 
 ### RestrictWorkspaceAdminsMessage
-* `status` (string) - . Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
+* `status` (string) - Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
 
 ### StringMessage
 * `value` (string) - Represents a generic string value

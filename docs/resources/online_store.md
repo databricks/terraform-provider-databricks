@@ -32,5 +32,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_online_store "name"
+terraform import databricks_online_store.this "name"
 ```

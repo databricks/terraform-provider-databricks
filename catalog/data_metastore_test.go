@@ -14,7 +14,7 @@ func TestMetastoreDataById(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			e := m.GetMockAccountMetastoresAPI().EXPECT()
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:        "xyz",
 					MetastoreId: "abc",

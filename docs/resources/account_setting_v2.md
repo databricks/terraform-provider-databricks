@@ -39,7 +39,7 @@ The following arguments are supported:
 * `string_val` (StringMessage, optional)
 
 ### AibiDashboardEmbeddingAccessPolicy
-* `access_policy_type` (string, required) - . Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
+* `access_policy_type` (string, required) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
 
 ### AibiDashboardEmbeddingApprovedDomains
 * `approved_domains` (list of string, optional)
@@ -63,8 +63,8 @@ The following arguments are supported:
 * `week_day_based_schedule` (ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule, optional)
 
 ### ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
-* `day_of_week` (string, optional) - . Possible values are: `FRIDAY`, `MONDAY`, `SATURDAY`, `SUNDAY`, `THURSDAY`, `TUESDAY`, `WEDNESDAY`
-* `frequency` (string, optional) - . Possible values are: `EVERY_WEEK`, `FIRST_AND_THIRD_OF_MONTH`, `FIRST_OF_MONTH`, `FOURTH_OF_MONTH`, `SECOND_AND_FOURTH_OF_MONTH`, `SECOND_OF_MONTH`, `THIRD_OF_MONTH`
+* `day_of_week` (string, optional) - Possible values are: `FRIDAY`, `MONDAY`, `SATURDAY`, `SUNDAY`, `THURSDAY`, `TUESDAY`, `WEDNESDAY`
+* `frequency` (string, optional) - Possible values are: `EVERY_WEEK`, `FIRST_AND_THIRD_OF_MONTH`, `FIRST_OF_MONTH`, `FOURTH_OF_MONTH`, `SECOND_AND_FOURTH_OF_MONTH`, `SECOND_OF_MONTH`, `THIRD_OF_MONTH`
 * `window_start_time` (ClusterAutoRestartMessageMaintenanceWindowWindowStartTime, optional)
 
 ### ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
@@ -75,10 +75,10 @@ The following arguments are supported:
 * `value` (integer, optional)
 
 ### PersonalComputeMessage
-* `value` (string, optional) - . Possible values are: `DELEGATE`, `ON`
+* `value` (string, optional) - Possible values are: `DELEGATE`, `ON`
 
 ### RestrictWorkspaceAdminsMessage
-* `status` (string, required) - . Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
+* `status` (string, required) - Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
 
 ### StringMessage
 * `value` (string, optional) - Represents a generic string value
@@ -100,5 +100,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_setting_v2 "name"
+terraform import databricks_account_setting_v2.this "name"
 ```

@@ -39,7 +39,7 @@ func (to *AccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *AccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from AccessControlRequest) {
 }
 
-func (c AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
@@ -55,26 +55,26 @@ func (c AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccessControlRequest
 // only implements ToObjectValue() and Type().
-func (o AccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             o.GroupName,
-			"permission_level":       o.PermissionLevel,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AccessControlRequest) Type(ctx context.Context) attr.Type {
+func (m AccessControlRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -116,7 +116,7 @@ func (to *AccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
@@ -133,7 +133,7 @@ func (c AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(Permission{}),
 	}
@@ -142,20 +142,20 @@ func (a AccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccessControlResponse
 // only implements ToObjectValue() and Type().
-func (o AccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        o.AllPermissions,
-			"display_name":           o.DisplayName,
-			"group_name":             o.GroupName,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AccessControlResponse) Type(ctx context.Context) attr.Type {
+func (m AccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
@@ -172,12 +172,12 @@ func (o AccessControlResponse) Type(ctx context.Context) attr.Type {
 // GetAllPermissions returns the value of the AllPermissions field in AccessControlResponse as
 // a slice of Permission values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccessControlResponse) GetAllPermissions(ctx context.Context) ([]Permission, bool) {
-	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+func (m *AccessControlResponse) GetAllPermissions(ctx context.Context) ([]Permission, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
 		return nil, false
 	}
 	var v []Permission
-	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -185,14 +185,14 @@ func (o *AccessControlResponse) GetAllPermissions(ctx context.Context) ([]Permis
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in AccessControlResponse.
-func (o *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permission) {
+func (m *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permission) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AllPermissions = types.ListValueMust(t, vs)
+	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type AccountGroup struct {
@@ -259,7 +259,7 @@ func (to *AccountGroup) SyncFieldsDuringRead(ctx context.Context, from AccountGr
 	}
 }
 
-func (c AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
@@ -278,7 +278,7 @@ func (c AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AccountGroup) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccountGroup) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"members": reflect.TypeOf(ComplexValue{}),
 		"meta":    reflect.TypeOf(ResourceMeta{}),
@@ -289,22 +289,22 @@ func (a AccountGroup) GetComplexFieldTypes(ctx context.Context) map[string]refle
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccountGroup
 // only implements ToObjectValue() and Type().
-func (o AccountGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccountGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":   o.AccountId,
-			"display_name": o.DisplayName,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
+			"account_id":   m.AccountId,
+			"display_name": m.DisplayName,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AccountGroup) Type(ctx context.Context) attr.Type {
+func (m AccountGroup) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":   types.StringType,
@@ -325,12 +325,12 @@ func (o AccountGroup) Type(ctx context.Context) attr.Type {
 // GetMembers returns the value of the Members field in AccountGroup as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountGroup) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *AccountGroup) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -338,26 +338,26 @@ func (o *AccountGroup) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetMembers sets the value of the Members field in AccountGroup.
-func (o *AccountGroup) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *AccountGroup) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in AccountGroup as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountGroup) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *AccountGroup) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -368,20 +368,20 @@ func (o *AccountGroup) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 }
 
 // SetMeta sets the value of the Meta field in AccountGroup.
-func (o *AccountGroup) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *AccountGroup) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in AccountGroup as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountGroup) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *AccountGroup) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -389,14 +389,14 @@ func (o *AccountGroup) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetRoles sets the value of the Roles field in AccountGroup.
-func (o *AccountGroup) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *AccountGroup) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type AccountServicePrincipal struct {
@@ -434,7 +434,7 @@ func (to *AccountServicePrincipal) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
@@ -453,7 +453,7 @@ func (c AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AccountServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccountServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"roles": reflect.TypeOf(ComplexValue{}),
 	}
@@ -462,22 +462,22 @@ func (a AccountServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccountServicePrincipal
 // only implements ToObjectValue() and Type().
-func (o AccountServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccountServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":     o.AccountId,
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"external_id":    o.ExternalId,
-			"id":             o.Id,
-			"roles":          o.Roles,
+			"account_id":     m.AccountId,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"external_id":    m.ExternalId,
+			"id":             m.Id,
+			"roles":          m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AccountServicePrincipal) Type(ctx context.Context) attr.Type {
+func (m AccountServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":     types.StringType,
@@ -496,12 +496,12 @@ func (o AccountServicePrincipal) Type(ctx context.Context) attr.Type {
 // GetRoles returns the value of the Roles field in AccountServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *AccountServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -509,14 +509,14 @@ func (o *AccountServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue,
 }
 
 // SetRoles sets the value of the Roles field in AccountServicePrincipal.
-func (o *AccountServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *AccountServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type AccountUser struct {
@@ -588,7 +588,7 @@ func (to *AccountUser) SyncFieldsDuringRead(ctx context.Context, from AccountUse
 	}
 }
 
-func (c AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -609,7 +609,7 @@ func (c AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AccountUser) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AccountUser) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails": reflect.TypeOf(ComplexValue{}),
 		"name":   reflect.TypeOf(Name{}),
@@ -620,24 +620,24 @@ func (a AccountUser) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccountUser
 // only implements ToObjectValue() and Type().
-func (o AccountUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AccountUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":   o.AccountId,
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"user_name":    o.UserName,
+			"account_id":   m.AccountId,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AccountUser) Type(ctx context.Context) attr.Type {
+func (m AccountUser) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":   types.StringType,
@@ -660,12 +660,12 @@ func (o AccountUser) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in AccountUser as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountUser) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *AccountUser) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -673,26 +673,26 @@ func (o *AccountUser) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetEmails sets the value of the Emails field in AccountUser.
-func (o *AccountUser) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *AccountUser) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in AccountUser as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountUser) GetName(ctx context.Context) (Name, bool) {
+func (m *AccountUser) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -703,20 +703,20 @@ func (o *AccountUser) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in AccountUser.
-func (o *AccountUser) SetName(ctx context.Context, v Name) {
+func (m *AccountUser) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in AccountUser as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AccountUser) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *AccountUser) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -724,14 +724,14 @@ func (o *AccountUser) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetRoles sets the value of the Roles field in AccountUser.
-func (o *AccountUser) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *AccountUser) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // represents an identity trying to access a resource - user or a service
@@ -747,7 +747,7 @@ func (to *Actor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Actor)
 func (to *Actor) SyncFieldsDuringRead(ctx context.Context, from Actor) {
 }
 
-func (c Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["actor_id"] = attrs["actor_id"].SetOptional()
 
 	return attrs
@@ -760,23 +760,23 @@ func (c Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Actor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Actor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Actor
 // only implements ToObjectValue() and Type().
-func (o Actor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Actor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"actor_id": o.ActorId,
+			"actor_id": m.ActorId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Actor) Type(ctx context.Context) attr.Type {
+func (m Actor) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"actor_id": types.Int64Type,
@@ -813,7 +813,7 @@ func (to *CheckPolicyResponse) SyncFieldsDuringRead(ctx context.Context, from Ch
 	}
 }
 
-func (c CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["consistency_token"] = attrs["consistency_token"].SetRequired()
 	attrs["is_permitted"] = attrs["is_permitted"].SetOptional()
 
@@ -827,7 +827,7 @@ func (c CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CheckPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CheckPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"consistency_token": reflect.TypeOf(ConsistencyToken{}),
 	}
@@ -836,17 +836,17 @@ func (a CheckPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CheckPolicyResponse
 // only implements ToObjectValue() and Type().
-func (o CheckPolicyResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CheckPolicyResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"consistency_token": o.ConsistencyToken,
-			"is_permitted":      o.IsPermitted,
+			"consistency_token": m.ConsistencyToken,
+			"is_permitted":      m.IsPermitted,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CheckPolicyResponse) Type(ctx context.Context) attr.Type {
+func (m CheckPolicyResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"consistency_token": ConsistencyToken{}.Type(ctx),
@@ -858,13 +858,13 @@ func (o CheckPolicyResponse) Type(ctx context.Context) attr.Type {
 // GetConsistencyToken returns the value of the ConsistencyToken field in CheckPolicyResponse as
 // a ConsistencyToken value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (ConsistencyToken, bool) {
+func (m *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (ConsistencyToken, bool) {
 	var e ConsistencyToken
-	if o.ConsistencyToken.IsNull() || o.ConsistencyToken.IsUnknown() {
+	if m.ConsistencyToken.IsNull() || m.ConsistencyToken.IsUnknown() {
 		return e, false
 	}
 	var v ConsistencyToken
-	d := o.ConsistencyToken.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.ConsistencyToken.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -875,9 +875,9 @@ func (o *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (Consiste
 }
 
 // SetConsistencyToken sets the value of the ConsistencyToken field in CheckPolicyResponse.
-func (o *CheckPolicyResponse) SetConsistencyToken(ctx context.Context, v ConsistencyToken) {
+func (m *CheckPolicyResponse) SetConsistencyToken(ctx context.Context, v ConsistencyToken) {
 	vs := v.ToObjectValue(ctx)
-	o.ConsistencyToken = vs
+	m.ConsistencyToken = vs
 }
 
 type ComplexValue struct {
@@ -898,7 +898,7 @@ func (to *ComplexValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 func (to *ComplexValue) SyncFieldsDuringRead(ctx context.Context, from ComplexValue) {
 }
 
-func (c ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ref"] = attrs["ref"].SetOptional()
 	attrs["display"] = attrs["display"].SetOptional()
 	attrs["primary"] = attrs["primary"].SetOptional()
@@ -915,27 +915,27 @@ func (c ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ComplexValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ComplexValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ComplexValue
 // only implements ToObjectValue() and Type().
-func (o ComplexValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ComplexValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display": o.Display,
-			"primary": o.Primary,
-			"ref":     o.Ref,
-			"type":    o.Type_,
-			"value":   o.Value,
+			"display": m.Display,
+			"primary": m.Primary,
+			"ref":     m.Ref,
+			"type":    m.Type_,
+			"value":   m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ComplexValue) Type(ctx context.Context) attr.Type {
+func (m ComplexValue) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display": types.StringType,
@@ -957,7 +957,7 @@ func (to *ConsistencyToken) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *ConsistencyToken) SyncFieldsDuringRead(ctx context.Context, from ConsistencyToken) {
 }
 
-func (c ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["value"] = attrs["value"].SetRequired()
 
 	return attrs
@@ -970,23 +970,23 @@ func (c ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ConsistencyToken) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ConsistencyToken) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ConsistencyToken
 // only implements ToObjectValue() and Type().
-func (o ConsistencyToken) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ConsistencyToken) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"value": o.Value,
+			"value": m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ConsistencyToken) Type(ctx context.Context) attr.Type {
+func (m ConsistencyToken) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": types.StringType,
@@ -1056,7 +1056,7 @@ func (to *CreateAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
@@ -1075,7 +1075,7 @@ func (c CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"members": reflect.TypeOf(ComplexValue{}),
 		"meta":    reflect.TypeOf(ResourceMeta{}),
@@ -1086,21 +1086,21 @@ func (a CreateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccountGroupRequest
 // only implements ToObjectValue() and Type().
-func (o CreateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": o.DisplayName,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
+			"display_name": m.DisplayName,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateAccountGroupRequest) Type(ctx context.Context) attr.Type {
+func (m CreateAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
@@ -1120,12 +1120,12 @@ func (o CreateAccountGroupRequest) Type(ctx context.Context) attr.Type {
 // GetMembers returns the value of the Members field in CreateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *CreateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1133,26 +1133,26 @@ func (o *CreateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexVa
 }
 
 // SetMembers sets the value of the Members field in CreateAccountGroupRequest.
-func (o *CreateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *CreateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in CreateAccountGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *CreateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1163,20 +1163,20 @@ func (o *CreateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, 
 }
 
 // SetMeta sets the value of the Meta field in CreateAccountGroupRequest.
-func (o *CreateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *CreateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in CreateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1184,14 +1184,14 @@ func (o *CreateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValu
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountGroupRequest.
-func (o *CreateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type CreateAccountServicePrincipalRequest struct {
@@ -1227,7 +1227,7 @@ func (to *CreateAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -1246,7 +1246,7 @@ func (c CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"roles": reflect.TypeOf(ComplexValue{}),
 	}
@@ -1255,21 +1255,21 @@ func (a CreateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccountServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o CreateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"external_id":    o.ExternalId,
-			"id":             o.Id,
-			"roles":          o.Roles,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"external_id":    m.ExternalId,
+			"id":             m.Id,
+			"roles":          m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m CreateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":         types.BoolType,
@@ -1287,12 +1287,12 @@ func (o CreateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Typ
 // GetRoles returns the value of the Roles field in CreateAccountServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1300,14 +1300,14 @@ func (o *CreateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountServicePrincipalRequest.
-func (o *CreateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type CreateAccountUserRequest struct {
@@ -1377,7 +1377,7 @@ func (to *CreateAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -1398,7 +1398,7 @@ func (c CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails": reflect.TypeOf(ComplexValue{}),
 		"name":   reflect.TypeOf(Name{}),
@@ -1409,23 +1409,23 @@ func (a CreateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAccountUserRequest
 // only implements ToObjectValue() and Type().
-func (o CreateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"user_name":    o.UserName,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateAccountUserRequest) Type(ctx context.Context) attr.Type {
+func (m CreateAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":       types.BoolType,
@@ -1447,12 +1447,12 @@ func (o CreateAccountUserRequest) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in CreateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *CreateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1460,26 +1460,26 @@ func (o *CreateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValu
 }
 
 // SetEmails sets the value of the Emails field in CreateAccountUserRequest.
-func (o *CreateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *CreateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in CreateAccountUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
+func (m *CreateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1490,20 +1490,20 @@ func (o *CreateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in CreateAccountUserRequest.
-func (o *CreateAccountUserRequest) SetName(ctx context.Context, v Name) {
+func (m *CreateAccountUserRequest) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in CreateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1511,14 +1511,14 @@ func (o *CreateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountUserRequest.
-func (o *CreateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type CreateGroupRequest struct {
@@ -1628,7 +1628,7 @@ func (to *CreateGroupRequest) SyncFieldsDuringRead(ctx context.Context, from Cre
 	}
 }
 
-func (c CreateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
@@ -1649,7 +1649,7 @@ func (c CreateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -1663,24 +1663,24 @@ func (a CreateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateGroupRequest
 // only implements ToObjectValue() and Type().
-func (o CreateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": o.DisplayName,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
+			"display_name": m.DisplayName,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateGroupRequest) Type(ctx context.Context) attr.Type {
+func (m CreateGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
@@ -1709,12 +1709,12 @@ func (o CreateGroupRequest) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *CreateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1722,25 +1722,25 @@ func (o *CreateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValu
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *CreateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *CreateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1748,25 +1748,25 @@ func (o *CreateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, boo
 }
 
 // SetGroups sets the value of the Groups field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *CreateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetMembers returns the value of the Members field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *CreateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1774,26 +1774,26 @@ func (o *CreateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bo
 }
 
 // SetMembers sets the value of the Members field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *CreateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in CreateGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *CreateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1804,20 +1804,20 @@ func (o *CreateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 }
 
 // SetMeta sets the value of the Meta field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *CreateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1825,25 +1825,25 @@ func (o *CreateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetRoles sets the value of the Roles field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in CreateGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *CreateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1851,14 +1851,14 @@ func (o *CreateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bo
 }
 
 // SetSchemas sets the value of the Schemas field in CreateGroupRequest.
-func (o *CreateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *CreateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type CreateServicePrincipalRequest struct {
@@ -1939,7 +1939,7 @@ func (to *CreateServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Contex
 	}
 }
 
-func (c CreateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -1960,7 +1960,7 @@ func (c CreateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -1972,24 +1972,24 @@ func (a CreateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context)
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o CreateServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"entitlements":   o.Entitlements,
-			"external_id":    o.ExternalId,
-			"groups":         o.Groups,
-			"id":             o.Id,
-			"roles":          o.Roles,
-			"schemas":        o.Schemas,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"entitlements":   m.Entitlements,
+			"external_id":    m.ExternalId,
+			"groups":         m.Groups,
+			"id":             m.Id,
+			"roles":          m.Roles,
+			"schemas":        m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m CreateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":         types.BoolType,
@@ -2016,12 +2016,12 @@ func (o CreateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *CreateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2029,25 +2029,25 @@ func (o *CreateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateServicePrincipalRequest.
-func (o *CreateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *CreateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *CreateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2055,25 +2055,25 @@ func (o *CreateServicePrincipalRequest) GetGroups(ctx context.Context) ([]Comple
 }
 
 // SetGroups sets the value of the Groups field in CreateServicePrincipalRequest.
-func (o *CreateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *CreateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetRoles returns the value of the Roles field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2081,25 +2081,25 @@ func (o *CreateServicePrincipalRequest) GetRoles(ctx context.Context) ([]Complex
 }
 
 // SetRoles sets the value of the Roles field in CreateServicePrincipalRequest.
-func (o *CreateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in CreateServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *CreateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2107,14 +2107,14 @@ func (o *CreateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types
 }
 
 // SetSchemas sets the value of the Schemas field in CreateServicePrincipalRequest.
-func (o *CreateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *CreateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type CreateUserRequest struct {
@@ -2233,7 +2233,7 @@ func (to *CreateUserRequest) SyncFieldsDuringRead(ctx context.Context, from Crea
 	}
 }
 
-func (c CreateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -2256,7 +2256,7 @@ func (c CreateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails":       reflect.TypeOf(ComplexValue{}),
 		"entitlements": reflect.TypeOf(ComplexValue{}),
@@ -2270,26 +2270,26 @@ func (a CreateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateUserRequest
 // only implements ToObjectValue() and Type().
-func (o CreateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
-			"user_name":    o.UserName,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateUserRequest) Type(ctx context.Context) attr.Type {
+func (m CreateUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":       types.BoolType,
@@ -2320,12 +2320,12 @@ func (o CreateUserRequest) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *CreateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2333,25 +2333,25 @@ func (o *CreateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetEmails sets the value of the Emails field in CreateUserRequest.
-func (o *CreateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *CreateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetEntitlements returns the value of the Entitlements field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *CreateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2359,25 +2359,25 @@ func (o *CreateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateUserRequest.
-func (o *CreateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *CreateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *CreateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2385,26 +2385,26 @@ func (o *CreateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetGroups sets the value of the Groups field in CreateUserRequest.
-func (o *CreateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *CreateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in CreateUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetName(ctx context.Context) (Name, bool) {
+func (m *CreateUserRequest) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -2415,20 +2415,20 @@ func (o *CreateUserRequest) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in CreateUserRequest.
-func (o *CreateUserRequest) SetName(ctx context.Context, v Name) {
+func (m *CreateUserRequest) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *CreateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2436,25 +2436,25 @@ func (o *CreateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool)
 }
 
 // SetRoles sets the value of the Roles field in CreateUserRequest.
-func (o *CreateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *CreateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in CreateUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *CreateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2462,14 +2462,14 @@ func (o *CreateUserRequest) GetSchemas(ctx context.Context) ([]types.String, boo
 }
 
 // SetSchemas sets the value of the Schemas field in CreateUserRequest.
-func (o *CreateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *CreateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type DeleteAccountGroupRequest struct {
@@ -2483,7 +2483,7 @@ func (to *DeleteAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *DeleteAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteAccountGroupRequest) {
 }
 
-func (c DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
@@ -2497,23 +2497,23 @@ func (c DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAccountGroupRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteAccountGroupRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2532,7 +2532,7 @@ func (to *DeleteAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(c
 func (to *DeleteAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteAccountServicePrincipalRequest) {
 }
 
-func (c DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
@@ -2546,23 +2546,23 @@ func (c DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAccountServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2581,7 +2581,7 @@ func (to *DeleteAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *DeleteAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteAccountUserRequest) {
 }
 
-func (c DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
@@ -2595,23 +2595,23 @@ func (c DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAccountUserRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteAccountUserRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2630,7 +2630,7 @@ func (to *DeleteGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 func (to *DeleteGroupRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteGroupRequest) {
 }
 
-func (c DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2643,23 +2643,23 @@ func (c DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteGroupRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteGroupRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2678,7 +2678,7 @@ func (to *DeleteServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *DeleteServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteServicePrincipalRequest) {
 }
 
-func (c DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2691,23 +2691,23 @@ func (c DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2726,7 +2726,7 @@ func (to *DeleteUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *DeleteUserRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteUserRequest) {
 }
 
-func (c DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2739,23 +2739,23 @@ func (c DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteUserRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteUserRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2776,7 +2776,7 @@ func (to *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteWorkspaceAssignmentRequest) {
 }
 
-func (c DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
@@ -2791,24 +2791,24 @@ func (c DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteWorkspaceAssignmentRequest
 // only implements ToObjectValue() and Type().
-func (o DeleteWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": o.PrincipalId,
-			"workspace_id": o.WorkspaceId,
+			"principal_id": m.PrincipalId,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
+func (m DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal_id": types.Int64Type,
@@ -2826,7 +2826,7 @@ func (to *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringCreateOrU
 func (to *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteWorkspacePermissionAssignmentResponse) {
 }
 
-func (c DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -2838,21 +2838,21 @@ func (c DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(a
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteWorkspacePermissionAssignmentResponse
 // only implements ToObjectValue() and Type().
-func (o DeleteWorkspacePermissionAssignmentResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteWorkspacePermissionAssignmentResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteWorkspacePermissionAssignmentResponse) Type(ctx context.Context) attr.Type {
+func (m DeleteWorkspacePermissionAssignmentResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -2869,7 +2869,7 @@ func (to *GetAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *GetAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from GetAccountGroupRequest) {
 }
 
-func (c GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
@@ -2883,23 +2883,23 @@ func (c GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAccountGroupRequest
 // only implements ToObjectValue() and Type().
-func (o GetAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAccountGroupRequest) Type(ctx context.Context) attr.Type {
+func (m GetAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2918,7 +2918,7 @@ func (to *GetAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx 
 func (to *GetAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from GetAccountServicePrincipalRequest) {
 }
 
-func (c GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
@@ -2932,23 +2932,23 @@ func (c GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAccountServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o GetAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m GetAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -2988,7 +2988,7 @@ func (to *GetAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *GetAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from GetAccountUserRequest) {
 }
 
-func (c GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
@@ -3009,30 +3009,30 @@ func (c GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAccountUserRequest
 // only implements ToObjectValue() and Type().
-func (o GetAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"id":                  o.Id,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"id":                  m.Id,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAccountUserRequest) Type(ctx context.Context) attr.Type {
+func (m GetAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -3066,7 +3066,7 @@ func (to *GetAssignableRolesForResourceRequest) SyncFieldsDuringCreateOrUpdate(c
 func (to *GetAssignableRolesForResourceRequest) SyncFieldsDuringRead(ctx context.Context, from GetAssignableRolesForResourceRequest) {
 }
 
-func (c GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["resource"] = attrs["resource"].SetRequired()
 
@@ -3080,23 +3080,23 @@ func (c GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAssignableRolesForResourceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAssignableRolesForResourceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAssignableRolesForResourceRequest
 // only implements ToObjectValue() and Type().
-func (o GetAssignableRolesForResourceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAssignableRolesForResourceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"resource": o.Resource,
+			"resource": m.Resource,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAssignableRolesForResourceRequest) Type(ctx context.Context) attr.Type {
+func (m GetAssignableRolesForResourceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"resource": types.StringType,
@@ -3126,7 +3126,7 @@ func (to *GetAssignableRolesForResourceResponse) SyncFieldsDuringRead(ctx contex
 	}
 }
 
-func (c GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["roles"] = attrs["roles"].SetOptional()
 
 	return attrs
@@ -3139,7 +3139,7 @@ func (c GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAssignableRolesForResourceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAssignableRolesForResourceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"roles": reflect.TypeOf(Role{}),
 	}
@@ -3148,16 +3148,16 @@ func (a GetAssignableRolesForResourceResponse) GetComplexFieldTypes(ctx context.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAssignableRolesForResourceResponse
 // only implements ToObjectValue() and Type().
-func (o GetAssignableRolesForResourceResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAssignableRolesForResourceResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"roles": o.Roles,
+			"roles": m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Type {
+func (m GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"roles": basetypes.ListType{
@@ -3170,12 +3170,12 @@ func (o GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Ty
 // GetRoles returns the value of the Roles field in GetAssignableRolesForResourceResponse as
 // a slice of Role values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetAssignableRolesForResourceResponse) GetRoles(ctx context.Context) ([]Role, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *GetAssignableRolesForResourceResponse) GetRoles(ctx context.Context) ([]Role, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []Role
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3183,14 +3183,14 @@ func (o *GetAssignableRolesForResourceResponse) GetRoles(ctx context.Context) ([
 }
 
 // SetRoles sets the value of the Roles field in GetAssignableRolesForResourceResponse.
-func (o *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v []Role) {
+func (m *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v []Role) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type GetGroupRequest struct {
@@ -3204,7 +3204,7 @@ func (to *GetGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *GetGroupRequest) SyncFieldsDuringRead(ctx context.Context, from GetGroupRequest) {
 }
 
-func (c GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -3217,23 +3217,23 @@ func (c GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetGroupRequest
 // only implements ToObjectValue() and Type().
-func (o GetGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetGroupRequest) Type(ctx context.Context) attr.Type {
+func (m GetGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -3250,7 +3250,7 @@ func (to *GetPasswordPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx
 func (to *GetPasswordPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, from GetPasswordPermissionLevelsRequest) {
 }
 
-func (c GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -3262,21 +3262,21 @@ func (c GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPasswordPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPasswordPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionLevelsRequest
 // only implements ToObjectValue() and Type().
-func (o GetPasswordPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPasswordPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPasswordPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
+func (m GetPasswordPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -3305,7 +3305,7 @@ func (to *GetPasswordPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.
 	}
 }
 
-func (c GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
 	return attrs
@@ -3318,7 +3318,7 @@ func (c GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPasswordPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPasswordPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(PasswordPermissionsDescription{}),
 	}
@@ -3327,16 +3327,16 @@ func (a GetPasswordPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Co
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionLevelsResponse
 // only implements ToObjectValue() and Type().
-func (o GetPasswordPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPasswordPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": o.PermissionLevels,
+			"permission_levels": m.PermissionLevels,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
+func (m GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
@@ -3349,12 +3349,12 @@ func (o GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type
 // GetPermissionLevels returns the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse as
 // a slice of PasswordPermissionsDescription values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetPasswordPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PasswordPermissionsDescription, bool) {
-	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+func (m *GetPasswordPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PasswordPermissionsDescription, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
 		return nil, false
 	}
 	var v []PasswordPermissionsDescription
-	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3362,14 +3362,14 @@ func (o *GetPasswordPermissionLevelsResponse) GetPermissionLevels(ctx context.Co
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse.
-func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PasswordPermissionsDescription) {
+func (m *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PasswordPermissionsDescription) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PermissionLevels = types.ListValueMust(t, vs)
+	m.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 type GetPasswordPermissionsRequest struct {
@@ -3381,7 +3381,7 @@ func (to *GetPasswordPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *GetPasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from GetPasswordPermissionsRequest) {
 }
 
-func (c GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -3393,21 +3393,21 @@ func (c GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPasswordPermissionsRequest
 // only implements ToObjectValue() and Type().
-func (o GetPasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
+func (m GetPasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -3417,8 +3417,8 @@ type GetPermissionLevelsRequest struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -3429,7 +3429,7 @@ func (to *GetPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context
 func (to *GetPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, from GetPermissionLevelsRequest) {
 }
 
-func (c GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
 	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
@@ -3443,24 +3443,24 @@ func (c GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPermissionLevelsRequest
 // only implements ToObjectValue() and Type().
-func (o GetPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
+			"request_object_id":   m.RequestObjectId,
+			"request_object_type": m.RequestObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
+func (m GetPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request_object_id":   types.StringType,
@@ -3492,7 +3492,7 @@ func (to *GetPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
 	return attrs
@@ -3505,7 +3505,7 @@ func (c GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(PermissionsDescription{}),
 	}
@@ -3514,16 +3514,16 @@ func (a GetPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPermissionLevelsResponse
 // only implements ToObjectValue() and Type().
-func (o GetPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": o.PermissionLevels,
+			"permission_levels": m.PermissionLevels,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
+func (m GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
@@ -3536,12 +3536,12 @@ func (o GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 // GetPermissionLevels returns the value of the PermissionLevels field in GetPermissionLevelsResponse as
 // a slice of PermissionsDescription values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PermissionsDescription, bool) {
-	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+func (m *GetPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PermissionsDescription, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
 		return nil, false
 	}
 	var v []PermissionsDescription
-	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3549,14 +3549,14 @@ func (o *GetPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) (
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetPermissionLevelsResponse.
-func (o *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PermissionsDescription) {
+func (m *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PermissionsDescription) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PermissionLevels = types.ListValueMust(t, vs)
+	m.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 type GetPermissionRequest struct {
@@ -3564,8 +3564,8 @@ type GetPermissionRequest struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -3576,7 +3576,7 @@ func (to *GetPermissionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *GetPermissionRequest) SyncFieldsDuringRead(ctx context.Context, from GetPermissionRequest) {
 }
 
-func (c GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
 	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
@@ -3590,24 +3590,24 @@ func (c GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetPermissionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetPermissionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetPermissionRequest
 // only implements ToObjectValue() and Type().
-func (o GetPermissionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetPermissionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
+			"request_object_id":   m.RequestObjectId,
+			"request_object_type": m.RequestObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetPermissionRequest) Type(ctx context.Context) attr.Type {
+func (m GetPermissionRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request_object_id":   types.StringType,
@@ -3651,7 +3651,7 @@ func (to *GetRuleSetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *GetRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from GetRuleSetRequest) {
 }
 
-func (c GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetRequired()
@@ -3666,24 +3666,24 @@ func (c GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetRuleSetRequest
 // only implements ToObjectValue() and Type().
-func (o GetRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag": o.Etag,
-			"name": o.Name,
+			"etag": m.Etag,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetRuleSetRequest) Type(ctx context.Context) attr.Type {
+func (m GetRuleSetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
@@ -3703,7 +3703,7 @@ func (to *GetServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context
 func (to *GetServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from GetServicePrincipalRequest) {
 }
 
-func (c GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -3716,23 +3716,23 @@ func (c GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o GetServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m GetServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -3772,7 +3772,7 @@ func (to *GetUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 func (to *GetUserRequest) SyncFieldsDuringRead(ctx context.Context, from GetUserRequest) {
 }
 
-func (c GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
@@ -3792,30 +3792,30 @@ func (c GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetUserRequest
 // only implements ToObjectValue() and Type().
-func (o GetUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"id":                  o.Id,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"id":                  m.Id,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetUserRequest) Type(ctx context.Context) attr.Type {
+func (m GetUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -3841,7 +3841,7 @@ func (to *GetWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *GetWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceAssignmentRequest) {
 }
 
-func (c GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
@@ -3855,23 +3855,23 @@ func (c GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceAssignmentRequest
 // only implements ToObjectValue() and Type().
-func (o GetWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"workspace_id": o.WorkspaceId,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
+func (m GetWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.Int64Type,
@@ -3908,7 +3908,7 @@ func (to *GrantRule) SyncFieldsDuringRead(ctx context.Context, from GrantRule) {
 	}
 }
 
-func (c GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principals"] = attrs["principals"].SetOptional()
 	attrs["role"] = attrs["role"].SetRequired()
 
@@ -3922,7 +3922,7 @@ func (c GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"principals": reflect.TypeOf(types.String{}),
 	}
@@ -3931,17 +3931,17 @@ func (a GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GrantRule
 // only implements ToObjectValue() and Type().
-func (o GrantRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GrantRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principals": o.Principals,
-			"role":       o.Role,
+			"principals": m.Principals,
+			"role":       m.Role,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GrantRule) Type(ctx context.Context) attr.Type {
+func (m GrantRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principals": basetypes.ListType{
@@ -3955,12 +3955,12 @@ func (o GrantRule) Type(ctx context.Context) attr.Type {
 // GetPrincipals returns the value of the Principals field in GrantRule as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GrantRule) GetPrincipals(ctx context.Context) ([]types.String, bool) {
-	if o.Principals.IsNull() || o.Principals.IsUnknown() {
+func (m *GrantRule) GetPrincipals(ctx context.Context) ([]types.String, bool) {
+	if m.Principals.IsNull() || m.Principals.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Principals.ElementsAs(ctx, &v, true)
+	d := m.Principals.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3968,14 +3968,14 @@ func (o *GrantRule) GetPrincipals(ctx context.Context) ([]types.String, bool) {
 }
 
 // SetPrincipals sets the value of the Principals field in GrantRule.
-func (o *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
+func (m *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Principals = types.ListValueMust(t, vs)
+	m.Principals = types.ListValueMust(t, vs)
 }
 
 type Group struct {
@@ -4085,7 +4085,7 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 	}
 }
 
-func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
@@ -4106,7 +4106,7 @@ func (c Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -4120,24 +4120,24 @@ func (a Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Group
 // only implements ToObjectValue() and Type().
-func (o Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": o.DisplayName,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
+			"display_name": m.DisplayName,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Group) Type(ctx context.Context) attr.Type {
+func (m Group) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
@@ -4166,12 +4166,12 @@ func (o Group) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *Group) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4179,25 +4179,25 @@ func (o *Group) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetEntitlements sets the value of the Entitlements field in Group.
-func (o *Group) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *Group) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *Group) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4205,25 +4205,25 @@ func (o *Group) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetGroups sets the value of the Groups field in Group.
-func (o *Group) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *Group) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetMembers returns the value of the Members field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *Group) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4231,26 +4231,26 @@ func (o *Group) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetMembers sets the value of the Members field in Group.
-func (o *Group) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *Group) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in Group as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -4261,20 +4261,20 @@ func (o *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 }
 
 // SetMeta sets the value of the Meta field in Group.
-func (o *Group) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *Group) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *Group) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4282,25 +4282,25 @@ func (o *Group) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetRoles sets the value of the Roles field in Group.
-func (o *Group) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *Group) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in Group as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Group) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *Group) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4308,14 +4308,14 @@ func (o *Group) GetSchemas(ctx context.Context) ([]types.String, bool) {
 }
 
 // SetSchemas sets the value of the Schemas field in Group.
-func (o *Group) SetSchemas(ctx context.Context, v []types.String) {
+func (m *Group) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type ListAccountGroupsRequest struct {
@@ -4347,7 +4347,7 @@ func (to *ListAccountGroupsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *ListAccountGroupsRequest) SyncFieldsDuringRead(ctx context.Context, from ListAccountGroupsRequest) {
 }
 
-func (c ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
@@ -4367,29 +4367,29 @@ func (c ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountGroupsRequest
 // only implements ToObjectValue() and Type().
-func (o ListAccountGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
+func (m ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -4433,7 +4433,7 @@ func (to *ListAccountGroupsResponse) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c ListAccountGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["start_index"] = attrs["start_index"].SetOptional()
@@ -4449,7 +4449,7 @@ func (c ListAccountGroupsResponse) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(AccountGroup{}),
 	}
@@ -4458,19 +4458,19 @@ func (a ListAccountGroupsResponse) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountGroupsResponse
 // only implements ToObjectValue() and Type().
-func (o ListAccountGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountGroupsResponse) Type(ctx context.Context) attr.Type {
+func (m ListAccountGroupsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -4486,12 +4486,12 @@ func (o ListAccountGroupsResponse) Type(ctx context.Context) attr.Type {
 // GetResources returns the value of the Resources field in ListAccountGroupsResponse as
 // a slice of AccountGroup values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAccountGroupsResponse) GetResources(ctx context.Context) ([]AccountGroup, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListAccountGroupsResponse) GetResources(ctx context.Context) ([]AccountGroup, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []AccountGroup
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4499,14 +4499,14 @@ func (o *ListAccountGroupsResponse) GetResources(ctx context.Context) ([]Account
 }
 
 // SetResources sets the value of the Resources field in ListAccountGroupsResponse.
-func (o *ListAccountGroupsResponse) SetResources(ctx context.Context, v []AccountGroup) {
+func (m *ListAccountGroupsResponse) SetResources(ctx context.Context, v []AccountGroup) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 type ListAccountServicePrincipalsRequest struct {
@@ -4538,7 +4538,7 @@ func (to *ListAccountServicePrincipalsRequest) SyncFieldsDuringCreateOrUpdate(ct
 func (to *ListAccountServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.Context, from ListAccountServicePrincipalsRequest) {
 }
 
-func (c ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
@@ -4558,29 +4558,29 @@ func (c ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountServicePrincipalsRequest
 // only implements ToObjectValue() and Type().
-func (o ListAccountServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
+func (m ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -4624,7 +4624,7 @@ func (to *ListAccountServicePrincipalsResponse) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c ListAccountServicePrincipalsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountServicePrincipalsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["start_index"] = attrs["start_index"].SetOptional()
@@ -4640,7 +4640,7 @@ func (c ListAccountServicePrincipalsResponse) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountServicePrincipalsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountServicePrincipalsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(AccountServicePrincipal{}),
 	}
@@ -4649,19 +4649,19 @@ func (a ListAccountServicePrincipalsResponse) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountServicePrincipalsResponse
 // only implements ToObjectValue() and Type().
-func (o ListAccountServicePrincipalsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountServicePrincipalsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountServicePrincipalsResponse) Type(ctx context.Context) attr.Type {
+func (m ListAccountServicePrincipalsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -4677,12 +4677,12 @@ func (o ListAccountServicePrincipalsResponse) Type(ctx context.Context) attr.Typ
 // GetResources returns the value of the Resources field in ListAccountServicePrincipalsResponse as
 // a slice of AccountServicePrincipal values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAccountServicePrincipalsResponse) GetResources(ctx context.Context) ([]AccountServicePrincipal, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListAccountServicePrincipalsResponse) GetResources(ctx context.Context) ([]AccountServicePrincipal, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []AccountServicePrincipal
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4690,14 +4690,14 @@ func (o *ListAccountServicePrincipalsResponse) GetResources(ctx context.Context)
 }
 
 // SetResources sets the value of the Resources field in ListAccountServicePrincipalsResponse.
-func (o *ListAccountServicePrincipalsResponse) SetResources(ctx context.Context, v []AccountServicePrincipal) {
+func (m *ListAccountServicePrincipalsResponse) SetResources(ctx context.Context, v []AccountServicePrincipal) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 type ListAccountUsersRequest struct {
@@ -4730,7 +4730,7 @@ func (to *ListAccountUsersRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *ListAccountUsersRequest) SyncFieldsDuringRead(ctx context.Context, from ListAccountUsersRequest) {
 }
 
-func (c ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
@@ -4750,29 +4750,29 @@ func (c ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountUsersRequest
 // only implements ToObjectValue() and Type().
-func (o ListAccountUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountUsersRequest) Type(ctx context.Context) attr.Type {
+func (m ListAccountUsersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -4816,7 +4816,7 @@ func (to *ListAccountUsersResponse) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c ListAccountUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAccountUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["start_index"] = attrs["start_index"].SetOptional()
@@ -4832,7 +4832,7 @@ func (c ListAccountUsersResponse) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAccountUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAccountUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(AccountUser{}),
 	}
@@ -4841,19 +4841,19 @@ func (a ListAccountUsersResponse) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountUsersResponse
 // only implements ToObjectValue() and Type().
-func (o ListAccountUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAccountUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAccountUsersResponse) Type(ctx context.Context) attr.Type {
+func (m ListAccountUsersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -4869,12 +4869,12 @@ func (o ListAccountUsersResponse) Type(ctx context.Context) attr.Type {
 // GetResources returns the value of the Resources field in ListAccountUsersResponse as
 // a slice of AccountUser values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAccountUsersResponse) GetResources(ctx context.Context) ([]AccountUser, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListAccountUsersResponse) GetResources(ctx context.Context) ([]AccountUser, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []AccountUser
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4882,14 +4882,14 @@ func (o *ListAccountUsersResponse) GetResources(ctx context.Context) ([]AccountU
 }
 
 // SetResources sets the value of the Resources field in ListAccountUsersResponse.
-func (o *ListAccountUsersResponse) SetResources(ctx context.Context, v []AccountUser) {
+func (m *ListAccountUsersResponse) SetResources(ctx context.Context, v []AccountUser) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 type ListGroupsRequest struct {
@@ -4921,7 +4921,7 @@ func (to *ListGroupsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 func (to *ListGroupsRequest) SyncFieldsDuringRead(ctx context.Context, from ListGroupsRequest) {
 }
 
-func (c ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -4940,29 +4940,29 @@ func (c ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListGroupsRequest
 // only implements ToObjectValue() and Type().
-func (o ListGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListGroupsRequest) Type(ctx context.Context) attr.Type {
+func (m ListGroupsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -5020,7 +5020,7 @@ func (to *ListGroupsResponse) SyncFieldsDuringRead(ctx context.Context, from Lis
 	}
 }
 
-func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
@@ -5037,7 +5037,7 @@ func (c ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(Group{}),
 		"schemas":   reflect.TypeOf(types.String{}),
@@ -5047,20 +5047,20 @@ func (a ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListGroupsResponse
 // only implements ToObjectValue() and Type().
-func (o ListGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"schemas":        o.Schemas,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"schemas":        m.Schemas,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListGroupsResponse) Type(ctx context.Context) attr.Type {
+func (m ListGroupsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -5079,12 +5079,12 @@ func (o ListGroupsResponse) Type(ctx context.Context) attr.Type {
 // GetResources returns the value of the Resources field in ListGroupsResponse as
 // a slice of Group values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListGroupsResponse) GetResources(ctx context.Context) ([]Group, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListGroupsResponse) GetResources(ctx context.Context) ([]Group, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []Group
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5092,25 +5092,25 @@ func (o *ListGroupsResponse) GetResources(ctx context.Context) ([]Group, bool) {
 }
 
 // SetResources sets the value of the Resources field in ListGroupsResponse.
-func (o *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
+func (m *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in ListGroupsResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListGroupsResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *ListGroupsResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5118,14 +5118,14 @@ func (o *ListGroupsResponse) GetSchemas(ctx context.Context) ([]types.String, bo
 }
 
 // SetSchemas sets the value of the Schemas field in ListGroupsResponse.
-func (o *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
+func (m *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type ListServicePrincipalResponse struct {
@@ -5172,7 +5172,7 @@ func (to *ListServicePrincipalResponse) SyncFieldsDuringRead(ctx context.Context
 	}
 }
 
-func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
@@ -5189,7 +5189,7 @@ func (c ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(ServicePrincipal{}),
 		"schemas":   reflect.TypeOf(types.String{}),
@@ -5199,20 +5199,20 @@ func (a ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListServicePrincipalResponse
 // only implements ToObjectValue() and Type().
-func (o ListServicePrincipalResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListServicePrincipalResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"schemas":        o.Schemas,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"schemas":        m.Schemas,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
+func (m ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -5231,12 +5231,12 @@ func (o ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
 // GetResources returns the value of the Resources field in ListServicePrincipalResponse as
 // a slice of ServicePrincipal values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListServicePrincipalResponse) GetResources(ctx context.Context) ([]ServicePrincipal, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListServicePrincipalResponse) GetResources(ctx context.Context) ([]ServicePrincipal, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []ServicePrincipal
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5244,25 +5244,25 @@ func (o *ListServicePrincipalResponse) GetResources(ctx context.Context) ([]Serv
 }
 
 // SetResources sets the value of the Resources field in ListServicePrincipalResponse.
-func (o *ListServicePrincipalResponse) SetResources(ctx context.Context, v []ServicePrincipal) {
+func (m *ListServicePrincipalResponse) SetResources(ctx context.Context, v []ServicePrincipal) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in ListServicePrincipalResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListServicePrincipalResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *ListServicePrincipalResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5270,14 +5270,14 @@ func (o *ListServicePrincipalResponse) GetSchemas(ctx context.Context) ([]types.
 }
 
 // SetSchemas sets the value of the Schemas field in ListServicePrincipalResponse.
-func (o *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types.String) {
+func (m *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type ListServicePrincipalsRequest struct {
@@ -5309,7 +5309,7 @@ func (to *ListServicePrincipalsRequest) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *ListServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.Context, from ListServicePrincipalsRequest) {
 }
 
-func (c ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -5328,29 +5328,29 @@ func (c ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListServicePrincipalsRequest
 // only implements ToObjectValue() and Type().
-func (o ListServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
+func (m ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -5394,7 +5394,7 @@ func (to *ListUsersRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *ListUsersRequest) SyncFieldsDuringRead(ctx context.Context, from ListUsersRequest) {
 }
 
-func (c ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -5413,29 +5413,29 @@ func (c ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListUsersRequest
 // only implements ToObjectValue() and Type().
-func (o ListUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          o.Attributes,
-			"count":               o.Count,
-			"excluded_attributes": o.ExcludedAttributes,
-			"filter":              o.Filter,
-			"sort_by":             o.SortBy,
-			"sort_order":          o.SortOrder,
-			"start_index":         o.StartIndex,
+			"attributes":          m.Attributes,
+			"count":               m.Count,
+			"excluded_attributes": m.ExcludedAttributes,
+			"filter":              m.Filter,
+			"sort_by":             m.SortBy,
+			"sort_order":          m.SortOrder,
+			"start_index":         m.StartIndex,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListUsersRequest) Type(ctx context.Context) attr.Type {
+func (m ListUsersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":          types.StringType,
@@ -5493,7 +5493,7 @@ func (to *ListUsersResponse) SyncFieldsDuringRead(ctx context.Context, from List
 	}
 }
 
-func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
@@ -5510,7 +5510,7 @@ func (c ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resources": reflect.TypeOf(User{}),
 		"schemas":   reflect.TypeOf(types.String{}),
@@ -5520,20 +5520,20 @@ func (a ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListUsersResponse
 // only implements ToObjectValue() and Type().
-func (o ListUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": o.ItemsPerPage,
-			"resources":      o.Resources,
-			"schemas":        o.Schemas,
-			"start_index":    o.StartIndex,
-			"total_results":  o.TotalResults,
+			"items_per_page": m.ItemsPerPage,
+			"resources":      m.Resources,
+			"schemas":        m.Schemas,
+			"start_index":    m.StartIndex,
+			"total_results":  m.TotalResults,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListUsersResponse) Type(ctx context.Context) attr.Type {
+func (m ListUsersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items_per_page": types.Int64Type,
@@ -5552,12 +5552,12 @@ func (o ListUsersResponse) Type(ctx context.Context) attr.Type {
 // GetResources returns the value of the Resources field in ListUsersResponse as
 // a slice of User values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListUsersResponse) GetResources(ctx context.Context) ([]User, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *ListUsersResponse) GetResources(ctx context.Context) ([]User, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []User
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5565,25 +5565,25 @@ func (o *ListUsersResponse) GetResources(ctx context.Context) ([]User, bool) {
 }
 
 // SetResources sets the value of the Resources field in ListUsersResponse.
-func (o *ListUsersResponse) SetResources(ctx context.Context, v []User) {
+func (m *ListUsersResponse) SetResources(ctx context.Context, v []User) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in ListUsersResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListUsersResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *ListUsersResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5591,14 +5591,14 @@ func (o *ListUsersResponse) GetSchemas(ctx context.Context) ([]types.String, boo
 }
 
 // SetSchemas sets the value of the Schemas field in ListUsersResponse.
-func (o *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
+func (m *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type ListWorkspaceAssignmentRequest struct {
@@ -5612,7 +5612,7 @@ func (to *ListWorkspaceAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *ListWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentRequest) {
 }
 
-func (c ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
@@ -5626,23 +5626,23 @@ func (c ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspaceAssignmentRequest
 // only implements ToObjectValue() and Type().
-func (o ListWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"workspace_id": o.WorkspaceId,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
+func (m ListWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.Int64Type,
@@ -5659,7 +5659,7 @@ func (to *MeRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Me
 func (to *MeRequest) SyncFieldsDuringRead(ctx context.Context, from MeRequest) {
 }
 
-func (c MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
 	return attrs
 }
@@ -5671,21 +5671,21 @@ func (c MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a MeRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m MeRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, MeRequest
 // only implements ToObjectValue() and Type().
-func (o MeRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m MeRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o MeRequest) Type(ctx context.Context) attr.Type {
+func (m MeRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -5709,7 +5709,7 @@ func (to *MigratePermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *MigratePermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from MigratePermissionsRequest) {
 }
 
-func (c MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
 	attrs["size"] = attrs["size"].SetOptional()
 	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
@@ -5725,26 +5725,26 @@ func (c MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a MigratePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m MigratePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, MigratePermissionsRequest
 // only implements ToObjectValue() and Type().
-func (o MigratePermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m MigratePermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"from_workspace_group_name": o.FromWorkspaceGroupName,
-			"size":                      o.Size,
-			"to_account_group_name":     o.ToAccountGroupName,
-			"workspace_id":              o.WorkspaceId,
+			"from_workspace_group_name": m.FromWorkspaceGroupName,
+			"size":                      m.Size,
+			"to_account_group_name":     m.ToAccountGroupName,
+			"workspace_id":              m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o MigratePermissionsRequest) Type(ctx context.Context) attr.Type {
+func (m MigratePermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"from_workspace_group_name": types.StringType,
@@ -5766,7 +5766,7 @@ func (to *MigratePermissionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context
 func (to *MigratePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, from MigratePermissionsResponse) {
 }
 
-func (c MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permissions_migrated"] = attrs["permissions_migrated"].SetOptional()
 
 	return attrs
@@ -5779,23 +5779,23 @@ func (c MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a MigratePermissionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m MigratePermissionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, MigratePermissionsResponse
 // only implements ToObjectValue() and Type().
-func (o MigratePermissionsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m MigratePermissionsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions_migrated": o.PermissionsMigrated,
+			"permissions_migrated": m.PermissionsMigrated,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o MigratePermissionsResponse) Type(ctx context.Context) attr.Type {
+func (m MigratePermissionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions_migrated": types.Int64Type,
@@ -5816,7 +5816,7 @@ func (to *Name) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Name) {
 func (to *Name) SyncFieldsDuringRead(ctx context.Context, from Name) {
 }
 
-func (c Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["family_name"] = attrs["family_name"].SetOptional()
 	attrs["given_name"] = attrs["given_name"].SetOptional()
 
@@ -5830,24 +5830,24 @@ func (c Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Name) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Name) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Name
 // only implements ToObjectValue() and Type().
-func (o Name) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Name) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"family_name": o.FamilyName,
-			"given_name":  o.GivenName,
+			"family_name": m.FamilyName,
+			"given_name":  m.GivenName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Name) Type(ctx context.Context) attr.Type {
+func (m Name) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"family_name": types.StringType,
@@ -5882,7 +5882,7 @@ func (to *ObjectPermissions) SyncFieldsDuringRead(ctx context.Context, from Obje
 	}
 }
 
-func (c ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
 	attrs["object_type"] = attrs["object_type"].SetOptional()
@@ -5897,7 +5897,7 @@ func (c ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(AccessControlResponse{}),
 	}
@@ -5906,18 +5906,18 @@ func (a ObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ObjectPermissions
 // only implements ToObjectValue() and Type().
-func (o ObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"object_id":           o.ObjectId,
-			"object_type":         o.ObjectType,
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ObjectPermissions) Type(ctx context.Context) attr.Type {
+func (m ObjectPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -5932,12 +5932,12 @@ func (o ObjectPermissions) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in ObjectPermissions as
 // a slice of AccessControlResponse values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlResponse, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *ObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlResponse, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []AccessControlResponse
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5945,14 +5945,14 @@ func (o *ObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessC
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in ObjectPermissions.
-func (o *ObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlResponse) {
+func (m *ObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlResponse) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type PasswordAccessControlRequest struct {
@@ -5972,7 +5972,7 @@ func (to *PasswordAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *PasswordAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from PasswordAccessControlRequest) {
 }
 
-func (c PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
@@ -5988,26 +5988,26 @@ func (c PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordAccessControlRequest
 // only implements ToObjectValue() and Type().
-func (o PasswordAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             o.GroupName,
-			"permission_level":       o.PermissionLevel,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordAccessControlRequest) Type(ctx context.Context) attr.Type {
+func (m PasswordAccessControlRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -6049,7 +6049,7 @@ func (to *PasswordAccessControlResponse) SyncFieldsDuringRead(ctx context.Contex
 	}
 }
 
-func (c PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
@@ -6066,7 +6066,7 @@ func (c PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(PasswordPermission{}),
 	}
@@ -6075,20 +6075,20 @@ func (a PasswordAccessControlResponse) GetComplexFieldTypes(ctx context.Context)
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordAccessControlResponse
 // only implements ToObjectValue() and Type().
-func (o PasswordAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        o.AllPermissions,
-			"display_name":           o.DisplayName,
-			"group_name":             o.GroupName,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
+func (m PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
@@ -6105,12 +6105,12 @@ func (o PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
 // GetAllPermissions returns the value of the AllPermissions field in PasswordAccessControlResponse as
 // a slice of PasswordPermission values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PasswordAccessControlResponse) GetAllPermissions(ctx context.Context) ([]PasswordPermission, bool) {
-	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+func (m *PasswordAccessControlResponse) GetAllPermissions(ctx context.Context) ([]PasswordPermission, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
 		return nil, false
 	}
 	var v []PasswordPermission
-	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6118,14 +6118,14 @@ func (o *PasswordAccessControlResponse) GetAllPermissions(ctx context.Context) (
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in PasswordAccessControlResponse.
-func (o *PasswordAccessControlResponse) SetAllPermissions(ctx context.Context, v []PasswordPermission) {
+func (m *PasswordAccessControlResponse) SetAllPermissions(ctx context.Context, v []PasswordPermission) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AllPermissions = types.ListValueMust(t, vs)
+	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type PasswordPermission struct {
@@ -6154,7 +6154,7 @@ func (to *PasswordPermission) SyncFieldsDuringRead(ctx context.Context, from Pas
 	}
 }
 
-func (c PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
@@ -6169,7 +6169,7 @@ func (c PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
@@ -6178,18 +6178,18 @@ func (a PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordPermission
 // only implements ToObjectValue() and Type().
-func (o PasswordPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             o.Inherited,
-			"inherited_from_object": o.InheritedFromObject,
-			"permission_level":      o.PermissionLevel,
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordPermission) Type(ctx context.Context) attr.Type {
+func (m PasswordPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -6204,12 +6204,12 @@ func (o PasswordPermission) Type(ctx context.Context) attr.Type {
 // GetInheritedFromObject returns the value of the InheritedFromObject field in PasswordPermission as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PasswordPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+func (m *PasswordPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6217,14 +6217,14 @@ func (o *PasswordPermission) GetInheritedFromObject(ctx context.Context) ([]type
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in PasswordPermission.
-func (o *PasswordPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+func (m *PasswordPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.InheritedFromObject = types.ListValueMust(t, vs)
+	m.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
 type PasswordPermissions struct {
@@ -6253,7 +6253,7 @@ func (to *PasswordPermissions) SyncFieldsDuringRead(ctx context.Context, from Pa
 	}
 }
 
-func (c PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
 	attrs["object_type"] = attrs["object_type"].SetOptional()
@@ -6268,7 +6268,7 @@ func (c PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(PasswordAccessControlResponse{}),
 	}
@@ -6277,18 +6277,18 @@ func (a PasswordPermissions) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordPermissions
 // only implements ToObjectValue() and Type().
-func (o PasswordPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"object_id":           o.ObjectId,
-			"object_type":         o.ObjectType,
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordPermissions) Type(ctx context.Context) attr.Type {
+func (m PasswordPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -6303,12 +6303,12 @@ func (o PasswordPermissions) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in PasswordPermissions as
 // a slice of PasswordAccessControlResponse values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PasswordPermissions) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlResponse, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *PasswordPermissions) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlResponse, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []PasswordAccessControlResponse
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6316,14 +6316,14 @@ func (o *PasswordPermissions) GetAccessControlList(ctx context.Context) ([]Passw
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in PasswordPermissions.
-func (o *PasswordPermissions) SetAccessControlList(ctx context.Context, v []PasswordAccessControlResponse) {
+func (m *PasswordPermissions) SetAccessControlList(ctx context.Context, v []PasswordAccessControlResponse) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type PasswordPermissionsDescription struct {
@@ -6338,7 +6338,7 @@ func (to *PasswordPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *PasswordPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from PasswordPermissionsDescription) {
 }
 
-func (c PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
@@ -6352,24 +6352,24 @@ func (c PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordPermissionsDescription
 // only implements ToObjectValue() and Type().
-func (o PasswordPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      o.Description,
-			"permission_level": o.PermissionLevel,
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordPermissionsDescription) Type(ctx context.Context) attr.Type {
+func (m PasswordPermissionsDescription) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -6400,7 +6400,7 @@ func (to *PasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 
 	return attrs
@@ -6413,7 +6413,7 @@ func (c PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(PasswordAccessControlRequest{}),
 	}
@@ -6422,16 +6422,16 @@ func (a PasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PasswordPermissionsRequest
 // only implements ToObjectValue() and Type().
-func (o PasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
+			"access_control_list": m.AccessControlList,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
+func (m PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -6444,12 +6444,12 @@ func (o PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in PasswordPermissionsRequest as
 // a slice of PasswordAccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PasswordPermissionsRequest) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlRequest, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *PasswordPermissionsRequest) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlRequest, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []PasswordAccessControlRequest
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6457,14 +6457,14 @@ func (o *PasswordPermissionsRequest) GetAccessControlList(ctx context.Context) (
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in PasswordPermissionsRequest.
-func (o *PasswordPermissionsRequest) SetAccessControlList(ctx context.Context, v []PasswordAccessControlRequest) {
+func (m *PasswordPermissionsRequest) SetAccessControlList(ctx context.Context, v []PasswordAccessControlRequest) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type Patch struct {
@@ -6482,7 +6482,7 @@ func (to *Patch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Patch)
 func (to *Patch) SyncFieldsDuringRead(ctx context.Context, from Patch) {
 }
 
-func (c Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["op"] = attrs["op"].SetOptional()
 	attrs["path"] = attrs["path"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
@@ -6497,25 +6497,25 @@ func (c Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Patch) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Patch) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Patch
 // only implements ToObjectValue() and Type().
-func (o Patch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Patch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"op":    o.Op,
-			"path":  o.Path,
-			"value": o.Value,
+			"op":    m.Op,
+			"path":  m.Path,
+			"value": m.Value,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Patch) Type(ctx context.Context) attr.Type {
+func (m Patch) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"op":    types.StringType,
@@ -6565,7 +6565,7 @@ func (to *PatchAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -6581,7 +6581,7 @@ func (c PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -6591,18 +6591,18 @@ func (a PatchAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchAccountGroupRequest
 // only implements ToObjectValue() and Type().
-func (o PatchAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchAccountGroupRequest) Type(ctx context.Context) attr.Type {
+func (m PatchAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -6619,12 +6619,12 @@ func (o PatchAccountGroupRequest) Type(ctx context.Context) attr.Type {
 // GetOperations returns the value of the Operations field in PatchAccountGroupRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchAccountGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6632,25 +6632,25 @@ func (o *PatchAccountGroupRequest) GetOperations(ctx context.Context) ([]Patch, 
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountGroupRequest.
-func (o *PatchAccountGroupRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchAccountGroupRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchAccountGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchAccountGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6658,14 +6658,14 @@ func (o *PatchAccountGroupRequest) GetSchemas(ctx context.Context) ([]types.Stri
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountGroupRequest.
-func (o *PatchAccountGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchAccountGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type PatchAccountServicePrincipalRequest struct {
@@ -6708,7 +6708,7 @@ func (to *PatchAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.
 	}
 }
 
-func (c PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -6724,7 +6724,7 @@ func (c PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -6734,18 +6734,18 @@ func (a PatchAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Co
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchAccountServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o PatchAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m PatchAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -6762,12 +6762,12 @@ func (o PatchAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type
 // GetOperations returns the value of the Operations field in PatchAccountServicePrincipalRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchAccountServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6775,25 +6775,25 @@ func (o *PatchAccountServicePrincipalRequest) GetOperations(ctx context.Context)
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountServicePrincipalRequest.
-func (o *PatchAccountServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchAccountServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchAccountServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchAccountServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6801,14 +6801,14 @@ func (o *PatchAccountServicePrincipalRequest) GetSchemas(ctx context.Context) ([
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountServicePrincipalRequest.
-func (o *PatchAccountServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchAccountServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type PatchAccountUserRequest struct {
@@ -6851,7 +6851,7 @@ func (to *PatchAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -6867,7 +6867,7 @@ func (c PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -6877,18 +6877,18 @@ func (a PatchAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchAccountUserRequest
 // only implements ToObjectValue() and Type().
-func (o PatchAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchAccountUserRequest) Type(ctx context.Context) attr.Type {
+func (m PatchAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -6905,12 +6905,12 @@ func (o PatchAccountUserRequest) Type(ctx context.Context) attr.Type {
 // GetOperations returns the value of the Operations field in PatchAccountUserRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchAccountUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6918,25 +6918,25 @@ func (o *PatchAccountUserRequest) GetOperations(ctx context.Context) ([]Patch, b
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountUserRequest.
-func (o *PatchAccountUserRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchAccountUserRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchAccountUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchAccountUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchAccountUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6944,14 +6944,14 @@ func (o *PatchAccountUserRequest) GetSchemas(ctx context.Context) ([]types.Strin
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountUserRequest.
-func (o *PatchAccountUserRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchAccountUserRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type PatchGroupRequest struct {
@@ -6994,7 +6994,7 @@ func (to *PatchGroupRequest) SyncFieldsDuringRead(ctx context.Context, from Patc
 	}
 }
 
-func (c PatchGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
@@ -7009,7 +7009,7 @@ func (c PatchGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -7019,18 +7019,18 @@ func (a PatchGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchGroupRequest
 // only implements ToObjectValue() and Type().
-func (o PatchGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchGroupRequest) Type(ctx context.Context) attr.Type {
+func (m PatchGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -7047,12 +7047,12 @@ func (o PatchGroupRequest) Type(ctx context.Context) attr.Type {
 // GetOperations returns the value of the Operations field in PatchGroupRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7060,25 +7060,25 @@ func (o *PatchGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
 }
 
 // SetOperations sets the value of the Operations field in PatchGroupRequest.
-func (o *PatchGroupRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchGroupRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7086,14 +7086,14 @@ func (o *PatchGroupRequest) GetSchemas(ctx context.Context) ([]types.String, boo
 }
 
 // SetSchemas sets the value of the Schemas field in PatchGroupRequest.
-func (o *PatchGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type PatchServicePrincipalRequest struct {
@@ -7136,7 +7136,7 @@ func (to *PatchServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context
 	}
 }
 
-func (c PatchServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
@@ -7151,7 +7151,7 @@ func (c PatchServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -7161,18 +7161,18 @@ func (a PatchServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o PatchServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m PatchServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -7189,12 +7189,12 @@ func (o PatchServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 // GetOperations returns the value of the Operations field in PatchServicePrincipalRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7202,25 +7202,25 @@ func (o *PatchServicePrincipalRequest) GetOperations(ctx context.Context) ([]Pat
 }
 
 // SetOperations sets the value of the Operations field in PatchServicePrincipalRequest.
-func (o *PatchServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7228,14 +7228,14 @@ func (o *PatchServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.
 }
 
 // SetSchemas sets the value of the Schemas field in PatchServicePrincipalRequest.
-func (o *PatchServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type PatchUserRequest struct {
@@ -7278,7 +7278,7 @@ func (to *PatchUserRequest) SyncFieldsDuringRead(ctx context.Context, from Patch
 	}
 }
 
-func (c PatchUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PatchUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
@@ -7293,7 +7293,7 @@ func (c PatchUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PatchUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PatchUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"operations": reflect.TypeOf(Patch{}),
 		"schemas":    reflect.TypeOf(types.String{}),
@@ -7303,18 +7303,18 @@ func (a PatchUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PatchUserRequest
 // only implements ToObjectValue() and Type().
-func (o PatchUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PatchUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"operations": o.Operations,
-			"schemas":    o.Schemas,
+			"id":         m.Id,
+			"operations": m.Operations,
+			"schemas":    m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PatchUserRequest) Type(ctx context.Context) attr.Type {
+func (m PatchUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -7331,12 +7331,12 @@ func (o PatchUserRequest) Type(ctx context.Context) attr.Type {
 // GetOperations returns the value of the Operations field in PatchUserRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+func (m *PatchUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
 		return nil, false
 	}
 	var v []Patch
-	d := o.Operations.ElementsAs(ctx, &v, true)
+	d := m.Operations.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7344,25 +7344,25 @@ func (o *PatchUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
 }
 
 // SetOperations sets the value of the Operations field in PatchUserRequest.
-func (o *PatchUserRequest) SetOperations(ctx context.Context, v []Patch) {
+func (m *PatchUserRequest) SetOperations(ctx context.Context, v []Patch) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Operations = types.ListValueMust(t, vs)
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in PatchUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PatchUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *PatchUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7370,14 +7370,14 @@ func (o *PatchUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool
 }
 
 // SetSchemas sets the value of the Schemas field in PatchUserRequest.
-func (o *PatchUserRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *PatchUserRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type Permission struct {
@@ -7406,7 +7406,7 @@ func (to *Permission) SyncFieldsDuringRead(ctx context.Context, from Permission)
 	}
 }
 
-func (c Permission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Permission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
@@ -7421,7 +7421,7 @@ func (c Permission) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
@@ -7430,18 +7430,18 @@ func (a Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Permission
 // only implements ToObjectValue() and Type().
-func (o Permission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Permission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             o.Inherited,
-			"inherited_from_object": o.InheritedFromObject,
-			"permission_level":      o.PermissionLevel,
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Permission) Type(ctx context.Context) attr.Type {
+func (m Permission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -7456,12 +7456,12 @@ func (o Permission) Type(ctx context.Context) attr.Type {
 // GetInheritedFromObject returns the value of the InheritedFromObject field in Permission as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Permission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+func (m *Permission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7469,14 +7469,14 @@ func (o *Permission) GetInheritedFromObject(ctx context.Context) ([]types.String
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in Permission.
-func (o *Permission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+func (m *Permission) SetInheritedFromObject(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.InheritedFromObject = types.ListValueMust(t, vs)
+	m.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
 // The output format for existing workspace PermissionAssignment records, which
@@ -7525,7 +7525,7 @@ func (to *PermissionAssignment) SyncFieldsDuringRead(ctx context.Context, from P
 	}
 }
 
-func (c PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 	attrs["principal"] = attrs["principal"].SetOptional()
@@ -7540,7 +7540,7 @@ func (c PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permissions": reflect.TypeOf(types.String{}),
 		"principal":   reflect.TypeOf(PrincipalOutput{}),
@@ -7550,18 +7550,18 @@ func (a PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionAssignment
 // only implements ToObjectValue() and Type().
-func (o PermissionAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PermissionAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"error":       o.Error,
-			"permissions": o.Permissions,
-			"principal":   o.Principal,
+			"error":       m.Error,
+			"permissions": m.Permissions,
+			"principal":   m.Principal,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PermissionAssignment) Type(ctx context.Context) attr.Type {
+func (m PermissionAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": types.StringType,
@@ -7576,12 +7576,12 @@ func (o PermissionAssignment) Type(ctx context.Context) attr.Type {
 // GetPermissions returns the value of the Permissions field in PermissionAssignment as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PermissionAssignment) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+func (m *PermissionAssignment) GetPermissions(ctx context.Context) ([]types.String, bool) {
+	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Permissions.ElementsAs(ctx, &v, true)
+	d := m.Permissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7589,26 +7589,26 @@ func (o *PermissionAssignment) GetPermissions(ctx context.Context) ([]types.Stri
 }
 
 // SetPermissions sets the value of the Permissions field in PermissionAssignment.
-func (o *PermissionAssignment) SetPermissions(ctx context.Context, v []types.String) {
+func (m *PermissionAssignment) SetPermissions(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Permissions = types.ListValueMust(t, vs)
+	m.Permissions = types.ListValueMust(t, vs)
 }
 
 // GetPrincipal returns the value of the Principal field in PermissionAssignment as
 // a PrincipalOutput value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutput, bool) {
+func (m *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutput, bool) {
 	var e PrincipalOutput
-	if o.Principal.IsNull() || o.Principal.IsUnknown() {
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
 		return e, false
 	}
 	var v PrincipalOutput
-	d := o.Principal.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Principal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -7619,9 +7619,9 @@ func (o *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutpu
 }
 
 // SetPrincipal sets the value of the Principal field in PermissionAssignment.
-func (o *PermissionAssignment) SetPrincipal(ctx context.Context, v PrincipalOutput) {
+func (m *PermissionAssignment) SetPrincipal(ctx context.Context, v PrincipalOutput) {
 	vs := v.ToObjectValue(ctx)
-	o.Principal = vs
+	m.Principal = vs
 }
 
 type PermissionAssignments struct {
@@ -7647,7 +7647,7 @@ func (to *PermissionAssignments) SyncFieldsDuringRead(ctx context.Context, from 
 	}
 }
 
-func (c PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission_assignments"] = attrs["permission_assignments"].SetOptional()
 
 	return attrs
@@ -7660,7 +7660,7 @@ func (c PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PermissionAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PermissionAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_assignments": reflect.TypeOf(PermissionAssignment{}),
 	}
@@ -7669,16 +7669,16 @@ func (a PermissionAssignments) GetComplexFieldTypes(ctx context.Context) map[str
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionAssignments
 // only implements ToObjectValue() and Type().
-func (o PermissionAssignments) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PermissionAssignments) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_assignments": o.PermissionAssignments,
+			"permission_assignments": m.PermissionAssignments,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PermissionAssignments) Type(ctx context.Context) attr.Type {
+func (m PermissionAssignments) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_assignments": basetypes.ListType{
@@ -7691,12 +7691,12 @@ func (o PermissionAssignments) Type(ctx context.Context) attr.Type {
 // GetPermissionAssignments returns the value of the PermissionAssignments field in PermissionAssignments as
 // a slice of PermissionAssignment values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PermissionAssignments) GetPermissionAssignments(ctx context.Context) ([]PermissionAssignment, bool) {
-	if o.PermissionAssignments.IsNull() || o.PermissionAssignments.IsUnknown() {
+func (m *PermissionAssignments) GetPermissionAssignments(ctx context.Context) ([]PermissionAssignment, bool) {
+	if m.PermissionAssignments.IsNull() || m.PermissionAssignments.IsUnknown() {
 		return nil, false
 	}
 	var v []PermissionAssignment
-	d := o.PermissionAssignments.ElementsAs(ctx, &v, true)
+	d := m.PermissionAssignments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7704,14 +7704,14 @@ func (o *PermissionAssignments) GetPermissionAssignments(ctx context.Context) ([
 }
 
 // SetPermissionAssignments sets the value of the PermissionAssignments field in PermissionAssignments.
-func (o *PermissionAssignments) SetPermissionAssignments(ctx context.Context, v []PermissionAssignment) {
+func (m *PermissionAssignments) SetPermissionAssignments(ctx context.Context, v []PermissionAssignment) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PermissionAssignments = types.ListValueMust(t, vs)
+	m.PermissionAssignments = types.ListValueMust(t, vs)
 }
 
 type PermissionOutput struct {
@@ -7727,7 +7727,7 @@ func (to *PermissionOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 func (to *PermissionOutput) SyncFieldsDuringRead(ctx context.Context, from PermissionOutput) {
 }
 
-func (c PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
@@ -7741,24 +7741,24 @@ func (c PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PermissionOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PermissionOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionOutput
 // only implements ToObjectValue() and Type().
-func (o PermissionOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PermissionOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      o.Description,
-			"permission_level": o.PermissionLevel,
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PermissionOutput) Type(ctx context.Context) attr.Type {
+func (m PermissionOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -7779,7 +7779,7 @@ func (to *PermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *PermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from PermissionsDescription) {
 }
 
-func (c PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
@@ -7793,24 +7793,24 @@ func (c PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PermissionsDescription
 // only implements ToObjectValue() and Type().
-func (o PermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      o.Description,
-			"permission_level": o.PermissionLevel,
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PermissionsDescription) Type(ctx context.Context) attr.Type {
+func (m PermissionsDescription) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -7840,7 +7840,7 @@ func (to *PrincipalOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 func (to *PrincipalOutput) SyncFieldsDuringRead(ctx context.Context, from PrincipalOutput) {
 }
 
-func (c PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetOptional()
@@ -7857,27 +7857,27 @@ func (c PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PrincipalOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m PrincipalOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PrincipalOutput
 // only implements ToObjectValue() and Type().
-func (o PrincipalOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m PrincipalOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name":           o.DisplayName,
-			"group_name":             o.GroupName,
-			"principal_id":           o.PrincipalId,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"principal_id":           m.PrincipalId,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PrincipalOutput) Type(ctx context.Context) attr.Type {
+func (m PrincipalOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name":           types.StringType,
@@ -7901,7 +7901,7 @@ func (to *ResourceMeta) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 func (to *ResourceMeta) SyncFieldsDuringRead(ctx context.Context, from ResourceMeta) {
 }
 
-func (c ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["resource_type"] = attrs["resource_type"].SetOptional()
 
 	return attrs
@@ -7914,23 +7914,23 @@ func (c ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResourceMeta) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResourceMeta) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResourceMeta
 // only implements ToObjectValue() and Type().
-func (o ResourceMeta) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResourceMeta) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"resource_type": o.ResourceType,
+			"resource_type": m.ResourceType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResourceMeta) Type(ctx context.Context) attr.Type {
+func (m ResourceMeta) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"resource_type": types.StringType,
@@ -7949,7 +7949,7 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
 }
 
-func (c Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -7962,23 +7962,23 @@ func (c Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Role) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Role) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Role
 // only implements ToObjectValue() and Type().
-func (o Role) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Role) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Role) Type(ctx context.Context) attr.Type {
+func (m Role) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -8021,7 +8021,7 @@ func (to *RuleSetResponse) SyncFieldsDuringRead(ctx context.Context, from RuleSe
 	}
 }
 
-func (c RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetRequired()
 	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -8036,7 +8036,7 @@ func (c RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RuleSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RuleSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"grant_rules": reflect.TypeOf(GrantRule{}),
 	}
@@ -8045,18 +8045,18 @@ func (a RuleSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RuleSetResponse
 // only implements ToObjectValue() and Type().
-func (o RuleSetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RuleSetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":        o.Etag,
-			"grant_rules": o.GrantRules,
-			"name":        o.Name,
+			"etag":        m.Etag,
+			"grant_rules": m.GrantRules,
+			"name":        m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RuleSetResponse) Type(ctx context.Context) attr.Type {
+func (m RuleSetResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
@@ -8071,12 +8071,12 @@ func (o RuleSetResponse) Type(ctx context.Context) attr.Type {
 // GetGrantRules returns the value of the GrantRules field in RuleSetResponse as
 // a slice of GrantRule values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RuleSetResponse) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
-	if o.GrantRules.IsNull() || o.GrantRules.IsUnknown() {
+func (m *RuleSetResponse) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
+	if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
 		return nil, false
 	}
 	var v []GrantRule
-	d := o.GrantRules.ElementsAs(ctx, &v, true)
+	d := m.GrantRules.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8084,14 +8084,14 @@ func (o *RuleSetResponse) GetGrantRules(ctx context.Context) ([]GrantRule, bool)
 }
 
 // SetGrantRules sets the value of the GrantRules field in RuleSetResponse.
-func (o *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
+func (m *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.GrantRules = types.ListValueMust(t, vs)
+	m.GrantRules = types.ListValueMust(t, vs)
 }
 
 type RuleSetUpdateRequest struct {
@@ -8129,7 +8129,7 @@ func (to *RuleSetUpdateRequest) SyncFieldsDuringRead(ctx context.Context, from R
 	}
 }
 
-func (c RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetRequired()
 	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -8144,7 +8144,7 @@ func (c RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RuleSetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m RuleSetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"grant_rules": reflect.TypeOf(GrantRule{}),
 	}
@@ -8153,18 +8153,18 @@ func (a RuleSetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, RuleSetUpdateRequest
 // only implements ToObjectValue() and Type().
-func (o RuleSetUpdateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m RuleSetUpdateRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":        o.Etag,
-			"grant_rules": o.GrantRules,
-			"name":        o.Name,
+			"etag":        m.Etag,
+			"grant_rules": m.GrantRules,
+			"name":        m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
+func (m RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
@@ -8179,12 +8179,12 @@ func (o RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
 // GetGrantRules returns the value of the GrantRules field in RuleSetUpdateRequest as
 // a slice of GrantRule values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RuleSetUpdateRequest) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
-	if o.GrantRules.IsNull() || o.GrantRules.IsUnknown() {
+func (m *RuleSetUpdateRequest) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
+	if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
 		return nil, false
 	}
 	var v []GrantRule
-	d := o.GrantRules.ElementsAs(ctx, &v, true)
+	d := m.GrantRules.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8192,14 +8192,14 @@ func (o *RuleSetUpdateRequest) GetGrantRules(ctx context.Context) ([]GrantRule, 
 }
 
 // SetGrantRules sets the value of the GrantRules field in RuleSetUpdateRequest.
-func (o *RuleSetUpdateRequest) SetGrantRules(ctx context.Context, v []GrantRule) {
+func (m *RuleSetUpdateRequest) SetGrantRules(ctx context.Context, v []GrantRule) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.GrantRules = types.ListValueMust(t, vs)
+	m.GrantRules = types.ListValueMust(t, vs)
 }
 
 type ServicePrincipal struct {
@@ -8280,7 +8280,7 @@ func (to *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from Servi
 	}
 }
 
-func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -8301,7 +8301,7 @@ func (c ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -8313,24 +8313,24 @@ func (a ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]r
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ServicePrincipal
 // only implements ToObjectValue() and Type().
-func (o ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"entitlements":   o.Entitlements,
-			"external_id":    o.ExternalId,
-			"groups":         o.Groups,
-			"id":             o.Id,
-			"roles":          o.Roles,
-			"schemas":        o.Schemas,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"entitlements":   m.Entitlements,
+			"external_id":    m.ExternalId,
+			"groups":         m.Groups,
+			"id":             m.Id,
+			"roles":          m.Roles,
+			"schemas":        m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ServicePrincipal) Type(ctx context.Context) attr.Type {
+func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":         types.BoolType,
@@ -8357,12 +8357,12 @@ func (o ServicePrincipal) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ServicePrincipal) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *ServicePrincipal) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8370,25 +8370,25 @@ func (o *ServicePrincipal) GetEntitlements(ctx context.Context) ([]ComplexValue,
 }
 
 // SetEntitlements sets the value of the Entitlements field in ServicePrincipal.
-func (o *ServicePrincipal) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *ServicePrincipal) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ServicePrincipal) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *ServicePrincipal) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8396,25 +8396,25 @@ func (o *ServicePrincipal) GetGroups(ctx context.Context) ([]ComplexValue, bool)
 }
 
 // SetGroups sets the value of the Groups field in ServicePrincipal.
-func (o *ServicePrincipal) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *ServicePrincipal) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetRoles returns the value of the Roles field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *ServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8422,25 +8422,25 @@ func (o *ServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) 
 }
 
 // SetRoles sets the value of the Roles field in ServicePrincipal.
-func (o *ServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *ServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in ServicePrincipal as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ServicePrincipal) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *ServicePrincipal) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8448,14 +8448,14 @@ func (o *ServicePrincipal) GetSchemas(ctx context.Context) ([]types.String, bool
 }
 
 // SetSchemas sets the value of the Schemas field in ServicePrincipal.
-func (o *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
+func (m *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type SetObjectPermissions struct {
@@ -8464,8 +8464,8 @@ type SetObjectPermissions struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -8488,7 +8488,7 @@ func (to *SetObjectPermissions) SyncFieldsDuringRead(ctx context.Context, from S
 	}
 }
 
-func (c SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
 	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
@@ -8503,7 +8503,7 @@ func (c SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SetObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SetObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
 	}
@@ -8512,18 +8512,18 @@ func (a SetObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SetObjectPermissions
 // only implements ToObjectValue() and Type().
-func (o SetObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SetObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
+			"access_control_list": m.AccessControlList,
+			"request_object_id":   m.RequestObjectId,
+			"request_object_type": m.RequestObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SetObjectPermissions) Type(ctx context.Context) attr.Type {
+func (m SetObjectPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -8538,12 +8538,12 @@ func (o SetObjectPermissions) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in SetObjectPermissions as
 // a slice of AccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SetObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *SetObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []AccessControlRequest
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8551,14 +8551,14 @@ func (o *SetObjectPermissions) GetAccessControlList(ctx context.Context) ([]Acce
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in SetObjectPermissions.
-func (o *SetObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
+func (m *SetObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type UpdateAccountGroupRequest struct {
@@ -8623,7 +8623,7 @@ func (to *UpdateAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["members"] = attrs["members"].SetOptional()
@@ -8642,7 +8642,7 @@ func (c UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"members": reflect.TypeOf(ComplexValue{}),
 		"meta":    reflect.TypeOf(ResourceMeta{}),
@@ -8653,21 +8653,21 @@ func (a UpdateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAccountGroupRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": o.DisplayName,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
+			"display_name": m.DisplayName,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateAccountGroupRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateAccountGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
@@ -8687,12 +8687,12 @@ func (o UpdateAccountGroupRequest) Type(ctx context.Context) attr.Type {
 // GetMembers returns the value of the Members field in UpdateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *UpdateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8700,26 +8700,26 @@ func (o *UpdateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexVa
 }
 
 // SetMembers sets the value of the Members field in UpdateAccountGroupRequest.
-func (o *UpdateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *UpdateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in UpdateAccountGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *UpdateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -8730,20 +8730,20 @@ func (o *UpdateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, 
 }
 
 // SetMeta sets the value of the Meta field in UpdateAccountGroupRequest.
-func (o *UpdateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *UpdateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in UpdateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8751,14 +8751,14 @@ func (o *UpdateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValu
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountGroupRequest.
-func (o *UpdateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type UpdateAccountServicePrincipalRequest struct {
@@ -8794,7 +8794,7 @@ func (to *UpdateAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -8813,7 +8813,7 @@ func (c UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"roles": reflect.TypeOf(ComplexValue{}),
 	}
@@ -8822,21 +8822,21 @@ func (a UpdateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAccountServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"external_id":    o.ExternalId,
-			"id":             o.Id,
-			"roles":          o.Roles,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"external_id":    m.ExternalId,
+			"id":             m.Id,
+			"roles":          m.Roles,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":         types.BoolType,
@@ -8854,12 +8854,12 @@ func (o UpdateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Typ
 // GetRoles returns the value of the Roles field in UpdateAccountServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8867,14 +8867,14 @@ func (o *UpdateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountServicePrincipalRequest.
-func (o *UpdateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type UpdateAccountUserRequest struct {
@@ -8944,7 +8944,7 @@ func (to *UpdateAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fr
 	}
 }
 
-func (c UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -8965,7 +8965,7 @@ func (c UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails": reflect.TypeOf(ComplexValue{}),
 		"name":   reflect.TypeOf(Name{}),
@@ -8976,23 +8976,23 @@ func (a UpdateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAccountUserRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"external_id":  o.ExternalId,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"user_name":    o.UserName,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"external_id":  m.ExternalId,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateAccountUserRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateAccountUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":       types.BoolType,
@@ -9014,12 +9014,12 @@ func (o UpdateAccountUserRequest) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in UpdateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *UpdateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9027,26 +9027,26 @@ func (o *UpdateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValu
 }
 
 // SetEmails sets the value of the Emails field in UpdateAccountUserRequest.
-func (o *UpdateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *UpdateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in UpdateAccountUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
+func (m *UpdateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -9057,20 +9057,20 @@ func (o *UpdateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in UpdateAccountUserRequest.
-func (o *UpdateAccountUserRequest) SetName(ctx context.Context, v Name) {
+func (m *UpdateAccountUserRequest) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in UpdateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9078,14 +9078,14 @@ func (o *UpdateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountUserRequest.
-func (o *UpdateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 type UpdateGroupRequest struct {
@@ -9195,7 +9195,7 @@ func (to *UpdateGroupRequest) SyncFieldsDuringRead(ctx context.Context, from Upd
 	}
 }
 
-func (c UpdateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
@@ -9216,7 +9216,7 @@ func (c UpdateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -9230,24 +9230,24 @@ func (a UpdateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateGroupRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": o.DisplayName,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"members":      o.Members,
-			"meta":         o.Meta,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
+			"display_name": m.DisplayName,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"members":      m.Members,
+			"meta":         m.Meta,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateGroupRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
@@ -9276,12 +9276,12 @@ func (o UpdateGroupRequest) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *UpdateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9289,25 +9289,25 @@ func (o *UpdateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValu
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *UpdateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *UpdateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9315,25 +9315,25 @@ func (o *UpdateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, boo
 }
 
 // SetGroups sets the value of the Groups field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *UpdateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetMembers returns the value of the Members field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Members.IsNull() || o.Members.IsUnknown() {
+func (m *UpdateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Members.IsNull() || m.Members.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Members.ElementsAs(ctx, &v, true)
+	d := m.Members.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9341,26 +9341,26 @@ func (o *UpdateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bo
 }
 
 // SetMembers sets the value of the Members field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
+func (m *UpdateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Members = types.ListValueMust(t, vs)
+	m.Members = types.ListValueMust(t, vs)
 }
 
 // GetMeta returns the value of the Meta field in UpdateGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+func (m *UpdateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 	var e ResourceMeta
-	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+	if m.Meta.IsNull() || m.Meta.IsUnknown() {
 		return e, false
 	}
 	var v ResourceMeta
-	d := o.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -9371,20 +9371,20 @@ func (o *UpdateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
 }
 
 // SetMeta sets the value of the Meta field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
+func (m *UpdateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
 	vs := v.ToObjectValue(ctx)
-	o.Meta = vs
+	m.Meta = vs
 }
 
 // GetRoles returns the value of the Roles field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9392,25 +9392,25 @@ func (o *UpdateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetRoles sets the value of the Roles field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in UpdateGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *UpdateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9418,14 +9418,14 @@ func (o *UpdateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bo
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateGroupRequest.
-func (o *UpdateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *UpdateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type UpdateObjectPermissions struct {
@@ -9434,8 +9434,8 @@ type UpdateObjectPermissions struct {
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// dbsql-dashboards, directories, experiments, files, instance-pools, jobs,
-	// notebooks, pipelines, queries, registered-models, repos,
+	// dbsql-dashboards, directories, experiments, files, genie, instance-pools,
+	// jobs, notebooks, pipelines, queries, registered-models, repos,
 	// serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
@@ -9458,7 +9458,7 @@ func (to *UpdateObjectPermissions) SyncFieldsDuringRead(ctx context.Context, fro
 	}
 }
 
-func (c UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
 	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
@@ -9473,7 +9473,7 @@ func (c UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
 	}
@@ -9482,18 +9482,18 @@ func (a UpdateObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[s
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateObjectPermissions
 // only implements ToObjectValue() and Type().
-func (o UpdateObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"request_object_id":   o.RequestObjectId,
-			"request_object_type": o.RequestObjectType,
+			"access_control_list": m.AccessControlList,
+			"request_object_id":   m.RequestObjectId,
+			"request_object_type": m.RequestObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateObjectPermissions) Type(ctx context.Context) attr.Type {
+func (m UpdateObjectPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -9508,12 +9508,12 @@ func (o UpdateObjectPermissions) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in UpdateObjectPermissions as
 // a slice of AccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *UpdateObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []AccessControlRequest
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9521,14 +9521,14 @@ func (o *UpdateObjectPermissions) GetAccessControlList(ctx context.Context) ([]A
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in UpdateObjectPermissions.
-func (o *UpdateObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
+func (m *UpdateObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type UpdateRuleSetRequest struct {
@@ -9561,7 +9561,7 @@ func (to *UpdateRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from U
 	}
 }
 
-func (c UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["rule_set"] = attrs["rule_set"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
@@ -9576,7 +9576,7 @@ func (c UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"rule_set": reflect.TypeOf(RuleSetUpdateRequest{}),
 	}
@@ -9585,17 +9585,17 @@ func (a UpdateRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRuleSetRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     o.Name,
-			"rule_set": o.RuleSet,
+			"name":     m.Name,
+			"rule_set": m.RuleSet,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":     types.StringType,
@@ -9607,13 +9607,13 @@ func (o UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
 // GetRuleSet returns the value of the RuleSet field in UpdateRuleSetRequest as
 // a RuleSetUpdateRequest value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateRequest, bool) {
+func (m *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateRequest, bool) {
 	var e RuleSetUpdateRequest
-	if o.RuleSet.IsNull() || o.RuleSet.IsUnknown() {
+	if m.RuleSet.IsNull() || m.RuleSet.IsUnknown() {
 		return e, false
 	}
 	var v RuleSetUpdateRequest
-	d := o.RuleSet.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.RuleSet.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -9624,9 +9624,9 @@ func (o *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateReq
 }
 
 // SetRuleSet sets the value of the RuleSet field in UpdateRuleSetRequest.
-func (o *UpdateRuleSetRequest) SetRuleSet(ctx context.Context, v RuleSetUpdateRequest) {
+func (m *UpdateRuleSetRequest) SetRuleSet(ctx context.Context, v RuleSetUpdateRequest) {
 	vs := v.ToObjectValue(ctx)
-	o.RuleSet = vs
+	m.RuleSet = vs
 }
 
 type UpdateServicePrincipalRequest struct {
@@ -9707,7 +9707,7 @@ func (to *UpdateServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Contex
 	}
 }
 
-func (c UpdateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -9728,7 +9728,7 @@ func (c UpdateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
@@ -9740,24 +9740,24 @@ func (a UpdateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context)
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateServicePrincipalRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         o.Active,
-			"application_id": o.ApplicationId,
-			"display_name":   o.DisplayName,
-			"entitlements":   o.Entitlements,
-			"external_id":    o.ExternalId,
-			"groups":         o.Groups,
-			"id":             o.Id,
-			"roles":          o.Roles,
-			"schemas":        o.Schemas,
+			"active":         m.Active,
+			"application_id": m.ApplicationId,
+			"display_name":   m.DisplayName,
+			"entitlements":   m.Entitlements,
+			"external_id":    m.ExternalId,
+			"groups":         m.Groups,
+			"id":             m.Id,
+			"roles":          m.Roles,
+			"schemas":        m.Schemas,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":         types.BoolType,
@@ -9784,12 +9784,12 @@ func (o UpdateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 // GetEntitlements returns the value of the Entitlements field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *UpdateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9797,25 +9797,25 @@ func (o *UpdateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateServicePrincipalRequest.
-func (o *UpdateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *UpdateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *UpdateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9823,25 +9823,25 @@ func (o *UpdateServicePrincipalRequest) GetGroups(ctx context.Context) ([]Comple
 }
 
 // SetGroups sets the value of the Groups field in UpdateServicePrincipalRequest.
-func (o *UpdateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *UpdateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetRoles returns the value of the Roles field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9849,25 +9849,25 @@ func (o *UpdateServicePrincipalRequest) GetRoles(ctx context.Context) ([]Complex
 }
 
 // SetRoles sets the value of the Roles field in UpdateServicePrincipalRequest.
-func (o *UpdateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in UpdateServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *UpdateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9875,14 +9875,14 @@ func (o *UpdateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateServicePrincipalRequest.
-func (o *UpdateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *UpdateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type UpdateUserRequest struct {
@@ -10001,7 +10001,7 @@ func (to *UpdateUserRequest) SyncFieldsDuringRead(ctx context.Context, from Upda
 	}
 }
 
-func (c UpdateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -10024,7 +10024,7 @@ func (c UpdateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails":       reflect.TypeOf(ComplexValue{}),
 		"entitlements": reflect.TypeOf(ComplexValue{}),
@@ -10038,26 +10038,26 @@ func (a UpdateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateUserRequest
 // only implements ToObjectValue() and Type().
-func (o UpdateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
-			"user_name":    o.UserName,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateUserRequest) Type(ctx context.Context) attr.Type {
+func (m UpdateUserRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":       types.BoolType,
@@ -10088,12 +10088,12 @@ func (o UpdateUserRequest) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *UpdateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10101,25 +10101,25 @@ func (o *UpdateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetEmails sets the value of the Emails field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *UpdateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetEntitlements returns the value of the Entitlements field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *UpdateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10127,25 +10127,25 @@ func (o *UpdateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *UpdateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *UpdateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10153,26 +10153,26 @@ func (o *UpdateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool
 }
 
 // SetGroups sets the value of the Groups field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *UpdateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in UpdateUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetName(ctx context.Context) (Name, bool) {
+func (m *UpdateUserRequest) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -10183,20 +10183,20 @@ func (o *UpdateUserRequest) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetName(ctx context.Context, v Name) {
+func (m *UpdateUserRequest) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *UpdateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10204,25 +10204,25 @@ func (o *UpdateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool)
 }
 
 // SetRoles sets the value of the Roles field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *UpdateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in UpdateUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *UpdateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10230,14 +10230,14 @@ func (o *UpdateUserRequest) GetSchemas(ctx context.Context) ([]types.String, boo
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateUserRequest.
-func (o *UpdateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
+func (m *UpdateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type UpdateWorkspaceAssignments struct {
@@ -10272,7 +10272,7 @@ func (to *UpdateWorkspaceAssignments) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
@@ -10288,7 +10288,7 @@ func (c UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permissions": reflect.TypeOf(types.String{}),
 	}
@@ -10297,18 +10297,18 @@ func (a UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateWorkspaceAssignments
 // only implements ToObjectValue() and Type().
-func (o UpdateWorkspaceAssignments) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateWorkspaceAssignments) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions":  o.Permissions,
-			"principal_id": o.PrincipalId,
-			"workspace_id": o.WorkspaceId,
+			"permissions":  m.Permissions,
+			"principal_id": m.PrincipalId,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
+func (m UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions": basetypes.ListType{
@@ -10323,12 +10323,12 @@ func (o UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
 // GetPermissions returns the value of the Permissions field in UpdateWorkspaceAssignments as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateWorkspaceAssignments) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+func (m *UpdateWorkspaceAssignments) GetPermissions(ctx context.Context) ([]types.String, bool) {
+	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Permissions.ElementsAs(ctx, &v, true)
+	d := m.Permissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10336,14 +10336,14 @@ func (o *UpdateWorkspaceAssignments) GetPermissions(ctx context.Context) ([]type
 }
 
 // SetPermissions sets the value of the Permissions field in UpdateWorkspaceAssignments.
-func (o *UpdateWorkspaceAssignments) SetPermissions(ctx context.Context, v []types.String) {
+func (m *UpdateWorkspaceAssignments) SetPermissions(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Permissions = types.ListValueMust(t, vs)
+	m.Permissions = types.ListValueMust(t, vs)
 }
 
 type User struct {
@@ -10462,7 +10462,7 @@ func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 	}
 }
 
-func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -10485,7 +10485,7 @@ func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"emails":       reflect.TypeOf(ComplexValue{}),
 		"entitlements": reflect.TypeOf(ComplexValue{}),
@@ -10499,26 +10499,26 @@ func (a User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, User
 // only implements ToObjectValue() and Type().
-func (o User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       o.Active,
-			"display_name": o.DisplayName,
-			"emails":       o.Emails,
-			"entitlements": o.Entitlements,
-			"external_id":  o.ExternalId,
-			"groups":       o.Groups,
-			"id":           o.Id,
-			"name":         o.Name,
-			"roles":        o.Roles,
-			"schemas":      o.Schemas,
-			"user_name":    o.UserName,
+			"active":       m.Active,
+			"display_name": m.DisplayName,
+			"emails":       m.Emails,
+			"entitlements": m.Entitlements,
+			"external_id":  m.ExternalId,
+			"groups":       m.Groups,
+			"id":           m.Id,
+			"name":         m.Name,
+			"roles":        m.Roles,
+			"schemas":      m.Schemas,
+			"user_name":    m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o User) Type(ctx context.Context) attr.Type {
+func (m User) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":       types.BoolType,
@@ -10549,12 +10549,12 @@ func (o User) Type(ctx context.Context) attr.Type {
 // GetEmails returns the value of the Emails field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+func (m *User) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Emails.IsNull() || m.Emails.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Emails.ElementsAs(ctx, &v, true)
+	d := m.Emails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10562,25 +10562,25 @@ func (o *User) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetEmails sets the value of the Emails field in User.
-func (o *User) SetEmails(ctx context.Context, v []ComplexValue) {
+func (m *User) SetEmails(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Emails = types.ListValueMust(t, vs)
+	m.Emails = types.ListValueMust(t, vs)
 }
 
 // GetEntitlements returns the value of the Entitlements field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+func (m *User) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10588,25 +10588,25 @@ func (o *User) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetEntitlements sets the value of the Entitlements field in User.
-func (o *User) SetEntitlements(ctx context.Context, v []ComplexValue) {
+func (m *User) SetEntitlements(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.ListValueMust(t, vs)
 }
 
 // GetGroups returns the value of the Groups field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+func (m *User) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Groups.IsNull() || m.Groups.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Groups.ElementsAs(ctx, &v, true)
+	d := m.Groups.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10614,26 +10614,26 @@ func (o *User) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetGroups sets the value of the Groups field in User.
-func (o *User) SetGroups(ctx context.Context, v []ComplexValue) {
+func (m *User) SetGroups(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Groups = types.ListValueMust(t, vs)
+	m.Groups = types.ListValueMust(t, vs)
 }
 
 // GetName returns the value of the Name field in User as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetName(ctx context.Context) (Name, bool) {
+func (m *User) GetName(ctx context.Context) (Name, bool) {
 	var e Name
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v Name
-	d := o.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -10644,20 +10644,20 @@ func (o *User) GetName(ctx context.Context) (Name, bool) {
 }
 
 // SetName sets the value of the Name field in User.
-func (o *User) SetName(ctx context.Context, v Name) {
+func (m *User) SetName(ctx context.Context, v Name) {
 	vs := v.ToObjectValue(ctx)
-	o.Name = vs
+	m.Name = vs
 }
 
 // GetRoles returns the value of the Roles field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+func (m *User) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if m.Roles.IsNull() || m.Roles.IsUnknown() {
 		return nil, false
 	}
 	var v []ComplexValue
-	d := o.Roles.ElementsAs(ctx, &v, true)
+	d := m.Roles.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10665,25 +10665,25 @@ func (o *User) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
 }
 
 // SetRoles sets the value of the Roles field in User.
-func (o *User) SetRoles(ctx context.Context, v []ComplexValue) {
+func (m *User) SetRoles(ctx context.Context, v []ComplexValue) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Roles = types.ListValueMust(t, vs)
+	m.Roles = types.ListValueMust(t, vs)
 }
 
 // GetSchemas returns the value of the Schemas field in User as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+func (m *User) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Schemas.ElementsAs(ctx, &v, true)
+	d := m.Schemas.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10691,14 +10691,14 @@ func (o *User) GetSchemas(ctx context.Context) ([]types.String, bool) {
 }
 
 // SetSchemas sets the value of the Schemas field in User.
-func (o *User) SetSchemas(ctx context.Context, v []types.String) {
+func (m *User) SetSchemas(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Schemas = types.ListValueMust(t, vs)
+	m.Schemas = types.ListValueMust(t, vs)
 }
 
 type WorkspacePermissions struct {
@@ -10724,7 +10724,7 @@ func (to *WorkspacePermissions) SyncFieldsDuringRead(ctx context.Context, from W
 	}
 }
 
-func (c WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 
 	return attrs
@@ -10737,7 +10737,7 @@ func (c WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WorkspacePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WorkspacePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permissions": reflect.TypeOf(PermissionOutput{}),
 	}
@@ -10746,16 +10746,16 @@ func (a WorkspacePermissions) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspacePermissions
 // only implements ToObjectValue() and Type().
-func (o WorkspacePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WorkspacePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions": o.Permissions,
+			"permissions": m.Permissions,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WorkspacePermissions) Type(ctx context.Context) attr.Type {
+func (m WorkspacePermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions": basetypes.ListType{
@@ -10768,12 +10768,12 @@ func (o WorkspacePermissions) Type(ctx context.Context) attr.Type {
 // GetPermissions returns the value of the Permissions field in WorkspacePermissions as
 // a slice of PermissionOutput values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WorkspacePermissions) GetPermissions(ctx context.Context) ([]PermissionOutput, bool) {
-	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+func (m *WorkspacePermissions) GetPermissions(ctx context.Context) ([]PermissionOutput, bool) {
+	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
 		return nil, false
 	}
 	var v []PermissionOutput
-	d := o.Permissions.ElementsAs(ctx, &v, true)
+	d := m.Permissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10781,12 +10781,12 @@ func (o *WorkspacePermissions) GetPermissions(ctx context.Context) ([]Permission
 }
 
 // SetPermissions sets the value of the Permissions field in WorkspacePermissions.
-func (o *WorkspacePermissions) SetPermissions(ctx context.Context, v []PermissionOutput) {
+func (m *WorkspacePermissions) SetPermissions(ctx context.Context, v []PermissionOutput) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Permissions = types.ListValueMust(t, vs)
+	m.Permissions = types.ListValueMust(t, vs)
 }

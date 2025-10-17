@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fix `ADMIN` assignment in `databricks_permission_assignment` resource ([#5109](https://github.com/databricks/terraform-provider-databricks/pull/5109))
+
 ### Documentation
 
 ### Exporter

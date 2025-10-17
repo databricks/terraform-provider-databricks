@@ -5,7 +5,7 @@
 ### Breaking Changes
 
 * Remove stale resources/datasources/documentation related to Clean Room services.
-  
+
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
@@ -14,6 +14,7 @@
 
 * Fixed syncing of effective fields in plugin framework implementation of share resource ([#4969](https://github.com/databricks/terraform-provider-databricks/pull/4969))
 * Mark `storage_location` as read-only in `databricks_catalog` ([#5075](https://github.com/databricks/terraform-provider-databricks/pull/5075))
+* Mark `workload_size` as non-computed in `databricks_model_serving` ([#5111](https://github.com/databricks/terraform-provider-databricks/pull/5111))
 
 ### Documentation
 

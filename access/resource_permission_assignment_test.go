@@ -101,6 +101,128 @@ func TestPermissionAssignmentCreateWithUserName(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestPermissionAssignmentCreateWithUserNameAndAdminPermissions(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								UserName: "test.user@databricks.com",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+								UserName:    "test.user@databricks.com",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/permissionassignments/principals/123",
+				ExpectedRequest: Permissions{
+					Permissions: []string{"ADMIN"},
+				},
+				Response: permissionAssignmentResponseItem{
+					Permissions: []string{"ADMIN"},
+					Principal: principalInfo{
+						PrincipalID: 123,
+						UserName:    "test.user@databricks.com",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/permissionassignments",
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"ADMIN"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+								UserName:    "test.user@databricks.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		user_name   = "test.user@databricks.com"
+		permissions = ["ADMIN"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestPermissionAssignmentCreateWithUserNameAndAdminPermissionsError(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/permissionassignments",
+				ExpectedRequest: permissionAssignmentRequest{
+					PermissionAssignments: []permissionAssignmentRequestItem{
+						{
+							principalInfo: principalInfo{
+								UserName: "test.user@databricks.com",
+							},
+							Permissions: []string{"USER"},
+						},
+					},
+				},
+				Response: permissionAssignmentResponse{
+					PermissionAssignments: []permissionAssignmentResponseItem{
+						{
+							Permissions: []string{"USER"},
+							Principal: principalInfo{
+								PrincipalID: 123,
+								UserName:    "test.user@databricks.com",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/permissionassignments/principals/123",
+				ExpectedRequest: Permissions{
+					Permissions: []string{"ADMIN"},
+				},
+				Status: 500,
+				Response: permissionAssignmentResponseItem{
+					Error: "Internal error",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/permissionassignments/principals/123",
+			},
+		},
+		Resource: ResourcePermissionAssignment(),
+		Create:   true,
+		New:      true,
+		HCL: `
+		user_name   = "test.user@databricks.com"
+		permissions = ["ADMIN"]
+		`,
+	}.ExpectError(t, "Internal error")
+}
+
 func TestPermissionAssignmentCreateWithServicePrincipalName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

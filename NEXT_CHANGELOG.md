@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 * Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
+* Fix `ADMIN` assignment in `databricks_permission_assignment` resource ([#5109](https://github.com/databricks/terraform-provider-databricks/pull/5109))
 
 ### Documentation
 

@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type CustomTemplatesData struct {
 
 func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"templates": reflect.TypeOf(apps_tf.CustomTemplate{}),
+		"templates": reflect.TypeOf(CustomTemplateData{}),
 	}
+}
+
+func (m CustomTemplatesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["templates"] = attrs["templates"].SetComputed()
+	return attrs
 }
 
 type CustomTemplatesDataSource struct {
@@ -46,10 +50,7 @@ func (r *CustomTemplatesDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *CustomTemplatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplatesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("templates")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CustomTemplatesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks CustomTemplate",
 		Attributes:  attrs,
@@ -64,12 +65,6 @@ func (r *CustomTemplatesDataSource) Configure(ctx context.Context, req datasourc
 func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config CustomTemplatesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -82,6 +77,13 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.AppsSettings.ListCustomTemplatesAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list apps_settings_custom_templates", err.Error())
@@ -90,7 +92,7 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var custom_template apps_tf.CustomTemplate
+		var custom_template CustomTemplateData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &custom_template)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +101,6 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	var newState CustomTemplatesData
-	newState.AppsSettings = types.ListValueMust(apps_tf.CustomTemplate{}.Type(ctx), results)
+	newState.AppsSettings = types.ListValueMust(CustomTemplateData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

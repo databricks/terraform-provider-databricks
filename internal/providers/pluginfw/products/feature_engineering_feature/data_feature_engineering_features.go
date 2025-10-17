@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type FeaturesData struct {
 
 func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"features": reflect.TypeOf(ml_tf.Feature{}),
+		"features": reflect.TypeOf(FeatureData{}),
 	}
+}
+
+func (m FeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["features"] = attrs["features"].SetComputed()
+	return attrs
 }
 
 type FeaturesDataSource struct {
@@ -46,10 +50,7 @@ func (r *FeaturesDataSource) Metadata(ctx context.Context, req datasource.Metada
 }
 
 func (r *FeaturesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeaturesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("features")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeaturesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Feature",
 		Attributes:  attrs,
@@ -64,12 +65,6 @@ func (r *FeaturesDataSource) Configure(ctx context.Context, req datasource.Confi
 func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config FeaturesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -82,6 +77,13 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.FeatureEngineering.ListFeaturesAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list feature_engineering_features", err.Error())
@@ -90,7 +92,7 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var feature ml_tf.Feature
+		var feature FeatureData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &feature)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +101,6 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var newState FeaturesData
-	newState.FeatureEngineering = types.ListValueMust(ml_tf.Feature{}.Type(ctx), results)
+	newState.FeatureEngineering = types.ListValueMust(FeatureData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

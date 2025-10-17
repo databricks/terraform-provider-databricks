@@ -63,5 +63,5 @@ This data source exports a single attribute, `templates`. It is a list of resour
 * `permission` (string) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string) - . Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
-* `securable_type` (string) - . Possible values are: `VOLUME`
+* `permission` (string) - Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
+* `securable_type` (string) - Possible values are: `VOLUME`

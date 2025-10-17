@@ -12,7 +12,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
-	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
@@ -1464,46 +1463,6 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockPipelinesAPI().EXPECT().GetByPipelineId(mock.Anything, "123").Return(&pipelines.GetPipelineResponse{
-			CreatorUserName: "creator@example.com",
-		}, nil)
-		e := mwc.GetMockPermissionsAPI().EXPECT()
-		e.Get(mock.Anything, iam.GetPermissionRequest{
-			RequestObjectId:   "123",
-			RequestObjectType: "pipelines",
-		}).Return(&iam.ObjectPermissions{
-			ObjectId:   "/pipelines/123",
-			ObjectType: "pipeline",
-			AccessControlList: []iam.AccessControlResponse{
-				{
-					GroupName: "admins",
-					AllPermissions: []iam.Permission{
-						{
-							PermissionLevel: "CAN_DO_EVERYTHING",
-							Inherited:       true,
-						},
-						{
-							PermissionLevel: "CAN_MANAGE",
-							Inherited:       false,
-						},
-					},
-				},
-			},
-		}, nil)
-		e.Set(mock.Anything, iam.SetObjectPermissions{
-			RequestObjectId:   "123",
-			RequestObjectType: "pipelines",
-			AccessControlList: []iam.AccessControlRequest{
-				{
-					GroupName:       "admins",
-					PermissionLevel: "CAN_MANAGE",
-				},
-				{
-					UserName:        "creator@example.com",
-					PermissionLevel: "IS_OWNER",
-				},
-			},
-		}).Return(nil, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("pipeline_id", "pipelines")

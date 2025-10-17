@@ -175,7 +175,7 @@ func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
 					"gcp_managed_network_config": map[string]any{
 						"subnet_cidr": "a",
 					},
-					"workspace_name":  "labdata",
+					"workspace_name":            "labdata",
 					"expected_workspace_status": "PROVISIONING",
 				},
 				Response: Workspace{

@@ -13,7 +13,7 @@ import (
 )
 
 // Namespace is used to store the namespace for unified terraform provider
-// across resources and data sourcesonboarded to plugin framework.
+// across resources and data sources onboarded to plugin framework.
 // Resources and data sources will use the underlying ProviderConfig and ProviderConfigData
 // type respectively to store the provider configurations.
 type Namespace struct {
@@ -80,6 +80,7 @@ type ProviderConfigData struct {
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfigData type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	return attrs
 }
 

@@ -13,3 +13,4 @@
 ### Exporter
 
 ### Internal Changes
+* Refactor `catalog_test.go` to use internal plan checks ([]())

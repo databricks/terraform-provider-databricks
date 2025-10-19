@@ -20,6 +20,10 @@ type Namespace struct {
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
+type Namespace_SdkV2 struct {
+	ProviderConfig types.List `tfsdk:"provider_config"`
+}
+
 // ProviderConfig is used to store the provider configurations for unified terraform provider
 // across resources onboarded to plugin framework.
 type ProviderConfig struct {

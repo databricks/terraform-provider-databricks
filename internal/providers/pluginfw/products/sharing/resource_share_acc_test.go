@@ -1,14 +1,19 @@
 package sharing_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
+	"maps"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const preTestTemplate = `
@@ -195,9 +200,6 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 				data_object_type = "TABLE"
 				history_data_sharing_status = "ENABLED"
 			}
-			provider_config = {
-				workspace_id = "{env.THIS_WORKSPACE_ID}"
-			}
 		}`,
 	})
 }
@@ -238,6 +240,188 @@ func TestUcAccUpdateShareReorderObject(t *testing.T) {
 	})
 }
 
+// TestUcAccUpdateShareNoChanges tests that updating a share with no actual changes doesn't cause issues
+func TestUcAccUpdateShareNoChanges(t *testing.T) {
+	shareConfig := preTestTemplateSchema +
+		`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+		}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig,
+	}, acceptance.Step{
+		PlanOnly: true,
+		Template: shareConfig, // Same config - should not trigger any updates
+	})
+}
+
+// TestUcAccUpdateShareComplexObjectChanges tests complex scenarios with multiple object updates
+func TestUcAccUpdateShareComplexObjectChanges(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			object {
+				name = databricks_schema.schema1.id
+				comment = "original comment"
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema2.id
+				comment = "second schema"
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	}, acceptance.Step{
+		// Remove one object, add another, and update comment on existing
+		Template: preTestTemplateSchema +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			object {
+				name = databricks_schema.schema1.id
+				comment = "updated comment"
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema3.id
+				comment = "third schema"
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	})
+}
+
+// TestUcAccUpdateShareRemoveAllObjects tests removing all objects from a share
+func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_schema.schema1.id
+				comment = "to be removed"
+				data_object_type = "SCHEMA"
+			}
+			object {
+				name = databricks_schema.schema2.id
+				comment = "also to be removed"
+				data_object_type = "SCHEMA"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplateSchema +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+		}`,
+	})
+}
+
+// TestUcAccShareMigrationFromSDKv2 tests the transition from sdkv2 to plugin framework.
+// This test verifies that existing state created by SDK v2 implementation can be
+// successfully managed by the plugin framework implementation without any changes.
+func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t,
+		// Step 1: Create share using SDK v2 implementation
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: preTestTemplateSchema + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
+					object {
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
+					}
+					object {
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
+					}
+				}`,
+		},
+		// Step 2: Update the share using plugin framework implementation (default)
+		// This verifies no changes are needed when switching implementations
+		acceptance.Step{
+			Template: preTestTemplateSchema + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
+					object {
+						name = databricks_schema.schema1.id
+						comment = "Updated comment for schema object after migration"
+						data_object_type = "SCHEMA"
+					}
+					object {
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
+					}
+				}`,
+		},
+	)
+}
+
+// TestUcAccShareMigrationFromPluginFramework tests the transition from plugin framework to sdkv2.
+// This test verifies that existing state created by plugin framework implementation can be
+// successfully managed by the SDK v2 implementation without any changes.
+func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t,
+		// Step 1: Create share using plugin framework implementation
+		acceptance.Step{
+			Template: preTestTemplateSchema + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
+					owner = "account users"
+					object {
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
+					}
+					object {
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
+					}
+				}`,
+		},
+		// Step 2: Update the share using SDK v2 (default)
+		// This verifies no changes are needed when switching implementations
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: preTestTemplateSchema + `
+				resource "databricks_share" "myshare" {
+					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
+					owner = "account users"
+					object {
+						name = databricks_schema.schema1.id
+						comment = "Shared schema object for migration test"
+						data_object_type = "SCHEMA"
+					}
+					object {
+						name = databricks_schema.schema2.id
+						comment = "Second shared schema object"
+						data_object_type = "SCHEMA"
+					}
+				}`,
+		},
+	)
+}
 func shareUpdateWithName(name string) string {
 	return fmt.Sprintf(`resource "databricks_share" "myshare" {
 			name  = "%s"
@@ -358,127 +542,70 @@ func TestUcAccShareReorderObject(t *testing.T) {
 	})
 }
 
-func shareTemplate(provider_config string) string {
-	return fmt.Sprintf(`
-	resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-share-config"
-			%s
+func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
+	shareName := ""
+	sharedObjectNameToAdd := ""
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + `
+		resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
 			object {
 				name = databricks_schema.schema1.id
 				data_object_type = "SCHEMA"
 			}
-	}
-`, provider_config)
-}
-
-func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "invalid"
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
 			}
-		`),
-		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*failed to parse workspace_id.*valid integer`),
-	})
-}
-
-func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "123"
+		}`,
+		Check: func(s *terraform.State) error {
+			resources := s.RootModule().Resources
+			share := resources["databricks_share.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected to find databricks_share.myshare in resources keys: %v", maps.Keys(resources))
 			}
-		`),
-		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*workspace_id mismatch.*please check the workspace_id provided in provider_config`),
-	})
-}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
 
-func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
+			schema := resources["databricks_schema.schema2"]
+			if schema == nil {
+				return fmt.Errorf("expected to find databricks_schema.schema2 in resources keys: %v", maps.Keys(resources))
 			}
-		`),
-		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
-	})
-}
-
-func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = ""
-			}
-		`),
-		ExpectError: regexp.MustCompile(`Attribute provider_config\.workspace_id string length must be at least 1`),
-	})
-}
-
-func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(""),
-	})
-}
-
-func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
-	// acceptance.LoadWorkspaceEnv(t)
-	// get workspace id here from workspace
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(""),
-	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "4220866301720038"
-			}
-		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
-			},
+			sharedObjectNameToAdd = schema.Primary.Attributes["id"]
+			assert.NotEmpty(t, sharedObjectNameToAdd)
+			return nil
 		},
-	})
-}
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
 
-func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(""),
-	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "4220866301720038"
-			}
-		`),
-	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "123"
-			}
-		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionReplace),
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionDestroyBeforeCreate),
-			},
+			// Add object to share outside terraform
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name: shareName,
+				Updates: []sharing.SharedDataObjectUpdate{
+					{
+						Action: sharing.SharedDataObjectUpdateActionAdd,
+						DataObject: &sharing.SharedDataObject{
+							Name:           sharedObjectNameToAdd,
+							DataObjectType: "SCHEMA",
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
 		},
-		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
-	})
-}
-
-func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(""),
-	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
-				workspace_id = "4220866301720038"
+		Template: preTestTemplateSchema + `
+		resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share-outside-terraform"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
 			}
-		`),
-	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(""),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
-			},
-		},
+			object {
+				name = databricks_schema.schema3.id
+				data_object_type = "SCHEMA"
+			}
+		}`,
 	})
 }

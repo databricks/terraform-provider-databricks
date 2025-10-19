@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/config"
@@ -64,28 +65,31 @@ func environment(cfg *config.Config) (azureEnvironment, error) {
 	return azureEnvironment{}, fmt.Errorf("unable to infer Azure environment")
 }
 
-func azureActiveDirectoryEndpoint(cfg *config.Config) (string, error) {
+func azureActiveDirectoryEndpoint(cfg *config.Config) string {
 	env, err := environment(cfg)
 	if err != nil {
-		return "", err
+		// TODO: The error is swallowed for backward compatibility. We should
+		// consider returning it to the caller.
+		log.Printf("[DEBUG] Failed to get Azure Active Directory endpoint: %s", err)
+		return ""
 	}
-	return env.ActiveDirectoryEndpoint, nil
+	return env.ActiveDirectoryEndpoint
 }
 
-func azureDomain(cfg *config.Config) (string, error) {
+func azureDomain(cfg *config.Config) string {
 	env, err := environment(cfg)
 	if err != nil {
-		return "", err
+		panic(fmt.Sprintf("Failed to get Azure domain: %s", err))
 	}
 
 	switch env.Name {
 	case "PUBLIC":
-		return "core.windows.net", nil
+		return "core.windows.net"
 	case "USGOVERNMENT":
-		return "core.usgovcloudapi.net", nil
+		return "core.usgovcloudapi.net"
 	case "CHINA":
-		return "core.chinacloudapi.cn", nil
+		return "core.chinacloudapi.cn"
 	default:
-		return "", fmt.Errorf("unknown Azure domain for environment: %q", env.Name)
+		panic(fmt.Sprintf("unknown Azure domain for environment: %q", env.Name))
 	}
 }

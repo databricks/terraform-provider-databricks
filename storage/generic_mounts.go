@@ -135,7 +135,11 @@ type AzureADLSGen2MountGeneric struct {
 
 // Source returns ABFSS URI backing the mount
 func (m *AzureADLSGen2MountGeneric) Source(client *common.DatabricksClient) string {
-	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
+	domain, err := azureDomain(client.Config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get Azure domain: %s", err))
+	}
+	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, domain, m.Directory)
 }
 
 func (m *AzureADLSGen2MountGeneric) Name() string {
@@ -168,7 +172,13 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config returns mount configurations
 func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+	aadEndpoint, err := azureActiveDirectoryEndpoint(client.Config)
+	if err != nil {
+		// TODO: The error is swallowed for backward compatibility. We should
+		// consider returning it to the caller.
+		log.Printf("[DEBUG] Failed to get Azure Active Directory endpoint: %s", err)
+		aadEndpoint = ""
+	}
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
@@ -233,7 +243,13 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config ...
 func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+	aadEndpoint, err := azureActiveDirectoryEndpoint(client.Config)
+	if err != nil {
+		// TODO: The error is swallowed for backward compatibility. We should
+		// consider returning it to the caller.
+		log.Printf("[DEBUG] Failed to get Azure Active Directory endpoint: %s", err)
+		aadEndpoint = ""
+	}
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 		m.PrefixType + ".oauth2.client.id":                  m.ClientID,
@@ -256,8 +272,12 @@ type AzureBlobMountGeneric struct {
 
 // Source ...
 func (m *AzureBlobMountGeneric) Source(client *common.DatabricksClient) string {
+	domain, err := azureDomain(client.Config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get Azure domain: %s", err))
+	}
 	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.%[3]s%[4]s",
-		m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
+		m.ContainerName, m.StorageAccountName, domain, m.Directory)
 }
 
 func (m *AzureBlobMountGeneric) Name() string {

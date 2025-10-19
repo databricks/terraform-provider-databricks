@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"strings"
+	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,23 +21,14 @@ type AzureADLSGen2Mount struct {
 	InitializeFileSystem bool   `json:"initialize_file_system"`
 }
 
-func getAzureDomain(client *common.DatabricksClient) string {
-	domains := map[string]string{
-		"PUBLIC":       "core.windows.net",
-		"USGOVERNMENT": "core.usgovcloudapi.net",
-		"CHINA":        "core.chinacloudapi.cn",
-	}
-	azureEnvironment := client.Config.Environment().AzureEnvironment.Name
-	domain, ok := domains[strings.ToUpper(azureEnvironment)]
-	if !ok {
-		panic(fmt.Sprintf("Unknown Azure environment: '%s'", azureEnvironment))
-	}
-	return domain
-}
-
 // Source returns ABFSS URI backing the mount
 func (m AzureADLSGen2Mount) Source(client *common.DatabricksClient) string {
-	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
+	domain, err := azureDomain(client.Config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get Azure domain: %s", err))
+	}
+
+	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, domain, m.Directory)
 }
 
 func (m AzureADLSGen2Mount) Name() string {
@@ -50,7 +41,13 @@ func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, cli
 
 // Config returns mount configurations
 func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+	aadEndpoint, err := azureActiveDirectoryEndpoint(client.Config)
+	if err != nil {
+		// TODO: The error is swallowed for backward compatibility. We should
+		// consider returning it to the caller.
+		log.Printf("[DEBUG] Failed to get Azure Active Directory endpoint: %s", err)
+		aadEndpoint = ""
+	}
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

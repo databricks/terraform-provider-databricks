@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,7 +35,13 @@ func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, cli
 
 // Config ...
 func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+	aadEndpoint, err := azureActiveDirectoryEndpoint(client.Config)
+	if err != nil {
+		// TODO: The error is swallowed for backward compatibility. We should
+		// consider returning it to the caller.
+		log.Printf("[DEBUG] Failed to get Azure Active Directory endpoint: %s", err)
+		aadEndpoint = ""
+	}
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 

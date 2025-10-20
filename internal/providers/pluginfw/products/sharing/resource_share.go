@@ -501,17 +501,34 @@ func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing
 	state.SyncFieldsDuringRead(ctx, plan)
 }
 
-func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
+// syncEffectiveFields syncs the effective fields between existingState and newState
+// and returns the newState
+//
+// existingState: infrastructure values that are recorded in the existing terraform state.
+// newState: latest infrastructure values that are returned by the CRUD API calls.
+//
+// HCL config is compared with this newState to determine what changes are to be made
+// to the infrastructure and then the newState values are recorded in the terraform state.
+// Hence we ignore the values in existingState which are not present in newState.
+func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, newState ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
-	mode.resourceLevel(ctx, &state, plan.ShareInfo_SdkV2)
-	planObjects, _ := plan.GetObjects(ctx)
-	stateObjects, _ := state.GetObjects(ctx)
+	mode.resourceLevel(ctx, &newState, existingState.ShareInfo_SdkV2)
+	existingStateObjects, _ := existingState.GetObjects(ctx)
+	newStateObjects, _ := newState.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
-	for i := range stateObjects {
-		mode.objectLevel(ctx, &stateObjects[i], planObjects[i])
-		finalObjects = append(finalObjects, stateObjects[i])
+	for i := range newStateObjects {
+		// For each object in the new state, we check if it exists in the existing state
+		// and if it does, we sync the effective fields.
+		// If it does not exist, we keep the new state object as is.
+		for j := range existingStateObjects {
+			if newStateObjects[i].Name == existingStateObjects[j].Name {
+				mode.objectLevel(ctx, &newStateObjects[i], existingStateObjects[j])
+				break
+			}
+		}
+		finalObjects = append(finalObjects, newStateObjects[i])
 	}
-	state.SetObjects(ctx, finalObjects)
-	state.ProviderConfig = plan.ProviderConfig // Preserve provider_config from plan
-	return state, d
+	newState.SetObjects(ctx, finalObjects)
+	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	return newState, d
 }

@@ -178,6 +178,16 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
 })
 ```
 
+Make sure that the migrated resources is also backwards compatible with SDKv2.
+- The schema struct should have an ID field. Example:
+```go
+
+```
+- Add an integration test which checks the backwards and forwards compatiblility. Example:
+Forwards Compatible
+```go
+```
+
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package.
 

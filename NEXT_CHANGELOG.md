@@ -11,6 +11,7 @@
 ### Documentation
 
 * Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
+* Update CONTRIBUTING guidelines for migrating resources to plugin framework
 
 ### Exporter
 

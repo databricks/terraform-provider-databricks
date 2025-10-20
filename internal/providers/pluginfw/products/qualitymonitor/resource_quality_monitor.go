@@ -62,12 +62,15 @@ type MonitorInfoExtended struct {
 	WarehouseId          types.String `tfsdk:"warehouse_id"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
 	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+	tfschema.Namespace_SdkV2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
 
 func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
+	attrs := m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
+	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return attrs
 }
 
 type QualityMonitorResource struct {
@@ -92,6 +95,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
 		c.SetOptional("id")
+		c.SetOptional("provider_config")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -113,13 +117,26 @@ func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.I
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+	var monitorInfoTfSDK MonitorInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var monitorInfoTfSDK MonitorInfoExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+
+	var workspaceID string
+	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,25 +167,40 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	// We need it to fill additional fields as they are not returned by the API
 	newMonitorInfoTfSDK.WarehouseId = monitorInfoTfSDK.WarehouseId
 	newMonitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDK.SkipBuiltinDashboard
+	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
+
+	var monitorInfoTfSDK MonitorInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &monitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var workspaceID string
+	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var getMonitor catalog_tf.GetQualityMonitorRequest
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("table_name"), &getMonitor.TableName)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	endpoint, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
-		TableName: getMonitor.TableName.ValueString(),
+		TableName: monitorInfoTfSDK.TableName.ValueString(),
 	})
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -178,38 +210,26 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		resp.Diagnostics.AddError("failed to get monitor", err.Error())
 		return
 	}
-	var monitorInfoTfSDK MonitorInfoExtended
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, endpoint, &monitorInfoTfSDK)...)
+	var newMonitorInfoTfSDK MonitorInfoExtended
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, endpoint, &newMonitorInfoTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
-	// We need it to fill additional fields as they are not returned by the API
-	var origWarehouseId types.String
-	var origSkipBuiltinDashboard types.Bool
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &origWarehouseId)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &origSkipBuiltinDashboard)...)
-	if resp.Diagnostics.HasError() {
-		return
+	newMonitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+	if monitorInfoTfSDK.WarehouseId.ValueString() != "" {
+		newMonitorInfoTfSDK.WarehouseId = monitorInfoTfSDK.WarehouseId
 	}
-	if origWarehouseId.ValueString() != "" {
-		monitorInfoTfSDK.WarehouseId = origWarehouseId
-	}
-	if origSkipBuiltinDashboard.ValueBool() {
-		monitorInfoTfSDK.SkipBuiltinDashboard = origSkipBuiltinDashboard
+	if monitorInfoTfSDK.SkipBuiltinDashboard.ValueBool() {
+		newMonitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDK.SkipBuiltinDashboard
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
+	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
+	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	var monitorInfoTfSDK MonitorInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
@@ -230,6 +250,25 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	if updateMonitorGoSDK.Schedule != nil {
 		updateMonitorGoSDK.Schedule.PauseStatus = ""
 	}
+
+	var workspaceID string
+	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	monitor, err := w.QualityMonitors.Update(ctx, updateMonitorGoSDK)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update monitor", err.Error())
@@ -252,24 +291,39 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
+
+	var monitorInfoTfSDK MonitorInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &monitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var workspaceID string
+	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
+	}
+
+	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest catalog_tf.DeleteQualityMonitorRequest
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("table_name"), &deleteRequest.TableName)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	_, err := w.QualityMonitors.Delete(ctx, catalog.DeleteQualityMonitorRequest{
-		TableName: deleteRequest.TableName.ValueString(),
+		TableName: monitorInfoTfSDK.TableName.ValueString(),
 	})
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete monitor", err.Error())

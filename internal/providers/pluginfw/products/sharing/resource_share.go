@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "share"
@@ -33,7 +32,7 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
-	tfschema.Namespace
+	tfschema.Namespace_SdkV2
 	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
@@ -146,7 +145,7 @@ type ShareResource struct {
 }
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -163,7 +162,7 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "partition", "value", "name")
 
 		c.SetComputed("id")
-		c.SetOptional("provider_config")
+		// c.SetOptional("provider_config")
 
 		return c
 	})
@@ -202,16 +201,15 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var workspaceID string
-	if !plan.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfig
-		resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !plan.ProviderConfig.IsNull() && !plan.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(plan.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
@@ -280,16 +278,15 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	var workspaceID string
-	if !existingState.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfig
-		resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !existingState.ProviderConfig.IsNull() && !existingState.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(existingState.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
@@ -351,16 +348,15 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.IncludeSharedData = true
 
 	var workspaceID string
-	if !plan.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfig
-		resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !plan.ProviderConfig.IsNull() && !plan.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(plan.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
@@ -458,16 +454,15 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	var workspaceID string
-	if !state.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfig
-		resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !state.ProviderConfig.IsNull() && !state.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(state.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)

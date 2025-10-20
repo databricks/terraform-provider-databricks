@@ -48,7 +48,7 @@ func (s ShareData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 }
 
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceNameShare)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceNameShare)
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

@@ -626,26 +626,18 @@ func shareTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShare_ProviderConfig_InvalidPlan(t *testing.T) {
+func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
 				workspace_id = "invalid"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`(?s)Attribute provider_config\[0\]\.workspace_id workspace_id must be a valid.*integer, got: invalid`),
-		PlanOnly:    true,
-	})
-}
-
-func TestAccShare_ProviderConfig_InvalidApply(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`(?s)Attribute provider_config\[0\]\.workspace_id workspace_id must be a valid.*integer, got: invalid`),
+		ExpectError: regexp.MustCompile(
+			`(?s)Attribute provider_config\[0\]\.workspace_id ` +
+				`workspace_id must be a valid.*integer, got: invalid`,
+		),
+		PlanOnly: true,
 	})
 }
 
@@ -656,7 +648,11 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 				workspace_id = "123"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client.*workspace_id mismatch` +
+				`.*please check the workspace_id provided in ` +
+				`provider_config`,
+		),
 	})
 }
 
@@ -670,18 +666,7 @@ func TestAccShare_ProviderConfig_Required(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_EmptyIDApply(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
-				workspace_id = ""
-			}
-		`),
-		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
-	})
-}
-
-func TestAccShare_ProviderConfig_EmptyIDPlan(t *testing.T) {
+func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {

@@ -626,14 +626,26 @@ func shareTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+func TestAccShare_ProviderConfig_InvalidPlan(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
 				workspace_id = "invalid"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*failed to parse workspace_id.*valid integer`),
+		ExpectError: regexp.MustCompile(`(?s)Attribute provider_config\[0\]\.workspace_id workspace_id must be a valid.*integer, got: invalid`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccShare_ProviderConfig_InvalidApply(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`(?s)Attribute provider_config\[0\]\.workspace_id workspace_id must be a valid.*integer, got: invalid`),
 	})
 }
 
@@ -658,7 +670,7 @@ func TestAccShare_ProviderConfig_Required(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
+func TestAccShare_ProviderConfig_EmptyIDApply(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -666,6 +678,18 @@ func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
+	})
+}
+
+func TestAccShare_ProviderConfig_EmptyIDPlan(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
+		PlanOnly:    true,
 	})
 }
 

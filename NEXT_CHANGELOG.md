@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `provider_config` support for SDKv2 compatible plugin framework resources and data sources([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))
+
 ### Bug Fixes
 
 ### Documentation
@@ -15,4 +17,3 @@
 ### Exporter
 
 ### Internal Changes
-* Add `provider_config` support for SDKv2 compatible plugin framework resources and data sources([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))

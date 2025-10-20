@@ -3,6 +3,7 @@ package tfschema
 import (
 	"context"
 	"reflect"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -36,6 +37,8 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuil
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 
@@ -85,6 +88,8 @@ type ProviderConfigData struct {
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 

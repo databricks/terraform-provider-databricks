@@ -110,7 +110,7 @@ func dataSharesTemplate(provider_config string) string {
 func TestAccDataShares_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSharesTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = "invalid"
 			}
 		`),
@@ -121,7 +121,7 @@ func TestAccDataShares_ProviderConfig_Invalid(t *testing.T) {
 func TestAccDataShares_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSharesTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = "123"
 			}
 		`),
@@ -132,7 +132,7 @@ func TestAccDataShares_ProviderConfig_Mismatched(t *testing.T) {
 func TestAccDataShares_ProviderConfig_Required(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSharesTemplate(`
-			provider_config = {
+			provider_config {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
@@ -142,7 +142,7 @@ func TestAccDataShares_ProviderConfig_Required(t *testing.T) {
 func TestAccDataShares_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSharesTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = ""
 			}
 		`),

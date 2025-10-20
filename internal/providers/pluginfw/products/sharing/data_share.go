@@ -14,8 +14,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShare = "share"
@@ -32,7 +30,7 @@ type ShareDataSource struct {
 
 type ShareData struct {
 	sharing_tf.ShareInfo
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	tfschema.Namespace_SdkV2
 }
 
 func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -75,16 +73,15 @@ func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	var workspaceID string
-	if !config.ProviderConfigData.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !config.ProviderConfig.IsNull() && !config.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(config.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)

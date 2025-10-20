@@ -13,14 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShares = "shares"
 
 type SharesList struct {
-	Shares             types.List   `tfsdk:"shares"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	Shares types.List `tfsdk:"shares"`
+	tfschema.Namespace_SdkV2
 }
 
 func (s SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -83,16 +82,15 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	var workspaceID string
-	if !config.ProviderConfigData.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
+	if !config.ProviderConfig.IsNull() && !config.ProviderConfig.IsUnknown() {
+		var namespaceList []tfschema.ProviderConfig
+		resp.Diagnostics.Append(config.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+		if len(namespaceList) > 0 {
+			workspaceID = namespaceList[0].WorkspaceID.ValueString()
+		}
 	}
 	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 
@@ -113,8 +111,10 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	newState := SharesList{
-		Shares:             types.ListValueMust(types.StringType, shareNames),
-		ProviderConfigData: config.ProviderConfigData,
+		Shares: types.ListValueMust(types.StringType, shareNames),
+		Namespace_SdkV2: tfschema.Namespace_SdkV2{
+			ProviderConfig: config.ProviderConfig,
+		},
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

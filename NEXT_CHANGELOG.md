@@ -11,7 +11,7 @@
 ### Documentation
 
 * Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
-* Document Unified Terraform Provider ([]()).
+* Document Unified Terraform Provider ([#5122](https://github.com/databricks/terraform-provider-databricks/pull/5122))
 
 ### Exporter
 

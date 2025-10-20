@@ -15,4 +15,4 @@
 ### Exporter
 
 ### Internal Changes
-* Add provider_config support for plugin framework ([#5104](https://github.com/databricks/terraform-provider-databricks/pull/5104))
+* Add `provider_config` support for SDKv2 compatible plugin framework resources and data sources([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))

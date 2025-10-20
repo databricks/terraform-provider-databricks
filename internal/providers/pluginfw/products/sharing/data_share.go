@@ -2,7 +2,6 @@ package sharing
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
@@ -28,29 +27,12 @@ type ShareDataSource struct {
 	Client *common.DatabricksClient
 }
 
-type ShareData struct {
-	sharing_tf.ShareInfo
-	tfschema.Namespace_SdkV2
-}
-
-func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	types := s.ShareInfo.GetComplexFieldTypes(ctx)
-	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfigData{})
-	return types
-}
-
-func (s ShareData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	s.ShareInfo.ApplySchemaCustomizations(attrs)
-	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	return attrs
-}
-
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceNameShare)
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ShareData{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sharing_tf.ShareInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,
@@ -65,25 +47,14 @@ func (d *ShareDataSource) Configure(_ context.Context, req datasource.ConfigureR
 
 func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameShare)
-
-	var config ShareData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	w, diags := d.Client.GetWorkspaceClient()
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var workspaceID string
-	if !config.ProviderConfig.IsNull() && !config.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(config.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
-	}
-	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	var config sharing_tf.ShareInfo
+	diags = req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

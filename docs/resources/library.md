@@ -127,6 +127,11 @@ resource "databricks_library" "rkeops" {
 }
 ```
 
+## Argument Reference
+
+The following arguments are supported:
+* `provider_config` - (Optional) Configure the provider by specifying `workspace_id`. Allows account level provider to manage this resource.
+
 ## Import
 
 !> Importing this resource is not currently supported.

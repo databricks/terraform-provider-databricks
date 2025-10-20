@@ -95,6 +95,7 @@ The following arguments are required:
 * `cdf_enabled` - (Optional) Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
 * `start_version` - (Optional) The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.
 * `history_data_sharing_status` - (Optional) Whether to enable history sharing, one of: `ENABLED`, `DISABLED`. When a table has history sharing enabled, recipients can query table data by version, starting from the current table version. If not specified, clients can only query starting from the version of the object at the time it was added to the share. *NOTE*: The start_version should be less than or equal the current version of the object. When this field is set, field `cdf_enabled` can not be set.
+* `provider_config` - (Optional) Configure the provider by specifying `workspace_id`. Allows account level provider to manage this resource.
 
 To share only part of a table when you add the table to a share, you can provide partition specifications. This is specified by a number of `partition` blocks. Each entry in `partition` block takes a list of `value` blocks. The field is documented below.
 

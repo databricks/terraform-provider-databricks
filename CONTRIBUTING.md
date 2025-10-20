@@ -178,7 +178,7 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
 })
 ```
 
-Make sure that the migrated resources are compatible with both SDKv2 and Plugin Framework.
+Make sure that migrated resources are compatible with both SDKv2 and Plugin Framework.
 - The schema struct should have a `types.String` ID field. Example:
 ```go
 type ResourceInfoExtended struct {
@@ -222,9 +222,9 @@ func TestSDKv2Compatibility(t *testing.T) {
 
 #### Plugin Framework Compatibility
 ```go
-func TestSDKv2Compatibility(t *testing.T) {
+func TestPluginFrameworkCompatibility(t *testing.T) {
 	acceptance.WorkspaceLevel(t,
-        // Step 1: Create the resource using SDKv2
+		// Step 1: Create the resource using SDKv2
 		acceptance.Step{
 			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 				"databricks": func() (tfprotov6.ProviderServer, error) {

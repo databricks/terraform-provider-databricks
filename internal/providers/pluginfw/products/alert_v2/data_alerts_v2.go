@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -33,8 +32,13 @@ type AlertsV2Data struct {
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"alerts": reflect.TypeOf(sql_tf.AlertV2{}),
+		"alerts": reflect.TypeOf(AlertV2Data{}),
 	}
+}
+
+func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alerts"] = attrs["alerts"].SetComputed()
+	return attrs
 }
 
 type AlertsV2DataSource struct {
@@ -46,10 +50,7 @@ func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.Metada
 }
 
 func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("alerts")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -64,12 +65,6 @@ func (r *AlertsV2DataSource) Configure(ctx context.Context, req datasource.Confi
 func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config AlertsV2Data
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -82,6 +77,13 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.AlertsV2.ListAlertsAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list alerts_v2", err.Error())
@@ -90,7 +92,7 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var alert_v2 sql_tf.AlertV2
+		var alert_v2 AlertV2Data
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &alert_v2)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -99,6 +101,6 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var newState AlertsV2Data
-	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
+	newState.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

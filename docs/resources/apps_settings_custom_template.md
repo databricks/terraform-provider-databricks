@@ -135,8 +135,8 @@ The following arguments are supported:
 * `permission` (string, required) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string, required) - . Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
-* `securable_type` (string, required) - . Possible values are: `VOLUME`
+* `permission` (string, required) - Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
+* `securable_type` (string, required) - Possible values are: `VOLUME`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -153,5 +153,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_apps_settings_custom_template "name"
+terraform import databricks_apps_settings_custom_template.this "name"
 ```

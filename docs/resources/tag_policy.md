@@ -53,5 +53,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_tag_policy "tag_key"
+terraform import databricks_tag_policy.this "tag_key"
 ```

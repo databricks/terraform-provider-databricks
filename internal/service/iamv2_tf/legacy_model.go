@@ -37,7 +37,7 @@ func (to *GetWorkspaceAccessDetailLocalRequest_SdkV2) SyncFieldsDuringCreateOrUp
 func (to *GetWorkspaceAccessDetailLocalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceAccessDetailLocalRequest_SdkV2) {
 }
 
-func (c GetWorkspaceAccessDetailLocalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["view"] = attrs["view"].SetOptional()
 
@@ -51,24 +51,24 @@ func (c GetWorkspaceAccessDetailLocalRequest_SdkV2) ApplySchemaCustomizations(at
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetWorkspaceAccessDetailLocalRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceAccessDetailLocalRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetWorkspaceAccessDetailLocalRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": o.PrincipalId,
-			"view":         o.View,
+			"principal_id": m.PrincipalId,
+			"view":         m.View,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetWorkspaceAccessDetailLocalRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal_id": types.Int64Type,
@@ -94,7 +94,7 @@ func (to *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(
 func (to *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceAccessDetailRequest_SdkV2) {
 }
 
-func (c GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
@@ -110,25 +110,25 @@ func (c GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetWorkspaceAccessDetailRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetWorkspaceAccessDetailRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceAccessDetailRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetWorkspaceAccessDetailRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetWorkspaceAccessDetailRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": o.PrincipalId,
-			"view":         o.View,
-			"workspace_id": o.WorkspaceId,
+			"principal_id": m.PrincipalId,
+			"view":         m.View,
+			"workspace_id": m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetWorkspaceAccessDetailRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetWorkspaceAccessDetailRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal_id": types.Int64Type,
@@ -156,7 +156,7 @@ func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV2) {
 }
 
-func (c Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
@@ -172,26 +172,26 @@ func (c Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Group_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Group_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Group_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":  o.AccountId,
-			"external_id": o.ExternalId,
-			"group_name":  o.GroupName,
-			"internal_id": o.InternalId,
+			"account_id":  m.AccountId,
+			"external_id": m.ExternalId,
+			"group_name":  m.GroupName,
+			"internal_id": m.InternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Group_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Group_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":  types.StringType,
@@ -216,7 +216,7 @@ func (to *ResolveGroupProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *ResolveGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveGroupProxyRequest_SdkV2) {
 }
 
-func (c ResolveGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 
 	return attrs
@@ -229,23 +229,23 @@ func (c ResolveGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveGroupProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveGroupProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveGroupProxyRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -267,7 +267,7 @@ func (to *ResolveGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *ResolveGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveGroupRequest_SdkV2) {
 }
 
-func (c ResolveGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -281,23 +281,23 @@ func (c ResolveGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveGroupRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveGroupRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveGroupRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -333,7 +333,7 @@ func (to *ResolveGroupResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 	}
 }
 
-func (c ResolveGroupResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveGroupResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group"] = attrs["group"].SetOptional()
 	attrs["group"] = attrs["group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -347,7 +347,7 @@ func (c ResolveGroupResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveGroupResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveGroupResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"group": reflect.TypeOf(Group_SdkV2{}),
 	}
@@ -356,16 +356,16 @@ func (a ResolveGroupResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) ma
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveGroupResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveGroupResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveGroupResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group": o.Group,
+			"group": m.Group,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveGroupResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveGroupResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group": basetypes.ListType{
@@ -378,13 +378,13 @@ func (o ResolveGroupResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetGroup returns the value of the Group field in ResolveGroupResponse_SdkV2 as
 // a Group_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolveGroupResponse_SdkV2) GetGroup(ctx context.Context) (Group_SdkV2, bool) {
+func (m *ResolveGroupResponse_SdkV2) GetGroup(ctx context.Context) (Group_SdkV2, bool) {
 	var e Group_SdkV2
-	if o.Group.IsNull() || o.Group.IsUnknown() {
+	if m.Group.IsNull() || m.Group.IsUnknown() {
 		return e, false
 	}
 	var v []Group_SdkV2
-	d := o.Group.ElementsAs(ctx, &v, true)
+	d := m.Group.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -395,10 +395,10 @@ func (o *ResolveGroupResponse_SdkV2) GetGroup(ctx context.Context) (Group_SdkV2,
 }
 
 // SetGroup sets the value of the Group field in ResolveGroupResponse_SdkV2.
-func (o *ResolveGroupResponse_SdkV2) SetGroup(ctx context.Context, v Group_SdkV2) {
+func (m *ResolveGroupResponse_SdkV2) SetGroup(ctx context.Context, v Group_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["group"]
-	o.Group = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["group"]
+	m.Group = types.ListValueMust(t, vs)
 }
 
 // Request message for resolving a service principal with the given external ID
@@ -415,7 +415,7 @@ func (to *ResolveServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpd
 func (to *ResolveServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveServicePrincipalProxyRequest_SdkV2) {
 }
 
-func (c ResolveServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 
 	return attrs
@@ -428,23 +428,23 @@ func (c ResolveServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveServicePrincipalProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveServicePrincipalProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveServicePrincipalProxyRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -466,7 +466,7 @@ func (to *ResolveServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 func (to *ResolveServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveServicePrincipalRequest_SdkV2) {
 }
 
-func (c ResolveServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -480,23 +480,23 @@ func (c ResolveServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveServicePrincipalRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveServicePrincipalRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveServicePrincipalRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -532,7 +532,7 @@ func (to *ResolveServicePrincipalResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 	}
 }
 
-func (c ResolveServicePrincipalResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveServicePrincipalResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal"] = attrs["service_principal"].SetOptional()
 	attrs["service_principal"] = attrs["service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -546,7 +546,7 @@ func (c ResolveServicePrincipalResponse_SdkV2) ApplySchemaCustomizations(attrs m
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveServicePrincipalResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveServicePrincipalResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"service_principal": reflect.TypeOf(ServicePrincipal_SdkV2{}),
 	}
@@ -555,16 +555,16 @@ func (a ResolveServicePrincipalResponse_SdkV2) GetComplexFieldTypes(ctx context.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveServicePrincipalResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveServicePrincipalResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveServicePrincipalResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal": o.ServicePrincipal,
+			"service_principal": m.ServicePrincipal,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveServicePrincipalResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveServicePrincipalResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"service_principal": basetypes.ListType{
@@ -577,13 +577,13 @@ func (o ResolveServicePrincipalResponse_SdkV2) Type(ctx context.Context) attr.Ty
 // GetServicePrincipal returns the value of the ServicePrincipal field in ResolveServicePrincipalResponse_SdkV2 as
 // a ServicePrincipal_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolveServicePrincipalResponse_SdkV2) GetServicePrincipal(ctx context.Context) (ServicePrincipal_SdkV2, bool) {
+func (m *ResolveServicePrincipalResponse_SdkV2) GetServicePrincipal(ctx context.Context) (ServicePrincipal_SdkV2, bool) {
 	var e ServicePrincipal_SdkV2
-	if o.ServicePrincipal.IsNull() || o.ServicePrincipal.IsUnknown() {
+	if m.ServicePrincipal.IsNull() || m.ServicePrincipal.IsUnknown() {
 		return e, false
 	}
 	var v []ServicePrincipal_SdkV2
-	d := o.ServicePrincipal.ElementsAs(ctx, &v, true)
+	d := m.ServicePrincipal.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -594,10 +594,10 @@ func (o *ResolveServicePrincipalResponse_SdkV2) GetServicePrincipal(ctx context.
 }
 
 // SetServicePrincipal sets the value of the ServicePrincipal field in ResolveServicePrincipalResponse_SdkV2.
-func (o *ResolveServicePrincipalResponse_SdkV2) SetServicePrincipal(ctx context.Context, v ServicePrincipal_SdkV2) {
+func (m *ResolveServicePrincipalResponse_SdkV2) SetServicePrincipal(ctx context.Context, v ServicePrincipal_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["service_principal"]
-	o.ServicePrincipal = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["service_principal"]
+	m.ServicePrincipal = types.ListValueMust(t, vs)
 }
 
 // Request message for resolving a user with the given external ID from the
@@ -614,7 +614,7 @@ func (to *ResolveUserProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *ResolveUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveUserProxyRequest_SdkV2) {
 }
 
-func (c ResolveUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 
 	return attrs
@@ -627,23 +627,23 @@ func (c ResolveUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveUserProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveUserProxyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveUserProxyRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -665,7 +665,7 @@ func (to *ResolveUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 func (to *ResolveUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolveUserRequest_SdkV2) {
 }
 
-func (c ResolveUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -679,23 +679,23 @@ func (c ResolveUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveUserRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveUserRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveUserRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"external_id": o.ExternalId,
+			"external_id": m.ExternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_id": types.StringType,
@@ -731,7 +731,7 @@ func (to *ResolveUserResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 	}
 }
 
-func (c ResolveUserResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ResolveUserResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["user"] = attrs["user"].SetOptional()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -745,7 +745,7 @@ func (c ResolveUserResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ResolveUserResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ResolveUserResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"user": reflect.TypeOf(User_SdkV2{}),
 	}
@@ -754,16 +754,16 @@ func (a ResolveUserResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ResolveUserResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ResolveUserResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ResolveUserResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user": o.User,
+			"user": m.User,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ResolveUserResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ResolveUserResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"user": basetypes.ListType{
@@ -776,13 +776,13 @@ func (o ResolveUserResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetUser returns the value of the User field in ResolveUserResponse_SdkV2 as
 // a User_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResolveUserResponse_SdkV2) GetUser(ctx context.Context) (User_SdkV2, bool) {
+func (m *ResolveUserResponse_SdkV2) GetUser(ctx context.Context) (User_SdkV2, bool) {
 	var e User_SdkV2
-	if o.User.IsNull() || o.User.IsUnknown() {
+	if m.User.IsNull() || m.User.IsUnknown() {
 		return e, false
 	}
 	var v []User_SdkV2
-	d := o.User.ElementsAs(ctx, &v, true)
+	d := m.User.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -793,10 +793,10 @@ func (o *ResolveUserResponse_SdkV2) GetUser(ctx context.Context) (User_SdkV2, bo
 }
 
 // SetUser sets the value of the User field in ResolveUserResponse_SdkV2.
-func (o *ResolveUserResponse_SdkV2) SetUser(ctx context.Context, v User_SdkV2) {
+func (m *ResolveUserResponse_SdkV2) SetUser(ctx context.Context, v User_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user"]
-	o.User = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user"]
+	m.User = types.ListValueMust(t, vs)
 }
 
 // The details of a ServicePrincipal resource.
@@ -821,7 +821,7 @@ func (to *ServicePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *ServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServicePrincipal_SdkV2) {
 }
 
-func (c ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_sp_status"] = attrs["account_sp_status"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
@@ -839,28 +839,28 @@ func (c ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ServicePrincipal_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ServicePrincipal_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ServicePrincipal_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        o.AccountId,
-			"account_sp_status": o.AccountSpStatus,
-			"application_id":    o.ApplicationId,
-			"display_name":      o.DisplayName,
-			"external_id":       o.ExternalId,
-			"internal_id":       o.InternalId,
+			"account_id":        m.AccountId,
+			"account_sp_status": m.AccountSpStatus,
+			"application_id":    m.ApplicationId,
+			"display_name":      m.DisplayName,
+			"external_id":       m.ExternalId,
+			"internal_id":       m.InternalId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":        types.StringType,
@@ -912,7 +912,7 @@ func (to *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, from User_SdkV2)
 	}
 }
 
-func (c User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
@@ -931,7 +931,7 @@ func (c User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a User_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m User_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"name": reflect.TypeOf(UserName_SdkV2{}),
 	}
@@ -940,21 +940,21 @@ func (a User_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, User_SdkV2
 // only implements ToObjectValue() and Type().
-func (o User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":          o.AccountId,
-			"account_user_status": o.AccountUserStatus,
-			"external_id":         o.ExternalId,
-			"internal_id":         o.InternalId,
-			"name":                o.Name,
-			"username":            o.Username,
+			"account_id":          m.AccountId,
+			"account_user_status": m.AccountUserStatus,
+			"external_id":         m.ExternalId,
+			"internal_id":         m.InternalId,
+			"name":                m.Name,
+			"username":            m.Username,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o User_SdkV2) Type(ctx context.Context) attr.Type {
+func (m User_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":          types.StringType,
@@ -972,13 +972,13 @@ func (o User_SdkV2) Type(ctx context.Context) attr.Type {
 // GetName returns the value of the Name field in User_SdkV2 as
 // a UserName_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *User_SdkV2) GetName(ctx context.Context) (UserName_SdkV2, bool) {
+func (m *User_SdkV2) GetName(ctx context.Context) (UserName_SdkV2, bool) {
 	var e UserName_SdkV2
-	if o.Name.IsNull() || o.Name.IsUnknown() {
+	if m.Name.IsNull() || m.Name.IsUnknown() {
 		return e, false
 	}
 	var v []UserName_SdkV2
-	d := o.Name.ElementsAs(ctx, &v, true)
+	d := m.Name.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -989,10 +989,10 @@ func (o *User_SdkV2) GetName(ctx context.Context) (UserName_SdkV2, bool) {
 }
 
 // SetName sets the value of the Name field in User_SdkV2.
-func (o *User_SdkV2) SetName(ctx context.Context, v UserName_SdkV2) {
+func (m *User_SdkV2) SetName(ctx context.Context, v UserName_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["name"]
-	o.Name = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["name"]
+	m.Name = types.ListValueMust(t, vs)
 }
 
 type UserName_SdkV2 struct {
@@ -1007,7 +1007,7 @@ func (to *UserName_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 func (to *UserName_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UserName_SdkV2) {
 }
 
-func (c UserName_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UserName_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["family_name"] = attrs["family_name"].SetOptional()
 	attrs["given_name"] = attrs["given_name"].SetOptional()
 
@@ -1021,24 +1021,24 @@ func (c UserName_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UserName_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UserName_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UserName_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UserName_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UserName_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"family_name": o.FamilyName,
-			"given_name":  o.GivenName,
+			"family_name": m.FamilyName,
+			"given_name":  m.GivenName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UserName_SdkV2) Type(ctx context.Context) attr.Type {
+func (m UserName_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"family_name": types.StringType,
@@ -1083,7 +1083,7 @@ func (to *WorkspaceAccessDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c WorkspaceAccessDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m WorkspaceAccessDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_type"] = attrs["access_type"].SetComputed()
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["permissions"] = attrs["permissions"].SetOptional()
@@ -1102,7 +1102,7 @@ func (c WorkspaceAccessDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a WorkspaceAccessDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m WorkspaceAccessDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permissions": reflect.TypeOf(types.String{}),
 	}
@@ -1111,22 +1111,22 @@ func (a WorkspaceAccessDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceAccessDetail_SdkV2
 // only implements ToObjectValue() and Type().
-func (o WorkspaceAccessDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m WorkspaceAccessDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_type":    o.AccessType,
-			"account_id":     o.AccountId,
-			"permissions":    o.Permissions,
-			"principal_id":   o.PrincipalId,
-			"principal_type": o.PrincipalType,
-			"status":         o.Status,
-			"workspace_id":   o.WorkspaceId,
+			"access_type":    m.AccessType,
+			"account_id":     m.AccountId,
+			"permissions":    m.Permissions,
+			"principal_id":   m.PrincipalId,
+			"principal_type": m.PrincipalType,
+			"status":         m.Status,
+			"workspace_id":   m.WorkspaceId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o WorkspaceAccessDetail_SdkV2) Type(ctx context.Context) attr.Type {
+func (m WorkspaceAccessDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_type": types.StringType,
@@ -1145,12 +1145,12 @@ func (o WorkspaceAccessDetail_SdkV2) Type(ctx context.Context) attr.Type {
 // GetPermissions returns the value of the Permissions field in WorkspaceAccessDetail_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *WorkspaceAccessDetail_SdkV2) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+func (m *WorkspaceAccessDetail_SdkV2) GetPermissions(ctx context.Context) ([]types.String, bool) {
+	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Permissions.ElementsAs(ctx, &v, true)
+	d := m.Permissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1158,12 +1158,12 @@ func (o *WorkspaceAccessDetail_SdkV2) GetPermissions(ctx context.Context) ([]typ
 }
 
 // SetPermissions sets the value of the Permissions field in WorkspaceAccessDetail_SdkV2.
-func (o *WorkspaceAccessDetail_SdkV2) SetPermissions(ctx context.Context, v []types.String) {
+func (m *WorkspaceAccessDetail_SdkV2) SetPermissions(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Permissions = types.ListValueMust(t, vs)
+	m.Permissions = types.ListValueMust(t, vs)
 }

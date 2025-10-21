@@ -36,6 +36,7 @@ type appResource struct {
 
 func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
+	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s
 }

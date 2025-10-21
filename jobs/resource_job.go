@@ -594,6 +594,12 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("trigger", "table_update").SetExactlyOneOf(trigger_eoo)
 	s.SchemaPath("trigger", "periodic").SetExactlyOneOf(trigger_eoo)
 
+	s.SchemaPath("trigger", "periodic", "interval").SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(1)))                          // .SetRequired()
+	s.SchemaPath("trigger", "periodic", "unit").SetValidateFunc(validation.StringInSlice([]string{"DAYS", "HOURS", "WEEKS"}, false))              //.SetRequired()
+	s.SchemaPath("trigger", "file_arrival", "url").SetValidateFunc(validation.StringIsNotEmpty)                                                   // .SetRequired()
+	s.SchemaPath("trigger", "table_update", "table_names").SetMinItems(1)                                                                         //.SetRequired()
+	s.SchemaPath("trigger", "table_update", "condition").SetValidateFunc(validation.StringInSlice([]string{"ANY_UPDATED", "ALL_UPDATED"}, false)) // .SetRequired()
+
 	// Deprecated Job API 2.0 attributes
 	var topLevelDeprecatedAttr = []string{
 		"max_retries",

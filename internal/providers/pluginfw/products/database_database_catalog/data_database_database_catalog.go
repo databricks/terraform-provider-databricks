@@ -12,10 +12,10 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -34,8 +34,15 @@ type DatabaseCatalogDataSource struct {
 
 // DatabaseCatalogData extends the main model with additional fields.
 type DatabaseCatalogData struct {
-	database_tf.DatabaseCatalog
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
+	// The name of the DatabaseInstance housing the database.
+	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
+	// The name of the database (in a instance) associated with the catalog.
+	DatabaseName types.String `tfsdk:"database_name"`
+	// The name of the catalog in UC.
+	Name types.String `tfsdk:"name"`
+
+	Uid types.String `tfsdk:"uid"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -46,7 +53,7 @@ type DatabaseCatalogData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DatabaseCatalogData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.DatabaseCatalog.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -56,31 +63,41 @@ func (m DatabaseCatalogData) GetComplexFieldTypes(ctx context.Context) map[strin
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCatalogData
 // only implements ToObjectValue() and Type().
 func (m DatabaseCatalogData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.DatabaseCatalog.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"create_database_if_not_exists": m.CreateDatabaseIfNotExists,
+			"database_instance_name":        m.DatabaseInstanceName,
+			"database_name":                 m.DatabaseName,
+			"name":                          m.Name,
+			"uid":                           m.Uid,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DatabaseCatalogData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.DatabaseCatalog.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"create_database_if_not_exists": types.BoolType,
+			"database_instance_name": types.StringType,
+			"database_name":          types.StringType,
+			"name":                   types.StringType,
+			"uid":                    types.StringType,
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *DatabaseCatalogData) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseCatalogData) {
-	m.DatabaseCatalog.SyncFieldsDuringRead(ctx, existingState.DatabaseCatalog)
+func (m DatabaseCatalogData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetOptional()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetComputed()
+	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetRequired()
+	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["uid"] = attrs["uid"].SetComputed()
+
+	return attrs
 }
 
 func (r *DatabaseCatalogDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -88,10 +105,7 @@ func (r *DatabaseCatalogDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *DatabaseCatalogDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseCatalog",
 		Attributes:  attrs,
@@ -106,12 +120,6 @@ func (r *DatabaseCatalogDataSource) Configure(ctx context.Context, req datasourc
 func (r *DatabaseCatalogDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config DatabaseCatalogData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -120,6 +128,13 @@ func (r *DatabaseCatalogDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var readRequest database.GetDatabaseCatalogRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -140,8 +155,6 @@ func (r *DatabaseCatalogDataSource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

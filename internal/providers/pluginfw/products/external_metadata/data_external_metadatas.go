@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,14 +27,18 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 
 // ExternalMetadatasData extends the main model with additional fields.
 type ExternalMetadatasData struct {
-	ExternalMetadata types.List   `tfsdk:"external_metadata"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+	ExternalMetadata types.List `tfsdk:"external_metadata"`
 }
 
 func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"external_metadata": reflect.TypeOf(catalog_tf.ExternalMetadata{}),
+		"external_metadata": reflect.TypeOf(ExternalMetadataData{}),
 	}
+}
+
+func (m ExternalMetadatasData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_metadata"] = attrs["external_metadata"].SetComputed()
+	return attrs
 }
 
 type ExternalMetadatasDataSource struct {
@@ -47,11 +50,7 @@ func (r *ExternalMetadatasDataSource) Metadata(ctx context.Context, req datasour
 }
 
 func (r *ExternalMetadatasDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("external_metadata")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ExternalMetadatasData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks ExternalMetadata",
 		Attributes:  attrs,
@@ -66,12 +65,6 @@ func (r *ExternalMetadatasDataSource) Configure(ctx context.Context, req datasou
 func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config ExternalMetadatasData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -84,6 +77,13 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.ExternalMetadata.ListExternalMetadataAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list external_metadatas", err.Error())
@@ -92,7 +92,7 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var external_metadata catalog_tf.ExternalMetadata
+		var external_metadata ExternalMetadataData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &external_metadata)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -101,7 +101,6 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var newState ExternalMetadatasData
-	newState.ExternalMetadata = types.ListValueMust(catalog_tf.ExternalMetadata{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
+	newState.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

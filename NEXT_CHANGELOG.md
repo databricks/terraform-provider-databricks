@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.91.0
+## Release v1.94.0
 
 ### Breaking Changes
 
@@ -8,14 +8,17 @@
 
 ### Bug Fixes
 
-* Allow update `managed_services_customer_managed_key_id` in `databricks_mws_workspaces` ([#5034](https://github.com/databricks/terraform-provider-databricks/pull/5034))
+* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
 
 ### Documentation
 
-* Clarify the use of `workspace-consume` entitlement and access to Databricks One ([#5043](https://github.com/databricks/terraform-provider-databricks/pull/5043))
+* Document `table_update` trigger in `databricks_job` resource ([#5107](https://github.com/databricks/terraform-provider-databricks/pull/5107))
+* Document new attributes in `databricks_app` resource and data sources ([#5108](https://github.com/databricks/terraform-provider-databricks/pull/5108))
+* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
 
 ### Exporter
 
 ### Internal Changes
 
 * Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).
+* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).

@@ -2,6 +2,8 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
 Alerts run on a schedule and evaluate query results against defined thresholds. When an alert is triggered, notifications can be sent to specified users or destinations.
@@ -81,11 +83,10 @@ The following arguments are supported:
   Deprecated: Use `run_as` field instead. This field will be removed in a future release
 * `schedule` (CronSchedule, optional)
 * `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
-* `empty_result_state` (string, optional) - Alert state if result is empty. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `empty_result_state` (string, optional) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `notification` (AlertV2Notification, optional) - User or Notification Destination to notify when alert is triggered
 * `source` (AlertV2OperandColumn, optional) - Source column from result to use to evaluate alert
 * `threshold` (AlertV2Operand, optional) - Threshold to user for alert evaluation, can be a column or a value
@@ -100,7 +101,7 @@ The following arguments are supported:
 * `value` (AlertV2OperandValue, optional)
 
 ### AlertV2OperandColumn
-* `aggregation` (string, optional) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string, optional) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string, optional)
 * `name` (string, optional)
 
@@ -151,5 +152,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_alert_v2 "id"
+terraform import databricks_alert_v2.this "id"
 ```

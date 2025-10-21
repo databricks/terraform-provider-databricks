@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,14 +27,18 @@ func DataSourceDatabaseCatalogs() datasource.DataSource {
 
 // DatabaseCatalogsData extends the main model with additional fields.
 type DatabaseCatalogsData struct {
-	Database    types.List   `tfsdk:"database_catalogs"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	Database types.List `tfsdk:"database_catalogs"`
 }
 
 func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"database_catalogs": reflect.TypeOf(database_tf.DatabaseCatalog{}),
+		"database_catalogs": reflect.TypeOf(DatabaseCatalogData{}),
 	}
+}
+
+func (m DatabaseCatalogsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_catalogs"] = attrs["database_catalogs"].SetComputed()
+	return attrs
 }
 
 type DatabaseCatalogsDataSource struct {
@@ -47,11 +50,7 @@ func (r *DatabaseCatalogsDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *DatabaseCatalogsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogsData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("database_catalogs")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseCatalogsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseCatalog",
 		Attributes:  attrs,
@@ -66,12 +65,6 @@ func (r *DatabaseCatalogsDataSource) Configure(ctx context.Context, req datasour
 func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config DatabaseCatalogsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -84,6 +77,13 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.Database.ListDatabaseCatalogsAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list database_database_catalogs", err.Error())
@@ -92,7 +92,7 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var database_catalog database_tf.DatabaseCatalog
+		var database_catalog DatabaseCatalogData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &database_catalog)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -101,7 +101,6 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 	}
 
 	var newState DatabaseCatalogsData
-	newState.Database = types.ListValueMust(database_tf.DatabaseCatalog{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
+	newState.Database = types.ListValueMust(DatabaseCatalogData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

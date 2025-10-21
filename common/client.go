@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -59,6 +60,10 @@ type DatabricksClient struct {
 	// configured for the provider
 	cachedWorkspaceClient *databricks.WorkspaceClient
 
+	// cachedWorkspaceID is the cached workspace ID of the workspace client
+	// authenticated to the workspace configured for the provider
+	cachedWorkspaceID int64
+
 	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
 	// populated when fetching a WorkspaceClient for a specific workspace ID using
 	// a provider configured at the account level
@@ -72,9 +77,139 @@ type DatabricksClient struct {
 	mu sync.Mutex
 }
 
-// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.
-// This is used by resources and data sources that are developed over plugin framework.
-func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
+// GetWorkspaceClientForUnifiedProvider returns the Databricks
+// WorkspaceClient for workspace level resources or diagnostics if that fails
+// for terraform provider, the provider can be configured at account level or workspace level.
+func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
+	ctx context.Context, workspaceID string,
+) (*databricks.WorkspaceClient, diag.Diagnostics) {
+	// The provider can be configured at account level or workspace level.
+	if c.Config.IsAccountClient() {
+		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+	}
+	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+}
+
+// getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
+// the workspace ID specified in the resource when the provider is configured
+// at account level.
+func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
+	ctx context.Context, workspaceID string,
+) (*databricks.WorkspaceClient, diag.Diagnostics) {
+	// Workspace ID must be set in a workspace level resource if
+	// the provider is configured at account level.
+	// TODO: Link to the documentation once migration guide is published
+	if workspaceID == "" {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic(
+			"workspace_id is not set",
+			"please set the workspace_id in the provider_config")}
+	}
+
+	// Parse the workspace ID to int.
+	workspaceIDInt, diags := parseWorkspaceID(workspaceID)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Get the workspace client for the workspace ID.
+	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
+	if err != nil {
+		diags.AddError(fmt.Sprintf(
+			"failed to get workspace client with workspace_id %d", workspaceIDInt), err.Error())
+		return nil, diags
+	}
+	return w, nil
+}
+
+// getWorkspaceClientForWorkspaceConfiguredProvider gets the workspace client for
+// the workspace ID specified in the resource when the provider is configured at workspace level.
+func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
+	ctx context.Context, workspaceID string,
+) (*databricks.WorkspaceClient, diag.Diagnostics) {
+	// Provider is configured at workspace level and we get the
+	// workspace client from the provider.
+	if workspaceID == "" {
+		return c.GetWorkspaceClient()
+	}
+
+	workspaceIDInt, diags := parseWorkspaceID(workspaceID)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Check if the workspace ID specified in the resource matches
+	// the workspace ID of the provider configured workspace client.
+	w, clientDiags := c.GetWorkspaceClient()
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	err := c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	if err != nil {
+		diags.AddError("failed to validate workspace_id", err.Error())
+		return nil, diags
+	}
+	// The provider is configured at the workspace level and the
+	// workspace ID matches
+	return w, diags
+}
+
+// parseWorkspaceID parses the workspace ID from string to int64.
+func parseWorkspaceID(workspaceID string) (int64, diag.Diagnostics) {
+	workspaceIDInt, err := strconv.ParseInt(workspaceID, 10, 64)
+	if err != nil {
+		return 0, diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				"failed to parse workspace_id. please check if the workspace_id in provider_config is a valid integer", err.Error(),
+			),
+		}
+	}
+	return workspaceIDInt, nil
+}
+
+// validateWorkspaceIDFromProvider validates the workspace ID specified in the
+// resource or data soruce matches the workspace ID of the provider configured workspace client.
+func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, workspaceID int64,
+	w *databricks.WorkspaceClient) error {
+	// If the workspace ID is not cached, we make an API call to the workspace to get
+	// the current workspace ID and cache it.
+	if c.cachedWorkspaceID == 0 {
+		err := c.setCachedWorkspaceID(ctx, w)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.cachedWorkspaceID != workspaceID {
+		return fmt.Errorf("workspace_id mismatch: provider is configured for workspace %d but got %d in provider_config. "+
+			"Please check the workspace_id provided in provider_config",
+			c.cachedWorkspaceID, workspaceID)
+	}
+	return nil
+}
+
+// setCachedWorkspaceID sets the cached workspace ID.
+func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databricks.WorkspaceClient) error {
+	// Acquire the lock to avoid race conditions.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// Double checked locking
+	if c.cachedWorkspaceID == 0 {
+		id, err := w.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to get the workspace_id: %w",
+				err)
+		}
+		c.cachedWorkspaceID = id
+	}
+	return nil
+}
+
+// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if
+// that fails. This is used by resources and data sources that are developed
+// over plugin framework.
+func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient,
+	diag.Diagnostics) {
 	w, err := c.WorkspaceClient()
 	if err != nil {
 		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}

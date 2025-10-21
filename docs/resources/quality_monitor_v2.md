@@ -2,6 +2,8 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
 
 
@@ -25,7 +27,6 @@ resource "databricks_quality_monitor_v2" "this" {
 The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
-* `workspace_id` (string, optional) - Workspace ID of the resource
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -46,5 +47,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_quality_monitor_v2 "object_type,object_id"
+terraform import databricks_quality_monitor_v2.this "object_type,object_id"
 ```

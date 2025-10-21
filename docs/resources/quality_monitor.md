@@ -120,7 +120,8 @@ table.
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation).
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)
-* `provider_config` - (Optional) Configure the provider by specifying `workspace_id`. Allows account level provider to manage this resource.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

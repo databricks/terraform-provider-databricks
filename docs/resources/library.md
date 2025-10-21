@@ -130,7 +130,34 @@ resource "databricks_library" "rkeops" {
 ## Argument Reference
 
 The following arguments are supported:
-* `provider_config` - (Optional) Configure the provider by specifying `workspace_id`. Allows account level provider to manage this resource.
+
+* `cluster_id` - (Required) ID of the [databricks_cluster](cluster.md) to install the library on.
+
+You must specify exactly **one** of the following library types:
+
+* `jar` - (Optional) Path to the JAR library. Supported URIs include Workspace paths, Unity Catalog Volumes paths, and S3 URIs. For example: `/Workspace/path/to/library.jar`, `/Volumes/path/to/library.jar` or `s3://my-bucket/library.jar`. If S3 is used, make sure the cluster has read access to the library. You may need to launch the cluster with an IAM role to access the S3 URI.
+
+* `egg` - (Optional, Deprecated) Path to the EGG library. Installing Python egg files is deprecated and is not supported in Databricks Runtime 14.0 and above. Use `whl` or `pypi` instead.
+
+* `whl` - (Optional) Path to the wheel library. Supported URIs include Workspace paths, Unity Catalog Volumes paths, and S3 URIs. For example: `/Workspace/path/to/library.whl`, `/Volumes/path/to/library.whl` or `s3://my-bucket/library.whl`. If S3 is used, make sure the cluster has read access to the library. You may need to launch the cluster with an IAM role to access the S3 URI.
+
+* `requirements` - (Optional) Path to the requirements.txt file. Only Workspace paths and Unity Catalog Volumes paths are supported. For example: `/Workspace/path/to/requirements.txt` or `/Volumes/path/to/requirements.txt`. Requires a cluster with DBR 15.0+.
+
+* `maven` - (Optional) Configuration block for a Maven library. The block consists of the following fields:
+  * `coordinates` - (Required) Gradle-style Maven coordinates. For example: `org.jsoup:jsoup:1.7.2`.
+  * `repo` - (Optional) Maven repository to install the Maven package from. If omitted, both Maven Central Repository and Spark Packages are searched.
+  * `exclusions` - (Optional) List of dependencies to exclude. For example: `["slf4j:slf4j", "*:hadoop-client"]`. See [Maven dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html) for more information.
+
+* `pypi` - (Optional) Configuration block for a PyPI library. The block consists of the following fields:
+  * `package` - (Required) The name of the PyPI package to install. An optional exact version specification is also supported. For example: `simplejson` or `simplejson==3.8.0`.
+  * `repo` - (Optional) The repository where the package can be found. If not specified, the default pip index is used.
+
+* `cran` - (Optional) Configuration block for a CRAN library. The block consists of the following fields:
+  * `package` - (Required) The name of the CRAN package to install.
+  * `repo` - (Optional) The repository where the package can be found. If not specified, the default CRAN repo is used.
+
+* `provider_config` - (Optional) Configuration block for management through the account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID that the resource belongs to. This workspace must be part of the account that the provider is configured with.
 
 ## Import
 

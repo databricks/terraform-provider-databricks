@@ -197,6 +197,7 @@ provider "databricks" {
   account_id = var.account_id
 }
 ```
+Note: Some workspace level resources can be managed through account provider. please see the [unified provider](./guides/unified-provider.md) for more details.
 
 ### Authenticating with Databricks CLI
 
@@ -230,7 +231,9 @@ provider "databricks" {
 }
 ```
 
-To create resources at both the account and workspace levels, you can create two providers as shown below:
+To create resources at both the account and workspace levels, you can create two providers as shown below.
+
+Note: Some workspace level resources can be managed through account provider. please see the [unified provider](./guides/unified-provider.md) for more details.
 
 ``` hcl
 provider "databricks" {
@@ -277,7 +280,9 @@ provider "databricks" {
 
 Workload Identity Federation can be used to authenticate Databricks from automated workflows. This is done through the tokens issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider.
 
-To create resources at both the account and workspace levels, you can create two providers as shown below:
+To create resources at both the account and workspace levels, you can create two providers as shown below.
+
+Note: Some workspace level resources can be managed through account provider. please see the [unified provider](./guides/unified-provider.md) for more details.
 
 Workspace level provider:
 ```hcl
@@ -303,7 +308,8 @@ provider "databricks" {
 Note: `auth_type` for Github Actions would be "github-oidc". For more details, please see the document linked above.
 
 ### Authenticating with Unified Provider
-Unified Provider allows management of workspace level terraform resources through account level provider. You can specify the `provider_config` block or attribute depending on the resource with the `workspace_id` that the resource will belong to. For more details, please see the [documentation](./guides/unified-provider.md) for more details.
+Unified Provider allows management of workspace level terraform resources through account level provider. You can specify the `provider_config` block or attribute depending on the resource with the `workspace_id` that the resource will belong to. For more details, please see the [documentation](./guides/unified-provider.md).
+
 
 Example:
 ```hcl

@@ -3,9 +3,9 @@
 
 ## Introduction
 
-The unified Terraform provider is a feature that allows you to manage workspace-level resources and data sources through an account-level provider. This significantly simplifies Terraform configurations and resource management, as only one provider is needed per account.
+Unified Terraform Provider allows you to manage workspace-level resources and data sources through an account-level provider. This significantly simplifies Terraform configurations and resource management, as only one provider is needed per account.
 
-**Note:** This feature is in [Public Beta](https://docs.databricks.com/aws/en/release-notes/release-types). If you experience any issues, please see the [Reporting Issues](#reporting-issues) section below.
+**Note:** This feature is in [Public Beta](https://docs.databricks.com/aws/en/release-notes/release-types). If you experience any issues, please refer to the [Reporting Issues](#reporting-issues) section below.
 
 ## Usage
 
@@ -33,6 +33,8 @@ resource "workspace_level_resource" "this" {
 }
 ```
 
+**Note:** This feature is being rolled out incrementally. Some resources do not yet support the unified provider. Please check the resource-specific documentation to see if the `provider_config` attribute or block is available.
+
 ## Migrating to Unified Provider
 
 If you are currently managing both workspace-level and account-level resources and data sources, you likely have multiple provider configurations that you specify for each resource using aliases. For example:
@@ -58,7 +60,7 @@ resource "databricks_account_federation_policy" "this" {
 
 // Define a workspace provider with alias
 provider "databricks" {
-    alias           = databricks.workspace
+    alias           = "workspace"
     host            = var.workspace_host
     client_id       = var.workspace_client_id
     client_secret   = var.workspace_client_secret

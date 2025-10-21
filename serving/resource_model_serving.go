@@ -3,6 +3,7 @@ package serving
 import (
 	"context"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -58,6 +59,105 @@ func suppressRouteModelEntityNameDiff(k, old, new string, d *schema.ResourceData
 	}
 
 	return false
+}
+
+// copySensitiveFields recursively copies sensitive plaintext fields from source to destination.
+// This is needed because the GET API doesn't return sensitive values, causing drift in Terraform state.
+// The function uses reflection to automatically handle all plaintext fields without manual enumeration.
+func copySensitiveFields(src, dst reflect.Value) {
+	// Handle nil pointers
+	if !src.IsValid() || !dst.IsValid() {
+		return
+	}
+
+	// Dereference pointers
+	if src.Kind() == reflect.Ptr {
+		if src.IsNil() {
+			return
+		}
+		src = src.Elem()
+	}
+	if dst.Kind() == reflect.Ptr {
+		if dst.IsNil() {
+			return
+		}
+		dst = dst.Elem()
+	}
+
+	// Only process structs
+	if src.Kind() != reflect.Struct || dst.Kind() != reflect.Struct {
+		return
+	}
+
+	// Ensure types match
+	if src.Type() != dst.Type() {
+		return
+	}
+
+	// Iterate through all fields
+	for i := 0; i < src.NumField(); i++ {
+		srcField := src.Field(i)
+		dstField := dst.Field(i)
+		fieldType := src.Type().Field(i)
+
+		// Skip unexported fields
+		if !dstField.CanSet() {
+			continue
+		}
+
+		fieldName := fieldType.Name
+
+		// Check if this is a sensitive plaintext field (ends with "Plaintext")
+		if strings.HasSuffix(fieldName, "Plaintext") && srcField.Kind() == reflect.String {
+			srcValue := srcField.String()
+			dstValue := dstField.String()
+
+			// Copy from source to destination if source has a value and destination is empty
+			if srcValue != "" && dstValue == "" {
+				dstField.SetString(srcValue)
+				log.Printf("[DEBUG] Copied sensitive field %s from state", fieldName)
+			}
+			continue
+		}
+
+		// Recursively process nested structs, pointers, slices, and maps
+		switch srcField.Kind() {
+		case reflect.Struct:
+			copySensitiveFields(srcField, dstField)
+		case reflect.Ptr:
+			if !srcField.IsNil() && !dstField.IsNil() {
+				copySensitiveFields(srcField, dstField)
+			}
+		case reflect.Slice:
+			// Process slice elements (e.g., served_entities)
+			if srcField.Len() > 0 && dstField.Len() > 0 {
+				minLen := srcField.Len()
+				if dstField.Len() < minLen {
+					minLen = dstField.Len()
+				}
+				for j := 0; j < minLen; j++ {
+					copySensitiveFields(srcField.Index(j), dstField.Index(j))
+				}
+			}
+		case reflect.Map:
+			// Process map values if needed in the future
+			continue
+		}
+	}
+}
+
+// copySensitiveExternalModelFields copies sensitive plaintext credential fields from the source
+// endpoint (from state) to the destination endpoint (from API response).
+func copySensitiveExternalModelFields(src, dst *serving.ServingEndpointDetailed) {
+	if src == nil || dst == nil {
+		return
+	}
+
+	// Use reflection to copy all sensitive fields recursively
+	srcVal := reflect.ValueOf(src)
+	dstVal := reflect.ValueOf(dst)
+
+	copySensitiveFields(srcVal, dstVal)
 }
 
 // updateConfig updates the configuration of the provided serving endpoint to the provided config.
@@ -220,6 +320,8 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Copy sensitive plaintext fields from state to API response to prevent drift
+			copySensitiveExternalModelFields(&sOrig, endpoint)
 			if sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
 				if endpoint.Config != nil {

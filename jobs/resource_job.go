@@ -670,42 +670,6 @@ func (JobSettingsResource) MaxDepthForTypes() map[string]int {
 	return map[string]int{"jobs.ForEachTask": 1}
 }
 
-// List all jobs matching the name. If name is empty, returns all jobs
-func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
-	jobs := []Job{}
-	params := map[string]interface{}{
-		"limit":        25,
-		"expand_tasks": expandTasks,
-	}
-	if name != "" {
-		params["name"] = name
-	}
-
-	nextPageToken := ""
-	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
-	for {
-		var resp JobListResponse
-		if nextPageToken != "" {
-			params["page_token"] = nextPageToken
-		}
-		err := a.client.Get(ctx, "/jobs/list", params, &resp)
-		if err != nil {
-			return nil, err
-		}
-		jobs = append(jobs, resp.Jobs...)
-		if !resp.HasMore {
-			break
-		}
-		nextPageToken = resp.NextPageToken
-	}
-	return jobs, nil
-}
-
-// List all jobs
-func (a JobsAPI) List() (l []Job, err error) {
-	return a.ListByName("", false)
-}
-
 // RunsList returns a job runs list
 func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
 	err = a.client.Get(a.context, "/jobs/runs/list", r, &jrl)
@@ -922,9 +886,9 @@ func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
 
 func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
 	s["url"].ValidateFunc = validation.IsURLWithHTTPS
-	s["tag"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
-	s["branch"].ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
-	s["commit"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+	s["tag"].ConflictsWith = []string{prefix + "git_source.0.branch", prefix + "git_source.0.commit"}
+	s["branch"].ConflictsWith = []string{prefix + "git_source.0.commit", prefix + "git_source.0.tag"}
+	s["commit"].ConflictsWith = []string{prefix + "git_source.0.branch", prefix + "git_source.0.tag"}
 }
 
 func fixWebhookNotifications(s map[string]*schema.Schema) {

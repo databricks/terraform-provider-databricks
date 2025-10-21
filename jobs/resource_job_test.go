@@ -148,91 +148,26 @@ func TestResourceJobCreate(t *testing.T) {
 }
 
 func TestResourceJobCreate_MultiTask(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "Featurizer" && len(req.Tasks) == 2
+			})).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
 					Name: "Featurizer",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey:           "a",
-							ExistingClusterID: "abc",
-							Libraries: []compute.Library{
-								{
-									Jar: "dbfs://aa/bb/cc.jar",
-								},
-							},
-							SparkJarTask: &SparkJarTask{
-								MainClassName: "com.labs.BarMain",
-							},
-							Health: &JobHealth{
-								Rules: []JobHealthRule{
-									{
-										Metric:    "RUN_DURATION_SECONDS",
-										Operation: "GREATER_THAN",
-										Value:     50000000000, // 5 * 10^10
-									},
-								},
-							},
-						},
-						{
-							TaskKey: "b",
-							DependsOn: []jobs.TaskDependency{
-								{
-									TaskKey: "a",
-								},
-							},
-							RunIf: "ALL_DONE",
-							NewCluster: &clusters.Cluster{
-								SparkVersion: "a",
-								NodeTypeID:   "b",
-								NumWorkers:   1,
-								AzureAttributes: &clusters.AzureAttributes{
-									SpotBidMaxPrice: 0.99,
-								},
-							},
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/Stuff",
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-					Health: &JobHealth{
-						Rules: []JobHealthRule{
-							{
-								Metric:    "RUN_DURATION_SECONDS",
-								Operation: "GREATER_THAN",
-								Value:     3600,
-							},
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "b"},
+						{TaskKey: "a"},
 					},
 				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-							{
-								TaskKey: "a",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -292,114 +227,35 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 				notebook_path = "/Stuff"
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Featurizer",
+	})
 }
 
 func TestResourceJobCreate_TaskOrder(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "Featurizer" && len(req.Tasks) == 4
+			})).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
 					Name: "Featurizer",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey:           "a",
-							ExistingClusterID: "abc",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/a",
-							},
-						},
-						{
-							TaskKey: "b",
-							DependsOn: []jobs.TaskDependency{
-								{
-									TaskKey: "a",
-								},
-							},
-							ExistingClusterID: "abc",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/b",
-							},
-						},
-						{
-							TaskKey: "c",
-							DependsOn: []jobs.TaskDependency{
-								{
-									TaskKey: "a",
-								},
-								{
-									TaskKey: "b",
-								},
-							},
-							ExistingClusterID: "abc",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/c",
-							},
-						},
-						{
-							TaskKey: "d",
-							DependsOn: []jobs.TaskDependency{
-								{
-									TaskKey: "a",
-								},
-								{
-									TaskKey: "b",
-								},
-								{
-									TaskKey: "c",
-								},
-							},
-							ExistingClusterID: "abc",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/d",
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-					Health: &JobHealth{
-						Rules: []JobHealthRule{
-							{
-								Metric:    "RUN_DURATION_SECONDS",
-								Operation: "GREATER_THAN",
-								Value:     3600,
-							},
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "b"},
+						{TaskKey: "a"},
+						{TaskKey: "d"},
+						{TaskKey: "c"},
 					},
 				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-							{
-								TaskKey: "a",
-							},
-							{
-								TaskKey: "d",
-							},
-							{
-								TaskKey: "c",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -477,57 +333,39 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 				notebook_path = "/d"
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Featurizer",
+	})
 }
 
 func TestResourceJobCreate_ConditionTask(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "ConditionTaskTesting" && len(req.Tasks) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 231,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 231,
+			}).Return(&jobs.Job{
+				JobId: 231,
+				Settings: &jobs.JobSettings{
 					Name: "ConditionTaskTesting",
-					Tasks: []JobTaskSettings{
+					Tasks: []jobs.Task{
 						{
 							TaskKey: "a",
 							ConditionTask: &jobs.ConditionTask{
 								Left:  "123",
-								Op:    "EQUAL_TO",
+								Op:    jobs.ConditionTaskOpEqualTo,
 								Right: "123",
 							},
 						},
 					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
 				},
-				Response: Job{
-					JobID: 231,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=231",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "a",
-								ConditionTask: &jobs.ConditionTask{
-									Left:  "123",
-									Op:    "EQUAL_TO",
-									Right: "123",
-								},
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -542,58 +380,32 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 				right = "123"
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "231", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "231",
+		"name": "ConditionTaskTesting",
+	})
 }
 
 func TestResourceJobCreate_ForEachTask(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "Foreach-task-testing" && len(req.Tasks) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
 					Name: "Foreach-task-testing",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey: "for_each_task_key",
-							ForEachTask: &ForEachTask{
-								Concurrency: 1,
-								Inputs:      "[1, 2, 3, 4, 5, 6]",
-								Task: ForEachNestedTask{
-									TaskKey:           "nested_task_key",
-									ExistingClusterID: "abc",
-									NotebookTask: &NotebookTask{
-										NotebookPath: "/Stuff",
-									},
-								},
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "for_each_task_key",
-							},
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "for_each_task_key"},
 					},
 				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -619,9 +431,10 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 				}
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Foreach-task-testing",
+	})
 }
 func TestResourceJobCreate_PowerBiTask(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -743,67 +556,30 @@ func TestResourceJobCreate_PowerBiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 func TestResourceJobCreate_JobParameters(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "JobParameterTesting" && len(req.Tasks) == 2 && len(req.Parameters) == 2
+			})).Return(&jobs.CreateResponse{
+				JobId: 231,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 231,
+			}).Return(&jobs.Job{
+				JobId: 231,
+				Settings: &jobs.JobSettings{
 					Name: "JobParameterTesting",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey: "a",
-						},
-						{
-							TaskKey: "b",
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "a"},
+						{TaskKey: "b"},
 					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
 					Parameters: []jobs.JobParameterDefinition{
-						{
-							Name:    "hello",
-							Default: "world",
-						},
-						{
-							Name:    "key",
-							Default: "value_default",
-						},
+						{Name: "hello", Default: "world"},
+						{Name: "key", Default: "value_default"},
 					},
 				},
-				Response: Job{
-					JobID: 231,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=231",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "a",
-							},
-							{
-								TaskKey: "b",
-							},
-						},
-						Parameters: []jobs.JobParameterDefinition{
-							{
-								Name:    "hello",
-								Default: "world",
-							},
-							{
-								Name:    "key",
-								Default: "value_default",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -826,59 +602,35 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 		task {
 			task_key = "b"
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "231", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "231",
+		"name": "JobParameterTesting",
+	})
 }
 
 func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
-					Name:              "JobParameterTesting",
-					MaxConcurrentRuns: 1,
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey: "a",
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "JobParameterTesting" && len(req.Tasks) == 1 && len(req.Parameters) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 231,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 231,
+			}).Return(&jobs.Job{
+				JobId: 231,
+				Settings: &jobs.JobSettings{
+					Name: "JobParameterTesting",
+					Tasks: []jobs.Task{
+						{TaskKey: "a"},
 					},
 					Parameters: []jobs.JobParameterDefinition{
-						{
-							Name:    "key",
-							Default: "",
-						},
+						{Name: "key", Default: ""},
 					},
 				},
-				Response: Job{
-					JobID: 231,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=231",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "a",
-							},
-						},
-						Parameters: []jobs.JobParameterDefinition{
-							{
-								Name:    "key",
-								Default: "",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -893,9 +645,10 @@ func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
 		task {
 			task_key = "a"
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "231", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "231",
+		"name": "JobParameterTesting",
+	})
 }
 
 func TestResourceJobCreate_JobParameters_DefaultIsRequired(t *testing.T) {
@@ -934,87 +687,26 @@ func TestResourceJobCreate_JobParameters_SingleTasksConflict(t *testing.T) {
 }
 
 func TestResourceJobCreate_JobClusters(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "JobClustered" && len(req.Tasks) == 3 && len(req.JobClusters) == 2
+			})).Return(&jobs.CreateResponse{
+				JobId: 17,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 17,
+			}).Return(&jobs.Job{
+				JobId: 17,
+				Settings: &jobs.JobSettings{
 					Name: "JobClustered",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey:       "a",
-							JobClusterKey: "j",
-						},
-						{
-							TaskKey: "b",
-							NewCluster: &clusters.Cluster{
-								SparkVersion: "a",
-								NodeTypeID:   "b",
-								NumWorkers:   3,
-							},
-							DependsOn: []jobs.TaskDependency{
-								{
-									TaskKey: "a",
-								},
-							},
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/Stuff",
-							},
-						},
-						{
-							TaskKey: "c",
-							NewCluster: &clusters.Cluster{
-								SparkVersion: "d",
-								NodeTypeID:   "e",
-								NumWorkers:   0,
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-					JobClusters: []JobCluster{
-						{
-							JobClusterKey: "j",
-							NewCluster: &clusters.Cluster{
-								SparkVersion: "b",
-								NodeTypeID:   "c",
-								NumWorkers:   7,
-							},
-						},
-						{
-							JobClusterKey: "k",
-							NewCluster: &clusters.Cluster{
-								SparkVersion: "x",
-								NodeTypeID:   "y",
-								NumWorkers:   0,
-							},
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "b"},
+						{TaskKey: "a"},
 					},
 				},
-				Response: Job{
-					JobID: 17,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=17",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-							{
-								TaskKey: "a",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -1071,63 +763,32 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			}
 		}
 		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "17", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "17",
+		"name": "JobClustered",
+	})
 }
 
 func TestResourceJobCreate_JobCompute(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "JobEnvironments" && len(req.Tasks) == 1 && len(req.Environments) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 18,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 18,
+			}).Return(&jobs.Job{
+				JobId: 18,
+				Settings: &jobs.JobSettings{
 					Name: "JobEnvironments",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey:        "b",
-							EnvironmentKey: "j",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/Stuff",
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-					Environments: []jobs.JobEnvironment{
-						{
-							EnvironmentKey: "j",
-							Spec: &compute.Environment{
-								Client: "1",
-								Dependencies: []string{
-									"cowsay",
-									"-r /Workspace/Users/lisa@company.com/my.whl",
-								},
-							},
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "b"},
 					},
 				},
-				Response: Job{
-					JobID: 18,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=18",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -1147,23 +808,48 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 				notebook_path = "/Stuff"
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "18", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "18",
+		"name": "JobEnvironments",
+	})
 }
 
 func TestResourceJobCreate_DashboardTask(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: jobs.CreateJob{
-					Name:              "DashboardTask",
-					MaxConcurrentRuns: 1,
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "DashboardTask",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey: "a",
+						DashboardTask: &jobs.DashboardTask{
+							Subscription: &jobs.Subscription{
+								Subscribers: []jobs.SubscriptionSubscriber{
+									{UserName: "user@domain.com"},
+									{DestinationId: "Test"},
+								},
+								Paused:        true,
+								CustomSubject: "\"custom subject\"",
+							},
+							WarehouseId: "\"dca3a0ba199040eb\"",
+							DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+						},
 					},
+				},
+			}).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "DashboardTask",
 					Tasks: []jobs.Task{
 						{
 							TaskKey: "a",
@@ -1182,37 +868,7 @@ func TestResourceJobCreate_DashboardTask(t *testing.T) {
 						},
 					},
 				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: jobs.Job{
-					JobId: 789,
-					Settings: &jobs.JobSettings{
-						Name: "DashboardTask",
-						Tasks: []jobs.Task{
-							{
-								TaskKey: "a",
-								DashboardTask: &jobs.DashboardTask{
-									Subscription: &jobs.Subscription{
-										Subscribers: []jobs.SubscriptionSubscriber{
-											{UserName: "user@domain.com"},
-											{DestinationId: "Test"},
-										},
-										Paused:        true,
-										CustomSubject: "\"custom subject\"",
-									},
-									WarehouseId: "\"dca3a0ba199040eb\"",
-									DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
-								},
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -1234,20 +890,62 @@ func TestResourceJobCreate_DashboardTask(t *testing.T) {
 			dashboard_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
 		  }
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "DashboardTask",
+	})
 }
 
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: jobs.CreateJob{
-					Name:              "TF SQL task subscriptions",
-					MaxConcurrentRuns: 1,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "TF SQL task subscriptions",
+				MaxConcurrentRuns: 1,
+				Tasks: []jobs.Task{
+					{
+						TaskKey: "a",
+						SqlTask: &jobs.SqlTask{
+							WarehouseId: "dca3a0ba199040eb",
+							Alert: &jobs.SqlTaskAlert{
+								AlertId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+								Subscriptions: []jobs.SqlTaskSubscription{
+									{UserName: "user@domain.com"},
+									{DestinationId: "Test"},
+								},
+								PauseSubscriptions: true,
+							},
+						},
+					},
+					{
+						TaskKey: "d",
+						SqlTask: &jobs.SqlTask{
+							WarehouseId: "dca3a0ba199040eb",
+							Dashboard: &jobs.SqlTaskDashboard{
+								DashboardId:        "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+								PauseSubscriptions: false,
+								Subscriptions: []jobs.SqlTaskSubscription{
+									{UserName: "user@domain.com"},
+									{DestinationId: "Test"},
+								},
+								CustomSubject: "test",
+							},
+						},
+					},
+				},
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+			}).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "TF SQL task subscriptions",
 					Tasks: []jobs.Task{
 						{
 							TaskKey: "a",
@@ -1268,8 +966,7 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 							SqlTask: &jobs.SqlTask{
 								WarehouseId: "dca3a0ba199040eb",
 								Dashboard: &jobs.SqlTaskDashboard{
-									DashboardId:        "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
-									PauseSubscriptions: false,
+									DashboardId: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
 									Subscriptions: []jobs.SqlTaskSubscription{
 										{UserName: "user@domain.com"},
 										{DestinationId: "Test"},
@@ -1279,54 +976,8 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 							},
 						},
 					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
 				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: jobs.Job{
-					JobId: 789,
-					Settings: &jobs.JobSettings{
-						Name: "TF SQL task subscriptions",
-						Tasks: []jobs.Task{
-							{
-								TaskKey: "a",
-								SqlTask: &jobs.SqlTask{
-									WarehouseId: "dca3a0ba199040eb",
-									Alert: &jobs.SqlTaskAlert{
-										AlertId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
-										Subscriptions: []jobs.SqlTaskSubscription{
-											{UserName: "user@domain.com"},
-											{DestinationId: "Test"},
-										},
-										PauseSubscriptions: true,
-									},
-								},
-							},
-							{
-								TaskKey: "d",
-								SqlTask: &jobs.SqlTask{
-									WarehouseId: "dca3a0ba199040eb",
-									Dashboard: &jobs.SqlTaskDashboard{
-										DashboardId: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
-										Subscriptions: []jobs.SqlTaskSubscription{
-											{UserName: "user@domain.com"},
-											{DestinationId: "Test"},
-										},
-										CustomSubject: "test",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -1368,54 +1019,35 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 			}
 		  }
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "TF SQL task subscriptions",
+	})
 }
 
 func TestResourceJobCreate_RunJobTask(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
-					Name:              "TF RunJobTask Main Job",
-					MaxConcurrentRuns: 1,
-					Tasks: []JobTaskSettings{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "TF RunJobTask Main Job" && len(req.Tasks) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 123,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 123,
+			}).Return(&jobs.Job{
+				JobId: 123,
+				Settings: &jobs.JobSettings{
+					Name: "TF SQL task subscriptions",
+					Tasks: []jobs.Task{
 						{
-							TaskKey: "runJobTask",
-							RunJobTask: &RunJobTask{
-								JobID: 123,
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-				},
-				Response: Job{
-					JobID: 123,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=123",
-				Response: Job{
-					JobID: 123,
-					Settings: &JobSettings{
-						Name: "TF SQL task subscriptions",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "childJobTaskKey",
-								NotebookTask: &NotebookTask{
-									NotebookPath: "/Stuff",
-								},
-							},
+							TaskKey:      "childJobTaskKey",
+							NotebookTask: &jobs.NotebookTask{NotebookPath: "/Stuff"},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -1428,9 +1060,10 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 				job_id = "123"
 		  }
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "123", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "123",
+		"name": "TF SQL task subscriptions",
+	})
 }
 
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
@@ -2132,57 +1765,25 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 
 func TestResourceJobCreateFromGitSource(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey: "b",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/GitSourcedNotebook",
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				return req.Name == "GitSourceJob" && len(req.Tasks) == 1
+			})).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
 					Name:              "GitSourceJob",
 					MaxConcurrentRuns: 1,
-					GitSource: &GitSource{
-						Url:      "https://github.com/databricks/terraform-provider-databricks",
-						Tag:      "0.4.8",
-						Provider: "gitHub",
-						JobSource: &jobs.JobSource{
-							JobConfigPath:       "a/b/c/databricks.yml",
-							ImportFromGitBranch: "main",
-							DirtyState:          "NOT_SYNCED",
-						},
+					Tasks: []jobs.Task{
+						{TaskKey: "b"},
 					},
 				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						// good enough for mock
-						ExistingClusterID: "abc",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-						},
-						Name:              "GitSourceJob",
-						MaxConcurrentRuns: 1,
-					},
-				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -2207,7 +1808,10 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 				notebook_path = "/GitSourcedNotebook"
 			}
 		}`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "GitSourceJob",
+	})
 }
 
 func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []string, gitSource string) {
@@ -2510,75 +2114,38 @@ func TestResourceJobUpdate(t *testing.T) {
 }
 
 func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "My job" && len(req.NewSettings.Tasks) == 2
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "My job",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:      "task1",
+							NotebookTask: &jobs.NotebookTask{NotebookPath: "/foo/bar"},
+							RunIf:        jobs.RunIfAllSuccess,
 						},
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "task1",
-								NotebookTask: &NotebookTask{
-									NotebookPath: "/foo/bar",
-								},
-								// The diff is suppressed here. The API payload
-								// contains the "run_if" value from the terraform
-								// state.
-								RunIf: "ALL_SUCCESS",
-							},
-							{
-								TaskKey: "task2",
-								ForEachTask: &ForEachTask{
-									Inputs: "abc",
-									Task: ForEachNestedTask{
-										TaskKey:      "task3",
-										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
-										// The diff is suppressed here. Value is from
-										// the terraform state.
-										RunIf: "ALL_SUCCESS",
-									},
-								},
-							},
-						},
-						Name: "My job",
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						Name: "My job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:      "task1",
-								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
-								RunIf:        "ALL_SUCCESS",
-							},
-							{
-								TaskKey: "task2",
-								ForEachTask: &ForEachTask{
-									Inputs: "abc",
-									Task: ForEachNestedTask{
-										TaskKey:      "task3",
-										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
-										RunIf:        "ALL_SUCCESS",
-									},
+						{
+							TaskKey: "task2",
+							ForEachTask: &jobs.ForEachTask{
+								Inputs: "abc",
+								Task: jobs.Task{
+									TaskKey:      "task3",
+									NotebookTask: &jobs.NotebookTask{NotebookPath: "/bar/foo"},
+									RunIf:        jobs.RunIfAllSuccess,
 								},
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		ID:       "789",
 		Update:   true,
@@ -2607,77 +2174,43 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 				}
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "My job",
+	})
 }
 
 func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						MaxConcurrentRuns: 1,
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "task1",
-								NotebookTask: &NotebookTask{
-									NotebookPath: "/foo/bar",
-								},
-								// The diff is not suppressed here. Thus the API payload
-								// explicitly does not set run_if here, to unset it in the
-								// job definition.
-								// RunIf is not set, as implied from the HCL config.
-							},
-							{
-								TaskKey: "task2",
-								ForEachTask: &ForEachTask{
-									Inputs: "abc",
-									Task: ForEachNestedTask{
-										TaskKey:      "task3",
-										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
-										// The diff is not suppressed. RunIf is
-										// not set, as implied from the HCL config.
-									},
-								},
-							},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "My job" && len(req.NewSettings.Tasks) == 2
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "My job",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:      "task1",
+							NotebookTask: &jobs.NotebookTask{NotebookPath: "/foo/bar"},
+							RunIf:        jobs.RunIfAtLeastOneFailed,
 						},
-						Name: "My job",
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						Name: "My job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:      "task1",
-								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
-								RunIf:        "AT_LEAST_ONE_FAILED",
-							},
-							{
-								TaskKey: "task2",
-								ForEachTask: &ForEachTask{
-									Task: ForEachNestedTask{
-										TaskKey: "task3",
-										RunIf:   "AT_LEAST_ONE_FAILED",
-									},
+						{
+							TaskKey: "task2",
+							ForEachTask: &jobs.ForEachTask{
+								Task: jobs.Task{
+									TaskKey: "task3",
+									RunIf:   jobs.RunIfAtLeastOneFailed,
 								},
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		ID:     "789",
 		Update: true,
@@ -2706,60 +2239,28 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 				}
 			}
 		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "My job",
+	})
 }
 
 func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: jobs.ResetJob{
-					JobId: 789,
-					NewSettings: jobs.JobSettings{
-						JobClusters: []jobs.JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: compute.ClusterSpec{
-									InstancePoolId:       "instance-pool-worker-job",
-									DriverInstancePoolId: "instance-pool-driver-job",
-									SparkVersion:         "spark-3",
-									NumWorkers:           3,
-								},
-							},
-						},
-						Tasks: []jobs.Task{
-							{
-								TaskKey: "task1",
-								NewCluster: &compute.ClusterSpec{
-									InstancePoolId:       "instance-pool-worker-task",
-									DriverInstancePoolId: "instance-pool-driver-task",
-									SparkVersion:         "spark-2",
-									NumWorkers:           2,
-								},
-							},
-						},
-						Name:              "Featurizer New",
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "Featurizer New"
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name:              "Featurizer New",
+					MaxConcurrentRuns: 1,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: jobs.Job{
-					JobId: 789,
-					Settings: &jobs.JobSettings{
-						Name:              "Featurizer New",
-						MaxConcurrentRuns: 1,
-					},
-				},
-			},
+			}, nil)
 		},
 		ID:       "789",
 		Update:   true,
@@ -2791,60 +2292,28 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		}
 		max_concurrent_runs = 1
 		name = "Featurizer New"`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
-	assert.Equal(t, "Featurizer New", d.Get("name"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Featurizer New",
+	})
 }
 
 func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: jobs.UpdateJob{
-					JobId: 789,
-					NewSettings: &jobs.JobSettings{
-						Tasks: []jobs.Task{
-							{
-								TaskKey: "task1",
-								NewCluster: &compute.ClusterSpec{
-									NodeTypeId:   "node-type-id-2",
-									SparkVersion: "spark-2",
-									NumWorkers:   2,
-								},
-							},
-						},
-						JobClusters: []jobs.JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: compute.ClusterSpec{
-									NodeTypeId:   "node-type-id-3",
-									SparkVersion: "spark-3",
-									NumWorkers:   3,
-								},
-							},
-						},
-						Name:              "Featurizer New",
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "Featurizer New"
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name:              "Featurizer New",
+					MaxConcurrentRuns: 1,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: jobs.Job{
-					JobId: 789,
-					Settings: &jobs.JobSettings{
-						Name:              "Featurizer New",
-						MaxConcurrentRuns: 1,
-					},
-				},
-			},
+			}, nil)
 		},
 		ID:       "789",
 		Update:   true,
@@ -2876,10 +2345,10 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 		}
 		max_concurrent_runs = 1
 		name = "Featurizer New"`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
-	assert.Equal(t, "Featurizer New", d.Get("name"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Featurizer New",
+	})
 }
 
 func TestResourceJobUpdate_Tasks(t *testing.T) {
@@ -3008,72 +2477,41 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 
 func TestResourceJobUpdate_ApplyPolicyDefaultValues_Default(t *testing.T) {
 	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "Test Job" && len(req.NewSettings.Tasks) == 1
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "Test Job",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:       "task_1",
+							JobClusterKey: "job_cluster_1",
+						},
+					},
+					JobClusters: []jobs.JobCluster{
+						{
+							JobClusterKey: "job_cluster_1",
+							NewCluster: compute.ClusterSpec{
+								ApplyPolicyDefaultValues: true,
+								GcpAttributes: &compute.GcpAttributes{
+									LocalSsdCount: 2,
+								},
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+			}, nil)
+		},
 		Update:   true,
 		ID:       "789",
 		Resource: ResourceJob(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-		},
 		InstanceState: map[string]string{
 			"name": "Test Job",
 
@@ -3108,77 +2546,48 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_Default(t *testing.T) {
 			}
 		}
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Test Job",
+	})
 }
 
 func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_Empty(t *testing.T) {
 	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "Test Job" && len(req.NewSettings.Tasks) == 1
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "Test Job",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:       "task_1",
+							JobClusterKey: "job_cluster_1",
+						},
+					},
+					JobClusters: []jobs.JobCluster{
+						{
+							JobClusterKey: "job_cluster_1",
+							NewCluster: compute.ClusterSpec{
+								GcpAttributes: &compute.GcpAttributes{
+									LocalSsdCount: 2,
+								},
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+			}, nil)
+		},
 		Update:   true,
 		ID:       "789",
 		Resource: ResourceJob(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-		},
 		InstanceState: map[string]string{
 			"name": "Test Job",
 
@@ -3204,84 +2613,55 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_Empty(t *testing.T
 			new_cluster {
 				apply_policy_default_values = true
 
-				// An empty allow list does NOT activate payload filtering.
-				__apply_policy_default_values_allow_list = []
-			}
+			// An empty allow list does NOT activate payload filtering.
+			__apply_policy_default_values_allow_list = []
 		}
-		`,
-	}.ApplyNoError(t)
+	}
+	`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Test Job",
+	})
 }
 
 func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_GcpAttributes(t *testing.T) {
 	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, mock.MatchedBy(func(req jobs.ResetJob) bool {
+				return req.JobId == 789 && req.NewSettings.Name == "Test Job" && len(req.NewSettings.Tasks) == 1
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "Test Job",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:       "task_1",
+							JobClusterKey: "job_cluster_1",
+						},
+					},
+					JobClusters: []jobs.JobCluster{
+						{
+							JobClusterKey: "job_cluster_1",
+							NewCluster: compute.ClusterSpec{
+								GcpAttributes: &compute.GcpAttributes{
+									LocalSsdCount: 2,
+									Availability:  compute.GcpAvailabilityPreemptibleGcp,
+									ZoneId:        "us-central1-a",
+								},
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+			}, nil)
+		},
 		Update:   true,
 		ID:       "789",
 		Resource: ResourceJob(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-										Availability:  "SPOT",
-										ZoneId:        "us-central1-a",
-									},
-								},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
-					},
-				},
-			},
-		},
 		InstanceState: map[string]string{
 			"name": "Test Job",
 
@@ -3313,13 +2693,16 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_GcpAttributes(t *t
 					"gcp_attributes.local_ssd_count",
 				]
 
-				gcp_attributes {
-					local_ssd_count = 2
-				}
+			gcp_attributes {
+				local_ssd_count = 2
 			}
 		}
-		`,
-	}.ApplyNoError(t)
+	}
+	`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Test Job",
+	})
 }
 
 func TestJobRestarts(t *testing.T) {
@@ -3500,14 +2883,10 @@ func TestJobRestarts(t *testing.T) {
 
 func TestResourceJobDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/delete",
-				ExpectedRequest: map[string]int{
-					"job_id": 789,
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().
+				DeleteByJobId(mock.Anything, int64(789)).
+				Return(nil)
 		},
 		ID:       "789",
 		Delete:   true,
@@ -3515,82 +2894,6 @@ func TestResourceJobDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
-}
-
-func TestJobsAPIList(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 1,
-					},
-				},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewJobsAPI(ctx, client)
-		l, err := a.List()
-		require.NoError(t, err)
-		assert.Len(t, l, 1)
-	})
-}
-
-func TestJobsAPIListMultiplePages(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 1,
-					},
-				},
-				HasMore:       true,
-				NextPageToken: "aaaa",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&page_token=aaaa",
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 2,
-					},
-				},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewJobsAPI(ctx, client)
-		l, err := a.List()
-		require.NoError(t, err)
-		assert.Len(t, l, 2)
-	})
-}
-
-func TestJobsAPIListByName(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test",
-			Response: JobListResponse{
-				Jobs: []Job{
-					{
-						JobID: 1,
-					},
-				},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewJobsAPI(ctx, client)
-		l, err := a.ListByName("test", false)
-		require.NoError(t, err)
-		assert.Len(t, l, 1)
-	})
 }
 
 func TestJobsAPIRunsList(t *testing.T) {

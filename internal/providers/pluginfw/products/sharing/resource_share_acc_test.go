@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -702,16 +703,20 @@ func TestAccShare_ProviderConfig_NotProvided(t *testing.T) {
 }
 
 func TestAccShare_ProviderConfig_Match(t *testing.T) {
-	// acceptance.LoadWorkspaceEnv(t)
-	// get workspace id here from workspace
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
+		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "575821473882772"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
 				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
@@ -721,14 +726,20 @@ func TestAccShare_ProviderConfig_Match(t *testing.T) {
 }
 
 func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
+		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "575821473882772"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 	}, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -745,14 +756,20 @@ func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
 }
 
 func TestAccShare_ProviderConfig_Remove(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
+		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "575821473882772"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 	}, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{

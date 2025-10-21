@@ -150,6 +150,8 @@ func ResourcePermissionAssignment() common.Resource {
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
+			// We need this because assignment by name doesn't work for admins, so we need to
+			// first assign them as users.  And then reassign them as admins.
 			shouldReassignAdmin := false
 			if assignment.PrincipalId == 0 && slices.Contains(assignment.Permissions, "ADMIN") {
 				shouldReassignAdmin = true

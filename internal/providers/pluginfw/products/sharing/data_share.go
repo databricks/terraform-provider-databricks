@@ -2,6 +2,7 @@ package sharing
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
@@ -13,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceNameShare = "share"
@@ -27,12 +29,29 @@ type ShareDataSource struct {
 	Client *common.DatabricksClient
 }
 
+type ShareData struct {
+	sharing_tf.ShareInfo
+	tfschema.Namespace
+}
+
+func (s ShareData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	types := s.ShareInfo.GetComplexFieldTypes(ctx)
+	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfigData{})
+	return types
+}
+
+func (s ShareData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	s.ShareInfo.ApplySchemaCustomizations(attrs)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	return attrs
+}
+
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceNameShare)
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sharing_tf.ShareInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ShareData{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,
@@ -47,14 +66,26 @@ func (d *ShareDataSource) Configure(_ context.Context, req datasource.ConfigureR
 
 func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameShare)
-	w, diags := d.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var config ShareData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var config sharing_tf.ShareInfo
-	diags = req.Config.Get(ctx, &config)
+	var workspaceID string
+	if !config.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(config.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -73,11 +104,14 @@ func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	var shareInfoTfSdk sharing_tf.ShareInfo
+	var shareInfoTfSdk ShareData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, share, &shareInfoTfSdk)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	shareInfoTfSdk.Namespace = tfschema.Namespace{
+		ProviderConfig: config.ProviderConfig,
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, shareInfoTfSdk)...)
 }

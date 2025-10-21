@@ -1,6 +1,8 @@
 package sharing_test
 
 import (
+	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -86,5 +88,50 @@ func TestUcAccDataSourceShares(t *testing.T) {
 		}
 		`,
 		Check: checkSharesDataSourcePopulated(t),
+	})
+}
+
+func dataSourceSharesTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+	resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-share-config"
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+	}
+	data "databricks_shares" "this" {
+		%s
+		depends_on = [databricks_share.myshare]
+	}
+`, provider_config)
+}
+
+func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
+			provider_config = {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
+		),
+		PlanOnly: true,
+	})
+}
+
+func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
+			provider_config = {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client.*workspace_id mismatch` +
+				`.*please check the workspace_id provided in ` +
+				`provider_config`,
+		),
 	})
 }

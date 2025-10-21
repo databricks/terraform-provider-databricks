@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.94.0
+## Release v1.95.0
 
 ### Breaking Changes
 
@@ -8,19 +8,8 @@
 
 ### Bug Fixes
 
-* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
-* Fix `ADMIN` assignment in `databricks_permission_assignment` resource ([#5109](https://github.com/databricks/terraform-provider-databricks/pull/5109))
-
 ### Documentation
-
-* Document `table_update` trigger in `databricks_job` resource ([#5107](https://github.com/databricks/terraform-provider-databricks/pull/5107))
-* Document new attributes in `databricks_app` resource and data sources ([#5108](https://github.com/databricks/terraform-provider-databricks/pull/5108))
-* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
-* Update `CONTRIBUTING` guidelines for migrating resources to plugin framework ([#5121](https://github.com/databricks/terraform-provider-databricks/pull/5121))
 
 ### Exporter
 
 ### Internal Changes
-
-* Add provider_config support for plugin framework ([#5104](https://github.com/databricks/terraform-provider-databricks/pull/5104))
-* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).

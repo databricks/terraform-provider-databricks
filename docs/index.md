@@ -307,17 +307,20 @@ Unified Provider allows management of workspace level terraform resources throug
 
 Example:
 ```hcl
+// Create an account level provider
 provider "databricks" {
   host          = var.account_host
   client_id     = var.client_id
   client_secret = var.client_secret
-  account_id    = "00000000-0000-0000-0000-000000000000"
+  account_id    = var.account_id
 }
 
+// Create a workspace under the account
 resource "databricks_mws_workspaces" "this" {
   ...
 }
 
+// Create a workspace level resource under the workspace above
 resource "databricks_workspace_level_resource" "this" {
   provider_config = {
     workspace_id = databricks_mws_workspaces.this.workspace_id

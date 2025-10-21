@@ -40,7 +40,7 @@ resource "databricks_rfa_access_request_destinations" "customer_data_table" {
   }
   are_any_destinations_hidden = false
 }
-
+```
 
 ## Arguments
 The following arguments are supported:

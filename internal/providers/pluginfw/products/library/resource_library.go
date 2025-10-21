@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -115,6 +116,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		c.SetOptional("id")
 		c.SetComputed("id")
 		c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
 	resp.Schema = schema.Schema{

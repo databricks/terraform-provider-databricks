@@ -656,6 +656,22 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+			provider_config {
+				workspace_id = "456"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config list must contain at most 1 element`,
+		),
+	})
+}
+
 func TestAccShare_ProviderConfig_Required(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`

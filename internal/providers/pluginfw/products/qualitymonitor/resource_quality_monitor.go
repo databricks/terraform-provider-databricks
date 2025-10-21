@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,6 +96,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
 		c.SetOptional("id")
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
 	resp.Schema = schema.Schema{

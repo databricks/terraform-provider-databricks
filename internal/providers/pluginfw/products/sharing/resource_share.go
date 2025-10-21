@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -162,6 +163,9 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "partition", "value", "name")
 
 		c.SetComputed("id")
+
+		// Ensure provider_config list has at most 1 element
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 
 		return c
 	})

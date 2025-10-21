@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -11,6 +12,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -607,5 +610,145 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 				data_object_type = "SCHEMA"
 			}
 		}`,
+	})
+}
+
+func shareTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+	resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-share-config"
+			%s
+			object {
+				name = databricks_schema.schema1.id
+				data_object_type = "SCHEMA"
+			}
+	}
+`, provider_config)
+}
+
+func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "invalid"
+				}
+			]
+		`),
+		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*failed to parse workspace_id.*valid integer`),
+	})
+}
+
+func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "123"
+				}
+			]
+		`),
+		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client.*workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+	})
+}
+
+func TestAccShare_ProviderConfig_Required(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+				}
+			]
+		`),
+		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
+	})
+}
+
+func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = ""
+				}
+			]
+		`),
+		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
+	})
+}
+
+func TestAccShare_ProviderConfig_NotProvided(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(""),
+	})
+}
+
+func TestAccShare_ProviderConfig_Match(t *testing.T) {
+	// acceptance.LoadWorkspaceEnv(t)
+	// get workspace id here from workspace
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(""),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "575821473882772"
+				}
+			]
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+			},
+		},
+	})
+}
+
+func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(""),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "575821473882772"
+				}
+			]
+		`),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "123"
+				}
+			]
+		`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionDestroyBeforeCreate),
+			},
+		},
+		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
+	})
+}
+
+func TestAccShare_ProviderConfig_Remove(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(""),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config = [
+				{
+					workspace_id = "575821473882772"
+				}
+			]
+		`),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+			},
+		},
 	})
 }

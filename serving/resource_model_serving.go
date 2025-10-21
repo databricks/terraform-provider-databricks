@@ -3,6 +3,7 @@ package serving
 import (
 	"context"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -131,6 +132,14 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// sortTagsByKey sorts tags by their Key field to ensure consistent ordering
+// and prevent spurious diffs when the API returns tags in different orders.
+func sortTagsByKey(tags []serving.EndpointTag) {
+	sort.Slice(tags, func(i, j int) bool {
+		return tags[i].Key < tags[j].Key
+	})
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -220,6 +229,10 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Sort tags to prevent spurious diffs from ordering changes
+			if endpoint.Tags != nil {
+				sortTagsByKey(endpoint.Tags)
+			}
 			if sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
 				if endpoint.Config != nil {
@@ -254,6 +267,7 @@ func ResourceModelServing() common.Resource {
 				}
 			}
 			if d.HasChange("tags") {
+				sortTagsByKey(e.Tags)
 				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
 					return err
 				}

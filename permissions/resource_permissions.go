@@ -92,6 +92,13 @@ func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity,
 // by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
 // object creator, if it can be determined.
 func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
+	if mapping.objectType == "pipelines" {
+		// There is a bug which causes the code below send IS_OWNER with run_as identity
+		// Which is of course wrong thing to do.
+		// For non-admin users this results in the error: https://community.databricks.com/t5/data-engineering/dab-dlt-destroy-fails-due-to-ownership-permissions-mismatch/td-p/132101
+		// For admin users situation is worse but there is no error, it silently changes owner to wrong identity.
+		return nil
+	}
 	objectACL, err := a.readRaw(objectID, mapping)
 	if err != nil {
 		return err

@@ -80,5 +80,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_rfa_access_request_destinations ""
+terraform import databricks_rfa_access_request_destinations.this ""
 ```

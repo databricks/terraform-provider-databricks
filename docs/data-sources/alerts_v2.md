@@ -73,7 +73,7 @@ This data source exports a single attribute, `alerts`. It is a list of resources
 * `value` (AlertV2OperandValue)
 
 ### AlertV2OperandColumn
-* `aggregation` (string) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string)
 * `name` (string)
 

@@ -669,6 +669,7 @@ func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`Attribute provider_config list must contain at most 1 element`,
 		),
+		PlanOnly: true,
 	})
 }
 

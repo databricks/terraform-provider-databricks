@@ -38,7 +38,7 @@ type NotificationDestinationsInfo struct {
 	DisplayNameContains      types.String `tfsdk:"display_name_contains"`
 	Type                     types.String `tfsdk:"type"`
 	NotificationDestinations types.List   `tfsdk:"notification_destinations"`
-	ProviderConfigData       types.Object `tfsdk:"provider_config"`
+	tfschema.Namespace
 }
 
 func (NotificationDestinationsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -103,9 +103,9 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 	}
 
 	var workspaceID string
-	if !notificationInfo.ProviderConfigData.IsNull() {
+	if !notificationInfo.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(notificationInfo.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(notificationInfo.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

@@ -24,9 +24,9 @@ type dataSourceApp struct {
 }
 
 type dataApp struct {
-	Name               types.String `tfsdk:"name"`
-	App                types.Object `tfsdk:"app"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	Name types.String `tfsdk:"name"`
+	App  types.Object `tfsdk:"app"`
+	tfschema.Namespace
 }
 
 func (dataApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -69,9 +69,9 @@ func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	var workspaceID string
-	if !config.ProviderConfigData.IsNull() {
+	if !config.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(config.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)
@@ -98,7 +98,13 @@ func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	dataApp := dataApp{Name: config.Name, App: newApp.ToObjectValue(ctx), ProviderConfigData: config.ProviderConfigData}
+	dataApp := dataApp{
+		Name: config.Name,
+		App:  newApp.ToObjectValue(ctx),
+		Namespace: tfschema.Namespace{
+			ProviderConfig: config.ProviderConfig,
+		},
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, dataApp)...)
 	if resp.Diagnostics.HasError() {
 		return

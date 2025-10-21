@@ -35,7 +35,7 @@ type DashboardsDataSource struct {
 type DashboardsInfo struct {
 	DashboardNameContains types.String `tfsdk:"dashboard_name_contains"`
 	Dashboards            types.List   `tfsdk:"dashboards"`
-	ProviderConfig        types.Object `tfsdk:"provider_config"`
+	tfschema.Namespace
 }
 
 func (DashboardsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

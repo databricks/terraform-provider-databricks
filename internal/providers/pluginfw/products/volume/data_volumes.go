@@ -32,10 +32,10 @@ type VolumesDataSource struct {
 }
 
 type VolumesList struct {
-	CatalogName        types.String `tfsdk:"catalog_name"`
-	SchemaName         types.String `tfsdk:"schema_name"`
-	Ids                types.List   `tfsdk:"ids"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	CatalogName types.String `tfsdk:"catalog_name"`
+	SchemaName  types.String `tfsdk:"schema_name"`
+	Ids         types.List   `tfsdk:"ids"`
+	tfschema.Namespace
 }
 
 func (VolumesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -84,9 +84,9 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
 
 	var workspaceID string
-	if !volumesList.ProviderConfigData.IsNull() {
+	if !volumesList.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(volumesList.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(volumesList.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

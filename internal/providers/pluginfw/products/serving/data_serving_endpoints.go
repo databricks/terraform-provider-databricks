@@ -28,8 +28,8 @@ type ServingEndpointsDataSource struct {
 }
 
 type ServingEndpointsData struct {
-	Endpoints          types.List   `tfsdk:"endpoints"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	Endpoints types.List `tfsdk:"endpoints"`
+	tfschema.Namespace
 }
 
 func (ServingEndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -72,9 +72,9 @@ func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.Re
 	}
 
 	var workspaceID string
-	if !endpoints.ProviderConfigData.IsNull() {
+	if !endpoints.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(endpoints.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(endpoints.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

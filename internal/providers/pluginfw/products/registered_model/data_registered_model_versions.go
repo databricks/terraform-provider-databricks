@@ -28,9 +28,9 @@ type RegisteredModelVersionsDataSource struct {
 }
 
 type RegisteredModelVersionsData struct {
-	FullName           types.String `tfsdk:"full_name"`
-	ModelVersions      types.List   `tfsdk:"model_versions"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	FullName      types.String `tfsdk:"full_name"`
+	ModelVersions types.List   `tfsdk:"model_versions"`
+	tfschema.Namespace
 }
 
 func (RegisteredModelVersionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -74,9 +74,9 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 	}
 
 	var workspaceID string
-	if !registeredModelVersions.ProviderConfigData.IsNull() {
+	if !registeredModelVersions.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(registeredModelVersions.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(registeredModelVersions.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

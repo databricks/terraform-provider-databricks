@@ -32,8 +32,8 @@ const (
 
 type appResource struct {
 	apps_tf.App
-	NoCompute      types.Bool   `tfsdk:"no_compute"`
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	NoCompute types.Bool `tfsdk:"no_compute"`
+	tfschema.Namespace
 }
 
 func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

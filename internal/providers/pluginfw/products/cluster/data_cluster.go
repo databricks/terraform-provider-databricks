@@ -35,10 +35,10 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	ClusterId          types.String `tfsdk:"cluster_id"`
-	Name               types.String `tfsdk:"cluster_name"`
-	ClusterInfo        types.List   `tfsdk:"cluster_info"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	ClusterId   types.String `tfsdk:"cluster_id"`
+	Name        types.String `tfsdk:"cluster_name"`
+	ClusterInfo types.List   `tfsdk:"cluster_info"`
+	tfschema.Namespace
 }
 
 func (ClusterInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -84,9 +84,9 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var workspaceID string
-	if !clusterInfo.ProviderConfigData.IsNull() {
+	if !clusterInfo.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(clusterInfo.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(clusterInfo.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

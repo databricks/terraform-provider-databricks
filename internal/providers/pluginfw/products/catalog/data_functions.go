@@ -33,11 +33,11 @@ type FunctionsDataSource struct {
 }
 
 type FunctionsData struct {
-	CatalogName        types.String `tfsdk:"catalog_name"`
-	SchemaName         types.String `tfsdk:"schema_name"`
-	IncludeBrowse      types.Bool   `tfsdk:"include_browse"`
-	Functions          types.List   `tfsdk:"functions"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	CatalogName   types.String `tfsdk:"catalog_name"`
+	SchemaName    types.String `tfsdk:"schema_name"`
+	IncludeBrowse types.Bool   `tfsdk:"include_browse"`
+	Functions     types.List   `tfsdk:"functions"`
+	tfschema.Namespace
 }
 
 func (FunctionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -85,9 +85,9 @@ func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var workspaceID string
-	if !functions.ProviderConfigData.IsNull() {
+	if !functions.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(functions.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(functions.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

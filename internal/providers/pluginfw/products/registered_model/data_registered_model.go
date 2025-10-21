@@ -34,11 +34,11 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName           types.String `tfsdk:"full_name"`
-	IncludeAliases     types.Bool   `tfsdk:"include_aliases"`
-	IncludeBrowse      types.Bool   `tfsdk:"include_browse"`
-	ModelInfo          types.List   `tfsdk:"model_info"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	FullName       types.String `tfsdk:"full_name"`
+	IncludeAliases types.Bool   `tfsdk:"include_aliases"`
+	IncludeBrowse  types.Bool   `tfsdk:"include_browse"`
+	ModelInfo      types.List   `tfsdk:"model_info"`
+	tfschema.Namespace
 }
 
 func (RegisteredModelData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -86,9 +86,9 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	var workspaceID string
-	if !registeredModel.ProviderConfigData.IsNull() {
+	if !registeredModel.ProviderConfig.IsNull() {
 		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(registeredModel.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		resp.Diagnostics.Append(registeredModel.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		})...)

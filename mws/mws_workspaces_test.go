@@ -681,9 +681,21 @@ func grantGcpWorkspacePermissions(t *testing.T, serviceAccountEmail string) {
 	})
 }
 
+func getCloudResourceManagerClient(ctx context.Context) (*cloudresourcemanager.Service, error) {
+	options := []option.ClientOption{
+		option.WithScopes(cloudresourcemanager.CloudPlatformScope),
+	}
+	// In integration tests, the GOOGLE_CREDENTIALS environment variable specifies the credentials
+	credentialsJSON := os.Getenv("GOOGLE_CREDENTIALS")
+	if credentialsJSON != "" {
+		options = append(options, option.WithCredentialsJSON([]byte(credentialsJSON)))
+	}
+	return cloudresourcemanager.NewService(ctx, options...)
+}
+
 // assignGcpRoleToServiceAccount assigns a custom role to a service account on a GCP project
 func assignGcpRoleToServiceAccount(ctx context.Context, projectID, serviceAccountEmail, roleID string) error {
-	crmService, err := cloudresourcemanager.NewService(ctx, option.WithScopes(cloudresourcemanager.CloudPlatformScope))
+	crmService, err := getCloudResourceManagerClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create Cloud Resource Manager client: %w", err)
 	}
@@ -741,7 +753,7 @@ func assignGcpRoleToServiceAccount(ctx context.Context, projectID, serviceAccoun
 
 // removeGcpRoleFromServiceAccount removes a custom role from a service account on a GCP project
 func removeGcpRoleFromServiceAccount(ctx context.Context, projectID, serviceAccountEmail, roleName string) error {
-	crmService, err := cloudresourcemanager.NewService(ctx, option.WithScopes(cloudresourcemanager.CloudPlatformScope))
+	crmService, err := getCloudResourceManagerClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create Cloud Resource Manager client: %w", err)
 	}

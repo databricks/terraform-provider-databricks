@@ -13,17 +13,28 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 ## Example Usage
 
-### Creating a serverless workspace in AWS
+### Creating a serverless workspace in AWS and GCP
 
 Creating a serverless workspace does not require any prerequisite resources. Simply specify `compute_mode = "SERVERLESS"` when creating the workspace. Serverless workspaces must not include `credentials_id` or `storage_configuration_id`.
 
-To use serverless workspaces, you must enroll in the [Default Storage preview](https://docs.databricks.com/aws/en/storage/express-storage).
+On [AWS](https://docs.databricks.com/aws/en/admin/workspace/serverless-workspaces):
 
 ```hcl
 resource "databricks_mws_workspaces" "serverless_workspace" {
   account_id     = "" # Your Databricks account ID
   workspace_name = "serverless-workspace"
   aws_region     = "us-east-1"
+  compute_mode   = "SERVERLESS"
+}
+```
+
+On [GCP](https://docs.databricks.com/gcp/en/admin/workspace/serverless-workspaces):
+
+```hcl
+resource "databricks_mws_workspaces" "serverless_workspace" {
+  account_id     = "" # Your Databricks account ID
+  workspace_name = "serverless-workspace"
+  location       = "us-east4"
   compute_mode   = "SERVERLESS"
 }
 ```

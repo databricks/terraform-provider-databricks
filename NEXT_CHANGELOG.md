@@ -18,3 +18,4 @@
 ### Exporter
 
 ### Internal Changes
+* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).

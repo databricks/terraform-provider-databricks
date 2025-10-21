@@ -32,6 +32,8 @@ type App_SdkV2 struct {
 
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 
+	ComputeSize types.String `tfsdk:"compute_size"`
+
 	ComputeStatus types.List `tfsdk:"compute_status"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time"`
@@ -187,12 +189,13 @@ func (to *App_SdkV2) SyncFieldsDuringRead(ctx context.Context, from App_SdkV2) {
 	}
 }
 
-func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active_deployment"] = attrs["active_deployment"].SetComputed()
 	attrs["active_deployment"] = attrs["active_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["app_status"] = attrs["app_status"].SetComputed()
 	attrs["app_status"] = attrs["app_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["compute_size"] = attrs["compute_size"].SetOptional()
 	attrs["compute_status"] = attrs["compute_status"].SetComputed()
 	attrs["compute_status"] = attrs["compute_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["create_time"] = attrs["create_time"].SetComputed()
@@ -226,7 +229,7 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"active_deployment":         reflect.TypeOf(AppDeployment_SdkV2{}),
 		"app_status":                reflect.TypeOf(ApplicationStatus_SdkV2{}),
@@ -241,38 +244,39 @@ func (a App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, App_SdkV2
 // only implements ToObjectValue() and Type().
-func (o App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active_deployment":           o.ActiveDeployment,
-			"app_status":                  o.AppStatus,
-			"budget_policy_id":            o.BudgetPolicyId,
-			"compute_status":              o.ComputeStatus,
-			"create_time":                 o.CreateTime,
-			"creator":                     o.Creator,
-			"default_source_code_path":    o.DefaultSourceCodePath,
-			"description":                 o.Description,
-			"effective_budget_policy_id":  o.EffectiveBudgetPolicyId,
-			"effective_user_api_scopes":   o.EffectiveUserApiScopes,
-			"id":                          o.Id,
-			"name":                        o.Name,
-			"oauth2_app_client_id":        o.Oauth2AppClientId,
-			"oauth2_app_integration_id":   o.Oauth2AppIntegrationId,
-			"pending_deployment":          o.PendingDeployment,
-			"resources":                   o.Resources,
-			"service_principal_client_id": o.ServicePrincipalClientId,
-			"service_principal_id":        o.ServicePrincipalId,
-			"service_principal_name":      o.ServicePrincipalName,
-			"update_time":                 o.UpdateTime,
-			"updater":                     o.Updater,
-			"url":                         o.Url,
-			"user_api_scopes":             o.UserApiScopes,
+			"active_deployment":           m.ActiveDeployment,
+			"app_status":                  m.AppStatus,
+			"budget_policy_id":            m.BudgetPolicyId,
+			"compute_size":                m.ComputeSize,
+			"compute_status":              m.ComputeStatus,
+			"create_time":                 m.CreateTime,
+			"creator":                     m.Creator,
+			"default_source_code_path":    m.DefaultSourceCodePath,
+			"description":                 m.Description,
+			"effective_budget_policy_id":  m.EffectiveBudgetPolicyId,
+			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
+			"id":                          m.Id,
+			"name":                        m.Name,
+			"oauth2_app_client_id":        m.Oauth2AppClientId,
+			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
+			"pending_deployment":          m.PendingDeployment,
+			"resources":                   m.Resources,
+			"service_principal_client_id": m.ServicePrincipalClientId,
+			"service_principal_id":        m.ServicePrincipalId,
+			"service_principal_name":      m.ServicePrincipalName,
+			"update_time":                 m.UpdateTime,
+			"updater":                     m.Updater,
+			"url":                         m.Url,
+			"user_api_scopes":             m.UserApiScopes,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o App_SdkV2) Type(ctx context.Context) attr.Type {
+func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active_deployment": basetypes.ListType{
@@ -282,6 +286,7 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: ApplicationStatus_SdkV2{}.Type(ctx),
 			},
 			"budget_policy_id": types.StringType,
+			"compute_size":     types.StringType,
 			"compute_status": basetypes.ListType{
 				ElemType: ComputeStatus_SdkV2{}.Type(ctx),
 			},
@@ -319,13 +324,13 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 // GetActiveDeployment returns the value of the ActiveDeployment field in App_SdkV2 as
 // a AppDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetActiveDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
+func (m *App_SdkV2) GetActiveDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
 	var e AppDeployment_SdkV2
-	if o.ActiveDeployment.IsNull() || o.ActiveDeployment.IsUnknown() {
+	if m.ActiveDeployment.IsNull() || m.ActiveDeployment.IsUnknown() {
 		return e, false
 	}
 	var v []AppDeployment_SdkV2
-	d := o.ActiveDeployment.ElementsAs(ctx, &v, true)
+	d := m.ActiveDeployment.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -336,22 +341,22 @@ func (o *App_SdkV2) GetActiveDeployment(ctx context.Context) (AppDeployment_SdkV
 }
 
 // SetActiveDeployment sets the value of the ActiveDeployment field in App_SdkV2.
-func (o *App_SdkV2) SetActiveDeployment(ctx context.Context, v AppDeployment_SdkV2) {
+func (m *App_SdkV2) SetActiveDeployment(ctx context.Context, v AppDeployment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["active_deployment"]
-	o.ActiveDeployment = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["active_deployment"]
+	m.ActiveDeployment = types.ListValueMust(t, vs)
 }
 
 // GetAppStatus returns the value of the AppStatus field in App_SdkV2 as
 // a ApplicationStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetAppStatus(ctx context.Context) (ApplicationStatus_SdkV2, bool) {
+func (m *App_SdkV2) GetAppStatus(ctx context.Context) (ApplicationStatus_SdkV2, bool) {
 	var e ApplicationStatus_SdkV2
-	if o.AppStatus.IsNull() || o.AppStatus.IsUnknown() {
+	if m.AppStatus.IsNull() || m.AppStatus.IsUnknown() {
 		return e, false
 	}
 	var v []ApplicationStatus_SdkV2
-	d := o.AppStatus.ElementsAs(ctx, &v, true)
+	d := m.AppStatus.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -362,22 +367,22 @@ func (o *App_SdkV2) GetAppStatus(ctx context.Context) (ApplicationStatus_SdkV2, 
 }
 
 // SetAppStatus sets the value of the AppStatus field in App_SdkV2.
-func (o *App_SdkV2) SetAppStatus(ctx context.Context, v ApplicationStatus_SdkV2) {
+func (m *App_SdkV2) SetAppStatus(ctx context.Context, v ApplicationStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_status"]
-	o.AppStatus = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app_status"]
+	m.AppStatus = types.ListValueMust(t, vs)
 }
 
 // GetComputeStatus returns the value of the ComputeStatus field in App_SdkV2 as
 // a ComputeStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetComputeStatus(ctx context.Context) (ComputeStatus_SdkV2, bool) {
+func (m *App_SdkV2) GetComputeStatus(ctx context.Context) (ComputeStatus_SdkV2, bool) {
 	var e ComputeStatus_SdkV2
-	if o.ComputeStatus.IsNull() || o.ComputeStatus.IsUnknown() {
+	if m.ComputeStatus.IsNull() || m.ComputeStatus.IsUnknown() {
 		return e, false
 	}
 	var v []ComputeStatus_SdkV2
-	d := o.ComputeStatus.ElementsAs(ctx, &v, true)
+	d := m.ComputeStatus.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -388,21 +393,21 @@ func (o *App_SdkV2) GetComputeStatus(ctx context.Context) (ComputeStatus_SdkV2, 
 }
 
 // SetComputeStatus sets the value of the ComputeStatus field in App_SdkV2.
-func (o *App_SdkV2) SetComputeStatus(ctx context.Context, v ComputeStatus_SdkV2) {
+func (m *App_SdkV2) SetComputeStatus(ctx context.Context, v ComputeStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compute_status"]
-	o.ComputeStatus = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute_status"]
+	m.ComputeStatus = types.ListValueMust(t, vs)
 }
 
 // GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in App_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
-	if o.EffectiveUserApiScopes.IsNull() || o.EffectiveUserApiScopes.IsUnknown() {
+func (m *App_SdkV2) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.EffectiveUserApiScopes.IsNull() || m.EffectiveUserApiScopes.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
+	d := m.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -410,26 +415,26 @@ func (o *App_SdkV2) GetEffectiveUserApiScopes(ctx context.Context) ([]types.Stri
 }
 
 // SetEffectiveUserApiScopes sets the value of the EffectiveUserApiScopes field in App_SdkV2.
-func (o *App_SdkV2) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
+func (m *App_SdkV2) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+	m.EffectiveUserApiScopes = types.ListValueMust(t, vs)
 }
 
 // GetPendingDeployment returns the value of the PendingDeployment field in App_SdkV2 as
 // a AppDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetPendingDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
+func (m *App_SdkV2) GetPendingDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
 	var e AppDeployment_SdkV2
-	if o.PendingDeployment.IsNull() || o.PendingDeployment.IsUnknown() {
+	if m.PendingDeployment.IsNull() || m.PendingDeployment.IsUnknown() {
 		return e, false
 	}
 	var v []AppDeployment_SdkV2
-	d := o.PendingDeployment.ElementsAs(ctx, &v, true)
+	d := m.PendingDeployment.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -440,21 +445,21 @@ func (o *App_SdkV2) GetPendingDeployment(ctx context.Context) (AppDeployment_Sdk
 }
 
 // SetPendingDeployment sets the value of the PendingDeployment field in App_SdkV2.
-func (o *App_SdkV2) SetPendingDeployment(ctx context.Context, v AppDeployment_SdkV2) {
+func (m *App_SdkV2) SetPendingDeployment(ctx context.Context, v AppDeployment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_deployment"]
-	o.PendingDeployment = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_deployment"]
+	m.PendingDeployment = types.ListValueMust(t, vs)
 }
 
 // GetResources returns the value of the Resources field in App_SdkV2 as
 // a slice of AppResource_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetResources(ctx context.Context) ([]AppResource_SdkV2, bool) {
-	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+func (m *App_SdkV2) GetResources(ctx context.Context) ([]AppResource_SdkV2, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
 		return nil, false
 	}
 	var v []AppResource_SdkV2
-	d := o.Resources.ElementsAs(ctx, &v, true)
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -462,25 +467,25 @@ func (o *App_SdkV2) GetResources(ctx context.Context) ([]AppResource_SdkV2, bool
 }
 
 // SetResources sets the value of the Resources field in App_SdkV2.
-func (o *App_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
+func (m *App_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Resources = types.ListValueMust(t, vs)
+	m.Resources = types.ListValueMust(t, vs)
 }
 
 // GetUserApiScopes returns the value of the UserApiScopes field in App_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *App_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
-	if o.UserApiScopes.IsNull() || o.UserApiScopes.IsUnknown() {
+func (m *App_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.UserApiScopes.ElementsAs(ctx, &v, true)
+	d := m.UserApiScopes.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -488,14 +493,14 @@ func (o *App_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool)
 }
 
 // SetUserApiScopes sets the value of the UserApiScopes field in App_SdkV2.
-func (o *App_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String) {
+func (m *App_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.UserApiScopes = types.ListValueMust(t, vs)
+	m.UserApiScopes = types.ListValueMust(t, vs)
 }
 
 type AppAccessControlRequest_SdkV2 struct {
@@ -515,7 +520,7 @@ func (to *AppAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *AppAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppAccessControlRequest_SdkV2) {
 }
 
-func (c AppAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
@@ -531,26 +536,26 @@ func (c AppAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppAccessControlRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppAccessControlRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppAccessControlRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppAccessControlRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppAccessControlRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             o.GroupName,
-			"permission_level":       o.PermissionLevel,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -592,7 +597,7 @@ func (to *AppAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 	}
 }
 
-func (c AppAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
@@ -609,7 +614,7 @@ func (c AppAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(AppPermission_SdkV2{}),
 	}
@@ -618,20 +623,20 @@ func (a AppAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppAccessControlResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppAccessControlResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppAccessControlResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        o.AllPermissions,
-			"display_name":           o.DisplayName,
-			"group_name":             o.GroupName,
-			"service_principal_name": o.ServicePrincipalName,
-			"user_name":              o.UserName,
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
@@ -648,12 +653,12 @@ func (o AppAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAllPermissions returns the value of the AllPermissions field in AppAccessControlResponse_SdkV2 as
 // a slice of AppPermission_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) ([]AppPermission_SdkV2, bool) {
-	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+func (m *AppAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) ([]AppPermission_SdkV2, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
 		return nil, false
 	}
 	var v []AppPermission_SdkV2
-	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -661,14 +666,14 @@ func (o *AppAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) 
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in AppAccessControlResponse_SdkV2.
-func (o *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v []AppPermission_SdkV2) {
+func (m *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v []AppPermission_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AllPermissions = types.ListValueMust(t, vs)
+	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type AppDeployment_SdkV2 struct {
@@ -736,7 +741,7 @@ func (to *AppDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ap
 	}
 }
 
-func (c AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].SetComputed()
@@ -758,7 +763,7 @@ func (c AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"deployment_artifacts": reflect.TypeOf(AppDeploymentArtifacts_SdkV2{}),
 		"status":               reflect.TypeOf(AppDeploymentStatus_SdkV2{}),
@@ -768,23 +773,23 @@ func (a AppDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppDeployment_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":          o.CreateTime,
-			"creator":              o.Creator,
-			"deployment_artifacts": o.DeploymentArtifacts,
-			"deployment_id":        o.DeploymentId,
-			"mode":                 o.Mode,
-			"source_code_path":     o.SourceCodePath,
-			"status":               o.Status,
-			"update_time":          o.UpdateTime,
+			"create_time":          m.CreateTime,
+			"creator":              m.Creator,
+			"deployment_artifacts": m.DeploymentArtifacts,
+			"deployment_id":        m.DeploymentId,
+			"mode":                 m.Mode,
+			"source_code_path":     m.SourceCodePath,
+			"status":               m.Status,
+			"update_time":          m.UpdateTime,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
@@ -806,13 +811,13 @@ func (o AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDeploymentArtifacts returns the value of the DeploymentArtifacts field in AppDeployment_SdkV2 as
 // a AppDeploymentArtifacts_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppDeployment_SdkV2) GetDeploymentArtifacts(ctx context.Context) (AppDeploymentArtifacts_SdkV2, bool) {
+func (m *AppDeployment_SdkV2) GetDeploymentArtifacts(ctx context.Context) (AppDeploymentArtifacts_SdkV2, bool) {
 	var e AppDeploymentArtifacts_SdkV2
-	if o.DeploymentArtifacts.IsNull() || o.DeploymentArtifacts.IsUnknown() {
+	if m.DeploymentArtifacts.IsNull() || m.DeploymentArtifacts.IsUnknown() {
 		return e, false
 	}
 	var v []AppDeploymentArtifacts_SdkV2
-	d := o.DeploymentArtifacts.ElementsAs(ctx, &v, true)
+	d := m.DeploymentArtifacts.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -823,22 +828,22 @@ func (o *AppDeployment_SdkV2) GetDeploymentArtifacts(ctx context.Context) (AppDe
 }
 
 // SetDeploymentArtifacts sets the value of the DeploymentArtifacts field in AppDeployment_SdkV2.
-func (o *AppDeployment_SdkV2) SetDeploymentArtifacts(ctx context.Context, v AppDeploymentArtifacts_SdkV2) {
+func (m *AppDeployment_SdkV2) SetDeploymentArtifacts(ctx context.Context, v AppDeploymentArtifacts_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment_artifacts"]
-	o.DeploymentArtifacts = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment_artifacts"]
+	m.DeploymentArtifacts = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in AppDeployment_SdkV2 as
 // a AppDeploymentStatus_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppDeployment_SdkV2) GetStatus(ctx context.Context) (AppDeploymentStatus_SdkV2, bool) {
+func (m *AppDeployment_SdkV2) GetStatus(ctx context.Context) (AppDeploymentStatus_SdkV2, bool) {
 	var e AppDeploymentStatus_SdkV2
-	if o.Status.IsNull() || o.Status.IsUnknown() {
+	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
 	var v []AppDeploymentStatus_SdkV2
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := m.Status.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -849,10 +854,10 @@ func (o *AppDeployment_SdkV2) GetStatus(ctx context.Context) (AppDeploymentStatu
 }
 
 // SetStatus sets the value of the Status field in AppDeployment_SdkV2.
-func (o *AppDeployment_SdkV2) SetStatus(ctx context.Context, v AppDeploymentStatus_SdkV2) {
+func (m *AppDeployment_SdkV2) SetStatus(ctx context.Context, v AppDeploymentStatus_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
 }
 
 type AppDeploymentArtifacts_SdkV2 struct {
@@ -867,7 +872,7 @@ func (to *AppDeploymentArtifacts_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *AppDeploymentArtifacts_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppDeploymentArtifacts_SdkV2) {
 }
 
-func (c AppDeploymentArtifacts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppDeploymentArtifacts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
 
 	return attrs
@@ -880,23 +885,23 @@ func (c AppDeploymentArtifacts_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppDeploymentArtifacts_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppDeploymentArtifacts_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppDeploymentArtifacts_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppDeploymentArtifacts_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppDeploymentArtifacts_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"source_code_path": o.SourceCodePath,
+			"source_code_path": m.SourceCodePath,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppDeploymentArtifacts_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppDeploymentArtifacts_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"source_code_path": types.StringType,
@@ -917,7 +922,7 @@ func (to *AppDeploymentStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *AppDeploymentStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppDeploymentStatus_SdkV2) {
 }
 
-func (c AppDeploymentStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppDeploymentStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
@@ -931,24 +936,24 @@ func (c AppDeploymentStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppDeploymentStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppDeploymentStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppDeploymentStatus_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppDeploymentStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppDeploymentStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": o.Message,
-			"state":   o.State,
+			"message": m.Message,
+			"state":   m.State,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppDeploymentStatus_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppDeploymentStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
@@ -987,7 +992,7 @@ func (to *AppManifest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppM
 	}
 }
 
-func (c AppManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["resource_specs"] = attrs["resource_specs"].SetOptional()
@@ -1003,7 +1008,7 @@ func (c AppManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"resource_specs": reflect.TypeOf(AppManifestAppResourceSpec_SdkV2{}),
 	}
@@ -1012,19 +1017,19 @@ func (a AppManifest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":    o.Description,
-			"name":           o.Name,
-			"resource_specs": o.ResourceSpecs,
-			"version":        o.Version,
+			"description":    m.Description,
+			"name":           m.Name,
+			"resource_specs": m.ResourceSpecs,
+			"version":        m.Version,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description": types.StringType,
@@ -1040,12 +1045,12 @@ func (o AppManifest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetResourceSpecs returns the value of the ResourceSpecs field in AppManifest_SdkV2 as
 // a slice of AppManifestAppResourceSpec_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifest_SdkV2) GetResourceSpecs(ctx context.Context) ([]AppManifestAppResourceSpec_SdkV2, bool) {
-	if o.ResourceSpecs.IsNull() || o.ResourceSpecs.IsUnknown() {
+func (m *AppManifest_SdkV2) GetResourceSpecs(ctx context.Context) ([]AppManifestAppResourceSpec_SdkV2, bool) {
+	if m.ResourceSpecs.IsNull() || m.ResourceSpecs.IsUnknown() {
 		return nil, false
 	}
 	var v []AppManifestAppResourceSpec_SdkV2
-	d := o.ResourceSpecs.ElementsAs(ctx, &v, true)
+	d := m.ResourceSpecs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1053,14 +1058,14 @@ func (o *AppManifest_SdkV2) GetResourceSpecs(ctx context.Context) ([]AppManifest
 }
 
 // SetResourceSpecs sets the value of the ResourceSpecs field in AppManifest_SdkV2.
-func (o *AppManifest_SdkV2) SetResourceSpecs(ctx context.Context, v []AppManifestAppResourceSpec_SdkV2) {
+func (m *AppManifest_SdkV2) SetResourceSpecs(ctx context.Context, v []AppManifestAppResourceSpec_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_specs"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resource_specs"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.ResourceSpecs = types.ListValueMust(t, vs)
+	m.ResourceSpecs = types.ListValueMust(t, vs)
 }
 
 type AppManifestAppResourceJobSpec_SdkV2 struct {
@@ -1075,7 +1080,7 @@ func (to *AppManifestAppResourceJobSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 func (to *AppManifestAppResourceJobSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceJobSpec_SdkV2) {
 }
 
-func (c AppManifestAppResourceJobSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceJobSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 
 	return attrs
@@ -1088,23 +1093,23 @@ func (c AppManifestAppResourceJobSpec_SdkV2) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceJobSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceJobSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceJobSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceJobSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceJobSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission": o.Permission,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceJobSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceJobSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission": types.StringType,
@@ -1124,7 +1129,7 @@ func (to *AppManifestAppResourceSecretSpec_SdkV2) SyncFieldsDuringCreateOrUpdate
 func (to *AppManifestAppResourceSecretSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceSecretSpec_SdkV2) {
 }
 
-func (c AppManifestAppResourceSecretSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceSecretSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 
 	return attrs
@@ -1137,23 +1142,23 @@ func (c AppManifestAppResourceSecretSpec_SdkV2) ApplySchemaCustomizations(attrs 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceSecretSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceSecretSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSecretSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceSecretSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceSecretSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission": o.Permission,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceSecretSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceSecretSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission": types.StringType,
@@ -1173,7 +1178,7 @@ func (to *AppManifestAppResourceServingEndpointSpec_SdkV2) SyncFieldsDuringCreat
 func (to *AppManifestAppResourceServingEndpointSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceServingEndpointSpec_SdkV2) {
 }
 
-func (c AppManifestAppResourceServingEndpointSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceServingEndpointSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 
 	return attrs
@@ -1186,23 +1191,23 @@ func (c AppManifestAppResourceServingEndpointSpec_SdkV2) ApplySchemaCustomizatio
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceServingEndpointSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceServingEndpointSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceServingEndpointSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceServingEndpointSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceServingEndpointSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission": o.Permission,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceServingEndpointSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceServingEndpointSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission": types.StringType,
@@ -1320,7 +1325,7 @@ func (to *AppManifestAppResourceSpec_SdkV2) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c AppManifestAppResourceSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["job_spec"] = attrs["job_spec"].SetOptional()
 	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1344,7 +1349,7 @@ func (c AppManifestAppResourceSpec_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"job_spec":              reflect.TypeOf(AppManifestAppResourceJobSpec_SdkV2{}),
 		"secret_spec":           reflect.TypeOf(AppManifestAppResourceSecretSpec_SdkV2{}),
@@ -1357,22 +1362,22 @@ func (a AppManifestAppResourceSpec_SdkV2) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":           o.Description,
-			"job_spec":              o.JobSpec,
-			"name":                  o.Name,
-			"secret_spec":           o.SecretSpec,
-			"serving_endpoint_spec": o.ServingEndpointSpec,
-			"sql_warehouse_spec":    o.SqlWarehouseSpec,
-			"uc_securable_spec":     o.UcSecurableSpec,
+			"description":           m.Description,
+			"job_spec":              m.JobSpec,
+			"name":                  m.Name,
+			"secret_spec":           m.SecretSpec,
+			"serving_endpoint_spec": m.ServingEndpointSpec,
+			"sql_warehouse_spec":    m.SqlWarehouseSpec,
+			"uc_securable_spec":     m.UcSecurableSpec,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description": types.StringType,
@@ -1399,13 +1404,13 @@ func (o AppManifestAppResourceSpec_SdkV2) Type(ctx context.Context) attr.Type {
 // GetJobSpec returns the value of the JobSpec field in AppManifestAppResourceSpec_SdkV2 as
 // a AppManifestAppResourceJobSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifestAppResourceSpec_SdkV2) GetJobSpec(ctx context.Context) (AppManifestAppResourceJobSpec_SdkV2, bool) {
+func (m *AppManifestAppResourceSpec_SdkV2) GetJobSpec(ctx context.Context) (AppManifestAppResourceJobSpec_SdkV2, bool) {
 	var e AppManifestAppResourceJobSpec_SdkV2
-	if o.JobSpec.IsNull() || o.JobSpec.IsUnknown() {
+	if m.JobSpec.IsNull() || m.JobSpec.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifestAppResourceJobSpec_SdkV2
-	d := o.JobSpec.ElementsAs(ctx, &v, true)
+	d := m.JobSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1416,22 +1421,22 @@ func (o *AppManifestAppResourceSpec_SdkV2) GetJobSpec(ctx context.Context) (AppM
 }
 
 // SetJobSpec sets the value of the JobSpec field in AppManifestAppResourceSpec_SdkV2.
-func (o *AppManifestAppResourceSpec_SdkV2) SetJobSpec(ctx context.Context, v AppManifestAppResourceJobSpec_SdkV2) {
+func (m *AppManifestAppResourceSpec_SdkV2) SetJobSpec(ctx context.Context, v AppManifestAppResourceJobSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_spec"]
-	o.JobSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job_spec"]
+	m.JobSpec = types.ListValueMust(t, vs)
 }
 
 // GetSecretSpec returns the value of the SecretSpec field in AppManifestAppResourceSpec_SdkV2 as
 // a AppManifestAppResourceSecretSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifestAppResourceSpec_SdkV2) GetSecretSpec(ctx context.Context) (AppManifestAppResourceSecretSpec_SdkV2, bool) {
+func (m *AppManifestAppResourceSpec_SdkV2) GetSecretSpec(ctx context.Context) (AppManifestAppResourceSecretSpec_SdkV2, bool) {
 	var e AppManifestAppResourceSecretSpec_SdkV2
-	if o.SecretSpec.IsNull() || o.SecretSpec.IsUnknown() {
+	if m.SecretSpec.IsNull() || m.SecretSpec.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifestAppResourceSecretSpec_SdkV2
-	d := o.SecretSpec.ElementsAs(ctx, &v, true)
+	d := m.SecretSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1442,22 +1447,22 @@ func (o *AppManifestAppResourceSpec_SdkV2) GetSecretSpec(ctx context.Context) (A
 }
 
 // SetSecretSpec sets the value of the SecretSpec field in AppManifestAppResourceSpec_SdkV2.
-func (o *AppManifestAppResourceSpec_SdkV2) SetSecretSpec(ctx context.Context, v AppManifestAppResourceSecretSpec_SdkV2) {
+func (m *AppManifestAppResourceSpec_SdkV2) SetSecretSpec(ctx context.Context, v AppManifestAppResourceSecretSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secret_spec"]
-	o.SecretSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret_spec"]
+	m.SecretSpec = types.ListValueMust(t, vs)
 }
 
 // GetServingEndpointSpec returns the value of the ServingEndpointSpec field in AppManifestAppResourceSpec_SdkV2 as
 // a AppManifestAppResourceServingEndpointSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifestAppResourceSpec_SdkV2) GetServingEndpointSpec(ctx context.Context) (AppManifestAppResourceServingEndpointSpec_SdkV2, bool) {
+func (m *AppManifestAppResourceSpec_SdkV2) GetServingEndpointSpec(ctx context.Context) (AppManifestAppResourceServingEndpointSpec_SdkV2, bool) {
 	var e AppManifestAppResourceServingEndpointSpec_SdkV2
-	if o.ServingEndpointSpec.IsNull() || o.ServingEndpointSpec.IsUnknown() {
+	if m.ServingEndpointSpec.IsNull() || m.ServingEndpointSpec.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifestAppResourceServingEndpointSpec_SdkV2
-	d := o.ServingEndpointSpec.ElementsAs(ctx, &v, true)
+	d := m.ServingEndpointSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1468,22 +1473,22 @@ func (o *AppManifestAppResourceSpec_SdkV2) GetServingEndpointSpec(ctx context.Co
 }
 
 // SetServingEndpointSpec sets the value of the ServingEndpointSpec field in AppManifestAppResourceSpec_SdkV2.
-func (o *AppManifestAppResourceSpec_SdkV2) SetServingEndpointSpec(ctx context.Context, v AppManifestAppResourceServingEndpointSpec_SdkV2) {
+func (m *AppManifestAppResourceSpec_SdkV2) SetServingEndpointSpec(ctx context.Context, v AppManifestAppResourceServingEndpointSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint_spec"]
-	o.ServingEndpointSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint_spec"]
+	m.ServingEndpointSpec = types.ListValueMust(t, vs)
 }
 
 // GetSqlWarehouseSpec returns the value of the SqlWarehouseSpec field in AppManifestAppResourceSpec_SdkV2 as
 // a AppManifestAppResourceSqlWarehouseSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifestAppResourceSpec_SdkV2) GetSqlWarehouseSpec(ctx context.Context) (AppManifestAppResourceSqlWarehouseSpec_SdkV2, bool) {
+func (m *AppManifestAppResourceSpec_SdkV2) GetSqlWarehouseSpec(ctx context.Context) (AppManifestAppResourceSqlWarehouseSpec_SdkV2, bool) {
 	var e AppManifestAppResourceSqlWarehouseSpec_SdkV2
-	if o.SqlWarehouseSpec.IsNull() || o.SqlWarehouseSpec.IsUnknown() {
+	if m.SqlWarehouseSpec.IsNull() || m.SqlWarehouseSpec.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifestAppResourceSqlWarehouseSpec_SdkV2
-	d := o.SqlWarehouseSpec.ElementsAs(ctx, &v, true)
+	d := m.SqlWarehouseSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1494,22 +1499,22 @@ func (o *AppManifestAppResourceSpec_SdkV2) GetSqlWarehouseSpec(ctx context.Conte
 }
 
 // SetSqlWarehouseSpec sets the value of the SqlWarehouseSpec field in AppManifestAppResourceSpec_SdkV2.
-func (o *AppManifestAppResourceSpec_SdkV2) SetSqlWarehouseSpec(ctx context.Context, v AppManifestAppResourceSqlWarehouseSpec_SdkV2) {
+func (m *AppManifestAppResourceSpec_SdkV2) SetSqlWarehouseSpec(ctx context.Context, v AppManifestAppResourceSqlWarehouseSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse_spec"]
-	o.SqlWarehouseSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse_spec"]
+	m.SqlWarehouseSpec = types.ListValueMust(t, vs)
 }
 
 // GetUcSecurableSpec returns the value of the UcSecurableSpec field in AppManifestAppResourceSpec_SdkV2 as
 // a AppManifestAppResourceUcSecurableSpec_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppManifestAppResourceSpec_SdkV2) GetUcSecurableSpec(ctx context.Context) (AppManifestAppResourceUcSecurableSpec_SdkV2, bool) {
+func (m *AppManifestAppResourceSpec_SdkV2) GetUcSecurableSpec(ctx context.Context) (AppManifestAppResourceUcSecurableSpec_SdkV2, bool) {
 	var e AppManifestAppResourceUcSecurableSpec_SdkV2
-	if o.UcSecurableSpec.IsNull() || o.UcSecurableSpec.IsUnknown() {
+	if m.UcSecurableSpec.IsNull() || m.UcSecurableSpec.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifestAppResourceUcSecurableSpec_SdkV2
-	d := o.UcSecurableSpec.ElementsAs(ctx, &v, true)
+	d := m.UcSecurableSpec.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1520,10 +1525,10 @@ func (o *AppManifestAppResourceSpec_SdkV2) GetUcSecurableSpec(ctx context.Contex
 }
 
 // SetUcSecurableSpec sets the value of the UcSecurableSpec field in AppManifestAppResourceSpec_SdkV2.
-func (o *AppManifestAppResourceSpec_SdkV2) SetUcSecurableSpec(ctx context.Context, v AppManifestAppResourceUcSecurableSpec_SdkV2) {
+func (m *AppManifestAppResourceSpec_SdkV2) SetUcSecurableSpec(ctx context.Context, v AppManifestAppResourceUcSecurableSpec_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable_spec"]
-	o.UcSecurableSpec = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable_spec"]
+	m.UcSecurableSpec = types.ListValueMust(t, vs)
 }
 
 type AppManifestAppResourceSqlWarehouseSpec_SdkV2 struct {
@@ -1538,7 +1543,7 @@ func (to *AppManifestAppResourceSqlWarehouseSpec_SdkV2) SyncFieldsDuringCreateOr
 func (to *AppManifestAppResourceSqlWarehouseSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceSqlWarehouseSpec_SdkV2) {
 }
 
-func (c AppManifestAppResourceSqlWarehouseSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceSqlWarehouseSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 
 	return attrs
@@ -1551,23 +1556,23 @@ func (c AppManifestAppResourceSqlWarehouseSpec_SdkV2) ApplySchemaCustomizations(
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceSqlWarehouseSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceSqlWarehouseSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceSqlWarehouseSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceSqlWarehouseSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceSqlWarehouseSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission": o.Permission,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceSqlWarehouseSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceSqlWarehouseSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission": types.StringType,
@@ -1587,7 +1592,7 @@ func (to *AppManifestAppResourceUcSecurableSpec_SdkV2) SyncFieldsDuringCreateOrU
 func (to *AppManifestAppResourceUcSecurableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceUcSecurableSpec_SdkV2) {
 }
 
-func (c AppManifestAppResourceUcSecurableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppManifestAppResourceUcSecurableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
@@ -1601,24 +1606,24 @@ func (c AppManifestAppResourceUcSecurableSpec_SdkV2) ApplySchemaCustomizations(a
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppManifestAppResourceUcSecurableSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppManifestAppResourceUcSecurableSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceUcSecurableSpec_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppManifestAppResourceUcSecurableSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppManifestAppResourceUcSecurableSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission":     o.Permission,
-			"securable_type": o.SecurableType,
+			"permission":     m.Permission,
+			"securable_type": m.SecurableType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppManifestAppResourceUcSecurableSpec_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppManifestAppResourceUcSecurableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission":     types.StringType,
@@ -1653,7 +1658,7 @@ func (to *AppPermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ap
 	}
 }
 
-func (c AppPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
@@ -1668,7 +1673,7 @@ func (c AppPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
@@ -1677,18 +1682,18 @@ func (a AppPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppPermission_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppPermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppPermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             o.Inherited,
-			"inherited_from_object": o.InheritedFromObject,
-			"permission_level":      o.PermissionLevel,
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppPermission_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppPermission_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -1703,12 +1708,12 @@ func (o AppPermission_SdkV2) Type(ctx context.Context) attr.Type {
 // GetInheritedFromObject returns the value of the InheritedFromObject field in AppPermission_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+func (m *AppPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1716,14 +1721,14 @@ func (o *AppPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]typ
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in AppPermission_SdkV2.
-func (o *AppPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []types.String) {
+func (m *AppPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.InheritedFromObject = types.ListValueMust(t, vs)
+	m.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
 type AppPermissions_SdkV2 struct {
@@ -1752,7 +1757,7 @@ func (to *AppPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from A
 	}
 }
 
-func (c AppPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
 	attrs["object_type"] = attrs["object_type"].SetOptional()
@@ -1767,7 +1772,7 @@ func (c AppPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(AppAccessControlResponse_SdkV2{}),
 	}
@@ -1776,18 +1781,18 @@ func (a AppPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppPermissions_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"object_id":           o.ObjectId,
-			"object_type":         o.ObjectType,
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppPermissions_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -1802,12 +1807,12 @@ func (o AppPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in AppPermissions_SdkV2 as
 // a slice of AppAccessControlResponse_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]AppAccessControlResponse_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *AppPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]AppAccessControlResponse_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []AppAccessControlResponse_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1815,14 +1820,14 @@ func (o *AppPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]AppA
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in AppPermissions_SdkV2.
-func (o *AppPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []AppAccessControlResponse_SdkV2) {
+func (m *AppPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []AppAccessControlResponse_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type AppPermissionsDescription_SdkV2 struct {
@@ -1837,7 +1842,7 @@ func (to *AppPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 func (to *AppPermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppPermissionsDescription_SdkV2) {
 }
 
-func (c AppPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
@@ -1851,24 +1856,24 @@ func (c AppPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppPermissionsDescription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppPermissionsDescription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppPermissionsDescription_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppPermissionsDescription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppPermissionsDescription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      o.Description,
-			"permission_level": o.PermissionLevel,
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -1901,7 +1906,7 @@ func (to *AppPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 	}
 }
 
-func (c AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 	attrs["app_name"] = attrs["app_name"].SetRequired()
 
@@ -1915,7 +1920,7 @@ func (c AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(AppAccessControlRequest_SdkV2{}),
 	}
@@ -1924,17 +1929,17 @@ func (a AppPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppPermissionsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": o.AccessControlList,
-			"app_name":            o.AppName,
+			"access_control_list": m.AccessControlList,
+			"app_name":            m.AppName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
@@ -1948,12 +1953,12 @@ func (o AppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAccessControlList returns the value of the AccessControlList field in AppPermissionsRequest_SdkV2 as
 // a slice of AppAccessControlRequest_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]AppAccessControlRequest_SdkV2, bool) {
-	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+func (m *AppPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]AppAccessControlRequest_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
 		return nil, false
 	}
 	var v []AppAccessControlRequest_SdkV2
-	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1961,20 +1966,22 @@ func (o *AppPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) 
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in AppPermissionsRequest_SdkV2.
-func (o *AppPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []AppAccessControlRequest_SdkV2) {
+func (m *AppPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []AppAccessControlRequest_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AccessControlList = types.ListValueMust(t, vs)
+	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type AppResource_SdkV2 struct {
 	Database types.List `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
+
+	GenieSpace types.List `tfsdk:"genie_space"`
 
 	Job types.List `tfsdk:"job"`
 	// Name of the App Resource.
@@ -1996,6 +2003,15 @@ func (to *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of Database
 				toDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabase)
 				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+	if !from.GenieSpace.IsNull() && !from.GenieSpace.IsUnknown() {
+		if toGenieSpace, ok := to.GetGenieSpace(ctx); ok {
+			if fromGenieSpace, ok := from.GetGenieSpace(ctx); ok {
+				// Recursively sync the fields of GenieSpace
+				toGenieSpace.SyncFieldsDuringCreateOrUpdate(ctx, fromGenieSpace)
+				to.SetGenieSpace(ctx, toGenieSpace)
 			}
 		}
 	}
@@ -2055,6 +2071,14 @@ func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppR
 			}
 		}
 	}
+	if !from.GenieSpace.IsNull() && !from.GenieSpace.IsUnknown() {
+		if toGenieSpace, ok := to.GetGenieSpace(ctx); ok {
+			if fromGenieSpace, ok := from.GetGenieSpace(ctx); ok {
+				toGenieSpace.SyncFieldsDuringRead(ctx, fromGenieSpace)
+				to.SetGenieSpace(ctx, toGenieSpace)
+			}
+		}
+	}
 	if !from.Job.IsNull() && !from.Job.IsUnknown() {
 		if toJob, ok := to.GetJob(ctx); ok {
 			if fromJob, ok := from.GetJob(ctx); ok {
@@ -2097,10 +2121,12 @@ func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppR
 	}
 }
 
-func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["database"] = attrs["database"].SetOptional()
 	attrs["database"] = attrs["database"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["genie_space"] = attrs["genie_space"].SetOptional()
+	attrs["genie_space"] = attrs["genie_space"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["job"] = attrs["job"].SetOptional()
 	attrs["job"] = attrs["job"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -2123,9 +2149,10 @@ func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database":         reflect.TypeOf(AppResourceDatabase_SdkV2{}),
+		"genie_space":      reflect.TypeOf(AppResourceGenieSpace_SdkV2{}),
 		"job":              reflect.TypeOf(AppResourceJob_SdkV2{}),
 		"secret":           reflect.TypeOf(AppResourceSecret_SdkV2{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint_SdkV2{}),
@@ -2137,29 +2164,33 @@ func (a AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResource_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"database":         o.Database,
-			"description":      o.Description,
-			"job":              o.Job,
-			"name":             o.Name,
-			"secret":           o.Secret,
-			"serving_endpoint": o.ServingEndpoint,
-			"sql_warehouse":    o.SqlWarehouse,
-			"uc_securable":     o.UcSecurable,
+			"database":         m.Database,
+			"description":      m.Description,
+			"genie_space":      m.GenieSpace,
+			"job":              m.Job,
+			"name":             m.Name,
+			"secret":           m.Secret,
+			"serving_endpoint": m.ServingEndpoint,
+			"sql_warehouse":    m.SqlWarehouse,
+			"uc_securable":     m.UcSecurable,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResource_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"database": basetypes.ListType{
 				ElemType: AppResourceDatabase_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
+			"genie_space": basetypes.ListType{
+				ElemType: AppResourceGenieSpace_SdkV2{}.Type(ctx),
+			},
 			"job": basetypes.ListType{
 				ElemType: AppResourceJob_SdkV2{}.Type(ctx),
 			},
@@ -2183,13 +2214,13 @@ func (o AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDatabase returns the value of the Database field in AppResource_SdkV2 as
 // a AppResourceDatabase_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetDatabase(ctx context.Context) (AppResourceDatabase_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetDatabase(ctx context.Context) (AppResourceDatabase_SdkV2, bool) {
 	var e AppResourceDatabase_SdkV2
-	if o.Database.IsNull() || o.Database.IsUnknown() {
+	if m.Database.IsNull() || m.Database.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceDatabase_SdkV2
-	d := o.Database.ElementsAs(ctx, &v, true)
+	d := m.Database.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2200,22 +2231,48 @@ func (o *AppResource_SdkV2) GetDatabase(ctx context.Context) (AppResourceDatabas
 }
 
 // SetDatabase sets the value of the Database field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetDatabase(ctx context.Context, v AppResourceDatabase_SdkV2) {
+func (m *AppResource_SdkV2) SetDatabase(ctx context.Context, v AppResourceDatabase_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["database"]
-	o.Database = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["database"]
+	m.Database = types.ListValueMust(t, vs)
+}
+
+// GetGenieSpace returns the value of the GenieSpace field in AppResource_SdkV2 as
+// a AppResourceGenieSpace_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource_SdkV2) GetGenieSpace(ctx context.Context) (AppResourceGenieSpace_SdkV2, bool) {
+	var e AppResourceGenieSpace_SdkV2
+	if m.GenieSpace.IsNull() || m.GenieSpace.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceGenieSpace_SdkV2
+	d := m.GenieSpace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGenieSpace sets the value of the GenieSpace field in AppResource_SdkV2.
+func (m *AppResource_SdkV2) SetGenieSpace(ctx context.Context, v AppResourceGenieSpace_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["genie_space"]
+	m.GenieSpace = types.ListValueMust(t, vs)
 }
 
 // GetJob returns the value of the Job field in AppResource_SdkV2 as
 // a AppResourceJob_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetJob(ctx context.Context) (AppResourceJob_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetJob(ctx context.Context) (AppResourceJob_SdkV2, bool) {
 	var e AppResourceJob_SdkV2
-	if o.Job.IsNull() || o.Job.IsUnknown() {
+	if m.Job.IsNull() || m.Job.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceJob_SdkV2
-	d := o.Job.ElementsAs(ctx, &v, true)
+	d := m.Job.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2226,22 +2283,22 @@ func (o *AppResource_SdkV2) GetJob(ctx context.Context) (AppResourceJob_SdkV2, b
 }
 
 // SetJob sets the value of the Job field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetJob(ctx context.Context, v AppResourceJob_SdkV2) {
+func (m *AppResource_SdkV2) SetJob(ctx context.Context, v AppResourceJob_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job"]
-	o.Job = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job"]
+	m.Job = types.ListValueMust(t, vs)
 }
 
 // GetSecret returns the value of the Secret field in AppResource_SdkV2 as
 // a AppResourceSecret_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetSecret(ctx context.Context) (AppResourceSecret_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetSecret(ctx context.Context) (AppResourceSecret_SdkV2, bool) {
 	var e AppResourceSecret_SdkV2
-	if o.Secret.IsNull() || o.Secret.IsUnknown() {
+	if m.Secret.IsNull() || m.Secret.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceSecret_SdkV2
-	d := o.Secret.ElementsAs(ctx, &v, true)
+	d := m.Secret.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2252,22 +2309,22 @@ func (o *AppResource_SdkV2) GetSecret(ctx context.Context) (AppResourceSecret_Sd
 }
 
 // SetSecret sets the value of the Secret field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetSecret(ctx context.Context, v AppResourceSecret_SdkV2) {
+func (m *AppResource_SdkV2) SetSecret(ctx context.Context, v AppResourceSecret_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
-	o.Secret = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
+	m.Secret = types.ListValueMust(t, vs)
 }
 
 // GetServingEndpoint returns the value of the ServingEndpoint field in AppResource_SdkV2 as
 // a AppResourceServingEndpoint_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetServingEndpoint(ctx context.Context) (AppResourceServingEndpoint_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetServingEndpoint(ctx context.Context) (AppResourceServingEndpoint_SdkV2, bool) {
 	var e AppResourceServingEndpoint_SdkV2
-	if o.ServingEndpoint.IsNull() || o.ServingEndpoint.IsUnknown() {
+	if m.ServingEndpoint.IsNull() || m.ServingEndpoint.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceServingEndpoint_SdkV2
-	d := o.ServingEndpoint.ElementsAs(ctx, &v, true)
+	d := m.ServingEndpoint.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2278,22 +2335,22 @@ func (o *AppResource_SdkV2) GetServingEndpoint(ctx context.Context) (AppResource
 }
 
 // SetServingEndpoint sets the value of the ServingEndpoint field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetServingEndpoint(ctx context.Context, v AppResourceServingEndpoint_SdkV2) {
+func (m *AppResource_SdkV2) SetServingEndpoint(ctx context.Context, v AppResourceServingEndpoint_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint"]
-	o.ServingEndpoint = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint"]
+	m.ServingEndpoint = types.ListValueMust(t, vs)
 }
 
 // GetSqlWarehouse returns the value of the SqlWarehouse field in AppResource_SdkV2 as
 // a AppResourceSqlWarehouse_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWarehouse_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWarehouse_SdkV2, bool) {
 	var e AppResourceSqlWarehouse_SdkV2
-	if o.SqlWarehouse.IsNull() || o.SqlWarehouse.IsUnknown() {
+	if m.SqlWarehouse.IsNull() || m.SqlWarehouse.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceSqlWarehouse_SdkV2
-	d := o.SqlWarehouse.ElementsAs(ctx, &v, true)
+	d := m.SqlWarehouse.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2304,22 +2361,22 @@ func (o *AppResource_SdkV2) GetSqlWarehouse(ctx context.Context) (AppResourceSql
 }
 
 // SetSqlWarehouse sets the value of the SqlWarehouse field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetSqlWarehouse(ctx context.Context, v AppResourceSqlWarehouse_SdkV2) {
+func (m *AppResource_SdkV2) SetSqlWarehouse(ctx context.Context, v AppResourceSqlWarehouse_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
-	o.SqlWarehouse = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
+	m.SqlWarehouse = types.ListValueMust(t, vs)
 }
 
 // GetUcSecurable returns the value of the UcSecurable field in AppResource_SdkV2 as
 // a AppResourceUcSecurable_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *AppResource_SdkV2) GetUcSecurable(ctx context.Context) (AppResourceUcSecurable_SdkV2, bool) {
+func (m *AppResource_SdkV2) GetUcSecurable(ctx context.Context) (AppResourceUcSecurable_SdkV2, bool) {
 	var e AppResourceUcSecurable_SdkV2
-	if o.UcSecurable.IsNull() || o.UcSecurable.IsUnknown() {
+	if m.UcSecurable.IsNull() || m.UcSecurable.IsUnknown() {
 		return e, false
 	}
 	var v []AppResourceUcSecurable_SdkV2
-	d := o.UcSecurable.ElementsAs(ctx, &v, true)
+	d := m.UcSecurable.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2330,10 +2387,10 @@ func (o *AppResource_SdkV2) GetUcSecurable(ctx context.Context) (AppResourceUcSe
 }
 
 // SetUcSecurable sets the value of the UcSecurable field in AppResource_SdkV2.
-func (o *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable_SdkV2) {
+func (m *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable"]
-	o.UcSecurable = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable"]
+	m.UcSecurable = types.ListValueMust(t, vs)
 }
 
 type AppResourceDatabase_SdkV2 struct {
@@ -2350,7 +2407,7 @@ func (to *AppResourceDatabase_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *AppResourceDatabase_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceDatabase_SdkV2) {
 }
 
-func (c AppResourceDatabase_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceDatabase_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["database_name"] = attrs["database_name"].SetRequired()
 	attrs["instance_name"] = attrs["instance_name"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
@@ -2365,30 +2422,87 @@ func (c AppResourceDatabase_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceDatabase_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceDatabase_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceDatabase_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceDatabase_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceDatabase_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"database_name": o.DatabaseName,
-			"instance_name": o.InstanceName,
-			"permission":    o.Permission,
+			"database_name": m.DatabaseName,
+			"instance_name": m.InstanceName,
+			"permission":    m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceDatabase_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceDatabase_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"database_name": types.StringType,
 			"instance_name": types.StringType,
 			"permission":    types.StringType,
+		},
+	}
+}
+
+type AppResourceGenieSpace_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+
+	Permission types.String `tfsdk:"permission"`
+
+	SpaceId types.String `tfsdk:"space_id"`
+}
+
+func (to *AppResourceGenieSpace_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceGenieSpace_SdkV2) {
+}
+
+func (to *AppResourceGenieSpace_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceGenieSpace_SdkV2) {
+}
+
+func (m AppResourceGenieSpace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceGenieSpace.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourceGenieSpace_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceGenieSpace_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppResourceGenieSpace_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":       m.Name,
+			"permission": m.Permission,
+			"space_id":   m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourceGenieSpace_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":       types.StringType,
+			"permission": types.StringType,
+			"space_id":   types.StringType,
 		},
 	}
 }
@@ -2407,7 +2521,7 @@ func (to *AppResourceJob_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *AppResourceJob_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceJob_SdkV2) {
 }
 
-func (c AppResourceJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
 
@@ -2421,24 +2535,24 @@ func (c AppResourceJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceJob_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceJob_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"permission": o.Permission,
+			"id":         m.Id,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceJob_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id":         types.StringType,
@@ -2463,7 +2577,7 @@ func (to *AppResourceSecret_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *AppResourceSecret_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceSecret_SdkV2) {
 }
 
-func (c AppResourceSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["key"] = attrs["key"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["scope"] = attrs["scope"].SetRequired()
@@ -2478,25 +2592,25 @@ func (c AppResourceSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceSecret_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceSecret_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceSecret_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceSecret_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceSecret_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":        o.Key,
-			"permission": o.Permission,
-			"scope":      o.Scope,
+			"key":        m.Key,
+			"permission": m.Permission,
+			"scope":      m.Scope,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceSecret_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceSecret_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"key":        types.StringType,
@@ -2520,7 +2634,7 @@ func (to *AppResourceServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *AppResourceServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceServingEndpoint_SdkV2) {
 }
 
-func (c AppResourceServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
 
@@ -2534,24 +2648,24 @@ func (c AppResourceServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceServingEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceServingEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceServingEndpoint_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":       o.Name,
-			"permission": o.Permission,
+			"name":       m.Name,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":       types.StringType,
@@ -2574,7 +2688,7 @@ func (to *AppResourceSqlWarehouse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *AppResourceSqlWarehouse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceSqlWarehouse_SdkV2) {
 }
 
-func (c AppResourceSqlWarehouse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceSqlWarehouse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
 
@@ -2588,24 +2702,24 @@ func (c AppResourceSqlWarehouse_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceSqlWarehouse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceSqlWarehouse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceSqlWarehouse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceSqlWarehouse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceSqlWarehouse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         o.Id,
-			"permission": o.Permission,
+			"id":         m.Id,
+			"permission": m.Permission,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id":         types.StringType,
@@ -2628,7 +2742,7 @@ func (to *AppResourceUcSecurable_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *AppResourceUcSecurable_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceUcSecurable_SdkV2) {
 }
 
-func (c AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
@@ -2643,30 +2757,289 @@ func (c AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a AppResourceUcSecurable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m AppResourceUcSecurable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceUcSecurable_SdkV2
 // only implements ToObjectValue() and Type().
-func (o AppResourceUcSecurable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m AppResourceUcSecurable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission":          o.Permission,
-			"securable_full_name": o.SecurableFullName,
-			"securable_type":      o.SecurableType,
+			"permission":          m.Permission,
+			"securable_full_name": m.SecurableFullName,
+			"securable_type":      m.SecurableType,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
+func (m AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission":          types.StringType,
 			"securable_full_name": types.StringType,
 			"securable_type":      types.StringType,
+		},
+	}
+}
+
+type AppUpdate_SdkV2 struct {
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
+	ComputeSize types.String `tfsdk:"compute_size"`
+
+	Description types.String `tfsdk:"description"`
+
+	Resources types.List `tfsdk:"resources"`
+
+	Status types.List `tfsdk:"status"`
+
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
+}
+
+func (to *AppUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppUpdate_SdkV2) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (to *AppUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppUpdate_SdkV2) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (m AppUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["compute_size"] = attrs["compute_size"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppUpdate.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppUpdate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"resources":       reflect.TypeOf(AppResource_SdkV2{}),
+		"status":          reflect.TypeOf(AppUpdateUpdateStatus_SdkV2{}),
+		"user_api_scopes": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppUpdate_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"budget_policy_id": m.BudgetPolicyId,
+			"compute_size":     m.ComputeSize,
+			"description":      m.Description,
+			"resources":        m.Resources,
+			"status":           m.Status,
+			"usage_policy_id":  m.UsagePolicyId,
+			"user_api_scopes":  m.UserApiScopes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppUpdate_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"budget_policy_id": types.StringType,
+			"compute_size":     types.StringType,
+			"description":      types.StringType,
+			"resources": basetypes.ListType{
+				ElemType: AppResource_SdkV2{}.Type(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: AppUpdateUpdateStatus_SdkV2{}.Type(ctx),
+			},
+			"usage_policy_id": types.StringType,
+			"user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetResources returns the value of the Resources field in AppUpdate_SdkV2 as
+// a slice of AppResource_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppUpdate_SdkV2) GetResources(ctx context.Context) ([]AppResource_SdkV2, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []AppResource_SdkV2
+	d := m.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in AppUpdate_SdkV2.
+func (m *AppUpdate_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Resources = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in AppUpdate_SdkV2 as
+// a AppUpdateUpdateStatus_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppUpdate_SdkV2) GetStatus(ctx context.Context) (AppUpdateUpdateStatus_SdkV2, bool) {
+	var e AppUpdateUpdateStatus_SdkV2
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v []AppUpdateUpdateStatus_SdkV2
+	d := m.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in AppUpdate_SdkV2.
+func (m *AppUpdate_SdkV2) SetStatus(ctx context.Context, v AppUpdateUpdateStatus_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
+}
+
+// GetUserApiScopes returns the value of the UserApiScopes field in AppUpdate_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppUpdate_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.UserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserApiScopes sets the value of the UserApiScopes field in AppUpdate_SdkV2.
+func (m *AppUpdate_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.UserApiScopes = types.ListValueMust(t, vs)
+}
+
+type AppUpdateUpdateStatus_SdkV2 struct {
+	Message types.String `tfsdk:"message"`
+
+	State types.String `tfsdk:"state"`
+}
+
+func (to *AppUpdateUpdateStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppUpdateUpdateStatus_SdkV2) {
+}
+
+func (to *AppUpdateUpdateStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppUpdateUpdateStatus_SdkV2) {
+}
+
+func (m AppUpdateUpdateStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppUpdateUpdateStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppUpdateUpdateStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppUpdateUpdateStatus_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppUpdateUpdateStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"message": m.Message,
+			"state":   m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppUpdateUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"message": types.StringType,
+			"state":   types.StringType,
 		},
 	}
 }
@@ -2684,7 +3057,7 @@ func (to *ApplicationStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 func (to *ApplicationStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApplicationStatus_SdkV2) {
 }
 
-func (c ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
@@ -2698,30 +3071,145 @@ func (c ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ApplicationStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ApplicationStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ApplicationStatus_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": o.Message,
-			"state":   o.State,
+			"message": m.Message,
+			"state":   m.State,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
 			"state":   types.StringType,
 		},
 	}
+}
+
+type AsyncUpdateAppRequest_SdkV2 struct {
+	App types.List `tfsdk:"app"`
+
+	AppName types.String `tfsdk:"-"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (to *AsyncUpdateAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AsyncUpdateAppRequest_SdkV2) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				// Recursively sync the fields of App
+				toApp.SyncFieldsDuringCreateOrUpdate(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
+}
+
+func (to *AsyncUpdateAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AsyncUpdateAppRequest_SdkV2) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				toApp.SyncFieldsDuringRead(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
+}
+
+func (m AsyncUpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetOptional()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AsyncUpdateAppRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AsyncUpdateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"app": reflect.TypeOf(App_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AsyncUpdateAppRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AsyncUpdateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"app":         m.App,
+			"app_name":    m.AppName,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AsyncUpdateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"app": basetypes.ListType{
+				ElemType: App_SdkV2{}.Type(ctx),
+			},
+			"app_name":    types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetApp returns the value of the App field in AsyncUpdateAppRequest_SdkV2 as
+// a App_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AsyncUpdateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
+	var e App_SdkV2
+	if m.App.IsNull() || m.App.IsUnknown() {
+		return e, false
+	}
+	var v []App_SdkV2
+	d := m.App.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApp sets the value of the App field in AsyncUpdateAppRequest_SdkV2.
+func (m *AsyncUpdateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	m.App = types.ListValueMust(t, vs)
 }
 
 type ComputeStatus_SdkV2 struct {
@@ -2737,7 +3225,7 @@ func (to *ComputeStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *ComputeStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComputeStatus_SdkV2) {
 }
 
-func (c ComputeStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ComputeStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
@@ -2751,24 +3239,24 @@ func (c ComputeStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ComputeStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ComputeStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ComputeStatus_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ComputeStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ComputeStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": o.Message,
-			"state":   o.State,
+			"message": m.Message,
+			"state":   m.State,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ComputeStatus_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ComputeStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
@@ -2807,7 +3295,7 @@ func (to *CreateAppDeploymentRequest_SdkV2) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c CreateAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_deployment"] = attrs["app_deployment"].SetRequired()
 	attrs["app_deployment"] = attrs["app_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["app_name"] = attrs["app_name"].SetRequired()
@@ -2822,7 +3310,7 @@ func (c CreateAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateAppDeploymentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateAppDeploymentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app_deployment": reflect.TypeOf(AppDeployment_SdkV2{}),
 	}
@@ -2831,17 +3319,17 @@ func (a CreateAppDeploymentRequest_SdkV2) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAppDeploymentRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateAppDeploymentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateAppDeploymentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_deployment": o.AppDeployment,
-			"app_name":       o.AppName,
+			"app_deployment": m.AppDeployment,
+			"app_name":       m.AppName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_deployment": basetypes.ListType{
@@ -2855,13 +3343,13 @@ func (o CreateAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAppDeployment returns the value of the AppDeployment field in CreateAppDeploymentRequest_SdkV2 as
 // a AppDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAppDeploymentRequest_SdkV2) GetAppDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
+func (m *CreateAppDeploymentRequest_SdkV2) GetAppDeployment(ctx context.Context) (AppDeployment_SdkV2, bool) {
 	var e AppDeployment_SdkV2
-	if o.AppDeployment.IsNull() || o.AppDeployment.IsUnknown() {
+	if m.AppDeployment.IsNull() || m.AppDeployment.IsUnknown() {
 		return e, false
 	}
 	var v []AppDeployment_SdkV2
-	d := o.AppDeployment.ElementsAs(ctx, &v, true)
+	d := m.AppDeployment.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2872,10 +3360,10 @@ func (o *CreateAppDeploymentRequest_SdkV2) GetAppDeployment(ctx context.Context)
 }
 
 // SetAppDeployment sets the value of the AppDeployment field in CreateAppDeploymentRequest_SdkV2.
-func (o *CreateAppDeploymentRequest_SdkV2) SetAppDeployment(ctx context.Context, v AppDeployment_SdkV2) {
+func (m *CreateAppDeploymentRequest_SdkV2) SetAppDeployment(ctx context.Context, v AppDeployment_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment"]
-	o.AppDeployment = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment"]
+	m.AppDeployment = types.ListValueMust(t, vs)
 }
 
 type CreateAppRequest_SdkV2 struct {
@@ -2907,7 +3395,7 @@ func (to *CreateAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c CreateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetRequired()
 	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["no_compute"] = attrs["no_compute"].SetOptional()
@@ -2922,7 +3410,7 @@ func (c CreateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app": reflect.TypeOf(App_SdkV2{}),
 	}
@@ -2931,17 +3419,17 @@ func (a CreateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app":        o.App,
-			"no_compute": o.NoCompute,
+			"app":        m.App,
+			"no_compute": m.NoCompute,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app": basetypes.ListType{
@@ -2955,13 +3443,13 @@ func (o CreateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetApp returns the value of the App field in CreateAppRequest_SdkV2 as
 // a App_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
+func (m *CreateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
 	var e App_SdkV2
-	if o.App.IsNull() || o.App.IsUnknown() {
+	if m.App.IsNull() || m.App.IsUnknown() {
 		return e, false
 	}
 	var v []App_SdkV2
-	d := o.App.ElementsAs(ctx, &v, true)
+	d := m.App.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2972,10 +3460,10 @@ func (o *CreateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
 }
 
 // SetApp sets the value of the App field in CreateAppRequest_SdkV2.
-func (o *CreateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
+func (m *CreateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
-	o.App = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	m.App = types.ListValueMust(t, vs)
 }
 
 type CreateCustomTemplateRequest_SdkV2 struct {
@@ -3005,7 +3493,7 @@ func (to *CreateCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Co
 	}
 }
 
-func (c CreateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["template"] = attrs["template"].SetRequired()
 	attrs["template"] = attrs["template"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -3019,7 +3507,7 @@ func (c CreateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"template": reflect.TypeOf(CustomTemplate_SdkV2{}),
 	}
@@ -3028,16 +3516,16 @@ func (a CreateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCustomTemplateRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"template": o.Template,
+			"template": m.Template,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"template": basetypes.ListType{
@@ -3050,13 +3538,13 @@ func (o CreateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetTemplate returns the value of the Template field in CreateCustomTemplateRequest_SdkV2 as
 // a CustomTemplate_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (CustomTemplate_SdkV2, bool) {
+func (m *CreateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (CustomTemplate_SdkV2, bool) {
 	var e CustomTemplate_SdkV2
-	if o.Template.IsNull() || o.Template.IsUnknown() {
+	if m.Template.IsNull() || m.Template.IsUnknown() {
 		return e, false
 	}
 	var v []CustomTemplate_SdkV2
-	d := o.Template.ElementsAs(ctx, &v, true)
+	d := m.Template.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3067,10 +3555,10 @@ func (o *CreateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (Cu
 }
 
 // SetTemplate sets the value of the Template field in CreateCustomTemplateRequest_SdkV2.
-func (o *CreateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v CustomTemplate_SdkV2) {
+func (m *CreateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v CustomTemplate_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["template"]
-	o.Template = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["template"]
+	m.Template = types.ListValueMust(t, vs)
 }
 
 type CustomTemplate_SdkV2 struct {
@@ -3115,7 +3603,7 @@ func (to *CustomTemplate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 	}
 }
 
-func (c CustomTemplate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CustomTemplate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["git_provider"] = attrs["git_provider"].SetRequired()
@@ -3135,7 +3623,7 @@ func (c CustomTemplate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CustomTemplate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CustomTemplate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"manifest": reflect.TypeOf(AppManifest_SdkV2{}),
 	}
@@ -3144,22 +3632,22 @@ func (a CustomTemplate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CustomTemplate_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CustomTemplate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CustomTemplate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creator":      o.Creator,
-			"description":  o.Description,
-			"git_provider": o.GitProvider,
-			"git_repo":     o.GitRepo,
-			"manifest":     o.Manifest,
-			"name":         o.Name,
-			"path":         o.Path,
+			"creator":      m.Creator,
+			"description":  m.Description,
+			"git_provider": m.GitProvider,
+			"git_repo":     m.GitRepo,
+			"manifest":     m.Manifest,
+			"name":         m.Name,
+			"path":         m.Path,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CustomTemplate_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CustomTemplate_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creator":      types.StringType,
@@ -3178,13 +3666,13 @@ func (o CustomTemplate_SdkV2) Type(ctx context.Context) attr.Type {
 // GetManifest returns the value of the Manifest field in CustomTemplate_SdkV2 as
 // a AppManifest_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CustomTemplate_SdkV2) GetManifest(ctx context.Context) (AppManifest_SdkV2, bool) {
+func (m *CustomTemplate_SdkV2) GetManifest(ctx context.Context) (AppManifest_SdkV2, bool) {
 	var e AppManifest_SdkV2
-	if o.Manifest.IsNull() || o.Manifest.IsUnknown() {
+	if m.Manifest.IsNull() || m.Manifest.IsUnknown() {
 		return e, false
 	}
 	var v []AppManifest_SdkV2
-	d := o.Manifest.ElementsAs(ctx, &v, true)
+	d := m.Manifest.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3195,10 +3683,10 @@ func (o *CustomTemplate_SdkV2) GetManifest(ctx context.Context) (AppManifest_Sdk
 }
 
 // SetManifest sets the value of the Manifest field in CustomTemplate_SdkV2.
-func (o *CustomTemplate_SdkV2) SetManifest(ctx context.Context, v AppManifest_SdkV2) {
+func (m *CustomTemplate_SdkV2) SetManifest(ctx context.Context, v AppManifest_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["manifest"]
-	o.Manifest = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["manifest"]
+	m.Manifest = types.ListValueMust(t, vs)
 }
 
 type DeleteAppRequest_SdkV2 struct {
@@ -3212,7 +3700,7 @@ func (to *DeleteAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *DeleteAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteAppRequest_SdkV2) {
 }
 
-func (c DeleteAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -3225,23 +3713,23 @@ func (c DeleteAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DeleteAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -3260,7 +3748,7 @@ func (to *DeleteCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 func (to *DeleteCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCustomTemplateRequest_SdkV2) {
 }
 
-func (c DeleteCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -3273,23 +3761,23 @@ func (c DeleteCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCustomTemplateRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DeleteCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -3310,7 +3798,7 @@ func (to *GetAppDeploymentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 func (to *GetAppDeploymentRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppDeploymentRequest_SdkV2) {
 }
 
-func (c GetAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_name"] = attrs["app_name"].SetRequired()
 	attrs["deployment_id"] = attrs["deployment_id"].SetRequired()
 
@@ -3324,24 +3812,24 @@ func (c GetAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAppDeploymentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAppDeploymentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppDeploymentRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetAppDeploymentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAppDeploymentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_name":      o.AppName,
-			"deployment_id": o.DeploymentId,
+			"app_name":      m.AppName,
+			"deployment_id": m.DeploymentId,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_name":      types.StringType,
@@ -3361,7 +3849,7 @@ func (to *GetAppPermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 func (to *GetAppPermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppPermissionLevelsRequest_SdkV2) {
 }
 
-func (c GetAppPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAppPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_name"] = attrs["app_name"].SetRequired()
 
 	return attrs
@@ -3374,23 +3862,23 @@ func (c GetAppPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAppPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAppPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppPermissionLevelsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetAppPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAppPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_name": o.AppName,
+			"app_name": m.AppName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAppPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetAppPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_name": types.StringType,
@@ -3421,7 +3909,7 @@ func (to *GetAppPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context
 	}
 }
 
-func (c GetAppPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAppPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
 	return attrs
@@ -3434,7 +3922,7 @@ func (c GetAppPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs ma
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAppPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAppPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(AppPermissionsDescription_SdkV2{}),
 	}
@@ -3443,16 +3931,16 @@ func (a GetAppPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.C
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppPermissionLevelsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetAppPermissionLevelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAppPermissionLevelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": o.PermissionLevels,
+			"permission_levels": m.PermissionLevels,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAppPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetAppPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
@@ -3465,12 +3953,12 @@ func (o GetAppPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 // GetPermissionLevels returns the value of the PermissionLevels field in GetAppPermissionLevelsResponse_SdkV2 as
 // a slice of AppPermissionsDescription_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetAppPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.Context) ([]AppPermissionsDescription_SdkV2, bool) {
-	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+func (m *GetAppPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.Context) ([]AppPermissionsDescription_SdkV2, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
 		return nil, false
 	}
 	var v []AppPermissionsDescription_SdkV2
-	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3478,14 +3966,14 @@ func (o *GetAppPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.C
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetAppPermissionLevelsResponse_SdkV2.
-func (o *GetAppPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Context, v []AppPermissionsDescription_SdkV2) {
+func (m *GetAppPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Context, v []AppPermissionsDescription_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.PermissionLevels = types.ListValueMust(t, vs)
+	m.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 type GetAppPermissionsRequest_SdkV2 struct {
@@ -3499,7 +3987,7 @@ func (to *GetAppPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *GetAppPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppPermissionsRequest_SdkV2) {
 }
 
-func (c GetAppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_name"] = attrs["app_name"].SetRequired()
 
 	return attrs
@@ -3512,23 +4000,23 @@ func (c GetAppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAppPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAppPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppPermissionsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetAppPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAppPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_name": o.AppName,
+			"app_name": m.AppName,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetAppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_name": types.StringType,
@@ -3547,7 +4035,7 @@ func (to *GetAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 func (to *GetAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppRequest_SdkV2) {
 }
 
-func (c GetAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -3560,26 +4048,74 @@ func (c GetAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
+		},
+	}
+}
+
+type GetAppUpdateRequest_SdkV2 struct {
+	// The name of the app.
+	AppName types.String `tfsdk:"-"`
+}
+
+func (to *GetAppUpdateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAppUpdateRequest_SdkV2) {
+}
+
+func (to *GetAppUpdateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppUpdateRequest_SdkV2) {
+}
+
+func (m GetAppUpdateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppUpdateRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetAppUpdateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppUpdateRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetAppUpdateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"app_name": m.AppName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetAppUpdateRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"app_name": types.StringType,
 		},
 	}
 }
@@ -3595,7 +4131,7 @@ func (to *GetCustomTemplateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 func (to *GetCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCustomTemplateRequest_SdkV2) {
 }
 
-func (c GetCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -3608,23 +4144,23 @@ func (c GetCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetCustomTemplateRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -3648,7 +4184,7 @@ func (to *ListAppDeploymentsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 func (to *ListAppDeploymentsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAppDeploymentsRequest_SdkV2) {
 }
 
-func (c ListAppDeploymentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAppDeploymentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_name"] = attrs["app_name"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
@@ -3663,25 +4199,25 @@ func (c ListAppDeploymentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[str
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAppDeploymentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAppDeploymentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppDeploymentsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListAppDeploymentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAppDeploymentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_name":   o.AppName,
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
+			"app_name":   m.AppName,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAppDeploymentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListAppDeploymentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_name":   types.StringType,
@@ -3716,7 +4252,7 @@ func (to *ListAppDeploymentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Con
 	}
 }
 
-func (c ListAppDeploymentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAppDeploymentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_deployments"] = attrs["app_deployments"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
@@ -3730,7 +4266,7 @@ func (c ListAppDeploymentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAppDeploymentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAppDeploymentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app_deployments": reflect.TypeOf(AppDeployment_SdkV2{}),
 	}
@@ -3739,17 +4275,17 @@ func (a ListAppDeploymentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Conte
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppDeploymentsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListAppDeploymentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAppDeploymentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app_deployments": o.AppDeployments,
-			"next_page_token": o.NextPageToken,
+			"app_deployments": m.AppDeployments,
+			"next_page_token": m.NextPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAppDeploymentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListAppDeploymentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_deployments": basetypes.ListType{
@@ -3763,12 +4299,12 @@ func (o ListAppDeploymentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetAppDeployments returns the value of the AppDeployments field in ListAppDeploymentsResponse_SdkV2 as
 // a slice of AppDeployment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAppDeploymentsResponse_SdkV2) GetAppDeployments(ctx context.Context) ([]AppDeployment_SdkV2, bool) {
-	if o.AppDeployments.IsNull() || o.AppDeployments.IsUnknown() {
+func (m *ListAppDeploymentsResponse_SdkV2) GetAppDeployments(ctx context.Context) ([]AppDeployment_SdkV2, bool) {
+	if m.AppDeployments.IsNull() || m.AppDeployments.IsUnknown() {
 		return nil, false
 	}
 	var v []AppDeployment_SdkV2
-	d := o.AppDeployments.ElementsAs(ctx, &v, true)
+	d := m.AppDeployments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3776,14 +4312,14 @@ func (o *ListAppDeploymentsResponse_SdkV2) GetAppDeployments(ctx context.Context
 }
 
 // SetAppDeployments sets the value of the AppDeployments field in ListAppDeploymentsResponse_SdkV2.
-func (o *ListAppDeploymentsResponse_SdkV2) SetAppDeployments(ctx context.Context, v []AppDeployment_SdkV2) {
+func (m *ListAppDeploymentsResponse_SdkV2) SetAppDeployments(ctx context.Context, v []AppDeployment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployments"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployments"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.AppDeployments = types.ListValueMust(t, vs)
+	m.AppDeployments = types.ListValueMust(t, vs)
 }
 
 type ListAppsRequest_SdkV2 struct {
@@ -3800,7 +4336,7 @@ func (to *ListAppsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *ListAppsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAppsRequest_SdkV2) {
 }
 
-func (c ListAppsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAppsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -3814,24 +4350,24 @@ func (c ListAppsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAppsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAppsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListAppsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAppsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAppsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListAppsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -3864,7 +4400,7 @@ func (to *ListAppsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c ListAppsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListAppsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["apps"] = attrs["apps"].SetOptional()
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
@@ -3878,7 +4414,7 @@ func (c ListAppsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListAppsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListAppsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"apps": reflect.TypeOf(App_SdkV2{}),
 	}
@@ -3887,17 +4423,17 @@ func (a ListAppsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListAppsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListAppsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"apps":            o.Apps,
-			"next_page_token": o.NextPageToken,
+			"apps":            m.Apps,
+			"next_page_token": m.NextPageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListAppsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListAppsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
@@ -3911,12 +4447,12 @@ func (o ListAppsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetApps returns the value of the Apps field in ListAppsResponse_SdkV2 as
 // a slice of App_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAppsResponse_SdkV2) GetApps(ctx context.Context) ([]App_SdkV2, bool) {
-	if o.Apps.IsNull() || o.Apps.IsUnknown() {
+func (m *ListAppsResponse_SdkV2) GetApps(ctx context.Context) ([]App_SdkV2, bool) {
+	if m.Apps.IsNull() || m.Apps.IsUnknown() {
 		return nil, false
 	}
 	var v []App_SdkV2
-	d := o.Apps.ElementsAs(ctx, &v, true)
+	d := m.Apps.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3924,14 +4460,14 @@ func (o *ListAppsResponse_SdkV2) GetApps(ctx context.Context) ([]App_SdkV2, bool
 }
 
 // SetApps sets the value of the Apps field in ListAppsResponse_SdkV2.
-func (o *ListAppsResponse_SdkV2) SetApps(ctx context.Context, v []App_SdkV2) {
+func (m *ListAppsResponse_SdkV2) SetApps(ctx context.Context, v []App_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Apps = types.ListValueMust(t, vs)
+	m.Apps = types.ListValueMust(t, vs)
 }
 
 type ListCustomTemplatesRequest_SdkV2 struct {
@@ -3948,7 +4484,7 @@ func (to *ListCustomTemplatesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 func (to *ListCustomTemplatesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCustomTemplatesRequest_SdkV2) {
 }
 
-func (c ListCustomTemplatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListCustomTemplatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -3962,24 +4498,24 @@ func (c ListCustomTemplatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[st
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCustomTemplatesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListCustomTemplatesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListCustomTemplatesRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCustomTemplatesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListCustomTemplatesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  o.PageSize,
-			"page_token": o.PageToken,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCustomTemplatesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListCustomTemplatesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -4013,7 +4549,7 @@ func (to *ListCustomTemplatesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Co
 	}
 }
 
-func (c ListCustomTemplatesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m ListCustomTemplatesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["templates"] = attrs["templates"].SetOptional()
 
@@ -4027,7 +4563,7 @@ func (c ListCustomTemplatesResponse_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCustomTemplatesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m ListCustomTemplatesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"templates": reflect.TypeOf(CustomTemplate_SdkV2{}),
 	}
@@ -4036,17 +4572,17 @@ func (a ListCustomTemplatesResponse_SdkV2) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ListCustomTemplatesResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCustomTemplatesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m ListCustomTemplatesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"next_page_token": o.NextPageToken,
-			"templates":       o.Templates,
+			"next_page_token": m.NextPageToken,
+			"templates":       m.Templates,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCustomTemplatesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+func (m ListCustomTemplatesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
@@ -4060,12 +4596,12 @@ func (o ListCustomTemplatesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // GetTemplates returns the value of the Templates field in ListCustomTemplatesResponse_SdkV2 as
 // a slice of CustomTemplate_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListCustomTemplatesResponse_SdkV2) GetTemplates(ctx context.Context) ([]CustomTemplate_SdkV2, bool) {
-	if o.Templates.IsNull() || o.Templates.IsUnknown() {
+func (m *ListCustomTemplatesResponse_SdkV2) GetTemplates(ctx context.Context) ([]CustomTemplate_SdkV2, bool) {
+	if m.Templates.IsNull() || m.Templates.IsUnknown() {
 		return nil, false
 	}
 	var v []CustomTemplate_SdkV2
-	d := o.Templates.ElementsAs(ctx, &v, true)
+	d := m.Templates.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4073,14 +4609,14 @@ func (o *ListCustomTemplatesResponse_SdkV2) GetTemplates(ctx context.Context) ([
 }
 
 // SetTemplates sets the value of the Templates field in ListCustomTemplatesResponse_SdkV2.
-func (o *ListCustomTemplatesResponse_SdkV2) SetTemplates(ctx context.Context, v []CustomTemplate_SdkV2) {
+func (m *ListCustomTemplatesResponse_SdkV2) SetTemplates(ctx context.Context, v []CustomTemplate_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["templates"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["templates"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Templates = types.ListValueMust(t, vs)
+	m.Templates = types.ListValueMust(t, vs)
 }
 
 type StartAppRequest_SdkV2 struct {
@@ -4094,7 +4630,7 @@ func (to *StartAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 func (to *StartAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StartAppRequest_SdkV2) {
 }
 
-func (c StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -4107,23 +4643,23 @@ func (c StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a StartAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m StartAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, StartAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o StartAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m StartAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o StartAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m StartAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -4142,7 +4678,7 @@ func (to *StopAppRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 func (to *StopAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StopAppRequest_SdkV2) {
 }
 
-func (c StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -4155,23 +4691,23 @@ func (c StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a StopAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m StopAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, StopAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o StopAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m StopAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": o.Name,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o StopAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m StopAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -4209,7 +4745,7 @@ func (to *UpdateAppRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 	}
 }
 
-func (c UpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetRequired()
 	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -4224,7 +4760,7 @@ func (c UpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app": reflect.TypeOf(App_SdkV2{}),
 	}
@@ -4233,17 +4769,17 @@ func (a UpdateAppRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAppRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app":  o.App,
-			"name": o.Name,
+			"app":  m.App,
+			"name": m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m UpdateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app": basetypes.ListType{
@@ -4257,13 +4793,13 @@ func (o UpdateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetApp returns the value of the App field in UpdateAppRequest_SdkV2 as
 // a App_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
+func (m *UpdateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
 	var e App_SdkV2
-	if o.App.IsNull() || o.App.IsUnknown() {
+	if m.App.IsNull() || m.App.IsUnknown() {
 		return e, false
 	}
 	var v []App_SdkV2
-	d := o.App.ElementsAs(ctx, &v, true)
+	d := m.App.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4274,10 +4810,10 @@ func (o *UpdateAppRequest_SdkV2) GetApp(ctx context.Context) (App_SdkV2, bool) {
 }
 
 // SetApp sets the value of the App field in UpdateAppRequest_SdkV2.
-func (o *UpdateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
+func (m *UpdateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
-	o.App = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	m.App = types.ListValueMust(t, vs)
 }
 
 type UpdateCustomTemplateRequest_SdkV2 struct {
@@ -4312,7 +4848,7 @@ func (to *UpdateCustomTemplateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Co
 	}
 }
 
-func (c UpdateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["template"] = attrs["template"].SetRequired()
 	attrs["template"] = attrs["template"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -4327,7 +4863,7 @@ func (c UpdateCustomTemplateRequest_SdkV2) ApplySchemaCustomizations(attrs map[s
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"template": reflect.TypeOf(CustomTemplate_SdkV2{}),
 	}
@@ -4336,17 +4872,17 @@ func (a UpdateCustomTemplateRequest_SdkV2) GetComplexFieldTypes(ctx context.Cont
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCustomTemplateRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateCustomTemplateRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     o.Name,
-			"template": o.Template,
+			"name":     m.Name,
+			"template": m.Template,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m UpdateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -4360,13 +4896,13 @@ func (o UpdateCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetTemplate returns the value of the Template field in UpdateCustomTemplateRequest_SdkV2 as
 // a CustomTemplate_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (CustomTemplate_SdkV2, bool) {
+func (m *UpdateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (CustomTemplate_SdkV2, bool) {
 	var e CustomTemplate_SdkV2
-	if o.Template.IsNull() || o.Template.IsUnknown() {
+	if m.Template.IsNull() || m.Template.IsUnknown() {
 		return e, false
 	}
 	var v []CustomTemplate_SdkV2
-	d := o.Template.ElementsAs(ctx, &v, true)
+	d := m.Template.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4377,8 +4913,8 @@ func (o *UpdateCustomTemplateRequest_SdkV2) GetTemplate(ctx context.Context) (Cu
 }
 
 // SetTemplate sets the value of the Template field in UpdateCustomTemplateRequest_SdkV2.
-func (o *UpdateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v CustomTemplate_SdkV2) {
+func (m *UpdateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v CustomTemplate_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["template"]
-	o.Template = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["template"]
+	m.Template = types.ListValueMust(t, vs)
 }

@@ -47,5 +47,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_quality_monitor_v2 "object_type,object_id"
+terraform import databricks_quality_monitor_v2.this "object_type,object_id"
 ```

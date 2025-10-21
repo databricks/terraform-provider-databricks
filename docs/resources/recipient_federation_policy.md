@@ -58,5 +58,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_recipient_federation_policy "name"
+terraform import databricks_recipient_federation_policy.this "name"
 ```

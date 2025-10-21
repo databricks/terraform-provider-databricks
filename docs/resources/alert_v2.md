@@ -101,7 +101,7 @@ The following arguments are supported:
 * `value` (AlertV2OperandValue, optional)
 
 ### AlertV2OperandColumn
-* `aggregation` (string, optional) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string, optional) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string, optional)
 * `name` (string, optional)
 
@@ -152,5 +152,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_alert_v2 "id"
+terraform import databricks_alert_v2.this "id"
 ```

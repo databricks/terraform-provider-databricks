@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const (
@@ -31,14 +32,22 @@ const (
 
 type appResource struct {
 	apps_tf.App
-	NoCompute types.Bool `tfsdk:"no_compute"`
+	NoCompute      types.Bool   `tfsdk:"no_compute"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
+	s["provider_config"] = s["provider_config"].SetOptional()
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s
+}
+
+func (a appResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	attrs := a.App.GetComplexFieldTypes(ctx)
+	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return attrs
 }
 
 func ResourceApp() resource.Resource {
@@ -94,17 +103,32 @@ func (a *resourceApp) Configure(ctx context.Context, req resource.ConfigureReque
 
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	var app appResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	var workspaceID string
+	if !app.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(app.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	var appGoSdk apps.App
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, app, &appGoSdk)...)
 	if resp.Diagnostics.HasError() {
@@ -133,6 +157,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	newApp.NoCompute = app.NoCompute
+	newApp.ProviderConfig = app.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,6 +175,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	newApp.ProviderConfig = app.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -195,14 +221,28 @@ func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceCli
 
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var app appResource
+	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var app appResource
-	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
+	var workspaceID string
+	if !app.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(app.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -219,6 +259,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 	newApp.NoCompute = app.NoCompute
+	newApp.ProviderConfig = app.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,14 +268,28 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var app appResource
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var app appResource
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
+	var workspaceID string
+	if !app.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(app.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -259,6 +314,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
+	newApp.ProviderConfig = app.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -267,14 +323,28 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+
+	var app appResource
+	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var app appResource
-	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
+	var workspaceID string
+	if !app.ProviderConfig.IsNull() {
+		var namespace tfschema.ProviderConfigData
+		resp.Diagnostics.Append(app.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		})...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		workspaceID = namespace.WorkspaceID.ValueString()
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

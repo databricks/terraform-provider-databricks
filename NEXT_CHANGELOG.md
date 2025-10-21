@@ -22,3 +22,4 @@
 
 * Add provider_config support for plugin framework ([#5104](https://github.com/databricks/terraform-provider-databricks/pull/5104))
 * Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).
+* Fix custom_app_integration_test ([]()).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/option"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
@@ -259,6 +262,13 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspacesProvisioningToRunning(t *testing.T) {
+	acceptance.LoadAccountEnv(t)
+	if !acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("TestMwsAccGcpWorkspacesProvisioningToRunning is currently only supported on GCP")
+	}
+
+	var serviceAccountEmail string
+
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_mws_workspaces" "this" {
@@ -282,6 +292,12 @@ func TestMwsAccGcpWorkspacesProvisioningToRunning(t *testing.T) {
 				return fmt.Errorf("workspace_id is empty")
 			}
 
+			// Capture service account email for use in PreConfig
+			serviceAccountEmail = rs.Primary.Attributes["gcp_workspace_sa"]
+			if serviceAccountEmail == "" {
+				return fmt.Errorf("gcp_workspace_sa is empty")
+			}
+
 			expectedStatus := "PROVISIONING"
 			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
 				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
@@ -289,6 +305,9 @@ func TestMwsAccGcpWorkspacesProvisioningToRunning(t *testing.T) {
 			return nil
 		},
 	}, acceptance.Step{
+		PreConfig: func() {
+			grantGcpWorkspacePermissions(t, serviceAccountEmail)
+		},
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -333,6 +352,13 @@ func TestMwsAccGcpWorkspacesProvisioningToRunning(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspacesUnsetExpectedState(t *testing.T) {
+	acceptance.LoadAccountEnv(t)
+	if !acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("TestMwsAccGcpWorkspacesUnsetExpectedState is currently only supported on GCP")
+	}
+
+	var serviceAccountEmail string
+
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_mws_workspaces" "this" {
@@ -356,6 +382,12 @@ func TestMwsAccGcpWorkspacesUnsetExpectedState(t *testing.T) {
 				return fmt.Errorf("workspace_id is empty")
 			}
 
+			// Capture service account email for use in PreConfig
+			serviceAccountEmail = rs.Primary.Attributes["gcp_workspace_sa"]
+			if serviceAccountEmail == "" {
+				return fmt.Errorf("gcp_workspace_sa is empty")
+			}
+
 			expectedStatus := "PROVISIONING"
 			if status := rs.Primary.Attributes["workspace_status"]; status != expectedStatus {
 				return fmt.Errorf("expected workspace_status to be %s, got %s", expectedStatus, status)
@@ -363,6 +395,9 @@ func TestMwsAccGcpWorkspacesUnsetExpectedState(t *testing.T) {
 			return nil
 		},
 	}, acceptance.Step{
+		PreConfig: func() {
+			grantGcpWorkspacePermissions(t, serviceAccountEmail)
+		},
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -611,4 +646,143 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 		// Use the original provider for a final step to clean up the newly created service principal
 		Template: workspaceTemplate(``) + servicePrincipal,
 	})
+}
+
+// grantGcpWorkspacePermissions is a helper function for PreConfig that grants GCP permissions
+// to a workspace service account using a pre-created custom role
+func grantGcpWorkspacePermissions(t *testing.T, serviceAccountEmail string) {
+	ctx := context.Background()
+
+	// Grant GCP permissions to the workspace service account
+	projectID := os.Getenv("GOOGLE_PROJECT")
+	if projectID == "" {
+		t.Fatal("GOOGLE_PROJECT environment variable is not set")
+	}
+
+	// Get the pre-created custom role ID from environment variable
+	roleID := os.Getenv("TEST_LEAST_PRIVILEGED_WORKSPACE_ROLE_ID")
+	if roleID == "" {
+		// TODO: fail here if roleID is not set
+		roleID = fmt.Sprintf("projects/%s/roles/databricksLeastPrivilegedWorkspaceRole", projectID)
+	}
+
+	t.Logf("Assigning role %s to service account: %s on project: %s", roleID, serviceAccountEmail, projectID)
+	if err := assignGcpRoleToServiceAccount(ctx, projectID, serviceAccountEmail, roleID); err != nil {
+		t.Fatalf("Failed to assign GCP role: %v", err)
+	}
+
+	// Clean up permissions after the test completes
+	t.Cleanup(func() {
+		cleanupCtx := context.Background()
+		t.Logf("Removing role %s from service account: %s on project: %s", roleID, serviceAccountEmail, projectID)
+		if err := removeGcpRoleFromServiceAccount(cleanupCtx, projectID, serviceAccountEmail, roleID); err != nil {
+			t.Logf("Warning: Failed to remove GCP role: %v", err)
+		}
+	})
+}
+
+// assignGcpRoleToServiceAccount assigns a custom role to a service account on a GCP project
+func assignGcpRoleToServiceAccount(ctx context.Context, projectID, serviceAccountEmail, roleID string) error {
+	crmService, err := cloudresourcemanager.NewService(ctx, option.WithScopes(cloudresourcemanager.CloudPlatformScope))
+	if err != nil {
+		return fmt.Errorf("failed to create Cloud Resource Manager client: %w", err)
+	}
+
+	// Get the current IAM policy
+	policy, err := crmService.Projects.GetIamPolicy(projectID, &cloudresourcemanager.GetIamPolicyRequest{}).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("failed to get IAM policy: %w", err)
+	}
+
+	member := fmt.Sprintf("serviceAccount:%s", serviceAccountEmail)
+
+	// Check if binding already exists for this custom role
+	memberExists := false
+	bindingIndex := -1
+
+	for i, binding := range policy.Bindings {
+		if binding.Role == roleID {
+			bindingIndex = i
+			// Check if member already exists
+			for _, m := range binding.Members {
+				if m == member {
+					memberExists = true
+					break
+				}
+			}
+			break
+		}
+	}
+
+	if !memberExists {
+		if bindingIndex >= 0 {
+			// Binding exists, add member to it
+			policy.Bindings[bindingIndex].Members = append(policy.Bindings[bindingIndex].Members, member)
+		} else {
+			// Binding doesn't exist, create it
+			newBinding := &cloudresourcemanager.Binding{
+				Role:    roleID,
+				Members: []string{member},
+			}
+			policy.Bindings = append(policy.Bindings, newBinding)
+		}
+
+		// Set the updated IAM policy
+		_, err = crmService.Projects.SetIamPolicy(projectID, &cloudresourcemanager.SetIamPolicyRequest{
+			Policy: policy,
+		}).Context(ctx).Do()
+		if err != nil {
+			return fmt.Errorf("failed to set IAM policy: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// removeGcpRoleFromServiceAccount removes a custom role from a service account on a GCP project
+func removeGcpRoleFromServiceAccount(ctx context.Context, projectID, serviceAccountEmail, roleName string) error {
+	crmService, err := cloudresourcemanager.NewService(ctx, option.WithScopes(cloudresourcemanager.CloudPlatformScope))
+	if err != nil {
+		return fmt.Errorf("failed to create Cloud Resource Manager client: %w", err)
+	}
+
+	// Get the current IAM policy
+	policy, err := crmService.Projects.GetIamPolicy(projectID, &cloudresourcemanager.GetIamPolicyRequest{}).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("failed to get IAM policy: %w", err)
+	}
+
+	member := fmt.Sprintf("serviceAccount:%s", serviceAccountEmail)
+
+	// Remove the member from the custom role binding
+	for i, binding := range policy.Bindings {
+		if binding.Role == roleName {
+			newMembers := []string{}
+			for _, m := range binding.Members {
+				if m != member {
+					newMembers = append(newMembers, m)
+				}
+			}
+			policy.Bindings[i].Members = newMembers
+		}
+	}
+
+	// Remove empty bindings
+	newBindings := []*cloudresourcemanager.Binding{}
+	for _, binding := range policy.Bindings {
+		if len(binding.Members) > 0 {
+			newBindings = append(newBindings, binding)
+		}
+	}
+	policy.Bindings = newBindings
+
+	// Set the updated IAM policy
+	_, err = crmService.Projects.SetIamPolicy(projectID, &cloudresourcemanager.SetIamPolicyRequest{
+		Policy: policy,
+	}).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("failed to set IAM policy: %w", err)
+	}
+
+	return nil
 }

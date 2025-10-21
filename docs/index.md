@@ -302,8 +302,8 @@ provider "databricks" {
 
 Note: `auth_type` for Github Actions would be "github-oidc". For more details, please see the document linked above.
 
-### Authenticating with Unified Terraform Provider
-Unified Terraform Provider allows management of workspace level terraform resources through account level provider. You can specify the `provider_config` block or attribute depending on the resource with the `workspace_id` that the resource will belong to. For more details, please see the [documentation](./guides/unified-provider.md) for more details.
+### Authenticating with Unified Provider
+Unified Provider allows management of workspace level terraform resources through account level provider. You can specify the `provider_config` block or attribute depending on the resource with the `workspace_id` that the resource will belong to. For more details, please see the [documentation](./guides/unified-provider.md) for more details.
 
 Example:
 ```hcl

@@ -313,6 +313,9 @@ func Read(jobID int64, w *databricks.WorkspaceClient, ctx context.Context) (job 
 		JobId: jobID,
 	})
 	err = wrapMissingJobError(err, fmt.Sprintf("%d", jobID))
+	if err != nil {
+		return
+	}
 	if job.Settings != nil {
 		js := JobSettingsResource{JobSettings: *job.Settings}
 		js.adjustTasks()

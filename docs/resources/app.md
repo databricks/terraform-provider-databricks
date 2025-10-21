@@ -47,6 +47,7 @@ The following arguments are required:
 * `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
+* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`, `LIQUID`.
 
 ### resources Configuration Attribute
 
@@ -78,6 +79,10 @@ Exactly one of the following attributes must be provided:
   * `database_name` - The name of database.
   * `instance_name` - The name of database instance.
   * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
+* `genie_space` attribute
+  * `name` - The name of Genie Space.
+  * ``permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.
+  * `space_id` - The unique ID of Genie Space.
 
 ## Attribute Reference
 

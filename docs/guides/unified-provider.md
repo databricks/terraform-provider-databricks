@@ -2,10 +2,16 @@
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 ## Introduction
-Manage workspace level resource through acccount level provider!
 
-## Usability
-Specify `provider_config` at the resource level which would contain the workspace_id that the resource will belong to. This can be used as either block or attribute depending on the internal implementations of the resource. For details, please see the documentation of the specific resource or data source.
+The unified Terraform provider is a feature that allows you to manage workspace-level resources and data sources through an account-level provider. This significantly simplifies Terraform configurations and resource management, as only one provider is needed per account.
+
+**Note:** This feature is in [Public Beta](https://docs.databricks.com/aws/en/release-notes/release-types). If you experience any issues, please see the [Reporting Issues](#reporting-issues) section below.
+
+## Usage
+
+To manage a workspace-level resource through the account provider, specify the `provider_config` at the resource level with the `workspace_id` of the workspace the resource belongs to.
+
+Depending on the internal implementation of the resource or data source, `provider_config` can be either a block or an attribute. For details, please refer to the documentation of the specific resource or data source.
 
 ### Block
 ```hcl
@@ -17,7 +23,7 @@ resource "workspace_level_resource" "this" {
 }
 ```
 
-#### Attribute
+### Attribute
 ```hcl
 resource "workspace_level_resource" "this" {
     provider_config = {
@@ -28,19 +34,86 @@ resource "workspace_level_resource" "this" {
 ```
 
 ## Migrating to Unified Provider
-If you are managing both workspace and account level resources, you would have a 2 provider setup. For example:
+
+If you are currently managing both workspace-level and account-level resources and data sources, you likely have multiple provider configurations that you specify for each resource using aliases. For example:
 ```hcl
+// Define an account provider with alias
+provider "databricks" {
+    alias         = "account"
+    host          = var.account_host
+    account_id    = var.account_id
+    client_id     = var.account_client_id
+    client_secret = var.account_client_secret
+}
+
+// Use the account provider for account-level resources
+resource "databricks_account_federation_policy" "this" {
+    provider = databricks.account
+    policy_id = "my-policy"
+    oidc_policy = {
+        issuer = "https://myidp.example.com"
+        subject_claim = "sub"
+    }
+}
+
+// Define a workspace provider with alias
+provider "databricks" {
+    alias           = databricks.workspace
+    host            = var.workspace_host
+    client_id       = var.workspace_client_id
+    client_secret   = var.workspace_client_secret
+}
+
+// Use the workspace provider for workspace-level resources
+resource "databricks_workspace_level_resource" "this" {
+    provider = databricks.workspace
+    name = "resource name"
+}
 ```
 
-To migrate to unified provider, you can remove the workspace level provider and specify the workspace_id which can be through the workspace resource or environment variable. Example
+To migrate to the unified provider, you can remove the workspace-level provider and specify the `workspace_id` in the `provider_config` attribute or block instead. For example:
 
 ```hcl
+// Define an account provider
+provider "databricks" {
+    host          = var.account_host
+    account_id    = var.account_id
+    client_id     = var.account_client_id
+    client_secret = var.account_client_secret
+}
+
+// Create an account-level resource
+resource "databricks_account_federation_policy" "this" {
+    policy_id = "my-policy"
+    oidc_policy = {
+        issuer = "https://myidp.example.com"
+        subject_claim = "sub"
+    }
+}
+
+// Create a workspace under the account
+resource "databricks_mws_workspaces" "this" {
+    account_id   = var.account_id
+    aws_region   = "us-east-1"
+    compute_mode = "SERVERLESS"
+}
+
+// Create a workspace-level resource using provider_config
+resource "databricks_workspace_level_resource" "this" {
+    provider_config {
+        workspace_id = databricks_mws_workspaces.this.workspace_id
+    }
+    name = "resource name"
+}
 ```
 
 ## Limitations
-There are some limitations to this feature and we plan to address them in near future.
-1. Databricks and Azure CLI aren't supported currently
-2. Some resources don't support unified provider. Please see the documentation for relevant resource or datasource if they have the `provider_config` attribute or block.
 
-## Issues
-This feature is in Public Beta. In case you encounter an issue. Please report it to us on https://github.com/databricks/terraform-provider-databricks/issues and `Unified Provider` label.
+There are some limitations to this feature that we plan to address in the near future:
+
+1. Databricks CLI and Azure CLI authentication methods are not currently supported
+2. Some resources do not yet support the unified provider. Please refer to the documentation for each resource or data source to check if they support the `provider_config` attribute or block.
+
+## Reporting Issues
+
+This feature is in Public Beta. If you encounter any issues, please report them on [GitHub Issues](https://github.com/databricks/terraform-provider-databricks/issues) with the `Unified Provider` label.

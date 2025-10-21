@@ -178,6 +178,79 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
 })
 ```
 
+Make sure that migrated resources are compatible with both SDKv2 and Plugin Framework.
+- The schema struct should have a `types.String` ID field. Example:
+```go
+type ResourceInfoExtended struct {
+	package_tf.ResourceInfo_SdkV2
+	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+}
+
+```
+
+- Add integration tests to verify that the resource is both SDKv2 and Plugin Framework compatible. Example:
+
+#### SDKv2 Compatibility
+```go
+func TestSDKv2Compatibility(t *testing.T) {
+	acceptance.WorkspaceLevel(t,
+		// Step 1: Create resource using plugin framework implementation
+		acceptance.Step{
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `
+		},
+		// Step 2: Update the resource using SDKv2
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `,
+		},
+	)
+}
+```
+
+#### Plugin Framework Compatibility
+```go
+func TestPluginFrameworkCompatibility(t *testing.T) {
+	acceptance.WorkspaceLevel(t,
+		// Step 1: Create the resource using SDKv2
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `,
+		},
+		// Step 2: Update the resource using plugin framework implementation
+		acceptance.Step{
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `
+		},
+
+	)
+}
+```
+
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package.
 

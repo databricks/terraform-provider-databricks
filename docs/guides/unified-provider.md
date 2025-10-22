@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Unified Terraform Provider allows you to manage workspace-level resources and data sources through an account-level provider. This significantly simplifies Terraform configurations and resource management, as only one provider is needed per account.
+The Unified Terraform Provider allows you to manage workspace-level resources and data sources through an account-level provider. This significantly simplifies Terraform configurations and resource management, as only one provider is needed per account.
 
 **Note:** This feature is in [Public Beta](https://docs.databricks.com/aws/en/release-notes/release-types). If you experience any issues, please refer to the [Reporting Issues](#reporting-issues) section below.
 
@@ -48,16 +48,15 @@ provider "databricks" {
     client_secret = var.account_client_secret
 }
 
-// Use the account provider for account-level resources
-resource "databricks_account_federation_policy" "this" {
+// Create a workspace
+resource "databricks_mws_workspaces" "this" {
     provider = databricks.account
-    policy_id = "my-policy"
-    oidc_policy = {
-        issuer = "https://myidp.example.com"
-        subject_claim = "sub"
-    }
+    ...
 }
+```
 
+Once the workspace is created, create a workspace-level provider.
+```hcl
 // Define a workspace provider with alias
 provider "databricks" {
     alias           = "workspace"
@@ -73,7 +72,11 @@ resource "databricks_workspace_level_resource" "this" {
 }
 ```
 
-To migrate to the unified provider, you can remove the workspace-level provider and specify the `workspace_id` in the `provider_config` attribute or block instead. For example:
+Migration to unified provider happens in 2 steps.
+1. Add `provider_config` and `workspace_id` to the resource without removing the workspace-level provider. Then do terraform apply so these values are part of the state.
+2. Remove the workspace-level provider.
+
+you can remove the workspace-level provider and specify the `workspace_id` in the `provider_config` attribute or block instead. For example:
 
 ```hcl
 // Define an account provider
@@ -82,15 +85,6 @@ provider "databricks" {
     account_id    = var.account_id
     client_id     = var.account_client_id
     client_secret = var.account_client_secret
-}
-
-// Create an account-level resource
-resource "databricks_account_federation_policy" "this" {
-    policy_id = "my-policy"
-    oidc_policy = {
-        issuer = "https://myidp.example.com"
-        subject_claim = "sub"
-    }
 }
 
 // Create a workspace under the account
@@ -108,6 +102,10 @@ resource "databricks_workspace_level_resource" "this" {
     name = "resource name"
 }
 ```
+
+## FAQ
+* Workspace for which the workspace_id is supplied to the resource through provider_config must belong to the account the provider is configured with.
+* Migration: Doing the migration in 1 step will lead to issues. This happens because the state doesn't have workspace_id during the refresh.
 
 ## Limitations
 

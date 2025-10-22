@@ -59,3 +59,68 @@ func TestFileContentSchemaClean(t *testing.T) {
 	assert.True(t, d.HasError())
 	assert.Equal(t, "Clean path required", d[0].Summary)
 }
+
+func TestNormalizeWorkspacePath(t *testing.T) {
+	testCases := []struct {
+		name           string
+		configuredPath string
+		apiPath        string
+		expected       string
+	}{
+		{
+			name:           "API adds /Workspace prefix - should strip it",
+			configuredPath: "/Users/user@example.com/notebook.py",
+			apiPath:        "/Workspace/Users/user@example.com/notebook.py",
+			expected:       "/Users/user@example.com/notebook.py",
+		},
+		{
+			name:           "Config has /Workspace prefix but API doesn't - should add it",
+			configuredPath: "/Workspace/Users/user@example.com/notebook.py",
+			apiPath:        "/Users/user@example.com/notebook.py",
+			expected:       "/Workspace/Users/user@example.com/notebook.py",
+		},
+		{
+			name:           "Both have /Workspace prefix - no change",
+			configuredPath: "/Workspace/Users/user@example.com/notebook.py",
+			apiPath:        "/Workspace/Users/user@example.com/notebook.py",
+			expected:       "/Workspace/Users/user@example.com/notebook.py",
+		},
+		{
+			name:           "Neither has /Workspace prefix - no change",
+			configuredPath: "/Users/user@example.com/notebook.py",
+			apiPath:        "/Users/user@example.com/notebook.py",
+			expected:       "/Users/user@example.com/notebook.py",
+		},
+		{
+			name:           "Empty configured path - return API path as-is",
+			configuredPath: "",
+			apiPath:        "/Workspace/Users/user@example.com/notebook.py",
+			expected:       "/Workspace/Users/user@example.com/notebook.py",
+		},
+		{
+			name:           "Directory path without /Workspace in config, with /Workspace in API",
+			configuredPath: "/Shared/test",
+			apiPath:        "/Workspace/Shared/test",
+			expected:       "/Shared/test",
+		},
+		{
+			name:           "Directory path with /Workspace in config, without /Workspace in API",
+			configuredPath: "/Workspace/Shared/test",
+			apiPath:        "/Shared/test",
+			expected:       "/Workspace/Shared/test",
+		},
+		{
+			name:           "Service principal path - API adds /Workspace",
+			configuredPath: "/Users/0b66cdac-04f8-408e-9290-13c058a2ebe1/file.py",
+			apiPath:        "/Workspace/Users/0b66cdac-04f8-408e-9290-13c058a2ebe1/file.py",
+			expected:       "/Users/0b66cdac-04f8-408e-9290-13c058a2ebe1/file.py",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := NormalizeWorkspacePath(tc.configuredPath, tc.apiPath)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}

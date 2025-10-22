@@ -351,6 +351,7 @@ func ResourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
+			objectStatus.Path = NormalizeWorkspacePath(d.Get("path").(string), objectStatus.Path)
 			SetWorkspaceObjectComputedProperties(d, c)
 			err = common.StructToData(objectStatus, s, d)
 			if err != nil {

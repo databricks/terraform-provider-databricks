@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Correctly handle the change `/Workspace/Path` -> `/Path` and back in workspace resources ([#5130](https://github.com/databricks/terraform-provider-databricks/pull/5130))
+
 ### Documentation
 
 ### Exporter

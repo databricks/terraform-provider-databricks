@@ -56,6 +56,7 @@ func ResourceDirectory() common.Resource {
 			d.SetId("")
 			return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
 		}
+		objectStatus.Path = NormalizeWorkspacePath(d.Get("path").(string), objectStatus.Path)
 		err = common.StructToData(objectStatus, s, d)
 		if err != nil {
 			return err

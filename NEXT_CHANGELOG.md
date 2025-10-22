@@ -16,6 +16,7 @@
 
 * Add documentation on the `service_principal_client_id` attribute of `databricks_app` and related [#5134](https://github.com/databricks/terraform-provider-databricks/pull/5134)
 ### Exporter
+* Remove `METRIC_VIEW` from
 
 ### Internal Changes
 

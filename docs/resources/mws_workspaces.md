@@ -309,6 +309,7 @@ The following arguments are available:
 * `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 * `pricing_tier` - (Optional) - The pricing tier of the workspace.
 * `compute_mode` - (Optional) - The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace.
+* `expected_workspace_status` - (Optional / GCP only / Private Preview) - The expected status of the workspace. When unset, it defaults to `RUNNING`. When set to `PROVISIONING`, workspace provisioning will pause and not enter `RUNNING` status. The only allowed values for this is `RUNNING` and `PROVISIONING`.
 
 ~> Databricks strongly recommends using OAuth instead of PATs for user account client authentication and authorization due to the improved security
 

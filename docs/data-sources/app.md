@@ -43,6 +43,7 @@ In addition to all arguments above, the following attributes are exported:
   * `creator` - The email of the user that created the app.
   * `update_time` - The update time of the app.
   * `updater` - The email of the user that last updated the app.
+  * `service_principal_client_id` - client_id (application_id) of the app service principal
   * `service_principal_id` - id of the app service principal
   * `service_principal_name` - name of the app service principal
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.

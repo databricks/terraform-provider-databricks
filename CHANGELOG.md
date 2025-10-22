@@ -1,5 +1,61 @@
 # Version changelog
 
+## Release v1.94.0
+
+### Bug Fixes
+
+* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
+* Fix `ADMIN` assignment in `databricks_permission_assignment` resource ([#5109](https://github.com/databricks/terraform-provider-databricks/pull/5109))
+
+### Documentation
+
+* Document `table_update` trigger in `databricks_job` resource ([#5107](https://github.com/databricks/terraform-provider-databricks/pull/5107))
+* Document new attributes in `databricks_app` resource and data sources ([#5108](https://github.com/databricks/terraform-provider-databricks/pull/5108))
+* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
+* Update `CONTRIBUTING` guidelines for migrating resources to plugin framework ([#5121](https://github.com/databricks/terraform-provider-databricks/pull/5121))
+
+### Internal Changes
+
+* Add provider_config support for plugin framework ([#5104](https://github.com/databricks/terraform-provider-databricks/pull/5104))
+* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).
+
+
+## Release v1.93.0
+
+### Internal Changes
+
+* Make plugin framework implementation of share resource as default ([#4967](https://github.com/databricks/terraform-provider-databricks/pull/4967))
+
+
+## Release v1.92.0
+
+### Breaking Changes
+
+* Remove stale resources/datasources/documentation related to Clean Room services.
+* databricks\_permissions resource no longer updates permissions on delete. This is to mitigate an issue with incorrect IS\_OWNER being set ([#5096](https://github.com/databricks/terraform-provider-databricks/pull/5096))
+
+### New Features and Improvements
+
+* Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
+* Add `data_quality_monitor` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
+* Add `data_quality_refresh` resource and data sources ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
+* Perform workspace-level permission assignment by `user_name`, `group_name`, or `service_principal_name` ([#5068](https://github.com/databricks/terraform-provider-databricks/pull/5068)).
+
+### Bug Fixes
+
+* Fixed syncing of effective fields in plugin framework implementation of share resource ([#4969](https://github.com/databricks/terraform-provider-databricks/pull/4969))
+* Mark `storage_location` as read-only in `databricks_catalog` ([#5075](https://github.com/databricks/terraform-provider-databricks/pull/5075))
+
+### Documentation
+
+* Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
+* Document output attributes in `databricks_storage_credential` ([#5093](https://github.com/databricks/terraform-provider-databricks/pull/5093))
+
+### Internal Changes
+
+* Bump the Go SDK to v0.86.0 ([#5092](https://github.com/databricks/terraform-provider-databricks/pull/5092)).
+
+
 ## Release v1.91.0
 
 ### New Features and Improvements

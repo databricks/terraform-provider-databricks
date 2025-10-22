@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.92.0
+## Release v1.95.0
 
 ### Breaking Changes
 
@@ -8,15 +8,17 @@
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
 * Add `provider_config` support for manual SDKv2 resources and data sources on Go SDK([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))
+* Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
 
 ### Bug Fixes
 
-* Mark `storage_location` as read-only in `databricks_catalog` ([#5075](https://github.com/databricks/terraform-provider-databricks/pull/5075))
+* Fix Inconsistent Plan Errors in Permissions Resource ([#5091](https://github.com/databricks/terraform-provider-databricks/pull/5091))
 
 ### Documentation
 
-* Add instructions for migration from deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#5054](https://github.com/databricks/terraform-provider-databricks/pull/5054))
-
+* Add documentation on the `service_principal_client_id` attribute of `databricks_app` and related [#5134](https://github.com/databricks/terraform-provider-databricks/pull/5134)
 ### Exporter
 
 ### Internal Changes
+
+* Fix custom_app_integration_test ([#5129](https://github.com/databricks/terraform-provider-databricks/pull/5129))

@@ -31,6 +31,13 @@ func ResourceRegisteredModel() common.Resource {
 				Computed: true,
 				Optional: true,
 			}
+			// Mark read-only fields as Computed
+			readOnlyFields := []string{"created_at", "created_by", "full_name", "metastore_id", "updated_at", "updated_by"}
+			for _, field := range readOnlyFields {
+				if m[field] != nil {
+					m[field].Computed = true
+				}
+			}
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})

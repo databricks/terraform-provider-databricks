@@ -24,8 +24,11 @@ func ResourceMwsNccBinding() common.Resource {
 			return err
 		}
 		wait, err := acc.Workspaces.Update(ctx, provisioning.UpdateWorkspaceRequest{
-			NetworkConnectivityConfigId: d.Get("network_connectivity_config_id").(string),
-			WorkspaceId:                 int64(d.Get("workspace_id").(int)),
+			CustomerFacingWorkspace: provisioning.Workspace{
+				NetworkConnectivityConfigId: d.Get("network_connectivity_config_id").(string),
+			},
+			UpdateMask:  "network_connectivity_config_id",
+			WorkspaceId: int64(d.Get("workspace_id").(int)),
 		})
 		if err != nil {
 			return err

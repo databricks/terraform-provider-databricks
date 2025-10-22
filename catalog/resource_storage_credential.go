@@ -96,7 +96,7 @@ func ResourceStorageCredential() common.Resource {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
-						CredentialInfo: &create,
+						CredentialInfo: toCreateAccountsStorageCredential(&create),
 					})
 				if err != nil {
 					return err
@@ -110,7 +110,7 @@ func ResourceStorageCredential() common.Resource {
 
 				update.Name = d.Id()
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-					CredentialInfo:        &update,
+					CredentialInfo:        toUpdateAccountsStorageCredential(&update),
 					MetastoreId:           metastoreId,
 					StorageCredentialName: storageCredential.CredentialInfo.Name,
 				})
@@ -220,11 +220,12 @@ func ResourceStorageCredential() common.Resource {
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
+					ownerUpdate := catalog.UpdateStorageCredential{
+						Name:  update.Name,
+						Owner: update.Owner,
+					}
 					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-						CredentialInfo: &catalog.UpdateStorageCredential{
-							Name:  update.Name,
-							Owner: update.Owner,
-						},
+						CredentialInfo:        toUpdateAccountsStorageCredential(&ownerUpdate),
 						MetastoreId:           metastoreId,
 						StorageCredentialName: storageCredentialName,
 					})
@@ -245,7 +246,7 @@ func ResourceStorageCredential() common.Resource {
 				}
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-					CredentialInfo:        &update,
+					CredentialInfo:        toUpdateAccountsStorageCredential(&update),
 					MetastoreId:           metastoreId,
 					StorageCredentialName: storageCredentialName,
 				})
@@ -253,11 +254,12 @@ func ResourceStorageCredential() common.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, new := d.GetChange("owner")
+						rollbackUpdate := catalog.UpdateStorageCredential{
+							Name:  update.Name,
+							Owner: old.(string),
+						}
 						_, rollbackErr := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-							CredentialInfo: &catalog.UpdateStorageCredential{
-								Name:  update.Name,
-								Owner: old.(string),
-							},
+							CredentialInfo:        toUpdateAccountsStorageCredential(&rollbackUpdate),
 							MetastoreId:           metastoreId,
 							StorageCredentialName: storageCredentialName,
 						})
@@ -322,11 +324,12 @@ func ResourceStorageCredential() common.Resource {
 
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+				_, err := acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					Force:                 force,
 					StorageCredentialName: storageCredentialName,
 					MetastoreId:           metastoreId,
 				})
+				return err
 			}, func(w *databricks.WorkspaceClient) error {
 				err := validateMetastoreId(ctx, w, metastoreId)
 				if err != nil {

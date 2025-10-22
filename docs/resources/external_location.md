@@ -156,7 +156,7 @@ The `file_event_queue` block supports the following:
   - `managed_resource_id` - (Computed) The ID of the managed resource.
 - `managed_aqs` - (Optional) Configuration for managed Azure Queue Storage queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.
-  - `resource_group` - (Required) The Azure resource group.
+  - `resource_group` - (Required) The name of the Azure resource group.
   - `subscription_id` - (Required) The Azure subscription ID.
 - `managed_sqs` - (Optional) Configuration for managed Amazon SQS queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.

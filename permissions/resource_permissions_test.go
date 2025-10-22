@@ -12,7 +12,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
-	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
@@ -1464,46 +1463,6 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockPipelinesAPI().EXPECT().GetByPipelineId(mock.Anything, "123").Return(&pipelines.GetPipelineResponse{
-			CreatorUserName: "creator@example.com",
-		}, nil)
-		e := mwc.GetMockPermissionsAPI().EXPECT()
-		e.Get(mock.Anything, iam.GetPermissionRequest{
-			RequestObjectId:   "123",
-			RequestObjectType: "pipelines",
-		}).Return(&iam.ObjectPermissions{
-			ObjectId:   "/pipelines/123",
-			ObjectType: "pipeline",
-			AccessControlList: []iam.AccessControlResponse{
-				{
-					GroupName: "admins",
-					AllPermissions: []iam.Permission{
-						{
-							PermissionLevel: "CAN_DO_EVERYTHING",
-							Inherited:       true,
-						},
-						{
-							PermissionLevel: "CAN_MANAGE",
-							Inherited:       false,
-						},
-					},
-				},
-			},
-		}, nil)
-		e.Set(mock.Anything, iam.SetObjectPermissions{
-			RequestObjectId:   "123",
-			RequestObjectType: "pipelines",
-			AccessControlList: []iam.AccessControlRequest{
-				{
-					GroupName:       "admins",
-					PermissionLevel: "CAN_MANAGE",
-				},
-				{
-					UserName:        "creator@example.com",
-					PermissionLevel: "IS_OWNER",
-				},
-			},
-		}).Return(nil, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("pipeline_id", "pipelines")
@@ -1908,4 +1867,54 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+// TestAccessControlHashFunction verifies that the custom hash function treats
+// access_control elements with and without empty fields as equal.
+// This prevents "inconsistent final plan" errors reported in ES-1587799.
+func TestAccessControlHashFunction(t *testing.T) {
+	resource := ResourcePermissions()
+	s := resource.ToResource().Schema
+	acSchema := s["access_control"]
+
+	require.NotNil(t, acSchema.Set, "access_control should have a custom Set function")
+
+	// Test case 1: Elements with only populated fields should hash the same
+	// as elements with explicit empty fields
+	elem1 := map[string]interface{}{
+		"group_name":       "RSDB_Databricks_TSR_Residential_RW",
+		"permission_level": "CAN_USE",
+	}
+	elem2 := map[string]interface{}{
+		"group_name":             "RSDB_Databricks_TSR_Residential_RW",
+		"permission_level":       "CAN_USE",
+		"service_principal_name": "",
+		"user_name":              "",
+	}
+	hash1 := acSchema.Set(elem1)
+	hash2 := acSchema.Set(elem2)
+	assert.Equal(t, hash1, hash2, "Elements with and without empty fields should have the same hash")
+
+	// Test case 2: Different elements should have different hashes
+	elem3 := map[string]interface{}{
+		"user_name":        "different_user",
+		"permission_level": "CAN_USE",
+	}
+	hash3 := acSchema.Set(elem3)
+	assert.NotEqual(t, hash1, hash3, "Different elements should have different hashes")
+
+	// Test case 3: Service principal with and without empty fields
+	elem4 := map[string]interface{}{
+		"service_principal_name": "6d1fc824-191d-4a99-9fac-f62a27822946",
+		"permission_level":       "CAN_USE",
+	}
+	elem5 := map[string]interface{}{
+		"service_principal_name": "6d1fc824-191d-4a99-9fac-f62a27822946",
+		"permission_level":       "CAN_USE",
+		"group_name":             "",
+		"user_name":              "",
+	}
+	hash4 := acSchema.Set(elem4)
+	hash5 := acSchema.Set(elem5)
+	assert.Equal(t, hash4, hash5, "Service principal elements with and without empty fields should have the same hash")
 }

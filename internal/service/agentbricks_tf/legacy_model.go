@@ -34,7 +34,7 @@ func (to *CancelCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringCreateOrU
 func (to *CancelCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CancelCustomLlmOptimizationRunRequest_SdkV2) {
 }
 
-func (c CancelCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CancelCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -47,23 +47,23 @@ func (c CancelCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(a
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CancelCustomLlmOptimizationRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CancelCustomLlmOptimizationRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CancelCustomLlmOptimizationRunRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CancelCustomLlmOptimizationRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CancelCustomLlmOptimizationRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CancelCustomLlmOptimizationRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CancelCustomLlmOptimizationRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -118,7 +118,7 @@ func (to *CreateCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 	}
 }
 
-func (c CreateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CreateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["agent_artifact_path"] = attrs["agent_artifact_path"].SetOptional()
 	attrs["datasets"] = attrs["datasets"].SetOptional()
 	attrs["guidelines"] = attrs["guidelines"].SetOptional()
@@ -135,7 +135,7 @@ func (c CreateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CreateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"datasets":   reflect.TypeOf(Dataset_SdkV2{}),
 		"guidelines": reflect.TypeOf(types.String{}),
@@ -145,20 +145,20 @@ func (a CreateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCustomLlmRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"agent_artifact_path": o.AgentArtifactPath,
-			"datasets":            o.Datasets,
-			"guidelines":          o.Guidelines,
-			"instructions":        o.Instructions,
-			"name":                o.Name,
+			"agent_artifact_path": m.AgentArtifactPath,
+			"datasets":            m.Datasets,
+			"guidelines":          m.Guidelines,
+			"instructions":        m.Instructions,
+			"name":                m.Name,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CreateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"agent_artifact_path": types.StringType,
@@ -177,12 +177,12 @@ func (o CreateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDatasets returns the value of the Datasets field in CreateCustomLlmRequest_SdkV2 as
 // a slice of Dataset_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCustomLlmRequest_SdkV2) GetDatasets(ctx context.Context) ([]Dataset_SdkV2, bool) {
-	if o.Datasets.IsNull() || o.Datasets.IsUnknown() {
+func (m *CreateCustomLlmRequest_SdkV2) GetDatasets(ctx context.Context) ([]Dataset_SdkV2, bool) {
+	if m.Datasets.IsNull() || m.Datasets.IsUnknown() {
 		return nil, false
 	}
 	var v []Dataset_SdkV2
-	d := o.Datasets.ElementsAs(ctx, &v, true)
+	d := m.Datasets.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -190,25 +190,25 @@ func (o *CreateCustomLlmRequest_SdkV2) GetDatasets(ctx context.Context) ([]Datas
 }
 
 // SetDatasets sets the value of the Datasets field in CreateCustomLlmRequest_SdkV2.
-func (o *CreateCustomLlmRequest_SdkV2) SetDatasets(ctx context.Context, v []Dataset_SdkV2) {
+func (m *CreateCustomLlmRequest_SdkV2) SetDatasets(ctx context.Context, v []Dataset_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Datasets = types.ListValueMust(t, vs)
+	m.Datasets = types.ListValueMust(t, vs)
 }
 
 // GetGuidelines returns the value of the Guidelines field in CreateCustomLlmRequest_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCustomLlmRequest_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
-	if o.Guidelines.IsNull() || o.Guidelines.IsUnknown() {
+func (m *CreateCustomLlmRequest_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
+	if m.Guidelines.IsNull() || m.Guidelines.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Guidelines.ElementsAs(ctx, &v, true)
+	d := m.Guidelines.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -216,14 +216,14 @@ func (o *CreateCustomLlmRequest_SdkV2) GetGuidelines(ctx context.Context) ([]typ
 }
 
 // SetGuidelines sets the value of the Guidelines field in CreateCustomLlmRequest_SdkV2.
-func (o *CreateCustomLlmRequest_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
+func (m *CreateCustomLlmRequest_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Guidelines = types.ListValueMust(t, vs)
+	m.Guidelines = types.ListValueMust(t, vs)
 }
 
 type CustomLlm_SdkV2 struct {
@@ -278,7 +278,7 @@ func (to *CustomLlm_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Custom
 	}
 }
 
-func (c CustomLlm_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m CustomLlm_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["agent_artifact_path"] = attrs["agent_artifact_path"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -302,7 +302,7 @@ func (c CustomLlm_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CustomLlm_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CustomLlm_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"datasets":   reflect.TypeOf(Dataset_SdkV2{}),
 		"guidelines": reflect.TypeOf(types.String{}),
@@ -312,25 +312,25 @@ func (a CustomLlm_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, CustomLlm_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CustomLlm_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CustomLlm_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"agent_artifact_path": o.AgentArtifactPath,
-			"creation_time":       o.CreationTime,
-			"creator":             o.Creator,
-			"datasets":            o.Datasets,
-			"endpoint_name":       o.EndpointName,
-			"guidelines":          o.Guidelines,
-			"id":                  o.Id,
-			"instructions":        o.Instructions,
-			"name":                o.Name,
-			"optimization_state":  o.OptimizationState,
+			"agent_artifact_path": m.AgentArtifactPath,
+			"creation_time":       m.CreationTime,
+			"creator":             m.Creator,
+			"datasets":            m.Datasets,
+			"endpoint_name":       m.EndpointName,
+			"guidelines":          m.Guidelines,
+			"id":                  m.Id,
+			"instructions":        m.Instructions,
+			"name":                m.Name,
+			"optimization_state":  m.OptimizationState,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CustomLlm_SdkV2) Type(ctx context.Context) attr.Type {
+func (m CustomLlm_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"agent_artifact_path": types.StringType,
@@ -354,12 +354,12 @@ func (o CustomLlm_SdkV2) Type(ctx context.Context) attr.Type {
 // GetDatasets returns the value of the Datasets field in CustomLlm_SdkV2 as
 // a slice of Dataset_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CustomLlm_SdkV2) GetDatasets(ctx context.Context) ([]Dataset_SdkV2, bool) {
-	if o.Datasets.IsNull() || o.Datasets.IsUnknown() {
+func (m *CustomLlm_SdkV2) GetDatasets(ctx context.Context) ([]Dataset_SdkV2, bool) {
+	if m.Datasets.IsNull() || m.Datasets.IsUnknown() {
 		return nil, false
 	}
 	var v []Dataset_SdkV2
-	d := o.Datasets.ElementsAs(ctx, &v, true)
+	d := m.Datasets.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -367,25 +367,25 @@ func (o *CustomLlm_SdkV2) GetDatasets(ctx context.Context) ([]Dataset_SdkV2, boo
 }
 
 // SetDatasets sets the value of the Datasets field in CustomLlm_SdkV2.
-func (o *CustomLlm_SdkV2) SetDatasets(ctx context.Context, v []Dataset_SdkV2) {
+func (m *CustomLlm_SdkV2) SetDatasets(ctx context.Context, v []Dataset_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Datasets = types.ListValueMust(t, vs)
+	m.Datasets = types.ListValueMust(t, vs)
 }
 
 // GetGuidelines returns the value of the Guidelines field in CustomLlm_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CustomLlm_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
-	if o.Guidelines.IsNull() || o.Guidelines.IsUnknown() {
+func (m *CustomLlm_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
+	if m.Guidelines.IsNull() || m.Guidelines.IsUnknown() {
 		return nil, false
 	}
 	var v []types.String
-	d := o.Guidelines.ElementsAs(ctx, &v, true)
+	d := m.Guidelines.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -393,14 +393,14 @@ func (o *CustomLlm_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bo
 }
 
 // SetGuidelines sets the value of the Guidelines field in CustomLlm_SdkV2.
-func (o *CustomLlm_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
+func (m *CustomLlm_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
 	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	o.Guidelines = types.ListValueMust(t, vs)
+	m.Guidelines = types.ListValueMust(t, vs)
 }
 
 type Dataset_SdkV2 struct {
@@ -430,7 +430,7 @@ func (to *Dataset_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Dataset_
 	}
 }
 
-func (c Dataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Dataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["table"] = attrs["table"].SetRequired()
 	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -444,7 +444,7 @@ func (c Dataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Dataset_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Dataset_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table": reflect.TypeOf(Table_SdkV2{}),
 	}
@@ -453,16 +453,16 @@ func (a Dataset_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Dataset_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Dataset_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Dataset_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"table": o.Table,
+			"table": m.Table,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Dataset_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Dataset_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"table": basetypes.ListType{
@@ -475,13 +475,13 @@ func (o Dataset_SdkV2) Type(ctx context.Context) attr.Type {
 // GetTable returns the value of the Table field in Dataset_SdkV2 as
 // a Table_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Dataset_SdkV2) GetTable(ctx context.Context) (Table_SdkV2, bool) {
+func (m *Dataset_SdkV2) GetTable(ctx context.Context) (Table_SdkV2, bool) {
 	var e Table_SdkV2
-	if o.Table.IsNull() || o.Table.IsUnknown() {
+	if m.Table.IsNull() || m.Table.IsUnknown() {
 		return e, false
 	}
 	var v []Table_SdkV2
-	d := o.Table.ElementsAs(ctx, &v, true)
+	d := m.Table.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -492,10 +492,10 @@ func (o *Dataset_SdkV2) GetTable(ctx context.Context) (Table_SdkV2, bool) {
 }
 
 // SetTable sets the value of the Table field in Dataset_SdkV2.
-func (o *Dataset_SdkV2) SetTable(ctx context.Context, v Table_SdkV2) {
+func (m *Dataset_SdkV2) SetTable(ctx context.Context, v Table_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	o.Table = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	m.Table = types.ListValueMust(t, vs)
 }
 
 type DeleteCustomLlmRequest_SdkV2 struct {
@@ -509,7 +509,7 @@ func (to *DeleteCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 func (to *DeleteCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCustomLlmRequest_SdkV2) {
 }
 
-func (c DeleteCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DeleteCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -522,23 +522,23 @@ func (c DeleteCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DeleteCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCustomLlmRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DeleteCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m DeleteCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -557,7 +557,7 @@ func (to *GetCustomLlmRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 func (to *GetCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCustomLlmRequest_SdkV2) {
 }
 
-func (c GetCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m GetCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -570,23 +570,23 @@ func (c GetCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m GetCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, GetCustomLlmRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m GetCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m GetCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -605,7 +605,7 @@ func (to *StartCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringCreateOrUp
 func (to *StartCustomLlmOptimizationRunRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StartCustomLlmOptimizationRunRequest_SdkV2) {
 }
 
-func (c StartCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m StartCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -618,23 +618,23 @@ func (c StartCustomLlmOptimizationRunRequest_SdkV2) ApplySchemaCustomizations(at
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a StartCustomLlmOptimizationRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m StartCustomLlmOptimizationRunRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, StartCustomLlmOptimizationRunRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o StartCustomLlmOptimizationRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m StartCustomLlmOptimizationRunRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": o.Id,
+			"id": m.Id,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o StartCustomLlmOptimizationRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m StartCustomLlmOptimizationRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -657,7 +657,7 @@ func (to *Table_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 func (to *Table_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Table_SdkV2) {
 }
 
-func (c Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["request_col"] = attrs["request_col"].SetRequired()
 	attrs["response_col"] = attrs["response_col"].SetOptional()
 	attrs["table_path"] = attrs["table_path"].SetRequired()
@@ -672,25 +672,25 @@ func (c Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Table_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Table_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, Table_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Table_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Table_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"request_col":  o.RequestCol,
-			"response_col": o.ResponseCol,
-			"table_path":   o.TablePath,
+			"request_col":  m.RequestCol,
+			"response_col": m.ResponseCol,
+			"table_path":   m.TablePath,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Table_SdkV2) Type(ctx context.Context) attr.Type {
+func (m Table_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request_col":  types.StringType,
@@ -745,7 +745,7 @@ func (to *UpdateCustomLlmRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 	}
 }
 
-func (c UpdateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UpdateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["custom_llm"] = attrs["custom_llm"].SetRequired()
 	attrs["custom_llm"] = attrs["custom_llm"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
@@ -761,7 +761,7 @@ func (c UpdateCustomLlmRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UpdateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"custom_llm": reflect.TypeOf(CustomLlm_SdkV2{}),
 	}
@@ -770,18 +770,18 @@ func (a UpdateCustomLlmRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
 // interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCustomLlmRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UpdateCustomLlmRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_llm":  o.CustomLlm,
-			"id":          o.Id,
-			"update_mask": o.UpdateMask,
+			"custom_llm":  m.CustomLlm,
+			"id":          m.Id,
+			"update_mask": m.UpdateMask,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
+func (m UpdateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"custom_llm": basetypes.ListType{
@@ -796,13 +796,13 @@ func (o UpdateCustomLlmRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // GetCustomLlm returns the value of the CustomLlm field in UpdateCustomLlmRequest_SdkV2 as
 // a CustomLlm_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateCustomLlmRequest_SdkV2) GetCustomLlm(ctx context.Context) (CustomLlm_SdkV2, bool) {
+func (m *UpdateCustomLlmRequest_SdkV2) GetCustomLlm(ctx context.Context) (CustomLlm_SdkV2, bool) {
 	var e CustomLlm_SdkV2
-	if o.CustomLlm.IsNull() || o.CustomLlm.IsUnknown() {
+	if m.CustomLlm.IsNull() || m.CustomLlm.IsUnknown() {
 		return e, false
 	}
 	var v []CustomLlm_SdkV2
-	d := o.CustomLlm.ElementsAs(ctx, &v, true)
+	d := m.CustomLlm.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -813,8 +813,8 @@ func (o *UpdateCustomLlmRequest_SdkV2) GetCustomLlm(ctx context.Context) (Custom
 }
 
 // SetCustomLlm sets the value of the CustomLlm field in UpdateCustomLlmRequest_SdkV2.
-func (o *UpdateCustomLlmRequest_SdkV2) SetCustomLlm(ctx context.Context, v CustomLlm_SdkV2) {
+func (m *UpdateCustomLlmRequest_SdkV2) SetCustomLlm(ctx context.Context, v CustomLlm_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_llm"]
-	o.CustomLlm = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_llm"]
+	m.CustomLlm = types.ListValueMust(t, vs)
 }

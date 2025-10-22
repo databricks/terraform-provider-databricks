@@ -201,6 +201,8 @@ func (m *AlertConfiguration) SetActionConfigurations(ctx context.Context, v []Ac
 }
 
 type BudgetConfiguration struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
@@ -255,6 +257,7 @@ func (to *BudgetConfiguration) SyncFieldsDuringRead(ctx context.Context, from Bu
 }
 
 func (m BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["budget_configuration_id"] = attrs["budget_configuration_id"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetOptional()
@@ -286,6 +289,7 @@ func (m BudgetConfiguration) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":              m.AccountId,
 			"alert_configurations":    m.AlertConfigurations,
 			"budget_configuration_id": m.BudgetConfigurationId,
 			"create_time":             m.CreateTime,
@@ -299,6 +303,7 @@ func (m BudgetConfiguration) ToObjectValue(ctx context.Context) basetypes.Object
 func (m BudgetConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
 				ElemType: AlertConfiguration{}.Type(ctx),
 			},
@@ -958,6 +963,7 @@ func (to *CreateBillingUsageDashboardRequest) SyncFieldsDuringRead(ctx context.C
 func (m CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1044,6 +1050,8 @@ func (m CreateBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type
 }
 
 type CreateBudgetConfigurationBudget struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
@@ -1092,6 +1100,7 @@ func (to *CreateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
@@ -1120,6 +1129,7 @@ func (m CreateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":           m.AccountId,
 			"alert_configurations": m.AlertConfigurations,
 			"display_name":         m.DisplayName,
 			"filter":               m.Filter,
@@ -1130,6 +1140,7 @@ func (m CreateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 func (m CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
 				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.Type(ctx),
 			},
@@ -1387,6 +1398,7 @@ func (to *CreateBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m CreateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1579,6 +1591,7 @@ func (to *CreateBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, f
 func (m CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetOptional()
 	attrs["request_id"] = attrs["request_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1833,6 +1846,7 @@ func (to *DeleteBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeleteBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
 
 	return attrs
@@ -1922,6 +1936,7 @@ func (to *DeleteBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m DeleteBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
 	return attrs
@@ -1980,6 +1995,7 @@ func (to *DownloadRequest) SyncFieldsDuringRead(ctx context.Context, from Downlo
 }
 
 func (m DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["start_month"] = attrs["start_month"].SetRequired()
 	attrs["end_month"] = attrs["end_month"].SetRequired()
 	attrs["personal_data"] = attrs["personal_data"].SetOptional()
@@ -2149,6 +2165,7 @@ func (to *GetBillingUsageDashboardRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m GetBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
 
@@ -2253,6 +2270,7 @@ func (to *GetBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
 
 	return attrs
@@ -2392,6 +2410,7 @@ func (to *GetBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m GetBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
 	return attrs
@@ -2532,6 +2551,7 @@ func (to *GetLogDeliveryRequest) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GetLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
 
 	return attrs
@@ -2625,6 +2645,7 @@ func (to *ListBudgetConfigurationsRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m ListBudgetConfigurationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
 	return attrs
@@ -2816,6 +2837,7 @@ func (to *ListBudgetPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m ListBudgetPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter_by"] = attrs["filter_by"].SetOptional()
@@ -3037,6 +3059,7 @@ func (to *ListLogDeliveryRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ListLogDeliveryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -3084,6 +3107,8 @@ func (m ListLogDeliveryRequest) Type(ctx context.Context) attr.Type {
 
 // * Log Delivery Configuration
 type LogDeliveryConfiguration struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id"`
 	// The unique UUID of log delivery configuration
 	ConfigId types.String `tfsdk:"config_id"`
 	// The optional human-readable name of the log delivery configuration.
@@ -3197,6 +3222,7 @@ func (to *LogDeliveryConfiguration) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m LogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["config_id"] = attrs["config_id"].SetOptional()
 	attrs["config_name"] = attrs["config_name"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
@@ -3235,6 +3261,7 @@ func (m LogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":               m.AccountId,
 			"config_id":                m.ConfigId,
 			"config_name":              m.ConfigName,
 			"creation_time":            m.CreationTime,
@@ -3255,6 +3282,7 @@ func (m LogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.O
 func (m LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":               types.StringType,
 			"config_id":                types.StringType,
 			"config_name":              types.StringType,
 			"creation_time":            types.Int64Type,
@@ -3494,6 +3522,8 @@ func (m SortSpec) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateBudgetConfigurationBudget struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
@@ -3544,6 +3574,7 @@ func (to *UpdateBudgetConfigurationBudget) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["budget_configuration_id"] = attrs["budget_configuration_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -3573,6 +3604,7 @@ func (m UpdateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":              m.AccountId,
 			"alert_configurations":    m.AlertConfigurations,
 			"budget_configuration_id": m.BudgetConfigurationId,
 			"display_name":            m.DisplayName,
@@ -3584,6 +3616,7 @@ func (m UpdateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 func (m UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
 				ElemType: AlertConfiguration{}.Type(ctx),
 			},
@@ -3678,6 +3711,7 @@ func (to *UpdateBudgetConfigurationRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m UpdateBudgetConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget"] = attrs["budget"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["budget_id"] = attrs["budget_id"].SetRequired()
 
 	return attrs
@@ -3890,6 +3924,7 @@ func (to *UpdateBudgetPolicyRequest) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m UpdateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 	attrs["limit_config"] = attrs["limit_config"].SetOptional()
 
@@ -4004,6 +4039,7 @@ func (to *UpdateLogDeliveryConfigurationStatusRequest) SyncFieldsDuringRead(ctx 
 
 func (m UpdateLogDeliveryConfigurationStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["status"] = attrs["status"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
 
 	return attrs
@@ -4072,6 +4108,7 @@ func (to *WrappedCreateLogDeliveryConfiguration) SyncFieldsDuringRead(ctx contex
 
 func (m WrappedCreateLogDeliveryConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configuration"] = attrs["log_delivery_configuration"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }

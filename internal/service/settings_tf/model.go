@@ -134,6 +134,8 @@ func (m *AccountIpAccessEnable) SetAcctIpAclEnable(ctx context.Context, v Boolea
 }
 
 type AccountNetworkPolicy struct {
+	// The associated account ID for this Network Policy object.
+	AccountId types.String `tfsdk:"account_id"`
 	// The network policies applying for egress traffic.
 	Egress types.Object `tfsdk:"egress"`
 	// The unique identifier for the network policy.
@@ -164,6 +166,7 @@ func (to *AccountNetworkPolicy) SyncFieldsDuringRead(ctx context.Context, from A
 }
 
 func (m AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["egress"] = attrs["egress"].SetOptional()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
 
@@ -190,6 +193,7 @@ func (m AccountNetworkPolicy) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":        m.AccountId,
 			"egress":            m.Egress,
 			"network_policy_id": m.NetworkPolicyId,
 		})
@@ -199,6 +203,7 @@ func (m AccountNetworkPolicy) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m AccountNetworkPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":        types.StringType,
 			"egress":            NetworkPolicyEgress{}.Type(ctx),
 			"network_policy_id": types.StringType,
 		},
@@ -1730,6 +1735,7 @@ func (m CreateIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetRequired()
 	attrs["list_type"] = attrs["list_type"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1920,6 +1926,7 @@ func (to *CreateNetworkConnectivityConfigRequest) SyncFieldsDuringRead(ctx conte
 
 func (m CreateNetworkConnectivityConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -2071,6 +2078,7 @@ func (to *CreateNetworkPolicyRequest) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m CreateNetworkPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["network_policy"] = attrs["network_policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -2586,6 +2594,7 @@ func (to *CreatePrivateEndpointRuleRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m CreatePrivateEndpointRuleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["private_endpoint_rule"] = attrs["private_endpoint_rule"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 
 	return attrs
@@ -3015,6 +3024,9 @@ func (m *CspEnablementAccountSetting) SetCspEnablementAccount(ctx context.Contex
 // towards a VPC endpoint service behind a customer-managed NLB, you must
 // approve the endpoint in AWS console after initialization.
 type CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule struct {
+	// Databricks account ID. You can find your account ID from the Accounts
+	// Console.
+	AccountId types.String `tfsdk:"account_id"`
 	// The current status of this private endpoint. The private endpoint rules
 	// are effective only if the connection state is ESTABLISHED. Remember that
 	// you must approve new endpoints on your resources in the AWS console
@@ -3098,6 +3110,7 @@ func (to *CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) SyncFie
 }
 
 func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["connection_state"] = attrs["connection_state"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["deactivated"] = attrs["deactivated"].SetOptional()
@@ -3135,6 +3148,7 @@ func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) ToObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":                     m.AccountId,
 			"connection_state":               m.ConnectionState,
 			"creation_time":                  m.CreationTime,
 			"deactivated":                    m.Deactivated,
@@ -3154,6 +3168,7 @@ func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) ToObjectV
 func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":       types.StringType,
 			"connection_state": types.StringType,
 			"creation_time":    types.Int64Type,
 			"deactivated":      types.BoolType,
@@ -3588,6 +3603,7 @@ func (to *DeleteAccountIpAccessEnableRequest) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m DeleteAccountIpAccessEnableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -3691,6 +3707,7 @@ func (to *DeleteAccountIpAccessListRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeleteAccountIpAccessListRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
 
 	return attrs
@@ -4508,6 +4525,7 @@ func (to *DeleteDisableLegacyFeaturesRequest) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m DeleteDisableLegacyFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -4768,6 +4786,7 @@ func (to *DeleteNetworkConnectivityConfigurationRequest) SyncFieldsDuringRead(ct
 }
 
 func (m DeleteNetworkConnectivityConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 
 	return attrs
@@ -4816,6 +4835,7 @@ func (to *DeleteNetworkPolicyRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m DeleteNetworkPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 
 	return attrs
@@ -4917,6 +4937,7 @@ func (to *DeletePersonalComputeSettingRequest) SyncFieldsDuringRead(ctx context.
 }
 
 func (m DeletePersonalComputeSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -5022,6 +5043,7 @@ func (to *DeletePrivateEndpointRuleRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeletePrivateEndpointRuleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 	attrs["private_endpoint_rule_id"] = attrs["private_endpoint_rule_id"].SetRequired()
 
@@ -7937,6 +7959,7 @@ func (to *GetAccountIpAccessEnableRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m GetAccountIpAccessEnableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -7985,6 +8008,7 @@ func (to *GetAccountIpAccessListRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetAccountIpAccessListRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
 
 	return attrs
@@ -8255,6 +8279,7 @@ func (to *GetCspEnablementAccountSettingRequest) SyncFieldsDuringRead(ctx contex
 }
 
 func (m GetCspEnablementAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -8579,6 +8604,7 @@ func (to *GetDisableLegacyFeaturesRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m GetDisableLegacyFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -8810,6 +8836,7 @@ func (to *GetEsmEnablementAccountSettingRequest) SyncFieldsDuringRead(ctx contex
 }
 
 func (m GetEsmEnablementAccountSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -9093,6 +9120,7 @@ func (to *GetLlmProxyPartnerPoweredAccountRequest) SyncFieldsDuringRead(ctx cont
 }
 
 func (m GetLlmProxyPartnerPoweredAccountRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -9147,6 +9175,7 @@ func (to *GetLlmProxyPartnerPoweredEnforceRequest) SyncFieldsDuringRead(ctx cont
 }
 
 func (m GetLlmProxyPartnerPoweredEnforceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -9249,6 +9278,7 @@ func (to *GetNetworkConnectivityConfigurationRequest) SyncFieldsDuringRead(ctx c
 }
 
 func (m GetNetworkConnectivityConfigurationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 
 	return attrs
@@ -9297,6 +9327,7 @@ func (to *GetNetworkPolicyRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m GetNetworkPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 
 	return attrs
@@ -9398,6 +9429,7 @@ func (to *GetPersonalComputeSettingRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m GetPersonalComputeSettingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
@@ -9448,6 +9480,7 @@ func (to *GetPrivateEndpointRuleRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetPrivateEndpointRuleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 	attrs["private_endpoint_rule_id"] = attrs["private_endpoint_rule_id"].SetRequired()
 
@@ -9966,6 +9999,7 @@ func (to *GetWorkspaceNetworkOptionRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m GetWorkspaceNetworkOptionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -10238,6 +10272,7 @@ func (to *ListIpAccessLists) SyncFieldsDuringRead(ctx context.Context, from List
 }
 
 func (m ListIpAccessLists) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -10281,6 +10316,7 @@ func (to *ListNetworkConnectivityConfigurationsRequest) SyncFieldsDuringRead(ctx
 }
 
 func (m ListNetworkConnectivityConfigurationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
 	return attrs
@@ -10425,6 +10461,7 @@ func (to *ListNetworkPoliciesRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m ListNetworkPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
 	return attrs
@@ -10777,6 +10814,7 @@ func (to *ListPrivateEndpointRulesRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m ListPrivateEndpointRulesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -12437,6 +12475,9 @@ func (m *NccEgressTargetRules) SetAzurePrivateEndpointRules(ctx context.Context,
 // Properties of the new private endpoint rule. Note that you must approve the
 // endpoint in Azure portal after initialization.
 type NccPrivateEndpointRule struct {
+	// Databricks account ID. You can find your account ID from the Accounts
+	// Console.
+	AccountId types.String `tfsdk:"account_id"`
 	// The current status of this private endpoint. The private endpoint rules
 	// are effective only if the connection state is ESTABLISHED. Remember that
 	// you must approve new endpoints on your resources in the Cloud console
@@ -12529,6 +12570,7 @@ func (to *NccPrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m NccPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["connection_state"] = attrs["connection_state"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["deactivated"] = attrs["deactivated"].SetOptional()
@@ -12569,6 +12611,7 @@ func (m NccPrivateEndpointRule) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":                     m.AccountId,
 			"connection_state":               m.ConnectionState,
 			"creation_time":                  m.CreationTime,
 			"deactivated":                    m.Deactivated,
@@ -12591,6 +12634,7 @@ func (m NccPrivateEndpointRule) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m NccPrivateEndpointRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":       types.StringType,
 			"connection_state": types.StringType,
 			"creation_time":    types.Int64Type,
 			"deactivated":      types.BoolType,
@@ -12668,6 +12712,9 @@ func (m *NccPrivateEndpointRule) SetResourceNames(ctx context.Context, v []types
 
 // Properties of the new network connectivity configuration.
 type NetworkConnectivityConfiguration struct {
+	// Your Databricks account ID. You can find your account ID in your
+	// Databricks accounts console.
+	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// The network connectivity rules that apply to network traffic from your
@@ -12712,6 +12759,7 @@ func (to *NetworkConnectivityConfiguration) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m NetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -12742,6 +12790,7 @@ func (m NetworkConnectivityConfiguration) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":                     m.AccountId,
 			"creation_time":                  m.CreationTime,
 			"egress_config":                  m.EgressConfig,
 			"name":                           m.Name,
@@ -12755,6 +12804,7 @@ func (m NetworkConnectivityConfiguration) ToObjectValue(ctx context.Context) bas
 func (m NetworkConnectivityConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":                     types.StringType,
 			"creation_time":                  types.Int64Type,
 			"egress_config":                  NccEgressConfig{}.Type(ctx),
 			"name":                           types.StringType,
@@ -13361,6 +13411,7 @@ func (m ReplaceIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetRequired()
 	attrs["list_type"] = attrs["list_type"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
 
 	return attrs
@@ -14565,6 +14616,7 @@ func (m UpdateAccountIpAccessEnableRequest) ApplySchemaCustomizations(attrs map[
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -15135,6 +15187,7 @@ func (m UpdateCspEnablementAccountSettingRequest) ApplySchemaCustomizations(attr
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -15819,6 +15872,7 @@ func (m UpdateDisableLegacyFeaturesRequest) ApplySchemaCustomizations(attrs map[
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -16389,6 +16443,7 @@ func (m UpdateEsmEnablementAccountSettingRequest) ApplySchemaCustomizations(attr
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -16492,6 +16547,7 @@ func (m UpdateIpAccessList) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetOptional()
 	attrs["list_type"] = attrs["list_type"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
 
 	return attrs
@@ -16614,6 +16670,7 @@ func (m UpdateLlmProxyPartnerPoweredAccountRequest) ApplySchemaCustomizations(at
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -16728,6 +16785,7 @@ func (m UpdateLlmProxyPartnerPoweredEnforceRequest) ApplySchemaCustomizations(at
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -16950,6 +17008,7 @@ func (to *UpdateNccPrivateEndpointRuleRequest) SyncFieldsDuringRead(ctx context.
 
 func (m UpdateNccPrivateEndpointRuleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["private_endpoint_rule"] = attrs["private_endpoint_rule"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 	attrs["private_endpoint_rule_id"] = attrs["private_endpoint_rule_id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
@@ -17053,6 +17112,7 @@ func (to *UpdateNetworkPolicyRequest) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m UpdateNetworkPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["network_policy"] = attrs["network_policy"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 
 	return attrs
@@ -17269,6 +17329,7 @@ func (m UpdatePersonalComputeSettingRequest) ApplySchemaCustomizations(attrs map
 	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
 	attrs["field_mask"] = attrs["field_mask"].SetRequired()
 	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -17750,6 +17811,7 @@ func (to *UpdateWorkspaceNetworkOptionRequest) SyncFieldsDuringRead(ctx context.
 
 func (m UpdateWorkspaceNetworkOptionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_network_option"] = attrs["workspace_network_option"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs

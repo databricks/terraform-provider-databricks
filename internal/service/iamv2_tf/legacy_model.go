@@ -95,6 +95,7 @@ func (to *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 }
 
 func (m GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["view"] = attrs["view"].SetOptional()
@@ -139,6 +140,8 @@ func (m GetWorkspaceAccessDetailRequest_SdkV2) Type(ctx context.Context) attr.Ty
 
 // The details of a Group resource.
 type Group_SdkV2 struct {
+	// The parent account ID for group in Databricks.
+	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Display name of the group.
@@ -154,6 +157,7 @@ func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV
 }
 
 func (m Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
@@ -179,6 +183,7 @@ func (m Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
 			"group_name":  m.GroupName,
 			"internal_id": m.InternalId,
@@ -189,6 +194,7 @@ func (m Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Group_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":  types.StringType,
 			"external_id": types.StringType,
 			"group_name":  types.StringType,
 			"internal_id": types.Int64Type,
@@ -263,6 +269,7 @@ func (to *ResolveGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m ResolveGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -461,6 +468,7 @@ func (to *ResolveServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context
 
 func (m ResolveServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -659,6 +667,7 @@ func (to *ResolveUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 
 func (m ResolveUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -792,6 +801,8 @@ func (m *ResolveUserResponse_SdkV2) SetUser(ctx context.Context, v User_SdkV2) {
 
 // The details of a ServicePrincipal resource.
 type ServicePrincipal_SdkV2 struct {
+	// The parent account ID for the service principal in Databricks.
+	AccountId types.String `tfsdk:"account_id"`
 	// The activity status of a service principal in a Databricks account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
 	// Application ID of the service principal.
@@ -811,6 +822,7 @@ func (to *ServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_sp_status"] = attrs["account_sp_status"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -838,6 +850,7 @@ func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":        m.AccountId,
 			"account_sp_status": m.AccountSpStatus,
 			"application_id":    m.ApplicationId,
 			"display_name":      m.DisplayName,
@@ -850,6 +863,7 @@ func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":        types.StringType,
 			"account_sp_status": types.StringType,
 			"application_id":    types.StringType,
 			"display_name":      types.StringType,
@@ -861,6 +875,8 @@ func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 
 // The details of a User resource.
 type User_SdkV2 struct {
+	// The accountId parent of the user in Databricks.
+	AccountId types.String `tfsdk:"account_id"`
 	// The activity status of a user in a Databricks account.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
 	// ExternalId of the user in the customer's IdP.
@@ -897,6 +913,7 @@ func (to *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, from User_SdkV2)
 }
 
 func (m User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
@@ -927,6 +944,7 @@ func (m User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":          m.AccountId,
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"internal_id":         m.InternalId,
@@ -939,6 +957,7 @@ func (m User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m User_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":          types.StringType,
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"internal_id":         types.Int64Type,
@@ -1031,6 +1050,8 @@ func (m UserName_SdkV2) Type(ctx context.Context) attr.Type {
 // The details of a principal's access to a workspace.
 type WorkspaceAccessDetail_SdkV2 struct {
 	AccessType types.String `tfsdk:"access_type"`
+	// The account ID parent of the workspace where the principal has access.
+	AccountId types.String `tfsdk:"account_id"`
 	// The permissions granted to the principal in the workspace.
 	Permissions types.List `tfsdk:"permissions"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
@@ -1064,6 +1085,7 @@ func (to *WorkspaceAccessDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 
 func (m WorkspaceAccessDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_type"] = attrs["access_type"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -1094,6 +1116,7 @@ func (m WorkspaceAccessDetail_SdkV2) ToObjectValue(ctx context.Context) basetype
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"access_type":    m.AccessType,
+			"account_id":     m.AccountId,
 			"permissions":    m.Permissions,
 			"principal_id":   m.PrincipalId,
 			"principal_type": m.PrincipalType,
@@ -1107,6 +1130,7 @@ func (m WorkspaceAccessDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_type": types.StringType,
+			"account_id":  types.StringType,
 			"permissions": basetypes.ListType{
 				ElemType: types.StringType,
 			},

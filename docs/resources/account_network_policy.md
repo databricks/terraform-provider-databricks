@@ -46,6 +46,7 @@ resource "databricks_account_network_policy" "example_network_policy" {
 
 ## Arguments
 The following arguments are supported:
+* `account_id` (string, optional) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic
 * `network_policy_id` (string, optional) - The unique identifier for the network policy
 

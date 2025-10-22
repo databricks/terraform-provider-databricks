@@ -196,6 +196,8 @@ func (m *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permi
 }
 
 type AccountGroup struct {
+	// Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
 	// String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
 	// external_id should be unique for identifying groups
@@ -258,6 +260,7 @@ func (to *AccountGroup) SyncFieldsDuringRead(ctx context.Context, from AccountGr
 }
 
 func (m AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
@@ -290,6 +293,7 @@ func (m AccountGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":   m.AccountId,
 			"display_name": m.DisplayName,
 			"external_id":  m.ExternalId,
 			"id":           m.Id,
@@ -303,6 +307,7 @@ func (m AccountGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AccountGroup) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":   types.StringType,
 			"display_name": types.StringType,
 			"external_id":  types.StringType,
 			"id":           types.StringType,
@@ -395,6 +400,8 @@ func (m *AccountGroup) SetRoles(ctx context.Context, v []ComplexValue) {
 }
 
 type AccountServicePrincipal struct {
+	// Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
 	// If this user is active
 	Active types.Bool `tfsdk:"active"`
 	// UUID relating to the service principal
@@ -428,6 +435,7 @@ func (to *AccountServicePrincipal) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -458,6 +466,7 @@ func (m AccountServicePrincipal) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":     m.AccountId,
 			"active":         m.Active,
 			"application_id": m.ApplicationId,
 			"display_name":   m.DisplayName,
@@ -471,6 +480,7 @@ func (m AccountServicePrincipal) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m AccountServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":     types.StringType,
 			"active":         types.BoolType,
 			"application_id": types.StringType,
 			"display_name":   types.StringType,
@@ -510,6 +520,8 @@ func (m *AccountServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue
 }
 
 type AccountUser struct {
+	// Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
 	// If this user is active
 	Active types.Bool `tfsdk:"active"`
 	// String that represents a concatenation of given and family names. For
@@ -577,6 +589,7 @@ func (to *AccountUser) SyncFieldsDuringRead(ctx context.Context, from AccountUse
 }
 
 func (m AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["active"] = attrs["active"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["emails"] = attrs["emails"].SetOptional()
@@ -611,6 +624,7 @@ func (m AccountUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"account_id":   m.AccountId,
 			"active":       m.Active,
 			"display_name": m.DisplayName,
 			"emails":       m.Emails,
@@ -626,6 +640,7 @@ func (m AccountUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AccountUser) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"account_id":   types.StringType,
 			"active":       types.BoolType,
 			"display_name": types.StringType,
 			"emails": basetypes.ListType{
@@ -1048,6 +1063,7 @@ func (m CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["members"] = attrs["members"].SetOptional()
 	attrs["meta"] = attrs["meta"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1218,6 +1234,7 @@ func (m CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1369,6 +1386,7 @@ func (m CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -2466,6 +2484,7 @@ func (to *DeleteAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2514,6 +2533,7 @@ func (to *DeleteAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2562,6 +2582,7 @@ func (to *DeleteAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2756,6 +2777,7 @@ func (to *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 
@@ -2848,6 +2870,7 @@ func (to *GetAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2896,6 +2919,7 @@ func (to *GetAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -2965,6 +2989,7 @@ func (to *GetAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
@@ -3042,6 +3067,7 @@ func (to *GetAssignableRolesForResourceRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["resource"] = attrs["resource"].SetRequired()
 
 	return attrs
@@ -3626,6 +3652,7 @@ func (to *GetRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from GetR
 }
 
 func (m GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["etag"] = attrs["etag"].SetRequired()
 
@@ -3815,6 +3842,7 @@ func (to *GetWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -4320,6 +4348,7 @@ func (to *ListAccountGroupsRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -4510,6 +4539,7 @@ func (to *ListAccountServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.
 }
 
 func (m ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -4701,6 +4731,7 @@ func (to *ListAccountUsersRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["count"] = attrs["count"].SetOptional()
 	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
@@ -5582,6 +5613,7 @@ func (to *ListWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Conte
 }
 
 func (m ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -6536,6 +6568,7 @@ func (to *PatchAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, fr
 func (m PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -6678,6 +6711,7 @@ func (to *PatchAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.
 func (m PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -6820,6 +6854,7 @@ func (to *PatchAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fro
 func (m PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["schemas"] = attrs["schemas"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -8594,6 +8629,7 @@ func (m UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["members"] = attrs["members"].SetOptional()
 	attrs["meta"] = attrs["meta"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -8764,6 +8800,7 @@ func (m UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -8915,6 +8952,7 @@ func (m UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["roles"] = attrs["roles"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -9526,6 +9564,7 @@ func (to *UpdateRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from U
 func (m UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["rule_set"] = attrs["rule_set"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -10235,6 +10274,7 @@ func (to *UpdateWorkspaceAssignments) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permissions"] = attrs["permissions"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 

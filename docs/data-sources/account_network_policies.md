@@ -22,6 +22,7 @@ No arguments are supported for this resource.
 
 ## Attributes
 This data source exports a single attribute, `items`. It is a list of resources, each with the following attributes:
+* `account_id` (string) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress) - The network policies applying for egress traffic
 * `network_policy_id` (string) - The unique identifier for the network policy
 

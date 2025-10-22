@@ -13,10 +13,14 @@ import (
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
 	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token"}
 
-func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData) bool {
-	if k == "options.pem_private_key_expiration_epoch_sec" {
-		log.Printf("[INFO] Suppressing diff on %s", k)
-		return true
+var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
+
+func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
+	for _, option := range computedOptions {
+		if k == "options."+option {
+			log.Printf("[INFO] Suppressing diff on %s", k)
+			return true
+		}
 	}
 	return false
 }
@@ -34,7 +38,7 @@ func ResourceConnection() common.Resource {
 			for _, v := range []string{"read_only", "properties", "comment", "connection_type"} {
 				common.CustomizeSchemaPath(m, v).SetForceNew()
 			}
-			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressPemPrivateKeyExpiration)
+			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 
 			return m
@@ -136,7 +140,9 @@ func ResourceConnection() common.Resource {
 			}
 
 			updateConnectionRequest.Owner = ""
-			delete(updateConnectionRequest.Options, "pem_private_key_expiration_epoch_sec")
+			for _, option := range computedOptions {
+				delete(updateConnectionRequest.Options, option)
+			}
 			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
 				if d.HasChange("owner") {

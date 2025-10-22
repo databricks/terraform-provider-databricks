@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,20 +25,20 @@ func DataSourceOnlineStores() datasource.DataSource {
 	return &OnlineStoresDataSource{}
 }
 
-type OnlineStoresList struct {
-	ml_tf.ListOnlineStoresRequest
+// OnlineStoresData extends the main model with additional fields.
+type OnlineStoresData struct {
 	FeatureStore types.List `tfsdk:"online_stores"`
 }
 
-func (c OnlineStoresList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["online_stores"] = attrs["online_stores"].SetComputed()
-	return attrs
+func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"online_stores": reflect.TypeOf(OnlineStoreData{}),
+	}
 }
 
-func (OnlineStoresList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"online_stores": reflect.TypeOf(ml_tf.OnlineStore{}),
-	}
+func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["online_stores"] = attrs["online_stores"].SetComputed()
+	return attrs
 }
 
 type OnlineStoresDataSource struct {
@@ -51,7 +50,7 @@ func (r *OnlineStoresDataSource) Metadata(ctx context.Context, req datasource.Me
 }
 
 func (r *OnlineStoresDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, OnlineStoresData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks OnlineStore",
 		Attributes:  attrs,
@@ -66,13 +65,7 @@ func (r *OnlineStoresDataSource) Configure(ctx context.Context, req datasource.C
 func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var config OnlineStoresList
+	var config OnlineStoresData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,6 +73,13 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var listRequest ml.ListOnlineStoresRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +92,7 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var online_store ml_tf.OnlineStore
+		var online_store OnlineStoreData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &online_store)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +100,7 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		results = append(results, online_store.ToObjectValue(ctx))
 	}
 
-	var newState OnlineStoresList
-	newState.FeatureStore = types.ListValueMust(ml_tf.OnlineStore{}.Type(ctx), results)
+	var newState OnlineStoresData
+	newState.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

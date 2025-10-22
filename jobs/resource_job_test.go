@@ -668,7 +668,9 @@ func TestResourceJobCreate_PowerBiTask(t *testing.T) {
 				Return(&jobs.CreateResponse{
 					JobId: 789,
 				}, nil)
-			e.GetByJobId(mock.Anything, int64(789)).Return(&jobs.Job{
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: int64(789),
+			}).Return(&jobs.Job{
 				JobId: 789,
 				Settings: &jobs.JobSettings{
 					Name: "power_bi_task_name",
@@ -2367,6 +2369,37 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 		New:      true,
 		Removed:  true,
 		ID:       "789",
+	}.ApplyNoError(t)
+}
+
+func TestResourceJobReadMultiTask_NotFound(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer"
+		task {
+			task_key = "a"
+			spark_jar_task {
+				main_class_name = "com.labs.BarMain"
+			}
+		}
+		task {
+			task_key = "b"
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+
+		Read:    true,
+		New:     true,
+		Removed: true,
+		ID:      "789",
 	}.ApplyNoError(t)
 }
 

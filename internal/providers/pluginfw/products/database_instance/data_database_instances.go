@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,20 +25,20 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 	return &DatabaseInstancesDataSource{}
 }
 
-type DatabaseInstancesList struct {
-	database_tf.ListDatabaseInstancesRequest
+// DatabaseInstancesData extends the main model with additional fields.
+type DatabaseInstancesData struct {
 	Database types.List `tfsdk:"database_instances"`
 }
 
-func (c DatabaseInstancesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_instances"] = attrs["database_instances"].SetComputed()
-	return attrs
+func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database_instances": reflect.TypeOf(DatabaseInstanceData{}),
+	}
 }
 
-func (DatabaseInstancesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"database_instances": reflect.TypeOf(database_tf.DatabaseInstance{}),
-	}
+func (m DatabaseInstancesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_instances"] = attrs["database_instances"].SetComputed()
+	return attrs
 }
 
 type DatabaseInstancesDataSource struct {
@@ -51,7 +50,7 @@ func (r *DatabaseInstancesDataSource) Metadata(ctx context.Context, req datasour
 }
 
 func (r *DatabaseInstancesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseInstance",
 		Attributes:  attrs,
@@ -66,13 +65,7 @@ func (r *DatabaseInstancesDataSource) Configure(ctx context.Context, req datasou
 func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var config DatabaseInstancesList
+	var config DatabaseInstancesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,6 +73,13 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 
 	var listRequest database.ListDatabaseInstancesRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +92,7 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var database_instance database_tf.DatabaseInstance
+		var database_instance DatabaseInstanceData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &database_instance)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +100,7 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, database_instance.ToObjectValue(ctx))
 	}
 
-	var newState DatabaseInstancesList
-	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), results)
+	var newState DatabaseInstancesData
+	newState.Database = types.ListValueMust(DatabaseInstanceData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

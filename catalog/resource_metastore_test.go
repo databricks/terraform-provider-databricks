@@ -367,16 +367,16 @@ func TestCreateAccountMetastore(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -398,27 +398,27 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "administrators",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "a",
 					Owner: "administrators",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -442,24 +442,24 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner:                        "administrators",
 					DeltaSharingOrganizationName: "acme",
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
 					ForceSendFields:              []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:                         "a",
 					Owner:                        "administrators",
@@ -467,7 +467,7 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -494,7 +494,7 @@ func TestDeleteAccountMetastore(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockAccountMetastoresAPI().EXPECT().Delete(mock.Anything, catalog.DeleteAccountMetastoreRequest{
 				MetastoreId: "abc",
-			}).Return(nil)
+			}).Return(&catalog.AccountsDeleteMetastoreResponse{}, nil)
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
@@ -511,7 +511,7 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -547,17 +547,16 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "updatedOwner",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "updatedOwner",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -593,11 +592,10 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "updatedOwner",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "updatedOwner",
@@ -605,8 +603,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -614,11 +611,10 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			}).Return(nil, errors.New("Something unexpected happened"))
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "admin",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "admin",
@@ -654,20 +650,19 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:              "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot:       "s3://b/abc",
 					Name:              "abc",
@@ -702,7 +697,7 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 func TestReadAccountMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",

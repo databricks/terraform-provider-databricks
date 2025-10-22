@@ -35,6 +35,18 @@ func setStruct(s *settings.NotificationDestination, readND *settings.Notificatio
 				if readND.Config.MicrosoftTeams.UrlSet {
 					readND.Config.MicrosoftTeams.Url = s.Config.MicrosoftTeams.Url
 				}
+				if readND.Config.MicrosoftTeams.ChannelUrlSet {
+					readND.Config.MicrosoftTeams.ChannelUrl = s.Config.MicrosoftTeams.ChannelUrl
+				}
+				if readND.Config.MicrosoftTeams.AuthSecretSet {
+					readND.Config.MicrosoftTeams.AuthSecret = s.Config.MicrosoftTeams.AuthSecret
+				}
+				if readND.Config.MicrosoftTeams.TenantIdSet {
+					readND.Config.MicrosoftTeams.TenantId = s.Config.MicrosoftTeams.TenantId
+				}
+				if readND.Config.MicrosoftTeams.AppIdSet {
+					readND.Config.MicrosoftTeams.AppId = s.Config.MicrosoftTeams.AppId
+				}
 			}
 		case settings.DestinationTypeWebhook:
 			if readND.Config.GenericWebhook != nil && s.Config.GenericWebhook != nil {
@@ -137,6 +149,10 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook", "username").SetSensitive()
 	s.SchemaPath("config", "generic_webhook", "url").SetSensitive()
 	s.SchemaPath("config", "microsoft_teams", "url").SetSensitive()
+	s.SchemaPath("config", "microsoft_teams", "channel_url").SetSensitive()
+	s.SchemaPath("config", "microsoft_teams", "auth_secret").SetSensitive()
+	s.SchemaPath("config", "microsoft_teams", "tenant_id").SetSensitive()
+	s.SchemaPath("config", "microsoft_teams", "app_id").SetSensitive()
 	s.SchemaPath("config", "pagerduty", "integration_key").SetSensitive()
 	s.SchemaPath("config", "slack", "url").SetSensitive()
 	s.SchemaPath("config", "slack", "oauth_token").SetSensitive()

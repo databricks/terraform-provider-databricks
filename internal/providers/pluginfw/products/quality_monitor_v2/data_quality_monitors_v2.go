@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,20 +25,20 @@ func DataSourceQualityMonitors() datasource.DataSource {
 	return &QualityMonitorsDataSource{}
 }
 
-type QualityMonitorsList struct {
-	qualitymonitorv2_tf.ListQualityMonitorRequest
+// QualityMonitorsData extends the main model with additional fields.
+type QualityMonitorsData struct {
 	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
 }
 
-func (c QualityMonitorsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
-	return attrs
+func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"quality_monitors": reflect.TypeOf(QualityMonitorData{}),
+	}
 }
 
-func (QualityMonitorsList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"quality_monitors": reflect.TypeOf(qualitymonitorv2_tf.QualityMonitor{}),
-	}
+func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
+	return attrs
 }
 
 type QualityMonitorsDataSource struct {
@@ -51,7 +50,7 @@ func (r *QualityMonitorsDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (r *QualityMonitorsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, QualityMonitorsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks QualityMonitor",
 		Attributes:  attrs,
@@ -66,13 +65,7 @@ func (r *QualityMonitorsDataSource) Configure(ctx context.Context, req datasourc
 func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var config QualityMonitorsList
+	var config QualityMonitorsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,6 +73,13 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var listRequest qualitymonitorv2.ListQualityMonitorRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +92,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var quality_monitor qualitymonitorv2_tf.QualityMonitor
+		var quality_monitor QualityMonitorData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &quality_monitor)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +100,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, quality_monitor.ToObjectValue(ctx))
 	}
 
-	var newState QualityMonitorsList
-	newState.QualityMonitorV2 = types.ListValueMust(qualitymonitorv2_tf.QualityMonitor{}.Type(ctx), results)
+	var newState QualityMonitorsData
+	newState.QualityMonitorV2 = types.ListValueMust(QualityMonitorData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

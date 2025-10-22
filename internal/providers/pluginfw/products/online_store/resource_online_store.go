@@ -5,6 +5,7 @@ package online_store
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -13,13 +14,15 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "online_store"
@@ -34,15 +37,98 @@ type OnlineStoreResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// OnlineStore extends the main model with additional fields.
+type OnlineStore struct {
+	// The capacity of the online store. Valid values are "CU_1", "CU_2",
+	// "CU_4", "CU_8".
+	Capacity types.String `tfsdk:"capacity"`
+	// The timestamp when the online store was created.
+	CreationTime types.String `tfsdk:"creation_time"`
+	// The email of the creator of the online store.
+	Creator types.String `tfsdk:"creator"`
+	// The name of the online store. This is the unique identifier for the
+	// online store.
+	Name types.String `tfsdk:"name"`
+	// The number of read replicas for the online store. Defaults to 0.
+	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
+	// The current state of the online store.
+	State types.String `tfsdk:"state"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// OnlineStore struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStore
+// only implements ToObjectValue() and Type().
+func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{"capacity": m.Capacity,
+			"creation_time":      m.CreationTime,
+			"creator":            m.Creator,
+			"name":               m.Name,
+			"read_replica_count": m.ReadReplicaCount,
+			"state":              m.State,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (m OnlineStore) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+			"creation_time":      types.StringType,
+			"creator":            types.StringType,
+			"name":               types.StringType,
+			"read_replica_count": types.Int64Type,
+			"state":              types.StringType,
+		},
+	}
+}
+
+// SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during create and update.
+func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *OnlineStore) SyncFieldsDuringRead(ctx context.Context, from OnlineStore) {
+}
+
+func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetRequired()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	return attrs
+}
+
 func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
 func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ml_tf.OnlineStore{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
-		return c
-	})
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks online_store",
 		Attributes:  attrs,
@@ -54,13 +140,7 @@ func (r *OnlineStoreResource) Configure(ctx context.Context, req resource.Config
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetWorkspaceClient()
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-
+func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
 	var online_store ml.OnlineStore
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
@@ -74,13 +154,19 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore
 		UpdateMask:  "capacity,read_replica_count",
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
 	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)
 	if err != nil {
 		diags.AddError("failed to update online_store", err.Error())
 		return
 	}
 
-	var newState ml_tf.OnlineStore
+	var newState OnlineStore
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -93,12 +179,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan ml_tf.OnlineStore
 func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var plan ml_tf.OnlineStore
+	var plan OnlineStore
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,13 +195,20 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 		OnlineStore: online_store,
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.FeatureStore.CreateOnlineStore(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create online_store", err.Error())
 		return
 	}
 
-	var newState ml_tf.OnlineStore
+	var newState OnlineStore
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -139,13 +227,7 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var existingState ml_tf.OnlineStore
+	var existingState OnlineStore
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,6 +239,12 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	response, err := client.FeatureStore.GetOnlineStore(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -168,7 +256,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	var newState ml_tf.OnlineStore
+	var newState OnlineStore
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +270,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 func (r *OnlineStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan ml_tf.OnlineStore
+	var plan OnlineStore
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,13 +282,7 @@ func (r *OnlineStoreResource) Update(ctx context.Context, req resource.UpdateReq
 func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var state ml_tf.OnlineStore
+	var state OnlineStore
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -212,6 +294,12 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	err := client.FeatureStore.DeleteOnlineStore(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete online_store", err.Error())

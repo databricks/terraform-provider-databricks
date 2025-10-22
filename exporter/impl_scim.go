@@ -3,8 +3,10 @@ package exporter
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"golang.org/x/exp/maps"
@@ -277,5 +279,55 @@ func importServicePrincipal(ic *importContext, r *resource) error {
 				ic.Client.Config.AccountID, applicationID),
 		})
 	}
+	return nil
+}
+
+func emitIdfedAndUsersSpsGroups(ic *importContext, workspaceId int64) error {
+	log.Printf("[DEBUG] Emitting permission assignments for workspace %d", workspaceId)
+	pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, workspaceId)
+	if err != nil {
+		log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
+			workspaceId, err.Error())
+		return err
+	}
+	for _, pa := range pas.PermissionAssignments {
+		perm := "unknown"
+		if len(pa.Permissions) > 0 {
+			perm = pa.Permissions[0].String()
+		}
+		nm := fmt.Sprintf("mws_pa_%d_%s_%s_%d", workspaceId, pa.Principal.DisplayName,
+			perm, pa.Principal.PrincipalId)
+		// We  generate Data directly to avoid calling APIs
+		data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
+		paId := fmt.Sprintf("%d|%d", workspaceId, pa.Principal.PrincipalId)
+		data = ic.generateNewData(data, "databricks_mws_permission_assignment", paId, pa)
+		data.Set("workspace_id", workspaceId)
+		data.Set("principal_id", pa.Principal.PrincipalId)
+		ic.Emit(&resource{
+			Resource: "databricks_mws_permission_assignment",
+			ID:       paId,
+			Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
+			Data:     data,
+		})
+		// Emit principals
+		strPrincipalId := strconv.FormatInt(pa.Principal.PrincipalId, 10)
+		if pa.Principal.ServicePrincipalName != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_service_principal",
+				ID:       strPrincipalId,
+			})
+		} else if pa.Principal.UserName != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_user",
+				ID:       strPrincipalId,
+			})
+		} else if pa.Principal.GroupName != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_group",
+				ID:       strPrincipalId,
+			})
+		}
+	}
+
 	return nil
 }

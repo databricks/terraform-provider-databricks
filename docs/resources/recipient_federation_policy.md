@@ -2,6 +2,8 @@
 subcategory: "Delta Sharing"
 ---
 # databricks_recipient_federation_policy Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -49,12 +51,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_recipient_federation_policy.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_recipient_federation_policy name
+terraform import databricks_recipient_federation_policy.this "name"
 ```

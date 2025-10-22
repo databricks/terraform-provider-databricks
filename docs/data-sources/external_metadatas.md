@@ -2,6 +2,8 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_external_metadatas Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of external metadata objects.
 
 -> **Note** This resource can only be used with an workspace-level provider!
@@ -10,7 +12,7 @@ This data source can be used to fetch the list of external metadata objects.
 Getting a list of all external metadata objects:
 
 ```hcl
-data "databricks_external_metadatas" "all" 
+data "databricks_external_metadatas" "all" {
 }
 ```
 
@@ -18,7 +20,6 @@ data "databricks_external_metadatas" "all"
 The following arguments are supported:
 * `page_size` (integer, optional) - Specifies the maximum number of external metadata objects to return in a single response.
   The value must be less than or equal to 1000
-
 
 
 ## Attributes
@@ -33,7 +34,7 @@ This data source exports a single attribute, `external_metadata`. It is a list o
 * `name` (string) - Name of the external metadata object
 * `owner` (string) - Owner of the external metadata object
 * `properties` (object) - A map of key-value properties attached to the external metadata object
-* `system_type` (string) - Type of external system. Possible values are: `AMAZON_REDSHIFT`, `AZURE_SYNAPSE`, `CONFLUENT`, `DATABRICKS`, `GOOGLE_BIGQUERY`, `KAFKA`, `LOOKER`, `MICROSOFT_FABRIC`, `MICROSOFT_SQL_SERVER`, `MONGODB`, `MYSQL`, `ORACLE`, `OTHER`, `POSTGRESQL`, `POWER_BI`, `SALESFORCE`, `SAP`, `SERVICENOW`, `SNOWFLAKE`, `TABLEAU`, `TERADATA`, `WORKDAY`
+* `system_type` (string) - Type of external system. Possible values are: `AMAZON_REDSHIFT`, `AZURE_SYNAPSE`, `CONFLUENT`, `DATABRICKS`, `GOOGLE_BIGQUERY`, `KAFKA`, `LOOKER`, `MICROSOFT_FABRIC`, `MICROSOFT_SQL_SERVER`, `MONGODB`, `MYSQL`, `ORACLE`, `OTHER`, `POSTGRESQL`, `POWER_BI`, `SALESFORCE`, `SAP`, `SERVICENOW`, `SNOWFLAKE`, `STREAM_NATIVE`, `TABLEAU`, `TERADATA`, `WORKDAY`
 * `update_time` (string) - Time at which this external metadata object was last modified
 * `updated_by` (string) - Username of user who last modified external metadata object
 * `url` (string) - URL associated with the external metadata object

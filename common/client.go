@@ -107,6 +107,13 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
 }
 
+// GetDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
+// This is used by resources and data sources that are developed
+// over SDKv2 and are not using Go SDK.
+func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+	return c, nil
+}
+
 // getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured
 // at account level.

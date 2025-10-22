@@ -130,6 +130,7 @@ type permissionAssignmentEntity struct {
 	GroupName            string   `json:"group_name,omitempty" tf:"computed,force_new"`
 	Permissions          []string `json:"permissions" tf:"slice_as_set"`
 	DisplayName          string   `json:"display_name" tf:"computed"`
+	common.Namespace
 }
 
 // ResourcePermissionAssignment performs of users to a workspace
@@ -142,11 +143,19 @@ func ResourcePermissionAssignment() common.Resource {
 			s[field].ExactlyOneOf = fields
 		}
 		common.CustomizeSchemaPath(s, "display_name").SetReadOnly()
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := common.DatabricksClientForUnifiedProvider(ctx, d, c)
+			if err != nil {
+				return err
+			}
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -175,6 +184,10 @@ func ResourcePermissionAssignment() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := common.DatabricksClientForUnifiedProvider(ctx, d, c)
+			if err != nil {
+				return err
+			}
 			list, err := NewPermissionAssignmentAPI(ctx, c).List()
 			if err != nil {
 				return err
@@ -186,10 +199,14 @@ func ResourcePermissionAssignment() common.Resource {
 			return common.StructToData(data, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := common.DatabricksClientForUnifiedProvider(ctx, d, c)
+			if err != nil {
+				return err
+			}
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
-			_, err := api.CreateOrUpdate(assignment)
+			_, err = api.CreateOrUpdate(assignment)
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

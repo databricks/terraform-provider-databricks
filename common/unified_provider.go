@@ -73,3 +73,20 @@ func WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData,
 	}
 	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 }
+
+// DatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
+// This is used by resources and data sources that are developed
+// over SDKv2 and are not using Go SDK.
+func DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (*DatabricksClient, error) {
+	workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
+	// workspace_id does not exist in the schema
+	if workspaceIDFromSchema == nil {
+		return c.GetDatabricksClientForUnifiedProvider(ctx, "")
+	}
+	var workspaceID string
+	workspaceID, ok := workspaceIDFromSchema.(string)
+	if !ok {
+		return nil, fmt.Errorf("workspace_id must be a string")
+	}
+	return c.GetDatabricksClientForUnifiedProvider(ctx, workspaceID)
+}

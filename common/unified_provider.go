@@ -78,13 +78,13 @@ func WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData,
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (*DatabricksClient, error) {
-	workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the schema
-	if workspaceIDFromSchema == nil {
+	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
+	// workspace_id does not exist in the resource data
+	if workspaceIDFromResourceData == nil {
 		return c.GetDatabricksClientForUnifiedProvider(ctx, "")
 	}
 	var workspaceID string
-	workspaceID, ok := workspaceIDFromSchema.(string)
+	workspaceID, ok := workspaceIDFromResourceData.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}

@@ -124,16 +124,10 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	var workspaceID string
-	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
@@ -182,16 +176,10 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var workspaceID string
-	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
@@ -252,16 +240,10 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		updateMonitorGoSDK.Schedule.PauseStatus = ""
 	}
 
-	var workspaceID string
-	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
@@ -305,16 +287,10 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var workspaceID string
-	if !monitorInfoTfSDK.ProviderConfig.IsNull() && !monitorInfoTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(monitorInfoTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

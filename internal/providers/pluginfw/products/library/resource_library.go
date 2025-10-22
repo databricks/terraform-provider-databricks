@@ -140,16 +140,10 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var workspaceID string
-	if !libraryTfSDK.ProviderConfig.IsNull() && !libraryTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
@@ -206,16 +200,10 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var workspaceID string
-	if !libraryTfSDK.ProviderConfig.IsNull() && !libraryTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
@@ -263,16 +251,10 @@ func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	var workspaceID string
-	if !libraryTfSDK.ProviderConfig.IsNull() && !libraryTfSDK.ProviderConfig.IsUnknown() {
-		var namespaceList []tfschema.ProviderConfig
-		resp.Diagnostics.Append(libraryTfSDK.ProviderConfig.ElementsAs(ctx, &namespaceList, true)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(namespaceList) > 0 {
-			workspaceID = namespaceList[0].WorkspaceID.ValueString()
-		}
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

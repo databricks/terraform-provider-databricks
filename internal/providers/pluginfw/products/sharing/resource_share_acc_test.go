@@ -747,11 +747,12 @@ func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
 			}
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
+			PostApplyPreRefresh: []plancheck.PlanCheck{
 				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
-		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 

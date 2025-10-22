@@ -160,7 +160,7 @@ func ResourceShare() common.Resource {
 			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -189,7 +189,7 @@ func ResourceShare() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -208,7 +208,7 @@ func ResourceShare() common.Resource {
 			return common.StructToData(si, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -268,7 +268,7 @@ func ResourceShare() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

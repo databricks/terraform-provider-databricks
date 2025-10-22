@@ -73,7 +73,7 @@ func ResourceVectorSearchIndex() common.Resource {
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -106,7 +106,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return common.StructToData(*index, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

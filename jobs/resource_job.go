@@ -1099,7 +1099,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1135,7 +1135,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1177,7 +1177,7 @@ func ResourceJob() common.Resource {
 				if err != nil {
 					return err
 				}
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1204,7 +1204,7 @@ func ResourceJob() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

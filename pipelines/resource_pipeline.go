@@ -287,14 +287,14 @@ func ResourcePipeline() common.Resource {
 			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -322,7 +322,7 @@ func ResourcePipeline() common.Resource {
 			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -330,7 +330,7 @@ func ResourcePipeline() common.Resource {
 
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

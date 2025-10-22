@@ -69,7 +69,7 @@ func ResourceCatalog() common.Resource {
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -113,7 +113,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -125,7 +125,7 @@ func ResourceCatalog() common.Resource {
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -194,7 +194,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

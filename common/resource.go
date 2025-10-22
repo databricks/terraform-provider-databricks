@@ -226,7 +226,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, s, ptr.Elem())
 			if m.DatabricksClient != nil && !m.Config.IsAccountClient() {
-				w, err := m.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := WorkspaceClientUnifiedProvider(ctx, d, m)
 				if err != nil {
 					return err
 				}
@@ -263,7 +263,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClientUnifiedProvider(ctx, d)
+			return WorkspaceClientUnifiedProvider(ctx, d, client)
 		},
 		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)
@@ -304,7 +304,7 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClientUnifiedProvider(ctx, d)
+			return WorkspaceClientUnifiedProvider(ctx, d, client)
 		},
 		func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
 			res, err := read(ctx, o, w)
@@ -326,7 +326,7 @@ func WorkspaceDataWithCustomizeFunc[T any](
 	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
 	return genericDatabricksData(
 		func(client *DatabricksClient, ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-			return client.WorkspaceClientUnifiedProvider(ctx, d)
+			return WorkspaceClientUnifiedProvider(ctx, d, client)
 		},
 		func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)

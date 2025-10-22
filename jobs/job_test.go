@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func jobClusterTemplate(provider_config string) string {
@@ -144,34 +145,42 @@ func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
 
 func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	// get workspace id here from workspace
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	}, acceptance.Step{
-		Template: jobClusterTemplate(`
+		Template: jobClusterTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "1142582526922259"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				common.CheckResourceUpdate{Address: "databricks_job.this"},
-				common.CheckResourceNoDelete{Address: "databricks_job.this"},
-				common.CheckResourceNoCreate{Address: "databricks_job.this"},
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
 }
 
 func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	}, acceptance.Step{
-		Template: jobClusterTemplate(`
+		Template: jobClusterTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "1142582526922259"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 	}, acceptance.Step{
 		Template: jobClusterTemplate(`
 			provider_config {
@@ -179,31 +188,34 @@ func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
 			}
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
-				common.CheckResourceCreate{Address: "databricks_job.this"},
-				common.CheckResourceDelete{Address: "databricks_job.this"},
+			PostApplyPreRefresh: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
-		ExpectError: regexp.MustCompile(`failed to validate workspace_id: workspace_id mismatch`),
+		PlanOnly: true,
 	})
 }
 
 func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(""),
 	}, acceptance.Step{
-		Template: jobClusterTemplate(`
+		Template: jobClusterTemplate(fmt.Sprintf(`
 			provider_config {
-				workspace_id = "1142582526922259"
+				workspace_id = "%s"
 			}
-		`),
+		`, workspaceIDStr)),
 	}, acceptance.Step{
 		Template: jobClusterTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				common.CheckResourceUpdate{Address: "databricks_job.this"},
-				common.CheckResourceNoDelete{Address: "databricks_job.this"},
-				common.CheckResourceNoCreate{Address: "databricks_job.this"},
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

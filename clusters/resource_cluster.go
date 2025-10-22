@@ -393,7 +393,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}
@@ -485,7 +485,7 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}
@@ -537,7 +537,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}
@@ -702,7 +702,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}

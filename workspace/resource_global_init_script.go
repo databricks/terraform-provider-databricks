@@ -54,7 +54,7 @@ func ResourceGlobalInitScript() common.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ func ResourceGlobalInitScript() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func ResourceGlobalInitScript() common.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -103,7 +103,7 @@ func ResourceGlobalInitScript() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

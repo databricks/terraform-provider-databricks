@@ -1,6 +1,10 @@
 package common
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -41,4 +45,20 @@ func NamespaceCustomizeDiff(d *schema.ResourceDiff) error {
 		}
 	}
 	return nil
+}
+
+// WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data
+// This is used by resources and data sources that are developed over SDKv2.
+func WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+	workspaceIDFromSchema := d.Get("provider_config.0.workspace_id")
+	// workspace_id does not exist in the schema
+	if workspaceIDFromSchema == nil {
+		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
+	}
+	var workspaceID string
+	workspaceID, ok := workspaceIDFromSchema.(string)
+	if !ok {
+		return nil, fmt.Errorf("workspace_id must be a string")
+	}
+	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 }

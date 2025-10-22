@@ -135,7 +135,7 @@ func ResourceSqlAlert() common.Resource {
 			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, data, c)
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func ResourceSqlAlert() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, data, c)
 			if err != nil {
 				return err
 			}
@@ -165,7 +165,7 @@ func ResourceSqlAlert() common.Resource {
 			return a.fromAPIObject(apiAlert, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, data, c)
 			if err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ func ResourceSqlAlert() common.Resource {
 			return w.AlertsLegacy.Update(ctx, ca)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, data, c)
 			if err != nil {
 				return err
 			}

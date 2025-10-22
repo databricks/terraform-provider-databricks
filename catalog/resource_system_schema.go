@@ -50,7 +50,7 @@ func ResourceSystemSchema() common.Resource {
 			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old system schema: %s, new: %s", old, new)
-		w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 		if err != nil {
 			return err
 		}
@@ -94,7 +94,7 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -139,7 +139,7 @@ func ResourceSystemSchema() common.Resource {
 				log.Printf("[WARN] %s is auto enabled, ignoring it", schemaName)
 				return nil
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

@@ -27,9 +27,11 @@ func DataSourceRefreshes() datasource.DataSource {
 
 // RefreshesData extends the main model with additional fields.
 type RefreshesData struct {
-	DataQuality types.List   `tfsdk:"refreshes"`
-	ObjectType  types.String `tfsdk:"object_type"`
-	ObjectId    types.String `tfsdk:"object_id"`
+	DataQuality types.List `tfsdk:"refreshes"`
+
+	PageSize   types.Int64  `tfsdk:"page_size"`
+	ObjectType types.String `tfsdk:"object_type"`
+	ObjectId   types.String `tfsdk:"object_id"`
 }
 
 func (RefreshesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -39,10 +41,18 @@ func (RefreshesData) GetComplexFieldTypes(context.Context) map[string]reflect.Ty
 }
 
 func (m RefreshesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["refreshes"] = attrs["refreshes"].SetComputed()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *RefreshesData) SyncFieldsDuringRead(ctx context.Context, from RefreshesData) {
 }
 
 type RefreshesDataSource struct {
@@ -106,5 +116,6 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	var newState RefreshesData
 	newState.DataQuality = types.ListValueMust(RefreshData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

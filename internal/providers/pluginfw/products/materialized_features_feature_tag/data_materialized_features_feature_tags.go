@@ -28,6 +28,12 @@ func DataSourceFeatureTags() datasource.DataSource {
 // FeatureTagsData extends the main model with additional fields.
 type FeatureTagsData struct {
 	MaterializedFeatures types.List `tfsdk:"feature_tags"`
+
+	FeatureName types.String `tfsdk:"feature_name"`
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"page_size"`
+
+	TableName types.String `tfsdk:"table_name"`
 }
 
 func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +43,18 @@ func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.
 }
 
 func (m FeatureTagsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["table_name"] = attrs["table_name"].SetRequired()
+	attrs["feature_name"] = attrs["feature_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["feature_tags"] = attrs["feature_tags"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *FeatureTagsData) SyncFieldsDuringRead(ctx context.Context, from FeatureTagsData) {
 }
 
 type FeatureTagsDataSource struct {
@@ -102,5 +118,6 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var newState FeatureTagsData
 	newState.MaterializedFeatures = types.ListValueMust(FeatureTagData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

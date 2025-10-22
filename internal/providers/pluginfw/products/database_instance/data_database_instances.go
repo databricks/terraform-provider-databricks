@@ -28,6 +28,8 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 // DatabaseInstancesData extends the main model with additional fields.
 type DatabaseInstancesData struct {
 	Database types.List `tfsdk:"database_instances"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +39,16 @@ func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]re
 }
 
 func (m DatabaseInstancesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["database_instances"] = attrs["database_instances"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *DatabaseInstancesData) SyncFieldsDuringRead(ctx context.Context, from DatabaseInstancesData) {
 }
 
 type DatabaseInstancesDataSource struct {
@@ -102,5 +112,6 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 
 	var newState DatabaseInstancesData
 	newState.Database = types.ListValueMust(DatabaseInstanceData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

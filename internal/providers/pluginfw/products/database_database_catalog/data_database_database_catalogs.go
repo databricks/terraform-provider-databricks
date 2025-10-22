@@ -28,6 +28,10 @@ func DataSourceDatabaseCatalogs() datasource.DataSource {
 // DatabaseCatalogsData extends the main model with additional fields.
 type DatabaseCatalogsData struct {
 	Database types.List `tfsdk:"database_catalogs"`
+	// Name of the instance to get database catalogs for.
+	InstanceName types.String `tfsdk:"instance_name"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +41,17 @@ func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]ref
 }
 
 func (m DatabaseCatalogsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["database_catalogs"] = attrs["database_catalogs"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *DatabaseCatalogsData) SyncFieldsDuringRead(ctx context.Context, from DatabaseCatalogsData) {
 }
 
 type DatabaseCatalogsDataSource struct {
@@ -102,5 +115,6 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 
 	var newState DatabaseCatalogsData
 	newState.Database = types.ListValueMust(DatabaseCatalogData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

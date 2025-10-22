@@ -28,6 +28,8 @@ func DataSourceAlertsV2() datasource.DataSource {
 // AlertsV2Data extends the main model with additional fields.
 type AlertsV2Data struct {
 	AlertsV2 types.List `tfsdk:"alerts"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +39,16 @@ func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["alerts"] = attrs["alerts"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *AlertsV2Data) SyncFieldsDuringRead(ctx context.Context, from AlertsV2Data) {
 }
 
 type AlertsV2DataSource struct {
@@ -102,5 +112,6 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var newState AlertsV2Data
 	newState.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

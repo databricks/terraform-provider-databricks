@@ -23,7 +23,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress) - The network policies applying for egress traffic
 * `network_policy_id` (string) - The unique identifier for the network policy
 

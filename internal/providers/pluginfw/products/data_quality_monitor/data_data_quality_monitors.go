@@ -28,6 +28,8 @@ func DataSourceMonitors() datasource.DataSource {
 // MonitorsData extends the main model with additional fields.
 type MonitorsData struct {
 	DataQuality types.List `tfsdk:"monitors"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (MonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +39,16 @@ func (MonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m MonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["monitors"] = attrs["monitors"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *MonitorsData) SyncFieldsDuringRead(ctx context.Context, from MonitorsData) {
 }
 
 type MonitorsDataSource struct {
@@ -102,5 +112,6 @@ func (r *MonitorsDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var newState MonitorsData
 	newState.DataQuality = types.ListValueMust(MonitorData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

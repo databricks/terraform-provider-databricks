@@ -94,7 +94,6 @@ func (to *GetWorkspaceAccessDetailRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m GetWorkspaceAccessDetailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["view"] = attrs["view"].SetOptional()
@@ -139,8 +138,6 @@ func (m GetWorkspaceAccessDetailRequest) Type(ctx context.Context) attr.Type {
 
 // The details of a Group resource.
 type Group struct {
-	// The parent account ID for group in Databricks.
-	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Display name of the group.
@@ -156,7 +153,6 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 }
 
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
@@ -182,7 +178,6 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
 			"group_name":  m.GroupName,
 			"internal_id": m.InternalId,
@@ -193,7 +188,6 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Group) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":  types.StringType,
 			"external_id": types.StringType,
 			"group_name":  types.StringType,
 			"internal_id": types.Int64Type,
@@ -268,7 +262,6 @@ func (to *ResolveGroupRequest) SyncFieldsDuringRead(ctx context.Context, from Re
 
 func (m ResolveGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -463,7 +456,6 @@ func (to *ResolveServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Conte
 
 func (m ResolveServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -658,7 +650,6 @@ func (to *ResolveUserRequest) SyncFieldsDuringRead(ctx context.Context, from Res
 
 func (m ResolveUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["external_id"] = attrs["external_id"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -788,8 +779,6 @@ func (m *ResolveUserResponse) SetUser(ctx context.Context, v User) {
 
 // The details of a ServicePrincipal resource.
 type ServicePrincipal struct {
-	// The parent account ID for the service principal in Databricks.
-	AccountId types.String `tfsdk:"account_id"`
 	// The activity status of a service principal in a Databricks account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
 	// Application ID of the service principal.
@@ -809,7 +798,6 @@ func (to *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from Servi
 }
 
 func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_sp_status"] = attrs["account_sp_status"].SetOptional()
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
@@ -837,7 +825,6 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
 			"account_sp_status": m.AccountSpStatus,
 			"application_id":    m.ApplicationId,
 			"display_name":      m.DisplayName,
@@ -850,7 +837,6 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
 			"account_sp_status": types.StringType,
 			"application_id":    types.StringType,
 			"display_name":      types.StringType,
@@ -862,8 +848,6 @@ func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 
 // The details of a User resource.
 type User struct {
-	// The accountId parent of the user in Databricks.
-	AccountId types.String `tfsdk:"account_id"`
 	// The activity status of a user in a Databricks account.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
 	// ExternalId of the user in the customer's IdP.
@@ -900,7 +884,6 @@ func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 }
 
 func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
@@ -930,7 +913,6 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":          m.AccountId,
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"internal_id":         m.InternalId,
@@ -943,7 +925,6 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m User) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":          types.StringType,
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"internal_id":         types.Int64Type,
@@ -1033,8 +1014,6 @@ func (m UserName) Type(ctx context.Context) attr.Type {
 // The details of a principal's access to a workspace.
 type WorkspaceAccessDetail struct {
 	AccessType types.String `tfsdk:"access_type"`
-	// The account ID parent of the workspace where the principal has access.
-	AccountId types.String `tfsdk:"account_id"`
 	// The permissions granted to the principal in the workspace.
 	Permissions types.List `tfsdk:"permissions"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
@@ -1068,7 +1047,6 @@ func (to *WorkspaceAccessDetail) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m WorkspaceAccessDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_type"] = attrs["access_type"].SetComputed()
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -1099,7 +1077,6 @@ func (m WorkspaceAccessDetail) ToObjectValue(ctx context.Context) basetypes.Obje
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"access_type":    m.AccessType,
-			"account_id":     m.AccountId,
 			"permissions":    m.Permissions,
 			"principal_id":   m.PrincipalId,
 			"principal_type": m.PrincipalType,
@@ -1113,7 +1090,6 @@ func (m WorkspaceAccessDetail) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_type": types.StringType,
-			"account_id":  types.StringType,
 			"permissions": basetypes.ListType{
 				ElemType: types.StringType,
 			},

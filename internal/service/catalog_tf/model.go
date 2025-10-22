@@ -187,7 +187,6 @@ func (to *AccountsCreateMetastore) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m AccountsCreateMetastore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -284,7 +283,6 @@ func (to *AccountsCreateMetastoreAssignment) SyncFieldsDuringRead(ctx context.Co
 
 func (m AccountsCreateMetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
@@ -521,7 +519,6 @@ func (to *AccountsCreateStorageCredential) SyncFieldsDuringRead(ctx context.Cont
 func (m AccountsCreateStorageCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["credential_info"] = attrs["credential_info"].SetOptional()
 	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
 	return attrs
@@ -1206,7 +1203,6 @@ func (to *AccountsUpdateMetastore) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m AccountsUpdateMetastore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metastore_info"] = attrs["metastore_info"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
 	return attrs
@@ -1306,7 +1302,6 @@ func (to *AccountsUpdateMetastoreAssignment) SyncFieldsDuringRead(ctx context.Co
 
 func (m AccountsUpdateMetastoreAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metastore_assignment"] = attrs["metastore_assignment"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
@@ -1547,7 +1542,6 @@ func (to *AccountsUpdateStorageCredential) SyncFieldsDuringRead(ctx context.Cont
 func (m AccountsUpdateStorageCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["credential_info"] = attrs["credential_info"].SetOptional()
 	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetRequired()
 
@@ -3226,8 +3220,6 @@ func (m *CatalogInfo) SetProvisioningInfo(ctx context.Context, v ProvisioningInf
 type CloudflareApiToken struct {
 	// The access key ID associated with the API token.
 	AccessKeyId types.String `tfsdk:"access_key_id"`
-	// The ID of the account associated with the API token.
-	AccountId types.String `tfsdk:"account_id"`
 	// The secret access token generated for the above access key ID.
 	SecretAccessKey types.String `tfsdk:"secret_access_key"`
 }
@@ -3240,7 +3232,6 @@ func (to *CloudflareApiToken) SyncFieldsDuringRead(ctx context.Context, from Clo
 
 func (m CloudflareApiToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_key_id"] = attrs["access_key_id"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["secret_access_key"] = attrs["secret_access_key"].SetRequired()
 
 	return attrs
@@ -3265,7 +3256,6 @@ func (m CloudflareApiToken) ToObjectValue(ctx context.Context) basetypes.ObjectV
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"access_key_id":     m.AccessKeyId,
-			"account_id":        m.AccountId,
 			"secret_access_key": m.SecretAccessKey,
 		})
 }
@@ -3275,7 +3265,6 @@ func (m CloudflareApiToken) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_key_id":     types.StringType,
-			"account_id":        types.StringType,
 			"secret_access_key": types.StringType,
 		},
 	}
@@ -8619,7 +8608,6 @@ func (to *DeleteAccountMetastoreAssignmentRequest) SyncFieldsDuringRead(ctx cont
 }
 
 func (m DeleteAccountMetastoreAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
@@ -8673,7 +8661,6 @@ func (to *DeleteAccountMetastoreRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m DeleteAccountMetastoreRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 	attrs["force"] = attrs["force"].SetOptional()
 
@@ -8730,7 +8717,6 @@ func (to *DeleteAccountStorageCredentialRequest) SyncFieldsDuringRead(ctx contex
 }
 
 func (m DeleteAccountStorageCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetRequired()
 	attrs["force"] = attrs["force"].SetOptional()
@@ -15515,7 +15501,6 @@ func (to *GetAccountMetastoreAssignmentRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m GetAccountMetastoreAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -15564,7 +15549,6 @@ func (to *GetAccountMetastoreRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m GetAccountMetastoreRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
 	return attrs
@@ -15615,7 +15599,6 @@ func (to *GetAccountStorageCredentialRequest) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m GetAccountStorageCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 	attrs["storage_credential_name"] = attrs["storage_credential_name"].SetRequired()
 
@@ -17541,7 +17524,6 @@ func (to *ListAccountMetastoreAssignmentsRequest) SyncFieldsDuringRead(ctx conte
 }
 
 func (m ListAccountMetastoreAssignmentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
 	return attrs
@@ -17678,7 +17660,6 @@ func (to *ListAccountMetastoresRequest) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m ListAccountMetastoresRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -17722,7 +17703,6 @@ func (to *ListAccountStorageCredentialsRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m ListAccountStorageCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetRequired()
 
 	return attrs

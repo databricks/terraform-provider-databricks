@@ -28,6 +28,8 @@ func DataSourceFeatures() datasource.DataSource {
 // FeaturesData extends the main model with additional fields.
 type FeaturesData struct {
 	FeatureEngineering types.List `tfsdk:"features"`
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +39,16 @@ func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m FeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["features"] = attrs["features"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *FeaturesData) SyncFieldsDuringRead(ctx context.Context, from FeaturesData) {
 }
 
 type FeaturesDataSource struct {
@@ -102,5 +112,6 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var newState FeaturesData
 	newState.FeatureEngineering = types.ListValueMust(FeatureData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

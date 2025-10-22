@@ -28,6 +28,9 @@ func DataSourceOnlineStores() datasource.DataSource {
 // OnlineStoresData extends the main model with additional fields.
 type OnlineStoresData struct {
 	FeatureStore types.List `tfsdk:"online_stores"`
+	// The maximum number of results to return. Defaults to 100 if not
+	// specified.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +40,16 @@ func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect
 }
 
 func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["online_stores"] = attrs["online_stores"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *OnlineStoresData) SyncFieldsDuringRead(ctx context.Context, from OnlineStoresData) {
 }
 
 type OnlineStoresDataSource struct {
@@ -102,5 +113,6 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	var newState OnlineStoresData
 	newState.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

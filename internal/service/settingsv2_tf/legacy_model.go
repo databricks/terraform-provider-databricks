@@ -696,7 +696,6 @@ func (to *GetPublicAccountSettingRequest_SdkV2) SyncFieldsDuringRead(ctx context
 }
 
 func (m GetPublicAccountSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -849,7 +848,6 @@ func (to *ListAccountSettingsMetadataRequest_SdkV2) SyncFieldsDuringRead(ctx con
 }
 
 func (m ListAccountSettingsMetadataRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -1174,7 +1172,6 @@ func (to *PatchPublicAccountSettingRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 func (m PatchPublicAccountSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["setting"] = attrs["setting"].SetRequired()
 	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs

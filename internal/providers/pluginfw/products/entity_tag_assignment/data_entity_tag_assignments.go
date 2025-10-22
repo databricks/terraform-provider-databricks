@@ -27,9 +27,11 @@ func DataSourceEntityTagAssignments() datasource.DataSource {
 
 // EntityTagAssignmentsData extends the main model with additional fields.
 type EntityTagAssignmentsData struct {
-	EntityTagAssignments types.List   `tfsdk:"tag_assignments"`
-	EntityType           types.String `tfsdk:"entity_type"`
-	EntityName           types.String `tfsdk:"entity_name"`
+	EntityTagAssignments types.List `tfsdk:"tag_assignments"`
+	// Optional. Maximum number of tag assignments to return in a single page
+	MaxResults types.Int64  `tfsdk:"max_results"`
+	EntityType types.String `tfsdk:"entity_type"`
+	EntityName types.String `tfsdk:"entity_name"`
 }
 
 func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -39,10 +41,18 @@ func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string
 }
 
 func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+
 	attrs["tag_assignments"] = attrs["tag_assignments"].SetComputed()
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *EntityTagAssignmentsData) SyncFieldsDuringRead(ctx context.Context, from EntityTagAssignmentsData) {
 }
 
 type EntityTagAssignmentsDataSource struct {
@@ -106,5 +116,6 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 
 	var newState EntityTagAssignmentsData
 	newState.EntityTagAssignments = types.ListValueMust(EntityTagAssignmentData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

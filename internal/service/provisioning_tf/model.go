@@ -631,7 +631,6 @@ func (to *CreateCredentialRequest) SyncFieldsDuringRead(ctx context.Context, fro
 func (m CreateCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aws_credentials"] = attrs["aws_credentials"].SetRequired()
 	attrs["credentials_name"] = attrs["credentials_name"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -796,7 +795,6 @@ func (m CreateCustomerManagedKeyRequest) ApplySchemaCustomizations(attrs map[str
 	attrs["aws_key_info"] = attrs["aws_key_info"].SetOptional()
 	attrs["gcp_key_info"] = attrs["gcp_key_info"].SetOptional()
 	attrs["use_cases"] = attrs["use_cases"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1055,7 +1053,6 @@ func (m CreateNetworkRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["subnet_ids"] = attrs["subnet_ids"].SetOptional()
 	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetOptional()
 	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1267,7 +1264,6 @@ func (m CreatePrivateAccessSettingsRequest) ApplySchemaCustomizations(attrs map[
 	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetOptional()
 	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1382,7 +1378,6 @@ func (m CreateStorageConfigurationRequest) ApplySchemaCustomizations(attrs map[s
 	attrs["role_arn"] = attrs["role_arn"].SetOptional()
 	attrs["root_bucket_info"] = attrs["root_bucket_info"].SetRequired()
 	attrs["storage_configuration_name"] = attrs["storage_configuration_name"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1488,7 +1483,6 @@ func (m CreateVpcEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["gcp_vpc_endpoint_info"] = attrs["gcp_vpc_endpoint_info"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["vpc_endpoint_name"] = attrs["vpc_endpoint_name"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1719,7 +1713,6 @@ func (m CreateWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
 	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
 	attrs["workspace_name"] = attrs["workspace_name"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -1898,9 +1891,6 @@ func (m *CreateWorkspaceRequest) SetGkeConfig(ctx context.Context, v GkeConfig) 
 }
 
 type Credential struct {
-	// The Databricks account ID that hosts the credential.
-	AccountId types.String `tfsdk:"account_id"`
-
 	AwsCredentials types.Object `tfsdk:"aws_credentials"`
 	// Time in epoch milliseconds when the credential was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
@@ -1934,7 +1924,6 @@ func (to *Credential) SyncFieldsDuringRead(ctx context.Context, from Credential)
 }
 
 func (m Credential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["aws_credentials"] = attrs["aws_credentials"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
@@ -1963,7 +1952,6 @@ func (m Credential) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":       m.AccountId,
 			"aws_credentials":  m.AwsCredentials,
 			"creation_time":    m.CreationTime,
 			"credentials_id":   m.CredentialsId,
@@ -1975,7 +1963,6 @@ func (m Credential) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Credential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":       types.StringType,
 			"aws_credentials":  AwsCredentials{}.Type(ctx),
 			"creation_time":    types.Int64Type,
 			"credentials_id":   types.StringType,
@@ -2057,9 +2044,6 @@ func (m CustomerFacingGcpCloudResourceContainer) Type(ctx context.Context) attr.
 }
 
 type CustomerManagedKey struct {
-	// The Databricks account ID that holds the customer-managed key.
-	AccountId types.String `tfsdk:"account_id"`
-
 	AwsKeyInfo types.Object `tfsdk:"aws_key_info"`
 
 	AzureKeyInfo types.Object `tfsdk:"azure_key_info"`
@@ -2143,7 +2127,6 @@ func (to *CustomerManagedKey) SyncFieldsDuringRead(ctx context.Context, from Cus
 }
 
 func (m CustomerManagedKey) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["aws_key_info"] = attrs["aws_key_info"].SetOptional()
 	attrs["azure_key_info"] = attrs["azure_key_info"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
@@ -2177,7 +2160,6 @@ func (m CustomerManagedKey) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":              m.AccountId,
 			"aws_key_info":            m.AwsKeyInfo,
 			"azure_key_info":          m.AzureKeyInfo,
 			"creation_time":           m.CreationTime,
@@ -2191,7 +2173,6 @@ func (m CustomerManagedKey) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m CustomerManagedKey) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":              types.StringType,
 			"aws_key_info":            AwsKeyInfo{}.Type(ctx),
 			"azure_key_info":          AzureKeyInfo{}.Type(ctx),
 			"creation_time":           types.Int64Type,
@@ -2317,7 +2298,6 @@ func (to *DeleteCredentialRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m DeleteCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
 
 	return attrs
@@ -2366,7 +2346,6 @@ func (to *DeleteEncryptionKeyRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m DeleteEncryptionKeyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["customer_managed_key_id"] = attrs["customer_managed_key_id"].SetRequired()
 
 	return attrs
@@ -2415,7 +2394,6 @@ func (to *DeleteNetworkRequest) SyncFieldsDuringRead(ctx context.Context, from D
 }
 
 func (m DeleteNetworkRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_id"] = attrs["network_id"].SetRequired()
 
 	return attrs
@@ -2463,7 +2441,6 @@ func (to *DeletePrivateAccesRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m DeletePrivateAccesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
 
 	return attrs
@@ -2511,7 +2488,6 @@ func (to *DeleteStorageRequest) SyncFieldsDuringRead(ctx context.Context, from D
 }
 
 func (m DeleteStorageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
 
 	return attrs
@@ -2559,7 +2535,6 @@ func (to *DeleteVpcEndpointRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m DeleteVpcEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetRequired()
 
 	return attrs
@@ -2607,7 +2582,6 @@ func (to *DeleteWorkspaceRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m DeleteWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -2968,7 +2942,6 @@ func (to *GetCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from G
 }
 
 func (m GetCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["credentials_id"] = attrs["credentials_id"].SetRequired()
 
 	return attrs
@@ -3017,7 +2990,6 @@ func (to *GetEncryptionKeyRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m GetEncryptionKeyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["customer_managed_key_id"] = attrs["customer_managed_key_id"].SetRequired()
 
 	return attrs
@@ -3066,7 +3038,6 @@ func (to *GetNetworkRequest) SyncFieldsDuringRead(ctx context.Context, from GetN
 }
 
 func (m GetNetworkRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["network_id"] = attrs["network_id"].SetRequired()
 
 	return attrs
@@ -3114,7 +3085,6 @@ func (to *GetPrivateAccesRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m GetPrivateAccesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
 
 	return attrs
@@ -3162,7 +3132,6 @@ func (to *GetStorageRequest) SyncFieldsDuringRead(ctx context.Context, from GetS
 }
 
 func (m GetStorageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
 
 	return attrs
@@ -3211,7 +3180,6 @@ func (to *GetVpcEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GetVpcEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetRequired()
 
 	return attrs
@@ -3259,7 +3227,6 @@ func (to *GetWorkspaceRequest) SyncFieldsDuringRead(ctx context.Context, from Ge
 }
 
 func (m GetWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
@@ -3410,7 +3377,6 @@ func (to *ListCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ListCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3452,7 +3418,6 @@ func (to *ListEncryptionKeysRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m ListEncryptionKeysRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3494,7 +3459,6 @@ func (to *ListNetworksRequest) SyncFieldsDuringRead(ctx context.Context, from Li
 }
 
 func (m ListNetworksRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3536,7 +3500,6 @@ func (to *ListPrivateAccessRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m ListPrivateAccessRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3578,7 +3541,6 @@ func (to *ListStorageRequest) SyncFieldsDuringRead(ctx context.Context, from Lis
 }
 
 func (m ListStorageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3620,7 +3582,6 @@ func (to *ListVpcEndpointsRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m ListVpcEndpointsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3662,7 +3623,6 @@ func (to *ListWorkspacesRequest) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m ListWorkspacesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -3695,8 +3655,6 @@ func (m ListWorkspacesRequest) Type(ctx context.Context) attr.Type {
 }
 
 type Network struct {
-	// The Databricks account ID associated with this network configuration.
-	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when the network was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Array of error messages about the network configuration.
@@ -3815,7 +3773,6 @@ func (to *Network) SyncFieldsDuringRead(ctx context.Context, from Network) {
 }
 
 func (m Network) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["error_messages"] = attrs["error_messages"].SetComputed()
 	attrs["gcp_network_info"] = attrs["gcp_network_info"].SetOptional()
@@ -3857,7 +3814,6 @@ func (m Network) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":         m.AccountId,
 			"creation_time":      m.CreationTime,
 			"error_messages":     m.ErrorMessages,
 			"gcp_network_info":   m.GcpNetworkInfo,
@@ -3877,7 +3833,6 @@ func (m Network) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Network) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":    types.StringType,
 			"creation_time": types.Int64Type,
 			"error_messages": basetypes.ListType{
 				ElemType: NetworkHealth{}.Type(ctx),
@@ -4302,8 +4257,6 @@ func (m NetworkWarning) Type(ctx context.Context) attr.Type {
 
 // *
 type PrivateAccessSettings struct {
-	// The Databricks account ID that hosts the private access settings.
-	AccountId types.String `tfsdk:"account_id"`
 	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
 	// is returned when registering the VPC endpoint configuration in your
 	// Databricks account. This is not the ID of the VPC endpoint in AWS. Only
@@ -4355,7 +4308,6 @@ func (to *PrivateAccessSettings) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m PrivateAccessSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
 	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetComputed()
@@ -4386,7 +4338,6 @@ func (m PrivateAccessSettings) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":                   m.AccountId,
 			"allowed_vpc_endpoint_ids":     m.AllowedVpcEndpointIds,
 			"private_access_level":         m.PrivateAccessLevel,
 			"private_access_settings_id":   m.PrivateAccessSettingsId,
@@ -4400,7 +4351,6 @@ func (m PrivateAccessSettings) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m PrivateAccessSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id": types.StringType,
 			"allowed_vpc_endpoint_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -4471,7 +4421,6 @@ func (to *ReplacePrivateAccessSettingsRequest) SyncFieldsDuringRead(ctx context.
 
 func (m ReplacePrivateAccessSettingsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["customer_facing_private_access_settings"] = attrs["customer_facing_private_access_settings"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetComputed()
 
 	return attrs
@@ -4586,8 +4535,6 @@ func (m RootBucketInfo) Type(ctx context.Context) attr.Type {
 }
 
 type StorageConfiguration struct {
-	// The Databricks account ID associated with this storage configuration.
-	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when the storage configuration was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Optional IAM role that is used to access the workspace catalog which is
@@ -4629,7 +4576,6 @@ func (to *StorageConfiguration) SyncFieldsDuringRead(ctx context.Context, from S
 }
 
 func (m StorageConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["role_arn"] = attrs["role_arn"].SetOptional()
 	attrs["root_bucket_info"] = attrs["root_bucket_info"].SetOptional()
@@ -4659,7 +4605,6 @@ func (m StorageConfiguration) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":                 m.AccountId,
 			"creation_time":              m.CreationTime,
 			"role_arn":                   m.RoleArn,
 			"root_bucket_info":           m.RootBucketInfo,
@@ -4672,7 +4617,6 @@ func (m StorageConfiguration) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m StorageConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":                 types.StringType,
 			"creation_time":              types.Int64Type,
 			"role_arn":                   types.StringType,
 			"root_bucket_info":           RootBucketInfo{}.Type(ctx),
@@ -4798,7 +4742,6 @@ func (to *UpdateWorkspaceRequest) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m UpdateWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["customer_facing_workspace"] = attrs["customer_facing_workspace"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["update_mask"] = attrs["update_mask"].SetOptional()
 
@@ -4869,10 +4812,6 @@ func (m *UpdateWorkspaceRequest) SetCustomerFacingWorkspace(ctx context.Context,
 
 // *
 type VpcEndpoint struct {
-	// The Databricks account ID that hosts the VPC endpoint configuration. TODO
-	// - This may signal an OpenAPI diff; it does not show up in the generated
-	// spec
-	AccountId types.String `tfsdk:"account_id"`
 	// The AWS Account in which the VPC endpoint object exists.
 	AwsAccountId types.String `tfsdk:"aws_account_id"`
 	// The ID of the Databricks [endpoint service] that this VPC endpoint is
@@ -4934,7 +4873,6 @@ func (to *VpcEndpoint) SyncFieldsDuringRead(ctx context.Context, from VpcEndpoin
 }
 
 func (m VpcEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["aws_account_id"] = attrs["aws_account_id"].SetOptional()
 	attrs["aws_endpoint_service_id"] = attrs["aws_endpoint_service_id"].SetOptional()
 	attrs["aws_vpc_endpoint_id"] = attrs["aws_vpc_endpoint_id"].SetOptional()
@@ -4968,7 +4906,6 @@ func (m VpcEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":              m.AccountId,
 			"aws_account_id":          m.AwsAccountId,
 			"aws_endpoint_service_id": m.AwsEndpointServiceId,
 			"aws_vpc_endpoint_id":     m.AwsVpcEndpointId,
@@ -4985,7 +4922,6 @@ func (m VpcEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m VpcEndpoint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":              types.StringType,
 			"aws_account_id":          types.StringType,
 			"aws_endpoint_service_id": types.StringType,
 			"aws_vpc_endpoint_id":     types.StringType,
@@ -5025,9 +4961,6 @@ func (m *VpcEndpoint) SetGcpVpcEndpointInfo(ctx context.Context, v GcpVpcEndpoin
 }
 
 type Workspace struct {
-	// Databricks account ID.
-	AccountId types.String `tfsdk:"account_id"`
-
 	AwsRegion types.String `tfsdk:"aws_region"`
 
 	AzureWorkspaceInfo types.Object `tfsdk:"azure_workspace_info"`
@@ -5191,7 +5124,6 @@ func (to *Workspace) SyncFieldsDuringRead(ctx context.Context, from Workspace) {
 }
 
 func (m Workspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["aws_region"] = attrs["aws_region"].SetOptional()
 	attrs["azure_workspace_info"] = attrs["azure_workspace_info"].SetComputed()
 	attrs["cloud"] = attrs["cloud"].SetOptional()
@@ -5247,7 +5179,6 @@ func (m Workspace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":                 m.AccountId,
 			"aws_region":                 m.AwsRegion,
 			"azure_workspace_info":       m.AzureWorkspaceInfo,
 			"cloud":                      m.Cloud,
@@ -5281,7 +5212,6 @@ func (m Workspace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Workspace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":               types.StringType,
 			"aws_region":               types.StringType,
 			"azure_workspace_info":     AzureWorkspaceInfo{}.Type(ctx),
 			"cloud":                    types.StringType,

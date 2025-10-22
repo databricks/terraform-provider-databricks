@@ -28,6 +28,10 @@ func DataSourceSyncedDatabaseTables() datasource.DataSource {
 // SyncedDatabaseTablesData extends the main model with additional fields.
 type SyncedDatabaseTablesData struct {
 	Database types.List `tfsdk:"synced_tables"`
+	// Name of the instance to get synced tables for.
+	InstanceName types.String `tfsdk:"instance_name"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +41,17 @@ func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string
 }
 
 func (m SyncedDatabaseTablesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["synced_tables"] = attrs["synced_tables"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *SyncedDatabaseTablesData) SyncFieldsDuringRead(ctx context.Context, from SyncedDatabaseTablesData) {
 }
 
 type SyncedDatabaseTablesDataSource struct {
@@ -102,5 +115,6 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 
 	var newState SyncedDatabaseTablesData
 	newState.Database = types.ListValueMust(SyncedDatabaseTableData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

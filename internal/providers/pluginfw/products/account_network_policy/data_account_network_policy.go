@@ -34,8 +34,6 @@ type AccountNetworkPolicyDataSource struct {
 
 // AccountNetworkPolicyData extends the main model with additional fields.
 type AccountNetworkPolicyData struct {
-	// The associated account ID for this Network Policy object.
-	AccountId types.String `tfsdk:"account_id"`
 	// The network policies applying for egress traffic.
 	Egress types.Object `tfsdk:"egress"`
 	// The unique identifier for the network policy.
@@ -65,7 +63,6 @@ func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
 			"egress":            m.Egress,
 			"network_policy_id": m.NetworkPolicyId,
 		},
@@ -77,7 +74,6 @@ func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.O
 func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
 			"egress":            settings_tf.NetworkPolicyEgress{}.Type(ctx),
 			"network_policy_id": types.StringType,
 		},
@@ -85,7 +81,6 @@ func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
 }
 
 func (m AccountNetworkPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["egress"] = attrs["egress"].SetComputed()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 

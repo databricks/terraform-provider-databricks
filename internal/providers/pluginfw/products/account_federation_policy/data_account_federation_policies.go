@@ -28,6 +28,8 @@ func DataSourceFederationPolicies() datasource.DataSource {
 // FederationPoliciesData extends the main model with additional fields.
 type FederationPoliciesData struct {
 	AccountFederationPolicy types.List `tfsdk:"policies"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +39,16 @@ func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]r
 }
 
 func (m FederationPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *FederationPoliciesData) SyncFieldsDuringRead(ctx context.Context, from FederationPoliciesData) {
 }
 
 type FederationPoliciesDataSource struct {
@@ -102,5 +112,6 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 
 	var newState FederationPoliciesData
 	newState.AccountFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -28,6 +28,10 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 // BudgetPoliciesData extends the main model with additional fields.
 type BudgetPoliciesData struct {
 	BudgetPolicy types.List `tfsdk:"policies"`
+	// The maximum number of budget policies to return. If unspecified, at most
+	// 100 budget policies will be returned. The maximum value is 1000; values
+	// above 1000 will be coerced to 1000.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,8 +41,16 @@ func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]refle
 }
 
 func (m BudgetPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
+}
+
+// SyncFieldsDuringRead copies values from the existing state into the receiver,
+// including both embedded model fields and additional fields. This method is called
+// during read.
+func (to *BudgetPoliciesData) SyncFieldsDuringRead(ctx context.Context, from BudgetPoliciesData) {
 }
 
 type BudgetPoliciesDataSource struct {
@@ -102,5 +114,6 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 
 	var newState BudgetPoliciesData
 	newState.BudgetPolicy = types.ListValueMust(BudgetPolicyData{}.Type(ctx), results)
+	newState.SyncFieldsDuringRead(ctx, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

@@ -57,7 +57,6 @@ func (to *CreateAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context
 
 func (m CreateAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 
 	return attrs
@@ -208,7 +207,6 @@ func (m CreateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -461,7 +459,6 @@ func (to *CreatePublishedAppIntegration) SyncFieldsDuringRead(ctx context.Contex
 func (m CreatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app_id"] = attrs["app_id"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 
 	return attrs
 }
@@ -609,7 +606,6 @@ func (to *CreateServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ct
 
 func (m CreateServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 
@@ -694,7 +690,6 @@ func (to *CreateServicePrincipalSecretRequest) SyncFieldsDuringRead(ctx context.
 
 func (m CreateServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["lifetime"] = attrs["lifetime"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 
 	return attrs
@@ -824,7 +819,6 @@ func (to *DeleteAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m DeleteAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
 	return attrs
@@ -913,7 +907,6 @@ func (to *DeleteCustomAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m DeleteCustomAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -1002,7 +995,6 @@ func (to *DeletePublishedAppIntegrationRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m DeletePublishedAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -1053,7 +1045,6 @@ func (to *DeleteServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ct
 }
 
 func (m DeleteServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
@@ -1107,7 +1098,6 @@ func (to *DeleteServicePrincipalSecretRequest) SyncFieldsDuringRead(ctx context.
 }
 
 func (m DeleteServicePrincipalSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["secret_id"] = attrs["secret_id"].SetRequired()
 
@@ -1298,7 +1288,6 @@ func (to *GetAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GetAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
 	return attrs
@@ -1615,7 +1604,6 @@ func (to *GetCustomAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Conte
 }
 
 func (m GetCustomAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -1875,7 +1863,6 @@ func (to *GetPublishedAppIntegrationRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GetPublishedAppIntegrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -2117,7 +2104,6 @@ func (to *GetServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ctx c
 }
 
 func (m GetServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 
@@ -2170,7 +2156,6 @@ func (to *ListAccountFederationPoliciesRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m ListAccountFederationPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -2225,7 +2210,6 @@ func (to *ListCustomAppIntegrationsRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m ListCustomAppIntegrationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["include_creator_username"] = attrs["include_creator_username"].SetOptional()
@@ -2376,7 +2360,6 @@ func (to *ListOAuthPublishedAppsRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m ListOAuthPublishedAppsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -2429,7 +2412,6 @@ func (to *ListPublishedAppIntegrationsRequest) SyncFieldsDuringRead(ctx context.
 }
 
 func (m ListPublishedAppIntegrationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -2484,7 +2466,6 @@ func (to *ListServicePrincipalFederationPoliciesRequest) SyncFieldsDuringRead(ct
 }
 
 func (m ListServicePrincipalFederationPoliciesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
@@ -2550,7 +2531,6 @@ func (to *ListServicePrincipalSecretsRequest) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m ListServicePrincipalSecretsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
@@ -3175,7 +3155,6 @@ func (to *UpdateAccountFederationPolicyRequest) SyncFieldsDuringRead(ctx context
 
 func (m UpdateAccountFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetOptional()
 
@@ -3325,7 +3304,6 @@ func (m UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -3556,7 +3534,6 @@ func (to *UpdatePublishedAppIntegration) SyncFieldsDuringRead(ctx context.Contex
 
 func (m UpdatePublishedAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 
 	return attrs
@@ -3703,7 +3680,6 @@ func (to *UpdateServicePrincipalFederationPolicyRequest) SyncFieldsDuringRead(ct
 
 func (m UpdateServicePrincipalFederationPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["policy"] = attrs["policy"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
 	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetOptional()

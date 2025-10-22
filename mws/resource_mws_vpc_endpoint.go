@@ -90,6 +90,13 @@ func ResourceMwsVpcEndpoint() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var vpcEndpoint VPCEndpoint
 			common.DataToStructPointer(d, s, &vpcEndpoint)
+			if vpcEndpoint.AccountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the resource")
+				}
+				vpcEndpoint.AccountID = c.Config.AccountID
+				d.Set("account_id", vpcEndpoint.AccountID)
+			}
 			if err := NewVPCEndpointAPI(ctx, c).Create(&vpcEndpoint); err != nil {
 				return err
 			}

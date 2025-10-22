@@ -66,7 +66,6 @@ resource "aws_kms_alias" "managed_services_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "managed_services" {
-  account_id = var.databricks_account_id
   aws_key_info {
     key_arn   = aws_kms_key.managed_services_customer_managed_key.arn
     key_alias = aws_kms_alias.managed_services_customer_managed_key_alias.name
@@ -88,7 +87,6 @@ variable "cmek_resource_id" {
 }
 
 resource "databricks_mws_customer_managed_keys" "managed_services" {
-  account_id = var.databricks_account_id
   gcp_key_info {
     kms_key_id = var.cmek_resource_id
   }
@@ -191,7 +189,6 @@ resource "aws_kms_alias" "storage_customer_managed_key_alias" {
 }
 
 resource "databricks_mws_customer_managed_keys" "storage" {
-  account_id = var.databricks_account_id
   aws_key_info {
     key_arn   = aws_kms_key.storage_customer_managed_key.arn
     key_alias = aws_kms_alias.storage_customer_managed_key_alias.name
@@ -213,7 +210,6 @@ variable "cmek_resource_id" {
 }
 
 resource "databricks_mws_customer_managed_keys" "storage" {
-  account_id = var.databricks_account_id
   gcp_key_info {
     kms_key_id = var.cmek_resource_id
   }
@@ -228,7 +224,7 @@ The following arguments are required:
 
 * `aws_key_info` - This field is a block and is documented below. This conflicts with `gcp_key_info`
 * `gcp_key_info` - This field is a block and is documented below. This conflicts with `aws_key_info`
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `use_cases` - *(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.* Possible values are:
   * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
   * `STORAGE` - for encryption of the DBFS Storage & Cluster EBS Volumes

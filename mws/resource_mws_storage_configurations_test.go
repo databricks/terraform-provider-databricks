@@ -177,3 +177,55 @@ func TestResourceStorageConfigurationDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/scid", d.Id())
 }
+
+func TestResourceStorageConfigurationCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/storage-configurations",
+				ExpectedRequest: StorageConfiguration{
+					StorageConfigurationName: "Main Storage",
+					RootBucketInfo: &RootBucketInfo{
+						BucketName: "bucket",
+					},
+				},
+				Response: StorageConfiguration{
+					StorageConfigurationID: "scid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
+				Response: StorageConfiguration{
+					StorageConfigurationID:   "scid",
+					StorageConfigurationName: "Main Storage",
+					RootBucketInfo: &RootBucketInfo{
+						BucketName: "bucket",
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsStorageConfigurations(),
+		State: map[string]any{
+			"bucket_name":                "bucket",
+			"storage_configuration_name": "Main Storage",
+		},
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc/scid",
+	})
+}
+
+func TestResourceStorageConfigurationCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsStorageConfigurations(),
+		State: map[string]any{
+			"bucket_name":                "bucket",
+			"storage_configuration_name": "Main Storage",
+		},
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the resource")
+}

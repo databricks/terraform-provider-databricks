@@ -73,7 +73,7 @@ type GcpNetworkInfo struct {
 
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
-	AccountID        string               `json:"account_id" tf:"force_new"`
+	AccountID        string               `json:"account_id,omitempty" tf:"computed,force_new"`
 	NetworkID        string               `json:"network_id,omitempty" tf:"computed"`
 	NetworkName      string               `json:"network_name" tf:"force_new"`
 	VPCID            string               `json:"vpc_id,omitempty" tf:"force_new"`
@@ -100,7 +100,7 @@ type GcpVpcEndpointInfo struct {
 type VPCEndpoint struct {
 	VPCEndpointID           string              `json:"vpc_endpoint_id,omitempty" tf:"computed"`
 	AwsVPCEndpointID        string              `json:"aws_vpc_endpoint_id,omitempty"`
-	AccountID               string              `json:"account_id,omitempty"`
+	AccountID               string              `json:"account_id,omitempty" tf:"computed,force_new"`
 	VPCEndpointName         string              `json:"vpc_endpoint_name"`
 	AwsVPCEndpointServiceID string              `json:"aws_endpoint_service_id,omitempty" tf:"computed"`
 	AWSAccountID            string              `json:"aws_account_id,omitempty" tf:"computed"`

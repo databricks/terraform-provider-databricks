@@ -17,55 +17,58 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResourceWorkspaceCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/accounts/abc/workspaces",
-				ExpectedRequest: Workspace{
-					AccountID:                           "abc",
-					IsNoPublicIPEnabled:                 true,
-					WorkspaceName:                       "labdata",
-					DeploymentName:                      "900150983cd24fb0",
-					AwsRegion:                           "us-east-1",
-					CredentialsID:                       "bcd",
-					StorageConfigurationID:              "ghi",
-					NetworkID:                           "fgh",
-					ManagedServicesCustomerManagedKeyID: "def",
-					StorageCustomerManagedKeyID:         "def",
-					CustomTags: map[string]string{
-						"SoldToCode": "1234",
-					},
-				},
-				Response: Workspace{
-					WorkspaceID:    1234,
-					AccountID:      "abc",
-					DeploymentName: "900150983cd24fb0",
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					WorkspaceID:                         1234,
-					WorkspaceStatus:                     WorkspaceStatusRunning,
-					WorkspaceName:                       "labdata",
-					DeploymentName:                      "900150983cd24fb0",
-					AwsRegion:                           "us-east-1",
-					CredentialsID:                       "bcd",
-					StorageConfigurationID:              "ghi",
-					NetworkID:                           "fgh",
-					ManagedServicesCustomerManagedKeyID: "def",
-					StorageCustomerManagedKeyID:         "def",
-					AccountID:                           "abc",
-					CustomTags: map[string]string{
-						"SoldToCode": "1234",
-					},
-				},
+var workspaceCreateFixtures = []qa.HTTPFixture{
+	{
+		Method:   "POST",
+		Resource: "/api/2.0/accounts/abc/workspaces",
+		ExpectedRequest: Workspace{
+			AccountID:                           "abc",
+			IsNoPublicIPEnabled:                 true,
+			WorkspaceName:                       "labdata",
+			DeploymentName:                      "900150983cd24fb0",
+			AwsRegion:                           "us-east-1",
+			CredentialsID:                       "bcd",
+			StorageConfigurationID:              "ghi",
+			NetworkID:                           "fgh",
+			ManagedServicesCustomerManagedKeyID: "def",
+			StorageCustomerManagedKeyID:         "def",
+			CustomTags: map[string]string{
+				"SoldToCode": "1234",
 			},
 		},
+		Response: Workspace{
+			WorkspaceID:    1234,
+			AccountID:      "abc",
+			DeploymentName: "900150983cd24fb0",
+		},
+		ReuseRequest: true,
+	},
+	{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+		Response: Workspace{
+			WorkspaceID:                         1234,
+			WorkspaceStatus:                     WorkspaceStatusRunning,
+			WorkspaceName:                       "labdata",
+			DeploymentName:                      "900150983cd24fb0",
+			AwsRegion:                           "us-east-1",
+			CredentialsID:                       "bcd",
+			StorageConfigurationID:              "ghi",
+			NetworkID:                           "fgh",
+			ManagedServicesCustomerManagedKeyID: "def",
+			StorageCustomerManagedKeyID:         "def",
+			AccountID:                           "abc",
+			CustomTags: map[string]string{
+				"SoldToCode": "1234",
+			},
+		},
+	},
+}
+
+func TestResourceWorkspaceCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: workspaceCreateFixtures,
 		Resource: ResourceMwsWorkspaces(),
 		State: map[string]any{
 			"account_id":     "abc",
@@ -82,9 +85,48 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/1234", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abc/1234",
+	})
+}
+
+func TestResourceWorkspaceCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: workspaceCreateFixtures,
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"custom_tags": map[string]any{
+				"SoldToCode": "1234",
+			},
+		},
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc/1234",
+	})
+}
+
+func TestResourceWorkspaceCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: workspaceCreateFixtures,
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"aws_region":               "us-east-1",
+			"network_id":               "fgh",
+			"storage_configuration_id": "ghi",
+			"workspace_name":           "labdata",
+		},
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the workspace resource")
 }
 
 func TestResourceWorkspaceCreateGcp(t *testing.T) {

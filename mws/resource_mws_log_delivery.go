@@ -17,7 +17,7 @@ type LogDelivery struct {
 
 // LogDeliveryConfiguration describes log delivery
 type LogDeliveryConfiguration struct {
-	AccountID              string  `json:"account_id" tf:"force_new"`
+	AccountID              string  `json:"account_id,omitempty" tf:"computed,force_new"`
 	ConfigID               string  `json:"config_id,omitempty" tf:"computed,force_new"`
 	CredentialsID          string  `json:"credentials_id" tf:"force_new"`
 	StorageConfigurationID string  `json:"storage_configuration_id" tf:"force_new"`
@@ -82,6 +82,13 @@ func ResourceMwsLogDelivery() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
 			common.DataToStructPointer(d, s, &ldc)
+			if ldc.AccountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the resource")
+				}
+				ldc.AccountID = c.Config.AccountID
+				d.Set("account_id", ldc.AccountID)
+			}
 			configID, err := NewLogDeliveryAPI(ctx, c).Create(ldc)
 			if err != nil {
 				return err
@@ -95,6 +102,9 @@ func ResourceMwsLogDelivery() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
 			common.DataToStructPointer(d, s, &ldc)
+			if ldc.AccountID == "" {
+				ldc.AccountID = c.Config.AccountID
+			}
 			err := NewLogDeliveryAPI(ctx, c).Patch(ldc.AccountID, ldc.ConfigID, ldc.Status)
 			if err != nil {
 				return err

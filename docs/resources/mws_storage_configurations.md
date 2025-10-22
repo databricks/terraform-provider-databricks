@@ -32,7 +32,6 @@ resource "aws_s3_bucket_versioning" "root_versioning" {
 
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
   storage_configuration_name = "${var.prefix}-storage"
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
 }
@@ -43,7 +42,7 @@ resource "databricks_mws_storage_configurations" "this" {
 The following arguments are required:
 
 * `bucket_name` - name of AWS S3 bucket
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `storage_configuration_name` - name under which this storage configuration is stored
 
 ## Attribute Reference

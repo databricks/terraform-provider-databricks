@@ -73,7 +73,6 @@ Once you have created the necessary endpoints, you need to register each of them
 ```hcl
 resource "databricks_mws_vpc_endpoint" "workspace" {
   provider            = databricks.mws
-  account_id          = var.databricks_account_id
   aws_vpc_endpoint_id = aws_vpc_endpoint.workspace.id
   vpc_endpoint_name   = "VPC Relay for ${module.vpc.vpc_id}"
   region              = var.region
@@ -82,7 +81,6 @@ resource "databricks_mws_vpc_endpoint" "workspace" {
 
 resource "databricks_mws_vpc_endpoint" "relay" {
   provider            = databricks.mws
-  account_id          = var.databricks_account_id
   aws_vpc_endpoint_id = aws_vpc_endpoint.relay.id
   vpc_endpoint_name   = "VPC Relay for ${module.vpc.vpc_id}"
   region              = var.region
@@ -95,7 +93,6 @@ Typically the next steps after this would be to create a [databricks_mws_private
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
   aws_region                 = var.region
   workspace_name             = local.prefix
   credentials_id             = databricks_mws_credentials.this.credentials_id
@@ -128,7 +125,6 @@ provider "databricks" {
 
 resource "databricks_mws_vpc_endpoint" "workspace" {
   provider          = databricks.mws
-  account_id        = var.databricks_account_id
   vpc_endpoint_name = "PSC Rest API endpoint"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
@@ -139,7 +135,6 @@ resource "databricks_mws_vpc_endpoint" "workspace" {
 
 resource "databricks_mws_vpc_endpoint" "relay" {
   provider          = databricks.mws
-  account_id        = var.databricks_account_id
   vpc_endpoint_name = "PSC Relay endpoint"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
@@ -154,7 +149,6 @@ Typically the next steps after this would be to create a [databricks_mws_private
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws
-  account_id     = var.databricks_account_id
   workspace_name = "gcp workspace"
   location       = var.subnet_region
   cloud_resource_container {
@@ -177,7 +171,7 @@ resource "databricks_mws_workspaces" "this" {
 
 The following arguments are required:
 
-* `account_id` - Account Id that could be found in the Accounts Console for [AWS](https://accounts.cloud.databricks.com/) or [GCP](https://accounts.gcp.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the Accounts Console for [AWS](https://accounts.cloud.databricks.com/) or [GCP](https://accounts.gcp.databricks.com/)
 * `aws_vpc_endpoint_id` - (AWS only) ID of configured [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint)
 * `vpc_endpoint_name` - Name of VPC Endpoint in Databricks Account
 * `region` - (AWS only) Region of AWS VPC

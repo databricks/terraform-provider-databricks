@@ -80,7 +80,7 @@ type externalCustomerInfo struct {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
-	AccountID                           string                   `json:"account_id"`
+	AccountID                           string                   `json:"account_id,omitempty" tf:"computed,force_new"`
 	WorkspaceName                       string                   `json:"workspace_name"`
 	DeploymentName                      string                   `json:"deployment_name,omitempty"`
 	AwsRegion                           string                   `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
@@ -617,6 +617,13 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
+			if workspace.AccountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the workspace resource")
+				}
+				workspace.AccountID = c.Config.AccountID
+				d.Set("account_id", workspace.AccountID)
+			}
 			if c.IsAws() {
 				if _, ok := d.GetOk("aws_region"); !ok {
 					return fmt.Errorf("aws_region is required for AWS workspaces")
@@ -690,6 +697,9 @@ func ResourceMwsWorkspaces() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
+			if workspace.AccountID == "" {
+				workspace.AccountID = c.Config.AccountID
+			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID

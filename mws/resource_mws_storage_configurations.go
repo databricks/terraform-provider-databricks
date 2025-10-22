@@ -62,6 +62,13 @@ func ResourceMwsStorageConfigurations() common.Resource {
 			name := d.Get("storage_configuration_name").(string)
 			bucketName := d.Get("bucket_name").(string)
 			accountID := d.Get("account_id").(string)
+			if accountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the resource")
+				}
+				accountID = c.Config.AccountID
+				d.Set("account_id", accountID)
+			}
 			storageConfiguration, err := NewStorageConfigurationsAPI(ctx, c).Create(accountID, name, bucketName)
 			if err != nil {
 				return err
@@ -93,7 +100,9 @@ func ResourceMwsStorageConfigurations() common.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
+				Computed:  true,
+				ForceNew:  true,
 				Sensitive: true,
 			},
 			"storage_configuration_name": {

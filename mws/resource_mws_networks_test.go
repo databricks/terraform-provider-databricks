@@ -340,3 +340,61 @@ func TestResourceNetworkDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/nid", d.Id())
 }
+
+func TestResourceNetworkCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/networks",
+				ExpectedRequest: Network{
+					AccountID:        "abc",
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+				},
+				Response: Network{
+					AccountID: "abc",
+					NetworkID: "nid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: Network{
+					NetworkID:        "nid",
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+				},
+			},
+		},
+		Resource: ResourceMwsNetworks(),
+		HCL: `
+		network_name = "Open Workers"
+		security_group_ids = ["one", "two"]
+		subnet_ids = ["three", "four"]
+		vpc_id = "five"
+		`,
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc/nid",
+	})
+}
+
+func TestResourceNetworkCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsNetworks(),
+		HCL: `
+		network_name = "Open Workers"
+		security_group_ids = ["one", "two"]
+		subnet_ids = ["three", "four"]
+		vpc_id = "five"
+		`,
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the resource")
+}

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "cluster"
@@ -83,17 +82,10 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var workspaceID string
-	if !clusterInfo.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(clusterInfo.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, clusterInfo.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func DataSourceRegisteredModelVersions() datasource.DataSource {
@@ -73,17 +72,10 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	var workspaceID string
-	if !registeredModelVersions.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(registeredModelVersions.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, registeredModelVersions.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "notification_destinations"
@@ -102,17 +101,10 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	var workspaceID string
-	if !notificationInfo.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(notificationInfo.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, notificationInfo.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

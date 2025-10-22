@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "volumes"
@@ -83,18 +82,12 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	var listVolumesRequest catalog.ListVolumesRequest
 	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
 
-	var workspaceID string
-	if !volumesList.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(volumesList.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, volumesList.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {

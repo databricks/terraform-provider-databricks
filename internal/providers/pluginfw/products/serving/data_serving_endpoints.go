@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func DataSourceServingEndpoints() datasource.DataSource {
@@ -71,17 +70,10 @@ func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var workspaceID string
-	if !endpoints.ProviderConfig.IsNull() {
-		var namespace tfschema.ProviderConfigData
-		resp.Diagnostics.Append(endpoints.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-			UnhandledNullAsEmpty:    true,
-			UnhandledUnknownAsEmpty: true,
-		})...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		workspaceID = namespace.WorkspaceID.ValueString()
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, endpoints.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)

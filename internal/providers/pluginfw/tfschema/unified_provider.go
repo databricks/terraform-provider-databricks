@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -115,4 +116,48 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 			"workspace_id": types.StringType,
 		},
 	}
+}
+
+func GetWorkspaceIDResource(ctx context.Context, providerConfig types.Object) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() {
+		return workspaceID, diags
+	}
+
+	var namespace ProviderConfig
+	diags.Append(providerConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	workspaceID = namespace.WorkspaceID.ValueString()
+
+	return workspaceID, diags
+}
+
+func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() {
+		return workspaceID, diags
+	}
+
+	var namespace ProviderConfigData
+	diags.Append(providerConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	workspaceID = namespace.WorkspaceID.ValueString()
+
+	return workspaceID, diags
 }

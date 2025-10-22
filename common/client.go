@@ -77,6 +77,27 @@ type DatabricksClient struct {
 	mu sync.Mutex
 }
 
+// GetDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
+// This is used by resources and data sources that are developed
+// over SDKv2 and are not using Go SDK.
+func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+	// The provider can be configured at account level or workspace level.
+	if c.Config.IsAccountClient() {
+		w, err := c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+		if err != nil {
+			return nil, err
+		}
+		c.SetWorkspaceClient(w)
+		return c, nil
+	}
+	w, err := c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	c.SetWorkspaceClient(w)
+	return c, nil
+}
+
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks
 // WorkspaceClient for workspace level resources or diagnostics if that fails
 // for terraform provider, the provider can be configured at account level or workspace level.
@@ -105,13 +126,6 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
-}
-
-// GetDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
-// This is used by resources and data sources that are developed
-// over SDKv2 and are not using Go SDK.
-func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
-	return c, nil
 }
 
 // getWorkspaceClientForAccountConfiguredProvider gets the workspace client for

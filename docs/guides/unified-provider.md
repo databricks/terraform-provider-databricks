@@ -72,11 +72,11 @@ resource "databricks_workspace_level_resource" "this" {
 }
 ```
 
-Migration to unified provider happens in 2 steps.
-1. Add `provider_config` and `workspace_id` to the resource without removing the workspace-level provider. Then do terraform apply so these values are part of the state.
+Migration to the unified provider happens in 2 steps:
+1. Add `provider_config` and `workspace_id` to the resource without removing the workspace-level provider. Then run `terraform apply` so these values are included in the state.
 2. Remove the workspace-level provider.
 
-you can remove the workspace-level provider and specify the `workspace_id` in the `provider_config` attribute or block instead. For example:
+For example:
 
 ```hcl
 // Define an account provider
@@ -104,15 +104,17 @@ resource "databricks_workspace_level_resource" "this" {
 ```
 
 ## FAQ
-* Workspace for which the workspace_id is supplied to the resource through provider_config must belong to the account the provider is configured with.
-* Migration: Doing the migration in 1 step will lead to issues. This happens because the state doesn't have workspace_id during the refresh.
+
+* An empty `workspace_id` is not allowed, and `terraform plan` will fail with the error: `"workspace_id string length must be at least 1"`.
+* The `workspace_id` supplied to the resource through `provider_config` must belong to the account for which the provider is configured. If the workspace does not belong to the account, you will receive an error: `"failed to get workspace client, please check the workspace_id provided in the provider_config"`.
+* Migrating to the unified provider in a single step (i.e., removing the workspace-level provider and adding `provider_config` to the resource simultaneously) will result in an error: `"workspace_id is not set, please set the workspace_id in the provider_config"`. This occurs because the state does not contain `workspace_id` during the refresh phase. Migration must be done in 2 steps as described above.
 
 ## Limitations
 
 There are some limitations to this feature that we plan to address in the near future:
 
 1. Databricks CLI and Azure CLI authentication methods are not currently supported
-2. Some resources do not yet support the unified provider. Please refer to the documentation for each resource or data source to check if they support the `provider_config` attribute or block.
+2. Some resources do not yet support the unified provider as the support is rolling out incrementally. Please refer to the documentation for each resource or data source to check if they support the `provider_config` attribute or block.
 
 ## Reporting Issues
 

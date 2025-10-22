@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fix Inconsistent Plan Errors in Permissions Resource ([#5091](https://github.com/databricks/terraform-provider-databricks/pull/5091))
+
 ### Documentation
 
 ### Exporter

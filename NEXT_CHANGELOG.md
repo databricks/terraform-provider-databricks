@@ -20,3 +20,4 @@
 ### Internal Changes
 
 * Fix custom_app_integration_test ([#5129](https://github.com/databricks/terraform-provider-databricks/pull/5129))
+* Support Databricks Client in CustomizeDiff ([#5139](https://github.com/databricks/terraform-provider-databricks/pull/5139))

@@ -2,6 +2,10 @@
 
 ## Release v1.95.0
 
+### Breaking Changes
+
+* Remove `recipient_federation_policy` resource and datasources ([#5126](https://github.com/databricks/terraform-provider-databricks/pull/5126))
+
 ### New Features and Improvements
 
 * Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))

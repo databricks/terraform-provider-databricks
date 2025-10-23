@@ -28,6 +28,8 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 // DatabaseInstancesData extends the main model with additional fields.
 type DatabaseInstancesData struct {
 	Database types.List `tfsdk:"database_instances"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]re
 }
 
 func (m DatabaseInstancesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["database_instances"] = attrs["database_instances"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, database_instance.ToObjectValue(ctx))
 	}
 
-	var newState DatabaseInstancesData
-	newState.Database = types.ListValueMust(DatabaseInstanceData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.Database = types.ListValueMust(DatabaseInstanceData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

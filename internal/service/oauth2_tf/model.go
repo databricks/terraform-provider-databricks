@@ -3062,9 +3062,26 @@ func (m SecretInfo) Type(ctx context.Context) attr.Type {
 }
 
 type TokenAccessPolicy struct {
+	// Absolute OAuth session TTL in minutes. Effective only when the single-use
+	// refresh token feature is enabled. This is the absolute TTL of all refresh
+	// tokens issued in one OAuth session. When a new refresh token is issued
+	// during refresh token rotation, it will inherit the same absolute TTL as
+	// the old refresh token. In other words, this represents the maximum amount
+	// of time a user can stay logged in without re-authenticating.
+	AbsoluteSessionLifetimeInMinutes types.Int64 `tfsdk:"absolute_session_lifetime_in_minutes"`
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes"`
-	// refresh token time to live in minutes
+	// Whether to enable single-use refresh tokens (refresh token rotation). If
+	// this feature is enabled, upon successfully getting a new access token
+	// using a refresh token, Databricks will issue a new refresh token along
+	// with the access token in the response and invalidate the old refresh
+	// token. The client should use the new refresh token to get access tokens
+	// in future requests.
+	EnableSingleUseRefreshTokens types.Bool `tfsdk:"enable_single_use_refresh_tokens"`
+	// Refresh token time to live in minutes. When single-use refresh tokens are
+	// enabled, this represents the TTL of an individual refresh token. If the
+	// refresh token is used before it expires, a new one is issued with a
+	// renewed individual TTL.
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes"`
 }
 
@@ -3075,7 +3092,9 @@ func (to *TokenAccessPolicy) SyncFieldsDuringRead(ctx context.Context, from Toke
 }
 
 func (m TokenAccessPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["absolute_session_lifetime_in_minutes"] = attrs["absolute_session_lifetime_in_minutes"].SetOptional()
 	attrs["access_token_ttl_in_minutes"] = attrs["access_token_ttl_in_minutes"].SetOptional()
+	attrs["enable_single_use_refresh_tokens"] = attrs["enable_single_use_refresh_tokens"].SetOptional()
 	attrs["refresh_token_ttl_in_minutes"] = attrs["refresh_token_ttl_in_minutes"].SetOptional()
 
 	return attrs
@@ -3099,8 +3118,10 @@ func (m TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_token_ttl_in_minutes":  m.AccessTokenTtlInMinutes,
-			"refresh_token_ttl_in_minutes": m.RefreshTokenTtlInMinutes,
+			"absolute_session_lifetime_in_minutes": m.AbsoluteSessionLifetimeInMinutes,
+			"access_token_ttl_in_minutes":          m.AccessTokenTtlInMinutes,
+			"enable_single_use_refresh_tokens":     m.EnableSingleUseRefreshTokens,
+			"refresh_token_ttl_in_minutes":         m.RefreshTokenTtlInMinutes,
 		})
 }
 
@@ -3108,8 +3129,10 @@ func (m TokenAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m TokenAccessPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_token_ttl_in_minutes":  types.Int64Type,
-			"refresh_token_ttl_in_minutes": types.Int64Type,
+			"absolute_session_lifetime_in_minutes": types.Int64Type,
+			"access_token_ttl_in_minutes":          types.Int64Type,
+			"enable_single_use_refresh_tokens":     types.BoolType,
+			"refresh_token_ttl_in_minutes":         types.Int64Type,
 		},
 	}
 }

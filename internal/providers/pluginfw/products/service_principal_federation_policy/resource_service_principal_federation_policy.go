@@ -241,7 +241,9 @@ func (r *FederationPolicyResource) update(ctx context.Context, plan FederationPo
 	}
 
 	var newState FederationPolicy
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -376,11 +378,13 @@ func (r *FederationPolicyResource) Delete(ctx context.Context, req resource.Dele
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.ServicePrincipalFederationPolicy.Delete(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete service_principal_federation_policy", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &FederationPolicyResource{}

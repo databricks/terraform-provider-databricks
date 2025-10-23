@@ -80,7 +80,8 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 // and contains additional fields.
 func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"are_any_destinations_hidden": types.BoolType,
+		AttrTypes: map[string]attr.Type{
+			"are_any_destinations_hidden": types.BoolType,
 			"destinations": basetypes.ListType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
@@ -91,8 +92,8 @@ func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 
 func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
-	attrs["destinations"] = attrs["destinations"].SetRequired()
-	attrs["securable"] = attrs["securable"].SetRequired()
+	attrs["destinations"] = attrs["destinations"].SetComputed()
+	attrs["securable"] = attrs["securable"].SetComputed()
 
 	return attrs
 }

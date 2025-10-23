@@ -43,9 +43,23 @@ type MonitorResource struct {
 type Monitor struct {
 	// Anomaly Detection Configuration, applicable to `schema` object types.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-	// Data Profiling Configuration, applicable to `table` object types
+	// Data Profiling Configuration, applicable to `table` object types. Exactly
+	// one `Analysis Configuration` must be present.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -247,7 +261,9 @@ func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.
 	}
 
 	var newState Monitor
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -380,11 +396,13 @@ func (r *MonitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.DataQuality.DeleteMonitor(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_quality_monitor", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &MonitorResource{}

@@ -10150,6 +10150,11 @@ type RepairRun struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -10159,10 +10164,10 @@ type RepairRun struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
@@ -10181,15 +10186,15 @@ type RepairRun struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// The performance mode on a serverless job. The performance target
 	// determines the level of compute performance or cost-efficiency for the
@@ -10211,8 +10216,8 @@ type RepairRun struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -10220,7 +10225,7 @@ type RepairRun struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// If true, repair all failed tasks. Only one of `rerun_tasks` or
 	// `rerun_all_failed_tasks` can be used.
@@ -10241,8 +10246,8 @@ type RepairRun struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -10250,11 +10255,16 @@ type RepairRun struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -13123,6 +13133,11 @@ type RunJobTask struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -13132,10 +13147,10 @@ type RunJobTask struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// ID of the job to trigger.
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -13151,15 +13166,15 @@ type RunJobTask struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
@@ -13172,8 +13187,8 @@ type RunJobTask struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13181,7 +13196,7 @@ type RunJobTask struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
@@ -13191,8 +13206,8 @@ type RunJobTask struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13200,11 +13215,16 @@ type RunJobTask struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -13606,6 +13626,11 @@ type RunNow struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
@@ -13630,10 +13655,10 @@ type RunNow struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// The ID of the job to be executed
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -13650,15 +13675,15 @@ type RunNow struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
@@ -13683,8 +13708,8 @@ type RunNow struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13692,7 +13717,7 @@ type RunNow struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// The queue settings of the run.
 	Queue types.Object `tfsdk:"queue"`
@@ -13704,8 +13729,8 @@ type RunNow struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13713,11 +13738,16 @@ type RunNow struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -14788,6 +14818,11 @@ type RunParameters struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -14797,10 +14832,10 @@ type RunParameters struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
@@ -14812,15 +14847,15 @@ type RunParameters struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
@@ -14833,8 +14868,8 @@ type RunParameters struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -14842,7 +14877,7 @@ type RunParameters struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
@@ -14852,8 +14887,8 @@ type RunParameters struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -14861,11 +14896,16 @@ type RunParameters struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 

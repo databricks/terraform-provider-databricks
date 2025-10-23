@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -32,13 +33,16 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
+	tfschema.Namespace_SdkV2
 	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
 
 func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
+	types := s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
+	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return types
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -160,6 +164,9 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 
 		c.SetComputed("id")
 
+		// Ensure provider_config list has at most 1 element
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
+
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -177,11 +184,7 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+
 	var plan ShareInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -199,6 +202,19 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	shareInfo, err := w.Shares.Create(ctx, createShare)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create share", err.Error())
@@ -252,15 +268,21 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	w, diags := r.Client.GetWorkspaceClient()
+	var getShareRequest sharing.GetShareRequest
+	getShareRequest.IncludeSharedData = true
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, existingState.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var getShareRequest sharing.GetShareRequest
-	getShareRequest.IncludeSharedData = true
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -302,12 +324,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var plan ShareInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -324,7 +340,18 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	currentShareInfo, err := client.Shares.Get(ctx, getShareRequest)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	currentShareInfo, err := w.Shares.Get(ctx, getShareRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to get current share info", err.Error())
 		return
@@ -337,7 +364,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	// if owner has changed, update the share owner
 	if !plan.Owner.IsNull() {
-		updatedShareInfo, err := client.Shares.Update(ctx, sharing.UpdateShare{
+		updatedShareInfo, err := w.Shares.Update(ctx, sharing.UpdateShare{
 			Name:  state.Name.ValueString(),
 			Owner: plan.Owner.ValueString(),
 		})
@@ -362,12 +389,12 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if !plan.Comment.IsNull() {
 			update.Comment = plan.Comment.ValueString()
 		}
-		upToDateShareInfo, err = client.Shares.Update(ctx, update)
+		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())
 
-			rollbackShareInfo, rollbackErr := client.Shares.Update(ctx, sharing.UpdateShare{
+			rollbackShareInfo, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
 				Name:  currentShareInfo.Name,
 				Owner: currentShareInfo.Owner,
 			})
@@ -402,14 +429,26 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+	var state ShareInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var deleteShareRequest sharing_tf.DeleteShareRequest
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &deleteShareRequest.Name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, state.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -473,5 +512,6 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 		finalObjects = append(finalObjects, newStateObjects[i])
 	}
 	newState.SetObjects(ctx, finalObjects)
+	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
 	return newState, d
 }

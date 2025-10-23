@@ -3,17 +3,14 @@ package access
 // REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
 
 import (
-	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-
 	"github.com/databricks/terraform-provider-databricks/qa"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
@@ -27,49 +24,41 @@ var (
 )
 
 func TestIPACLCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/ip-access-lists",
-				ExpectedRequest: settings.CreateIpAccessList{
-					Label:       TestingLabel,
-					ListType:    TestingListType,
-					IpAddresses: TestingIpAddresses,
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockIpAccessListsAPI().EXPECT()
+			api.Create(mock.Anything, settings.CreateIpAccessList{
+				Label:       TestingLabel,
+				ListType:    TestingListType,
+				IpAddresses: TestingIpAddresses,
+			}).Return(&settings.CreateIpAccessListResponse{
+				IpAccessList: &settings.IpAccessListInfo{
+					ListId:       TestingId,
+					Label:        TestingLabel,
+					ListType:     TestingListType,
+					IpAddresses:  TestingIpAddresses,
+					AddressCount: 2,
+					CreatedAt:    87939234,
+					CreatedBy:    1234556,
+					UpdatedAt:    87939234,
+					UpdatedBy:    1234556,
+					Enabled:      TestingEnabled,
 				},
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
-					},
+			}, nil)
+			api.GetByIpAccessListId(mock.Anything, TestingId).Return(&settings.FetchIpAccessListResponse{
+				IpAccessList: &settings.IpAccessListInfo{
+					ListId:       TestingId,
+					Label:        TestingLabel,
+					ListType:     TestingListType,
+					IpAddresses:  TestingIpAddresses,
+					AddressCount: 2,
+					CreatedAt:    87939234,
+					CreatedBy:    1234556,
+					UpdatedAt:    87939234,
+					UpdatedBy:    1234556,
+					Enabled:      TestingEnabled,
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
-					},
-				},
-			},
+			}, nil)
 		},
 		Resource: ResourceIPAccessList(),
 		State: map[string]any{
@@ -78,27 +67,28 @@ func TestIPACLCreate(t *testing.T) {
 			"ip_addresses": TestingIpAddressesState,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           TestingId,
+		"label":        TestingLabel,
+		"list_type":    TestingListTypeString,
+		"enabled":      TestingEnabled,
+		"ip_addresses": TestingIpAddressesState,
+	})
 }
 
 func TestAPIACLCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/ip-access-lists",
-				Response: apierr.APIError{
-					ErrorCode: "RESOURCE_ALREADY_EXISTS",
-					Message:   "IP access list with type (" + TestingListTypeString + ") and label (" + TestingLabel + ") already exists",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				Create(mock.Anything, settings.CreateIpAccessList{
+					Label:       TestingLabel,
+					ListType:    TestingListType,
+					IpAddresses: TestingIpAddresses,
+				}).Return(nil, &apierr.APIError{
+				ErrorCode:  "RESOURCE_ALREADY_EXISTS",
+				StatusCode: 400,
+				Message:    "IP access list with type (" + TestingListTypeString + ") and label (" + TestingLabel + ") already exists",
+			})
 		},
 		Resource: ResourceIPAccessList(),
 		State: map[string]any{
@@ -114,50 +104,30 @@ func TestAPIACLCreate_Error(t *testing.T) {
 }
 
 func TestIPACLUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
-					},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockIpAccessListsAPI().EXPECT()
+			api.GetByIpAccessListId(mock.Anything, TestingId).Return(&settings.FetchIpAccessListResponse{
+				IpAccessList: &settings.IpAccessListInfo{
+					ListId:       TestingId,
+					Label:        TestingLabel,
+					ListType:     TestingListType,
+					IpAddresses:  TestingIpAddresses,
+					AddressCount: 2,
+					CreatedAt:    87939234,
+					CreatedBy:    1234556,
+					UpdatedAt:    87939234,
+					UpdatedBy:    1234556,
+					Enabled:      TestingEnabled,
 				},
-			},
-			{
-				Method:   http.MethodPatch,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
-					Label:       TestingLabel,
-					ListType:    TestingListType,
-					IpAddresses: TestingIpAddresses,
-					Enabled:     TestingEnabled,
-				},
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
-					},
-				},
-			},
+			}, nil)
+			api.Update(mock.Anything, settings.UpdateIpAccessList{
+				IpAccessListId: TestingId,
+				Label:          TestingLabel,
+				ListType:       TestingListType,
+				IpAddresses:    TestingIpAddresses,
+				Enabled:        TestingEnabled,
+			}).Return(nil)
 		},
 		Resource: ResourceIPAccessList(),
 		State: map[string]any{
@@ -167,30 +137,26 @@ func TestIPACLUpdate(t *testing.T) {
 		},
 		Update: true,
 		ID:     TestingId,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           TestingId,
+		"label":        TestingLabel,
+		"list_type":    TestingListTypeString,
+		"enabled":      TestingEnabled,
+		"ip_addresses": TestingIpAddressesState,
+	})
 }
 
 func TestIPACLUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPatch,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-				ExpectedRequest: settings.UpdateIpAccessList{
-					Enabled: TestingEnabled,
-				},
-				Response: apierr.APIError{
-					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
-				},
-				Status: 500,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				Update(mock.Anything, mock.MatchedBy(func(req settings.UpdateIpAccessList) bool {
+					return req.IpAccessListId == TestingId && req.Enabled == TestingEnabled
+				})).Return(&apierr.APIError{
+				ErrorCode:  "SERVER_ERROR",
+				StatusCode: 500,
+				Message:    "Something unexpected happened",
+			})
 		},
 		Resource: ResourceIPAccessList(),
 		Update:   true,
@@ -200,12 +166,11 @@ func TestIPACLUpdate_Error(t *testing.T) {
 }
 
 func TestIPACLRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: settings.FetchIpAccessListResponse{
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				GetByIpAccessListId(mock.Anything, TestingId).
+				Return(&settings.FetchIpAccessListResponse{
 					IpAccessList: &settings.IpAccessListInfo{
 						ListId:       TestingId,
 						Label:        TestingLabel,
@@ -218,34 +183,31 @@ func TestIPACLRead(t *testing.T) {
 						UpdatedBy:    1234556,
 						Enabled:      TestingEnabled,
 					},
-				},
-			},
+				}, nil)
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,
 		New:      true,
 		ID:       TestingId,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           TestingId,
+		"label":        TestingLabel,
+		"list_type":    TestingListTypeString,
+		"enabled":      TestingEnabled,
+		"ip_addresses": TestingIpAddressesState,
+	})
 }
 
 func TestIPACLRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: apierr.APIError{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Can't find an IP access list with id: " + TestingId + ".",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				GetByIpAccessListId(mock.Anything, TestingId).
+				Return(nil, &apierr.APIError{
+					ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+					StatusCode: 404,
+					Message:    "Can't find an IP access list with id: " + TestingId + ".",
+				})
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,
@@ -256,16 +218,14 @@ func TestIPACLRead_NotFound(t *testing.T) {
 
 func TestIPACLRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: apierr.APIError{
-					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
-				},
-				Status: 500,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				GetByIpAccessListId(mock.Anything, TestingId).
+				Return(nil, &apierr.APIError{
+					ErrorCode:  "SERVER_ERROR",
+					StatusCode: 500,
+					Message:    "Something unexpected happened",
+				})
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,
@@ -277,33 +237,30 @@ func TestIPACLRead_Error(t *testing.T) {
 }
 
 func TestIPACLDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodDelete,
-				Resource: fmt.Sprintf("/api/2.0/ip-access-lists/%s?", TestingId),
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				DeleteByIpAccessListId(mock.Anything, TestingId).
+				Return(nil)
 		},
 		Resource: ResourceIPAccessList(),
 		Delete:   true,
 		ID:       TestingId,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": TestingId,
+	})
 }
 
 func TestIPACLDelete_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodDelete,
-				Resource: fmt.Sprintf("/api/2.0/ip-access-lists/%s?", TestingId),
-				Response: apierr.APIError{
-					ErrorCode: "INVALID_STATE",
-					Message:   "Something went wrong",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockIpAccessListsAPI().EXPECT().
+				DeleteByIpAccessListId(mock.Anything, TestingId).
+				Return(&apierr.APIError{
+					ErrorCode:  "INVALID_STATE",
+					StatusCode: 400,
+					Message:    "Something went wrong",
+				})
 		},
 		Resource: ResourceIPAccessList(),
 		Delete:   true,

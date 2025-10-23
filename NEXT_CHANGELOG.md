@@ -2,7 +2,10 @@
 
 ## Release v1.95.0
 
-### Breaking Changes
+### New Features and Improvements
+
+* Add `arm` option to `databricks_node_type` instead of `graviton` ([#5028](https://github.com/databricks/terraform-provider-databricks/pull/5028))
+* Optimize `databricks_grant` and `databricks_grants` to not call the `Update` API if the requested permissions are already granted ([#5095](https://github.com/databricks/terraform-provider-databricks/pull/5095))
 
 ### New Features and Improvements
 

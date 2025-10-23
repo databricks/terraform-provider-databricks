@@ -19,6 +19,8 @@
 ### Documentation
 
 * Add documentation on the `service_principal_client_id` attribute of `databricks_app` and related [#5134](https://github.com/databricks/terraform-provider-databricks/pull/5134)
+* Add documentation for Unified Terraform Provider ([#5122](https://github.com/databricks/terraform-provider-databricks/pull/5122))
+
 ### Exporter
 * Remove `METRIC_VIEW` from `sql_table` resource ([#5135](https://github.com/databricks/terraform-provider-databricks/pull/5135))
 

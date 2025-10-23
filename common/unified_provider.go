@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,7 +24,10 @@ type ProviderConfig struct {
 
 // workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
-	return validation.StringIsNotEmpty
+	return validation.All(
+		validation.StringIsNotEmpty,
+		validation.StringMatch(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"),
+	)
 }
 
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
@@ -48,6 +52,7 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
 func NamespaceCustomizeDiff(d *schema.ResourceDiff) error {
+	// Force New
 	workspaceIDKey := workspaceIDSchemaKey
 	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
 	if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
@@ -55,6 +60,7 @@ func NamespaceCustomizeDiff(d *schema.ResourceDiff) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

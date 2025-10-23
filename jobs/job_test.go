@@ -101,7 +101,8 @@ func TestAccJobCluster_ProviderConfig_Invalid(t *testing.T) {
 				workspace_id = "invalid"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`failed to parse workspace_id.*invalid syntax`),
+		ExpectError: regexp.MustCompile(`workspace_id must be a valid integer`),
+		PlanOnly:    true,
 	})
 }
 
@@ -192,7 +193,8 @@ func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
 				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
-		PlanOnly: true,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 

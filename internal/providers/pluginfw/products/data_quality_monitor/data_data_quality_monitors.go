@@ -28,6 +28,8 @@ func DataSourceMonitors() datasource.DataSource {
 // MonitorsData extends the main model with additional fields.
 type MonitorsData struct {
 	DataQuality types.List `tfsdk:"monitors"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (MonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (MonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m MonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["monitors"] = attrs["monitors"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *MonitorsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, monitor.ToObjectValue(ctx))
 	}
 
-	var newState MonitorsData
-	newState.DataQuality = types.ListValueMust(MonitorData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.DataQuality = types.ListValueMust(MonitorData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

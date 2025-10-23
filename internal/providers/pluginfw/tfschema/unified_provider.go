@@ -3,9 +3,11 @@ package tfschema
 import (
 	"context"
 	"reflect"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +22,10 @@ type Namespace struct {
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
+type Namespace_SdkV2 struct {
+	ProviderConfig types.List `tfsdk:"provider_config"`
+}
+
 // ProviderConfig is used to store the provider configurations for unified terraform provider
 // across resources onboarded to plugin framework.
 type ProviderConfig struct {
@@ -32,6 +38,8 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuil
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 
@@ -81,6 +89,8 @@ type ProviderConfigData struct {
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 
@@ -106,4 +116,28 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 			"workspace_id": types.StringType,
 		},
 	}
+}
+
+// GetWorkspaceID_SdkV2 extracts the workspace ID from a provider_config list (for SdkV2-compatible resources).
+// It returns the workspace ID string and any diagnostics encountered during extraction.
+// If the provider_config is not set, it returns an empty string with no diagnostics.
+func GetWorkspaceID_SdkV2(ctx context.Context, providerConfig types.List) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
+		return workspaceID, diags
+	}
+
+	var namespaceList []ProviderConfig
+	diags.Append(providerConfig.ElementsAs(ctx, &namespaceList, true)...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	if len(namespaceList) > 0 {
+		workspaceID = namespaceList[0].WorkspaceID.ValueString()
+	}
+
+	return workspaceID, diags
 }

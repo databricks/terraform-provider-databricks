@@ -28,6 +28,8 @@ func DataSourceFederationPolicies() datasource.DataSource {
 // FederationPoliciesData extends the main model with additional fields.
 type FederationPoliciesData struct {
 	AccountFederationPolicy types.List `tfsdk:"policies"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]r
 }
 
 func (m FederationPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
-	var newState FederationPoliciesData
-	newState.AccountFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AccountFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

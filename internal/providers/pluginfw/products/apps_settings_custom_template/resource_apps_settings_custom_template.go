@@ -217,7 +217,9 @@ func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate
 	}
 
 	var newState CustomTemplate
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -350,11 +352,13 @@ func (r *CustomTemplateResource) Delete(ctx context.Context, req resource.Delete
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	_, err := client.AppsSettings.DeleteCustomTemplate(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete apps_settings_custom_template", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &CustomTemplateResource{}

@@ -28,6 +28,11 @@ func DataSourceTagPolicies() datasource.DataSource {
 // TagPoliciesData extends the main model with additional fields.
 type TagPoliciesData struct {
 	TagPolicies types.List `tfsdk:"tag_policies"`
+	// The maximum number of results to return in this request. Fewer results
+	// may be returned than requested. If unspecified or set to 0, this defaults
+	// to 1000. The maximum value is 1000; values above 1000 will be coerced
+	// down to 1000.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +42,8 @@ func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.
 }
 
 func (m TagPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["tag_policies"] = attrs["tag_policies"].SetComputed()
 	return attrs
 }
@@ -100,7 +107,6 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, tag_policy.ToObjectValue(ctx))
 	}
 
-	var newState TagPoliciesData
-	newState.TagPolicies = types.ListValueMust(TagPolicyData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.TagPolicies = types.ListValueMust(TagPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

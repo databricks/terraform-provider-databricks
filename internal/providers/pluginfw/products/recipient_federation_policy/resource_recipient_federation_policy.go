@@ -17,12 +17,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -189,42 +187,6 @@ func (r *FederationPolicyResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FederationPolicyResource) update(ctx context.Context, plan FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var federation_policy sharing.FederationPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := sharing.UpdateFederationPolicyRequest{
-		Policy:     federation_policy,
-		Name:       plan.Name.ValueString(),
-		UpdateMask: "comment,oidc_policy",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.RecipientFederationPolicies.Update(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update recipient_federation_policy", err.Error())
-		return
-	}
-
-	var newState FederationPolicy
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *FederationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -317,15 +279,7 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *FederationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
-	var plan FederationPolicy
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	resp.Diagnostics.AddError("failed to update recipient_federation_policy", "updating recipient_federation_policy is not supported")
 }
 
 func (r *FederationPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

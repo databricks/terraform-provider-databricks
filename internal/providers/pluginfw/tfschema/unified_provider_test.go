@@ -192,6 +192,21 @@ func TestGetWorkspaceIDResource(t *testing.T) {
 			expectedWorkspaceID: "",
 			expectError:         false,
 		},
+		{
+			name: "incompatible object structure",
+			setupProviderConfig: func() types.Object {
+				// Create an object with wrong attribute types to trigger conversion error
+				attrTypes := map[string]attr.Type{
+					"workspace_id": types.Int64Type,
+				}
+				attrValues := map[string]attr.Value{
+					"workspace_id": types.Int64Value(123),
+				}
+				return types.ObjectValueMust(attrTypes, attrValues)
+			},
+			expectedWorkspaceID: "",
+			expectError:         true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -266,6 +281,21 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 			},
 			expectedWorkspaceID: "",
 			expectError:         false,
+		},
+		{
+			name: "incompatible object structure",
+			setupProviderConfig: func() types.Object {
+				// Create an object with wrong attribute types to trigger conversion error
+				attrTypes := map[string]attr.Type{
+					"workspace_id": types.Int64Type,
+				}
+				attrValues := map[string]attr.Value{
+					"workspace_id": types.Int64Value(123),
+				}
+				return types.ObjectValueMust(attrTypes, attrValues)
+			},
+			expectedWorkspaceID: "",
+			expectError:         true,
 		},
 	}
 

@@ -73,10 +73,18 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
-		c := m.(*DatabricksClient)
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.
+		var c *DatabricksClient
+		if m != nil {
+			var ok bool
+			c, ok = m.(*DatabricksClient)
+			if !ok {
+				return nicerError(ctx, fmt.Errorf("expected *DatabricksClient, got %T", m),
+					"customize diff for")
+			}
+		}
 		err = r.CustomizeDiff(ctx, rd, c)
 		if err != nil {
 			err = nicerError(ctx, err, "customize diff for")

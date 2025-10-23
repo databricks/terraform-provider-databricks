@@ -8,6 +8,7 @@
 
 ### New Features and Improvements
 
+* Add `provider_config` support for SDKv2 compatible plugin framework resources and data sources([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))
 * Optimize `databricks_grant` and `databricks_grants` to not call the `Update` API if the requested permissions are already granted ([#5095](https://github.com/databricks/terraform-provider-databricks/pull/5095))
 * Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
 

@@ -27,6 +27,7 @@ func ResourceCustomAppIntegration() common.Resource {
 		common.CustomizeSchemaPath(m, "client_secret").SetSensitive().SetComputed()
 		common.CustomizeSchemaPath(m, "token_access_policy", "access_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 1440))
 		common.CustomizeSchemaPath(m, "token_access_policy", "refresh_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 129600))
+		common.CustomizeSchemaPath(m, "token_access_policy", "absolute_session_lifetime_in_minutes").SetComputed()
 		return m
 	})
 	return common.Resource{
@@ -62,6 +63,12 @@ func ResourceCustomAppIntegration() common.Resource {
 			var update oauth2.UpdateCustomAppIntegration
 			update.IntegrationId = d.Id()
 			common.DataToStructPointer(d, s, &update)
+			// The API rejects absolute_session_lifetime_in_minutes when enable_single_use_refresh_tokens is false
+			// Since this field is Computed, it gets stored in state even when not set by user
+			// We need to clear it unless enable_single_use_refresh_tokens is true
+			if update.TokenAccessPolicy != nil && !update.TokenAccessPolicy.EnableSingleUseRefreshTokens {
+				update.TokenAccessPolicy.AbsoluteSessionLifetimeInMinutes = 0
+			}
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err

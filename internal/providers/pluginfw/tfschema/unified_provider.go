@@ -118,6 +118,30 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetWorkspaceID_SdkV2 extracts the workspace ID from a provider_config list (for SdkV2-compatible resources).
+// It returns the workspace ID string and any diagnostics encountered during extraction.
+// If the provider_config is not set, it returns an empty string with no diagnostics.
+func GetWorkspaceID_SdkV2(ctx context.Context, providerConfig types.List) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
+		return workspaceID, diags
+	}
+
+	var namespaceList []ProviderConfig
+	diags.Append(providerConfig.ElementsAs(ctx, &namespaceList, true)...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	if len(namespaceList) > 0 {
+		workspaceID = namespaceList[0].WorkspaceID.ValueString()
+	}
+
+	return workspaceID, diags
+}
+
 func GetWorkspaceIDResource(ctx context.Context, providerConfig types.Object) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var workspaceID string

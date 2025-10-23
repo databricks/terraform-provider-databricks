@@ -28,6 +28,8 @@ func DataSourceQualityMonitors() datasource.DataSource {
 // QualityMonitorsData extends the main model with additional fields.
 type QualityMonitorsData struct {
 	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]refl
 }
 
 func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, quality_monitor.ToObjectValue(ctx))
 	}
 
-	var newState QualityMonitorsData
-	newState.QualityMonitorV2 = types.ListValueMust(QualityMonitorData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.QualityMonitorV2 = types.ListValueMust(QualityMonitorData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

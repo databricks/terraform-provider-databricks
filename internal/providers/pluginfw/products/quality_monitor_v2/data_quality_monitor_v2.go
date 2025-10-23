@@ -75,9 +75,10 @@ func (m QualityMonitorData) ToObjectValue(ctx context.Context) basetypes.ObjectV
 // and contains additional fields.
 func (m QualityMonitorData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
+			"object_id":                types.StringType,
+			"object_type":              types.StringType,
 		},
 	}
 }

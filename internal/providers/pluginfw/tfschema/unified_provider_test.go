@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -62,6 +63,73 @@ func TestWorkspaceIDPlanModifier(t *testing.T) {
 			assert.Equal(t, tt.expectedRequiresReplace, resp.RequiresReplace,
 				"RequiresReplace mismatch for state '%s' -> plan '%s'",
 				tt.stateValue, tt.planValue)
+		})
+	}
+}
+
+func TestGetWorkspaceID_SdkV2(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name                string
+		setupProviderConfig func() types.List
+		expectedWorkspaceID string
+		expectError         bool
+	}{
+		{
+			name: "valid workspace ID",
+			setupProviderConfig: func() types.List {
+				providerConfig := ProviderConfig{
+					WorkspaceID: types.StringValue("123456789"),
+				}
+				return types.ListValueMust(
+					ProviderConfig{}.Type(ctx),
+					[]attr.Value{providerConfig.ToObjectValue(ctx)},
+				)
+			},
+			expectedWorkspaceID: "123456789",
+			expectError:         false,
+		},
+		{
+			name: "null provider_config",
+			setupProviderConfig: func() types.List {
+				return types.ListNull(ProviderConfig{}.Type(ctx))
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+		{
+			name: "unknown provider_config",
+			setupProviderConfig: func() types.List {
+				return types.ListUnknown(ProviderConfig{}.Type(ctx))
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+		{
+			name: "empty list",
+			setupProviderConfig: func() types.List {
+				return types.ListValueMust(
+					ProviderConfig{}.Type(ctx),
+					[]attr.Value{},
+				)
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			providerConfigList := tt.setupProviderConfig()
+			workspaceID, diags := GetWorkspaceID_SdkV2(ctx, providerConfigList)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Expected diagnostics error")
+			} else {
+				assert.False(t, diags.HasError(), "Expected no diagnostics error")
+			}
+			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
 		})
 	}
 }

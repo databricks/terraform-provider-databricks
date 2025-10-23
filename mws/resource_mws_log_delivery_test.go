@@ -383,3 +383,79 @@ func TestResourceLogDeliveryDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc|nid", d.Id())
 }
+
+func TestResourceLogDeliveryCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/log-delivery",
+				ExpectedRequest: LogDelivery{
+					LogDeliveryConfiguration: LogDeliveryConfiguration{
+						AccountID:              "abc",
+						ConfigName:             "Audit logs",
+						CredentialsID:          "bcd",
+						DeliveryPathPrefix:     "/a/b",
+						LogType:                "AUDIT_LOGS",
+						OutputFormat:           "JSON",
+						StorageConfigurationID: "def",
+						DeliveryStartTime:      "2020-10",
+						WorkspaceIdsFilter:     []int64{1111111111111111, 222222222222222},
+					},
+				},
+				Response: LogDelivery{
+					LogDeliveryConfiguration: LogDeliveryConfiguration{
+						ConfigID: "nid",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
+				Response: LogDelivery{
+					LogDeliveryConfiguration: LogDeliveryConfiguration{
+						ConfigID:               "nid",
+						AccountID:              "abc",
+						ConfigName:             "Audit logs",
+						CredentialsID:          "bcd",
+						DeliveryPathPrefix:     "/a/b",
+						LogType:                "AUDIT_LOGS",
+						OutputFormat:           "JSON",
+						StorageConfigurationID: "def",
+						DeliveryStartTime:      "2020-10",
+						WorkspaceIdsFilter:     []int64{1111111111111111, 222222222222222},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsLogDelivery(),
+		HCL: `
+		credentials_id = "bcd"
+		storage_configuration_id = "def"
+		config_name = "Audit logs"
+		log_type = "AUDIT_LOGS"
+		output_format = "JSON"
+		delivery_path_prefix = "/a/b"
+		workspace_ids_filter = [1111111111111111, 222222222222222]
+		delivery_start_time = "2020-10"`,
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc|nid",
+	})
+}
+
+func TestResourceLogDeliveryCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsLogDelivery(),
+		HCL: `
+		credentials_id = "bcd"
+		storage_configuration_id = "def"
+		config_name = "Audit logs"
+		log_type = "AUDIT_LOGS"
+		output_format = "JSON"
+		delivery_path_prefix = "/a/b"`,
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the resource")
+}

@@ -98,6 +98,13 @@ func ResourceMwsNetworks() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var network Network
 			common.DataToStructPointer(d, s, &network)
+			if network.AccountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the resource")
+				}
+				network.AccountID = c.Config.AccountID
+				d.Set("account_id", network.AccountID)
+			}
 			if err := NewNetworksAPI(ctx, c).Create(&network); err != nil {
 				return err
 			}

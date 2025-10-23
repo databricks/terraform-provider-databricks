@@ -18,7 +18,6 @@ It is strongly recommended that customers read the [Enable AWS Private Link](htt
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
   provider                     = databricks.mws
-  account_id                   = var.databricks_account_id
   private_access_settings_name = "Private Access Settings for ${local.prefix}"
   region                       = var.region
   public_access_enabled        = true

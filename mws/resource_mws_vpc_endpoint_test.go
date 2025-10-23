@@ -276,6 +276,62 @@ func TestResourceVPCEndpointDelete_Error(t *testing.T) {
 	assert.Equal(t, "abc/veid", d.Id())
 }
 
+func TestResourceVPCEndpointCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/vpc-endpoints",
+				ExpectedRequest: VPCEndpoint{
+					AccountID:        "abc",
+					VPCEndpointName:  "ve_name",
+					Region:           "ar",
+					AwsVPCEndpointID: "ave_id",
+				},
+				Response: VPCEndpoint{
+					VPCEndpointID: "ve_id",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
+				ReuseRequest: true,
+				Response: VPCEndpoint{
+					AccountID:        "abc",
+					VPCEndpointName:  "ve_name",
+					Region:           "ar",
+					AwsVPCEndpointID: "ave_id",
+					VPCEndpointID:    "ve_id",
+					State:            "Available",
+				},
+			},
+		},
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		vpc_endpoint_name = "ve_name"
+		region = "ar"
+		aws_vpc_endpoint_id = "ave_id"
+		`,
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc/ve_id",
+	})
+}
+
+func TestResourceVPCEndpointCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		vpc_endpoint_name = "ve_name"
+		region = "ar"
+		aws_vpc_endpoint_id = "ave_id"
+		`,
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the resource")
+}
+
 func TestResourceVPCEndpointList(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

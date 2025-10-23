@@ -263,3 +263,67 @@ func TestAwsKeyInfoKeyAliasOptional(t *testing.T) {
 	assert.Equal(t, "abc/cmkid", d.Id())
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 }
+
+func TestResourceCustomerManagedKeyCreate_NoAccountIDInResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys",
+				ExpectedRequest: CustomerManagedKey{
+					AccountID: "abc",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn:   "key-arn",
+						KeyAlias: "key-alias",
+					},
+					UseCases: []string{"MANAGED_SERVICES"},
+				},
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn:    "key-arn",
+						KeyAlias:  "key-alias",
+						KeyRegion: "us-east-1",
+					},
+					AccountID:    "abc",
+					UseCases:     []string{"MANAGED_SERVICES"},
+					CreationTime: 123,
+				},
+			},
+		},
+		Resource: ResourceMwsCustomerManagedKeys(),
+		HCL: `
+			aws_key_info {
+				key_arn   = "key-arn"
+				key_alias = "key-alias"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		`,
+		AccountID: "abc",
+		Create:    true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"account_id": "abc",
+		"id":         "abc/cmkid",
+	})
+}
+
+func TestResourceCustomerManagedKeyCreate_NoAccountID(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsCustomerManagedKeys(),
+		HCL: `
+			aws_key_info {
+				key_arn   = "key-arn"
+				key_alias = "key-alias"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		`,
+		Create: true,
+	}.ExpectError(t, "account_id is required in the provider block or in the resource")
+}

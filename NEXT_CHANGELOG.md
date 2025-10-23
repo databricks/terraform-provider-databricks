@@ -10,6 +10,7 @@
 ### New Features and Improvements
 
 * Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
+* Make `account_id` optional in `mws_*` resources ([#5133](https://github.com/databricks/terraform-provider-databricks/pull/5133))
 
 ### Bug Fixes
 

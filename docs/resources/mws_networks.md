@@ -75,7 +75,6 @@ module "vpc" {
 
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
-  account_id         = var.databricks_account_id
   network_name       = "${local.prefix}-network"
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = module.vpc.private_subnets
@@ -88,7 +87,6 @@ In order to create a VPC [that leverages AWS PrivateLink](https://docs.databrick
 ```hcl
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
-  account_id         = var.databricks_account_id
   network_name       = "${local.prefix}-network"
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = module.vpc.private_subnets
@@ -137,7 +135,6 @@ resource "google_compute_router_nat" "nat" {
 }
 
 resource "databricks_mws_networks" "this" {
-  account_id   = var.databricks_account_id
   network_name = "test-demo-${random_string.suffix.result}"
   gcp_network_info {
     network_project_id = var.google_project
@@ -152,7 +149,6 @@ In order to create a VPC [that leverages GCP Private Service Connect](https://do
 
 ```hcl
 resource "databricks_mws_networks" "this" {
-  account_id   = var.databricks_account_id
   network_name = "test-demo-${random_string.suffix.result}"
   gcp_network_info {
     network_project_id = var.google_project
@@ -179,7 +175,7 @@ Due to specifics of platform APIs, changing any attribute of network configurati
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `network_name` - name under which this network is registered
 * `vpc_id` - (AWS only) [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
 * `subnet_ids` - (AWS only) ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)

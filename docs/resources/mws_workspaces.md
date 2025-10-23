@@ -21,7 +21,6 @@ To use serverless workspaces, you must enroll in the [Default Storage preview](h
 
 ```hcl
 resource "databricks_mws_workspaces" "serverless_workspace" {
-  account_id     = "" # Your Databricks account ID
   workspace_name = "serverless-workspace"
   aws_region     = "us-east-1"
   compute_mode   = "SERVERLESS"
@@ -45,14 +44,14 @@ variable "databricks_account_id" {
 }
 
 provider "databricks" {
-  alias = "mws"
-  host  = "https://accounts.cloud.databricks.com"
+  alias      = "mws"
+  host       = "https://accounts.cloud.databricks.com"
+  account_id = var.account_id
 }
 
 // register cross-account ARN
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.databricks_account_id
   credentials_name = "${var.prefix}-creds"
   role_arn         = var.crossaccount_arn
 }
@@ -60,7 +59,6 @@ resource "databricks_mws_credentials" "this" {
 // register root bucket
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
   storage_configuration_name = "${var.prefix}-storage"
   bucket_name                = var.root_bucket
 }
@@ -68,7 +66,6 @@ resource "databricks_mws_storage_configurations" "this" {
 // register VPC
 resource "databricks_mws_networks" "this" {
   provider           = databricks.mws
-  account_id         = var.databricks_account_id
   network_name       = "${var.prefix}-network"
   vpc_id             = var.vpc_id
   subnet_ids         = var.subnets_private
@@ -78,7 +75,6 @@ resource "databricks_mws_networks" "this" {
 // create workspace in given VPC with DBFS on root bucket
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws
-  account_id     = var.databricks_account_id
   workspace_name = var.prefix
   aws_region     = var.region
 
@@ -130,7 +126,6 @@ resource "aws_iam_role_policy" "this" {
 
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
-  account_id       = var.databricks_account_id
   credentials_name = "${local.prefix}-creds"
   role_arn         = aws_iam_role.cross_account_role.arn
 }
@@ -180,14 +175,12 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
 
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
   storage_configuration_name = "${local.prefix}-storage"
   bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
 }
 
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws
-  account_id     = var.databricks_account_id
   workspace_name = local.prefix
   aws_region     = "us-east-1"
 
@@ -219,14 +212,14 @@ variable "databricks_google_service_account" {}
 variable "google_project" {}
 
 provider "databricks" {
-  alias = "mws"
-  host  = "https://accounts.gcp.databricks.com"
+  alias      = "mws"
+  host       = "https://accounts.gcp.databricks.com"
+  account_id = var.account_id
 }
 
 
 // register VPC
 resource "databricks_mws_networks" "this" {
-  account_id   = var.databricks_account_id
   network_name = "${var.prefix}-network"
   gcp_network_info {
     network_project_id    = var.google_project
@@ -240,7 +233,6 @@ resource "databricks_mws_networks" "this" {
 
 // create workspace in given VPC
 resource "databricks_mws_workspaces" "this" {
-  account_id     = var.databricks_account_id
   workspace_name = var.prefix
   location       = var.subnet_region
   cloud_resource_container {
@@ -274,7 +266,6 @@ data "google_client_config" "current" {
 
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.accounts
-  account_id     = var.databricks_account_id
   workspace_name = var.prefix
   location       = data.google_client_config.current.region
 
@@ -292,7 +283,7 @@ resource "databricks_mws_workspaces" "this" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).  If not specified, then it's taken from the provider config.
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).

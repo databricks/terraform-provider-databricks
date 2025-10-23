@@ -28,7 +28,7 @@ type CustomerManagedKey struct {
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
 	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty" tf:"force_new,conflicts:gcp_key_info"`
 	GcpKeyInfo           *GcpKeyInfo `json:"gcp_key_info,omitempty" tf:"force_new,conflicts:aws_key_info"`
-	AccountID            string      `json:"account_id" tf:"force_new"`
+	AccountID            string      `json:"account_id,omitempty" tf:"computed,force_new"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 	UseCases             []string    `json:"use_cases"`
 }
@@ -78,6 +78,13 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
 			common.DataToStructPointer(d, s, &cmk)
+			if cmk.AccountID == "" {
+				if c.Config == nil || c.Config.AccountID == "" {
+					return fmt.Errorf("account_id is required in the provider block or in the resource")
+				}
+				cmk.AccountID = c.Config.AccountID
+				d.Set("account_id", cmk.AccountID)
+			}
 			customerManagedKeyData, err := NewCustomerManagedKeysAPI(ctx, c).Create(cmk)
 			if err != nil {
 				return err

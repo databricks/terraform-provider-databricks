@@ -10,6 +10,7 @@
 
 ### Bug Fixes
 
+* Mark `workload_size` as not computed in `databricks_model_serving` ([#5111](https://github.com/databricks/terraform-provider-databricks/pull/5111))
 * Fix Inconsistent Plan Errors in Permissions Resource ([#5091](https://github.com/databricks/terraform-provider-databricks/pull/5091))
 
 ### Documentation

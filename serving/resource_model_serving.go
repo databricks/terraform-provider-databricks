@@ -154,12 +154,14 @@ func ResourceModelServing() common.Resource {
 
 			common.CustomizeSchemaPath(m, "config", "served_models", "name").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_models", "workload_type").SetComputed()
+			common.CustomizeSchemaPath(m, "config", "served_models", "workload_size").SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").SetOptional().SetDefault(true)
 			common.CustomizeSchemaPath(m, "config", "served_models").SetDeprecated("Please use 'config.served_entities' instead of 'config.served_models'.")
 			common.CustomizeSchemaPath(m, "rate_limits").SetDeprecated("Please use AI Gateway to manage rate limits.")
 
 			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_type").SetComputed()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_size").SetSuppressDiff()
 
 			// Apply custom suppress diff to traffic config routes for served_model_name and served_entity_name
 			common.CustomizeSchemaPath(m, "config", "traffic_config", "routes", "served_model_name").SetCustomSuppressDiff(suppressRouteModelEntityNameDiff)

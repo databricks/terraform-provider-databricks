@@ -909,7 +909,9 @@ func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.
 	}
 
 	var newState Setting
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}

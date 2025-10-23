@@ -86,9 +86,10 @@ func (m BudgetPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 // and contains additional fields.
 func (m BudgetPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"binding_workspace_ids": basetypes.ListType{
-			ElemType: types.Int64Type,
-		},
+		AttrTypes: map[string]attr.Type{
+			"binding_workspace_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
 			"custom_tags": basetypes.ListType{
 				ElemType: compute_tf.CustomPolicyTag{}.Type(ctx),
 			},
@@ -99,10 +100,10 @@ func (m BudgetPolicyData) Type(ctx context.Context) attr.Type {
 }
 
 func (m BudgetPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["binding_workspace_ids"] = attrs["binding_workspace_ids"].SetOptional()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetComputed()
-	attrs["policy_name"] = attrs["policy_name"].SetOptional()
+	attrs["binding_workspace_ids"] = attrs["binding_workspace_ids"].SetComputed()
+	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["policy_name"] = attrs["policy_name"].SetComputed()
 
 	return attrs
 }

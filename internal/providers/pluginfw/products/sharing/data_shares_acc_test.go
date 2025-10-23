@@ -107,7 +107,7 @@ func dataSourceSharesTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+func TestAccSharesData_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
 			provider_config = {
@@ -121,7 +121,7 @@ func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
+func TestAccSharesData_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
 			provider_config = {

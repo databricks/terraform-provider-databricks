@@ -72,7 +72,7 @@ func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, se
 	if err != nil {
 		return err
 	}
-	diff := diffPermissions(list.PrivilegeAssignments, existing.PrivilegeAssignments)
+	diff := diffPermissionsForPrincipal(principal, list.PrivilegeAssignments, existing.PrivilegeAssignments)
 	if len(diff) == 0 {
 		// The permissions are already correct, no need to update or wait
 		return nil

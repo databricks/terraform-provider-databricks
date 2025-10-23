@@ -196,7 +196,9 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 	}
 
 	var newState Refresh
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -331,11 +333,13 @@ func (r *RefreshResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.DataQuality.DeleteRefresh(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_quality_refresh", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &RefreshResource{}

@@ -48,12 +48,6 @@ func (m DatabaseCatalogsData) ApplySchemaCustomizations(attrs map[string]tfschem
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *DatabaseCatalogsData) SyncFieldsDuringRead(ctx context.Context, from DatabaseCatalogsData) {
-}
-
 type DatabaseCatalogsDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -113,8 +107,6 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		results = append(results, database_catalog.ToObjectValue(ctx))
 	}
 
-	var newState DatabaseCatalogsData
-	newState.Database = types.ListValueMust(DatabaseCatalogData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.Database = types.ListValueMust(DatabaseCatalogData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

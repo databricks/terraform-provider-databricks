@@ -49,12 +49,6 @@ func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfs
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *EntityTagAssignmentsData) SyncFieldsDuringRead(ctx context.Context, from EntityTagAssignmentsData) {
-}
-
 type EntityTagAssignmentsDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -114,8 +108,6 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 		results = append(results, entity_tag_assignment.ToObjectValue(ctx))
 	}
 
-	var newState EntityTagAssignmentsData
-	newState.EntityTagAssignments = types.ListValueMust(EntityTagAssignmentData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.EntityTagAssignments = types.ListValueMust(EntityTagAssignmentData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

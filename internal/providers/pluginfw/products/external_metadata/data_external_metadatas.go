@@ -46,12 +46,6 @@ func (m ExternalMetadatasData) ApplySchemaCustomizations(attrs map[string]tfsche
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *ExternalMetadatasData) SyncFieldsDuringRead(ctx context.Context, from ExternalMetadatasData) {
-}
-
 type ExternalMetadatasDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -111,8 +105,6 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, external_metadata.ToObjectValue(ctx))
 	}
 
-	var newState ExternalMetadatasData
-	newState.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

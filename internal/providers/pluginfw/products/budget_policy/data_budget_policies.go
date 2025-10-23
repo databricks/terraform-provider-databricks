@@ -11,6 +11,7 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/billing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,29 +29,31 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 // BudgetPoliciesData extends the main model with additional fields.
 type BudgetPoliciesData struct {
 	BudgetPolicy types.List `tfsdk:"policies"`
+	// A filter to apply to the list of policies.
+	FilterBy types.Object `tfsdk:"filter_by"`
 	// The maximum number of budget policies to return. If unspecified, at most
 	// 100 budget policies will be returned. The maximum value is 1000; values
 	// above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"page_size"`
+	// The sort specification.
+	SortSpec types.Object `tfsdk:"sort_spec"`
 }
 
 func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(BudgetPolicyData{}),
+		"policies":  reflect.TypeOf(BudgetPolicyData{}),
+		"filter_by": reflect.TypeOf(billing_tf.Filter{}),
+		"sort_spec": reflect.TypeOf(billing_tf.SortSpec{}),
 	}
 }
 
 func (m BudgetPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["filter_by"] = attrs["filter_by"].SetOptional()
+	attrs["sort_spec"] = attrs["sort_spec"].SetOptional()
 
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
-}
-
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *BudgetPoliciesData) SyncFieldsDuringRead(ctx context.Context, from BudgetPoliciesData) {
 }
 
 type BudgetPoliciesDataSource struct {
@@ -112,8 +115,6 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		results = append(results, budget_policy.ToObjectValue(ctx))
 	}
 
-	var newState BudgetPoliciesData
-	newState.BudgetPolicy = types.ListValueMust(BudgetPolicyData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.BudgetPolicy = types.ListValueMust(BudgetPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

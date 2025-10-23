@@ -45,12 +45,6 @@ func (m MonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *MonitorsData) SyncFieldsDuringRead(ctx context.Context, from MonitorsData) {
-}
-
 type MonitorsDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -110,8 +104,6 @@ func (r *MonitorsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, monitor.ToObjectValue(ctx))
 	}
 
-	var newState MonitorsData
-	newState.DataQuality = types.ListValueMust(MonitorData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.DataQuality = types.ListValueMust(MonitorData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

@@ -45,12 +45,6 @@ func (m FederationPoliciesData) ApplySchemaCustomizations(attrs map[string]tfsch
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *FederationPoliciesData) SyncFieldsDuringRead(ctx context.Context, from FederationPoliciesData) {
-}
-
 type FederationPoliciesDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -110,8 +104,6 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
-	var newState FederationPoliciesData
-	newState.AccountFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AccountFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

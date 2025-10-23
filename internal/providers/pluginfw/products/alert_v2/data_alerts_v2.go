@@ -45,12 +45,6 @@ func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *AlertsV2Data) SyncFieldsDuringRead(ctx context.Context, from AlertsV2Data) {
-}
-
 type AlertsV2DataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -110,8 +104,6 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertsV2Data
-	newState.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

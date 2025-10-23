@@ -261,7 +261,9 @@ func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.
 	}
 
 	var newState Monitor
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -394,11 +396,13 @@ func (r *MonitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.DataQuality.DeleteMonitor(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_quality_monitor", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &MonitorResource{}

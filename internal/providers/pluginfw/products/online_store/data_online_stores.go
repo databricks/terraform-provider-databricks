@@ -46,12 +46,6 @@ func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *OnlineStoresData) SyncFieldsDuringRead(ctx context.Context, from OnlineStoresData) {
-}
-
 type OnlineStoresDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -111,8 +105,6 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		results = append(results, online_store.ToObjectValue(ctx))
 	}
 
-	var newState OnlineStoresData
-	newState.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

@@ -45,12 +45,6 @@ func (m CustomTemplatesData) ApplySchemaCustomizations(attrs map[string]tfschema
 	return attrs
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (to *CustomTemplatesData) SyncFieldsDuringRead(ctx context.Context, from CustomTemplatesData) {
-}
-
 type CustomTemplatesDataSource struct {
 	Client *autogen.DatabricksClient
 }
@@ -110,8 +104,6 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, custom_template.ToObjectValue(ctx))
 	}
 
-	var newState CustomTemplatesData
-	newState.AppsSettings = types.ListValueMust(CustomTemplateData{}.Type(ctx), results)
-	newState.SyncFieldsDuringRead(ctx, config)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AppsSettings = types.ListValueMust(CustomTemplateData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

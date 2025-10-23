@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+Added support for custom instance profiles on instance pools on AWS
+
 ### Bug Fixes
 
 ### Documentation

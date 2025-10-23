@@ -31,15 +31,17 @@ func setCommonUserFields(d *schema.ResourceData, user User, username string) {
 	d.Set("repos", fmt.Sprintf("/Repos/%s", username))
 }
 
+type UserEntity struct {
+	common.Namespace
+	UserName    string `json:"user_name" tf:"force_new"`
+	DisplayName string `json:"display_name,omitempty" tf:"computed"`
+	Active      bool   `json:"active,omitempty"`
+	ExternalID  string `json:"external_id,omitempty" tf:"suppress_diff"`
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() common.Resource {
-	type entity struct {
-		UserName    string `json:"user_name" tf:"force_new"`
-		DisplayName string `json:"display_name,omitempty" tf:"computed"`
-		Active      bool   `json:"active,omitempty"`
-		ExternalID  string `json:"external_id,omitempty" tf:"suppress_diff"`
-	}
-	userSchema := common.StructToSchema(entity{},
+	userSchema := common.StructToSchema(UserEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -76,10 +78,11 @@ func ResourceUser() common.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
-		var u entity
+		var u UserEntity
 		common.DataToStructPointer(d, userSchema, &u)
 		return User{
 			UserName:     u.UserName,
@@ -91,6 +94,9 @@ func ResourceUser() common.Resource {
 	}
 	return common.Resource{
 		Schema: userSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			u, err := scimUserFromData(d)
 			if err != nil {

@@ -11,6 +11,7 @@ import (
 
 func DataSourceExperiment() common.Resource {
 	type experimentDataParams struct {
+		common.Namespace
 		ExperimentId string `json:"experiment_id" tf:"computed,optional"`
 		Name         string `json:"name" tf:"computed,optional"`
 	}

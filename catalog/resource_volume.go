@@ -15,6 +15,7 @@ import (
 // We need to create this because we need Owner, FullNameArg, SchemaName and CatalogName which aren't present in a single of them.
 // We also need to annotate tf:"computed" for the Owner field.
 type VolumeInfo struct {
+	common.Namespace
 	// The name of the catalog where the schema and the volume are
 	CatalogName string `json:"catalog_name" tf:"force_new"`
 	// The comment attached to the volume
@@ -58,12 +59,16 @@ func ResourceVolume() common.Resource {
 			// If server side validation is added in the future, this validation function
 			// can be removed.
 			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -90,7 +95,7 @@ func ResourceVolume() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -105,7 +110,7 @@ func ResourceVolume() common.Resource {
 			return d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -163,7 +168,7 @@ func ResourceVolume() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

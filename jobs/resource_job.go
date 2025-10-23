@@ -486,6 +486,7 @@ func (JobCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 
 type JobSettingsResource struct {
 	jobs.JobSettings
+	common.Namespace
 
 	// BEGIN Jobs API 2.0
 	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
@@ -510,6 +511,7 @@ func (JobSettingsResource) Aliases() map[string]map[string]string {
 }
 
 func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	// Suppress diffs
 	s.SchemaPath("email_notifications").SetSuppressDiff()
 	s.SchemaPath("webhook_notifications").SetSuppressDiff()
@@ -662,6 +664,8 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 
 	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
 	s.SchemaPath("git_source", "provider").SetOptional()
+
+	common.NamespaceCustomizeSchema(s)
 
 	return s
 }
@@ -1094,14 +1098,14 @@ func ResourceJob() common.Resource {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
-			return nil
+			return common.NamespaceCustomizeDiff(d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClient()
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1137,7 +1141,7 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				w, err := c.WorkspaceClient()
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1179,7 +1183,7 @@ func ResourceJob() common.Resource {
 				if err != nil {
 					return err
 				}
-				w, err := c.WorkspaceClient()
+				w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 				if err != nil {
 					return err
 				}
@@ -1206,7 +1210,7 @@ func ResourceJob() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

@@ -37,7 +37,7 @@ func ResourceGitCredential() common.Resource {
 		Schema:        s,
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ func ResourceGitCredential() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func ResourceGitCredential() common.Resource {
 				return err
 			}
 			req.CredentialId = cred_id
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -109,7 +109,7 @@ func ResourceGitCredential() common.Resource {
 			return w.GitCredentials.Update(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

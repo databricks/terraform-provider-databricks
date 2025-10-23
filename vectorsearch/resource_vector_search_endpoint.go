@@ -14,9 +14,14 @@ import (
 const defaultEndpointProvisionTimeout = 75 * time.Minute
 const deleteCallTimeout = 10 * time.Second
 
+type EndpointInfo struct {
+	vectorsearch.EndpointInfo
+	common.Namespace
+}
+
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.EndpointInfo{},
+		EndpointInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
@@ -35,13 +40,13 @@ func ResourceVectorSearchEndpoint() common.Resource {
 				Optional: true,
 				Computed: true,
 			})
-
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -64,7 +69,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -81,7 +86,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -98,7 +103,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 		},
 
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -109,6 +114,9 @@ func ResourceVectorSearchEndpoint() common.Resource {
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultEndpointProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

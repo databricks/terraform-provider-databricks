@@ -10,6 +10,7 @@ import (
 )
 
 type SchemaInfo struct {
+	common.Namespace
 	Name                         string            `json:"name" tf:"force_new"`
 	CatalogName                  string            `json:"catalog_name" tf:"force_new"`
 	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`
@@ -38,12 +39,16 @@ func ResourceSchema() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -81,7 +86,7 @@ func ResourceSchema() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -92,7 +97,7 @@ func ResourceSchema() common.Resource {
 			return common.StructToData(schema, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -149,7 +154,7 @@ func ResourceSchema() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			name := d.Id()
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

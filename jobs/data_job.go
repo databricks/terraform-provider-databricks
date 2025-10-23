@@ -14,6 +14,7 @@ func DataSourceJob() common.Resource {
 		Name    string `json:"name,omitempty" tf:"computed"`
 		JobName string `json:"job_name,omitempty" tf:"computed"`
 		Job     *Job   `json:"job_settings,omitempty" tf:"computed"`
+		common.Namespace
 	}
 	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)

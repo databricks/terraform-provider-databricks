@@ -10,6 +10,7 @@ import (
 
 func DataSourceTable() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		common.Namespace
 		Id    string             `json:"id,omitempty" tf:"computed"`
 		Name  string             `json:"name"`
 		Table *catalog.TableInfo `json:"table_info,omitempty" tf:"computed"`

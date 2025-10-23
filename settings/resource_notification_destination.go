@@ -108,9 +108,11 @@ func Delete(ctx context.Context, d *schema.ResourceData, w *databricks.Workspace
 
 type NDStruct struct {
 	settings.NotificationDestination
+	common.Namespace
 }
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	// Required fields
 	s.SchemaPath("display_name").SetRequired()
 
@@ -166,30 +168,33 @@ var ndSchema = common.StructToSchema(NDStruct{}, nil)
 func ResourceNotificationDestination() common.Resource {
 	return common.Resource{
 		Schema: ndSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return Create(ctx, d, w)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return Read(ctx, d, w)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return Update(ctx, d, w)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

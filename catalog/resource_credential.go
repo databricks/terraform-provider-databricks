@@ -9,7 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
+type CredentialInfo struct {
+	catalog.CredentialInfo
+	common.Namespace
+}
+
+var credentialSchema = common.StructToSchema(CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
 			"databricks_gcp_service_account"}
@@ -55,6 +60,7 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			Computed: true,
 		}
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -62,7 +68,7 @@ func ResourceCredential() common.Resource {
 	return common.Resource{
 		Schema: credentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -94,7 +100,7 @@ func ResourceCredential() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, bindings.BindingsSecurableTypeCredential)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -115,7 +121,7 @@ func ResourceCredential() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_update").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -173,7 +179,7 @@ func ResourceCredential() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -181,6 +187,9 @@ func ResourceCredential() common.Resource {
 				NameArg: d.Id(),
 				Force:   force,
 			})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

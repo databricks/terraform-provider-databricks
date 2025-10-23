@@ -160,6 +160,7 @@ func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema)
 
 type Pipeline struct {
 	pipelines.PipelineSpec
+	common.Namespace
 	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
 	Cause                string                              `json:"cause,omitempty"`
 	ClusterId            string                              `json:"cluster_id,omitempty"`
@@ -195,6 +196,7 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()
@@ -281,15 +283,18 @@ var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
 func ResourcePipeline() common.Resource {
 	return common.Resource{
 		Schema: pipelineSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -317,7 +322,7 @@ func ResourcePipeline() common.Resource {
 			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -325,7 +330,7 @@ func ResourcePipeline() common.Resource {
 
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

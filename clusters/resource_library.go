@@ -15,6 +15,7 @@ import (
 
 type LibraryResource struct {
 	compute.Library
+	common.Namespace
 }
 
 func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -28,6 +29,7 @@ func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSch
 const EggDeprecationWarning = "The `egg` library type is deprecated. Please use `whl` or `pypi` instead."
 
 func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("egg").SetDeprecated(EggDeprecationWarning)
 	return s
 }
@@ -43,8 +45,11 @@ func ResourceLibrary() common.Resource {
 	}
 	return common.Resource{
 		Schema: libraySdkSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -74,7 +79,7 @@ func ResourceLibrary() common.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -106,7 +111,7 @@ func ResourceLibrary() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

@@ -64,7 +64,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 		}
 	}
 
-	w, err := c.WorkspaceClient()
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 }
 
 func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func ResourceWorkspaceConf() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

@@ -14,6 +14,11 @@ import (
 
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
+type MonitorInfo struct {
+	catalog.MonitorInfo
+	common.Namespace
+}
+
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
 	return retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
 		endpoint, err := w.QualityMonitors.Get(ctx, catalog.GetQualityMonitorRequest{
@@ -35,7 +40,7 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 
 func ResourceQualityMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
-		catalog.MonitorInfo{},
+		MonitorInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "assets_dir").SetRequired()
 			common.CustomizeSchemaPath(m, "output_schema_name").SetRequired()
@@ -56,13 +61,14 @@ func ResourceQualityMonitor() common.Resource {
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
 			common.CustomizeSchemaPath(m, "schedule", "pause_status").SetReadOnly()
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		},
 	)
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -83,7 +89,7 @@ func ResourceQualityMonitor() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -108,7 +114,7 @@ func ResourceQualityMonitor() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -125,7 +131,7 @@ func ResourceQualityMonitor() common.Resource {
 			return WaitForMonitor(w, ctx, update.TableName)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -137,6 +143,9 @@ func ResourceQualityMonitor() common.Resource {
 		Schema: monitorSchema,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(qualityMonitorDefaultProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

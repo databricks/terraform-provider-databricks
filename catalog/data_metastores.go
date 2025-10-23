@@ -10,6 +10,7 @@ import (
 
 func DataSourceMetastores() common.Resource {
 	type metastoresData struct {
+		common.Namespace
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
 	return common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {

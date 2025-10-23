@@ -11,8 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type Alert struct {
+	sql.Alert
+	common.Namespace
+}
+
 func ResourceAlert() common.Resource {
-	s := common.StructToSchema(sql.Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "display_name").SetRequired()
 		common.CustomizeSchemaPath(m, "query_id").SetRequired()
 		common.CustomizeSchemaPath(m, "condition").SetRequired()
@@ -45,12 +50,13 @@ func ResourceAlert() common.Resource {
 		common.CustomizeSchemaPath(m, "state").SetReadOnly()
 		common.CustomizeSchemaPath(m, "trigger_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "update_time").SetReadOnly()
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -78,7 +84,7 @@ func ResourceAlert() common.Resource {
 			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -94,7 +100,7 @@ func ResourceAlert() common.Resource {
 			return common.StructToData(apiAlert, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -118,12 +124,15 @@ func ResourceAlert() common.Resource {
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
 			return w.Alerts.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type ArtifactAllowlistInfo struct {
+	common.Namespace
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers []catalog.ArtifactMatcher `json:"artifact_matchers" tf:"slice_set,alias:artifact_matcher"`
 	// The artifact type of the allowlist.
@@ -21,12 +22,17 @@ type ArtifactAllowlistInfo struct {
 	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
 }
 
+func (ArtifactAllowlistInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
+	return s
+}
+
 func ResourceArtifactAllowlist() common.Resource {
-	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, common.NoCustomize)
+	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, nil)
 	p := common.NewPairID("metastore_id", "artifact_type")
 
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		w, err := c.WorkspaceClient()
+		w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 		if err != nil {
 			return err
 		}
@@ -53,9 +59,12 @@ func ResourceArtifactAllowlist() common.Resource {
 	}
 	return common.Resource{
 		Schema: allowlistSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -82,7 +91,7 @@ func ResourceArtifactAllowlist() common.Resource {
 		},
 		Update: createOrUpdate,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := common.WorkspaceClientUnifiedProvider(ctx, d, c)
 			if err != nil {
 				return err
 			}

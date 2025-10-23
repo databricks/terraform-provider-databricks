@@ -11,6 +11,7 @@ import (
 )
 
 type OboToken struct {
+	common.Namespace
 	ApplicationID   string `json:"application_id"`
 	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
 	Comment         string `json:"comment,omitempty"`
@@ -48,10 +49,14 @@ func ResourceOboToken() common.Resource {
 				Computed:  true,
 				Sensitive: true,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: oboTokenSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var request OboToken
 			common.DataToStructPointer(d, oboTokenSchema, &request)

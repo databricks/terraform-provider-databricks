@@ -7,7 +7,7 @@
 ### New Features and Improvements
 
 * Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
-* Added `databricks_volume_directory` resource ([#5138](https://github.com/databricks/terraform-provider-databricks/pull/5138))
+* Added `databricks_volume_directory` resource ([#5141](https://github.com/databricks/terraform-provider-databricks/pull/5141))
 
 ### Bug Fixes
 

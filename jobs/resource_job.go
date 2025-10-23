@@ -1078,7 +1078,7 @@ func ResourceJob() common.Resource {
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource
 			common.DiffToStructPointer(d, jobsGoSdkSchema, &jsr)
 			alwaysRunning := d.Get("always_running").(bool)

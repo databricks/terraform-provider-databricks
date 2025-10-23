@@ -175,7 +175,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return w.Warehouses.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return d.Clear("health")
 		},
 	}

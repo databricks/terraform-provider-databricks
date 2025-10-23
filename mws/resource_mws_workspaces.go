@@ -711,7 +711,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")

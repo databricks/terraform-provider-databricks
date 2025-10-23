@@ -211,7 +211,7 @@ func ResourcePermissions() common.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c *common.DatabricksClient) error {
 			mapping, _, err := getResourcePermissionsFromState(diff)
 			if err != nil {
 				// This preserves current behavior but is likely only exercised in tests where

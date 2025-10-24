@@ -15,7 +15,9 @@ data "databricks_zones" "zones" {}
 
 ## Argument Reference
 
-There are no arguments to this data source and only attributes that are computed.
+The following arguments are supported for this resource:
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

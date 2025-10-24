@@ -1,8 +1,12 @@
 package common
 
 import (
+	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -234,4 +238,287 @@ func TestNamespaceCustomizeDiff(t *testing.T) {
 		require.True(t, exists, "workspace_id should exist in provider_config schema")
 		assert.Equal(t, schema.TypeString, workspaceID.Type, "workspace_id should be a string type")
 	})
+}
+
+func TestWorkspaceClientUnifiedProvider(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"provider_config": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		name              string
+		resourceData      map[string]interface{}
+		cachedWorkspaceID int64
+		isAccountLevel    bool
+		accountID         string
+		expectError       bool
+		errorContains     string
+		description       string
+	}{
+		{
+			name: "workspace_id not set - calls with empty string",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			cachedWorkspaceID: 0,
+			isAccountLevel:    false,
+			expectError:       false,
+			description:       "When provider_config is not set, should use cached workspace client",
+		},
+		{
+			name: "workspace_id set to valid value",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "123456",
+					},
+				},
+			},
+			cachedWorkspaceID: 123456,
+			isAccountLevel:    false,
+			expectError:       false,
+			description:       "When workspace_id matches cached ID, should return workspace client",
+		},
+		{
+			name: "workspace_id set to empty string",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "",
+					},
+				},
+			},
+			cachedWorkspaceID: 0,
+			isAccountLevel:    false,
+			expectError:       false,
+			description:       "When workspace_id is explicitly empty, should use cached workspace client",
+		},
+		{
+			name: "workspace_id with different numeric value",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "789012",
+					},
+				},
+			},
+			cachedWorkspaceID: 789012,
+			isAccountLevel:    false,
+			expectError:       false,
+			description:       "Should handle different workspace IDs correctly",
+		},
+		{
+			name: "account level provider without workspace_id - returns error",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			cachedWorkspaceID: 0,
+			isAccountLevel:    true,
+			accountID:         "test-account-id",
+			expectError:       true,
+			errorContains:     "workspace_id",
+			description:       "Account-level provider requires workspace_id to be set",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create resource data
+			d := schema.TestResourceDataRaw(t, testSchema, tc.resourceData)
+
+			// Create a mock workspace client to be returned
+			mockWorkspaceClient := &databricks.WorkspaceClient{}
+
+			// Create a DatabricksClient based on test case configuration
+			var dc *DatabricksClient
+			if tc.isAccountLevel {
+				// Create account-level provider
+				dc = &DatabricksClient{
+					DatabricksClient: &client.DatabricksClient{
+						Config: &config.Config{
+							Host:      "https://accounts.cloud.databricks.com",
+							AccountID: tc.accountID,
+							Token:     "test-token",
+						},
+					},
+				}
+			} else {
+				// Create workspace-level provider
+				dc = &DatabricksClient{
+					DatabricksClient: &client.DatabricksClient{
+						Config: &config.Config{
+							Host:  "https://test.cloud.databricks.com",
+							Token: "test-token",
+						},
+					},
+					cachedWorkspaceClient: mockWorkspaceClient,
+					cachedWorkspaceID:     tc.cachedWorkspaceID,
+				}
+			}
+
+			// Call WorkspaceClientUnifiedProvider
+			result, err := dc.WorkspaceClientUnifiedProvider(ctx, d)
+
+			// Verify results
+			if tc.expectError {
+				assert.Error(t, err, tc.description)
+				if tc.errorContains != "" {
+					assert.Contains(t, err.Error(), tc.errorContains)
+				}
+			} else {
+				assert.NoError(t, err, tc.description)
+				assert.NotNil(t, result)
+				assert.Equal(t, mockWorkspaceClient, result)
+			}
+		})
+	}
+}
+
+func TestWorkspaceIDExtractionLogic(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"provider_config": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	testCases := []struct {
+		name          string
+		resourceData  map[string]interface{}
+		getKey        string // optional: if set, use this key instead of workspaceIDSchemaKey
+		expectedValue string
+		expectedOk    bool
+		shouldBeNil   bool
+		description   string
+	}{
+		{
+			name: "provider_config not set - returns empty string",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			expectedValue: "",
+			expectedOk:    true,
+			shouldBeNil:   false,
+			description:   "d.Get returns empty string when provider_config is not set",
+		},
+		{
+			name: "non-existent key returns nil",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			getKey:        "non_existent_key",
+			expectedValue: "",
+			expectedOk:    false,
+			shouldBeNil:   true,
+			description:   "d.Get returns nil if the key doesn't exist in the schema",
+		},
+		{
+			name: "workspace_id set to valid value",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "123456",
+					},
+				},
+			},
+			expectedValue: "123456",
+			expectedOk:    true,
+			shouldBeNil:   false,
+			description:   "d.Get returns the correct workspace_id when set",
+		},
+		{
+			name: "workspace_id set to empty string",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "",
+					},
+				},
+			},
+			expectedValue: "",
+			expectedOk:    true,
+			shouldBeNil:   false,
+			description:   "d.Get returns empty string when explicitly set to empty",
+		},
+		{
+			name: "workspace_id with numeric value",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "999999999",
+					},
+				},
+			},
+			expectedValue: "999999999",
+			expectedOk:    true,
+			shouldBeNil:   false,
+			description:   "d.Get returns large numeric workspace_id as string",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create resource data with test case input
+			d := schema.TestResourceDataRaw(t, testSchema, tc.resourceData)
+
+			// Test: workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
+			// Use custom key if specified, otherwise use workspaceIDSchemaKey
+			key := workspaceIDSchemaKey
+			if tc.getKey != "" {
+				key = tc.getKey
+			}
+			workspaceIDFromSchema := d.Get(key)
+
+			// Test: if workspaceIDFromSchema == nil
+			if tc.shouldBeNil {
+				assert.Nil(t, workspaceIDFromSchema, tc.description)
+			} else {
+				assert.NotNil(t, workspaceIDFromSchema, tc.description)
+			}
+
+			// Test: workspaceID, ok := workspaceIDFromSchema.(string)
+			workspaceID, ok := workspaceIDFromSchema.(string)
+			assert.Equal(t, tc.expectedOk, ok, "type assertion ok should match expected")
+			if ok {
+				assert.Equal(t, tc.expectedValue, workspaceID, tc.description)
+			}
+		})
+	}
 }

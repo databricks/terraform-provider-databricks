@@ -471,9 +471,11 @@ func allResourcePermissions() []resourcePermissions {
 			idRetriever: PATH,
 			updateAclCustomizers: []update.ACLCustomizer{
 				update.If(update.ObjectIdMatches("/directories/0"), update.AddAdmin),
+				update.AddUserHomeDirectoryManagePermission,
 			},
 			deleteAclCustomizers: []update.ACLCustomizer{
 				update.If(update.ObjectIdMatches("/directories/0"), update.AddAdmin),
+				update.AddUserHomeDirectoryManagePermission,
 			},
 		},
 		{

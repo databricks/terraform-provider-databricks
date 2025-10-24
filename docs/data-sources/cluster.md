@@ -46,6 +46,8 @@ data "databricks_cluster" "my_cluster" {
 
 * `cluster_id` - (Required if `cluster_name` isn't specified) The id of the cluster.
 * `cluster_name` - (Required if `cluster_id` isn't specified) The exact name of the cluster to search. Can only be specified if there is exactly one cluster with the provided name.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -50,6 +50,8 @@ Data source allows you to pick groups by the following attributes:
 * `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`.
 * `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`. *Deprecated with DBR 14.0 release. Specify `runtime_engine=\"PHOTON\"` in the cluster configuration instead!*
 * `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`. _Deprecated with DBR 14.0 release. DBR version compiled for Graviton will be automatically installed when nodes with Graviton CPUs are specified in the cluster configuration._
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

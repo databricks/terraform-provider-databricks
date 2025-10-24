@@ -120,9 +120,15 @@ Some Unity Catalog resources (e.g., storage credentials, external locations) wor
 
 ### Code Organization
 - Files should not exceed 600 lines
+- don't make changes in files that have `DO NOT EDIT` in the first line
 - Functions should fit on a 13" screen (max 40 lines, except tests)
 - No unnecessary package exports (avoid public structs/types unless needed outside package)
 - Use `qa.EnvironmentTemplate()` instead of complex `fmt.Sprintf` with >4 placeholders
+
+### Writing unit tests for resources and data sources
+
+For unit tests use the `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
+Use `ApplyAndExpectData` where it's possible.
 
 ### Import Conventions
 Order imports as: Go standard library, vendor packages, current provider packages.
@@ -145,4 +151,4 @@ All user-facing changes must be documented in `NEXT_CHANGELOG.md` with format:
 ### Migration Verification
 When migrating resources to Plugin Framework, always run `make diff-schema` to ensure no breaking changes to the Terraform schema.
 
-- Always run make fmt before making any commit.
+- Always run `make fmt lint ws` before making any commit.

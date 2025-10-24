@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+
 ### Bug Fixes
 
 ### Documentation
@@ -15,3 +17,4 @@
 ### Internal Changes
 
 * Port `databricks_instance_pools` data source to plugin framework ([#5145](https://github.com/databricks/terraform-provider-databricks/pull/5145))
+* Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

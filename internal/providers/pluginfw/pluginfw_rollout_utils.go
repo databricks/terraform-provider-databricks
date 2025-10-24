@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/dashboards"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/pools"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/serving"
@@ -62,6 +63,7 @@ var pluginFwOnlyDataSources = append(
 		catalog.DataSourceFunctions,
 		dashboards.DataSourceDashboards,
 		notificationdestinations.DataSourceNotificationDestinations,
+		pools.DataSourceInstancePool,
 		registered_model.DataSourceRegisteredModel,
 		registered_model.DataSourceRegisteredModelVersions,
 		serving.DataSourceServingEndpoints,

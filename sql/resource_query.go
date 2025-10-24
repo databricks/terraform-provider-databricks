@@ -3,10 +3,10 @@ package sql
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -130,10 +130,7 @@ func ResourceQuery() common.Resource {
 				log.Printf("[WARN] error getting query by ID: %v", err)
 				return err
 			}
-			parentPath := d.Get("parent_path").(string)
-			if parentPath != "" && strings.HasPrefix(apiQuery.ParentPath, "/Workspace") && !strings.HasPrefix(parentPath, "/Workspace") {
-				apiQuery.ParentPath = strings.TrimPrefix(parentPath, "/Workspace")
-			}
+			apiQuery.ParentPath = workspace.NormalizeWorkspacePath(d.Get("parent_path").(string), apiQuery.ParentPath)
 			return common.StructToData(QueryStruct{Query: *apiQuery}, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

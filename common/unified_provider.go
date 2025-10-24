@@ -27,7 +27,7 @@ type ProviderConfig struct {
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
 	return validation.All(
 		validation.StringIsNotEmpty,
-		validation.StringMatch(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"),
+		validation.StringMatch(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"),
 	)
 }
 

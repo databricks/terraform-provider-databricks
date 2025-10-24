@@ -58,7 +58,12 @@ func TestWorkspaceIDValidateFunc(t *testing.T) {
 		{
 			name:        "invalid string with leading zero",
 			input:       "0123",
-			expectError: false, // This is actually valid as it's still a numeric string
+			expectError: true, // Leading zeros are not allowed
+		},
+		{
+			name:        "invalid single zero",
+			input:       "0",
+			expectError: true, // Zero is not a valid workspace ID
 		},
 		{
 			name:        "invalid negative number",

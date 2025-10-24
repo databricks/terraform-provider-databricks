@@ -219,7 +219,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials",
 				ExpectedRequest: &catalog.AccountsCreateStorageCredential{
 					MetastoreId: "metastore_id",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "storage_credential_name",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
@@ -236,17 +236,13 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name",
 				ExpectedRequest: &catalog.AccountsUpdateStorageCredential{
-					CredentialInfo: &catalog.UpdateStorageCredential{
-						Name:  "storage_credential_name",
+					MetastoreId:           "metastore_id",
+					StorageCredentialName: "storage_credential_name",
+					CredentialInfo: &catalog.UpdateAccountsStorageCredential{
 						Owner: "administrators",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
 						},
-					},
-				},
-				Response: &catalog.AccountsStorageCredentialInfo{
-					CredentialInfo: &catalog.StorageCredentialInfo{
-						Name: "storage_credential_name",
 					},
 				},
 			},
@@ -904,4 +900,65 @@ func TestUpdateAzStorageCredentialSpn(t *testing.T) {
 		"azure_service_principal.0.directory_id":   "SAME",
 		"azure_service_principal.0.client_secret":  "CHANGED",
 	})
+}
+
+func TestStorageCredentialImportAccountLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name?",
+				Response: &catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "storage_credential_name",
+						AwsIamRole: &catalog.AwsIamRoleResponse{
+							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+						},
+						Id:          "1234-5678",
+						MetastoreId: "metastore_id",
+					},
+				},
+			},
+		},
+		Resource:  ResourceStorageCredential(),
+		AccountID: "account_id",
+		Read:      true,
+		ID:        "metastore_id|storage_credential_name",
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id":          "metastore_id",
+		"storage_credential_id": "1234-5678",
+	})
+}
+
+func TestStorageCredentialImportWorkspaceLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/storage_credential_name?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "storage_credential_name",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+					},
+					Id:          "1234-5678",
+					MetastoreId: "metastore_id",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Read:     true,
+		ID:       "storage_credential_name",
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id":          "metastore_id",
+		"storage_credential_id": "1234-5678",
+	})
+}
+
+func TestStorageCredentialImportInvalidFormat(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceStorageCredential(),
+		Read:     true,
+		ID:       "invalid|format|with|too|many|parts",
+	}.ExpectError(t, "invalid storage credential ID format: expected 'name' or 'metastore_id|name', got 'invalid|format|with|too|many|parts'")
 }

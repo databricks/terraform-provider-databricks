@@ -2,6 +2,8 @@
 subcategory: "Machine Learning"
 ---
 # databricks_online_stores Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -10,7 +12,6 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified
-
 
 
 ## Attributes

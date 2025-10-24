@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,20 +25,30 @@ func DataSourceFeatureTags() datasource.DataSource {
 	return &FeatureTagsDataSource{}
 }
 
-type FeatureTagsList struct {
-	ml_tf.ListFeatureTagsRequest
+// FeatureTagsData extends the main model with additional fields.
+type FeatureTagsData struct {
 	MaterializedFeatures types.List `tfsdk:"feature_tags"`
+
+	FeatureName types.String `tfsdk:"feature_name"`
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"page_size"`
+
+	TableName types.String `tfsdk:"table_name"`
 }
 
-func (c FeatureTagsList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_tags": reflect.TypeOf(FeatureTagData{}),
+	}
+}
+
+func (m FeatureTagsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["table_name"] = attrs["table_name"].SetRequired()
+	attrs["feature_name"] = attrs["feature_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["feature_tags"] = attrs["feature_tags"].SetComputed()
 	return attrs
-}
-
-func (FeatureTagsList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"feature_tags": reflect.TypeOf(ml_tf.FeatureTag{}),
-	}
 }
 
 type FeatureTagsDataSource struct {
@@ -51,7 +60,7 @@ func (r *FeatureTagsDataSource) Metadata(ctx context.Context, req datasource.Met
 }
 
 func (r *FeatureTagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FeatureTagsData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FeatureTag",
 		Attributes:  attrs,
@@ -66,13 +75,7 @@ func (r *FeatureTagsDataSource) Configure(ctx context.Context, req datasource.Co
 func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var config FeatureTagsList
+	var config FeatureTagsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,6 +83,13 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var listRequest ml.ListFeatureTagsRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +102,7 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var feature_tag ml_tf.FeatureTag
+		var feature_tag FeatureTagData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &feature_tag)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +110,6 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, feature_tag.ToObjectValue(ctx))
 	}
 
-	var newState FeatureTagsList
-	newState.MaterializedFeatures = types.ListValueMust(ml_tf.FeatureTag{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.MaterializedFeatures = types.ListValueMust(FeatureTagData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

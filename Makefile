@@ -2,9 +2,9 @@ default: build
 
 fmt:
 	@echo "✓ Formatting source code with goimports ..."
-	@go tool goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@go tool goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
 	@echo "✓ Formatting source code with gofmt ..."
-	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
 
 fmt-docs:
 	@echo "✓ Formatting code samples in documentation"

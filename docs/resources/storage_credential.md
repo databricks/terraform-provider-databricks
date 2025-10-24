@@ -86,7 +86,7 @@ The following arguments are required:
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
-- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`.
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
@@ -116,20 +116,37 @@ In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this storage credential - same as the `name`.
 - `storage_credential_id` - Unique ID of storage credential.
+- `aws_iam_role` exposes two additional attributes:
+
+  - `external_id` - The external ID used in role assumption to prevent the confused deputy problem.
+  - `unity_catalog_iam_arn` - The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks. This is the identity that is going to assume the AWS IAM role.
 
 ## Import
 
-This resource can be imported by name:
+When using a workspace-level provider to manage storage credentials, this resource can be imported by name:
 
 ```hcl
 import {
   to = databricks_storage_credential.this
-  id = "<name>"
+  id = "<storage_credential_name>"
+}
+```
+
+When using an account-level provider to manage storage credentials, use the format `<metastore_id>|<storage_credential_name>`:
+
+```hcl
+import {
+  to = databricks_storage_credential.this
+  id = "<metastore_id>|<storage_credential_name>"
 }
 ```
 
 Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_storage_credential.this <name>
+# When using a workspace-level provider
+terraform import databricks_storage_credential.this <storage_credential_name>
+
+# When using an account-level provider
+terraform import databricks_storage_credential.this '<metastore_id>|<storage_credential_name>'
 ```

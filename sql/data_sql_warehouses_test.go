@@ -52,7 +52,7 @@ func TestWarehousesDataContains(t *testing.T) {
 				}, nil)
 		},
 		Resource:    DataSourceWarehouses(),
-		HCL:         `warehouse_name_contains = "ba"`,
+		HCL:         `warehouse_name_contains = "Ba"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",

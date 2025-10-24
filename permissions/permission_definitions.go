@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/permissions/read"
@@ -408,7 +409,9 @@ func allResourcePermissions() []resourcePermissions {
 				if err != nil {
 					return "", err
 				}
-				job, err := w.Jobs.GetByJobId(ctx, jobId)
+				job, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+					JobId: jobId,
+				})
 				if err != nil {
 					return "", common.IgnoreNotFoundError(err)
 				}

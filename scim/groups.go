@@ -40,18 +40,21 @@ func (a GroupsAPI) Read(groupID, attributes string) (group Group, err error) {
 }
 
 // Filter returns groups matching the filter
-func (a GroupsAPI) Filter(filter string) (GroupList, error) {
+func (a GroupsAPI) Filter(filter string, attributes string) (GroupList, error) {
 	var groups GroupList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
+	}
+	if attributes != "" {
+		req["attributes"] = attributes
 	}
 	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
 }
 
 func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Group, err error) {
-	groupList, err := a.Filter(fmt.Sprintf(`displayName eq "%s"`, displayName))
+	groupList, err := a.Filter(fmt.Sprintf(`displayName eq "%s"`, displayName), attributes)
 	if err != nil {
 		return
 	}

@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_database_catalog Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Database Catalog.
 
 

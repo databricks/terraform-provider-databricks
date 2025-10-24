@@ -13,12 +13,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 const resourceName = "share"
@@ -31,12 +33,16 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
+	tfschema.Namespace_SdkV2
+	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
 
 func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
+	types := s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
+	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return types
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -140,7 +146,7 @@ type ShareResource struct {
 }
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -155,6 +161,11 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
 		c.SetRequired("object", "partition", "value", "name")
+
+		c.SetComputed("id")
+
+		// Ensure provider_config list has at most 1 element
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 
 		return c
 	})
@@ -173,11 +184,7 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+
 	var plan ShareInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -195,6 +202,19 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	shareInfo, err := w.Shares.Create(ctx, createShare)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create share", err.Error())
@@ -228,6 +248,8 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	newState.ID = newState.Name
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
@@ -246,15 +268,21 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	w, diags := r.Client.GetWorkspaceClient()
+	var getShareRequest sharing.GetShareRequest
+	getShareRequest.IncludeSharedData = true
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, existingState.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var getShareRequest sharing.GetShareRequest
-	getShareRequest.IncludeSharedData = true
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -296,12 +324,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var plan ShareInfoExtended
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -318,7 +340,18 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	currentShareInfo, err := client.Shares.Get(ctx, getShareRequest)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	currentShareInfo, err := w.Shares.Get(ctx, getShareRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to get current share info", err.Error())
 		return
@@ -331,7 +364,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	// if owner has changed, update the share owner
 	if !plan.Owner.IsNull() {
-		updatedShareInfo, err := client.Shares.Update(ctx, sharing.UpdateShare{
+		updatedShareInfo, err := w.Shares.Update(ctx, sharing.UpdateShare{
 			Name:  state.Name.ValueString(),
 			Owner: plan.Owner.ValueString(),
 		})
@@ -356,12 +389,12 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if !plan.Comment.IsNull() {
 			update.Comment = plan.Comment.ValueString()
 		}
-		upToDateShareInfo, err = client.Shares.Update(ctx, update)
+		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())
 
-			rollbackShareInfo, rollbackErr := client.Shares.Update(ctx, sharing.UpdateShare{
+			rollbackShareInfo, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
 				Name:  currentShareInfo.Name,
 				Owner: currentShareInfo.Owner,
 			})
@@ -396,14 +429,26 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	w, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
+	var state ShareInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var deleteShareRequest sharing_tf.DeleteShareRequest
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &deleteShareRequest.Name)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, state.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -439,16 +484,34 @@ func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing
 	state.SyncFieldsDuringRead(ctx, plan)
 }
 
-func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
+// syncEffectiveFields syncs the effective fields between existingState and newState
+// and returns the newState
+//
+// existingState: infrastructure values that are recorded in the existing terraform state.
+// newState: latest infrastructure values that are returned by the CRUD API calls.
+//
+// HCL config is compared with this newState to determine what changes are to be made
+// to the infrastructure and then the newState values are recorded in the terraform state.
+// Hence we ignore the values in existingState which are not present in newState.
+func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, newState ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
-	mode.resourceLevel(ctx, &state, plan.ShareInfo_SdkV2)
-	planObjects, _ := plan.GetObjects(ctx)
-	stateObjects, _ := state.GetObjects(ctx)
+	mode.resourceLevel(ctx, &newState, existingState.ShareInfo_SdkV2)
+	existingStateObjects, _ := existingState.GetObjects(ctx)
+	newStateObjects, _ := newState.GetObjects(ctx)
 	finalObjects := []sharing_tf.SharedDataObject_SdkV2{}
-	for i := range stateObjects {
-		mode.objectLevel(ctx, &stateObjects[i], planObjects[i])
-		finalObjects = append(finalObjects, stateObjects[i])
+	for i := range newStateObjects {
+		// For each object in the new state, we check if it exists in the existing state
+		// and if it does, we sync the effective fields.
+		// If it does not exist, we keep the new state object as is.
+		for j := range existingStateObjects {
+			if newStateObjects[i].Name == existingStateObjects[j].Name {
+				mode.objectLevel(ctx, &newStateObjects[i], existingStateObjects[j])
+				break
+			}
+		}
+		finalObjects = append(finalObjects, newStateObjects[i])
 	}
-	state.SetObjects(ctx, finalObjects)
-	return state, d
+	newState.SetObjects(ctx, finalObjects)
+	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	return newState, d
 }

@@ -336,7 +336,7 @@ func TestNodeTypeEmptyList(t *testing.T) {
 		ID:          ".",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "Standard_D3_v2", d.Id())
+	assert.Equal(t, "Standard_D4ds_v5", d.Id())
 }
 
 func TestNodeTypeFleetEmptyList(t *testing.T) {

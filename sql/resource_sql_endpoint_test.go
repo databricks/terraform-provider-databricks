@@ -57,6 +57,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			api := w.GetMockWarehousesAPI()
 			api.EXPECT().Create(mock.Anything, createRequest).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "abc", // Set the ID in the waiter
 				Poll: poll.Simple(getResponse),
 			}, nil)
 			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
@@ -125,6 +126,7 @@ func TestResourceSQLEndpointCreate_ForceSendFields(t *testing.T) {
 						SpotInstancePolicy:      "COST_OPTIMIZED",
 						ForceSendFields:         c.expectedForceSendFields,
 					}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+						Id:   "abc",
 						Poll: poll.Simple(response),
 					}, nil)
 					api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
@@ -158,6 +160,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 				SpotInstancePolicy: "COST_OPTIMIZED",
 				ForceSendFields:    []string{"AutoStopMins"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "abc",
 				Poll: poll.Simple(getResponse),
 			}, nil)
 			e.GetById(mock.Anything, "abc").Return(&getResponse, nil)
@@ -288,7 +291,10 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 				MaxNumClusters:     1,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
-			}).Return(&sql.WaitGetWarehouseRunning[struct{}]{Poll: poll.Simple(getResponse)}, nil)
+			}).Return(&sql.WaitGetWarehouseRunning[struct{}]{
+				Id:   "abc",
+				Poll: poll.Simple(getResponse),
+			}, nil)
 			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
 			addDataSourceListHttpFixture(mwc)
 		},
@@ -407,5 +413,45 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 		require.NoError(t, err)
 		_, err = resolveDataSourceID(ctx, w, "any")
 		require.Error(t, err)
+	})
+}
+
+func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
+	// Create a specific response for the no_wait test that shows a starting state
+	getResponseStarting := sql.GetWarehouseResponse{
+		Name:           "foo",
+		ClusterSize:    "Small",
+		Id:             "abc",
+		State:          "STARTING", // Important: Warehouse is still starting
+		Tags:           &sql.EndpointTags{},
+		MaxNumClusters: 1,
+		NumClusters:    0, // No clusters running yet
+	}
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockWarehousesAPI()
+			// The Create should return immediately without waiting due to no_wait=true
+			api.EXPECT().Create(mock.Anything, createRequest).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "abc",                            // Set the ID directly in the waiter
+				Poll: poll.Simple(getResponseStarting), // Use starting state response
+			}, nil)
+
+			// Read operation will still be called after create to refresh state
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponseStarting, nil)
+			addDataSourceListHttpFixture(w)
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+		cluster_size = "Small"
+		no_wait = true
+		`,
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"id":             "abc",
+		"no_wait":        true,
+		"state":          "STARTING",
+		"data_source_id": "d7c9d05c-7496-4c69-b089-48823edad40c",
 	})
 }

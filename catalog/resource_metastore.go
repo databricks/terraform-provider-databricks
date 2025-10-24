@@ -38,6 +38,27 @@ func updateForceSendFields(req *catalog.UpdateMetastore) {
 	}
 }
 
+func toCreateAccountsMetastore(create *catalog.CreateMetastore) *catalog.CreateAccountsMetastore {
+	return &catalog.CreateAccountsMetastore{
+		Name:            create.Name,
+		Region:          create.Region,
+		StorageRoot:     create.StorageRoot,
+		ForceSendFields: create.ForceSendFields,
+	}
+}
+
+func toUpdateAccountsMetastore(update *catalog.UpdateMetastore) *catalog.UpdateAccountsMetastore {
+	return &catalog.UpdateAccountsMetastore{
+		DeltaSharingOrganizationName:                update.DeltaSharingOrganizationName,
+		DeltaSharingRecipientTokenLifetimeInSeconds: update.DeltaSharingRecipientTokenLifetimeInSeconds,
+		DeltaSharingScope:                           update.DeltaSharingScope,
+		Owner:                                       update.Owner,
+		PrivilegeModelVersion:                       update.PrivilegeModelVersion,
+		StorageRootCredentialId:                     update.StorageRootCredentialId,
+		ForceSendFields:                             update.ForceSendFields,
+	}
+}
+
 func ResourceMetastore() common.Resource {
 	s := common.StructToSchema(MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -74,7 +95,7 @@ func ResourceMetastore() common.Resource {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
-						MetastoreInfo: &create,
+						MetastoreInfo: toCreateAccountsMetastore(&create),
 					})
 				if err != nil {
 					return err
@@ -85,7 +106,7 @@ func ResourceMetastore() common.Resource {
 				}
 				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   mi.MetastoreInfo.MetastoreId,
-					MetastoreInfo: &update,
+					MetastoreInfo: toUpdateAccountsMetastore(&update),
 				})
 				if err != nil {
 					return err
@@ -131,12 +152,13 @@ func ResourceMetastore() common.Resource {
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
+					ownerUpdate := catalog.UpdateMetastore{
+						Id:    update.Id,
+						Owner: update.Owner,
+					}
 					_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
-						MetastoreId: d.Id(),
-						MetastoreInfo: &catalog.UpdateMetastore{
-							Id:    update.Id,
-							Owner: update.Owner,
-						},
+						MetastoreId:   d.Id(),
+						MetastoreInfo: toUpdateAccountsMetastore(&ownerUpdate),
 					})
 					if err != nil {
 						return err
@@ -150,18 +172,19 @@ func ResourceMetastore() common.Resource {
 				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
-					MetastoreInfo: &update,
+					MetastoreInfo: toUpdateAccountsMetastore(&update),
 				})
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
 						old, new := d.GetChange("owner")
+						rollbackUpdate := catalog.UpdateMetastore{
+							Id:    update.Id,
+							Owner: old.(string),
+						}
 						_, rollbackErr := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
-							MetastoreId: d.Id(),
-							MetastoreInfo: &catalog.UpdateMetastore{
-								Id:    update.Id,
-								Owner: old.(string),
-							},
+							MetastoreId:   d.Id(),
+							MetastoreInfo: toUpdateAccountsMetastore(&rollbackUpdate),
 						})
 						if rollbackErr != nil {
 							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -207,7 +230,8 @@ func ResourceMetastore() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
+				_, err := acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
+				return err
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			})

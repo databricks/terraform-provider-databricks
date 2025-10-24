@@ -20,13 +20,12 @@ func DataSourceWarehouses() common.Resource {
 		if err != nil {
 			return err
 		}
-		name_contains := (*data).WarehouseNameContains
-		for _, e := range list {
-			match_name := strings.Contains(strings.ToLower(e.Name), name_contains)
-			if name_contains != "" && !match_name {
+		nameContains := strings.ToLower(data.WarehouseNameContains)
+		for _, warehouse := range list {
+			if nameContains != "" && !strings.Contains(strings.ToLower(warehouse.Name), nameContains) {
 				continue
 			}
-			data.Ids = append(data.Ids, e.Id)
+			data.Ids = append(data.Ids, warehouse.Id)
 		}
 
 		sort.Strings(data.Ids)

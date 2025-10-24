@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"slices"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -34,6 +36,7 @@ type appResource struct {
 
 func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
+	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s
 }
@@ -53,7 +56,17 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = tfschema.ResourceStructToSchema(ctx, appResource{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
-		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse", "uc_securable"}
+		exclusiveFields := []string{}
+		t := reflect.TypeOf(apps_tf.AppResource{})
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			if f.Tag != "" {
+				tag := f.Tag.Get("tfsdk")
+				if !slices.Contains([]string{"name", "description"}, tag) {
+					exclusiveFields = append(exclusiveFields, tag)
+				}
+			}
+		}
 		paths := path.Expressions{}
 		for _, field := range exclusiveFields[1:] {
 			paths = append(paths, path.MatchRelative().AtParent().AtName(field))

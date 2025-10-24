@@ -5,8 +5,6 @@ subcategory: "Apps"
 
 -> This data source can only be used with a workspace-level provider!
 
--> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
-
 [Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer’s Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
 
 This data source allows you to fetch information about a Databricks App.
@@ -39,11 +37,13 @@ In addition to all arguments above, the following attributes are exported:
   * `app_status` attribute
     * `state` - State of the application.
     * `message` - Application status message
+  * `compute_size` - (Optional) A string specifying compute size for the App.
   * `url` - The URL of the app once it is deployed.
   * `create_time` - The creation time of the app.
   * `creator` - The email of the user that created the app.
   * `update_time` - The update time of the app.
   * `updater` - The email of the user that last updated the app.
+  * `service_principal_client_id` - client_id (application_id) of the app service principal
   * `service_principal_id` - id of the app service principal
   * `service_principal_name` - name of the app service principal
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
@@ -81,6 +81,10 @@ Exactly one of the following attributes will be provided:
   * `database_name` - The name of database.
   * `instance_name` - The name of database instance.
   * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
+* `genie_space` attribute
+  * `name` - The name of Genie Space.
+  * ``permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.
+  * `space_id` - The unique ID of Genie Space.
 
 ## Related Resources
 

@@ -2,6 +2,8 @@
 subcategory: "Billing"
 ---
 # databricks_budget_policies Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to fetch the list of budget policies.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -21,7 +23,6 @@ The following arguments are supported:
   If unspecified, at most 100 budget policies will be returned.
   The maximum value is 1000; values above 1000 will be coerced to 1000
 * `sort_spec` (SortSpec, optional) - The sort specification
-
 
 ### Filter
 * `creator_user_id` (integer, optional, deprecated) - The policy creator user id to be filtered on.

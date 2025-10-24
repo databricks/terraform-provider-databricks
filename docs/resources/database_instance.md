@@ -2,6 +2,8 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_instance Resource
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Lakebase Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances.
 
 ### Use Cases
@@ -67,23 +69,51 @@ resource "databricks_database_instance" "child" {
 }
 ```
 
+### Example with a usage policy and custom tags
+
+This example creates a Database Instance with an associated usage policy and custom tags.
+
+```hcl
+resource "databricks_database_instance" "this" {
+  name = "my-database-instance"
+  capacity = "CU_8"
+  usage_policy_id = "948192fa-a98b-498f-a09b-ecee79d8b983"
+  custom_tags = [
+    {
+      key = "custom_tag_key1"
+      value = "custom_tag_value1"
+    },
+    {
+      key = "custom_tag_key2"
+      value = "custom_tag_value2"
+    }
+  ]
+}
+```
 
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the instance. This is the unique identifier for the instance
 * `capacity` (string, optional) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
+* `custom_tags` (list of CustomTag, optional) - Custom tags associated with the instance. This field is only included on create and update responses
+* `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on the instance. Defaults to false
 * `enable_readable_secondaries` (boolean, optional) - Whether to enable secondaries to serve read-only traffic. Defaults to false
 * `node_count` (integer, optional) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
-  1 primary and 0 secondaries
+  1 primary and 0 secondaries. This field is input only, see effective_node_count for the output
 * `parent_instance_ref` (DatabaseInstanceRef, optional) - The ref of the parent instance. This is only available if the instance is
   child instance.
   Input: For specifying the parent instance to create a child instance. Optional.
   Output: Only populated if provided as input to create a child instance
+* `purge_on_delete` (boolean, optional) - Purge the resource on delete
 * `retention_window_in_days` (integer, optional) - The retention window for the instance. This is the time window in days
   for which the historical data is retained. The default value is 7 days.
   Valid values are 2 to 35 days
-* `stopped` (boolean, optional) - Whether the instance is stopped
-* `purge_on_delete` (boolean, optional) - Purge the resource on delete
+* `stopped` (boolean, optional) - Whether to stop the instance. An input only param, see effective_stopped for the output
+* `usage_policy_id` (string, optional) - The desired usage policy to associate with the instance
+
+### CustomTag
+* `key` (string, optional) - The key of the custom tag
+* `value` (string, optional) - The value of the custom tag
 
 ### DatabaseInstanceRef
 * `branch_time` (string, optional) - Branch time of the ref database instance.
@@ -105,18 +135,16 @@ In addition to the above arguments, the following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
-* `effective_enable_readable_secondaries` (boolean) - xref AIP-129. `enable_readable_secondaries` is owned by the client, while `effective_enable_readable_secondaries` is owned by the server.
-  `enable_readable_secondaries` will only be set in Create/Update response messages if and only if the user provides the field via the request.
-  `effective_enable_readable_secondaries` on the other hand will always bet set in all response messages (Create/Update/Get/List)
-* `effective_node_count` (integer) - xref AIP-129. `node_count` is owned by the client, while `effective_node_count` is owned by the server.
-  `node_count` will only be set in Create/Update response messages if and only if the user provides the field via the request.
-  `effective_node_count` on the other hand will always bet set in all response messages (Create/Update/Get/List)
-* `effective_retention_window_in_days` (integer) - xref AIP-129. `retention_window_in_days` is owned by the client, while `effective_retention_window_in_days` is owned by the server.
-  `retention_window_in_days` will only be set in Create/Update response messages if and only if the user provides the field via the request.
-  `effective_retention_window_in_days` on the other hand will always bet set in all response messages (Create/Update/Get/List)
-* `effective_stopped` (boolean) - xref AIP-129. `stopped` is owned by the client, while `effective_stopped` is owned by the server.
-  `stopped` will only be set in Create/Update response messages if and only if the user provides the field via the request.
-  `effective_stopped` on the other hand will always bet set in all response messages (Create/Update/Get/List)
+* `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity
+* `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance
+* `effective_enable_pg_native_login` (boolean) - Whether the instance has PG native password login enabled
+* `effective_enable_readable_secondaries` (boolean) - Whether secondaries serving read-only traffic are enabled. Defaults to false
+* `effective_node_count` (integer) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
+  1 primary and 0 secondaries
+* `effective_retention_window_in_days` (integer) - The retention window for the instance. This is the time window in days
+  for which the historical data is retained
+* `effective_stopped` (boolean) - Whether the instance is stopped
+* `effective_usage_policy_id` (string) - The policy that is applied to the instance
 * `pg_version` (string) - The version of Postgres running on the instance
 * `read_only_dns` (string) - The DNS endpoint to connect to the instance for read only access. This is only available if
   enable_readable_secondaries is true
@@ -125,10 +153,7 @@ In addition to the above arguments, the following attributes are exported:
 * `uid` (string) - An immutable UUID identifier for the instance
 
 ### DatabaseInstanceRef
-* `effective_lsn` (string) - xref AIP-129. `lsn` is owned by the client, while `effective_lsn` is owned by the server.
-  `lsn` will only be set in Create/Update response messages if and only if the user provides the field via the request.
-  `effective_lsn` on the other hand will always bet set in all response messages (Create/Update/Get/List).
-  For a parent ref instance, this is the LSN on the parent instance from which the
+* `effective_lsn` (string) - For a parent ref instance, this is the LSN on the parent instance from which the
   instance was created.
   For a child ref instance, this is the LSN on the instance from which the child instance
   was created
@@ -138,12 +163,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = name
+  id = "name"
   to = databricks_database_instance.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_instance name
+terraform import databricks_database_instance.this "name"
 ```

@@ -309,8 +309,13 @@ func Update(jobID int64, js JobSettingsResource, w *databricks.WorkspaceClient, 
 }
 
 func Read(jobID int64, w *databricks.WorkspaceClient, ctx context.Context) (job *jobs.Job, err error) {
-	job, err = w.Jobs.GetByJobId(ctx, jobID)
+	job, err = w.Jobs.Get(ctx, jobs.GetJobRequest{
+		JobId: jobID,
+	})
 	err = wrapMissingJobError(err, fmt.Sprintf("%d", jobID))
+	if err != nil {
+		return
+	}
 	if job.Settings != nil {
 		js := JobSettingsResource{JobSettings: *job.Settings}
 		js.adjustTasks()

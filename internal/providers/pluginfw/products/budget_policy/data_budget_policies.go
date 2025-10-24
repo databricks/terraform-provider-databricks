@@ -26,20 +26,34 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 	return &BudgetPoliciesDataSource{}
 }
 
-type BudgetPoliciesList struct {
-	billing_tf.ListBudgetPoliciesRequest
+// BudgetPoliciesData extends the main model with additional fields.
+type BudgetPoliciesData struct {
 	BudgetPolicy types.List `tfsdk:"policies"`
+	// A filter to apply to the list of policies.
+	FilterBy types.Object `tfsdk:"filter_by"`
+	// The maximum number of budget policies to return. If unspecified, at most
+	// 100 budget policies will be returned. The maximum value is 1000; values
+	// above 1000 will be coerced to 1000.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// The sort specification.
+	SortSpec types.Object `tfsdk:"sort_spec"`
 }
 
-func (c BudgetPoliciesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (BudgetPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policies":  reflect.TypeOf(BudgetPolicyData{}),
+		"filter_by": reflect.TypeOf(billing_tf.Filter{}),
+		"sort_spec": reflect.TypeOf(billing_tf.SortSpec{}),
+	}
+}
+
+func (m BudgetPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["filter_by"] = attrs["filter_by"].SetOptional()
+	attrs["sort_spec"] = attrs["sort_spec"].SetOptional()
+
 	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
-}
-
-func (BudgetPoliciesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
-	}
 }
 
 type BudgetPoliciesDataSource struct {
@@ -51,7 +65,7 @@ func (r *BudgetPoliciesDataSource) Metadata(ctx context.Context, req datasource.
 }
 
 func (r *BudgetPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, BudgetPoliciesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks BudgetPolicy",
 		Attributes:  attrs,
@@ -66,13 +80,7 @@ func (r *BudgetPoliciesDataSource) Configure(ctx context.Context, req datasource
 func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetAccountClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var config BudgetPoliciesList
+	var config BudgetPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,6 +88,13 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 
 	var listRequest billing.ListBudgetPoliciesRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,7 +107,7 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var budget_policy billing_tf.BudgetPolicy
+		var budget_policy BudgetPolicyData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &budget_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +115,6 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		results = append(results, budget_policy.ToObjectValue(ctx))
 	}
 
-	var newState BudgetPoliciesList
-	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.BudgetPolicy = types.ListValueMust(BudgetPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

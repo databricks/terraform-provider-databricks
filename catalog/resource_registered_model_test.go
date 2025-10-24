@@ -65,6 +65,7 @@ func TestRegisteredModelCreateWithOwner(t *testing.T) {
 				CatalogName: "catalog",
 				SchemaName:  "schema",
 				Comment:     "comment",
+				Owner:       "owner",
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				Owner:       "old_owner",
@@ -74,9 +75,12 @@ func TestRegisteredModelCreateWithOwner(t *testing.T) {
 				Comment:     "comment",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
-				Owner:    "owner",
-				FullName: "catalog.schema.model",
-				Comment:  "comment",
+				Owner:       "owner",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				Owner:       "owner",
@@ -161,8 +165,11 @@ func TestRegisteredModelUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockRegisteredModelsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
-				FullName: "catalog.schema.model",
-				Comment:  "new comment",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
@@ -203,6 +210,9 @@ func TestRegisteredModelUpdateCommentOnly(t *testing.T) {
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
 				FullName:        "catalog.schema.model",
 				Comment:         "",
+				CatalogName:     "catalog",
+				SchemaName:      "schema",
+				Name:            "model",
 				ForceSendFields: []string{"Comment"},
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
@@ -253,8 +263,11 @@ func TestRegisteredModelUpdateOwner(t *testing.T) {
 				Comment:     "comment",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
-				FullName: "catalog.schema.model",
-				Comment:  "new comment",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
@@ -314,8 +327,11 @@ func TestRegisteredModelUpdateRollback(t *testing.T) {
 				Comment:     "comment",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
-				FullName: "catalog.schema.model",
-				Comment:  "new comment",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
 			}).Return(nil, errors.New("Something unexpected"))
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
 				FullName: "catalog.schema.model",
@@ -355,8 +371,11 @@ func TestRegisteredModelUpdate_Error(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockRegisteredModelsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
-				FullName: "catalog.schema.model",
-				Comment:  "new comment",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
 			}).Return(nil, errors.New("Internal error happened"))
 		},
 		Resource: ResourceRegisteredModel(),

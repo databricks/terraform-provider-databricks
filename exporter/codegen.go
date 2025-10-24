@@ -536,7 +536,6 @@ func (ic *importContext) generateVariables() error {
 				for _, block := range tbody.Blocks() {
 					typ := block.Type()
 					labels := block.Labels()
-					// log.Printf("[DEBUG] blockBody: %v %v\n", typ, labels)
 					_, present := ic.variables[labels[0]]
 					if typ == "variable" && present {
 						log.Printf("[DEBUG] Ignoring variable '%s' that will be re-exported", labels[0])

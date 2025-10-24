@@ -511,7 +511,6 @@ func (JobSettingsResource) Aliases() map[string]map[string]string {
 }
 
 func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-	common.NamespaceCustomizeSchema(s)
 	// Suppress diffs
 	s.SchemaPath("email_notifications").SetSuppressDiff()
 	s.SchemaPath("webhook_notifications").SetSuppressDiff()

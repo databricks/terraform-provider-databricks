@@ -138,12 +138,6 @@ func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 	})
 }
 
-func TestAccJobCluster_ProviderConfig_NotProvided(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: jobClusterTemplate(""),
-	})
-}
-
 func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	ctx := context.Background()

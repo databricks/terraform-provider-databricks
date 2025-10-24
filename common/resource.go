@@ -219,19 +219,14 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
-	s := StructToSchema(sc, NamespaceCustomizeSchemaMap)
+	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		return m
+	})
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, s, ptr.Elem())
-			if m.DatabricksClient != nil && !m.Config.IsAccountClient() {
-				w, err := m.WorkspaceClientUnifiedProvider(ctx, d)
-				if err != nil {
-					return err
-				}
-				m.SetWorkspaceClient(w)
-			}
 			err = read(ctx, ptr.Interface(), m)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")

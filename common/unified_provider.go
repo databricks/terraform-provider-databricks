@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// workspaceIDSchemaKey is the key for the workspace ID in schema
 const workspaceIDSchemaKey = "provider_config.0.workspace_id"
 
 type Namespace struct {
@@ -68,7 +69,7 @@ func NamespaceCustomizeDiff(d *schema.ResourceDiff) error {
 // This is used by resources and data sources that are developed over SDKv2.
 func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
 	workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the schema
+	// workspace_id does not exist in the resource data
 	if workspaceIDFromSchema == nil {
 		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
 	}

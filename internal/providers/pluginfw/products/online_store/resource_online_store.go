@@ -167,7 +167,9 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 	}
 
 	var newState OnlineStore
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -300,11 +302,13 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.FeatureStore.DeleteOnlineStore(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete online_store", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &OnlineStoreResource{}

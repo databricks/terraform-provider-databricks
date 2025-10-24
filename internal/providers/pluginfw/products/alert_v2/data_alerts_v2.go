@@ -28,6 +28,8 @@ func DataSourceAlertsV2() datasource.DataSource {
 // AlertsV2Data extends the main model with additional fields.
 type AlertsV2Data struct {
 	AlertsV2 types.List `tfsdk:"alerts"`
+
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["alerts"] = attrs["alerts"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertsV2Data
-	newState.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

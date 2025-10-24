@@ -28,6 +28,8 @@ func DataSourceCustomTemplates() datasource.DataSource {
 // CustomTemplatesData extends the main model with additional fields.
 type CustomTemplatesData struct {
 	AppsSettings types.List `tfsdk:"templates"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]refl
 }
 
 func (m CustomTemplatesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["templates"] = attrs["templates"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		results = append(results, custom_template.ToObjectValue(ctx))
 	}
 
-	var newState CustomTemplatesData
-	newState.AppsSettings = types.ListValueMust(CustomTemplateData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AppsSettings = types.ListValueMust(CustomTemplateData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

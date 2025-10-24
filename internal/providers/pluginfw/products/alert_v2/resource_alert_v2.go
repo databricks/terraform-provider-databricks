@@ -404,7 +404,9 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 	}
 
 	var newState AlertV2
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -537,11 +539,13 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &AlertV2Resource{}

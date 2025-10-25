@@ -181,6 +181,32 @@ func ResourcePermissions() common.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
+
+		// Use a custom hash function that only considers non-empty fields.
+		// This prevents spurious diffs when comparing {group_name: "X", permission_level: "Y"}
+		// with {group_name: "X", permission_level: "Y", service_principal_name: "", user_name: ""}
+		acSchema := s["access_control"].Elem.(*schema.Resource).Schema
+		s["access_control"].Set = func(v interface{}) int {
+			m, ok := v.(map[string]interface{})
+			if !ok {
+				return 0
+			}
+			// Build a normalized map with only non-empty string fields for hashing
+			normalized := make(map[string]interface{})
+			for key, val := range m {
+				if _, exists := acSchema[key]; !exists {
+					continue // Skip fields not in schema
+				}
+				if strVal, ok := val.(string); ok {
+					if strVal != "" {
+						normalized[key] = strVal
+					}
+				}
+			}
+			// Use HashResource with a schema that only includes the fields we care about
+			hashSchema := &schema.Resource{Schema: acSchema}
+			return schema.HashResource(hashSchema)(normalized)
+		}
 		return s
 	})
 	return common.Resource{

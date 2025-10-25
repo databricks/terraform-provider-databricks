@@ -67,7 +67,20 @@ func (m AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 
 // Request to cancel a refresh.
 type CancelRefreshRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -311,7 +324,20 @@ func (m *CreateMonitorRequest) SetMonitor(ctx context.Context, v Monitor) {
 }
 
 type CreateRefreshRequest struct {
-	// The UUID of the request object. For example, table id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`or
 	// `table`.
@@ -498,7 +524,7 @@ type DataProfilingConfig struct {
 	DriftMetricsTableName types.String `tfsdk:"drift_metrics_table_name"`
 	// The warehouse for dashboard creation
 	EffectiveWarehouseId types.String `tfsdk:"effective_warehouse_id"`
-	// Configuration for monitoring inference log tables.
+	// `Analysis Configuration` for monitoring inference log tables.
 	InferenceLog types.Object `tfsdk:"inference_log"`
 	// The latest error message for a monitor failure.
 	LatestMonitorFailureMessage types.String `tfsdk:"latest_monitor_failure_message"`
@@ -529,11 +555,11 @@ type DataProfilingConfig struct {
 	// slice per unique value in `col1`. For high-cardinality columns, only the
 	// top 100 unique values by frequency will generate slices.
 	SlicingExprs types.List `tfsdk:"slicing_exprs"`
-	// Configuration for monitoring snapshot tables.
+	// `Analysis Configuration` for monitoring snapshot tables.
 	Snapshot types.Object `tfsdk:"snapshot"`
 	// The data profiling monitor status.
 	Status types.String `tfsdk:"status"`
-	// Configuration for monitoring time series tables.
+	// `Analysis Configuration` for monitoring time series tables.
 	TimeSeries types.Object `tfsdk:"time_series"`
 	// Optional argument to specify the warehouse for dashboard creation. If not
 	// specified, the first running warehouse will be used.
@@ -1044,7 +1070,20 @@ func (m *DataProfilingCustomMetric) SetInputColumns(ctx context.Context, v []typ
 }
 
 type DeleteMonitorRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -1098,7 +1137,20 @@ func (m DeleteMonitorRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteRefreshRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -1157,7 +1209,20 @@ func (m DeleteRefreshRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetMonitorRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -1211,7 +1276,20 @@ func (m GetMonitorRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetRefreshRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -1522,7 +1600,20 @@ func (m *ListMonitorResponse) SetMonitors(ctx context.Context, v []Monitor) {
 }
 
 type ListRefreshRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -1685,9 +1776,23 @@ func (m *ListRefreshResponse) SetRefreshes(ctx context.Context, v []Refresh) {
 type Monitor struct {
 	// Anomaly Detection Configuration, applicable to `schema` object types.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-	// Data Profiling Configuration, applicable to `table` object types
+	// Data Profiling Configuration, applicable to `table` object types. Exactly
+	// one `Analysis Configuration` must be present.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -2026,7 +2131,20 @@ type Refresh struct {
 	// An optional message to give insight into the current state of the refresh
 	// (e.g. FAILURE messages).
 	Message types.String `tfsdk:"message"`
-	// The UUID of the request object. For example, table id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: `schema`or
 	// `table`.
@@ -2235,7 +2353,20 @@ func (m *TimeSeriesConfig) SetGranularities(ctx context.Context, v []types.Strin
 type UpdateMonitorRequest struct {
 	// The monitor to update.
 	Monitor types.Object `tfsdk:"monitor"`
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -2343,7 +2474,20 @@ func (m *UpdateMonitorRequest) SetMonitor(ctx context.Context, v Monitor) {
 }
 
 type UpdateRefreshRequest struct {
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"-"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -79,21 +78,20 @@ func (m DatabaseCatalogData) ToObjectValue(ctx context.Context) basetypes.Object
 // and contains additional fields.
 func (m DatabaseCatalogData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"create_database_if_not_exists": types.BoolType,
-			"database_instance_name": types.StringType,
-			"database_name":          types.StringType,
-			"name":                   types.StringType,
-			"uid":                    types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"create_database_if_not_exists": types.BoolType,
+			"database_instance_name":        types.StringType,
+			"database_name":                 types.StringType,
+			"name":                          types.StringType,
+			"uid":                           types.StringType,
 		},
 	}
 }
 
 func (m DatabaseCatalogData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetOptional()
 	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].SetComputed()
-	attrs["create_database_if_not_exists"] = attrs["create_database_if_not_exists"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["database_instance_name"] = attrs["database_instance_name"].SetRequired()
-	attrs["database_name"] = attrs["database_name"].SetRequired()
+	attrs["database_instance_name"] = attrs["database_instance_name"].SetComputed()
+	attrs["database_name"] = attrs["database_name"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["uid"] = attrs["uid"].SetComputed()
 

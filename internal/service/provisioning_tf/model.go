@@ -1613,6 +1613,10 @@ type CreateWorkspaceRequest struct {
 	// history. The provided key configuration object property use_cases must
 	// contain MANAGED_SERVICES.
 	ManagedServicesCustomerManagedKeyId types.String `tfsdk:"managed_services_customer_managed_key_id"`
+	// The object ID of network connectivity config. Once assigned, the
+	// workspace serverless compute resources use the same set of stable IP CIDR
+	// blocks and optional private link to access your resources.
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
 	// The ID of the workspace's network configuration object. To use AWS
 	// PrivateLink, this field is required.
 	NetworkId types.String `tfsdk:"network_id"`
@@ -1708,6 +1712,7 @@ func (m CreateWorkspaceRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["gke_config"] = attrs["gke_config"].SetOptional()
 	attrs["location"] = attrs["location"].SetOptional()
 	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
 	attrs["network_id"] = attrs["network_id"].SetOptional()
 	attrs["pricing_tier"] = attrs["pricing_tier"].SetOptional()
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
@@ -1753,12 +1758,13 @@ func (m CreateWorkspaceRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 			"gke_config":                 m.GkeConfig,
 			"location":                   m.Location,
 			"managed_services_customer_managed_key_id": m.ManagedServicesCustomerManagedKeyId,
-			"network_id":                      m.NetworkId,
-			"pricing_tier":                    m.PricingTier,
-			"private_access_settings_id":      m.PrivateAccessSettingsId,
-			"storage_configuration_id":        m.StorageConfigurationId,
-			"storage_customer_managed_key_id": m.StorageCustomerManagedKeyId,
-			"workspace_name":                  m.WorkspaceName,
+			"network_connectivity_config_id":           m.NetworkConnectivityConfigId,
+			"network_id":                               m.NetworkId,
+			"pricing_tier":                             m.PricingTier,
+			"private_access_settings_id":               m.PrivateAccessSettingsId,
+			"storage_configuration_id":                 m.StorageConfigurationId,
+			"storage_customer_managed_key_id":          m.StorageCustomerManagedKeyId,
+			"workspace_name":                           m.WorkspaceName,
 		})
 }
 
@@ -1779,12 +1785,13 @@ func (m CreateWorkspaceRequest) Type(ctx context.Context) attr.Type {
 			"gke_config":                 GkeConfig{}.Type(ctx),
 			"location":                   types.StringType,
 			"managed_services_customer_managed_key_id": types.StringType,
-			"network_id":                      types.StringType,
-			"pricing_tier":                    types.StringType,
-			"private_access_settings_id":      types.StringType,
-			"storage_configuration_id":        types.StringType,
-			"storage_customer_managed_key_id": types.StringType,
-			"workspace_name":                  types.StringType,
+			"network_connectivity_config_id":           types.StringType,
+			"network_id":                               types.StringType,
+			"pricing_tier":                             types.StringType,
+			"private_access_settings_id":               types.StringType,
+			"storage_configuration_id":                 types.StringType,
+			"storage_customer_managed_key_id":          types.StringType,
+			"workspace_name":                           types.StringType,
 		},
 	}
 }
@@ -5024,7 +5031,7 @@ type Workspace struct {
 	AwsRegion types.String `tfsdk:"aws_region"`
 
 	AzureWorkspaceInfo types.Object `tfsdk:"azure_workspace_info"`
-	// The cloud name. This field always has the value `gcp`.
+	// The cloud name. This field can have values like `azure`, `gcp`.
 	Cloud types.String `tfsdk:"cloud"`
 
 	CloudResourceContainer types.Object `tfsdk:"cloud_resource_container"`

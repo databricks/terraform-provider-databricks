@@ -174,7 +174,7 @@ func TestNamespaceCustomizeSchemaMap(t *testing.T) {
 		assert.NotEmpty(t, errors, "Invalid workspace ID should produce errors")
 	})
 
-	t.Run("without provider_config", func(t *testing.T) {
+	t.Run("panic without provider_config", func(t *testing.T) {
 		testSchema := map[string]*schema.Schema{
 			"other_field": {
 				Type:     schema.TypeString,
@@ -182,8 +182,9 @@ func TestNamespaceCustomizeSchemaMap(t *testing.T) {
 			},
 		}
 
-		result := NamespaceCustomizeSchemaMap(testSchema)
-		assert.Equal(t, testSchema, result, "Schema should be returned unchanged when provider_config is not present")
+		assert.Panics(t, func() {
+			NamespaceCustomizeSchemaMap(testSchema)
+		}, "NamespaceCustomizeSchemaMap should panic when provider_config is not present")
 	})
 }
 
@@ -209,26 +210,33 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	mockWorkspaceClient := &databricks.WorkspaceClient{}
 
 	testCases := []struct {
-		name              string
-		resourceData      map[string]interface{}
-		cachedWorkspaceID int64
-		isAccountLevel    bool
-		accountID         string
-		expectError       bool
-		errorContains     string
-		description       string
+		name          string
+		resourceData  map[string]interface{}
+		client        *DatabricksClient
+		expectError   bool
+		errorContains string
+		description   string
 	}{
 		{
 			name: "workspace_id not set - calls with empty string",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
-			cachedWorkspaceID: 0,
-			isAccountLevel:    false,
-			expectError:       false,
-			description:       "When provider_config is not set, should use cached workspace client",
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:  "https://test.cloud.databricks.com",
+						Token: "test-token",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     0,
+			},
+			expectError: false,
+			description: "When provider_config is not set, should use cached workspace client",
 		},
 		{
 			name: "workspace_id set to valid value",
@@ -240,10 +248,18 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			cachedWorkspaceID: 123456,
-			isAccountLevel:    false,
-			expectError:       false,
-			description:       "When workspace_id matches cached ID, should return workspace client",
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:  "https://test.cloud.databricks.com",
+						Token: "test-token",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     123456,
+			},
+			expectError: false,
+			description: "When workspace_id matches cached ID, should return workspace client",
 		},
 		{
 			name: "workspace_id set to empty string",
@@ -255,10 +271,18 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			cachedWorkspaceID: 0,
-			isAccountLevel:    false,
-			expectError:       false,
-			description:       "When workspace_id is explicitly empty, should use cached workspace client",
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:  "https://test.cloud.databricks.com",
+						Token: "test-token",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     0,
+			},
+			expectError: false,
+			description: "When workspace_id is explicitly empty, should use cached workspace client",
 		},
 		{
 			name: "workspace_id with different numeric value",
@@ -270,22 +294,36 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			cachedWorkspaceID: 789012,
-			isAccountLevel:    false,
-			expectError:       false,
-			description:       "Should handle different workspace IDs correctly",
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:  "https://test.cloud.databricks.com",
+						Token: "test-token",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     789012,
+			},
+			expectError: false,
+			description: "Should handle different workspace IDs correctly",
 		},
 		{
 			name: "account level provider without workspace_id - returns error",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
-			cachedWorkspaceID: 0,
-			isAccountLevel:    true,
-			accountID:         "test-account-id",
-			expectError:       true,
-			errorContains:     "workspace_id",
-			description:       "Account-level provider requires workspace_id to be set",
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:      "https://accounts.cloud.databricks.com",
+						AccountID: "test-account-id",
+						Token:     "test-token",
+					},
+				},
+			},
+			expectError:   true,
+			errorContains: "workspace_id",
+			description:   "Account-level provider requires workspace_id to be set",
 		},
 	}
 
@@ -294,38 +332,8 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			// Create resource data
 			d := schema.TestResourceDataRaw(t, testSchema, tc.resourceData)
 
-			// Create a mock workspace client to be returned
-			mockWorkspaceClient := &databricks.WorkspaceClient{}
-
-			// Create a DatabricksClient based on test case configuration
-			var dc *DatabricksClient
-			if tc.isAccountLevel {
-				// Create account-level provider
-				dc = &DatabricksClient{
-					DatabricksClient: &client.DatabricksClient{
-						Config: &config.Config{
-							Host:      "https://accounts.cloud.databricks.com",
-							AccountID: tc.accountID,
-							Token:     "test-token",
-						},
-					},
-				}
-			} else {
-				// Create workspace-level provider
-				dc = &DatabricksClient{
-					DatabricksClient: &client.DatabricksClient{
-						Config: &config.Config{
-							Host:  "https://test.cloud.databricks.com",
-							Token: "test-token",
-						},
-					},
-					cachedWorkspaceClient: mockWorkspaceClient,
-					cachedWorkspaceID:     tc.cachedWorkspaceID,
-				}
-			}
-
 			// Call WorkspaceClientUnifiedProvider
-			result, err := dc.WorkspaceClientUnifiedProvider(ctx, d)
+			result, err := tc.client.WorkspaceClientUnifiedProvider(ctx, d)
 
 			// Verify results
 			if tc.expectError {

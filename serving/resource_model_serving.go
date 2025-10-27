@@ -145,6 +145,9 @@ func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, apiR
 	var config serving.CreateServingEndpoint
 	common.DataToStructPointer(d, s, &config)
 
+	if config.Config == nil {
+		return
+	}
 	for _, configModel := range config.Config.ServedModels {
 		if configModel.WorkloadSize != "" {
 			continue

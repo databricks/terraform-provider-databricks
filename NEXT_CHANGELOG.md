@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Remove unnecessary `SetSuppressDiff()` for `workload_size` in `databricks_model_serving` ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX)).
+
 ### Documentation
 
 ### Exporter

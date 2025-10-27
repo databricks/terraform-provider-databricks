@@ -52,11 +52,9 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	if !ok {
 		panic("provider_config.Elem is not a *schema.Resource")
 	}
-	workspaceID, ok := elem.Schema["workspace_id"]
-	if !ok {
-		panic("workspace_id not found in provider_config schema")
+	if workspaceID, ok := elem.Schema["workspace_id"]; ok {
+		workspaceID.ValidateFunc = workspaceIDValidateFunc()
 	}
-	workspaceID.ValidateFunc = workspaceIDValidateFunc()
 	return m
 }
 

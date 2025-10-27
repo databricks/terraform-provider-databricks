@@ -131,6 +131,42 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// cleanWorkloadSize clears the workload_size field from the config (the API response) if it is not set in the corresponding schema.ResourceData.
+// This is applied to both the ServedModels and ServedEntities fields.
+func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, config *serving.EndpointCoreConfigOutput) {
+	var e serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &e)
+
+	if e.Config.ServedModels != nil {
+		for _, model := range e.Config.ServedModels {
+			if model.WorkloadSize != "" {
+				continue
+			}
+			// find the corresponding model in config and set the workload_size to empty string
+			for _, m := range config.ServedModels {
+				if m.Name == model.Name {
+					m.WorkloadSize = ""
+					break
+				}
+			}
+		}
+	}
+	if e.Config.ServedEntities != nil {
+		for _, entity := range e.Config.ServedEntities {
+			if entity.WorkloadSize != "" {
+				continue
+			}
+			// find the corresponding entity in config and set the workload_size to empty string
+			for _, e := range config.ServedEntities {
+				if e.Name == entity.Name {
+					e.WorkloadSize = ""
+					break
+				}
+			}
+		}
+	}
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -232,6 +268,8 @@ func ResourceModelServing() common.Resource {
 					endpoint.Config.ServedEntities = nil
 				}
 			}
+			cleanWorkloadSize(s, d, endpoint.Config)
+
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err

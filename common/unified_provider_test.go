@@ -322,7 +322,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "workspace_id",
+			errorContains: "workspace_id is not set, please set the workspace_id in the provider_config",
 			description:   "Account-level provider requires workspace_id to be set",
 		},
 	}

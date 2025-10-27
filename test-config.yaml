@@ -120,9 +120,3 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/secrets
       test_name: TestAccSecretAclResourceDefaultPrincipal
       comment: Failures due to 500s in secrets ACLs APIs.
-    - package: github.com/databricks/terraform-provider-databricks/scim
-      test_name: TestAccGroupRole
-      comment: Failures likely due to read-after-write inconsistency.
-    - package: github.com/databricks/terraform-provider-databricks/scim
-      test_name: TestAccUserRole
-      comment: Failures likely due to read-after-write inconsistency.

@@ -141,3 +141,53 @@ func GetWorkspaceID_SdkV2(ctx context.Context, providerConfig types.List) (strin
 
 	return workspaceID, diags
 }
+
+// GetWorkspaceIDResource extracts the workspace ID from a provider_config object (for resources).
+// It returns the workspace ID string and any diagnostics encountered during extraction.
+// If the provider_config is not set, it returns an empty string with no diagnostics.
+func GetWorkspaceIDResource(ctx context.Context, providerConfig types.Object) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() {
+		return workspaceID, diags
+	}
+
+	var namespace ProviderConfig
+	diags.Append(providerConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	workspaceID = namespace.WorkspaceID.ValueString()
+
+	return workspaceID, diags
+}
+
+// GetWorkspaceIDDataSource extracts the workspace ID from a provider_config object (for data sources).
+// It returns the workspace ID string and any diagnostics encountered during extraction.
+// If the provider_config is not set, it returns an empty string with no diagnostics.
+func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var workspaceID string
+
+	if providerConfig.IsNull() {
+		return workspaceID, diags
+	}
+
+	var namespace ProviderConfigData
+	diags.Append(providerConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return workspaceID, diags
+	}
+
+	workspaceID = namespace.WorkspaceID.ValueString()
+
+	return workspaceID, diags
+}

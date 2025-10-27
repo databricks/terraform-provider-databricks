@@ -100,7 +100,6 @@ func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasou
 		results = append(results, account_network_policy.ToObjectValue(ctx))
 	}
 
-	var newState AccountNetworkPoliciesData
-	newState.NetworkPolicies = types.ListValueMust(AccountNetworkPolicyData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.NetworkPolicies = types.ListValueMust(AccountNetworkPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

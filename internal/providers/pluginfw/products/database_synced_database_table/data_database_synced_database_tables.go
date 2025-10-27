@@ -28,6 +28,10 @@ func DataSourceSyncedDatabaseTables() datasource.DataSource {
 // SyncedDatabaseTablesData extends the main model with additional fields.
 type SyncedDatabaseTablesData struct {
 	Database types.List `tfsdk:"synced_tables"`
+	// Name of the instance to get synced tables for.
+	InstanceName types.String `tfsdk:"instance_name"`
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +41,9 @@ func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string
 }
 
 func (m SyncedDatabaseTablesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["synced_tables"] = attrs["synced_tables"].SetComputed()
 	return attrs
 }
@@ -100,7 +107,6 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		results = append(results, synced_database_table.ToObjectValue(ctx))
 	}
 
-	var newState SyncedDatabaseTablesData
-	newState.Database = types.ListValueMust(SyncedDatabaseTableData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.Database = types.ListValueMust(SyncedDatabaseTableData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

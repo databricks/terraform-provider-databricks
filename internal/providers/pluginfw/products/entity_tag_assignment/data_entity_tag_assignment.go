@@ -77,7 +77,8 @@ func (m EntityTagAssignmentData) ToObjectValue(ctx context.Context) basetypes.Ob
 // and contains additional fields.
 func (m EntityTagAssignmentData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"entity_name": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"entity_name": types.StringType,
 			"entity_type": types.StringType,
 			"tag_key":     types.StringType,
 			"tag_value":   types.StringType,
@@ -89,7 +90,7 @@ func (m EntityTagAssignmentData) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
-	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["tag_value"] = attrs["tag_value"].SetComputed()
 
 	return attrs
 }

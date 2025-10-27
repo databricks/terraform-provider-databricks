@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -114,7 +113,8 @@ func (m SyncedDatabaseTableData) ToObjectValue(ctx context.Context) basetypes.Ob
 // and contains additional fields.
 func (m SyncedDatabaseTableData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"data_synchronization_status": database_tf.SyncedTableStatus{}.Type(ctx),
+		AttrTypes: map[string]attr.Type{
+			"data_synchronization_status":      database_tf.SyncedTableStatus{}.Type(ctx),
 			"database_instance_name":           types.StringType,
 			"effective_database_instance_name": types.StringType,
 			"effective_logical_database_name":  types.StringType,
@@ -128,16 +128,12 @@ func (m SyncedDatabaseTableData) Type(ctx context.Context) attr.Type {
 
 func (m SyncedDatabaseTableData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["data_synchronization_status"] = attrs["data_synchronization_status"].SetComputed()
-	attrs["database_instance_name"] = attrs["database_instance_name"].SetOptional()
 	attrs["database_instance_name"] = attrs["database_instance_name"].SetComputed()
-	attrs["database_instance_name"] = attrs["database_instance_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["effective_database_instance_name"] = attrs["effective_database_instance_name"].SetComputed()
 	attrs["effective_logical_database_name"] = attrs["effective_logical_database_name"].SetComputed()
-	attrs["logical_database_name"] = attrs["logical_database_name"].SetOptional()
 	attrs["logical_database_name"] = attrs["logical_database_name"].SetComputed()
-	attrs["logical_database_name"] = attrs["logical_database_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
 	return attrs

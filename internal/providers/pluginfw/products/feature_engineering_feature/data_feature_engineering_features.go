@@ -28,6 +28,8 @@ func DataSourceFeatures() datasource.DataSource {
 // FeaturesData extends the main model with additional fields.
 type FeaturesData struct {
 	FeatureEngineering types.List `tfsdk:"features"`
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +39,8 @@ func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 func (m FeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["features"] = attrs["features"].SetComputed()
 	return attrs
 }
@@ -100,7 +104,6 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		results = append(results, feature.ToObjectValue(ctx))
 	}
 
-	var newState FeaturesData
-	newState.FeatureEngineering = types.ListValueMust(FeatureData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.FeatureEngineering = types.ListValueMust(FeatureData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

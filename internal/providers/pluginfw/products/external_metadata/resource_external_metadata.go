@@ -277,7 +277,9 @@ func (r *ExternalMetadataResource) update(ctx context.Context, plan ExternalMeta
 	}
 
 	var newState ExternalMetadata
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -410,11 +412,13 @@ func (r *ExternalMetadataResource) Delete(ctx context.Context, req resource.Dele
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.ExternalMetadata.DeleteExternalMetadata(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete external_metadata", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &ExternalMetadataResource{}

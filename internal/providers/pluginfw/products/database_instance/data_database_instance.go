@@ -16,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -169,7 +165,8 @@ func (m DatabaseInstanceData) ToObjectValue(ctx context.Context) basetypes.Objec
 // and contains additional fields.
 func (m DatabaseInstanceData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"capacity": types.StringType,
 			"child_instance_refs": basetypes.ListType{
 				ElemType: database_tf.DatabaseInstanceRef{}.Type(ctx),
 			},
@@ -206,13 +203,11 @@ func (m DatabaseInstanceData) Type(ctx context.Context) attr.Type {
 }
 
 func (m DatabaseInstanceData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["capacity"] = attrs["capacity"].SetOptional()
+	attrs["capacity"] = attrs["capacity"].SetComputed()
 	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
-	attrs["custom_tags"] = attrs["custom_tags"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["effective_capacity"] = attrs["effective_capacity"].SetComputed()
 	attrs["effective_custom_tags"] = attrs["effective_custom_tags"].SetComputed()
 	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
@@ -221,31 +216,19 @@ func (m DatabaseInstanceData) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
 	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
-	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
 	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
-	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
 	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetComputed()
-	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["node_count"] = attrs["node_count"].SetOptional()
 	attrs["node_count"] = attrs["node_count"].SetComputed()
-	attrs["node_count"] = attrs["node_count"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["parent_instance_ref"] = attrs["parent_instance_ref"].SetOptional()
+	attrs["parent_instance_ref"] = attrs["parent_instance_ref"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
 	attrs["read_only_dns"] = attrs["read_only_dns"].SetComputed()
 	attrs["read_write_dns"] = attrs["read_write_dns"].SetComputed()
-	attrs["retention_window_in_days"] = attrs["retention_window_in_days"].SetOptional()
 	attrs["retention_window_in_days"] = attrs["retention_window_in_days"].SetComputed()
-	attrs["retention_window_in_days"] = attrs["retention_window_in_days"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetComputed()
-	attrs["stopped"] = attrs["stopped"].SetOptional()
 	attrs["stopped"] = attrs["stopped"].SetComputed()
-	attrs["stopped"] = attrs["stopped"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["uid"] = attrs["uid"].SetComputed()
-	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetComputed()
-	attrs["usage_policy_id"] = attrs["usage_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

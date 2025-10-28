@@ -38,7 +38,20 @@ type RefreshData struct {
 	// An optional message to give insight into the current state of the refresh
 	// (e.g. FAILURE messages).
 	Message types.String `tfsdk:"message"`
-	// The UUID of the request object. For example, table id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: `schema`or
 	// `table`.
@@ -90,7 +103,8 @@ func (m RefreshData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m RefreshData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"end_time_ms": types.Int64Type,
+		AttrTypes: map[string]attr.Type{
+			"end_time_ms":   types.Int64Type,
 			"message":       types.StringType,
 			"object_id":     types.StringType,
 			"object_type":   types.StringType,
@@ -107,7 +121,7 @@ func (m RefreshData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
-	attrs["refresh_id"] = attrs["refresh_id"].SetComputed()
+	attrs["refresh_id"] = attrs["refresh_id"].SetRequired()
 	attrs["start_time_ms"] = attrs["start_time_ms"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 	attrs["trigger"] = attrs["trigger"].SetComputed()

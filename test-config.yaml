@@ -117,3 +117,6 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/serving
       test_name: TestUcAccModelServingProvisionedThroughputResource
       comment: Failure due to limited capacity in specific regions
+    - package: github.com/databricks/terraform-provider-databricks/secrets
+      test_name: TestAccSecretAclResourceDefaultPrincipal
+      comment: Failures due to 500s in secrets ACLs APIs.

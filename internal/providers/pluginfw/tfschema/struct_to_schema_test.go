@@ -10,6 +10,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	datasource_schema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	resource_schema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
@@ -40,6 +42,36 @@ type TestIntTfSdk struct {
 func (TestIntTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
 	attrs["workers"] = attrs["workers"].SetOptional()
 	return attrs
+}
+
+type TestNamespaceResourceTfSdk struct {
+	Namespace
+}
+
+func (a TestNamespaceResourceTfSdk) ApplySchemaCustomizations(s map[string]AttributeBuilder) map[string]AttributeBuilder {
+	s["provider_config"] = s["provider_config"].SetOptional()
+	return s
+}
+
+func (a TestNamespaceResourceTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
+	}
+}
+
+type TestNamespaceDataSourceTfSdk struct {
+	Namespace
+}
+
+func (a TestNamespaceDataSourceTfSdk) ApplySchemaCustomizations(s map[string]AttributeBuilder) map[string]AttributeBuilder {
+	s["provider_config"] = s["provider_config"].SetOptional()
+	return s
+}
+
+func (a TestNamespaceDataSourceTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 type TestComputedTfSdk struct {
@@ -220,6 +252,18 @@ var tests = []struct {
 		}),
 		},
 	},
+	{
+		"namespace resource conversion",
+		TestNamespaceResourceTfSdk{Namespace: Namespace{ProviderConfig: types.ObjectValueMust(ProviderConfig{}.Type(context.Background()).(types.ObjectType).AttrTypes, map[string]attr.Value{
+			"workspace_id": types.StringValue("1234567890"),
+		})}},
+	},
+	{
+		"namespace data source conversion",
+		TestNamespaceDataSourceTfSdk{Namespace: Namespace{ProviderConfig: types.ObjectValueMust(ProviderConfigData{}.Type(context.Background()).(types.ObjectType).AttrTypes, map[string]attr.Value{
+			"workspace_id": types.StringValue("1234567890"),
+		})}},
+	},
 }
 
 // StructToSchemaConversionTestCase runs a single test case to verify StructToSchema works for both data source and resource.
@@ -261,6 +305,22 @@ func TestStructToSchemaOptionalVsRequiredField(t *testing.T) {
 	data_scm := DataSourceStructToSchema(context.Background(), TestBoolTfSdk{}, nil)
 	assert.True(t, !data_scm.Attributes["enabled"].IsOptional())
 	assert.True(t, data_scm.Attributes["enabled"].IsRequired())
+}
+
+func TestStructToSchemaNamespace(t *testing.T) {
+	// Test that provider_config is an optional field.
+	scm := ResourceStructToSchema(context.Background(), TestNamespaceResourceTfSdk{}, nil)
+	assert.True(t, scm.Attributes["provider_config"].IsOptional())
+
+	data_scm := DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
+	assert.True(t, data_scm.Attributes["provider_config"].IsOptional())
+
+	// Test that workspace_id is a required field.
+	scm = ResourceStructToSchema(context.Background(), TestNamespaceResourceTfSdk{}, nil)
+	assert.True(t, scm.Attributes["provider_config"].(resource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
+
+	data_scm = DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
+	assert.True(t, data_scm.Attributes["provider_config"].(datasource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
 }
 
 func testStructToSchemaPanics(t *testing.T, testStruct any, expectedError string) {

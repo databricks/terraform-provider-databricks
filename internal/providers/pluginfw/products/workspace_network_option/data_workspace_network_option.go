@@ -74,15 +74,16 @@ func (m WorkspaceNetworkOptionData) ToObjectValue(ctx context.Context) basetypes
 // and contains additional fields.
 func (m WorkspaceNetworkOptionData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"network_policy_id": types.StringType,
-			"workspace_id": types.Int64Type,
+		AttrTypes: map[string]attr.Type{
+			"network_policy_id": types.StringType,
+			"workspace_id":      types.Int64Type,
 		},
 	}
 }
 
 func (m WorkspaceNetworkOptionData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
 }

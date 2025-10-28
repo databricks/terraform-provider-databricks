@@ -85,6 +85,8 @@ The following arguments are required:
 * `name` - (Required) Name of share. Change forces creation of a new resource.
 * `owner` - (Optional) User name/group name/sp application_id of the share owner.
 * `comment` - (Optional) User-supplied free-form text.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### object Configuration Block
 

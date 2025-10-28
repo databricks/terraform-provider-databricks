@@ -1,18 +1,23 @@
 # NEXT CHANGELOG
 
-## Release v1.94.0
+## Release v1.96.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
 
+* Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+
 ### Bug Fixes
+
+* Remove unnecessary `SetSuppressDiff()` for `workload_size` in `databricks_model_serving` ([#5152](https://github.com/databricks/terraform-provider-databricks/pull/5152)).
 
 ### Documentation
 
 * Document support for serverless workspaces on GCP ([#5124](https://github.com/databricks/terraform-provider-databricks/pull/5124))
-* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
 
 ### Exporter
 
 ### Internal Changes
+
+* Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

@@ -533,7 +533,9 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 	}
 
 	var newState DatabaseInstance
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -686,11 +688,13 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.Database.DeleteDatabaseInstance(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_instance", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &DatabaseInstanceResource{}

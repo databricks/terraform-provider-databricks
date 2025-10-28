@@ -109,9 +109,10 @@ func (m ExternalMetadataData) ToObjectValue(ctx context.Context) basetypes.Objec
 // and contains additional fields.
 func (m ExternalMetadataData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"columns": basetypes.ListType{
-			ElemType: types.StringType,
-		},
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"create_time":  types.StringType,
 			"created_by":   types.StringType,
 			"description":  types.StringType,
@@ -132,20 +133,20 @@ func (m ExternalMetadataData) Type(ctx context.Context) attr.Type {
 }
 
 func (m ExternalMetadataData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["columns"] = attrs["columns"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["entity_type"] = attrs["entity_type"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["entity_type"] = attrs["entity_type"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["system_type"] = attrs["system_type"].SetRequired()
+	attrs["owner"] = attrs["owner"].SetComputed()
+	attrs["properties"] = attrs["properties"].SetComputed()
+	attrs["system_type"] = attrs["system_type"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
-	attrs["url"] = attrs["url"].SetOptional()
+	attrs["url"] = attrs["url"].SetComputed()
 
 	return attrs
 }

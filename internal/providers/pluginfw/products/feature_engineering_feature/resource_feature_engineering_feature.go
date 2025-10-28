@@ -333,7 +333,9 @@ func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.
 	}
 
 	var newState Feature
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -466,11 +468,13 @@ func (r *FeatureResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.FeatureEngineering.DeleteFeature(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete feature_engineering_feature", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &FeatureResource{}

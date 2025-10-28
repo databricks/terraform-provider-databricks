@@ -16,6 +16,8 @@
 
 ### Exporter
 
+* Fix typo in the name of environment variable ([#5158](https://github.com/databricks/terraform-provider-databricks/pull/5158)).
+
 ### Internal Changes
 
 * Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

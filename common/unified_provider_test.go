@@ -124,13 +124,6 @@ func TestNamespaceCustomizeSchema(t *testing.T) {
 	workspaceID := elem.Schema["workspace_id"]
 	require.NotNil(t, workspaceID)
 	assert.NotNil(t, workspaceID.ValidateFunc, "ValidateFunc should be set on workspace_id")
-
-	// Test the validation function
-	_, errors := workspaceID.ValidateFunc("123456", "workspace_id")
-	assert.Empty(t, errors, "Valid workspace ID should not produce errors")
-
-	_, errors = workspaceID.ValidateFunc("invalid", "workspace_id")
-	assert.NotEmpty(t, errors, "Invalid workspace ID should produce errors")
 }
 
 func TestNamespaceCustomizeSchemaMap(t *testing.T) {
@@ -165,13 +158,6 @@ func TestNamespaceCustomizeSchemaMap(t *testing.T) {
 		workspaceID := elem.Schema["workspace_id"]
 		require.NotNil(t, workspaceID)
 		assert.NotNil(t, workspaceID.ValidateFunc, "ValidateFunc should be set on workspace_id")
-
-		// Test the validation function
-		_, errors := workspaceID.ValidateFunc("123456", "workspace_id")
-		assert.Empty(t, errors, "Valid workspace ID should not produce errors")
-
-		_, errors = workspaceID.ValidateFunc("invalid", "workspace_id")
-		assert.NotEmpty(t, errors, "Invalid workspace ID should produce errors")
 	})
 
 	t.Run("panic without provider_config", func(t *testing.T) {

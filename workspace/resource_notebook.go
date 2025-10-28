@@ -269,8 +269,22 @@ func ResourceNotebook() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"provider_config": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
@@ -278,6 +292,10 @@ func ResourceNotebook() common.Resource {
 			return d.Get("format").(string) == "SOURCE"
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
@@ -330,6 +348,10 @@ func ResourceNotebook() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			oldFormat := d.Get("format").(string)
 			if oldFormat == "" {
 				source := d.Get("source").(string)
@@ -359,6 +381,10 @@ func ResourceNotebook() common.Resource {
 			return d.Set("format", oldFormat)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			content, err := ReadContent(d)
 			if err != nil {
@@ -394,8 +420,15 @@ func ResourceNotebook() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			objType := d.Get("object_type")
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

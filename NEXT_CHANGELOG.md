@@ -1,22 +1,25 @@
 # NEXT CHANGELOG
 
-## Release v1.94.0
+## Release v1.96.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
 
+* Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+
+* Added support for custom instance profiles on instance pools on AWS ([#5144](https://github.com/databricks/terraform-provider-databricks/pull/5144))
+
+
 ### Bug Fixes
 
-* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
 * Fix permanent drift in `databricks_model_serving` when using `*_plaintext` credential fields for external models ([#5125](https://github.com/databricks/terraform-provider-databricks/pull/5125))
+* Remove unnecessary `SetSuppressDiff()` for `workload_size` in `databricks_model_serving` ([#5152](https://github.com/databricks/terraform-provider-databricks/pull/5152)).
 
 ### Documentation
-
-* Document new attributes in `databricks_app` resource and data sources ([#5108](https://github.com/databricks/terraform-provider-databricks/pull/5108))
-* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
 
 ### Exporter
 
 ### Internal Changes
-* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).
+
+* Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

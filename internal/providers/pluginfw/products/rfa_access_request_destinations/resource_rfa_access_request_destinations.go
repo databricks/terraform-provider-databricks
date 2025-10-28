@@ -224,7 +224,9 @@ func (r *AccessRequestDestinationResource) update(ctx context.Context, plan Acce
 	}
 
 	var newState AccessRequestDestinations
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}

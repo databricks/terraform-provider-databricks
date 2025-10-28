@@ -231,6 +231,47 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// cleanWorkloadSize clears the workload_size field from the config (the API response) if it is not set in the corresponding schema.ResourceData.
+// This is applied to both the ServedModels and ServedEntities fields.
+//
+// If neither workload_size nor min_provisioned_concurrency/max_provisioned_concurrency are provided in API requests, workload_size is set in the
+// API response. This results in a configuration drift for workload_size.
+//
+// The resulting behavior is:
+//
+// - If the workload_size is set in the ResourceData, the provider respects the value specified in the API response.
+// - If the workload_size is not set in the ResourceData, the provider clears the workload_size from the API response.
+func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil {
+		return
+	}
+	for _, configModel := range config.Config.ServedModels {
+		if configModel.WorkloadSize != "" {
+			continue
+		}
+		for i, apiModel := range apiResponse.ServedModels {
+			if apiModel.Name == configModel.Name {
+				apiResponse.ServedModels[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+	for _, configEntity := range config.Config.ServedEntities {
+		if configEntity.WorkloadSize != "" {
+			continue
+		}
+		for i, apiEntity := range apiResponse.ServedEntities {
+			if apiEntity.Name == configEntity.Name {
+				apiResponse.ServedEntities[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -259,7 +300,6 @@ func ResourceModelServing() common.Resource {
 			common.CustomizeSchemaPath(m, "rate_limits").SetDeprecated("Please use AI Gateway to manage rate limits.")
 
 			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
-			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_size").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_type").SetComputed()
 
 			// Apply custom suppress diff to traffic config routes for served_model_name and served_entity_name
@@ -335,6 +375,8 @@ func ResourceModelServing() common.Resource {
 					endpoint.Config.ServedEntities = nil
 				}
 			}
+			cleanWorkloadSize(s, d, endpoint.Config)
+
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err

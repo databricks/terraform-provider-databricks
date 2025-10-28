@@ -139,10 +139,11 @@ func (m PolicyInfoData) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 // and contains additional fields.
 func (m PolicyInfoData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"column_mask": catalog_tf.ColumnMaskOptions{}.Type(ctx),
-			"comment":    types.StringType,
-			"created_at": types.Int64Type,
-			"created_by": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"column_mask": catalog_tf.ColumnMaskOptions{}.Type(ctx),
+			"comment":     types.StringType,
+			"created_at":  types.Int64Type,
+			"created_by":  types.StringType,
 			"except_principals": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -167,23 +168,23 @@ func (m PolicyInfoData) Type(ctx context.Context) attr.Type {
 }
 
 func (m PolicyInfoData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["column_mask"] = attrs["column_mask"].SetOptional()
-	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["column_mask"] = attrs["column_mask"].SetComputed()
+	attrs["comment"] = attrs["comment"].SetComputed()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["except_principals"] = attrs["except_principals"].SetOptional()
-	attrs["for_securable_type"] = attrs["for_securable_type"].SetRequired()
+	attrs["except_principals"] = attrs["except_principals"].SetComputed()
+	attrs["for_securable_type"] = attrs["for_securable_type"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
-	attrs["match_columns"] = attrs["match_columns"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetOptional()
-	attrs["on_securable_type"] = attrs["on_securable_type"].SetOptional()
-	attrs["policy_type"] = attrs["policy_type"].SetRequired()
-	attrs["row_filter"] = attrs["row_filter"].SetOptional()
-	attrs["to_principals"] = attrs["to_principals"].SetRequired()
+	attrs["match_columns"] = attrs["match_columns"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetRequired()
+	attrs["on_securable_type"] = attrs["on_securable_type"].SetRequired()
+	attrs["policy_type"] = attrs["policy_type"].SetComputed()
+	attrs["row_filter"] = attrs["row_filter"].SetComputed()
+	attrs["to_principals"] = attrs["to_principals"].SetComputed()
 	attrs["updated_at"] = attrs["updated_at"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
-	attrs["when_condition"] = attrs["when_condition"].SetOptional()
+	attrs["when_condition"] = attrs["when_condition"].SetComputed()
 
 	return attrs
 }

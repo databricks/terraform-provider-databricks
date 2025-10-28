@@ -90,7 +90,8 @@ func (m CustomTemplateData) ToObjectValue(ctx context.Context) basetypes.ObjectV
 // and contains additional fields.
 func (m CustomTemplateData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"creator": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"creator":      types.StringType,
 			"description":  types.StringType,
 			"git_provider": types.StringType,
 			"git_repo":     types.StringType,
@@ -103,12 +104,12 @@ func (m CustomTemplateData) Type(ctx context.Context) attr.Type {
 
 func (m CustomTemplateData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["git_provider"] = attrs["git_provider"].SetRequired()
-	attrs["git_repo"] = attrs["git_repo"].SetRequired()
-	attrs["manifest"] = attrs["manifest"].SetRequired()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["git_provider"] = attrs["git_provider"].SetComputed()
+	attrs["git_repo"] = attrs["git_repo"].SetComputed()
+	attrs["manifest"] = attrs["manifest"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["path"] = attrs["path"].SetRequired()
+	attrs["path"] = attrs["path"].SetComputed()
 
 	return attrs
 }

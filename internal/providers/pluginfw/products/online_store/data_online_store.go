@@ -84,7 +84,8 @@ func (m OnlineStoreData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 // and contains additional fields.
 func (m OnlineStoreData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"capacity":           types.StringType,
 			"creation_time":      types.StringType,
 			"creator":            types.StringType,
 			"name":               types.StringType,
@@ -95,11 +96,11 @@ func (m OnlineStoreData) Type(ctx context.Context) attr.Type {
 }
 
 func (m OnlineStoreData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["capacity"] = attrs["capacity"].SetRequired()
+	attrs["capacity"] = attrs["capacity"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
+	attrs["read_replica_count"] = attrs["read_replica_count"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
 	return attrs

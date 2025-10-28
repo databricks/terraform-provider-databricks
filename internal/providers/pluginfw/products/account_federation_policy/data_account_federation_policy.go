@@ -98,7 +98,8 @@ func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.Objec
 // and contains additional fields.
 func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"create_time":          types.StringType,
 			"description":          types.StringType,
 			"name":                 types.StringType,
 			"oidc_policy":          oauth2_tf.OidcFederationPolicy{}.Type(ctx),
@@ -112,10 +113,10 @@ func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
 
 func (m FederationPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
+	attrs["description"] = attrs["description"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
-	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetComputed()
+	attrs["oidc_policy"] = attrs["oidc_policy"].SetComputed()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()

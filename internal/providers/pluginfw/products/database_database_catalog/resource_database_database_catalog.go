@@ -170,7 +170,9 @@ func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatal
 	}
 
 	var newState DatabaseCatalog
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -303,11 +305,13 @@ func (r *DatabaseCatalogResource) Delete(ctx context.Context, req resource.Delet
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.Database.DeleteDatabaseCatalog(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_database_catalog", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &DatabaseCatalogResource{}

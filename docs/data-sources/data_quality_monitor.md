@@ -2,7 +2,7 @@
 subcategory: "Data Quality Monitoring"
 ---
 # databricks_data_quality_monitor Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source can be used to fetch a data quality monitor.
 
@@ -33,14 +33,31 @@ data "databricks_data_quality_monitor" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `object_id` (string, required) - The UUID of the request object. For example, schema id
+* `object_id` (string, required) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema` or `table`
 
 ## Attributes
 The following attributes are exported:
 * `anomaly_detection_config` (AnomalyDetectionConfig) - Anomaly Detection Configuration, applicable to `schema` object types
-* `data_profiling_config` (DataProfilingConfig) - Data Profiling Configuration, applicable to `table` object types
-* `object_id` (string) - The UUID of the request object. For example, schema id
+* `data_profiling_config` (DataProfilingConfig) - Data Profiling Configuration, applicable to `table` object types. Exactly one `Analysis Configuration`
+  must be present
+* `object_id` (string) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string) - The type of the monitored object. Can be one of the following: `schema` or `table`
 
 ### AnomalyDetectionConfig
@@ -63,7 +80,7 @@ The following attributes are exported:
   This can be empty if the monitor is in PENDING state
 * `drift_metrics_table_name` (string) - Table that stores drift metrics data. Format: `catalog.schema.table_name`
 * `effective_warehouse_id` (string) - The warehouse for dashboard creation
-* `inference_log` (InferenceLogConfig) - Configuration for monitoring inference log tables
+* `inference_log` (InferenceLogConfig) - `Analysis Configuration` for monitoring inference log tables
 * `latest_monitor_failure_message` (string) - The latest error message for a monitor failure
 * `monitor_version` (integer) - Represents the current monitor configuration version in use. The version will be represented in a
   numeric fashion (1,2,3...). The field has flexibility to take on negative values, which can indicate corrupted
@@ -80,9 +97,9 @@ The following attributes are exported:
   slices: two slices for `col_2 > 10` (True and False), and one slice per unique value in
   `col1`. For high-cardinality columns, only the top 100 unique values by frequency will
   generate slices
-* `snapshot` (SnapshotConfig) - Configuration for monitoring snapshot tables
+* `snapshot` (SnapshotConfig) - `Analysis Configuration` for monitoring snapshot tables
 * `status` (string) - The data profiling monitor status. Possible values are: `DATA_PROFILING_STATUS_ACTIVE`, `DATA_PROFILING_STATUS_DELETE_PENDING`, `DATA_PROFILING_STATUS_ERROR`, `DATA_PROFILING_STATUS_FAILED`, `DATA_PROFILING_STATUS_PENDING`
-* `time_series` (TimeSeriesConfig) - Configuration for monitoring time series tables
+* `time_series` (TimeSeriesConfig) - `Analysis Configuration` for monitoring time series tables
 * `warehouse_id` (string) - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running
   warehouse will be used
 

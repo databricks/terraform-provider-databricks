@@ -22,7 +22,7 @@ func TestAccDataSourcesJob_InvalidID(t *testing.T) {
 				workspace_id = "invalid"
 			}
 		}`,
-		ExpectError: regexp.MustCompile(`workspace_id must be a valid integer`),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
 		PlanOnly:    true,
 	})
 }

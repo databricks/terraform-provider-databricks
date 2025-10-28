@@ -64,6 +64,8 @@ type DatabricksClient struct {
 	// authenticated to the workspace configured for the provider
 	cachedWorkspaceID int64
 
+	cachedDatabricksClient *client.DatabricksClient
+
 	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
 	// populated when fetching a WorkspaceClient for a specific workspace ID using
 	// a provider configured at the account level

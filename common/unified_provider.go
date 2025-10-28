@@ -97,7 +97,7 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
 	// workspace_id does not exist in the resource data
 	if workspaceIDFromResourceData == nil {
-		return c.GetDatabricksClientForUnifiedProvider(ctx, "")
+		return c, nil
 	}
 	var workspaceID string
 	workspaceID, ok := workspaceIDFromResourceData.(string)
@@ -111,18 +111,48 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
-	// Get the workspace client for the workspace ID
-	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
-	if err != nil {
-		return nil, err
+	// If the Databricks Client is cached, we use it
+	if c.cachedDatabricksClient != nil {
+		return &DatabricksClient{
+			DatabricksClient: c.cachedDatabricksClient,
+		}, nil
 	}
-	// Create a new Databricks Client with the same configuration as the workspace client
-	newClient, err := client.New(workspaceClient.Config)
-	if err != nil {
-		return nil, err
+
+	// If the Databricks Client is not cached, we create a client
+	// and cache it.
+	if c.cachedDatabricksClient == nil {
+		err := c.setCachedDatabricksClient(ctx, workspaceID)
+		if err != nil {
+			return nil, err
+		}
 	}
-	newDatabricksClient := &DatabricksClient{
-		DatabricksClient: newClient,
+
+	// Return the Databricks Client.
+	return &DatabricksClient{
+		DatabricksClient: c.cachedDatabricksClient,
+	}, nil
+}
+
+// setCachedDatabricksClient sets the cached Databricks Client.
+func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
+	// Acquire the lock to avoid race conditions.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// Double checked locking
+	if c.cachedDatabricksClient == nil {
+		// Get the workspace client for the workspace ID
+		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+		if err != nil {
+			return err
+		}
+
+		// Create a new Databricks Client with the same configuration
+		// as the workspace client
+		newClient, err := client.New(workspaceClient.Config)
+		if err != nil {
+			return err
+		}
+		c.cachedDatabricksClient = newClient
 	}
-	return newDatabricksClient, nil
+	return nil
 }

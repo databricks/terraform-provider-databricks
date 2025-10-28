@@ -101,7 +101,7 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 			}
 			*s = *res
 			return nil
-		}, true, NoCustomize)
+		}, true, NamespaceCustomizeSchemaMap)
 }
 
 // WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.

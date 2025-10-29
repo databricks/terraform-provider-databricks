@@ -6,7 +6,8 @@
 
 ### New Features and Improvements
 
-* Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+* Add `provider_config` support for manual plugin framework resources and data sources ([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+* Added `databricks_permission` resource for managing permissions on Databricks objects for individual principals ([#5161](https://github.com/databricks/terraform-provider-databricks/pull/5161)).
 
 * Added support for custom instance profiles on instance pools on AWS ([#5144](https://github.com/databricks/terraform-provider-databricks/pull/5144))
 

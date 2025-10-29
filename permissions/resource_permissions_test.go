@@ -1329,7 +1329,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
 
-func getResourcePermissions(field, objectType string) resourcePermissions {
+func getResourcePermissions(field, objectType string) WorkspaceObjectPermissions {
 	for _, mapping := range allResourcePermissions() {
 		if mapping.field == field && mapping.objectType == objectType {
 			return mapping

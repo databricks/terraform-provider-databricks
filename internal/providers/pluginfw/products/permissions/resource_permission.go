@@ -200,6 +200,10 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Lock the object to prevent concurrent modifications
+	lockObject(objectID)
+	defer unlockObject(objectID)
+
 	// Determine principal identifier
 	var principal string
 	if !userName.IsNull() && !userName.IsUnknown() && userName.ValueString() != "" {
@@ -349,6 +353,10 @@ func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Lock the object to prevent concurrent modifications
+	lockObject(objectID)
+	defer unlockObject(objectID)
+
 	// Get the mapping from the ID
 	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
 	if err != nil {
@@ -410,6 +418,12 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		resp.Diagnostics.AddError("Failed to parse resource ID", err.Error())
 		return
 	}
+
+	// Lock the object to prevent concurrent modifications
+	// This is CRITICAL for Delete to avoid race conditions when multiple
+	// permission resources for the same object are deleted concurrently
+	lockObject(objectID)
+	defer unlockObject(objectID)
 
 	// Get the mapping from the ID
 	mapping, err := permissions.GetResourcePermissionsFromId(objectID)

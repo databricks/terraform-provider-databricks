@@ -309,3 +309,56 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 		Update:      true,
 	}.ApplyNoError(t)
 }
+
+func TestResourceWorkspaceFileRead_WorkspacePrefixNormalization(t *testing.T) {
+	objectID := int64(12345)
+	// Test case 1: Config without /Workspace prefix, API returns with prefix
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/Users/user@example.com/file.py").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeFile,
+					Path:       "/Workspace/Users/user@example.com/file.py",
+				}, nil)
+		},
+		Resource: ResourceWorkspaceFile(),
+		Read:     true,
+		New:      true,
+		ID:       "/Users/user@example.com/file.py",
+		State: map[string]any{
+			"path": "/Users/user@example.com/file.py",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/Users/user@example.com/file.py",
+		"path":           "/Users/user@example.com/file.py", // Should match configured path
+		"workspace_path": "/Workspace/Users/user@example.com/file.py",
+		"object_id":      int(objectID),
+	})
+
+	// Test case 2: Config with /Workspace prefix, API returns without prefix
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockWorkspaceAPI().EXPECT().
+				GetStatusByPath(mock.Anything, "/Workspace/Users/user@example.com/file.py").
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   objectID,
+					ObjectType: ws_api.ObjectTypeFile,
+					Path:       "/Users/user@example.com/file.py",
+				}, nil)
+		},
+		Resource: ResourceWorkspaceFile(),
+		Read:     true,
+		New:      true,
+		ID:       "/Workspace/Users/user@example.com/file.py",
+		State: map[string]any{
+			"path": "/Workspace/Users/user@example.com/file.py",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/Workspace/Users/user@example.com/file.py",
+		"path":           "/Workspace/Users/user@example.com/file.py", // Should match configured path
+		"workspace_path": "/Workspace/Workspace/Users/user@example.com/file.py",
+		"object_id":      int(objectID),
+	})
+}

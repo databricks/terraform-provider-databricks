@@ -194,3 +194,30 @@ func PathListHash(v any) int {
 	}
 	return c
 }
+
+// NormalizeWorkspacePath normalizes the path returned from the API to match the configured path.
+// The Databricks API may add or remove the "/Workspace" prefix depending on the workspace configuration.
+// This function ensures that the returned path matches the format used in the configuration to avoid
+// Terraform detecting false changes.
+//
+// Examples:
+//   - If configured path is "/Users/..." and API returns "/Workspace/Users/...", it strips "/Workspace"
+//   - If configured path is "/Workspace/Users/..." and API returns "/Users/...", it adds "/Workspace"
+func NormalizeWorkspacePath(configuredPath string, apiPath string) string {
+	if configuredPath == "" {
+		return apiPath
+	}
+
+	// Case 1: API added /Workspace prefix, but config doesn't have it
+	if strings.HasPrefix(apiPath, "/Workspace") && !strings.HasPrefix(configuredPath, "/Workspace") {
+		return strings.TrimPrefix(apiPath, "/Workspace")
+	}
+
+	// Case 2: Config has /Workspace prefix, but API doesn't have it
+	if !strings.HasPrefix(apiPath, "/Workspace") && strings.HasPrefix(configuredPath, "/Workspace") {
+		return "/Workspace" + apiPath
+	}
+
+	// No normalization needed
+	return apiPath
+}

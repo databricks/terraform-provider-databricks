@@ -13,6 +13,7 @@
 
 ### Bug Fixes
 
+* Correctly handle the change `/Workspace/Path` -> `/Path` and back in workspace resources ([#5130](https://github.com/databricks/terraform-provider-databricks/pull/5130))
 * Remove unnecessary `SetSuppressDiff()` for `workload_size` in `databricks_model_serving` ([#5152](https://github.com/databricks/terraform-provider-databricks/pull/5152)).
 
 ### Documentation

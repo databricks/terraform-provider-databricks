@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -87,10 +88,7 @@ func ResourceAlert() common.Resource {
 				log.Printf("[WARN] error getting alert by ID: %v", err)
 				return err
 			}
-			parentPath := d.Get("parent_path").(string)
-			if parentPath != "" && strings.HasPrefix(apiAlert.ParentPath, "/Workspace") && !strings.HasPrefix(parentPath, "/Workspace") {
-				apiAlert.ParentPath = strings.TrimPrefix(parentPath, "/Workspace")
-			}
+			apiAlert.ParentPath = workspace.NormalizeWorkspacePath(d.Get("parent_path").(string), apiAlert.ParentPath)
 			return common.StructToData(apiAlert, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

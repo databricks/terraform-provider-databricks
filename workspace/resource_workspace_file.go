@@ -78,6 +78,7 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
+			objectStatus.Path = NormalizeWorkspacePath(d.Get("path").(string), objectStatus.Path)
 			SetWorkspaceObjectComputedProperties(d, c)
 			return common.StructToData(objectStatus, s, d)
 		},

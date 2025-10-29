@@ -62,6 +62,8 @@ resource "databricks_permissions" "everyone_can_view_all_jobs" {
 
 * `job_name_contains` - (Optional) Only return [databricks_job](../resources/job.md#) ids that match the given name string (case-insensitive).
 * `key` - (Optional) Attribute to use for keys in the returned map of [databricks_job](../resources/job.md#) ids by. Possible values are `name` (default) or `id`. Setting to `id` uses the job ID as the map key, allowing duplicate job names.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

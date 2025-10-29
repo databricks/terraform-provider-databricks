@@ -9,7 +9,8 @@ import (
 
 func DataSourceMwsWorkspaces() common.Resource {
 	type mwsWorkspacesData struct {
-		Ids map[string]int64 `json:"ids" tf:"computed"`
+		Ids             map[string]int64  `json:"ids" tf:"computed"`
+		DeploymentNames map[string]string `json:"deployment_names" tf:"computed"`
 	}
 	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*mwsWorkspacesData)
@@ -21,8 +22,10 @@ func DataSourceMwsWorkspaces() common.Resource {
 			return err
 		}
 		data.Ids = map[string]int64{}
+		data.DeploymentNames = map[string]string{}
 		for _, v := range workspaces {
 			data.Ids[v.WorkspaceName] = v.WorkspaceID
+			data.DeploymentNames[v.WorkspaceName] = v.DeploymentName
 		}
 		return nil
 	})

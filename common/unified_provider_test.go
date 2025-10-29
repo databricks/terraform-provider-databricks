@@ -175,8 +175,17 @@ func TestNamespaceCustomizeSchemaMap(t *testing.T) {
 }
 
 func TestAddNamespaceInSchema(t *testing.T) {
-	t.Run("adds provider_config to empty schema", func(t *testing.T) {
-		testSchema := map[string]*schema.Schema{}
+	t.Run("adds provider_config to schema with existing fields", func(t *testing.T) {
+		testSchema := map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		}
 
 		result := AddNamespaceInSchema(testSchema)
 
@@ -194,21 +203,6 @@ func TestAddNamespaceInSchema(t *testing.T) {
 		require.NotNil(t, workspaceID)
 		assert.Equal(t, schema.TypeString, workspaceID.Type)
 		assert.True(t, workspaceID.Required)
-	})
-
-	t.Run("adds provider_config to schema with existing fields", func(t *testing.T) {
-		testSchema := map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		}
-
-		result := AddNamespaceInSchema(testSchema)
 
 		// Verify existing fields are preserved
 		assert.Len(t, result, 3, "Should have 3 fields: name, description, provider_config")

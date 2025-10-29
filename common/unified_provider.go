@@ -137,10 +137,15 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	if err != nil {
+		return nil, err
+	}
+
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClient != nil {
 		return &DatabricksClient{
-			DatabricksClient: c.cachedDatabricksClient,
+			DatabricksClient: c.cachedDatabricksClient[workspaceIDInt],
 		}, nil
 	}
 
@@ -155,15 +160,15 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// Return the Databricks Client.
 	return &DatabricksClient{
-		DatabricksClient: c.cachedDatabricksClient,
+		DatabricksClient: c.cachedDatabricksClient[workspaceIDInt],
 	}, nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.
 func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
 	// Acquire the lock to avoid race conditions.
-	c.mu_legacy.Lock()
-	defer c.mu_legacy.Unlock()
+	c.muLegacy.Lock()
+	defer c.muLegacy.Unlock()
 	// Double checked locking
 	if c.cachedDatabricksClient == nil {
 		// Get the workspace client for the workspace ID
@@ -178,7 +183,11 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 		if err != nil {
 			return err
 		}
-		c.cachedDatabricksClient = newClient
+		workspaceIDInt, err := parseWorkspaceID(workspaceID)
+		if err != nil {
+			return err
+		}
+		c.cachedDatabricksClient[workspaceIDInt] = newClient
 	}
 	return nil
 }

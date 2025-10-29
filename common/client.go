@@ -67,7 +67,7 @@ type DatabricksClient struct {
 	// cachedDatabricksClient is a cached Databricks Client authenticated to the workspace
 	// configured for the provider. This is used by legacy SDKv2 resources and data sources
 	// not using Go SDK.
-	cachedDatabricksClient *client.DatabricksClient
+	cachedDatabricksClient map[int64]*client.DatabricksClient
 
 	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
 	// populated when fetching a WorkspaceClient for a specific workspace ID using
@@ -81,10 +81,10 @@ type DatabricksClient struct {
 	// mu synchronizes access to all cached clients.
 	mu sync.Mutex
 
-	// mu_legacy synchronizes access to all cached clients.
+	// muLegacy synchronizes access to all cached clients.
 	// This is used by legacy SDKv2 resources and data sources not using Go SDK where
 	// a new client is created.
-	mu_legacy sync.Mutex
+	muLegacy sync.Mutex
 }
 
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks

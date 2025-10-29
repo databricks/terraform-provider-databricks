@@ -565,10 +565,24 @@ func (r *PermissionResource) ImportState(ctx context.Context, req resource.Impor
 	configuredValue := permID
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(mapping.GetField()), types.StringValue(configuredValue))...)
 
-	// Set principal fields
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringValue(userName))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringValue(groupName))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringValue(servicePrincipalName))...)
+	// Set principal fields - use null for empty strings to avoid ImportStateVerify failures
+	if userName != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringValue(userName))...)
+	} else {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringNull())...)
+	}
+
+	if groupName != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringValue(groupName))...)
+	} else {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringNull())...)
+	}
+
+	if servicePrincipalName != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringValue(servicePrincipalName))...)
+	} else {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringNull())...)
+	}
 
 	// Set permission level
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), types.StringValue(permissionLevel))...)

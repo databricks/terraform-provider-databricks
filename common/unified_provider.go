@@ -143,7 +143,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// If the Databricks Client is cached, we use it
-	if c.cachedDatabricksClient != nil {
+	if c.cachedDatabricksClient != nil && c.cachedDatabricksClient[workspaceIDInt] != nil {
 		return &DatabricksClient{
 			DatabricksClient: c.cachedDatabricksClient[workspaceIDInt],
 		}, nil
@@ -169,8 +169,12 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	// Acquire the lock to avoid race conditions.
 	c.muLegacy.Lock()
 	defer c.muLegacy.Unlock()
+	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	if err != nil {
+		return err
+	}
 	// Double checked locking
-	if c.cachedDatabricksClient == nil {
+	if c.cachedDatabricksClient == nil || c.cachedDatabricksClient[workspaceIDInt] == nil {
 		// Get the workspace client for the workspace ID
 		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 		if err != nil {
@@ -180,10 +184,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 		// Create a new Databricks Client with the same configuration
 		// as the workspace client
 		newClient, err := client.New(workspaceClient.Config)
-		if err != nil {
-			return err
-		}
-		workspaceIDInt, err := parseWorkspaceID(workspaceID)
 		if err != nil {
 			return err
 		}

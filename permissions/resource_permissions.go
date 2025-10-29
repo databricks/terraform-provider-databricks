@@ -30,7 +30,7 @@ type PermissionsAPI struct {
 }
 
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
-func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.AccessControlRequest, mapping resourcePermissions, ownerOpt string) error {
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.AccessControlRequest, mapping WorkspaceObjectPermissions, ownerOpt string) error {
 	w, err := a.client.WorkspaceClient()
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity, mapping resourcePermissions) error {
+func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity, mapping WorkspaceObjectPermissions) error {
 	currentUser, err := a.getCurrentUser()
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity,
 // Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
 // by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
 // object creator, if it can be determined.
-func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
+func (a PermissionsAPI) Delete(objectID string, mapping WorkspaceObjectPermissions) error {
 	if mapping.objectType == "pipelines" {
 		// There is a bug which causes the code below send IS_OWNER with run_as identity
 		// Which is of course wrong thing to do.
@@ -122,7 +122,7 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 	return a.safePutWithOwner(objectID, accl, mapping, resourceStatus.creator)
 }
 
-func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*iam.ObjectPermissions, error) {
+func (a PermissionsAPI) readRaw(objectID string, mapping WorkspaceObjectPermissions) (*iam.ObjectPermissions, error) {
 	w, err := a.client.WorkspaceClient()
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
+func (a PermissionsAPI) Read(objectID string, mapping WorkspaceObjectPermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
 	permissions, err := a.readRaw(objectID, mapping)
 	if err != nil {
 		return entity.PermissionsEntity{}, err
@@ -164,7 +164,7 @@ func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, exist
 	return mapping.prepareResponse(objectID, permissions, existing, me)
 }
 
-// ResourcePermissions definition
+// ResourcePermissions is the SDKv2 resource definition for databricks_permissions
 func ResourcePermissions() common.Resource {
 	s := common.StructToSchema(entity.PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, mapping := range allResourcePermissions() {
@@ -231,14 +231,14 @@ func ResourcePermissions() common.Resource {
 				// is not aware of.
 				if _, ok := mapping.allowedPermissionLevels[string(permissionLevel)]; !ok {
 					return fmt.Errorf(`permission_level %s is not supported with %s objects; allowed levels: %s`,
-						permissionLevel, mapping.field, strings.Join(mapping.getAllowedPermissionLevels(true), ", "))
+						permissionLevel, mapping.field, strings.Join(mapping.GetAllowedPermissionLevels(true), ", "))
 				}
 			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			a := NewPermissionsAPI(ctx, c)
-			mapping, err := getResourcePermissionsFromId(d.Id())
+			mapping, err := GetResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
@@ -293,14 +293,14 @@ func ResourcePermissions() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			mapping, err := getResourcePermissionsFromId(d.Id())
+			mapping, err := GetResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
 			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			mapping, err := getResourcePermissionsFromId(d.Id())
+			mapping, err := GetResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}

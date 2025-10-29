@@ -36,6 +36,30 @@ func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
 	)
 }
 
+// AddNamespaceInSchema adds the provider_config schema to the given schema map.
+// This is used by resources and data sources that are developed over SDKv2 and not using Go SDK
+// that manually defines the schema without Structs
+func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
+	// panic if provider_config already exists in the schema map
+	if _, ok := m["provider_config"]; ok {
+		panic("provider_config already exists in schema map")
+	}
+	m["provider_config"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+	return m
+}
+
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
 // for a single schema.
 func NamespaceCustomizeSchema(s *CustomizableSchema) {

@@ -269,21 +269,9 @@ func ResourceNotebook() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"provider_config": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"workspace_id": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}
+	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema:        s,

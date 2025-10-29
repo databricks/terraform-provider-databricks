@@ -174,6 +174,63 @@ func TestNamespaceCustomizeSchemaMap(t *testing.T) {
 	})
 }
 
+func TestAddNamespaceInSchema(t *testing.T) {
+	t.Run("adds provider_config to empty schema", func(t *testing.T) {
+		testSchema := map[string]*schema.Schema{}
+
+		result := AddNamespaceInSchema(testSchema)
+
+		// Verify provider_config was added
+		require.NotNil(t, result)
+		providerConfig, exists := result["provider_config"]
+		assert.True(t, exists, "provider_config should exist in schema")
+		require.NotNil(t, providerConfig)
+
+		// Verify workspace_id field
+		elem, ok := providerConfig.Elem.(*schema.Resource)
+		require.True(t, ok, "Elem should be *schema.Resource")
+		workspaceID, exists := elem.Schema["workspace_id"]
+		assert.True(t, exists, "workspace_id should exist")
+		require.NotNil(t, workspaceID)
+		assert.Equal(t, schema.TypeString, workspaceID.Type)
+		assert.True(t, workspaceID.Required)
+	})
+
+	t.Run("adds provider_config to schema with existing fields", func(t *testing.T) {
+		testSchema := map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		}
+
+		result := AddNamespaceInSchema(testSchema)
+
+		// Verify existing fields are preserved
+		assert.Len(t, result, 3, "Should have 3 fields: name, description, provider_config")
+		assert.NotNil(t, result["name"])
+		assert.NotNil(t, result["description"])
+		assert.NotNil(t, result["provider_config"])
+	})
+
+	t.Run("panics when provider_config already exists", func(t *testing.T) {
+		testSchema := map[string]*schema.Schema{
+			"provider_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+			},
+		}
+
+		assert.Panics(t, func() {
+			AddNamespaceInSchema(testSchema)
+		}, "Should panic when provider_config already exists in schema")
+	})
+}
+
 func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 	testSchema := map[string]*schema.Schema{
 		"provider_config": {

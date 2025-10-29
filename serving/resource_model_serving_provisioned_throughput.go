@@ -72,6 +72,10 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Sort tags to prevent spurious diffs from ordering changes
+			if endpoint.Tags != nil {
+				sortTagsByKey(endpoint.Tags)
+			}
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
@@ -101,6 +105,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				}
 			}
 			if d.HasChange("tags") {
+				sortTagsByKey(e.Tags)
 				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
 					return err
 				}

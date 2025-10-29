@@ -688,3 +688,23 @@ func TestModelServingProvisionedThroughputDelete_Error(t *testing.T) {
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
 }
+
+func TestSortTagsByKey(t *testing.T) {
+	// Test that tags are sorted correctly by key to prevent spurious diffs
+	tags := []serving.EndpointTag{
+		{Key: "service_name", Value: "ib-gemini-flash"},
+		{Key: "service-tier", Value: "2"},
+		{Key: "environment", Value: "production"},
+		{Key: "aaa-first", Value: "should-be-first"},
+	}
+
+	sortTagsByKey(tags)
+
+	// Verify tags are sorted alphabetically by key
+	expectedOrder := []string{"aaa-first", "environment", "service-tier", "service_name"}
+	for i, tag := range tags {
+		if tag.Key != expectedOrder[i] {
+			t.Errorf("Expected tag at position %d to have key %s, got %s", i, expectedOrder[i], tag.Key)
+		}
+	}
+}

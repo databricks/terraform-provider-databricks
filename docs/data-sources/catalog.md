@@ -27,6 +27,8 @@ resource "databricks_grants" "things" {
 ## Argument Reference
 
 * `name` - (Required) name of the catalog
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -36,7 +38,7 @@ This data source exports the following attributes:
 * `catalog_info` - the [CatalogInfo](https://pkg.go.dev/github.com/databricks/databricks-sdk-go/service/catalog#CatalogInfo) object for a Unity Catalog catalog. This contains the following attributes (see ):
   * `name` - Name of the catalog
   * `full_name` The full name of the catalog. Corresponds with the name field.
-  * `catalog_type` - Type of the catalog, e.g. `MANAGED_CATALOG`, `DELTASHARING_CATALOG`, `SYSTEM_CATALOG`, 
+  * `catalog_type` - Type of the catalog, e.g. `MANAGED_CATALOG`, `DELTASHARING_CATALOG`, `SYSTEM_CATALOG`,
   * `owner` - Current owner of the catalog
   * `comment` - Free-form text description
   * `storage_location` -  Storage Location URL (full path) for managed tables within catalog.

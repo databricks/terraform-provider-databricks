@@ -55,7 +55,7 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 		},
 		func(ctx context.Context, s T, t *T, wc *databricks.WorkspaceClient) error {
 			return read(ctx, t, wc)
-		}, false, NoCustomize)
+		}, false, NamespaceCustomizeSchemaMap)
 }
 
 // WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
@@ -101,7 +101,7 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 			}
 			*s = *res
 			return nil
-		}, true, NoCustomize)
+		}, true, NamespaceCustomizeSchemaMap)
 }
 
 // WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.

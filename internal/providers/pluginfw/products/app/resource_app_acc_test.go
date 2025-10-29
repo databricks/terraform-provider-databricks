@@ -1,13 +1,17 @@
 package app_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const baseResources = `
@@ -184,5 +188,80 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 			assert.Equal(t, "STOPPED", computeStatus)
 			return nil
 		},
+	})
+}
+
+func appTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+		resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+	resource "databricks_app" "this" {
+		%s
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "no_compute app"
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+	`, provider_config)
+}
+
+func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: appTemplate(`
+			provider_config = {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
+		),
+		PlanOnly: true,
+	})
+}
+
+func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: appTemplate(`
+			provider_config = {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client.*workspace_id mismatch` +
+				`.*please check the workspace_id provided in ` +
+				`provider_config`,
+		),
+	})
+}
+
+func TestAccApp_ProviderConfig_Apply(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: appTemplate(``),
+	}, acceptance.Step{
+		Template: appTemplate(fmt.Sprintf(`
+			provider_config = {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
 	})
 }

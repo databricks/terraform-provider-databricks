@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -148,11 +150,28 @@ func ResourcePermissionAssignment() common.Resource {
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
+			// We need this because assignment by name doesn't work for admins, so we need to
+			// first assign them as users.  And then reassign them as admins.
+			shouldReassignAdmin := false
+			if assignment.PrincipalId == 0 && slices.Contains(assignment.Permissions, "ADMIN") {
+				shouldReassignAdmin = true
+				assignment.Permissions = []string{"USER"}
+			}
 			principal, err := api.CreateOrUpdate(assignment)
 			if err != nil {
 				return err
 			}
 			d.SetId(strconv.FormatInt(principal.PrincipalID, 10))
+			if shouldReassignAdmin {
+				common.DataToStructPointer(d, s, &assignment)
+				assignment.PrincipalId = principal.PrincipalID
+				_, err := api.CreateOrUpdate(assignment)
+				if err != nil {
+					log.Printf("[WARN] error reassigning admin permissions: %v", err)
+					api.Remove(d.Id())
+				}
+				return err
+			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

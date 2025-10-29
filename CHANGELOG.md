@@ -1,5 +1,54 @@
 # Version changelog
 
+## Release v1.95.0
+
+### Breaking Changes
+
+* Remove `recipient_federation_policy` resource and datasources ([#5126](https://github.com/databricks/terraform-provider-databricks/pull/5126))
+
+### New Features and Improvements
+
+* Add `provider_config` support for SDKv2 compatible plugin framework resources and data sources([#5115](https://github.com/databricks/terraform-provider-databricks/pull/5115))
+* Optimize `databricks_grant` and `databricks_grants` to not call the `Update` API if the requested permissions are already granted ([#5095](https://github.com/databricks/terraform-provider-databricks/pull/5095))
+* Added `expected_workspace_status` to `databricks_mws_workspaces` to support creating workspaces in provisioning status ([#5019](https://github.com/databricks/terraform-provider-databricks/pull/5019))
+
+### Bug Fixes
+
+* Mark `workload_size` as not computed in `databricks_model_serving` ([#5111](https://github.com/databricks/terraform-provider-databricks/pull/5111))
+* Fix Inconsistent Plan Errors in Permissions Resource ([#5091](https://github.com/databricks/terraform-provider-databricks/pull/5091))
+
+### Documentation
+
+* Add documentation on the `service_principal_client_id` attribute of `databricks_app` and related [#5134](https://github.com/databricks/terraform-provider-databricks/pull/5134)
+
+### Exporter
+* Remove `METRIC_VIEW` from `sql_table` resource ([#5135](https://github.com/databricks/terraform-provider-databricks/pull/5135))
+
+### Internal Changes
+
+* Fix custom_app_integration_test ([#5129](https://github.com/databricks/terraform-provider-databricks/pull/5129))
+
+
+## Release v1.94.0
+
+### Bug Fixes
+
+* Fix crash when error happens during reading `databricks_job` ([#5110](https://github.com/databricks/terraform-provider-databricks/pull/5110))
+* Fix `ADMIN` assignment in `databricks_permission_assignment` resource ([#5109](https://github.com/databricks/terraform-provider-databricks/pull/5109))
+
+### Documentation
+
+* Document `table_update` trigger in `databricks_job` resource ([#5107](https://github.com/databricks/terraform-provider-databricks/pull/5107))
+* Document new attributes in `databricks_app` resource and data sources ([#5108](https://github.com/databricks/terraform-provider-databricks/pull/5108))
+* Document `git_email` in `databricks_git_credential` resource ([#5099](https://github.com/databricks/terraform-provider-databricks/pull/5099))
+* Update `CONTRIBUTING` guidelines for migrating resources to plugin framework ([#5121](https://github.com/databricks/terraform-provider-databricks/pull/5121))
+
+### Internal Changes
+
+* Add provider_config support for plugin framework ([#5104](https://github.com/databricks/terraform-provider-databricks/pull/5104))
+* Refactor `catalog_test.go` to use internal plan checks ([#5112](https://github.com/databricks/terraform-provider-databricks/pull/5112)).
+
+
 ## Release v1.93.0
 
 ### Internal Changes

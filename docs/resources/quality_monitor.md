@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_quality_monitor Resource
 
-This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
+This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -120,6 +120,8 @@ table.
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation).
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -129,7 +131,7 @@ In addition to all arguments above, the following attributes are exported:
 * `monitor_version` - The version of the monitor config (e.g. 1,2,3). If negative, the monitor may be corrupted
 * `drift_metrics_table_name` - The full name of the drift metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
 * `profile_metrics_table_name` - The full name of the profile metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
-* `status` - Status of the Monitor 
+* `status` - Status of the Monitor
 * `dashboard_id` - The ID of the generated dashboard.
 
 ## Related Resources

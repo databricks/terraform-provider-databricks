@@ -210,7 +210,9 @@ func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *d
 	}
 
 	var newState TagPolicy
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -343,11 +345,13 @@ func (r *TagPolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.TagPolicies.DeleteTagPolicy(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete tag_policy", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &TagPolicyResource{}

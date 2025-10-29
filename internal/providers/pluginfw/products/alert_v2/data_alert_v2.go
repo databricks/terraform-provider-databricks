@@ -132,7 +132,8 @@ func (m AlertV2Data) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m AlertV2Data) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"create_time":        types.StringType,
 			"custom_description": types.StringType,
 			"custom_summary":     types.StringType,
 			"display_name":       types.StringType,
@@ -154,21 +155,21 @@ func (m AlertV2Data) Type(ctx context.Context) attr.Type {
 
 func (m AlertV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["custom_description"] = attrs["custom_description"].SetOptional()
-	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["custom_description"] = attrs["custom_description"].SetComputed()
+	attrs["custom_summary"] = attrs["custom_summary"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
-	attrs["evaluation"] = attrs["evaluation"].SetOptional()
+	attrs["evaluation"] = attrs["evaluation"].SetComputed()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
-	attrs["parent_path"] = attrs["parent_path"].SetOptional()
-	attrs["query_text"] = attrs["query_text"].SetOptional()
-	attrs["run_as"] = attrs["run_as"].SetOptional()
-	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetComputed()
+	attrs["query_text"] = attrs["query_text"].SetComputed()
+	attrs["run_as"] = attrs["run_as"].SetComputed()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetComputed()
+	attrs["schedule"] = attrs["schedule"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
 
 	return attrs
 }

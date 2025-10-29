@@ -144,7 +144,9 @@ func (r *FeatureTagResource) update(ctx context.Context, plan FeatureTag, diags 
 	}
 
 	var newState FeatureTag
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -277,11 +279,13 @@ func (r *FeatureTagResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.MaterializedFeatures.DeleteFeatureTag(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete materialized_features_feature_tag", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &FeatureTagResource{}

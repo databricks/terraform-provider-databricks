@@ -149,7 +149,9 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan Worksp
 	}
 
 	var newState WorkspaceNetworkOption
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}

@@ -27,7 +27,15 @@ func DataSourcePolicyInfos() datasource.DataSource {
 
 // PolicyInfosData extends the main model with additional fields.
 type PolicyInfosData struct {
-	Policies            types.List   `tfsdk:"policies"`
+	Policies types.List `tfsdk:"policies"`
+	// Optional. Whether to include policies defined on parent securables. By
+	// default, the inherited policies are not included.
+	IncludeInherited types.Bool `tfsdk:"include_inherited"`
+	// Optional. Maximum number of policies to return on a single page (page
+	// length). - When not set or set to 0, the page length is set to a server
+	// configured value (recommended); - When set to a value greater than 0, the
+	// page length is the minimum of this value and a server configured value;
+	MaxResults          types.Int64  `tfsdk:"max_results"`
 	OnSecurableType     types.String `tfsdk:"on_securable_type"`
 	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
 }
@@ -39,6 +47,9 @@ func (PolicyInfosData) GetComplexFieldTypes(context.Context) map[string]reflect.
 }
 
 func (m PolicyInfosData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include_inherited"] = attrs["include_inherited"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+
 	attrs["policies"] = attrs["policies"].SetComputed()
 	attrs["on_securable_type"] = attrs["on_securable_type"].SetRequired()
 	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetRequired()
@@ -104,7 +115,6 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		results = append(results, policy_info.ToObjectValue(ctx))
 	}
 
-	var newState PolicyInfosData
-	newState.Policies = types.ListValueMust(PolicyInfoData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.Policies = types.ListValueMust(PolicyInfoData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

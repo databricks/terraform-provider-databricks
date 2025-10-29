@@ -195,7 +195,9 @@ func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan AccountN
 	}
 
 	var newState AccountNetworkPolicy
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -328,11 +330,13 @@ func (r *AccountNetworkPolicyResource) Delete(ctx context.Context, req resource.
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.NetworkPolicies.DeleteNetworkPolicyRpc(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete account_network_policy", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &AccountNetworkPolicyResource{}

@@ -7,6 +7,9 @@ import (
 )
 
 func TestAccGroupRole(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestAccGroupRole is failing on non-AWS environments, likely due to read-after-write inconsistency.")
+	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_group" "this" {

@@ -2,7 +2,7 @@
 subcategory: "Data Quality Monitoring"
 ---
 # databricks_data_quality_refresh Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This resource allows you to refresh the data quality monitoring checks on Unity Catalog tables.
 
@@ -59,7 +59,15 @@ resource "databricks_data_quality_refresh" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `object_id` (string, required) - The UUID of the request object. For example, table id
+* `object_id` (string, required) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema`or `table`
 
 ## Attributes

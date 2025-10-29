@@ -28,17 +28,19 @@ type ServingEndpointsDataSource struct {
 
 type ServingEndpointsData struct {
 	Endpoints types.List `tfsdk:"endpoints"`
+	tfschema.Namespace
 }
 
 func (ServingEndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoints"] = attrs["endpoints"].SetOptional().SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"endpoints": reflect.TypeOf(serving_tf.ServingEndpoint_SdkV2{}),
+		"endpoints":       reflect.TypeOf(serving_tf.ServingEndpoint_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -61,18 +63,25 @@ func (d *ServingEndpointsDataSource) Configure(_ context.Context, req datasource
 }
 
 func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	w, diags := d.Client.GetWorkspaceClient()
+	var endpoints ServingEndpointsData
+	diags := req.Config.Get(ctx, &endpoints)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var endpoints ServingEndpointsData
-	diags = req.Config.Get(ctx, &endpoints)
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, endpoints.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	endpointsInfoSdk, err := w.ServingEndpoints.ListAll(ctx)
 	if err != nil {
 		if apierr.IsMissing(err) {

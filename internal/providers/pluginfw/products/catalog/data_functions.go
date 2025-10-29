@@ -36,6 +36,7 @@ type FunctionsData struct {
 	SchemaName    types.String `tfsdk:"schema_name"`
 	IncludeBrowse types.Bool   `tfsdk:"include_browse"`
 	Functions     types.List   `tfsdk:"functions"`
+	tfschema.Namespace
 }
 
 func (FunctionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -43,13 +44,14 @@ func (FunctionsData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["functions"] = attrs["functions"].SetOptional().SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (FunctionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"functions": reflect.TypeOf(catalog_tf.FunctionInfo{}),
+		"functions":       reflect.TypeOf(catalog_tf.FunctionInfo{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -73,18 +75,26 @@ func (d *FunctionsDataSource) Configure(_ context.Context, req datasource.Config
 
 func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
+
+	var functions FunctionsData
+	diags := req.Config.Get(ctx, &functions)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var functions FunctionsData
-	diags = req.Config.Get(ctx, &functions)
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, functions.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	catalogName := functions.CatalogName.ValueString()
 	schemaName := functions.SchemaName.ValueString()
 	functionsInfosSdk, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{

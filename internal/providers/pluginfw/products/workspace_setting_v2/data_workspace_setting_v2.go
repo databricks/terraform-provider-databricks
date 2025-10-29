@@ -132,7 +132,8 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m SettingData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"aibi_dashboard_embedding_access_policy": settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+		AttrTypes: map[string]attr.Type{
+			"aibi_dashboard_embedding_access_policy":              settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
 			"aibi_dashboard_embedding_approved_domains":           settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
 			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
@@ -154,23 +155,23 @@ func (m SettingData) Type(ctx context.Context) attr.Type {
 }
 
 func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetOptional()
-	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetOptional()
-	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetOptional()
-	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
-	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetOptional()
-	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetOptional()
-	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetOptional()
+	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetComputed()
+	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetComputed()
+	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetComputed()
+	attrs["boolean_val"] = attrs["boolean_val"].SetComputed()
+	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetComputed()
+	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetComputed()
+	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetComputed()
 	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
-	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
-	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetOptional()
+	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
+	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
-	attrs["integer_val"] = attrs["integer_val"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["personal_compute"] = attrs["personal_compute"].SetOptional()
-	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetOptional()
-	attrs["string_val"] = attrs["string_val"].SetOptional()
+	attrs["integer_val"] = attrs["integer_val"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
+	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
+	attrs["string_val"] = attrs["string_val"].SetComputed()
 
 	return attrs
 }

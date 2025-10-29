@@ -36,9 +36,23 @@ type MonitorDataSource struct {
 type MonitorData struct {
 	// Anomaly Detection Configuration, applicable to `schema` object types.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-	// Data Profiling Configuration, applicable to `table` object types
+	// Data Profiling Configuration, applicable to `table` object types. Exactly
+	// one `Analysis Configuration` must be present.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
-	// The UUID of the request object. For example, schema id.
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: `schema`
 	// or `table`.
@@ -81,17 +95,18 @@ func (m MonitorData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m MonitorData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"anomaly_detection_config": dataquality_tf.AnomalyDetectionConfig{}.Type(ctx),
-			"data_profiling_config": dataquality_tf.DataProfilingConfig{}.Type(ctx),
-			"object_id":             types.StringType,
-			"object_type":           types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"anomaly_detection_config": dataquality_tf.AnomalyDetectionConfig{}.Type(ctx),
+			"data_profiling_config":    dataquality_tf.DataProfilingConfig{}.Type(ctx),
+			"object_id":                types.StringType,
+			"object_type":              types.StringType,
 		},
 	}
 }
 
 func (m MonitorData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetOptional()
-	attrs["data_profiling_config"] = attrs["data_profiling_config"].SetOptional()
+	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
+	attrs["data_profiling_config"] = attrs["data_profiling_config"].SetComputed()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 

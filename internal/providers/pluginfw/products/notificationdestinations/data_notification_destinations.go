@@ -37,19 +37,21 @@ type NotificationDestinationsInfo struct {
 	DisplayNameContains      types.String `tfsdk:"display_name_contains"`
 	Type                     types.String `tfsdk:"type"`
 	NotificationDestinations types.List   `tfsdk:"notification_destinations"`
+	tfschema.Namespace
 }
 
 func (NotificationDestinationsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name_contains"] = attrs["display_name_contains"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
 	attrs["notification_destinations"] = attrs["notification_destinations"].SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"notification_destinations": reflect.TypeOf(settings_tf.ListNotificationDestinationsResult{}),
+		"provider_config":           reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -93,13 +95,21 @@ func AppendDiagAndCheckErrors(resp *datasource.ReadResponse, diags diag.Diagnost
 
 func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
-	if AppendDiagAndCheckErrors(resp, diags) {
-		return
-	}
 
 	var notificationInfo NotificationDestinationsInfo
 	if AppendDiagAndCheckErrors(resp, req.Config.Get(ctx, &notificationInfo)) {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, notificationInfo.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

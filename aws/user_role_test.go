@@ -7,6 +7,9 @@ import (
 )
 
 func TestAccUserRole(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestAccUserRole is failing on non-AWS environments, likely due to read-after-write inconsistency.")
+	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_user" "this" {

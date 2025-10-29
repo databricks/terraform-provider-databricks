@@ -163,7 +163,9 @@ func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTag
 	}
 
 	var newState EntityTagAssignment
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -296,11 +298,13 @@ func (r *EntityTagAssignmentResource) Delete(ctx context.Context, req resource.D
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.EntityTagAssignments.Delete(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete entity_tag_assignment", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &EntityTagAssignmentResource{}

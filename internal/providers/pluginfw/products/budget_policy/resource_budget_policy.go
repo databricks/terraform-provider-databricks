@@ -247,7 +247,9 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicy, di
 	}
 
 	var newState BudgetPolicy
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -380,11 +382,13 @@ func (r *BudgetPolicyResource) Delete(ctx context.Context, req resource.DeleteRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.BudgetPolicy.Delete(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete budget_policy", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &BudgetPolicyResource{}

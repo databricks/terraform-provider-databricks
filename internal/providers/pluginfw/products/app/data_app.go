@@ -11,7 +11,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -26,18 +25,20 @@ type dataSourceApp struct {
 type dataApp struct {
 	Name types.String `tfsdk:"name"`
 	App  types.Object `tfsdk:"app"`
+	tfschema.Namespace
 }
 
 func (dataApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["app"] = attrs["app"].SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (dataApp) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"app": reflect.TypeOf(apps_tf.App{}),
+		"app":             reflect.TypeOf(apps_tf.App{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -59,19 +60,26 @@ func (a *dataSourceApp) Configure(ctx context.Context, req datasource.ConfigureR
 
 func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
+
+	var config dataApp
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, config.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var name types.String
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("name"), &name)...)
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	appGoSdk, err := w.Apps.GetByName(ctx, name.ValueString())
+	appGoSdk, err := w.Apps.GetByName(ctx, config.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("failed to read app", err.Error())
 		return
@@ -82,7 +90,13 @@ func (a *dataSourceApp) Read(ctx context.Context, req datasource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	dataApp := dataApp{Name: name, App: newApp.ToObjectValue(ctx)}
+	dataApp := dataApp{
+		Name: config.Name,
+		App:  newApp.ToObjectValue(ctx),
+		Namespace: tfschema.Namespace{
+			ProviderConfig: config.ProviderConfig,
+		},
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, dataApp)...)
 	if resp.Diagnostics.HasError() {
 		return

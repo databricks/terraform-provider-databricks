@@ -2,7 +2,7 @@
 subcategory: "Data Quality Monitoring"
 ---
 # databricks_data_quality_monitor Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This resource allows you to set up data quality monitoring checks for Unity Catalog objects, currently schema and table. 
 
@@ -33,10 +33,19 @@ resource "databricks_data_quality_monitor" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `object_id` (string, required) - The UUID of the request object. For example, schema id
+* `object_id` (string, required) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema` or `table`
 * `anomaly_detection_config` (AnomalyDetectionConfig, optional) - Anomaly Detection Configuration, applicable to `schema` object types
-* `data_profiling_config` (DataProfilingConfig, optional) - Data Profiling Configuration, applicable to `table` object types
+* `data_profiling_config` (DataProfilingConfig, optional) - Data Profiling Configuration, applicable to `table` object types. Exactly one `Analysis Configuration`
+  must be present
 
 ### CronSchedule
 * `quartz_cron_expression` (string, required) - The expression that determines when to run the monitor. See [examples](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
@@ -52,7 +61,7 @@ The following arguments are supported:
   Baseline data is used to compute drift from the data in the monitored `table_name`.
   The baseline table and the monitored table shall have the same schema
 * `custom_metrics` (list of DataProfilingCustomMetric, optional) - Custom metrics
-* `inference_log` (InferenceLogConfig, optional) - Configuration for monitoring inference log tables
+* `inference_log` (InferenceLogConfig, optional) - `Analysis Configuration` for monitoring inference log tables
 * `notification_settings` (NotificationSettings, optional) - Field for specifying notification settings
 * `schedule` (CronSchedule, optional) - The cron schedule
 * `skip_builtin_dashboard` (boolean, optional) - Whether to skip creating a default dashboard summarizing data quality metrics
@@ -62,8 +71,8 @@ The following arguments are supported:
   slices: two slices for `col_2 > 10` (True and False), and one slice per unique value in
   `col1`. For high-cardinality columns, only the top 100 unique values by frequency will
   generate slices
-* `snapshot` (SnapshotConfig, optional) - Configuration for monitoring snapshot tables
-* `time_series` (TimeSeriesConfig, optional) - Configuration for monitoring time series tables
+* `snapshot` (SnapshotConfig, optional) - `Analysis Configuration` for monitoring snapshot tables
+* `time_series` (TimeSeriesConfig, optional) - `Analysis Configuration` for monitoring time series tables
 * `warehouse_id` (string, optional) - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running
   warehouse will be used
 

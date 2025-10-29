@@ -305,7 +305,9 @@ func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDat
 	}
 
 	var newState SyncedDatabaseTable
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -438,11 +440,13 @@ func (r *SyncedDatabaseTableResource) Delete(ctx context.Context, req resource.D
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.Database.DeleteSyncedDatabaseTable(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_synced_database_table", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &SyncedDatabaseTableResource{}

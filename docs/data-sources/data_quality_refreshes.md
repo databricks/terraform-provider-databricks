@@ -2,7 +2,7 @@
 subcategory: "Data Quality Monitoring"
 ---
 # databricks_data_quality_refreshes Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source can be used to fetch the list of data quality refreshes on a Unity Catalog table.
 
@@ -31,7 +31,15 @@ data "databricks_data_quality_refreshes" "all" {
 
 ## Arguments
 The following arguments are supported:
-* `object_id` (string, required) - The UUID of the request object. For example, schema id
+* `object_id` (string, required) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema` or `table`
 * `page_size` (integer, optional)
 
@@ -40,7 +48,15 @@ The following arguments are supported:
 This data source exports a single attribute, `refreshes`. It is a list of resources, each with the following attributes:
 * `end_time_ms` (integer) - Time when the refresh ended (milliseconds since 1/1/1970 UTC)
 * `message` (string) - An optional message to give insight into the current state of the refresh (e.g. FAILURE messages)
-* `object_id` (string) - The UUID of the request object. For example, table id
+* `object_id` (string) - The UUID of the request object. It is `schema_id` for `schema`, and `table_id` for `table`.
+  
+  Find the `schema_id` from either:
+  1. The [schema_id](https://docs.databricks.com/api/workspace/schemas/get#schema_id) of the `Schemas` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `schema` > go to the `Details` tab > the `Schema ID` field.
+  
+  Find the `table_id` from either:
+  1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
+  2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string) - The type of the monitored object. Can be one of the following: `schema`or `table`
 * `refresh_id` (integer) - Unique id of the refresh operation
 * `start_time_ms` (integer) - Time when the refresh started (milliseconds since 1/1/1970 UTC)

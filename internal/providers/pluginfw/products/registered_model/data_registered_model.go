@@ -38,6 +38,7 @@ type RegisteredModelData struct {
 	IncludeAliases types.Bool   `tfsdk:"include_aliases"`
 	IncludeBrowse  types.Bool   `tfsdk:"include_browse"`
 	ModelInfo      types.List   `tfsdk:"model_info"`
+	tfschema.Namespace
 }
 
 func (RegisteredModelData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -45,12 +46,14 @@ func (RegisteredModelData) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["include_aliases"] = attrs["include_aliases"].SetOptional()
 	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["model_info"] = attrs["model_info"].SetOptional().SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_info": reflect.TypeOf(catalog_tf.RegisteredModelInfo_SdkV2{}),
+		"model_info":      reflect.TypeOf(catalog_tf.RegisteredModelInfo_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -74,14 +77,21 @@ func (d *RegisteredModelDataSource) Configure(_ context.Context, req datasource.
 
 func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
+
+	var registeredModel RegisteredModelData
+	diags := req.Config.Get(ctx, &registeredModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var registeredModel RegisteredModelData
-	diags = req.Config.Get(ctx, &registeredModel)
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, registeredModel.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

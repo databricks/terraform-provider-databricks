@@ -69,7 +69,8 @@ func (m FeatureTagData) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 // and contains additional fields.
 func (m FeatureTagData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"key": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
 			"value": types.StringType,
 		},
 	}
@@ -77,7 +78,7 @@ func (m FeatureTagData) Type(ctx context.Context) attr.Type {
 
 func (m FeatureTagData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["key"] = attrs["key"].SetRequired()
-	attrs["value"] = attrs["value"].SetOptional()
+	attrs["value"] = attrs["value"].SetComputed()
 
 	return attrs
 }

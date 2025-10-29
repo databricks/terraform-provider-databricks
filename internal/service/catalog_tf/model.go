@@ -25584,7 +25584,7 @@ func (m RunRefreshRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 40
+// Next ID: 41
 type SchemaInfo struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is

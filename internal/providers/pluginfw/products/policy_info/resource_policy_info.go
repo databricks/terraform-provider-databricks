@@ -441,7 +441,9 @@ func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags 
 	}
 
 	var newState PolicyInfo
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -574,11 +576,13 @@ func (r *PolicyInfoResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	_, err := client.Policies.DeletePolicy(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete policy_info", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &PolicyInfoResource{}

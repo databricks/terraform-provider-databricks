@@ -88,9 +88,10 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m FeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"description": types.StringType,
-			"full_name": types.StringType,
-			"function":  ml_tf.Function{}.Type(ctx),
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"full_name":   types.StringType,
+			"function":    ml_tf.Function{}.Type(ctx),
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -101,12 +102,12 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 }
 
 func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
+	attrs["description"] = attrs["description"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["function"] = attrs["function"].SetRequired()
-	attrs["inputs"] = attrs["inputs"].SetRequired()
-	attrs["source"] = attrs["source"].SetRequired()
-	attrs["time_window"] = attrs["time_window"].SetRequired()
+	attrs["function"] = attrs["function"].SetComputed()
+	attrs["inputs"] = attrs["inputs"].SetComputed()
+	attrs["source"] = attrs["source"].SetComputed()
+	attrs["time_window"] = attrs["time_window"].SetComputed()
 
 	return attrs
 }

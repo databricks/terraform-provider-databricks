@@ -26,17 +26,19 @@ type dataSourceApps struct {
 
 type dataApps struct {
 	Apps types.List `tfsdk:"app"`
+	tfschema.Namespace
 }
 
 func (dataApps) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetComputed()
-
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (dataApps) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"app": reflect.TypeOf(apps_tf.App{}),
+		"app":             reflect.TypeOf(apps_tf.App{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -58,7 +60,20 @@ func (a *dataSourceApps) Configure(ctx context.Context, req datasource.Configure
 
 func (a *dataSourceApps) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, resourceName)
-	w, diags := a.client.GetWorkspaceClient()
+
+	var config dataApps
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, config.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, diags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -79,7 +94,12 @@ func (a *dataSourceApps) Read(ctx context.Context, req datasource.ReadRequest, r
 		}
 		apps = append(apps, app.ToObjectValue(ctx))
 	}
-	dataApps := dataApps{Apps: types.ListValueMust(apps_tf.App{}.Type(ctx), apps)}
+	dataApps := dataApps{
+		Apps: types.ListValueMust(apps_tf.App{}.Type(ctx), apps),
+		Namespace: tfschema.Namespace{
+			ProviderConfig: config.ProviderConfig,
+		},
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, dataApps)...)
 	if resp.Diagnostics.HasError() {
 		return

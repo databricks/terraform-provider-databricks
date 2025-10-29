@@ -96,6 +96,8 @@ func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d
 func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
 	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
 	// workspace_id does not exist in the resource data
+	// so we don't need to create a new client
+	// and can return the current client.
 	if workspaceIDFromResourceData == nil {
 		return c, nil
 	}

@@ -106,13 +106,13 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	return c.GetDatabricksClientForUnifiedProvider(ctx, workspaceID)
+	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
 }
 
 // GetDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
-func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClient != nil {
 		return &DatabricksClient{
@@ -138,8 +138,8 @@ func (c *DatabricksClient) GetDatabricksClientForUnifiedProvider(ctx context.Con
 // setCachedDatabricksClient sets the cached Databricks Client.
 func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
 	// Acquire the lock to avoid race conditions.
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu_legacy.Lock()
+	defer c.mu_legacy.Unlock()
 	// Double checked locking
 	if c.cachedDatabricksClient == nil {
 		// Get the workspace client for the workspace ID

@@ -77,6 +77,9 @@ type DatabricksClient struct {
 
 	// mu synchronizes access to all cached clients.
 	mu sync.Mutex
+
+	// mu synchronizes access to all cached clients.
+	mu_legacy sync.Mutex
 }
 
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks

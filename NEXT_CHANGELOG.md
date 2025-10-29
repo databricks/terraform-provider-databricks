@@ -17,6 +17,8 @@
 
 ### Documentation
 
+* Fix missing GCP IAM permissions for workspace creation in GCP guides ([#5123](https://github.com/databricks/terraform-provider-databricks/pull/5123)).
+
 ### Exporter
 
 ### Internal Changes

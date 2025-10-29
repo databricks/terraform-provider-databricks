@@ -12,6 +12,7 @@ import (
 // DataSourceDirectory ...
 func DataSourceDirectory() common.Resource {
 	type Directory struct {
+		common.Namespace
 		Id            string `json:"id,omitempty" tf:"computed"`
 		Path          string `json:"path"`
 		ObjectId      int64  `json:"object_id,omitempty" tf:"computed"`

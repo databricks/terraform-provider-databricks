@@ -10,6 +10,7 @@ import (
 
 func DataSourceExternalLocations() common.Resource {
 	type externalLocationsData struct {
+		common.Namespace
 		Names []string `json:"names,omitempty" tf:"computed"`
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *externalLocationsData, w *databricks.WorkspaceClient) error {

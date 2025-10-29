@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -24,6 +25,7 @@ import (
 const resourceName = "permission"
 
 var _ resource.ResourceWithConfigure = &PermissionResource{}
+var _ resource.ResourceWithImportState = &PermissionResource{}
 
 func ResourcePermission() resource.Resource {
 	return &PermissionResource{}
@@ -244,7 +246,7 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	// Set the ID, object_type, and all other fields in state
 	resourceID := fmt.Sprintf("%s/%s", objectID, principal)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(resourceID))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), types.StringValue(mapping.GetObjectType()))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), types.StringValue(mapping.GetRequestObjectType()))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(objectFieldName), objectFieldValue)...) // Set the object identifier field
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), userName)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), groupName)...)
@@ -289,6 +291,11 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		RequestObjectType: mapping.GetRequestObjectType(),
 	})
 	if err != nil {
+		// If the object or permissions are not found, remove from state to trigger recreation
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Failed to read permissions", err.Error())
 		return
 	}
@@ -308,7 +315,7 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	if !found {
-		// Permission no longer exists, remove from state
+		// Permission for this specific principal no longer exists, remove from state to trigger recreation
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -441,6 +448,11 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		RequestObjectType: mapping.GetRequestObjectType(),
 	})
 	if err != nil {
+		// If the object or permissions are not found, the permission is already gone
+		// This is the desired state, so we can return successfully
+		if apierr.IsMissing(err) {
+			return
+		}
 		resp.Diagnostics.AddError("Failed to read current permissions", err.Error())
 		return
 	}
@@ -468,9 +480,98 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		AccessControlList: remainingACLs,
 	})
 	if err != nil {
+		// If the object or principal doesn't exist, the permission is already gone
+		// This can happen if the underlying object or principal was deleted outside of Terraform
+		if apierr.IsMissing(err) {
+			return
+		}
 		resp.Diagnostics.AddError("Failed to delete permission", err.Error())
 		return
 	}
+}
+
+func (r *PermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Import ID format: /<resource_type>/<id>/<principal>
+	// Example: /clusters/cluster-123/user@example.com
+
+	w, err := r.Client.WorkspaceClient()
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+		return
+	}
+
+	// Parse the import ID
+	objectID, principal, err := r.parseID(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID Format",
+			fmt.Sprintf("Expected format: /<resource_type>/<id>/<principal>. Error: %s", err.Error()),
+		)
+		return
+	}
+
+	// Get the mapping from the ID to determine object type and field
+	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get resource permissions mapping", err.Error())
+		return
+	}
+
+	// Read current permissions from Databricks
+	idParts := strings.Split(objectID, "/")
+	permID := idParts[len(idParts)-1]
+
+	perms, err := w.Permissions.Get(ctx, iam.GetPermissionRequest{
+		RequestObjectId:   permID,
+		RequestObjectType: mapping.GetRequestObjectType(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to read permissions", err.Error())
+		return
+	}
+
+	// Find the specific principal's permission
+	var found bool
+	var permissionLevel string
+	var userName, groupName, servicePrincipalName string
+
+	for _, acl := range perms.AccessControlList {
+		if r.matchesPrincipal(acl, principal) {
+			if len(acl.AllPermissions) > 0 {
+				permissionLevel = string(acl.AllPermissions[0].PermissionLevel)
+				userName = acl.UserName
+				groupName = acl.GroupName
+				servicePrincipalName = acl.ServicePrincipalName
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		resp.Diagnostics.AddError(
+			"Permission Not Found",
+			fmt.Sprintf("No permission found for principal %q on object %q", principal, objectID),
+		)
+		return
+	}
+
+	// Set all attributes in state using SetAttribute
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(req.ID))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), types.StringValue(mapping.GetRequestObjectType()))...)
+
+	// Set the object identifier field (e.g., cluster_id, job_id, etc.)
+	// Extract the configured value from the objectID
+	configuredValue := permID
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(mapping.GetField()), types.StringValue(configuredValue))...)
+
+	// Set principal fields
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringValue(userName))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringValue(groupName))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringValue(servicePrincipalName))...)
+
+	// Set permission level
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), types.StringValue(permissionLevel))...)
 }
 
 // Helper methods

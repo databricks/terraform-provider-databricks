@@ -175,15 +175,15 @@ func TestAccPermission_Authorization_Tokens(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
 resource "databricks_group" "team_a" {
-	display_name = "permission-team-a-{var.RANDOM}"
+	display_name = "permission-team-a-{var.STICKY_RANDOM}"
 }
 
 resource "databricks_group" "team_b" {
-	display_name = "permission-team-b-{var.RANDOM}"
+	display_name = "permission-team-b-{var.STICKY_RANDOM}"
 }
 
 resource "databricks_group" "team_c" {
-	display_name = "permission-team-c-{var.RANDOM}"
+	display_name = "permission-team-c-{var.STICKY_RANDOM}"
 }
 
 # This demonstrates the key benefit: each team's token permissions
@@ -245,15 +245,15 @@ resource "databricks_permission" "tokens_team_c" {
 		// Update one permission independently - remove team_b
 		Template: `
 resource "databricks_group" "team_a" {
-	display_name = "permission-team-a-{var.RANDOM}"
+	display_name = "permission-team-a-{var.STICKY_RANDOM}"
 }
 
 resource "databricks_group" "team_b" {
-	display_name = "permission-team-b-{var.RANDOM}"
+	display_name = "permission-team-b-{var.STICKY_RANDOM}"
 }
 
 resource "databricks_group" "team_c" {
-	display_name = "permission-team-c-{var.RANDOM}"
+	display_name = "permission-team-c-{var.STICKY_RANDOM}"
 }
 
 resource "databricks_permission" "tokens_team_a" {

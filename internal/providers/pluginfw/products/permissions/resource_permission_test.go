@@ -138,3 +138,65 @@ func TestPermissionResource_Configure(t *testing.T) {
 	assert.False(t, resp.Diagnostics.HasError())
 	assert.Equal(t, client, r.Client)
 }
+
+func TestPermissionResource_ImportState(t *testing.T) {
+	// Verify the resource implements the ImportState interface
+	var _ resource.ResourceWithImportState = &PermissionResource{}
+
+	// Test that parseID correctly handles import ID format
+	r := &PermissionResource{}
+
+	tests := []struct {
+		name          string
+		importID      string
+		expectedObjID string
+		expectedPrinc string
+		expectError   bool
+	}{
+		{
+			name:          "valid cluster import",
+			importID:      "/clusters/cluster-123/user@example.com",
+			expectedObjID: "/clusters/cluster-123",
+			expectedPrinc: "user@example.com",
+			expectError:   false,
+		},
+		{
+			name:          "valid job import",
+			importID:      "/jobs/job-456/data-engineers",
+			expectedObjID: "/jobs/job-456",
+			expectedPrinc: "data-engineers",
+			expectError:   false,
+		},
+		{
+			name:          "valid authorization import",
+			importID:      "/authorization/tokens/team-a",
+			expectedObjID: "/authorization/tokens",
+			expectedPrinc: "team-a",
+			expectError:   false,
+		},
+		{
+			name:        "invalid format - too few parts",
+			importID:    "/clusters/cluster-123",
+			expectError: true,
+		},
+		{
+			name:        "invalid format - no slashes",
+			importID:    "cluster-123-user",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			objectID, principal, err := r.parseID(tt.importID)
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for invalid import ID")
+			} else {
+				assert.NoError(t, err, "Expected no error for valid import ID")
+				assert.Equal(t, tt.expectedObjID, objectID, "Object ID should match")
+				assert.Equal(t, tt.expectedPrinc, principal, "Principal should match")
+			}
+		})
+	}
+}

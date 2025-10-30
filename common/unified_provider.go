@@ -138,7 +138,7 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
 }
 
-// GetDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
+// getDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {

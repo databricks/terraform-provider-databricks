@@ -485,7 +485,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 						Host: cachedWorkspaceHost,
 					},
 				}
-				c.cachedDatabricksClient = map[int64]*client.DatabricksClient{
+				c.cachedDatabricksClients = map[int64]*client.DatabricksClient{
 					123456: mockDatabricksClient,
 				}
 				return c

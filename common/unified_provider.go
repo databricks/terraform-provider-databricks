@@ -148,8 +148,8 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// If the Databricks Client is cached, we use it
-	if c.cachedDatabricksClient != nil {
-		if client, ok := c.cachedDatabricksClient[workspaceIDInt]; ok && client != nil {
+	if c.cachedDatabricksClients != nil {
+		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
 			return &DatabricksClient{
 				DatabricksClient: client,
 			}, nil
@@ -165,7 +165,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// Return the Databricks Client.
 	return &DatabricksClient{
-		DatabricksClient: c.cachedDatabricksClient[workspaceIDInt],
+		DatabricksClient: c.cachedDatabricksClients[workspaceIDInt],
 	}, nil
 }
 
@@ -176,8 +176,8 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	defer c.muLegacy.Unlock()
 
 	// Initialize the map if it's nil
-	if c.cachedDatabricksClient == nil {
-		c.cachedDatabricksClient = make(map[int64]*client.DatabricksClient)
+	if c.cachedDatabricksClients == nil {
+		c.cachedDatabricksClients = make(map[int64]*client.DatabricksClient)
 	}
 
 	workspaceIDInt, err := parseWorkspaceID(workspaceID)
@@ -186,7 +186,7 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	}
 
 	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClient[workspaceIDInt]; ok && existingClient != nil {
+	if existingClient, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && existingClient != nil {
 		return nil
 	}
 
@@ -202,6 +202,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	if err != nil {
 		return err
 	}
-	c.cachedDatabricksClient[workspaceIDInt] = newClient
+	c.cachedDatabricksClients[workspaceIDInt] = newClient
 	return nil
 }

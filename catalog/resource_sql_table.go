@@ -65,7 +65,6 @@ type SqlTableInfo struct {
 	WarehouseID         string            `json:"warehouse_id,omitempty"`
 	Owner               string            `json:"owner,omitempty" tf:"computed"`
 	TableID             string            `json:"table_id" tf:"computed"`
-	common.Namespace
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -93,7 +92,6 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
-	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -177,7 +175,7 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	ti.exec = c.CommandExecutor(ctx)
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
@@ -665,7 +663,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("comment") && d.Get("table_type") == "VIEW" {
 				d.ForceNew("comment")
 			}
-			return common.NamespaceCustomizeDiff(d)
+			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
@@ -677,7 +675,7 @@ func ResourceSqlTable() common.Resource {
 				return err
 			}
 			if ti.Owner != "" {
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}
@@ -697,7 +695,7 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -731,7 +729,7 @@ func ResourceSqlTable() common.Resource {
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

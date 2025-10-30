@@ -148,19 +148,19 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// If the Databricks Client is cached, we use it
-	if c.cachedDatabricksClient != nil && c.cachedDatabricksClient[workspaceIDInt] != nil {
-		return &DatabricksClient{
-			DatabricksClient: c.cachedDatabricksClient[workspaceIDInt],
-		}, nil
+	if c.cachedDatabricksClient != nil {
+		if client, ok := c.cachedDatabricksClient[workspaceIDInt]; ok && client != nil {
+			return &DatabricksClient{
+				DatabricksClient: client,
+			}, nil
+		}
 	}
 
 	// If the Databricks Client is not cached, we create a client
 	// and cache it.
-	if c.cachedDatabricksClient == nil || c.cachedDatabricksClient[workspaceIDInt] == nil {
-		err := c.setCachedDatabricksClient(ctx, workspaceID)
-		if err != nil {
-			return nil, err
-		}
+	err = c.setCachedDatabricksClient(ctx, workspaceID)
+	if err != nil {
+		return nil, err
 	}
 
 	// Return the Databricks Client.
@@ -186,20 +186,22 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	}
 
 	// Double checked locking
-	if c.cachedDatabricksClient[workspaceIDInt] == nil {
-		// Get the workspace client for the workspace ID
-		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
-		if err != nil {
-			return err
-		}
-
-		// Create a new Databricks Client with the same configuration
-		// as the workspace client
-		newClient, err := client.New(workspaceClient.Config)
-		if err != nil {
-			return err
-		}
-		c.cachedDatabricksClient[workspaceIDInt] = newClient
+	if existingClient, ok := c.cachedDatabricksClient[workspaceIDInt]; ok && existingClient != nil {
+		return nil
 	}
+
+	// Get the workspace client for the workspace ID
+	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	if err != nil {
+		return err
+	}
+
+	// Create a new Databricks Client with the same configuration
+	// as the workspace client
+	newClient, err := client.New(workspaceClient.Config)
+	if err != nil {
+		return err
+	}
+	c.cachedDatabricksClient[workspaceIDInt] = newClient
 	return nil
 }

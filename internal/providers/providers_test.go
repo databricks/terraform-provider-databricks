@@ -370,7 +370,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 }
 
 func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {
-	ws, err := c.WorkspaceClient()
+	ws, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	require.NoError(t, err)
 	bgCtx := context.Background()
 	{

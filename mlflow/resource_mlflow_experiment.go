@@ -39,7 +39,7 @@ func ResourceMlflowExperiment() common.Resource {
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -53,7 +53,7 @@ func ResourceMlflowExperiment() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func ResourceMlflowExperiment() common.Resource {
 			return common.StructToData(e.Experiment, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,7 @@ func ResourceMlflowExperiment() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

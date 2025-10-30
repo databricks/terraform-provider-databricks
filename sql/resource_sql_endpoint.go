@@ -105,7 +105,7 @@ func ResourceSqlEndpoint() common.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -138,7 +138,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -153,7 +153,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return common.StructToData(warehouse, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

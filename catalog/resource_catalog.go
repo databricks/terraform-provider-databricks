@@ -28,8 +28,13 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 	return false
 }
 
+type CatalogInfoResource struct {
+	catalog.CatalogInfo
+	common.Namespace
+}
+
 func ResourceCatalog() common.Resource {
-	catalogSchema := common.StructToSchema(catalog.CatalogInfo{},
+	catalogSchema := common.StructToSchema(CatalogInfoResource{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -58,12 +63,41 @@ func ResourceCatalog() common.Resource {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
 		Schema: catalogSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// The only scenario in which we can update options is for the `authorized_paths` key. Any
+			// other changes to the options field will result in an error.
+			if d.HasChange("options") {
+				old, new := d.GetChange("options")
+				oldMap := old.(map[string]interface{})
+				newMap := new.(map[string]interface{})
+				delete(oldMap, "authorized_paths")
+				delete(newMap, "authorized_paths")
+				// If any attribute other than `authorized_paths` is removed, the resource should be recreated.
+				for k := range oldMap {
+					if _, ok := newMap[k]; !ok {
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
+					}
+				}
+				// If any attribute other than `authorized_paths` is added or changed, the resource should be recreated.
+				for k, v := range newMap {
+					if oldV, ok := oldMap[k]; !ok || oldV != v {
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
+					}
+				}
+			}
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -107,7 +141,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -119,7 +153,7 @@ func ResourceCatalog() common.Resource {
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -188,7 +222,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -215,34 +249,6 @@ func ResourceCatalog() common.Resource {
 				}
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
-		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			// The only scenario in which we can update options is for the `authorized_paths` key. Any
-			// other changes to the options field will result in an error.
-			if d.HasChange("options") {
-				old, new := d.GetChange("options")
-				oldMap := old.(map[string]interface{})
-				newMap := new.(map[string]interface{})
-				delete(oldMap, "authorized_paths")
-				delete(newMap, "authorized_paths")
-				// If any attribute other than `authorized_paths` is removed, the resource should be recreated.
-				for k := range oldMap {
-					if _, ok := newMap[k]; !ok {
-						if err := d.ForceNew("options"); err != nil {
-							return err
-						}
-					}
-				}
-				// If any attribute other than `authorized_paths` is added or changed, the resource should be recreated.
-				for k, v := range newMap {
-					if oldV, ok := oldMap[k]; !ok || oldV != v {
-						if err := d.ForceNew("options"); err != nil {
-							return err
-						}
-					}
-				}
-			}
-			return nil
 		},
 	}
 }

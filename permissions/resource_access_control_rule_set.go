@@ -32,7 +32,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			}
 			return accountClient.AccessControl.GetRuleSet(ctx, getRuleSetReq)
 		}
-		workspaceClient, err := c.WorkspaceClient()
+		workspaceClient, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +46,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			}
 			return accountClient.AccessControl.UpdateRuleSet(ctx, updateRuleSetReq)
 		}
-		workspaceClient, err := c.WorkspaceClient()
+		workspaceClient, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 		if err != nil {
 			return nil, err
 		}

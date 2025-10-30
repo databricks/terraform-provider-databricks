@@ -68,7 +68,7 @@ func ResourceSecretScope() common.Resource {
 		Schema:        s,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -86,7 +86,7 @@ func ResourceSecretScope() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -97,7 +97,7 @@ func ResourceSecretScope() common.Resource {
 			return common.StructToData(scope, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

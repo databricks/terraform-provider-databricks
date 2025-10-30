@@ -233,22 +233,40 @@ func goSdkToTfSdkSingleField(
 		}
 		destField.Set(reflect.ValueOf(objectVal))
 	case reflect.Slice:
-		// This always corresponds to a types.List.
-		listType, ok := tfType.(types.ListType)
-		if !ok {
-			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a list type: %s. %s", tfType, common.TerraformBugErrorMessage))
+		// This corresponds to either a types.List or types.Set.
+		var elemType attr.Type
+		isSet := false
+
+		if listType, ok := tfType.(types.ListType); ok {
+			elemType = listType.ElemType
+		} else if setType, ok := tfType.(types.SetType); ok {
+			elemType = setType.ElemType
+			isSet = true
+		} else {
+			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a list or set type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
+
 		if srcField.IsNil() {
 			// Treat the source field as an empty slice.
-			nullList := types.ListNull(listType.ElemType)
-			destField.Set(reflect.ValueOf(nullList))
+			if isSet {
+				nullSet := types.SetNull(elemType)
+				destField.Set(reflect.ValueOf(nullSet))
+			} else {
+				nullList := types.ListNull(elemType)
+				destField.Set(reflect.ValueOf(nullList))
+			}
 			return
 		}
 		if srcField.Len() == 0 {
 			// Treat the source field as an empty slice.
-			emptyList := types.ListValueMust(listType.ElemType, []attr.Value{})
-			destField.Set(reflect.ValueOf(emptyList))
+			if isSet {
+				emptySet := types.SetValueMust(elemType, []attr.Value{})
+				destField.Set(reflect.ValueOf(emptySet))
+			} else {
+				emptyList := types.ListValueMust(elemType, []attr.Value{})
+				destField.Set(reflect.ValueOf(emptyList))
+			}
 			return
 		}
 
@@ -260,7 +278,7 @@ func goSdkToTfSdkSingleField(
 			// Otherwise, it is a struct, and we need to convert it by calling GoSdkToTfSdkStruct.
 			switch innerType {
 			case reflect.TypeOf(types.String{}), reflect.TypeOf(types.Bool{}), reflect.TypeOf(types.Int64{}), reflect.TypeOf(types.Float64{}):
-				d.Append(goSdkToTfSdkSingleField(ctx, srcField.Index(i), element.Elem(), true, listType.ElemType, innerType)...)
+				d.Append(goSdkToTfSdkSingleField(ctx, srcField.Index(i), element.Elem(), true, elemType, innerType)...)
 			default:
 				d.Append(GoSdkToTfSdkStruct(ctx, srcField.Index(i).Interface(), element.Interface())...)
 			}
@@ -271,12 +289,21 @@ func goSdkToTfSdkSingleField(
 		}
 
 		// Construct the Terraform value and set it.
-		destVal, ds := types.ListValueFrom(ctx, listType.ElemType, elements)
-		d.Append(ds...)
-		if d.HasError() {
-			return
+		if isSet {
+			destVal, ds := types.SetValueFrom(ctx, elemType, elements)
+			d.Append(ds...)
+			if d.HasError() {
+				return
+			}
+			destField.Set(reflect.ValueOf(destVal))
+		} else {
+			destVal, ds := types.ListValueFrom(ctx, elemType, elements)
+			d.Append(ds...)
+			if d.HasError() {
+				return
+			}
+			destField.Set(reflect.ValueOf(destVal))
 		}
-		destField.Set(reflect.ValueOf(destVal))
 	case reflect.Map:
 		// This always corresponds to a types.Map.
 		mapType, ok := tfType.(types.MapType)

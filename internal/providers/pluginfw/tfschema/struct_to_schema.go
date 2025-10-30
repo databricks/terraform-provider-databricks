@@ -54,7 +54,7 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			scmAttr[fieldName] = Float64AttributeBuilder{}
 		case types.String:
 			scmAttr[fieldName] = StringAttributeBuilder{}
-		case types.List, types.Map, types.Object:
+		case types.List, types.Set, types.Map, types.Object:
 			// Additional metadata is required to determine the type of the list elements.
 			// This is available via the ComplexFieldTypeProvider interface, implemented on the parent type.
 			provider, ok := v.Interface().(tfcommon.ComplexFieldTypeProvider)
@@ -83,6 +83,8 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				switch value.(type) {
 				case types.List:
 					scmAttr[fieldName] = ListAttributeBuilder{ElementType: containerType.ElementType()}
+				case types.Set:
+					scmAttr[fieldName] = SetAttributeBuilder{ElementType: containerType.ElementType()}
 				case types.Map:
 					scmAttr[fieldName] = MapAttributeBuilder{ElementType: containerType.ElementType()}
 				}
@@ -97,6 +99,12 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				case types.List:
 					validators := []validator.List{}
 					scmAttr[fieldName] = ListNestedAttributeBuilder{
+						NestedObject: nestedSchema.ToNestedAttributeObject(),
+						Validators:   validators,
+					}
+				case types.Set:
+					validators := []validator.Set{}
+					scmAttr[fieldName] = SetNestedAttributeBuilder{
 						NestedObject: nestedSchema.ToNestedAttributeObject(),
 						Validators:   validators,
 					}

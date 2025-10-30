@@ -17,6 +17,11 @@ The following arguments are supported:
 * `source` (DataSource, required) - The data source of the feature
 * `time_window` (TimeWindow, required) - The time window in which the feature is computed
 * `description` (string, optional) - The description of the feature
+* `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+
+### ContinuousWindow
+* `window_duration` (string, required) - The duration of the continuous window (must be positive)
+* `offset` (string, optional) - The offset of the continuous window (must be non-positive)
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional)
@@ -34,9 +39,17 @@ The following arguments are supported:
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
 
+### SlidingWindow
+* `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
+* `window_duration` (string, required) - The duration of the sliding window
+
 ### TimeWindow
-* `duration` (string, required) - The duration of the time window
-* `offset` (string, optional) - The offset of the time window
+* `continuous` (ContinuousWindow, optional)
+* `sliding` (SlidingWindow, optional)
+* `tumbling` (TumblingWindow, optional)
+
+### TumblingWindow
+* `window_duration` (string, required) - The duration of each tumbling window (non-overlapping, fixed-duration windows)
 
 
 

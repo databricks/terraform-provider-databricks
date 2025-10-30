@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
+* Improve `databricks_service_principals` data source ([#5163](https://github.com/databricks/terraform-provider-databricks/pull/5163))
 
 ### Bug Fixes
 

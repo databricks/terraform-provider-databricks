@@ -9,7 +9,7 @@
 * Add `provider_config` support for manual plugin framework resources and data sources([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
 
 * Added support for custom instance profiles on instance pools on AWS ([#5144](https://github.com/databricks/terraform-provider-databricks/pull/5144))
-
+* Add `feature_engineering_materialized_feature` resource and data sources([#5166](https://github.com/databricks/terraform-provider-databricks/pull/5166))
 
 ### Bug Fixes
 

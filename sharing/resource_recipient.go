@@ -21,8 +21,13 @@ func recepientPropertiesSuppressDiff(k, old, new string, d *schema.ResourceData)
 	return false
 }
 
+type RecipientResource struct {
+	sharing.RecipientInfo
+	common.Namespace
+}
+
 func ResourceRecipient() common.Resource {
-	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	recipientSchema := common.StructToSchema(RecipientResource{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(
 			validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
 		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
@@ -42,6 +47,8 @@ func ResourceRecipient() common.Resource {
 		for _, path := range []string{"id", "created_at", "created_by", "activation_url", "expiration_time", "updated_at", "updated_by"} {
 			common.CustomizeSchemaPath(s, "tokens", path).SetReadOnly()
 		}
+
+		common.NamespaceCustomizeSchemaMap(s)
 
 		return s
 	})
@@ -127,6 +134,9 @@ func ResourceRecipient() common.Resource {
 				return err
 			}
 			return w.Recipients.DeleteByName(ctx, d.Id())
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

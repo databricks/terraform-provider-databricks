@@ -14,6 +14,7 @@ import (
 
 type Dashboard struct {
 	dashboards.Dashboard
+	common.Namespace
 	EmbedCredentials        bool   `json:"embed_credentials,omitempty"`
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
@@ -56,6 +57,7 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// DiffSuppressFunc
 	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -211,6 +213,9 @@ func ResourceDashboard() common.Resource {
 			}
 
 			return err
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

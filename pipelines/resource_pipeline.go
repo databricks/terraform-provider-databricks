@@ -173,6 +173,7 @@ type Pipeline struct {
 	State                pipelines.PipelineState             `json:"state,omitempty"`
 	// Provides the URL to the pipeline in the Databricks UI.
 	URL string `json:"url,omitempty"`
+	common.Namespace
 }
 
 func (Pipeline) Aliases() map[string]map[string]string {
@@ -273,6 +274,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// RequiredWith fields
 	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -334,6 +336,9 @@ func ResourcePipeline() common.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

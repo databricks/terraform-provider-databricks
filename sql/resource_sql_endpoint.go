@@ -21,6 +21,7 @@ var (
 
 type SqlWarehouse struct {
 	sql.GetWarehouseResponse
+	common.Namespace
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
@@ -98,6 +99,7 @@ func ResourceSqlEndpoint() common.Resource {
 			},
 		}
 
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	return common.Resource{
@@ -176,6 +178,7 @@ func ResourceSqlEndpoint() common.Resource {
 		},
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			common.NamespaceCustomizeDiff(d)
 			return d.Clear("health")
 		},
 	}

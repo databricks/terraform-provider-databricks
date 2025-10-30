@@ -64,7 +64,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 		}
 	}
 
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 }
 
 func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func ResourceWorkspaceConf() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -244,18 +244,11 @@ func ResourceWorkspaceConf() common.Resource {
 			return d.Set("custom_config", config)
 		},
 		Delete: deleteWorkspaceConf,
-		Schema: func() map[string]*schema.Schema {
-			s := map[string]*schema.Schema{
-				"custom_config": {
-					Type:     schema.TypeMap,
-					Optional: true,
-				},
-			}
-			common.NamespaceCustomizeSchemaMap(s)
-			return s
-		}(),
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
+		Schema: map[string]*schema.Schema{
+			"custom_config": {
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
 		},
 	}
 }

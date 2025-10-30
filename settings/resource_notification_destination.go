@@ -108,6 +108,7 @@ func Delete(ctx context.Context, d *schema.ResourceData, w *databricks.Workspace
 
 type NDStruct struct {
 	settings.NotificationDestination
+	common.Namespace
 }
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -157,7 +158,7 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "slack", "url").SetSensitive()
 	s.SchemaPath("config", "slack", "oauth_token").SetSensitive()
 	s.SchemaPath("config", "slack", "channel_id").SetSensitive()
-
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -194,6 +195,9 @@ func ResourceNotificationDestination() common.Resource {
 				return err
 			}
 			return Delete(ctx, d, w)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

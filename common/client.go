@@ -142,7 +142,7 @@ func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
 	// Provider is configured at workspace level and we get the
 	// workspace client from the provider.
 	if workspaceID == "" {
-		return c.WorkspaceClientUnifiedProvider(ctx, d)
+		return c.WorkspaceClient()
 	}
 
 	workspaceIDInt, err := parseWorkspaceID(workspaceID)
@@ -152,7 +152,7 @@ func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
 
 	// Check if the workspace ID specified in the resource matches
 	// the workspace ID of the provider configured workspace client.
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databric
 // over plugin framework.
 func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient,
 	diag.Diagnostics) {
-	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}
 	}
@@ -370,7 +370,7 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databrick
 		}
 		return accCallback(a)
 	} else {
-		ws, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		ws, err := c.WorkspaceClient()
 		if err != nil {
 			return err
 		}

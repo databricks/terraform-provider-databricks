@@ -364,7 +364,7 @@ func TestAccPermissions_Pipeline(t *testing.T) {
 	}, acceptance.Step{
 		Template: policyTemplate,
 		Check: acceptance.ResourceCheck("databricks_pipeline.this", func(ctx context.Context, c *common.DatabricksClient, id string) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			assert.NoError(t, err)
 			pipeline, err := w.Pipelines.GetByPipelineId(context.Background(), id)
 			assert.NoError(t, err)

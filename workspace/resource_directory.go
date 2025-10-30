@@ -40,10 +40,9 @@ func ResourceDirectory() common.Resource {
 			Computed: true,
 		},
 	}
-	common.NamespaceCustomizeSchemaMap(s)
 
 	directoryRead := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		client, err := c.WorkspaceClient()
 		if err != nil {
 			return err
 		}
@@ -67,11 +66,8 @@ func ResourceDirectory() common.Resource {
 
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -87,7 +83,7 @@ func ResourceDirectory() common.Resource {
 		Read:   directoryRead,
 		Update: directoryRead,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

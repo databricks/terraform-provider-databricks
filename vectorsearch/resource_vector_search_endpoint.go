@@ -14,9 +14,14 @@ import (
 const defaultEndpointProvisionTimeout = 75 * time.Minute
 const deleteCallTimeout = 10 * time.Second
 
+type VectorSearchEndpointResource struct {
+	vectorsearch.EndpointInfo
+	common.Namespace
+}
+
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.EndpointInfo{},
+		VectorSearchEndpointResource{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
@@ -36,6 +41,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 				Computed: true,
 			})
 
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
@@ -109,6 +115,9 @@ func ResourceVectorSearchEndpoint() common.Resource {
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultEndpointProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

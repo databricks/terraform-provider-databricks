@@ -30,6 +30,7 @@ type AlertEntity struct {
 	Parent    string        `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 	CreatedAt string        `json:"created_at,omitempty" tf:"computed"`
 	UpdatedAt string        `json:"updated_at,omitempty" tf:"computed"`
+	common.Namespace
 }
 
 func (a *AlertEntity) toCreateAlertApiObject(s map[string]*schema.Schema, data *schema.ResourceData) (sql.CreateAlert, error) {
@@ -125,12 +126,13 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.LegacyAlert, s map[string]*sch
 func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.MustSchemaPath(m, "options", "op").ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
 	return common.Resource{
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -147,7 +149,7 @@ func ResourceSqlAlert() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -160,7 +162,7 @@ func ResourceSqlAlert() common.Resource {
 			return a.fromAPIObject(apiAlert, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -172,7 +174,7 @@ func ResourceSqlAlert() common.Resource {
 			return w.AlertsLegacy.Update(ctx, ca)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -180,5 +182,8 @@ func ResourceSqlAlert() common.Resource {
 		},
 		Schema:             s,
 		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_alert` resource instead.",
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 	}
 }

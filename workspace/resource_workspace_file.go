@@ -29,19 +29,15 @@ func ResourceWorkspaceFile() common.Resource {
 			Computed: true,
 		},
 	})
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
 			}
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -72,7 +68,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -86,7 +82,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -103,7 +99,7 @@ func ResourceWorkspaceFile() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

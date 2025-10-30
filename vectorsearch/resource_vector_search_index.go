@@ -45,9 +45,14 @@ func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Conte
 	})
 }
 
+type VectorSearchIndexResource struct {
+	vectorsearch.VectorIndex
+	common.Namespace
+}
+
 func ResourceVectorSearchIndex() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.VectorIndex{},
+		VectorSearchIndexResource{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.MustSchemaPath(s, "delta_sync_index_spec", "embedding_vector_columns").MinItems = 1
 			exof := []string{"delta_sync_index_spec", "direct_access_index_spec"}
@@ -62,6 +67,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			common.CustomizeSchemaPath(s, "name").SetRequired()
 			common.CustomizeSchemaPath(s, "index_type").SetRequired()
 			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
@@ -115,6 +121,9 @@ func ResourceVectorSearchIndex() common.Resource {
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultIndexProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

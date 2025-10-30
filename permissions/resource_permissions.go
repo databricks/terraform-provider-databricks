@@ -271,7 +271,7 @@ func ResourcePermissions() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

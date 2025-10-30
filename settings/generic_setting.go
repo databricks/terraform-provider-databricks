@@ -288,7 +288,7 @@ func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.Databri
 		}
 		return aw.readAccFunc(ctx, a, etag)
 	} else {
-		ws, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		ws, err := c.WorkspaceClient()
 		if err != nil {
 			return nil, err
 		}
@@ -303,7 +303,7 @@ func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.Datab
 		}
 		return aw.updateAccFunc(ctx, a, t)
 	} else {
-		ws, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		ws, err := c.WorkspaceClient()
 		if err != nil {
 			return "", err
 		}
@@ -318,7 +318,7 @@ func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.Datab
 		}
 		return aw.deleteAccFunc(ctx, a, etag)
 	} else {
-		ws, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		ws, err := c.WorkspaceClient()
 		if err != nil {
 			return "", err
 		}
@@ -366,7 +366,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		var res string
 		switch defn := defn.(type) {
 		case workspaceSettingDefinition[T]:
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -425,7 +425,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			var res *T
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}
@@ -472,7 +472,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			updateETag := func(req *string, newEtag string) { *req = newEtag }
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}

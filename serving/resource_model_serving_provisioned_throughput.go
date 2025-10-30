@@ -14,9 +14,14 @@ const (
 	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
+type ModelServingProvisionedThroughputResource struct {
+	serving.CreatePtEndpointRequest
+	common.Namespace
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -34,6 +39,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
@@ -123,6 +129,9 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultPtProvisionTimeout),
 			Update: schema.DefaultTimeout(defaultPtProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

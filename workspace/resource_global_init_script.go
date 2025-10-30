@@ -44,12 +44,7 @@ func ResourceGlobalInitScript() common.Resource {
 		},
 	}
 	s := FileContentSchemaWithoutPath(extra)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
-		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return common.NamespaceCustomizeDiff(d)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
@@ -59,7 +54,7 @@ func ResourceGlobalInitScript() common.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -76,7 +71,7 @@ func ResourceGlobalInitScript() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -95,7 +90,7 @@ func ResourceGlobalInitScript() common.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -108,12 +103,13 @@ func ResourceGlobalInitScript() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
 			return w.GlobalInitScripts.DeleteByScriptId(ctx, d.Id())
 		},
+		Schema:        s,
 		SchemaVersion: 1,
 		Timeouts:      &schema.ResourceTimeout{},
 	}

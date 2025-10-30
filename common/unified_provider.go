@@ -130,6 +130,11 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
+	// If the workspace_id is not passed in the resource configuration, we don't need to create a new client
+	// and can return the current client.
+	if workspaceID == "" {
+		return c, nil
+	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
 }
 
@@ -151,7 +156,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// If the Databricks Client is not cached, we create a client
 	// and cache it.
-	if c.cachedDatabricksClient == nil {
+	if c.cachedDatabricksClient == nil || c.cachedDatabricksClient[workspaceIDInt] == nil {
 		err := c.setCachedDatabricksClient(ctx, workspaceID)
 		if err != nil {
 			return nil, err
@@ -169,12 +174,19 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	// Acquire the lock to avoid race conditions.
 	c.muLegacy.Lock()
 	defer c.muLegacy.Unlock()
+
+	// Initialize the map if it's nil
+	if c.cachedDatabricksClient == nil {
+		c.cachedDatabricksClient = make(map[int64]*client.DatabricksClient)
+	}
+
 	workspaceIDInt, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return err
 	}
+
 	// Double checked locking
-	if c.cachedDatabricksClient == nil || c.cachedDatabricksClient[workspaceIDInt] == nil {
+	if c.cachedDatabricksClient[workspaceIDInt] == nil {
 		// Get the workspace client for the workspace ID
 		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 		if err != nil {

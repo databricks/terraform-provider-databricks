@@ -67,12 +67,14 @@ resource "databricks_alert_v2" "basic_alert" {
 
 ## Arguments
 The following arguments are supported:
+* `display_name` (string, required) - The display name of the alert
+* `evaluation` (AlertV2Evaluation, required)
+* `query_text` (string, required) - Text of the query to be run
+* `schedule` (CronSchedule, required)
+* `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
-* `display_name` (string, optional) - The display name of the alert
-* `evaluation` (AlertV2Evaluation, optional)
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
-* `query_text` (string, optional) - Text of the query to be run
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
   This field allows you to configure alerts to run as a specific user or service principal.
   - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.
@@ -81,14 +83,12 @@ The following arguments are supported:
 * `run_as_user_name` (string, optional, deprecated) - The run as username or application ID of service principal.
   On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role.
   Deprecated: Use `run_as` field instead. This field will be removed in a future release
-* `schedule` (CronSchedule, optional)
-* `warehouse_id` (string, optional) - ID of the SQL warehouse attached to the alert
 
 ### AlertV2Evaluation
-* `comparison_operator` (string, optional) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
+* `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
+* `source` (AlertV2OperandColumn, required) - Source column from result to use to evaluate alert
 * `empty_result_state` (string, optional) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `notification` (AlertV2Notification, optional) - User or Notification Destination to notify when alert is triggered
-* `source` (AlertV2OperandColumn, optional) - Source column from result to use to evaluate alert
 * `threshold` (AlertV2Operand, optional) - Threshold to user for alert evaluation, can be a column or a value
 
 ### AlertV2Notification
@@ -101,9 +101,9 @@ The following arguments are supported:
 * `value` (AlertV2OperandValue, optional)
 
 ### AlertV2OperandColumn
+* `name` (string, required)
 * `aggregation` (string, optional) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string, optional)
-* `name` (string, optional)
 
 ### AlertV2OperandValue
 * `bool_value` (boolean, optional)
@@ -119,12 +119,12 @@ The following arguments are supported:
 * `user_email` (string, optional)
 
 ### CronSchedule
-* `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`
-* `quartz_cron_schedule` (string, optional) - A cron expression using quartz syntax that specifies the schedule for this pipeline.
+* `quartz_cron_schedule` (string, required) - A cron expression using quartz syntax that specifies the schedule for this pipeline.
   Should use the quartz format described here: http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
-* `timezone_id` (string, optional) - A Java timezone id. The schedule will be resolved using this timezone.
+* `timezone_id` (string, required) - A Java timezone id. The schedule will be resolved using this timezone.
   This will be combined with the quartz_cron_schedule to determine the schedule.
   See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details
+* `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -133,7 +133,7 @@ In addition to the above arguments, the following attributes are exported:
   This is an output-only field that shows the resolved run-as identity after applying
   permissions and defaults
 * `id` (string) - UUID identifying the alert
-* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
+* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `update_time` (string) - The timestamp indicating when the alert was updated
 

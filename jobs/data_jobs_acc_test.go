@@ -37,6 +37,7 @@ func TestAccDataSourcesJob_MismatchedID(t *testing.T) {
 			}
 		}`,
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 
@@ -50,6 +51,7 @@ func TestAccDataSourcesJob_EmptyID(t *testing.T) {
 			}
 		}`,
 		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
 	})
 }
 
@@ -62,6 +64,7 @@ func TestAccDataSourcesJob_EmptyBlock(t *testing.T) {
 			}
 		}`,
 		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
 	})
 }
 

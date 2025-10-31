@@ -149,7 +149,7 @@ func ResourcePermissionAssignment() common.Resource {
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(d)
+			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)

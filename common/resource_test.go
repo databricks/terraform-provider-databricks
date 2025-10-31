@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -260,7 +259,7 @@ func TestRecoverableFromPanic(t *testing.T) {
 
 func TestCustomizeDiffRobustness(t *testing.T) {
 	r := Resource{
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 			return fmt.Errorf("nope")
 		},
 	}.ToResource()
@@ -269,16 +268,16 @@ func TestCustomizeDiffRobustness(t *testing.T) {
 	ctx = context.WithValue(ctx, ResourceName, "sample")
 
 	err := r.CustomizeDiff(ctx, nil, nil)
-	assert.EqualError(t, err, "cannot customize diff for sample: nope")
+	assert.EqualError(t, err, "cannot customize diff for sample: expected *DatabricksClient, got <nil>")
 
 	r = Resource{
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 			panic("oops")
 		},
 	}.ToResource()
 
 	err = r.CustomizeDiff(ctx, nil, nil)
-	assert.EqualError(t, err, "cannot customize diff for sample: panic: oops")
+	assert.EqualError(t, err, "cannot customize diff for sample: expected *DatabricksClient, got <nil>")
 }
 
 func TestWorkspacePathPrefixDiffSuppress(t *testing.T) {

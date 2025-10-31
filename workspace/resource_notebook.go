@@ -416,7 +416,7 @@ func ResourceNotebook() common.Resource {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(d)
+			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 	}
 }

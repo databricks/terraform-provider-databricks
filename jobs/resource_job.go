@@ -1097,7 +1097,7 @@ func ResourceJob() common.Resource {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
-			return common.NamespaceCustomizeDiff(d)
+			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource

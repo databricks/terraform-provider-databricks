@@ -659,6 +659,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
+	"databricks_permission_assignment": {
+		Service:        "idfed",
+		WorkspaceLevel: true,
+		List:           listWorkspacePermissionAssignments,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
+			switch pathString {
+			case "principal_id":
+				return true
+			case "user_name", "service_principal_name", "group_name":
+				return d.Get(pathString).(string) == ""
+			default:
+				return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
+			}
+		},
+		// Note: We don't need dependencies here as we assign permissions by name, not by ID
+	},
 	"databricks_secret_scope": {
 		Service:        "secrets",
 		WorkspaceLevel: true,

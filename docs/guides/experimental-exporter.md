@@ -10,6 +10,7 @@ page_title: "Experimental resource exporter"
 Generates `*.tf` files for Databricks resources and `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating the configuration, we strongly recommend manually reviewing all created files.
 
 ## Installation
+
 The Resource Exporter is available in your Terraform plugin cache once you have initialised a Terraform workspace that uses the Databricks Terraform Provider (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`).
 
 If not, you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
@@ -121,9 +122,13 @@ We can also exclude specific services. For example, we can specify `-services` a
 
 ### Migration between workspaces with identity federation enabled
 
-When Unity Catalog metastore is attached to a workspace, the Identity Federation is enabled on it.  With Identity Federation, users, service principals, and groups are coming from the account level via assignment to a workspace.  But there is still an ability to create workspace-level groups via API, and `databricks_group` resource uses it and always creates workspace-level.  As a result, we shouldn't generate resources for account-level groups, because they will be turned into workspace-level groups.  Due to the limitations of APIs, we can't use `databricks_permission_assignment` on the workspace level to emulate the assignment.
+When Unity Catalog metastore is attached to a workspace, the Identity Federation is enabled on it.  With Identity Federation, users, service principals, and groups are coming from the account level via assignment to a workspace.  But there is still an ability to create workspace-level groups via API, and `databricks_group` resource uses it and always creates workspace-level.  As a result, we shouldn't generate resources for account-level groups, because they will be turned into workspace-level groups.
 
-So migration of resources between two workspaces with Identity Federation enabled should be done in a few steps:
+There two possibilities to perform permission assignment:
+
+#### Account-level approach (same Databricks account)
+
+Migration of resources between two workspaces with Identity Federation enabled should be done in a few steps:
 
 1. On the account level, export `databricks_mws_permission_assignment` resources for your source workspace:
 
@@ -133,7 +138,7 @@ So migration of resources between two workspaces with Identity Federation enable
     -directory output -skip-interactive -noformat
   ```
 
-2. Replace source workspace ID with destination workspace ID in the generated `idfed.tf` file, i.e., with `sed`:
+1. Replace source workspace ID with destination workspace ID in the generated `idfed.tf` file, i.e., with `sed`:
 
   ```sh
   sed -ibak -e 's|workspace_id = <source-workspace-id>|workspace_id = <destination-workspace-id>|' idfed.tf
@@ -141,9 +146,23 @@ So migration of resources between two workspaces with Identity Federation enable
 
   and do `terraform apply` on the account level to assign users, service principals, and groups to a destination workspace.
 
-3. Export resources from the source workspace using the exporter on the workspace level. It will automatically detect that Identity Federation is enabled and export account-level objects as data sources instead of resources.
+1. Export resources from the source workspace using the exporter on the workspace level. It will automatically detect that Identity Federation is enabled and export account-level objects as data sources instead of resources.
 
-4. Apply exported code against the destination workspace.
+1. Apply exported code against the destination workspace.
+
+#### Workspace-level approach (same Databricks account)
+
+When migrating between workspaces inside the same Databricks account, the users/service principals/groups are already provisioned.  In this case we can generate `databricks_permission_assignment` that will use user/SP/group names to perform assignments.  Just use the `idfed` in the `-listing`.
+
+#### Workspace-level approach (different Databricks accounts)
+
+Migration between Databricks accounts should be done in multiple steps:
+
+1. Export users/SPs/groups on the account level.
+1. Export workspace(s) with `idfed` listing included.
+1. Apply account-level export to a new account.  Extract application IDs of newly created service principals.
+1. Adjust service principal IDs in the workspace export.
+1. Apply workspace export to a new workspace.
 
 ## Services
 
@@ -161,7 +180,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
-* `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md).  When listing allows filtering assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
+* `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) (account-level) and [databricks_permission_assignment](../resources/permission_assignment.md) (workspace-level).  When listing is done on account level, you can filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
@@ -262,6 +281,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_notification_destination](../resources/notification_destination.md) | Yes | No | Yes\*\* | No |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable | No | No | No |
 | [databricks_online_table](../resources/online_table.md) | Yes | Yes | Yes | No |
+| [databricks_permission_assignment](../resources/permission_assignment.md) | Yes | No | Yes | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |
 | [databricks_pipeline](../resources/pipeline.md) | Yes | Yes | Yes | No |
 | [databricks_recipient](../resources/recipient.md) | Yes | Yes | Yes | No |

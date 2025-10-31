@@ -481,6 +481,14 @@ var emptySpnsList = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyPermissionAssignments = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/preview/permissionassignments",
+	Response: map[string]any{
+		"permission_assignments": []map[string]any{},
+	},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -530,6 +538,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
 			emptyGlobalSQLConfig,
+			emptyPermissionAssignments,
 			listSpFixtures[0],
 			listSpFixtures[1],
 			{
@@ -801,6 +810,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlAlerts,
 			emptyPipelines,
 			emptyPolicyFamilies,
+			emptyPermissionAssignments,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1681,6 +1691,12 @@ func TestImportingUser(t *testing.T) {
 	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=10000&startIndex=1",
+				Response:     scim.GroupList{Resources: []scim.Group{}},
+				ReuseRequest: true,
+			},
 			userFixture[0],
 			userFixture[1],
 			{
@@ -1791,6 +1807,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
 			getTokensPermissionsFixture,
+			emptyPermissionAssignments,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",

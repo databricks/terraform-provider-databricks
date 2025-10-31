@@ -174,7 +174,7 @@ func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 	})
 }
 
-func TestAccJobCluster_ProviderConfig_ReapplyError(t *testing.T) {
+func TestAccJobCluster_ProviderConfig_RecreateError(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())

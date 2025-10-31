@@ -13,3 +13,4 @@
 ### Exporter
 
 ### Internal Changes
+* Add client support in CustomizeDiff for SDKv2 resources and data sources ([#5171](https://github.com/databricks/terraform-provider-databricks/pull/5171)).

@@ -85,10 +85,6 @@ type DatabricksClient struct {
 	// This is used by legacy SDKv2 resources and data sources not using Go SDK where
 	// a new client is created.
 	muLegacy sync.Mutex
-
-	// isDerivedClient is a flag to indicate if the client is
-	// This fails if the methods for getting
-	isDerivedClient bool
 }
 
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks

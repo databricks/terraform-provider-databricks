@@ -654,6 +654,35 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 				`.*please check the workspace_id provided in ` +
 				`provider_config`,
 		),
+		PlanOnly: true,
+	})
+}
+
+func TestAccShare_ProviderConfig_MismatchedReapply(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client.*workspace_id mismatch` +
+				`.*please check the workspace_id provided in ` +
+				`provider_config`,
+		),
+		PlanOnly: true,
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
 	})
 }
 

@@ -73,9 +73,7 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 		}()
 		c, ok := m.(*DatabricksClient)
 		if !ok {
-			err = nicerError(ctx, fmt.Errorf("expected *DatabricksClient, got %T", m),
-				"customize diff for")
-			return
+			return nicerError(ctx, fmt.Errorf("expected *DatabricksClient, got %T", m), "customize diff for")
 		}
 		err = r.CustomizeDiff(ctx, rd, c)
 		if err != nil {

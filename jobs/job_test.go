@@ -128,6 +128,34 @@ func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccJobCluster_ProviderConfig_MismatchedReapply(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`failed to validate workspace_id: workspace_id mismatch: ` +
+				`provider is configured for workspace ` + workspaceIDStr +
+				` but got 123 in provider_config. ` +
+				`please check the workspace_id provided in provider_config`),
+		PlanOnly: true,
+	}, acceptance.Step{
+		Template: jobClusterTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+	})
+}
+
 func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(`

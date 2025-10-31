@@ -52,6 +52,39 @@ func TestAccDataSourcesJob_MismatchedID(t *testing.T) {
 	})
 }
 
+func TestAccDataSourcesJob_MismatchedIDReapply(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_jobs" "all" {
+			key = "id"
+			provider_config {
+				workspace_id = "123"
+			}
+		}`,
+		ExpectError: regexp.MustCompile(
+			`cannot read jobs: cannot get client jobs: ` +
+				`failed to validate workspace_id: workspace_id mismatch: ` +
+				`provider is configured for workspace ` + workspaceIDStr +
+				` but got 123 in provider_config. ` +
+				`please check the workspace_id provided in provider_config`),
+		PlanOnly: true,
+	}, acceptance.Step{
+		Template: fmt.Sprintf(`
+		data "databricks_jobs" "all" {
+			key = "id"
+			provider_config {
+				workspace_id = "%s"
+			}
+		}`, workspaceIDStr),
+	})
+}
+
 func TestAccDataSourcesJob_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `

@@ -182,6 +182,37 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 	}
 }
 
+func (r *ShareResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+
+	var plan ShareInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var planGoSDK sharing.ShareInfo
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &planGoSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate the workspace ID by making sure we are able to get a workspace client
+	// for the new workspace ID.
+	_, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}
+
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 

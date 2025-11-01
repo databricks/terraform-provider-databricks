@@ -3,27 +3,27 @@ package mws
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceMwsWorkspaces(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces",
-
-				Response: []Workspace{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockWorkspacesAPI().EXPECT().
+				List(mock.Anything).
+				Return([]provisioning.Workspace{
 					{
 						WorkspaceName: "bcd",
-						WorkspaceID:   123,
+						WorkspaceId:   123,
 					},
 					{
 						WorkspaceName: "def",
-						WorkspaceID:   456,
+						WorkspaceId:   456,
 					},
-				},
-			},
+				}, nil)
 		},
 		AccountID:   "abc",
 		Resource:    DataSourceMwsWorkspaces(),
@@ -51,13 +51,10 @@ func TestCatalogsData_Error(t *testing.T) {
 
 func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces",
-
-				Response: []Workspace{},
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockWorkspacesAPI().EXPECT().
+				List(mock.Anything).
+				Return([]provisioning.Workspace{}, nil)
 		},
 		AccountID:   "abc",
 		Resource:    DataSourceMwsWorkspaces(),

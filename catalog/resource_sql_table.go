@@ -611,7 +611,7 @@ func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{}, nil)
 	return common.Resource{
 		Schema: tableSchema,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			if d.HasChange("column") {
 				var newTableStruct SqlTableInfo
 				common.DiffToStructPointer(d, tableSchema, &newTableStruct)

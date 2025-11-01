@@ -78,7 +78,7 @@ func ResourceTable() common.Resource {
 		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			if d.Get("table_type") != "EXTERNAL" {
 				return nil
 			}

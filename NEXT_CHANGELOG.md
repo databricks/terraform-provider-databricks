@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Document support for serverless workspaces on GCP ([#5124](https://github.com/databricks/terraform-provider-databricks/pull/5124))
+
 ### Exporter
 
 ### Internal Changes

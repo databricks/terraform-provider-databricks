@@ -46,12 +46,15 @@ type ResourceDataWrapper interface {
 
 	// Type checking
 	IsPluginFramework() bool
+
+	// Extract typed struct (Plugin Framework only, returns error for SDKv2)
+	GetTypedStruct(ctx context.Context, target interface{}) error
 }
 
 // SchemaWrapper abstracts schema access across SDKv2 and Plugin Framework
 type SchemaWrapper interface {
 	GetFields() []string
-	GetFieldSchema(field string) FieldSchema
+	GetField(field string) FieldSchema
 	IsPluginFramework() bool
 }
 
@@ -72,6 +75,17 @@ type FieldSchema interface {
 	GetKeySchema() FieldSchema      // for map keys
 	GetValueSchema() FieldSchema    // for map values
 	GetDescription() string
+	GetMaxItems() int64 // for lists/sets (0 means no limit)
+
+	// Convenience type checkers
+	IsString() bool
+	IsBool() bool
+	IsInt() bool
+	IsFloat() bool
+	IsMap() bool
+	IsList() bool
+	IsSet() bool
+	IsNested() bool // true if this is a nested object/block
 
 	// Backward compatibility - returns nil for Plugin Framework
 	GetSDKv2Schema() *sdkv2schema.Schema
@@ -113,6 +127,10 @@ func (s *SDKv2ResourceData) IsPluginFramework() bool {
 	return false
 }
 
+func (s *SDKv2ResourceData) GetTypedStruct(ctx context.Context, target interface{}) error {
+	return fmt.Errorf("GetTypedStruct is not supported for SDKv2 resources")
+}
+
 // SDKv2SchemaWrapper wraps *schema.Resource
 type SDKv2SchemaWrapper struct {
 	resource *sdkv2schema.Resource
@@ -126,7 +144,7 @@ func (s *SDKv2SchemaWrapper) GetFields() []string {
 	return fields
 }
 
-func (s *SDKv2SchemaWrapper) GetFieldSchema(field string) FieldSchema {
+func (s *SDKv2SchemaWrapper) GetField(field string) FieldSchema {
 	if sch, ok := s.resource.Schema[field]; ok {
 		return &SDKv2FieldSchema{schema: sch}
 	}
@@ -223,6 +241,46 @@ func (s *SDKv2FieldSchema) GetDescription() string {
 	return s.schema.Description
 }
 
+func (s *SDKv2FieldSchema) GetMaxItems() int64 {
+	return int64(s.schema.MaxItems)
+}
+
+func (s *SDKv2FieldSchema) IsString() bool {
+	return s.GetType() == FieldTypeString
+}
+
+func (s *SDKv2FieldSchema) IsBool() bool {
+	return s.GetType() == FieldTypeBool
+}
+
+func (s *SDKv2FieldSchema) IsInt() bool {
+	return s.GetType() == FieldTypeInt
+}
+
+func (s *SDKv2FieldSchema) IsFloat() bool {
+	return s.GetType() == FieldTypeFloat
+}
+
+func (s *SDKv2FieldSchema) IsMap() bool {
+	return s.GetType() == FieldTypeMap
+}
+
+func (s *SDKv2FieldSchema) IsList() bool {
+	return s.GetType() == FieldTypeList
+}
+
+func (s *SDKv2FieldSchema) IsSet() bool {
+	return s.GetType() == FieldTypeSet
+}
+
+func (s *SDKv2FieldSchema) IsNested() bool {
+	if s.schema.Type == sdkv2schema.TypeList || s.schema.Type == sdkv2schema.TypeSet {
+		_, isResource := s.schema.Elem.(*sdkv2schema.Resource)
+		return isResource
+	}
+	return false
+}
+
 func (s *SDKv2FieldSchema) GetSDKv2Schema() *sdkv2schema.Schema {
 	return s.schema
 }
@@ -306,6 +364,14 @@ func (p *PluginFrameworkResourceData) IsPluginFramework() bool {
 	return true
 }
 
+func (p *PluginFrameworkResourceData) GetTypedStruct(ctx context.Context, target interface{}) error {
+	diags := p.state.Get(ctx, target)
+	if diags.HasError() {
+		return fmt.Errorf("failed to extract typed struct: %v", diags)
+	}
+	return nil
+}
+
 // PluginFrameworkSchemaWrapper wraps Plugin Framework frameworkschema.Schema
 type PluginFrameworkSchemaWrapper struct {
 	schema frameworkschema.Schema
@@ -322,7 +388,7 @@ func (p *PluginFrameworkSchemaWrapper) GetFields() []string {
 	return fields
 }
 
-func (p *PluginFrameworkSchemaWrapper) GetFieldSchema(field string) FieldSchema {
+func (p *PluginFrameworkSchemaWrapper) GetField(field string) FieldSchema {
 	if attr, ok := p.schema.Attributes[field]; ok {
 		return &PluginFrameworkFieldSchema{attribute: attr, isBlock: false}
 	}
@@ -475,6 +541,74 @@ func (p *PluginFrameworkFieldSchema) GetDescription() string {
 	return p.attribute.GetDescription()
 }
 
+func (p *PluginFrameworkFieldSchema) GetMaxItems() int64 {
+	if p.attribute != nil {
+		if listAttr, ok := p.attribute.(frameworkschema.ListAttribute); ok {
+			// Plugin Framework doesn't expose MaxItems directly, return 0 (no limit)
+			_ = listAttr
+			return 0
+		}
+		if setAttr, ok := p.attribute.(frameworkschema.SetAttribute); ok {
+			_ = setAttr
+			return 0
+		}
+	}
+	if p.block != nil {
+		if nestedBlock, ok := p.block.(frameworkschema.ListNestedBlock); ok {
+			_ = nestedBlock
+			// Check validators for MaxItems constraint
+			// For now, return 0 (no limit)
+			return 0
+		}
+		if singleBlock, ok := p.block.(frameworkschema.SingleNestedBlock); ok {
+			_ = singleBlock
+			return 1
+		}
+	}
+	return 0
+}
+
+func (p *PluginFrameworkFieldSchema) IsString() bool {
+	return p.GetType() == FieldTypeString
+}
+
+func (p *PluginFrameworkFieldSchema) IsBool() bool {
+	return p.GetType() == FieldTypeBool
+}
+
+func (p *PluginFrameworkFieldSchema) IsInt() bool {
+	return p.GetType() == FieldTypeInt
+}
+
+func (p *PluginFrameworkFieldSchema) IsFloat() bool {
+	return p.GetType() == FieldTypeFloat
+}
+
+func (p *PluginFrameworkFieldSchema) IsMap() bool {
+	return p.GetType() == FieldTypeMap
+}
+
+func (p *PluginFrameworkFieldSchema) IsList() bool {
+	return p.GetType() == FieldTypeList
+}
+
+func (p *PluginFrameworkFieldSchema) IsSet() bool {
+	return p.GetType() == FieldTypeSet
+}
+
+func (p *PluginFrameworkFieldSchema) IsNested() bool {
+	if p.block != nil {
+		return true
+	}
+	if p.attribute != nil {
+		_, isList := p.attribute.(frameworkschema.ListNestedAttribute)
+		_, isSet := p.attribute.(frameworkschema.SetNestedAttribute)
+		_, isSingle := p.attribute.(frameworkschema.SingleNestedAttribute)
+		return isList || isSet || isSingle
+	}
+	return false
+}
+
 func (p *PluginFrameworkFieldSchema) GetSDKv2Schema() *sdkv2schema.Schema {
 	return nil
 }
@@ -496,7 +630,7 @@ func (p *PluginFrameworkNestedSchemaWrapper) GetFields() []string {
 	return fields
 }
 
-func (p *PluginFrameworkNestedSchemaWrapper) GetFieldSchema(field string) FieldSchema {
+func (p *PluginFrameworkNestedSchemaWrapper) GetField(field string) FieldSchema {
 	if attr, ok := p.attrs[field]; ok {
 		return &PluginFrameworkFieldSchema{attribute: attr, isBlock: false}
 	}

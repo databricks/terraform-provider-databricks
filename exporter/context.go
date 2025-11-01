@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,6 +28,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
@@ -723,21 +725,51 @@ func (ic *importContext) Add(r *resource) {
 	}
 	ic.importing[rString] = true // mark resource as added
 	ic.importingMutex.Unlock()
-	state := r.Data.State()
-	if state == nil {
-		log.Printf("[ERROR] state is nil for %s", r)
-		return
-	}
+
 	inst := instanceApproximation{
 		Attributes: map[string]any{},
 	}
-	for k, v := range state.Attributes {
-		inst.Attributes[k] = v
+
+	// For Plugin Framework resources, we need to extract attributes differently
+	ir := ic.Importables[r.Resource]
+	if ir.PluginFramework && r.Data == nil && r.DataWrapper != nil {
+		// For Plugin Framework, we'll create a minimal approximation
+		// The actual attributes will be generated from the wrapper during HCL generation
+		// For now, we just need the ID and basic info for dependency resolution
+		inst.Attributes["id"] = r.ID
+
+		// Try to extract commonly used fields for dependency matching
+		if wrapper := r.DataWrapper; wrapper != nil {
+			// Extract all top-level string fields that might be used for matching
+			schema := wrapper.GetSchema()
+			for _, fieldName := range schema.GetFields() {
+				if val, ok := wrapper.GetOk(fieldName); ok {
+					// Only store simple types that can be used for matching
+					switch v := val.(type) {
+					case string:
+						inst.Attributes[fieldName] = v
+					case int, int32, int64, float32, float64, bool:
+						inst.Attributes[fieldName] = v
+					}
+				}
+			}
+		}
+	} else {
+		// SDKv2 resource - use existing logic
+		state := r.Data.State()
+		if state == nil {
+			log.Printf("[ERROR] state is nil for %s", r)
+			return
+		}
+		for k, v := range state.Attributes {
+			inst.Attributes[k] = v
+		}
+		inst.Attributes["id"] = r.ID
 	}
+
 	if r.Mode == "" {
 		r.Mode = "managed"
 	}
-	inst.Attributes["id"] = r.ID
 	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
 		Type:      r.Resource,
@@ -758,7 +790,23 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(ic, r.Data)
+		// For Plugin Framework resources, r.Data is nil but r.DataWrapper exists
+		// We need to handle name generation differently
+		ir := ic.Importables[r.Resource]
+		if ir.PluginFramework && r.Data == nil && r.DataWrapper != nil {
+			// For Plugin Framework, generate name directly from wrapper
+			// Most Plugin Framework resources use makeNamePlusIdFunc("field_name")
+			// For alert_v2, it's makeNamePlusIdFunc("display_name")
+			// We'll extract the display_name value and append the ID
+			if displayName, ok := r.DataWrapper.GetOk("display_name"); ok && displayName != "" {
+				name = displayName.(string) + "_" + r.ID
+			} else {
+				// Fallback to just using ID
+				name = r.ID
+			}
+		} else {
+			name = ir.Name(ic, r.Data)
+		}
 	}
 	if name == "" {
 		name = r.ID
@@ -838,8 +886,11 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	ic.importing[rString] = false // we're starting to add a new resource
 	ic.importingMutex.Unlock()
-	_, ok = ic.Resources[r.Resource]
-	if !ok {
+
+	// Check if resource is available in either SDKv2 or Plugin Framework provider
+	_, okSDKv2 := ic.Resources[r.Resource]
+	_, okPluginFW := ic.PluginFrameworkResources[r.Resource]
+	if !okSDKv2 && !okPluginFW {
 		log.Printf("[ERROR] %s is not available in provider", r)
 		return
 	}
@@ -902,7 +953,6 @@ func (ic *importContext) readSDKv2Resource(r *resource, ir importable) ResourceD
 	return &SDKv2ResourceData{data: sdkData, schema: pr}
 }
 
-// readPluginFrameworkResource reads a Plugin Framework resource and wraps it in ResourceDataWrapper
 func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable) ResourceDataWrapper {
 	pfResource := ic.PluginFrameworkResources[r.Resource]
 	if pfResource == nil {
@@ -926,21 +976,45 @@ func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable)
 		}
 	}
 
-	// Create empty state
+	// Create state with proper initialization
+	// We need to initialize the Raw field with an ObjectType that matches the schema
+	attrTypes := make(map[string]attr.Type)
+	for name, attr := range pfSchema.GetAttributes() {
+		attrTypes[name] = attr.GetType()
+	}
+
+	// Convert to tftypes.Value for the Raw field
+	nullObj := types.ObjectNull(attrTypes)
+	rawValue, err := nullObj.ToTerraformValue(ic.Context)
+	if err != nil {
+		log.Printf("[ERROR] Failed to convert null object to terraform value for %s: %v", r.Resource, err)
+		return nil
+	}
+
+	// Initialize state with a null object of the correct type
 	state := tfsdk.State{
 		Schema: pfSchema,
+		Raw:    rawValue,
 	}
+
+	// Set the ID in the state
 	state.SetAttribute(ic.Context, path.Root("id"), types.StringValue(r.ID))
 
 	var finalState *tfsdk.State
 
 	// Call Plugin Framework Read with retry logic
-	err := runWithRetries(func() error {
+	err = runWithRetries(func() error {
+		// Create a fresh response state for each retry
+		respState := tfsdk.State{
+			Schema: pfSchema,
+			Raw:    rawValue,
+		}
+
 		readReq := frameworkresource.ReadRequest{
 			State: state,
 		}
 		readResp := frameworkresource.ReadResponse{
-			State: state,
+			State: respState,
 		}
 
 		pfResource.Read(ic.Context, readReq, &readResp)
@@ -966,4 +1040,46 @@ func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable)
 	}
 
 	return &PluginFrameworkResourceData{state: finalState, schema: pfSchema}
+}
+
+// convertPluginFrameworkToGoSdk is a generic helper that converts Plugin Framework state to Go SDK struct.
+// It performs a two-step conversion:
+// 1. Extracts the typed TF struct from the wrapper (Plugin Framework types)
+// 2. Converts the TF struct to Go SDK struct (native Go types)
+//
+// Type parameters:
+//   - TTF: The Terraform Plugin Framework struct type (e.g., alert_v2_resource.AlertV2)
+//   - TGo: The Go SDK struct type (e.g., sql.AlertV2)
+//
+// Example usage:
+//
+//	var alert sql.AlertV2
+//	err := ic.convertPluginFrameworkToGoSdk(
+//	    wrapper,
+//	    alert_v2_resource.AlertV2{},
+//	    &alert,
+//	)
+func convertPluginFrameworkToGoSdk[TTF any, TGo any](
+	ic *importContext,
+	wrapper ResourceDataWrapper,
+	_ TTF,
+	goSdkTarget *TGo,
+) error {
+	if wrapper == nil {
+		return fmt.Errorf("wrapper is nil")
+	}
+
+	// Step 1: Extract typed TF struct from state
+	var tfStruct TTF
+	if err := wrapper.GetTypedStruct(ic.Context, &tfStruct); err != nil {
+		return fmt.Errorf("failed to extract TF struct: %w", err)
+	}
+
+	// Step 2: Convert TF struct to Go SDK struct
+	diags := converters.TfSdkToGoSdkStruct(ic.Context, tfStruct, goSdkTarget)
+	if diags.HasError() {
+		return fmt.Errorf("failed to convert to Go SDK struct: %v", diags)
+	}
+
+	return nil
 }

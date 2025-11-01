@@ -26,6 +26,7 @@ import (
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	alert_v2_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/alert_v2"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -1246,6 +1247,65 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
 			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_alert_v2": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "alerts",
+		Name:            makeNamePlusIdFunc("display_name"),
+		List:            listAlertsV2,
+		// Body function removed - using generic HCL generation for Plugin Framework resources
+		Import: func(ic *importContext, r *resource) error {
+			// Convert Plugin Framework state to Go SDK struct
+			var alert sql.AlertV2
+			if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper, alert_v2_resource.AlertV2{}, &alert); err != nil {
+				return err
+			}
+
+			// Emit dependencies - now using plain Go strings!
+			if alert.WarehouseId != "" {
+				ic.Emit(&resource{Resource: "databricks_sql_endpoint", ID: alert.WarehouseId})
+			}
+
+			if alert.ParentPath != "" {
+				ic.emitDirectoryOrRepo(alert.ParentPath)
+			}
+
+			if alert.OwnerUserName != "" {
+				ic.emitUserOrServicePrincipal(alert.OwnerUserName)
+			}
+
+			// Handle evaluation.notification.subscriptions
+			if alert.Evaluation.Notification != nil {
+				for _, sub := range alert.Evaluation.Notification.Subscriptions {
+					if sub.DestinationId != "" {
+						ic.Emit(&resource{Resource: "databricks_notification_destination", ID: sub.DestinationId})
+					}
+					// user_email is only for users (email addresses), not service principals (UUIDs)
+					// emitUserOrServicePrincipal will automatically handle this correctly
+					if sub.UserEmail != "" {
+						ic.emitUserOrServicePrincipal(sub.UserEmail)
+					}
+				}
+			}
+
+			// For Plugin Framework resources, we can't use r.Data directly, use the wrapper ID
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/alerts/%s", r.ID),
+				"alert_v2_"+r.Name)
+			return nil
+		},
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_alert_v2", "display_name"),
+		Depends: []reference{
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_directory"},
+			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "evaluation.notification.subscriptions.destination_id", Resource: "databricks_notification_destination"},
+			{Path: "evaluation.notification.subscriptions.user_email", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_pipeline": {

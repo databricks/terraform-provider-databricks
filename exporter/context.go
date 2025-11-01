@@ -18,15 +18,24 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkv2diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"golang.org/x/exp/maps"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	frameworkschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 /** High level overview of importer design:
@@ -59,17 +68,22 @@ type gitInfoCacheEntry struct {
 
 type importContext struct {
 	// not modified/used only in single thread
-	Module            string
-	Context           context.Context
-	Client            *common.DatabricksClient
-	Importables       map[string]importable
-	Resources         map[string]*schema.Resource
-	Directory         string
-	nameFixes         []regexFix
-	hclFixes          []regexFix
-	variables         map[string]string
-	variablesLock     sync.Mutex
-	workspaceConfKeys map[string]any
+	Module      string
+	Context     context.Context
+	Client      *common.DatabricksClient
+	Importables map[string]importable
+	Resources   map[string]*schema.Resource
+	Directory   string
+
+	// Plugin Framework support
+	PluginFrameworkProvider  provider.Provider
+	PluginFrameworkResources map[string]frameworkresource.Resource
+	PluginFrameworkSchemas   map[string]frameworkschema.Schema
+	nameFixes                []regexFix
+	hclFixes                 []regexFix
+	variables                map[string]string
+	variablesLock            sync.Mutex
+	workspaceConfKeys        map[string]any
 
 	workspaceClient *databricks.WorkspaceClient
 	accountClient   *databricks.AccountClient
@@ -263,6 +277,35 @@ func makeResourcesChannels() map[string]resourceChannel {
 	return channels
 }
 
+// initializePluginFrameworkProvider initializes the Plugin Framework provider and caches all resource schemas
+func initializePluginFrameworkProvider(ctx context.Context) (provider.Provider, map[string]frameworkresource.Resource, map[string]frameworkschema.Schema) {
+	pfProvider := pluginfw.GetDatabricksProviderPluginFramework()
+	pfResources := make(map[string]frameworkresource.Resource)
+	pfSchemas := make(map[string]frameworkschema.Schema)
+
+	// Get all Plugin Framework resources
+	resourceFuncs := pfProvider.Resources(ctx)
+	for _, resourceFunc := range resourceFuncs {
+		res := resourceFunc()
+
+		// Get resource metadata to find its name
+		metadataReq := frameworkresource.MetadataRequest{}
+		metadataResp := frameworkresource.MetadataResponse{}
+		res.Metadata(ctx, metadataReq, &metadataResp)
+
+		// Store resource instance
+		pfResources[metadataResp.TypeName] = res
+
+		// Cache schema
+		schemaReq := frameworkresource.SchemaRequest{}
+		schemaResp := frameworkresource.SchemaResponse{}
+		res.Schema(ctx, schemaReq, &schemaResp)
+		pfSchemas[metadataResp.TypeName] = schemaResp.Schema
+	}
+
+	return pfProvider, pfResources, pfSchemas
+}
+
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := sdkv2.DatabricksProvider()
 	p.TerraformVersion = "exporter"
@@ -278,12 +321,19 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize*3)
 
 	supportedResources := maps.Keys(resourcesMap)
+
+	// Initialize Plugin Framework provider
+	pfProvider, pfResources, pfSchemas := initializePluginFrameworkProvider(ctx)
+
 	return &importContext{
 		Client:                    c,
 		Context:                   ctx,
 		State:                     newStateApproximation(supportedResources),
 		Importables:               resourcesMap,
 		Resources:                 p.ResourcesMap,
+		PluginFrameworkProvider:   pfProvider,
+		PluginFrameworkResources:  pfResources,
+		PluginFrameworkSchemas:    pfSchemas,
 		Scope:                     importedResources{},
 		importing:                 map[string]bool{},
 		nameFixes:                 nameFixes,
@@ -815,4 +865,105 @@ func (ic *importContext) Emit(r *resource) {
 		ic.waitGroup.Add(1)
 		ic.defaultChannel <- r
 	}
+}
+
+// readSDKv2Resource reads an SDKv2 resource and wraps it in ResourceDataWrapper
+func (ic *importContext) readSDKv2Resource(r *resource, ir importable) ResourceDataWrapper {
+	pr := ic.Resources[r.Resource]
+	sdkData := pr.Data(&terraform.InstanceState{
+		Attributes: map[string]string{},
+		ID:         r.ID,
+	})
+	sdkData.MarkNewResource()
+
+	resourceName := strings.ReplaceAll(r.Resource, "databricks_", "")
+	ctx := context.WithValue(ic.Context, common.ResourceName, resourceName)
+	if ir.ApiVersion != "" {
+		ctx = context.WithValue(ctx, common.Api, ir.ApiVersion)
+	}
+
+	dia := runWithRetries(func() sdkv2diag.Diagnostics {
+		return pr.ReadContext(ctx, sdkData, ic.Client)
+	}, fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+
+	if dia.HasError() {
+		log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
+		return nil
+	}
+
+	if sdkData.Id() == "" {
+		if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+			log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+		}
+		return nil
+	}
+
+	return &SDKv2ResourceData{data: sdkData, schema: pr}
+}
+
+// readPluginFrameworkResource reads a Plugin Framework resource and wraps it in ResourceDataWrapper
+func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable) ResourceDataWrapper {
+	pfResource := ic.PluginFrameworkResources[r.Resource]
+	if pfResource == nil {
+		log.Printf("[ERROR] Plugin Framework resource %s not found", r.Resource)
+		return nil
+	}
+
+	pfSchema := ic.PluginFrameworkSchemas[r.Resource]
+
+	// Configure the resource with client if it supports configuration
+	if configurable, ok := pfResource.(frameworkresource.ResourceWithConfigure); ok {
+		configureReq := frameworkresource.ConfigureRequest{
+			ProviderData: ic.Client,
+		}
+		configureResp := frameworkresource.ConfigureResponse{}
+		configurable.Configure(ic.Context, configureReq, &configureResp)
+
+		if configureResp.Diagnostics.HasError() {
+			log.Printf("[ERROR] Error configuring %s: %v", r.Resource, configureResp.Diagnostics)
+			return nil
+		}
+	}
+
+	// Create empty state
+	state := tfsdk.State{
+		Schema: pfSchema,
+	}
+	state.SetAttribute(ic.Context, path.Root("id"), types.StringValue(r.ID))
+
+	var finalState *tfsdk.State
+
+	// Call Plugin Framework Read with retry logic
+	err := runWithRetries(func() error {
+		readReq := frameworkresource.ReadRequest{
+			State: state,
+		}
+		readResp := frameworkresource.ReadResponse{
+			State: state,
+		}
+
+		pfResource.Read(ic.Context, readReq, &readResp)
+
+		if readResp.Diagnostics.HasError() {
+			return fmt.Errorf("read failed: %v", readResp.Diagnostics)
+		}
+
+		finalState = &readResp.State
+		return nil
+	}, fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+
+	if err != nil {
+		log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
+		return nil
+	}
+
+	// Check if resource still exists
+	if finalState.Raw.IsNull() {
+		log.Printf("[WARN] %s %s has been deleted", r.Resource, r.ID)
+		ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+		return nil
+	}
+
+	return &PluginFrameworkResourceData{state: finalState, schema: pfSchema}
 }

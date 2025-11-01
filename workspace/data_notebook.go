@@ -56,7 +56,7 @@ func DataSourceNotebook() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			m, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func DataSourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
-			notebooksAPI := NewNotebooksAPI(ctx, m)
+			notebooksAPI := NewNotebooksAPI(ctx, newClient)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)
 			notebookContent, err := notebooksAPI.Export(path, format)

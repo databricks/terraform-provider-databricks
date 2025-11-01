@@ -19,8 +19,13 @@ func isOnlyOneGitCredentialForProviderError(err error) bool {
 		(strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time"))
 }
 
+type GitCredentialResource struct {
+	workspace.CreateCredentialsRequest
+	common.Namespace
+}
+
 func ResourceGitCredential() common.Resource {
-	s := common.StructToSchema(workspace.CreateCredentialsRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(GitCredentialResource{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -30,6 +35,7 @@ func ResourceGitCredential() common.Resource {
 			"GITLAB_TOKEN",               // https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs
 			"AZDO_PERSONAL_ACCESS_TOKEN", // https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs
 		}, nil)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 
@@ -37,7 +43,7 @@ func ResourceGitCredential() common.Resource {
 		Schema:        s,
 		SchemaVersion: 1,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -71,7 +77,7 @@ func ResourceGitCredential() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -96,7 +102,7 @@ func ResourceGitCredential() common.Resource {
 				return err
 			}
 			req.CredentialId = cred_id
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -109,7 +115,7 @@ func ResourceGitCredential() common.Resource {
 			return w.GitCredentials.Update(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -118,6 +124,9 @@ func ResourceGitCredential() common.Resource {
 				return err
 			}
 			return w.GitCredentials.DeleteByCredentialId(ctx, cred_id)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

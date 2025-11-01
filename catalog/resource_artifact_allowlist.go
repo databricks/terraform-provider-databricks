@@ -19,14 +19,18 @@ type ArtifactAllowlistInfo struct {
 	CreatedBy string `json:"created_by,omitempty" tf:"computed"`
 	// Unique identifier of parent metastore.
 	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
+	common.Namespace
 }
 
 func ResourceArtifactAllowlist() common.Resource {
-	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, common.NoCustomize)
+	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.NamespaceCustomizeSchemaMap(s)
+		return s
+	})
 	p := common.NewPairID("metastore_id", "artifact_type")
 
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		w, err := c.WorkspaceClient()
+		w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 		if err != nil {
 			return err
 		}
@@ -53,9 +57,12 @@ func ResourceArtifactAllowlist() common.Resource {
 	}
 	return common.Resource{
 		Schema: allowlistSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -82,7 +89,7 @@ func ResourceArtifactAllowlist() common.Resource {
 		},
 		Update: createOrUpdate,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

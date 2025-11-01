@@ -131,8 +131,13 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
+type GrantResource struct {
+	permissions.UnityCatalogPrivilegeAssignment
+	common.Namespace
+}
+
 func ResourceGrant() common.Resource {
-	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
+	s := common.StructToSchema(GrantResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
@@ -155,13 +160,17 @@ func ResourceGrant() common.Resource {
 					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -208,7 +217,7 @@ func ResourceGrant() common.Resource {
 			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -233,7 +242,7 @@ func ResourceGrant() common.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

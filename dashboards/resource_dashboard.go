@@ -14,6 +14,7 @@ import (
 
 type Dashboard struct {
 	dashboards.Dashboard
+	common.Namespace
 	EmbedCredentials        bool   `json:"embed_credentials,omitempty"`
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
@@ -56,6 +57,7 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// DiffSuppressFunc
 	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -66,7 +68,7 @@ func ResourceDashboard() common.Resource {
 	return common.Resource{
 		Schema: dashboardSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -115,7 +117,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -138,7 +140,7 @@ func ResourceDashboard() common.Resource {
 			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -181,7 +183,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -211,6 +213,9 @@ func ResourceDashboard() common.Resource {
 			}
 
 			return err
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

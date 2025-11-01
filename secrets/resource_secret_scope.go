@@ -15,11 +15,15 @@ import (
 )
 
 // SecretScope is a struct that encapsulates the secret scope
-type SecretScope workspace.CreateScope
+type SecretScope struct {
+	workspace.CreateScope
+	common.Namespace
+}
 
 func (s SecretScope) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
 	m.SchemaPath("name").SetValidateFunc(validScope)
 	m.SchemaPath("backend_type").SetComputed()
+	common.NamespaceCustomizeSchema(m)
 	return m
 }
 
@@ -68,7 +72,7 @@ func ResourceSecretScope() common.Resource {
 		Schema:        s,
 		SchemaVersion: 2,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -79,14 +83,14 @@ func ResourceSecretScope() common.Resource {
 			} else {
 				scope.ScopeBackendType = "DATABRICKS"
 			}
-			if err := w.Secrets.CreateScope(ctx, workspace.CreateScope(scope)); err != nil {
+			if err := w.Secrets.CreateScope(ctx, workspace.CreateScope(scope.CreateScope)); err != nil {
 				return err
 			}
 			d.SetId(scope.Scope)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -97,11 +101,14 @@ func ResourceSecretScope() common.Resource {
 			return common.StructToData(scope, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			return w.Secrets.DeleteScope(ctx, workspace.DeleteScope{Scope: d.Id()})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

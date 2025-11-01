@@ -29,6 +29,7 @@ type VolumeInfo struct {
 	// The storage location on the cloud
 	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
 	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
+	common.Namespace
 }
 
 func getNameFromId(id string) (string, error) {
@@ -58,12 +59,16 @@ func ResourceVolume() common.Resource {
 			// If server side validation is added in the future, this validation function
 			// can be removed.
 			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -90,7 +95,7 @@ func ResourceVolume() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -105,7 +110,7 @@ func ResourceVolume() common.Resource {
 			return d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -163,7 +168,7 @@ func ResourceVolume() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

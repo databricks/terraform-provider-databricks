@@ -149,10 +149,14 @@ type importable struct {
 	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
 	// Function to detect if the given resource should be ignored or not
 	Ignore func(ic *importContext, r *resource) bool
-	// Function to check if the field in the given resource should be omitted or not
+	// Function to check if the field in the given resource should be omitted or not (SDKv2 signature - deprecated)
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
-	// Function to check if the field in the given resource should be generated or not independently of the value
+	// Function to check if the field in the given resource should be generated or not independently of the value (SDKv2 signature - deprecated)
 	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
+	// Unified function to check if field should be omitted (works with both SDKv2 and Plugin Framework)
+	ShouldOmitFieldUnified func(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool
+	// Unified function to check if field should be generated (works with both SDKv2 and Plugin Framework)
+	ShouldGenerateFieldUnified func(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource

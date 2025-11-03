@@ -29,8 +29,13 @@ func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Conte
 	})
 }
 
+type OnlineTableResource struct {
+	catalog.OnlineTable
+	common.Namespace
+}
+
 func ResourceOnlineTable() common.Resource {
-	s := common.StructToSchema(catalog.OnlineTable{},
+	s := common.StructToSchema(OnlineTableResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -43,12 +48,17 @@ func ResourceOnlineTable() common.Resource {
 			runTypes := []string{"spec.0.run_triggered", "spec.0.run_continuously"}
 			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf(runTypes).SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf(runTypes).SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
+		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -69,7 +79,7 @@ func ResourceOnlineTable() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -80,7 +90,7 @@ func ResourceOnlineTable() common.Resource {
 			return common.StructToData(*table, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -91,7 +101,6 @@ func ResourceOnlineTable() common.Resource {
 			return waitForOnlineTableDeletion(w, ctx, d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},
-		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(onlineTableDefaultProvisionTimeout),

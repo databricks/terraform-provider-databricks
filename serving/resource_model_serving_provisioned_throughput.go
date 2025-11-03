@@ -14,9 +14,14 @@ const (
 	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
+type ModelServingProvisionedThroughputResource struct {
+	serving.CreatePtEndpointRequest
+	common.Namespace
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -34,12 +39,13 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -62,7 +68,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			var sOrig serving.ServingEndpointDetailed
 			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
@@ -80,7 +86,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -113,7 +119,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -123,6 +129,9 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultPtProvisionTimeout),
 			Update: schema.DefaultTimeout(defaultPtProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

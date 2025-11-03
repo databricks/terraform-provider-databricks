@@ -8,9 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type RegisteredModelResource struct {
+	catalog.CreateRegisteredModelRequest
+	common.Namespace
+}
+
 func ResourceRegisteredModel() common.Resource {
 	s := common.StructToSchema(
-		catalog.CreateRegisteredModelRequest{},
+		RegisteredModelResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 			for _, field := range caseInsensitiveFields {
@@ -34,12 +39,17 @@ func ResourceRegisteredModel() common.Resource {
 				}
 			}
 
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
+		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -65,7 +75,7 @@ func ResourceRegisteredModel() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -76,7 +86,7 @@ func ResourceRegisteredModel() common.Resource {
 			return common.StructToData(*model, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -122,14 +132,13 @@ func ResourceRegisteredModel() common.Resource {
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			return w.RegisteredModels.DeleteByFullName(ctx, d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},
-		Schema:         s,
 		SchemaVersion:  0,
 	}
 }

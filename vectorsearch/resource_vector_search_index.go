@@ -45,9 +45,14 @@ func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Conte
 	})
 }
 
+type VectorSearchIndexResource struct {
+	vectorsearch.VectorIndex
+	common.Namespace
+}
+
 func ResourceVectorSearchIndex() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.VectorIndex{},
+		VectorSearchIndexResource{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.MustSchemaPath(s, "delta_sync_index_spec", "embedding_vector_columns").MinItems = 1
 			exof := []string{"delta_sync_index_spec", "direct_access_index_spec"}
@@ -62,12 +67,13 @@ func ResourceVectorSearchIndex() common.Resource {
 			common.CustomizeSchemaPath(s, "name").SetRequired()
 			common.CustomizeSchemaPath(s, "index_type").SetRequired()
 			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -89,7 +95,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -100,7 +106,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return common.StructToData(*index, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -115,6 +121,9 @@ func ResourceVectorSearchIndex() common.Resource {
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultIndexProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

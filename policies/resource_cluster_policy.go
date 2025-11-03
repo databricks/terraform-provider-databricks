@@ -25,8 +25,13 @@ func isBuiltinPolicyFamily(ctx context.Context, w *databricks.WorkspaceClient, f
 	return false, nil
 }
 
+type ClusterPolicyResource struct {
+	compute.CreatePolicy
+	common.Namespace
+}
+
 var rcpSchema = common.StructToSchema(
-	compute.CreatePolicy{},
+	ClusterPolicyResource{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["policy_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -41,6 +46,7 @@ var rcpSchema = common.StructToSchema(
 		m["policy_family_id"].ConflictsWith = []string{"definition"}
 		m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
 
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -57,7 +63,7 @@ func ResourceClusterPolicy() common.Resource {
 			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -94,7 +100,7 @@ func ResourceClusterPolicy() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -105,7 +111,7 @@ func ResourceClusterPolicy() common.Resource {
 			return common.StructToData(resp, rcpSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -120,7 +126,7 @@ func ResourceClusterPolicy() common.Resource {
 			return w.ClusterPolicies.Edit(ctx, request)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -139,6 +145,9 @@ func ResourceClusterPolicy() common.Resource {
 				}
 			}
 			return w.ClusterPolicies.DeleteByPolicyId(ctx, d.Id())
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return common.NamespaceCustomizeDiff(d)
 		},
 	}
 }

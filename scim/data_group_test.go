@@ -83,6 +83,7 @@ func TestDataSourceGroup(t *testing.T) {
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"acl_principal_id":           "groups/ds",
+		"roles":                      []string{"a", "b"},
 		"instance_profiles":          []string{"a", "b"},
 		"members":                    []string{"1112", "1113", "1114"},
 		"groups":                     []string{"abc"},

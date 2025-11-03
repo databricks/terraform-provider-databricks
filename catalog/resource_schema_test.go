@@ -41,7 +41,11 @@ func TestCreateSchema(t *testing.T) {
 		catalog_name = "b"
 		comment = "c"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment":      "c",
+		"owner":        "testers",
+		"metastore_id": "d",
+	})
 }
 
 func TestCreateSchemaWithOwner(t *testing.T) {
@@ -83,7 +87,12 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 		owner = "administrators"
 		enable_predictive_optimization = "ENABLE"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment":                        "c",
+		"owner":                          "administrators",
+		"metastore_id":                   "d",
+		"enable_predictive_optimization": "ENABLE",
+	})
 }
 
 func TestUpdateSchema(t *testing.T) {
@@ -132,7 +141,13 @@ func TestUpdateSchema(t *testing.T) {
 		comment = "d"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":         "a",
+		"catalog_name": "b",
+		"comment":      "d",
+		"owner":        "administrators",
+		"metastore_id": "d",
+	})
 }
 
 func TestUpdateSchemaSetEmptyComment(t *testing.T) {
@@ -203,7 +218,13 @@ func TestUpdateSchemaChangeForceDestroy(t *testing.T) {
 		catalog_name = "b"
 		force_destroy = false
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":          "a",
+		"catalog_name":  "b",
+		"metastore_id":  "d",
+		"owner":         "administrators",
+		"force_destroy": false,
+	})
 }
 
 func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
@@ -249,7 +270,13 @@ func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
 		comment = "d"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":         "a",
+		"catalog_name": "b",
+		"comment":      "d",
+		"owner":        "administrators",
+		"metastore_id": "d",
+	})
 }
 
 func TestUpdateSchemaRollback(t *testing.T) {
@@ -382,7 +409,12 @@ func TestUpdateSchemaForceNew(t *testing.T) {
 		comment = "c"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":         "a",
+		"metastore_id": "d",
+		"comment":      "c",
+		"owner":        "administrators",
+	})
 }
 
 func TestDeleteSchema(t *testing.T) {
@@ -399,7 +431,9 @@ func TestDeleteSchema(t *testing.T) {
 		comment = "c"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "b.a",
+	})
 }
 
 func TestForceDeleteSchema(t *testing.T) {
@@ -417,5 +451,7 @@ func TestForceDeleteSchema(t *testing.T) {
 		owner = "administrators"
 		force_destroy = true
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "b.a",
+	})
 }

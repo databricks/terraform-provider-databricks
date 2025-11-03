@@ -198,7 +198,8 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()
-	s.SchemaPath("catalog").SetForceNew()
+	// catalog can be updated in-place, but switching between storage and catalog requires recreation
+	// (handled in CustomizeDiff)
 	s.SchemaPath("gateway_definition", "connection_id").SetForceNew()
 	s.SchemaPath("gateway_definition", "gateway_storage_catalog").SetForceNew()
 	s.SchemaPath("gateway_definition", "gateway_storage_schema").SetForceNew()
@@ -334,6 +335,42 @@ func ResourcePipeline() common.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// Allow changing catalog value in existing pipelines, but force recreation
+			// when switching between storage and catalog (or vice versa).
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				storageChanged := d.HasChange("storage")
+				catalogChanged := d.HasChange("catalog")
+
+				// If both changed, it means we're switching between storage and catalog modes
+				if storageChanged && catalogChanged {
+					oldStorage, newStorage := d.GetChange("storage")
+					oldCatalog, newCatalog := d.GetChange("catalog")
+
+					// Force new if switching from storage to catalog
+					if oldStorage != "" && oldStorage != nil && newCatalog != "" && newCatalog != nil {
+						if err := d.ForceNew("catalog"); err != nil {
+							return err
+						}
+						if err := d.ForceNew("storage"); err != nil {
+							return err
+						}
+					}
+
+					// Force new if switching from catalog to storage
+					if oldCatalog != "" && oldCatalog != nil && newStorage != "" && newStorage != nil {
+						if err := d.ForceNew("catalog"); err != nil {
+							return err
+						}
+						if err := d.ForceNew("storage"); err != nil {
+							return err
+						}
+					}
+				}
+			}
+			return nil
 		},
 	}
 }

@@ -237,11 +237,12 @@ func TestClientForHost(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.True(t, dc.IsAws())
-	cc, err := dc.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
+	cc, err := dc.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/", 12345)
 	assert.NoError(t, err)
 	assert.Equal(t, dc.Config.Username, cc.Config.Username)
 	assert.Equal(t, dc.Config.Password, cc.Config.Password)
 	assert.NotEqual(t, dc.Config.Host, cc.Config.Host)
+	assert.Equal(t, "12345", cc.Config.WorkspaceId)
 }
 
 func TestClientForHostAuthError(t *testing.T) {
@@ -254,7 +255,7 @@ func TestClientForHostAuthError(t *testing.T) {
 			},
 		},
 	}
-	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
+	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/", 12345)
 	assert.NoError(t, err)
 }
 

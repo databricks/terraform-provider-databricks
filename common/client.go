@@ -240,6 +240,8 @@ func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
 }
 
 func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
+	// TODO: For unified hosts, we can just make the client using the WorkspaceId without making an API call to accounts, and
+	// the host should stay unchanged. We'll still want to make a copy of the config, of course.
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.cachedWorkspaceClients == nil {
@@ -471,7 +473,7 @@ func (c *DatabricksClient) FormatURL(strs ...string) string {
 // ClientForHost creates a new DatabricksClient instance with the same auth parameters,
 // but for the given host. Authentication has to be reinitialized, as Google OIDC has
 // different authorizers, depending if it's workspace or Accounts API we're talking to.
-func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*DatabricksClient, error) {
+func (c *DatabricksClient) ClientForHost(ctx context.Context, url string, workspaceId int64) (*DatabricksClient, error) {
 	// create dummy http request
 	req, _ := http.NewRequestWithContext(ctx, "GET", "/", nil)
 	// Ensure that client is authenticated
@@ -483,6 +485,8 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure new client: %w", err)
 	}
+	// Set the workspace ID for unified hosts, which need the X-Databricks-Org-Id header
+	cfg.WorkspaceId = fmt.Sprintf("%d", workspaceId) // TODO: should have made WorkspaceId an int64 in the go SDK config. It's not too late to change it.
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure new client: %w", err)

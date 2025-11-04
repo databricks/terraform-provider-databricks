@@ -61,6 +61,8 @@ Data source allows you to pick groups by the following attributes
 * `is_io_cache_enabled` - (Optional) . Pick only nodes that have IO Cache. Defaults to _false_.
 * `support_port_forwarding` - (Optional) Pick only nodes that support port forwarding. Defaults to _false_.
 * `graviton` - (Deprecated. boolean, optional) if we should limit the search only to nodes with AWS Graviton or Azure Cobalt CPUs. Default to _false_. *Use `arm` instead!*
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

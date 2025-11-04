@@ -54,6 +54,8 @@ The size of a notebook source code must not exceed a few megabytes. The followin
 * `source` - Path to notebook in source code format on local filesystem. Conflicts with `content_base64`.
 * `content_base64` - The base64-encoded notebook source code. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline.
 * `language` -  (required with `content_base64`) One of `SCALA`, `PYTHON`, `SQL`, `R`.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

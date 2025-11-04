@@ -45,6 +45,8 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			}
 			var e serving.CreatePtEndpointRequest
 			common.DataToStructPointer(d, s, &e)
+			// Sort served entities for consistent ordering
+			sortPtServedModels(e.Config.ServedEntities)
 			wait, err := w.ServingEndpoints.CreateProvisionedThroughputEndpoint(ctx, e)
 			if err != nil {
 				return err
@@ -72,6 +74,10 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Sort served entities for consistent ordering
+			if endpoint.Config != nil {
+				sortServedEntitiesOutput(endpoint.Config.ServedEntities)
+			}
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
@@ -90,7 +96,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				var updateRequest serving.UpdateProvisionedThroughputEndpointConfigRequest
 				updateRequest.Name = e.Name
 				updateRequest.Config = e.Config
-
+				sortPtServedModels(updateRequest.Config.ServedEntities)
 				waiter, err := w.ServingEndpoints.UpdateProvisionedThroughputEndpointConfig(ctx, updateRequest)
 				if err != nil {
 					return err

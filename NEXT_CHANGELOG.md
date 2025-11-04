@@ -13,3 +13,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Sort entities/models in model serving endpoint resources ([#5184](https://github.com/databricks/terraform-provider-databricks/pull/5185)).

@@ -3,6 +3,7 @@ package serving
 import (
 	"context"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -60,9 +61,47 @@ func suppressRouteModelEntityNameDiff(k, old, new string, d *schema.ResourceData
 	return false
 }
 
+// sortServedEntities sorts served entities by name for consistent ordering
+func sortServedEntities(entities []serving.ServedEntityInput) {
+	sort.Slice(entities, func(i, j int) bool {
+		return entities[i].Name < entities[j].Name
+	})
+}
+
+// sortServedEntitiesOutput sorts served entity outputs by name for consistent ordering
+func sortServedEntitiesOutput(entities []serving.ServedEntityOutput) {
+	sort.Slice(entities, func(i, j int) bool {
+		return entities[i].Name < entities[j].Name
+	})
+}
+
+// sortServedModels sorts served models by name for consistent ordering
+func sortServedModels(models []serving.ServedModelInput) {
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
+}
+
+// sortServedModelsOutput sorts served model outputs by name for consistent ordering
+func sortServedModelsOutput(models []serving.ServedModelOutput) {
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
+}
+
+// sortPtServedModels sorts provisioned throughput served models by name for consistent ordering
+func sortPtServedModels(models []serving.PtServedModel) {
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
+}
+
 // updateConfig updates the configuration of the provided serving endpoint to the provided config.
 func updateConfig(ctx context.Context, w *databricks.WorkspaceClient, name string, e *serving.EndpointCoreConfigInput, d *schema.ResourceData) error {
 	e.Name = name
+	// Sort served entities/models for consistent ordering
+	sortServedEntities(e.ServedEntities)
+	sortServedModels(e.ServedModels)
 	waiter, err := w.ServingEndpoints.UpdateConfig(ctx, *e)
 	if err != nil {
 		return err
@@ -233,6 +272,11 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+			// Sort served entities/models for consistent ordering
+			if e.Config != nil {
+				sortServedEntities(e.Config.ServedEntities)
+				sortServedModels(e.Config.ServedModels)
+			}
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {
 				return err
@@ -274,6 +318,12 @@ func ResourceModelServing() common.Resource {
 				}
 			}
 			cleanWorkloadSize(s, d, endpoint.Config)
+
+			// Sort served entities/models for consistent ordering
+			if endpoint.Config != nil {
+				sortServedEntitiesOutput(endpoint.Config.ServedEntities)
+				sortServedModelsOutput(endpoint.Config.ServedModels)
+			}
 
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {

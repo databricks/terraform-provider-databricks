@@ -27,18 +27,18 @@ func TestModelServingCreate(t *testing.T) {
 					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								WorkloadSize:       "Small",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								WorkloadSize:       "Small",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -81,16 +81,16 @@ func TestModelServingCreate(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedModels: []serving.ServedModelOutput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -154,20 +154,20 @@ func TestModelServingCreateGPU(t *testing.T) {
 					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								WorkloadSize:       "Small",
-								WorkloadType:       "GPU_MEDIUM",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								WorkloadSize:       "Small",
 								WorkloadType:       "GPU_MEDIUM",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								WorkloadType:       "GPU_MEDIUM",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -210,16 +210,16 @@ func TestModelServingCreateGPU(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedModels: []serving.ServedModelOutput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -303,18 +303,18 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								WorkloadSize:       "Small",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								WorkloadSize:       "Small",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -399,30 +399,30 @@ func TestModelServingRead(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedModels: []serving.ServedModelOutput{
 							{
-								Name:               "prod_model",
-								ModelName:          "ads1",
-								ModelVersion:       "2",
-								ScaleToZeroEnabled: true,
-							},
-							{
 								Name:               "candidate_model",
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								ScaleToZeroEnabled: false,
 							},
-						},
-						ServedEntities: []serving.ServedEntityOutput{
 							{
 								Name:               "prod_model",
-								EntityName:         "ads1",
-								EntityVersion:      "2",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
 								ScaleToZeroEnabled: true,
 							},
+						},
+						ServedEntities: []serving.ServedEntityOutput{
 							{
 								Name:               "candidate_model",
 								EntityName:         "ads1",
 								EntityVersion:      "4",
 								ScaleToZeroEnabled: false,
+							},
+							{
+								Name:               "prod_model",
+								EntityName:         "ads1",
+								EntityVersion:      "2",
+								ScaleToZeroEnabled: true,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -450,8 +450,8 @@ func TestModelServingRead(t *testing.T) {
 		"serving_endpoint_id":                                   "test-endpoint",
 		"endpoint_url":                                          "https://example.com/endpoint",
 		"config.0.served_entities.#":                            2,
-		"config.0.served_entities.0.name":                       "prod_model",
-		"config.0.served_entities.1.name":                       "candidate_model",
+		"config.0.served_entities.0.name":                       "candidate_model",
+		"config.0.served_entities.1.name":                       "prod_model",
 		"config.0.traffic_config.#":                             1,
 		"config.0.traffic_config.0.routes.#":                    2,
 		"config.0.traffic_config.0.routes.0.served_model_name":  "prod_model",

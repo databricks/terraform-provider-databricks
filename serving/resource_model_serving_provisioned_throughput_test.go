@@ -27,15 +27,15 @@ func TestModelServingProvisionedThroughputCreate(t *testing.T) {
 					Config: serving.PtEndpointCoreConfig{
 						ServedEntities: []serving.PtServedModel{
 							{
-								Name:                  "prod_model",
-								EntityName:            "ads1",
-								EntityVersion:         "2",
-								ProvisionedModelUnits: 50,
-							},
-							{
 								Name:                  "candidate_model",
 								EntityName:            "ads1",
 								EntityVersion:         "4",
+								ProvisionedModelUnits: 50,
+							},
+							{
+								Name:                  "prod_model",
+								EntityName:            "ads1",
+								EntityVersion:         "2",
 								ProvisionedModelUnits: 50,
 							},
 						},
@@ -79,14 +79,14 @@ func TestModelServingProvisionedThroughputCreate(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedEntities: []serving.ServedEntityOutput{
 							{
-								Name:          "prod_model",
-								EntityName:    "ads1",
-								EntityVersion: "2",
-							},
-							{
 								Name:          "candidate_model",
 								EntityName:    "ads1",
 								EntityVersion: "4",
+							},
+							{
+								Name:          "prod_model",
+								EntityName:    "ads1",
+								EntityVersion: "2",
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{
@@ -166,15 +166,15 @@ func TestModelServingProvisionedThroughputCreate_WithErrorOnWait(t *testing.T) {
 					Config: serving.PtEndpointCoreConfig{
 						ServedEntities: []serving.PtServedModel{
 							{
-								Name:                  "prod_model",
-								EntityName:            "ads1",
-								EntityVersion:         "2",
-								ProvisionedModelUnits: 50,
-							},
-							{
 								Name:                  "candidate_model",
 								EntityName:            "ads1",
 								EntityVersion:         "4",
+								ProvisionedModelUnits: 50,
+							},
+							{
+								Name:                  "prod_model",
+								EntityName:            "ads1",
+								EntityVersion:         "2",
 								ProvisionedModelUnits: 50,
 							},
 						},
@@ -257,15 +257,15 @@ func TestModelServingProvisionedThroughputRead(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedEntities: []serving.ServedEntityOutput{
 							{
-								Name:                  "prod_model",
-								EntityName:            "ads1",
-								EntityVersion:         "2",
-								ProvisionedModelUnits: 50,
-							},
-							{
 								Name:                  "candidate_model",
 								EntityName:            "ads1",
 								EntityVersion:         "4",
+								ProvisionedModelUnits: 50,
+							},
+							{
+								Name:                  "prod_model",
+								EntityName:            "ads1",
+								EntityVersion:         "2",
 								ProvisionedModelUnits: 50,
 							},
 						},

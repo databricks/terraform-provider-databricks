@@ -349,9 +349,7 @@ func ResourcePipeline() common.Resource {
 				if err := d.ForceNew("catalog"); err != nil {
 					return err
 				}
-				if err := d.ForceNew("storage"); err != nil {
-					return err
-				}
+				return d.ForceNew("storage")
 			}
 			return nil
 		},

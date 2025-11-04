@@ -167,7 +167,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
 * `mws` - **listing** resources related to deployment of workspaces on AWS and GCP (networks, credentials, workspaces, ...).
-* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) and [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md).  **Note** we can't export [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) because of the missing API.
+* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md), [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md), and [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md).
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
@@ -249,7 +249,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
 | [databricks_mws_credentials](../resources/mws_credentials.md) | Yes | Yes | No | Yes |
 | [databricks_mws_customer_managed_keys](../resources/mws_customer_managed_keys.md) | Yes | Yes | No | Yes |
-| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | No | No | No | No |
+| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | Yes | No | No | Yes |
 | [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md) | Yes | No | No | Yes |
 | [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
 | [databricks_mws_networks](../resources/mws_networks.md) | Yes | No | No | Yes |

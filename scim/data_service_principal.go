@@ -30,16 +30,21 @@ func DataSourceServicePrincipal() common.Resource {
 		s["scim_id"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
 		return s
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var response spnData
 			var spList []User
-			var err error
 
 			common.DataToStructPointer(d, s, &response)
-			spnAPI := NewServicePrincipalsAPI(ctx, m)
+			spnAPI := NewServicePrincipalsAPI(ctx, newClient)
 
 			if response.ApplicationID != "" {
 				spList, err = spnAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, response.ApplicationID), true)

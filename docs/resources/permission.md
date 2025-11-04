@@ -10,6 +10,8 @@ This resource allows you to manage permissions for a single principal on a Datab
 
 ~> This resource is _authoritative_ for the specified object-principal pair. Configuring this resource will manage the permission for the specified principal only, without affecting permissions for other principals.
 
+~> **Warning:** Do not use both `databricks_permission` and `databricks_permissions` resources for the same object. This will cause conflicts as both resources manage the same permissions.
+
 -> Use `databricks_permissions` when you need to manage all permissions for an object in a single resource. Use `databricks_permission` (singular) when you want to manage permissions for individual principals independently.
 
 ## Example Usage
@@ -35,14 +37,16 @@ resource "databricks_group" "data_engineers" {
 
 # Grant CAN_RESTART permission to a group
 resource "databricks_permission" "cluster_de" {
-  cluster_id       = databricks_cluster.shared.id
+  object_type      = "clusters"
+  object_id        = databricks_cluster.shared.id
   group_name       = databricks_group.data_engineers.display_name
   permission_level = "CAN_RESTART"
 }
 
 # Grant CAN_ATTACH_TO permission to a user
 resource "databricks_permission" "cluster_analyst" {
-  cluster_id       = databricks_cluster.shared.id
+  object_type      = "clusters"
+  object_id        = databricks_cluster.shared.id
   user_name        = "analyst@company.com"
   permission_level = "CAN_ATTACH_TO"
 }
@@ -71,14 +75,16 @@ resource "databricks_job" "etl" {
 
 # Grant CAN_MANAGE to a service principal
 resource "databricks_permission" "job_sp" {
-  job_id                   = databricks_job.etl.id
+  object_type              = "jobs"
+  object_id                = databricks_job.etl.id
   service_principal_name   = databricks_service_principal.automation.application_id
   permission_level         = "CAN_MANAGE"
 }
 
 # Grant CAN_VIEW to a group
 resource "databricks_permission" "job_viewers" {
-  job_id           = databricks_job.etl.id
+  object_type      = "jobs"
+  object_id        = databricks_job.etl.id
   group_name       = "Data Viewers"
   permission_level = "CAN_VIEW"
 }
@@ -99,14 +105,16 @@ resource "databricks_notebook" "analysis" {
 
 # Grant CAN_RUN to a user
 resource "databricks_permission" "notebook_user" {
-  notebook_path    = databricks_notebook.analysis.path
+  object_type      = "notebooks"
+  object_id        = databricks_notebook.analysis.path
   user_name        = "data.scientist@company.com"
   permission_level = "CAN_RUN"
 }
 
 # Grant CAN_EDIT to a group
 resource "databricks_permission" "notebook_editors" {
-  notebook_path    = databricks_notebook.analysis.path
+  object_type      = "notebooks"
+  object_id        = databricks_notebook.analysis.path
   group_name       = "Notebook Editors"
   permission_level = "CAN_EDIT"
 }
@@ -119,19 +127,22 @@ This resource solves the limitation where all token permissions must be defined 
 ```hcl
 # Multiple resources can now manage different principals independently
 resource "databricks_permission" "tokens_team_a" {
-  authorization    = "tokens"
+  object_type      = "authorization"
+  object_id        = "tokens"
   group_name       = "Team A"
   permission_level = "CAN_USE"
 }
 
 resource "databricks_permission" "tokens_team_b" {
-  authorization    = "tokens"
+  object_type      = "authorization"
+  object_id        = "tokens"
   group_name       = "Team B"
   permission_level = "CAN_USE"
 }
 
 resource "databricks_permission" "tokens_service_account" {
-  authorization          = "tokens"
+  object_type            = "authorization"
+  object_id              = "tokens"
   service_principal_name = databricks_service_principal.ci_cd.application_id
   permission_level       = "CAN_USE"
 }
@@ -147,7 +158,8 @@ resource "databricks_sql_endpoint" "analytics" {
 }
 
 resource "databricks_permission" "warehouse_users" {
-  sql_endpoint_id  = databricks_sql_endpoint.analytics.id
+  object_type      = "sql/warehouses"
+  object_id        = databricks_sql_endpoint.analytics.id
   group_name       = "SQL Users"
   permission_level = "CAN_USE"
 }
@@ -157,6 +169,29 @@ resource "databricks_permission" "warehouse_users" {
 
 The following arguments are required:
 
+* `object_type` - (Required) The type of object to manage permissions for. Valid values include:
+  * `clusters` - For cluster permissions
+  * `cluster-policies` - For cluster policy permissions
+  * `instance-pools` - For instance pool permissions
+  * `jobs` - For job permissions
+  * `pipelines` - For Delta Live Tables pipeline permissions
+  * `notebooks` - For notebook permissions (use path as `object_id`)
+  * `directories` - For directory permissions (use path as `object_id`)
+  * `workspace-files` - For workspace file permissions (use path as `object_id`)
+  * `registered-models` - For registered model permissions
+  * `experiments` - For experiment permissions
+  * `sql-dashboards` - For legacy SQL dashboard permissions
+  * `sql/warehouses` - For SQL warehouse permissions
+  * `queries` - For query permissions
+  * `alerts` - For alert permissions
+  * `dashboards` - For Lakeview dashboard permissions
+  * `repos` - For repo permissions
+  * `authorization` - For authorization permissions (use `tokens` or `passwords` as `object_id`)
+  * `serving-endpoints` - For model serving endpoint permissions
+  * `vector-search-endpoints` - For vector search endpoint permissions
+
+* `object_id` - (Required) The ID or path of the object. For notebooks, directories, and workspace files, use the path (e.g., `/Shared/notebook`). For authorization, use `tokens` or `passwords`. For other objects, use the resource ID.
+
 * `permission_level` - (Required) The permission level to grant. The available permission levels depend on the object type. Common values include `CAN_MANAGE`, `CAN_USE`, `CAN_VIEW`, `CAN_RUN`, `CAN_EDIT`, `CAN_READ`, `CAN_RESTART`, `CAN_ATTACH_TO`.
 
 Exactly one of the following principal identifiers must be specified:
@@ -164,32 +199,6 @@ Exactly one of the following principal identifiers must be specified:
 * `user_name` - (Optional) User email address to grant permissions to. Conflicts with `group_name` and `service_principal_name`.
 * `group_name` - (Optional) Group name to grant permissions to. Conflicts with `user_name` and `service_principal_name`.
 * `service_principal_name` - (Optional) Application ID of the service principal. Conflicts with `user_name` and `group_name`.
-
-Exactly one of the following object identifiers must be specified:
-
-* `cluster_id` - (Optional) ID of the [databricks_cluster](cluster.md).
-* `cluster_policy_id` - (Optional) ID of the [databricks_cluster_policy](cluster_policy.md).
-* `instance_pool_id` - (Optional) ID of the [databricks_instance_pool](instance_pool.md).
-* `job_id` - (Optional) ID of the [databricks_job](job.md).
-* `pipeline_id` - (Optional) ID of the [databricks_pipeline](pipeline.md).
-* `notebook_id` - (Optional) ID of the [databricks_notebook](notebook.md). Can be used when the notebook is referenced by ID.
-* `notebook_path` - (Optional) Path to the [databricks_notebook](notebook.md).
-* `directory_id` - (Optional) ID of the [databricks_directory](directory.md).
-* `directory_path` - (Optional) Path to the [databricks_directory](directory.md).
-* `workspace_file_id` - (Optional) ID of the [databricks_workspace_file](workspace_file.md).
-* `workspace_file_path` - (Optional) Path to the [databricks_workspace_file](workspace_file.md).
-* `registered_model_id` - (Optional) ID of the [databricks_mlflow_model](mlflow_model.md).
-* `experiment_id` - (Optional) ID of the [databricks_mlflow_experiment](mlflow_experiment.md).
-* `sql_dashboard_id` - (Optional) ID of the legacy [databricks_sql_dashboard](sql_dashboard.md).
-* `sql_endpoint_id` - (Optional) ID of the [databricks_sql_endpoint](sql_endpoint.md).
-* `sql_query_id` - (Optional) ID of the [databricks_query](query.md).
-* `sql_alert_id` - (Optional) ID of the [databricks_alert](alert.md).
-* `dashboard_id` - (Optional) ID of the [databricks_dashboard](dashboard.md) (Lakeview).
-* `repo_id` - (Optional) ID of the [databricks_repo](repo.md).
-* `repo_path` - (Optional) Path to the [databricks_repo](repo.md).
-* `authorization` - (Optional) Type of authorization. Currently supports `tokens` and `passwords`.
-* `serving_endpoint_id` - (Optional) ID of the [databricks_model_serving](model_serving.md) endpoint.
-* `vector_search_endpoint_id` - (Optional) ID of the [databricks_vector_search_endpoint](vector_search_endpoint.md).
 
 ## Attribute Reference
 
@@ -249,13 +258,15 @@ resource "databricks_permissions" "cluster_all" {
 
 ```hcl
 resource "databricks_permission" "cluster_de" {
-  cluster_id       = databricks_cluster.shared.id
+  object_type      = "clusters"
+  object_id        = databricks_cluster.shared.id
   group_name       = "Data Engineers"
   permission_level = "CAN_RESTART"
 }
 
 resource "databricks_permission" "cluster_analyst" {
-  cluster_id       = databricks_cluster.shared.id
+  object_type      = "clusters"
+  object_id        = databricks_cluster.shared.id
   user_name        = "analyst@company.com"
   permission_level = "CAN_ATTACH_TO"
 }
@@ -263,7 +274,8 @@ resource "databricks_permission" "cluster_analyst" {
 # Adding a third principal is a separate resource
 # No need to modify existing resources
 resource "databricks_permission" "cluster_viewer" {
-  cluster_id       = databricks_cluster.shared.id
+  object_type      = "clusters"
+  object_id        = databricks_cluster.shared.id
   group_name       = "Viewers"
   permission_level = "CAN_ATTACH_TO"
 }

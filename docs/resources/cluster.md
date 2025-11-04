@@ -442,7 +442,7 @@ The following options are available:
 `docker_image` configuration block has the following attributes:
 
 * `url` - URL for the Docker image
-* `basic_auth` - (Optional) `basic_auth.username` and `basic_auth.password` for Docker repository. Docker registry credentials are encrypted when they are stored in Databricks internal storage and when they are passed to a registry upon fetching Docker images at cluster launch. However, other authenticated and authorized API users of this workspace can access the username and password.
+* `basic_auth` - (Optional) `basic_auth.username` and `basic_auth.password` for Docker repository. Docker registry credentials are encrypted when they are stored in Databricks internal storage and when they are passed to a registry upon fetching Docker images at cluster launch.  For better security, these credentials should be stored in the secret scope and referred using secret path syntax: `{{secrets/scope/key}}`, otherwise other users of the workspace may access them via UI/API.
 
 Example usage with [azurerm_container_registry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) and [docker_registry_image](https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/registry_image), that you can adapt to your specific use-case:
 
@@ -459,6 +459,7 @@ resource "databricks_cluster" "this" {
   docker_image {
     url = docker_registry_image.this.name
     basic_auth {
+      # Best is to store them in a secret scope
       username = azurerm_container_registry.this.admin_username
       password = azurerm_container_registry.this.admin_password
     }

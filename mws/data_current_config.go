@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type currentConfig struct {
@@ -15,24 +16,40 @@ type currentConfig struct {
 }
 
 func DataSourceCurrentConfiguration() common.Resource {
-	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
-		data := e.(*currentConfig)
-		data.IsAccount = false
-		if c.Config.IsAccountClient() {
-			data.AccountId = c.Config.AccountID
-			data.IsAccount = true
-		}
-		data.Host = c.Config.Host
-		if c.Config.IsAws() {
-			data.CloudType = "aws"
-		} else if c.Config.IsAzure() {
-			data.CloudType = "azure"
-		} else if c.Config.IsGcp() {
-			data.CloudType = "gcp"
-		} else {
-			data.CloudType = "unknown"
-		}
-		data.AuthType = c.Config.AuthType
-		return nil
-	})
+	s := common.StructToSchema(currentConfig{}, nil)
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
+	return common.Resource{
+		Schema: s,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			var data currentConfig
+			common.DataToStructPointer(d, s, &data)
+			data.IsAccount = false
+			if newClient.Config.IsAccountClient() {
+				data.AccountId = newClient.Config.AccountID
+				data.IsAccount = true
+			}
+			data.Host = newClient.Config.Host
+			if newClient.Config.IsAws() {
+				data.CloudType = "aws"
+			} else if newClient.Config.IsAzure() {
+				data.CloudType = "azure"
+			} else if newClient.Config.IsGcp() {
+				data.CloudType = "gcp"
+			} else {
+				data.CloudType = "unknown"
+			}
+			data.AuthType = newClient.Config.AuthType
+			err = common.StructToData(data, s, d)
+			if err != nil {
+				return err
+			}
+			d.SetId("_")
+			return nil
+		},
+	}
 }

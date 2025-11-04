@@ -38,6 +38,8 @@ resource "databricks_group_member" "my_member_spn" {
 Data source allows you to pick service principals by the following attributes
 
 - `display_name_contains` - (Optional) Only return [databricks_service_principal](service_principal.md) display name that match the given name string
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -6,12 +6,10 @@
 
 ### New Features and Improvements
 
-* Add `provider_config` support for manual plugin framework resources and data sources ([#5127](https://github.com/databricks/terraform-provider-databricks/pull/5127))
-* Added `databricks_permission` resource for managing permissions on Databricks objects for individual principals ([#5161](https://github.com/databricks/terraform-provider-databricks/pull/5161)).
+* Added `databricks_permission` resource for managing permissions on Databricks objects for individual principals ([#5186](https://github.com/databricks/terraform-provider-databricks/pull/5186)).
 
 ### Bug Fixes
 
-* Remove unnecessary `SetSuppressDiff()` for `workload_size` in `databricks_model_serving` ([#5152](https://github.com/databricks/terraform-provider-databricks/pull/5152)).
 
 ### Documentation
 
@@ -19,4 +17,3 @@
 
 ### Internal Changes
 
-* Caching group membership in `databricks_group_member` to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

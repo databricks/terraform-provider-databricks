@@ -1,10 +1,11 @@
 package permissions
 
 import (
+	"fmt"
 	"sync"
 )
 
-// objectMutexManager manages mutexes per object ID to prevent concurrent
+// objectMutexManager manages mutexes per object to prevent concurrent
 // operations on the same Databricks object that could lead to race conditions.
 //
 // This is particularly important for Delete operations where multiple
@@ -12,51 +13,46 @@ import (
 // concurrently, each doing GET -> filter -> SET, which could result in
 // lost permission updates.
 type objectMutexManager struct {
-	mutexes map[string]*sync.Mutex
-	mapLock sync.Mutex
+	mutexes sync.Map // map[string]*sync.Mutex
 }
 
 // globalObjectMutexManager is the singleton instance used by all permission resources
-var globalObjectMutexManager = &objectMutexManager{
-	mutexes: make(map[string]*sync.Mutex),
-}
+var globalObjectMutexManager = &objectMutexManager{}
 
-// Lock acquires a mutex for the given object ID.
-// Each object ID gets its own mutex to allow concurrent operations on different objects
+// Lock acquires a mutex for the given object type and ID.
+// Each object gets its own mutex to allow concurrent operations on different objects
 // while serializing operations on the same object.
-func (m *objectMutexManager) Lock(objectID string) {
-	m.mapLock.Lock()
-	mu, exists := m.mutexes[objectID]
-	if !exists {
-		mu = &sync.Mutex{}
-		m.mutexes[objectID] = mu
-	}
-	m.mapLock.Unlock()
+func (m *objectMutexManager) Lock(objectType, objectID string) {
+	key := fmt.Sprintf("%s/%s", objectType, objectID)
 
-	// Lock the object-specific mutex (outside the map lock to avoid deadlock)
+	// LoadOrStore returns the existing value if present, otherwise stores and returns the given value
+	value, _ := m.mutexes.LoadOrStore(key, &sync.Mutex{})
+	mu := value.(*sync.Mutex)
+
+	// Lock the object-specific mutex
 	mu.Lock()
 }
 
-// Unlock releases the mutex for the given object ID.
-func (m *objectMutexManager) Unlock(objectID string) {
-	m.mapLock.Lock()
-	mu, exists := m.mutexes[objectID]
-	m.mapLock.Unlock()
+// Unlock releases the mutex for the given object type and ID.
+func (m *objectMutexManager) Unlock(objectType, objectID string) {
+	key := fmt.Sprintf("%s/%s", objectType, objectID)
 
-	if exists {
+	value, ok := m.mutexes.Load(key)
+	if ok {
+		mu := value.(*sync.Mutex)
 		mu.Unlock()
 	}
 }
 
-// lockObject acquires a lock for the given object ID.
+// lockObject acquires a lock for the given object type and ID.
 // This should be called at the start of any operation that modifies permissions.
-func lockObject(objectID string) {
-	globalObjectMutexManager.Lock(objectID)
+func lockObject(objectType, objectID string) {
+	globalObjectMutexManager.Lock(objectType, objectID)
 }
 
-// unlockObject releases the lock for the given object ID.
+// unlockObject releases the lock for the given object type and ID.
 // This should be called at the end of any operation that modifies permissions.
 // Use defer to ensure it's always called even if the operation panics.
-func unlockObject(objectID string) {
-	globalObjectMutexManager.Unlock(objectID)
+func unlockObject(objectType, objectID string) {
+	globalObjectMutexManager.Unlock(objectType, objectID)
 }

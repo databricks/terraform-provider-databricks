@@ -10,15 +10,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// permissionLevelValidator validates that the permission_level is valid for the configured object type
+// permissionLevelValidator validates that the permission_level is valid for the configured object type.
+// It uses a hybrid approach:
+// 1. If the object type is known in permission_definitions.go, validate against allowed levels
+// 2. If the object type is unknown (new type), skip validation and let the API handle it
 type permissionLevelValidator struct{}
 
 func (v permissionLevelValidator) Description(ctx context.Context) string {
-	return "validates that the permission level is valid for the configured object type"
+	return "validates that the permission level is valid for the configured object type when the object type is known"
 }
 
 func (v permissionLevelValidator) MarkdownDescription(ctx context.Context) string {
-	return "validates that the permission level is valid for the configured object type"
+	return "validates that the permission level is valid for the configured object type when the object type is known"
 }
 
 func (v permissionLevelValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
@@ -28,19 +31,23 @@ func (v permissionLevelValidator) ValidateString(ctx context.Context, req valida
 
 	permissionLevel := req.ConfigValue.ValueString()
 
-	// Dynamically iterate through all permission definitions to find which object ID is set
+	// Get the object_type from the configuration
+	var objectType types.String
+	diags := req.Config.GetAttribute(ctx, path.Root("object_type"), &objectType)
+	if diags.HasError() || objectType.IsNull() || objectType.IsUnknown() {
+		// Can't validate without object_type, let the API handle it
+		return
+	}
+
+	objectTypeValue := objectType.ValueString()
+
+	// Try to find the permission mapping for this object type
 	allPermissions := permissions.AllResourcePermissions()
 	var mapping permissions.WorkspaceObjectPermissions
 	var found bool
 
 	for _, m := range allPermissions {
-		var attrValue types.String
-		diags := req.Config.GetAttribute(ctx, path.Root(m.GetField()), &attrValue)
-		if diags.HasError() {
-			continue // Attribute doesn't exist or has errors, try next
-		}
-
-		if !attrValue.IsNull() && !attrValue.IsUnknown() && attrValue.ValueString() != "" {
+		if m.GetRequestObjectType() == objectTypeValue {
 			mapping = m
 			found = true
 			break
@@ -48,7 +55,8 @@ func (v permissionLevelValidator) ValidateString(ctx context.Context, req valida
 	}
 
 	if !found {
-		// If we can't determine the object type, let the ConflictsWith validators handle it
+		// Object type not found in our definitions - this might be a new object type
+		// Let the API handle validation
 		return
 	}
 
@@ -71,14 +79,15 @@ func (v permissionLevelValidator) ValidateString(ctx context.Context, req valida
 			fmt.Sprintf(
 				"Permission level %q is not valid for object type %q. Allowed levels: %v",
 				permissionLevel,
-				mapping.GetObjectType(),
+				objectTypeValue,
 				allowedLevels,
 			),
 		)
 	}
 }
 
-// ValidatePermissionLevel returns a validator that checks if the permission level is valid for the object type
+// ValidatePermissionLevel returns a validator that checks if the permission level is valid for the object type.
+// Uses a hybrid approach: validates against known object types, lets API handle unknown ones.
 func ValidatePermissionLevel() validator.String {
 	return permissionLevelValidator{}
 }

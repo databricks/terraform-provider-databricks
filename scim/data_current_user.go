@@ -49,11 +49,7 @@ func DataSourceCurrentUser() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
-			if err != nil {
-				return err
-			}
-			w, err := newClient.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

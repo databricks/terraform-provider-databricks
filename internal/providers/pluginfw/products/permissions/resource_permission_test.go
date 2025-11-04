@@ -35,15 +35,12 @@ func TestPermissionResource_Schema(t *testing.T) {
 	_, ok = resp.Schema.Attributes["permission_level"]
 	assert.True(t, ok, "permission_level should be in schema")
 
-	// Check some object identifiers
-	_, ok = resp.Schema.Attributes["cluster_id"]
-	assert.True(t, ok, "cluster_id should be in schema")
+	// Check object identifier fields
+	_, ok = resp.Schema.Attributes["object_type"]
+	assert.True(t, ok, "object_type should be in schema")
 
-	_, ok = resp.Schema.Attributes["job_id"]
-	assert.True(t, ok, "job_id should be in schema")
-
-	_, ok = resp.Schema.Attributes["authorization"]
-	assert.True(t, ok, "authorization should be in schema")
+	_, ok = resp.Schema.Attributes["object_id"]
+	assert.True(t, ok, "object_id should be in schema")
 
 	// Check computed fields
 	idAttr, ok := resp.Schema.Attributes["id"]
@@ -52,10 +49,18 @@ func TestPermissionResource_Schema(t *testing.T) {
 		assert.True(t, stringAttr.Computed, "id should be computed")
 	}
 
+	// Verify object_type is required
 	objectTypeAttr, ok := resp.Schema.Attributes["object_type"]
 	assert.True(t, ok, "object_type should be in schema")
 	if stringAttr, ok := objectTypeAttr.(schema.StringAttribute); ok {
-		assert.True(t, stringAttr.Computed, "object_type should be computed")
+		assert.True(t, stringAttr.Required, "object_type should be required")
+	}
+
+	// Verify object_id is required
+	objectIDAttr, ok := resp.Schema.Attributes["object_id"]
+	assert.True(t, ok, "object_id should be in schema")
+	if stringAttr, ok := objectIDAttr.(schema.StringAttribute); ok {
+		assert.True(t, stringAttr.Required, "object_id should be required")
 	}
 }
 
@@ -73,36 +78,48 @@ func TestPermissionResource_ParseID(t *testing.T) {
 	r := &PermissionResource{}
 
 	tests := []struct {
-		name          string
-		id            string
-		wantObjectID  string
-		wantPrincipal string
-		wantError     bool
+		name           string
+		id             string
+		wantObjectType string
+		wantObjectID   string
+		wantPrincipal  string
+		wantError      bool
 	}{
 		{
-			name:          "cluster permission",
-			id:            "/clusters/test-cluster-id/user@example.com",
-			wantObjectID:  "/clusters/test-cluster-id",
-			wantPrincipal: "user@example.com",
-			wantError:     false,
+			name:           "cluster permission",
+			id:             "clusters/test-cluster-id/user@example.com",
+			wantObjectType: "clusters",
+			wantObjectID:   "test-cluster-id",
+			wantPrincipal:  "user@example.com",
+			wantError:      false,
 		},
 		{
-			name:          "job permission",
-			id:            "/jobs/123/test-group",
-			wantObjectID:  "/jobs/123",
-			wantPrincipal: "test-group",
-			wantError:     false,
+			name:           "job permission",
+			id:             "jobs/123/test-group",
+			wantObjectType: "jobs",
+			wantObjectID:   "123",
+			wantPrincipal:  "test-group",
+			wantError:      false,
 		},
 		{
-			name:          "authorization tokens",
-			id:            "/authorization/tokens/developers",
-			wantObjectID:  "/authorization/tokens",
-			wantPrincipal: "developers",
-			wantError:     false,
+			name:           "authorization tokens",
+			id:             "authorization/tokens/developers",
+			wantObjectType: "authorization",
+			wantObjectID:   "tokens",
+			wantPrincipal:  "developers",
+			wantError:      false,
+		},
+		{
+			name:           "notebook with path containing slashes",
+			id:             "notebooks/Shared/Team/notebook.py/user@example.com",
+			wantObjectType: "notebooks",
+			wantObjectID:   "Shared/Team/notebook.py",
+			wantPrincipal:  "user@example.com",
+			wantError:      false,
 		},
 		{
 			name:      "invalid format - too few parts",
-			id:        "/clusters/test-cluster-id",
+			id:        "clusters/test-cluster-id",
 			wantError: true,
 		},
 		{
@@ -114,11 +131,12 @@ func TestPermissionResource_ParseID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotObjectID, gotPrincipal, err := r.parseID(tt.id)
+			gotObjectType, gotObjectID, gotPrincipal, err := r.parseID(tt.id)
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+				assert.Equal(t, tt.wantObjectType, gotObjectType)
 				assert.Equal(t, tt.wantObjectID, gotObjectID)
 				assert.Equal(t, tt.wantPrincipal, gotPrincipal)
 			}
@@ -147,36 +165,40 @@ func TestPermissionResource_ImportState(t *testing.T) {
 	r := &PermissionResource{}
 
 	tests := []struct {
-		name          string
-		importID      string
-		expectedObjID string
-		expectedPrinc string
-		expectError   bool
+		name            string
+		importID        string
+		expectedObjType string
+		expectedObjID   string
+		expectedPrinc   string
+		expectError     bool
 	}{
 		{
-			name:          "valid cluster import",
-			importID:      "/clusters/cluster-123/user@example.com",
-			expectedObjID: "/clusters/cluster-123",
-			expectedPrinc: "user@example.com",
-			expectError:   false,
+			name:            "valid cluster import",
+			importID:        "clusters/cluster-123/user@example.com",
+			expectedObjType: "clusters",
+			expectedObjID:   "cluster-123",
+			expectedPrinc:   "user@example.com",
+			expectError:     false,
 		},
 		{
-			name:          "valid job import",
-			importID:      "/jobs/job-456/data-engineers",
-			expectedObjID: "/jobs/job-456",
-			expectedPrinc: "data-engineers",
-			expectError:   false,
+			name:            "valid job import",
+			importID:        "jobs/job-456/data-engineers",
+			expectedObjType: "jobs",
+			expectedObjID:   "job-456",
+			expectedPrinc:   "data-engineers",
+			expectError:     false,
 		},
 		{
-			name:          "valid authorization import",
-			importID:      "/authorization/tokens/team-a",
-			expectedObjID: "/authorization/tokens",
-			expectedPrinc: "team-a",
-			expectError:   false,
+			name:            "valid authorization import",
+			importID:        "authorization/tokens/team-a",
+			expectedObjType: "authorization",
+			expectedObjID:   "tokens",
+			expectedPrinc:   "team-a",
+			expectError:     false,
 		},
 		{
 			name:        "invalid format - too few parts",
-			importID:    "/clusters/cluster-123",
+			importID:    "clusters/cluster-123",
 			expectError: true,
 		},
 		{
@@ -188,12 +210,13 @@ func TestPermissionResource_ImportState(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			objectID, principal, err := r.parseID(tt.importID)
+			objectType, objectID, principal, err := r.parseID(tt.importID)
 
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for invalid import ID")
 			} else {
 				assert.NoError(t, err, "Expected no error for valid import ID")
+				assert.Equal(t, tt.expectedObjType, objectType, "Object type should match")
 				assert.Equal(t, tt.expectedObjID, objectID, "Object ID should match")
 				assert.Equal(t, tt.expectedPrinc, principal, "Principal should match")
 			}

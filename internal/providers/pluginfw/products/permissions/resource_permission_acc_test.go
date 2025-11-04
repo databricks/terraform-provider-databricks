@@ -43,13 +43,15 @@ resource "databricks_group" "group2" {
 }
 
 resource "databricks_permission" "cluster_group1" {
-	cluster_id       = databricks_cluster.this.id
+	object_type      = "clusters"
+	object_id        = databricks_cluster.this.id
 	group_name       = databricks_group.group1.display_name
 	permission_level = "CAN_ATTACH_TO"
 }
 
 resource "databricks_permission" "cluster_group2" {
-	cluster_id       = databricks_cluster.this.id
+	object_type      = "clusters"
+	object_id        = databricks_cluster.this.id
 	group_name       = databricks_group.group2.display_name
 	permission_level = "CAN_RESTART"
 }
@@ -107,13 +109,15 @@ resource "databricks_user" "test_user" {
 }
 
 resource "databricks_permission" "job_group" {
-	job_id           = databricks_job.this.id
+	object_type      = "jobs"
+	object_id        = databricks_job.this.id
 	group_name       = databricks_group.viewers.display_name
 	permission_level = "CAN_VIEW"
 }
 
 resource "databricks_permission" "job_user" {
-	job_id           = databricks_job.this.id
+	object_type      = "jobs"
+	object_id        = databricks_job.this.id
 	user_name        = databricks_user.test_user.user_name
 	permission_level = "CAN_MANAGE_RUN"
 }
@@ -122,9 +126,12 @@ resource "databricks_permission" "job_user" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_permission.job_group", "permission_level", "CAN_VIEW"),
-			resource.TestCheckResourceAttr("databricks_permission.job_user", "permission_level", "CAN_MANAGE_RUN"),
 			resource.TestCheckResourceAttr("databricks_permission.job_group", "object_type", "jobs"),
+			resource.TestCheckResourceAttrSet("databricks_permission.job_group", "object_id"),
+			resource.TestCheckResourceAttr("databricks_permission.job_group", "permission_level", "CAN_VIEW"),
+			resource.TestCheckResourceAttr("databricks_permission.job_user", "object_type", "jobs"),
+			resource.TestCheckResourceAttrSet("databricks_permission.job_user", "object_id"),
+			resource.TestCheckResourceAttr("databricks_permission.job_user", "permission_level", "CAN_MANAGE_RUN"),
 		),
 	})
 }
@@ -150,13 +157,15 @@ resource "databricks_group" "runners" {
 }
 
 resource "databricks_permission" "notebook_editors" {
-	notebook_path    = databricks_notebook.this.path
+	object_type      = "notebooks"
+	object_id        = databricks_notebook.this.path
 	group_name       = databricks_group.editors.display_name
 	permission_level = "CAN_EDIT"
 }
 
 resource "databricks_permission" "notebook_runners" {
-	notebook_path    = databricks_notebook.this.path
+	object_type      = "notebooks"
+	object_id        = databricks_notebook.this.path
 	group_name       = databricks_group.runners.display_name
 	permission_level = "CAN_RUN"
 }
@@ -165,7 +174,11 @@ resource "databricks_permission" "notebook_runners" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.notebook_editors", "object_type", "notebooks"),
+			resource.TestCheckResourceAttrSet("databricks_permission.notebook_editors", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.notebook_editors", "permission_level", "CAN_EDIT"),
+			resource.TestCheckResourceAttr("databricks_permission.notebook_runners", "object_type", "notebooks"),
+			resource.TestCheckResourceAttrSet("databricks_permission.notebook_runners", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.notebook_runners", "permission_level", "CAN_RUN"),
 		),
 	})
@@ -189,19 +202,22 @@ resource "databricks_group" "team_c" {
 # This demonstrates the key benefit: each team's token permissions
 # can be managed independently, unlike databricks_permissions
 resource "databricks_permission" "tokens_team_a" {
-	authorization    = "tokens"
+	object_type      = "authorization"
+	object_id        = "tokens"
 	group_name       = databricks_group.team_a.display_name
 	permission_level = "CAN_USE"
 }
 
 resource "databricks_permission" "tokens_team_b" {
-	authorization    = "tokens"
+	object_type      = "authorization"
+	object_id        = "tokens"
 	group_name       = databricks_group.team_b.display_name
 	permission_level = "CAN_USE"
 }
 
 resource "databricks_permission" "tokens_team_c" {
-	authorization    = "tokens"
+	object_type      = "authorization"
+	object_id        = "tokens"
 	group_name       = databricks_group.team_c.display_name
 	permission_level = "CAN_USE"
 }
@@ -210,10 +226,13 @@ resource "databricks_permission" "tokens_team_c" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_permission.tokens_team_a", "authorization", "tokens"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_a", "object_type", "authorization"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_a", "object_id", "tokens"),
 			resource.TestCheckResourceAttr("databricks_permission.tokens_team_a", "permission_level", "CAN_USE"),
-			resource.TestCheckResourceAttr("databricks_permission.tokens_team_b", "authorization", "tokens"),
-			resource.TestCheckResourceAttr("databricks_permission.tokens_team_c", "authorization", "tokens"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_b", "object_type", "authorization"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_b", "object_id", "tokens"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_c", "object_type", "authorization"),
+			resource.TestCheckResourceAttr("databricks_permission.tokens_team_c", "object_id", "tokens"),
 			func(s *terraform.State) error {
 				w := databricks.Must(databricks.NewWorkspaceClient())
 				permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "authorization", "tokens")
@@ -257,13 +276,15 @@ resource "databricks_group" "team_c" {
 }
 
 resource "databricks_permission" "tokens_team_a" {
-	authorization    = "tokens"
+	object_type      = "authorization"
+	object_id        = "tokens"
 	group_name       = databricks_group.team_a.display_name
 	permission_level = "CAN_USE"
 }
 
 resource "databricks_permission" "tokens_team_c" {
-	authorization    = "tokens"
+	object_type      = "authorization"
+	object_id        = "tokens"
 	group_name       = databricks_group.team_c.display_name
 	permission_level = "CAN_USE"
 }
@@ -309,7 +330,8 @@ resource "databricks_group" "test" {
 }
 
 resource "databricks_permission" "job_group" {
-	job_id           = databricks_job.this.id
+	object_type      = "jobs"
+	object_id        = databricks_job.this.id
 	group_name       = databricks_group.test.display_name
 	permission_level = "CAN_VIEW"
 }
@@ -325,7 +347,8 @@ resource "databricks_group" "test" {
 }
 
 resource "databricks_permission" "job_group" {
-	job_id           = databricks_job.this.id
+	object_type      = "jobs"
+	object_id        = databricks_job.this.id
 	group_name       = databricks_group.test.display_name
 	permission_level = "CAN_MANAGE"
 }
@@ -334,11 +357,15 @@ resource "databricks_permission" "job_group" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template1,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.job_group", "object_type", "jobs"),
+			resource.TestCheckResourceAttrSet("databricks_permission.job_group", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.job_group", "permission_level", "CAN_VIEW"),
 		),
 	}, acceptance.Step{
 		Template: template2,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.job_group", "object_type", "jobs"),
+			resource.TestCheckResourceAttrSet("databricks_permission.job_group", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.job_group", "permission_level", "CAN_MANAGE"),
 			func(s *terraform.State) error {
 				w := databricks.Must(databricks.NewWorkspaceClient())
@@ -375,7 +402,8 @@ resource "databricks_service_principal" "sp" {
 }
 
 resource "databricks_permission" "job_sp" {
-	job_id                   = databricks_job.this.id
+	object_type              = "jobs"
+	object_id                = databricks_job.this.id
 	service_principal_name   = databricks_service_principal.sp.application_id
 	permission_level         = "CAN_MANAGE"
 }
@@ -384,6 +412,8 @@ resource "databricks_permission" "job_sp" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.job_sp", "object_type", "jobs"),
+			resource.TestCheckResourceAttrSet("databricks_permission.job_sp", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.job_sp", "permission_level", "CAN_MANAGE"),
 			resource.TestCheckResourceAttrSet("databricks_permission.job_sp", "service_principal_name"),
 		),
@@ -402,7 +432,8 @@ resource "databricks_group" "test" {
 }
 
 resource "databricks_permission" "job_group" {
-	job_id           = databricks_job.this.id
+	object_type      = "jobs"
+	object_id        = databricks_job.this.id
 	group_name       = databricks_group.test.display_name
 	permission_level = "CAN_VIEW"
 }
@@ -437,7 +468,8 @@ resource "databricks_group" "sql_users" {
 }
 
 resource "databricks_permission" "warehouse_users" {
-	sql_endpoint_id  = databricks_sql_endpoint.this.id
+	object_type      = "sql/warehouses"
+	object_id        = databricks_sql_endpoint.this.id
 	group_name       = databricks_group.sql_users.display_name
 	permission_level = "CAN_USE"
 }
@@ -446,6 +478,8 @@ resource "databricks_permission" "warehouse_users" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.warehouse_users", "object_type", "sql/warehouses"),
+			resource.TestCheckResourceAttrSet("databricks_permission.warehouse_users", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.warehouse_users", "permission_level", "CAN_USE"),
 		),
 	})
@@ -471,7 +505,8 @@ resource "databricks_group" "pool_users" {
 }
 
 resource "databricks_permission" "pool_access" {
-	instance_pool_id = databricks_instance_pool.this.id
+	object_type      = "instance-pools"
+	object_id        = databricks_instance_pool.this.id
 	group_name       = databricks_group.pool_users.display_name
 	permission_level = "CAN_ATTACH_TO"
 }
@@ -480,6 +515,8 @@ resource "databricks_permission" "pool_access" {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.pool_access", "object_type", "instance-pools"),
+			resource.TestCheckResourceAttrSet("databricks_permission.pool_access", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.pool_access", "permission_level", "CAN_ATTACH_TO"),
 		),
 	})
@@ -503,15 +540,18 @@ resource "databricks_group" "policy_users" {
 }
 
 resource "databricks_permission" "policy_access" {
-	cluster_policy_id = databricks_cluster_policy.this.id
-	group_name        = databricks_group.policy_users.display_name
-	permission_level  = "CAN_USE"
+	object_type      = "cluster-policies"
+	object_id        = databricks_cluster_policy.this.id
+	group_name       = databricks_group.policy_users.display_name
+	permission_level = "CAN_USE"
 }
 `
 
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: template,
 		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permission.policy_access", "object_type", "cluster-policies"),
+			resource.TestCheckResourceAttrSet("databricks_permission.policy_access", "object_id"),
 			resource.TestCheckResourceAttr("databricks_permission.policy_access", "permission_level", "CAN_USE"),
 		),
 	})

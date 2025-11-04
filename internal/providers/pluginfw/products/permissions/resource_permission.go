@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -36,12 +34,10 @@ type PermissionResource struct {
 }
 
 // PermissionResourceModel represents the Terraform resource model
-// Note: Object identifiers are NOT defined in the struct - they are read/written dynamically
-// using GetAttribute()/SetAttribute(). This eliminates the need for hardcoded fields
-// and makes the code truly generic - new permission types require zero changes here.
 type PermissionResourceModel struct {
 	ID         types.String `tfsdk:"id"`
 	ObjectType types.String `tfsdk:"object_type"`
+	ObjectID   types.String `tfsdk:"object_id"`
 
 	// Principal identifiers - exactly one required
 	UserName             types.String `tfsdk:"user_name"`
@@ -50,10 +46,6 @@ type PermissionResourceModel struct {
 
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level"`
-
-	// Note: Object identifiers (cluster_id, job_id, etc.) are NOT defined here.
-	// They are accessed dynamically using GetAttribute()/SetAttribute() based on
-	// the definitions in permissions/permission_definitions.go
 }
 
 func (r *PermissionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -61,103 +53,80 @@ func (r *PermissionResource) Metadata(ctx context.Context, req resource.Metadata
 }
 
 func (r *PermissionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	// Collect all object identifier field names for ConflictsWith validators
-	allPermissions := permissions.AllResourcePermissions()
-	objectFieldPaths := make([]path.Expression, 0, len(allPermissions))
-	for _, mapping := range allPermissions {
-		objectFieldPaths = append(objectFieldPaths, path.MatchRoot(mapping.GetField()))
-	}
-
-	attrs := map[string]schema.Attribute{
-		"id": schema.StringAttribute{
-			Computed: true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-			},
-		},
-		"object_type": schema.StringAttribute{
-			Computed: true,
-		},
-		// Principal identifiers - exactly one required, mutually exclusive
-		"user_name": schema.StringAttribute{
-			Optional:    true,
-			Description: "User name of the principal. Conflicts with group_name and service_principal_name.",
-			Validators: []validator.String{
-				stringvalidator.ConflictsWith(
-					path.MatchRoot("group_name"),
-					path.MatchRoot("service_principal_name"),
-				),
-			},
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
-		},
-		"group_name": schema.StringAttribute{
-			Optional:    true,
-			Description: "Group name of the principal. Conflicts with user_name and service_principal_name.",
-			Validators: []validator.String{
-				stringvalidator.ConflictsWith(
-					path.MatchRoot("user_name"),
-					path.MatchRoot("service_principal_name"),
-				),
-			},
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
-		},
-		"service_principal_name": schema.StringAttribute{
-			Optional:    true,
-			Description: "Service principal name. Conflicts with user_name and group_name.",
-			Validators: []validator.String{
-				stringvalidator.ConflictsWith(
-					path.MatchRoot("user_name"),
-					path.MatchRoot("group_name"),
-				),
-			},
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
-		},
-		// Permission level
-		"permission_level": schema.StringAttribute{
-			Required:    true,
-			Description: "Permission level for the principal on the object (e.g., CAN_MANAGE, CAN_USE, CAN_VIEW).",
-			Validators: []validator.String{
-				ValidatePermissionLevel(),
-			},
-		},
-	}
-
-	// Dynamically add object identifier attributes from permission definitions
-	// Each object identifier is mutually exclusive with all others
-	for i, mapping := range allPermissions {
-		fieldName := mapping.GetField()
-
-		// Build ConflictsWith list - all other object fields except this one
-		conflictPaths := make([]path.Expression, 0, len(objectFieldPaths)-1)
-		for j, p := range objectFieldPaths {
-			if i != j {
-				conflictPaths = append(conflictPaths, p)
-			}
-		}
-
-		attrs[fieldName] = schema.StringAttribute{
-			Optional:    true,
-			Description: fmt.Sprintf("ID or path for %s object type. Conflicts with all other object identifier attributes.", mapping.GetObjectType()),
-			Validators: []validator.String{
-				stringvalidator.ConflictsWith(conflictPaths...),
-			},
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
-		}
-	}
-
 	resp.Schema = schema.Schema{
 		Description: "Manages permissions for a single principal on a Databricks object. " +
 			"This resource is authoritative for the specified object-principal pair only. " +
 			"Use `databricks_permissions` for managing all principals on an object at once.",
-		Attributes: attrs,
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"object_type": schema.StringAttribute{
+				Required:    true,
+				Description: "The type of object to manage permissions for (e.g., 'clusters', 'jobs', 'notebooks', 'authorization'). See the Databricks Permissions API documentation for the full list of supported object types.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"object_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the object to manage permissions for. The format depends on the object type.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			// Principal identifiers - exactly one required, mutually exclusive
+			"user_name": schema.StringAttribute{
+				Optional:    true,
+				Description: "User name of the principal. Conflicts with group_name and service_principal_name.",
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
+						path.MatchRoot("group_name"),
+						path.MatchRoot("service_principal_name"),
+					),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"group_name": schema.StringAttribute{
+				Optional:    true,
+				Description: "Group name of the principal. Conflicts with user_name and service_principal_name.",
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
+						path.MatchRoot("user_name"),
+						path.MatchRoot("service_principal_name"),
+					),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"service_principal_name": schema.StringAttribute{
+				Optional:    true,
+				Description: "Service principal name. Conflicts with user_name and group_name.",
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
+						path.MatchRoot("user_name"),
+						path.MatchRoot("group_name"),
+					),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			// Permission level
+			"permission_level": schema.StringAttribute{
+				Required:    true,
+				Description: "Permission level for the principal on the object (e.g., CAN_MANAGE, CAN_USE, CAN_VIEW). See the Databricks Permissions API documentation for valid permission levels for each object type.",
+				Validators: []validator.String{
+					ValidatePermissionLevel(),
+				},
+			},
+		},
 	}
 }
 
@@ -177,87 +146,27 @@ func (r *PermissionResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// Read principal and permission_level using GetAttribute
-	var userName, groupName, servicePrincipalName, permissionLevel types.String
-
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("user_name"), &userName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("group_name"), &groupName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("service_principal_name"), &servicePrincipalName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("permission_level"), &permissionLevel)...)
-
+	var plan PermissionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	r.upsertPermission(ctx, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Get the object mapping and ID (reads object identifiers dynamically from plan)
-	mapping, objectID, objectFieldName, objectFieldValue, err := r.getObjectMappingAndID(ctx, w, req.Plan)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get object mapping", err.Error())
-		return
-	}
+	// Set computed fields
+	principal := r.getPrincipalFromModel(&plan)
+	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.ObjectType.ValueString(), plan.ObjectID.ValueString(), principal))
 
-	// Lock the object to prevent concurrent modifications
-	lockObject(objectID)
-	defer unlockObject(objectID)
-
-	// Determine principal identifier
-	var principal string
-	if !userName.IsNull() && !userName.IsUnknown() && userName.ValueString() != "" {
-		principal = userName.ValueString()
-	} else if !groupName.IsNull() && !groupName.IsUnknown() && groupName.ValueString() != "" {
-		principal = groupName.ValueString()
-	} else if !servicePrincipalName.IsNull() && !servicePrincipalName.IsUnknown() && servicePrincipalName.ValueString() != "" {
-		principal = servicePrincipalName.ValueString()
-	} else {
-		resp.Diagnostics.AddError("Invalid principal configuration", "exactly one of 'user_name', 'group_name', or 'service_principal_name' must be set")
-		return
-	}
-
-	// Create the permission update request
-	permLevel := iam.PermissionLevel(permissionLevel.ValueString())
-
-	// Use Update API (PATCH) to add permissions for this principal only
-	idParts := strings.Split(objectID, "/")
-	permID := idParts[len(idParts)-1]
-
-	_, err = w.Permissions.Update(ctx, iam.UpdateObjectPermissions{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
-		AccessControlList: []iam.AccessControlRequest{
-			{
-				UserName:             userName.ValueString(),
-				GroupName:            groupName.ValueString(),
-				ServicePrincipalName: servicePrincipalName.ValueString(),
-				PermissionLevel:      permLevel,
-			},
-		},
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to create permission", err.Error())
-		return
-	}
-
-	// Set the ID, object_type, and all other fields in state
-	resourceID := fmt.Sprintf("%s/%s", objectID, principal)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(resourceID))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), types.StringValue(mapping.GetRequestObjectType()))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(objectFieldName), objectFieldValue)...) // Set the object identifier field
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), userName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), groupName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), servicePrincipalName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), permissionLevel)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Read ID from state using GetAttribute
-	var id types.String
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	var state PermissionResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -268,27 +177,17 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// Parse the ID to get object ID and principal
-	objectID, principal, err := r.parseID(id.ValueString())
+	// Parse the ID to get object type, object ID and principal
+	objectType, objectID, principal, err := r.parseID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to parse resource ID", err.Error())
 		return
 	}
 
-	// Get the mapping from the ID
-	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get resource permissions mapping", err.Error())
-		return
-	}
-
 	// Read current permissions
-	idParts := strings.Split(objectID, "/")
-	permID := idParts[len(idParts)-1]
-
 	perms, err := w.Permissions.Get(ctx, iam.GetPermissionRequest{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
+		RequestObjectId:   objectID,
+		RequestObjectType: objectType,
 	})
 	if err != nil {
 		// If the object or permissions are not found, remove from state to trigger recreation
@@ -302,12 +201,11 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Filter for the specific principal
 	found := false
-	var currentPermissionLevel types.String
 	for _, acl := range perms.AccessControlList {
 		if r.matchesPrincipal(acl, principal) {
 			// Update the state with the current permission level
 			if len(acl.AllPermissions) > 0 {
-				currentPermissionLevel = types.StringValue(string(acl.AllPermissions[0].PermissionLevel))
+				state.PermissionLevel = types.StringValue(string(acl.AllPermissions[0].PermissionLevel))
 				found = true
 				break
 			}
@@ -320,95 +218,27 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// Read the object identifier field from current state to preserve it
-	// (It should already be in state, but we need to make sure it stays there)
-	var objectFieldValue types.String
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(mapping.GetField()), &objectFieldValue)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Update state using SetAttribute
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(mapping.GetField()), objectFieldValue)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), currentPermissionLevel)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Read ID, principals, and permission_level from plan using GetAttribute
-	var id, userName, groupName, servicePrincipalName, permissionLevel types.String
-
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("id"), &id)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("user_name"), &userName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("group_name"), &groupName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("service_principal_name"), &servicePrincipalName)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("permission_level"), &permissionLevel)...)
-
+	var plan PermissionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
-		return
-	}
-
-	// Parse the ID to get object ID and principal
-	objectID, _, err := r.parseID(id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse resource ID", err.Error())
-		return
-	}
-
-	// Lock the object to prevent concurrent modifications
-	lockObject(objectID)
-	defer unlockObject(objectID)
-
-	// Get the mapping from the ID
-	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get resource permissions mapping", err.Error())
-		return
-	}
-
-	// Update the permission using PATCH
-	permLevel := iam.PermissionLevel(permissionLevel.ValueString())
-	idParts := strings.Split(objectID, "/")
-	permID := idParts[len(idParts)-1]
-
-	_, err = w.Permissions.Update(ctx, iam.UpdateObjectPermissions{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
-		AccessControlList: []iam.AccessControlRequest{
-			{
-				UserName:             userName.ValueString(),
-				GroupName:            groupName.ValueString(),
-				ServicePrincipalName: servicePrincipalName.ValueString(),
-				PermissionLevel:      permLevel,
-			},
-		},
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to update permission", err.Error())
-		return
-	}
-
-	// Read the object identifier field from current state to preserve it
-	var objectFieldValue types.String
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(mapping.GetField()), &objectFieldValue)...)
+	r.upsertPermission(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Update state using SetAttribute - preserve the object identifier field
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(mapping.GetField()), objectFieldValue)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), permissionLevel)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Read ID from state using GetAttribute
-	var id types.String
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	var state PermissionResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -419,33 +249,20 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	// Parse the ID to get object ID and principal
-	objectID, principal, err := r.parseID(id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse resource ID", err.Error())
-		return
-	}
+	objectType := state.ObjectType.ValueString()
+	objectID := state.ObjectID.ValueString()
+	principal := r.getPrincipalFromModel(&state)
 
 	// Lock the object to prevent concurrent modifications
 	// This is CRITICAL for Delete to avoid race conditions when multiple
 	// permission resources for the same object are deleted concurrently
-	lockObject(objectID)
-	defer unlockObject(objectID)
-
-	// Get the mapping from the ID
-	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get resource permissions mapping", err.Error())
-		return
-	}
+	lockObject(objectType, objectID)
+	defer unlockObject(objectType, objectID)
 
 	// Read current permissions to see what to remove
-	idParts := strings.Split(objectID, "/")
-	permID := idParts[len(idParts)-1]
-
 	currentPerms, err := w.Permissions.Get(ctx, iam.GetPermissionRequest{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
+		RequestObjectId:   objectID,
+		RequestObjectType: objectType,
 	})
 	if err != nil {
 		// If the object or permissions are not found, the permission is already gone
@@ -475,8 +292,8 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	// Use Set to replace all permissions (effectively removing the specified principal)
 	_, err = w.Permissions.Set(ctx, iam.SetObjectPermissions{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
+		RequestObjectId:   objectID,
+		RequestObjectType: objectType,
 		AccessControlList: remainingACLs,
 	})
 	if err != nil {
@@ -491,8 +308,8 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *PermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Import ID format: /<resource_type>/<id>/<principal>
-	// Example: /clusters/cluster-123/user@example.com
+	// Import ID format: <object_type>/<object_id>/<principal>
+	// Example: clusters/cluster-123/user@example.com
 
 	w, err := r.Client.WorkspaceClient()
 	if err != nil {
@@ -501,29 +318,19 @@ func (r *PermissionResource) ImportState(ctx context.Context, req resource.Impor
 	}
 
 	// Parse the import ID
-	objectID, principal, err := r.parseID(req.ID)
+	objectType, objectID, principal, err := r.parseID(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID Format",
-			fmt.Sprintf("Expected format: /<resource_type>/<id>/<principal>. Error: %s", err.Error()),
+			fmt.Sprintf("Expected format: <object_type>/<object_id>/<principal>. Error: %s", err.Error()),
 		)
 		return
 	}
 
-	// Get the mapping from the ID to determine object type and field
-	mapping, err := permissions.GetResourcePermissionsFromId(objectID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get resource permissions mapping", err.Error())
-		return
-	}
-
 	// Read current permissions from Databricks
-	idParts := strings.Split(objectID, "/")
-	permID := idParts[len(idParts)-1]
-
 	perms, err := w.Permissions.Get(ctx, iam.GetPermissionRequest{
-		RequestObjectId:   permID,
-		RequestObjectType: mapping.GetRequestObjectType(),
+		RequestObjectId:   objectID,
+		RequestObjectType: objectType,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read permissions", err.Error())
@@ -532,16 +339,35 @@ func (r *PermissionResource) ImportState(ctx context.Context, req resource.Impor
 
 	// Find the specific principal's permission
 	var found bool
-	var permissionLevel string
-	var userName, groupName, servicePrincipalName string
+	var state PermissionResourceModel
+	state.ID = types.StringValue(req.ID)
+	state.ObjectType = types.StringValue(objectType)
+	state.ObjectID = types.StringValue(objectID)
 
 	for _, acl := range perms.AccessControlList {
 		if r.matchesPrincipal(acl, principal) {
 			if len(acl.AllPermissions) > 0 {
-				permissionLevel = string(acl.AllPermissions[0].PermissionLevel)
-				userName = acl.UserName
-				groupName = acl.GroupName
-				servicePrincipalName = acl.ServicePrincipalName
+				state.PermissionLevel = types.StringValue(string(acl.AllPermissions[0].PermissionLevel))
+
+				// Set principal fields - use null for empty strings
+				if acl.UserName != "" {
+					state.UserName = types.StringValue(acl.UserName)
+				} else {
+					state.UserName = types.StringNull()
+				}
+
+				if acl.GroupName != "" {
+					state.GroupName = types.StringValue(acl.GroupName)
+				} else {
+					state.GroupName = types.StringNull()
+				}
+
+				if acl.ServicePrincipalName != "" {
+					state.ServicePrincipalName = types.StringValue(acl.ServicePrincipalName)
+				} else {
+					state.ServicePrincipalName = types.StringNull()
+				}
+
 				found = true
 				break
 			}
@@ -551,84 +377,64 @@ func (r *PermissionResource) ImportState(ctx context.Context, req resource.Impor
 	if !found {
 		resp.Diagnostics.AddError(
 			"Permission Not Found",
-			fmt.Sprintf("No permission found for principal %q on object %q", principal, objectID),
+			fmt.Sprintf("No permission found for principal %q on object %s/%s", principal, objectType, objectID),
 		)
 		return
 	}
 
-	// Set all attributes in state using SetAttribute
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(req.ID))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), types.StringValue(mapping.GetRequestObjectType()))...)
-
-	// Set the object identifier field (e.g., cluster_id, job_id, etc.)
-	// Extract the configured value from the objectID
-	configuredValue := permID
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(mapping.GetField()), types.StringValue(configuredValue))...)
-
-	// Set principal fields - use null for empty strings to avoid ImportStateVerify failures
-	if userName != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringValue(userName))...)
-	} else {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), types.StringNull())...)
-	}
-
-	if groupName != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringValue(groupName))...)
-	} else {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_name"), types.StringNull())...)
-	}
-
-	if servicePrincipalName != "" {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringValue(servicePrincipalName))...)
-	} else {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_principal_name"), types.StringNull())...)
-	}
-
-	// Set permission level
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_level"), types.StringValue(permissionLevel))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // Helper methods
 
-// AttributeGetter is an interface for types that can get attributes (Plan, Config, State)
-type AttributeGetter interface {
-	GetAttribute(ctx context.Context, path path.Path, target interface{}) diag.Diagnostics
-}
-
-// PermissionMapping is an interface that abstracts the permissions mapping operations
-type PermissionMapping interface {
-	GetRequestObjectType() string
-	GetObjectType() string
-	GetID(context.Context, *databricks.WorkspaceClient, string) (string, error)
-}
-
-func (r *PermissionResource) getObjectMappingAndID(ctx context.Context, w *databricks.WorkspaceClient, getter AttributeGetter) (PermissionMapping, string, string, types.String, error) {
-	// Dynamically iterate through all permission definitions to find which object ID is set
-	allPermissions := permissions.AllResourcePermissions()
-
-	for _, mapping := range allPermissions {
-		var attrValue types.String
-		diags := getter.GetAttribute(ctx, path.Root(mapping.GetField()), &attrValue)
-		if diags.HasError() {
-			continue // Attribute doesn't exist or has errors, try next
-		}
-
-		if !attrValue.IsNull() && !attrValue.IsUnknown() && attrValue.ValueString() != "" {
-			configuredValue := attrValue.ValueString()
-
-			// Get the object ID (may involve path resolution)
-			objectID, err := mapping.GetID(ctx, w, configuredValue)
-			if err != nil {
-				return nil, "", "", types.String{}, err
-			}
-
-			// Return mapping, objectID, field name, and field value
-			return mapping, objectID, mapping.GetField(), attrValue, nil
-		}
+// upsertPermission creates or updates a permission for a principal on an object
+func (r *PermissionResource) upsertPermission(ctx context.Context, model *PermissionResourceModel, diags *diag.Diagnostics) {
+	w, err := r.Client.WorkspaceClient()
+	if err != nil {
+		diags.AddError("Failed to get workspace client", err.Error())
+		return
 	}
 
-	// No object identifier was set
-	return nil, "", "", types.String{}, fmt.Errorf("at least one object identifier must be set")
+	objectType := model.ObjectType.ValueString()
+	objectID := model.ObjectID.ValueString()
+
+	// Lock the object to prevent concurrent modifications
+	lockObject(objectType, objectID)
+	defer unlockObject(objectType, objectID)
+
+	// Create the permission update request
+	permLevel := iam.PermissionLevel(model.PermissionLevel.ValueString())
+
+	_, err = w.Permissions.Update(ctx, iam.UpdateObjectPermissions{
+		RequestObjectId:   objectID,
+		RequestObjectType: objectType,
+		AccessControlList: []iam.AccessControlRequest{
+			{
+				UserName:             model.UserName.ValueString(),
+				GroupName:            model.GroupName.ValueString(),
+				ServicePrincipalName: model.ServicePrincipalName.ValueString(),
+				PermissionLevel:      permLevel,
+			},
+		},
+	})
+	if err != nil {
+		diags.AddError("Failed to create/update permission", err.Error())
+		return
+	}
+}
+
+// getPrincipalFromModel extracts the principal identifier from the model
+func (r *PermissionResource) getPrincipalFromModel(model *PermissionResourceModel) string {
+	if !model.UserName.IsNull() && model.UserName.ValueString() != "" {
+		return model.UserName.ValueString()
+	}
+	if !model.GroupName.IsNull() && model.GroupName.ValueString() != "" {
+		return model.GroupName.ValueString()
+	}
+	if !model.ServicePrincipalName.IsNull() && model.ServicePrincipalName.ValueString() != "" {
+		return model.ServicePrincipalName.ValueString()
+	}
+	return ""
 }
 
 func (r *PermissionResource) matchesPrincipal(acl iam.AccessControlResponse, principal string) bool {
@@ -637,16 +443,19 @@ func (r *PermissionResource) matchesPrincipal(acl iam.AccessControlResponse, pri
 		acl.ServicePrincipalName == principal
 }
 
-func (r *PermissionResource) parseID(id string) (objectID string, principal string, error error) {
-	// ID format: /<resource_type>/<id>/<principal>
+func (r *PermissionResource) parseID(id string) (objectType string, objectID string, principal string, err error) {
+	// ID format: <object_type>/<object_id>/<principal>
+	// Example: clusters/cluster-123/user@example.com
 	parts := strings.Split(id, "/")
-	if len(parts) < 4 {
-		return "", "", fmt.Errorf("invalid ID format: expected /<resource_type>/<id>/<principal>, got %s", id)
+	if len(parts) < 3 {
+		return "", "", "", fmt.Errorf("invalid ID format: expected <object_type>/<object_id>/<principal>, got %s", id)
 	}
 
-	// Reconstruct object ID and get principal
+	// Handle cases where object_id might contain slashes (e.g., notebooks paths)
+	// The principal is always the last part
 	principal = parts[len(parts)-1]
-	objectID = strings.Join(parts[:len(parts)-1], "/")
+	objectType = parts[0]
+	objectID = strings.Join(parts[1:len(parts)-1], "/")
 
-	return objectID, principal, nil
+	return objectType, objectID, principal, nil
 }

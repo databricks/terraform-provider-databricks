@@ -13,6 +13,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type LibraryResourceWithoutNamespace struct {
+	compute.Library
+}
+
+func (LibraryResourceWithoutNamespace) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.AddNewField("cluster_id", &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
+	})
+	return s
+}
+
+func (LibraryResourceWithoutNamespace) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("egg").SetDeprecated(EggDeprecationWarning)
+	return s
+}
+
 type LibraryResource struct {
 	compute.Library
 	common.Namespace

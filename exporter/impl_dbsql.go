@@ -215,6 +215,31 @@ func listAlerts(ic *importContext) error {
 	return nil
 }
 
+func listAlertsV2(ic *importContext) error {
+	it := ic.workspaceClient.AlertsV2.ListAlerts(ic.Context, sql.ListAlertsV2Request{PageSize: 100})
+	i := 0
+	for it.HasNext(ic.Context) {
+		a, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		i++
+		if !ic.MatchesName(a.DisplayName) {
+			continue
+		}
+		ic.EmitIfUpdatedAfterIsoString(&resource{
+			Resource:    "databricks_alert_v2",
+			ID:          a.Id,
+			Incremental: ic.incremental,
+		}, a.UpdateTime, fmt.Sprintf("alert_v2 '%s'", a.DisplayName))
+		if i%50 == 0 {
+			log.Printf("[INFO] Imported %d AlertsV2", i)
+		}
+	}
+	log.Printf("[INFO] Listed %d AlertsV2", i)
+	return nil
+}
+
 func listLakeviewDashboards(ic *importContext) error {
 	it := ic.workspaceClient.Lakeview.List(ic.Context, dashboards.ListDashboardsRequest{PageSize: 1000})
 	i := 0

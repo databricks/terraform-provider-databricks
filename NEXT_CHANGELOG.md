@@ -15,4 +15,6 @@
 
 ### Exporter
 
+* Initial support for resources implemented with plugin framework ([#5176](https://github.com/databricks/terraform-provider-databricks/pull/5176)).
+
 ### Internal Changes

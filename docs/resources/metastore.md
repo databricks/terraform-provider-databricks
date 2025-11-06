@@ -71,7 +71,7 @@ resource "databricks_metastore_assignment" "this" {
 The following arguments are required:
 
 * `name` - Name of metastore.
-* `storage_root` - (Optional) Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource. If no `storage_root` is defined for the metastore, each catalog must have a `storage_root` defined.
+* `storage_root` - (Optional) Path on cloud storage account, where managed `databricks_table` are stored.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). Change forces creation of a new resource. If no `storage_root` is defined for the metastore, each catalog must have a `storage_root` defined.
 * `region` - (Mandatory for account-level) The region of the metastore
 * `owner` - (Optional) Username/groupname/sp application_id of the metastore owner.
 * `delta_sharing_scope` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.  INTERNAL only allows sharing within the same account, and INTERNAL_AND_EXTERNAL allows cross account sharing and token based sharing.

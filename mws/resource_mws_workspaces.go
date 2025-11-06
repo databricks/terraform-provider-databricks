@@ -108,6 +108,7 @@ type Workspace struct {
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
 	EffectiveComputeMode                string                   `json:"effective_compute_mode" tf:"computed"`
+	NetworkConnectivityConfigID         string                   `json:"network_connectivity_config_id,omitempty" tf:"computed"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -711,7 +712,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")

@@ -322,6 +322,18 @@ func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.
 	return false
 }
 
+// DefaultShouldOmitFieldFuncWithAbstraction is the abstracted version that works with both SDKv2 and Plugin Framework
+// This will be used when codegen.go is updated to use abstractions
+func DefaultShouldOmitFieldFuncWithAbstraction(_ *importContext, pathString string, fieldSchema FieldSchema, d ResourceDataWrapper, _ *resource) bool {
+	if fieldSchema.IsComputed() {
+		return true
+	}
+	if def := fieldSchema.GetDefault(); def != nil && d.Get(pathString) == def {
+		return true
+	}
+	return false
+}
+
 func (ic *importContext) generateNewData(data *schema.ResourceData, resourceType, rID string, obj any) *schema.ResourceData {
 	data.MarkNewResource()
 	data.SetId(rID)

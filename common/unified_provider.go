@@ -83,32 +83,18 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	return m
 }
 
-// NamespaceCustomizeDiff is used to customize the diff for the provider configurations
-// in resources
+// NamespaceCustomizeDiff is used to customize the diff for the provider configuration
+// in a resource diff.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	// Force New
 	workspaceIDKey := workspaceIDSchemaKey
-	old, new := d.GetChange(workspaceIDKey)
-	oldWorkspaceID, ok := old.(string)
-	if !ok {
-		return fmt.Errorf("workspace_id must be a string")
-	}
-	newWorkspaceID, ok := new.(string)
-	if !ok {
-		return fmt.Errorf("workspace_id must be a string")
-	}
+	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
 	if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
 		if err := d.ForceNew(workspaceIDKey); err != nil {
 			return err
 		}
 	}
 
-	// Validate the workspace ID by making sure we are able to get a workspace client
-	// for the new workspace ID.
-	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWorkspaceID)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

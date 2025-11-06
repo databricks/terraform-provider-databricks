@@ -2822,6 +2822,9 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_mws_network_connectivity_config": {
 		AccountLevel: true,
 		Service:      "nccs",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Get("name").(string)
+		},
 		List: func(ic *importContext) error {
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
@@ -2844,7 +2847,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_mws_network_connectivity_config",
 					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
-					Name:     nc.Name,
 				})
 				if nc.EgressConfig.TargetRules != nil {
 					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
@@ -2876,6 +2878,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
 				Match: "network_connectivity_config_id"},
+		},
+	},
+	"databricks_mws_ncc_binding": {
+		AccountLevel: true,
+		Service:      "nccs",
+		List: func(ic *importContext) error {
+			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, workspace := range workspaces {
+				if workspace.NetworkConnectivityConfigId != "" {
+					ic.emitNccBindingAndNcc(workspace.WorkspaceId, workspace.NetworkConnectivityConfigId)
+					if !ic.accountClient.Config.IsAzure() {
+						wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
+						ic.Emit(&resource{
+							Resource: "databricks_mws_workspaces",
+							ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+							Name:     workspace.WorkspaceName + "_" + wsIdString,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
+				Match: "network_connectivity_config_id"},
+			{Path: "workspace_id", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 		},
 	},
 	"databricks_mws_credentials": {
@@ -3096,6 +3127,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "mws",
 		List: func(ic *importContext) error {
 			if ic.accountClient.Config.IsAzure() {
+				// TODO: use listing on Azure just to emit the NCC bindings
 				return nil
 			}
 			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
@@ -3165,6 +3197,9 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_mws_credentials",
 					ID:       ic.accountClient.Config.AccountID + "/" + workspace.CredentialsID,
 				})
+			}
+			if workspace.NetworkConnectivityConfigID != "" {
+				ic.emitNccBindingAndNcc(workspace.WorkspaceID, workspace.NetworkConnectivityConfigID)
 			}
 			if ic.isServiceEnabled("idfed") {
 				err := emitIdfedAndUsersSpsGroups(ic, workspace.WorkspaceID)

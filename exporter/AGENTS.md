@@ -82,4 +82,3 @@ unifiedDataToHcl()
 **Key Differences**:
 - SDKv2 generates nested structures as **blocks**: `evaluation { ... }`
 - Plugin Framework generates nested structures as **attributes**: `evaluation = { ... }`
-

@@ -95,7 +95,7 @@ Resources are being migrated from SDKv2 to Plugin Framework. When migrating:
   - `TestMwsAcc*` - Account-level tests across all clouds
   - `TestUcAcc*` - Unity Catalog tests across all clouds
 
-### Terraform Exporter 
+### Terraform Exporter
 
 The exporter (`exporter/` directory) generates Terraform configuration (`.tf` files) and import scripts from existing Databricks resources.
 

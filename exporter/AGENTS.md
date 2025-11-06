@@ -40,6 +40,7 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 1. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
 1. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
 1. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
+1. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
 
 Recommendations:
 
@@ -47,6 +48,7 @@ Recommendations:
 - Existing resources may emit newly implemented resource, i.e., `databricks_sql_table` should emit `databricks_quality_monitor` when it's added to Exporter.
 - In some cases, references to dependencies could be ambiguous, i.e., there could be tables or schemas with the same name in different catalogs/schema. In this case we may need to add `IsValidApproximation` implementation.
 - When there is a need to access a one or a few attributes in the Terraform resource data/state, use `.Get`, but if there is a need to access fields in nested structures, or have access to multiple fields, convert resource data/state into a Go SDK struct and use it.
+- Refer [Databricks REST API documentation](https://docs.databricks.com/api/llms.txt) to understand a payload used in specific API.
 
 **When Adding Exporter Support for resource implemented with Terraform plugin framework**:
 

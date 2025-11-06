@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"golang.org/x/exp/maps"
 
@@ -566,4 +567,23 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 		}
 		return name
 	}
+}
+
+func (ic *importContext) emitNccBindingAndNcc(workspaceId int64, nccId string) {
+	id := fmt.Sprintf("%d/%s", workspaceId, nccId)
+	data := mws.ResourceMwsNccBinding().ToResource().TestResourceData()
+	data.MarkNewResource()
+	data.SetId(id)
+	data.Set("workspace_id", workspaceId)
+	data.Set("network_connectivity_config_id", nccId)
+	ic.Emit(&resource{
+		Resource: "databricks_mws_ncc_binding",
+		Data:     data,
+		ID:       id,
+		Name:     fmt.Sprintf("ws_%d_%s", workspaceId, nccId),
+	})
+	ic.Emit(&resource{
+		Resource: "databricks_mws_network_connectivity_config",
+		ID:       ic.accountClient.Config.AccountID + "/" + nccId,
+	})
 }

@@ -16,6 +16,7 @@
 
 ### Exporter
 
+* Support exporting of `databricks_mws_ncc_binding` ([#5184](https://github.com/databricks/terraform-provider-databricks/pull/5184)).
 * Initial support for resources implemented with plugin framework ([#5176](https://github.com/databricks/terraform-provider-databricks/pull/5176)).
 
 ### Internal Changes

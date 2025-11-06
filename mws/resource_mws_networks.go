@@ -138,7 +138,7 @@ func ResourceMwsNetworks() common.Resource {
 			}
 			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			// For `gcp_network_info.0.pod_ip_range_name` or `gcp_network_info.0.service_ip_range_name`,
 			// users should be able to remove these keys without recreating their networks as part of the
 			// GKE deprecation process.

@@ -21,3 +21,4 @@
 * Initial support for resources implemented with plugin framework ([#5176](https://github.com/databricks/terraform-provider-databricks/pull/5176)).
 
 ### Internal Changes
+* Add client support in CustomizeDiff for SDKv2 resources and data sources ([#5171](https://github.com/databricks/terraform-provider-databricks/pull/5171)).

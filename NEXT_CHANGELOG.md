@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fixed spurious diffs in `databricks_model_serving` and `databricks_model_serving_provisioned_throughput` resources when the API returns `served_models` or `served_entities` in a different order than specified in the configuration ([#5188](https://github.com/databricks/terraform-provider-databricks/pull/5188)).
+
 ### Documentation
 
 * Explain that special characters in URLs should be percent-encoded ([#5178](https://github.com/databricks/terraform-provider-databricks/pull/5178)).

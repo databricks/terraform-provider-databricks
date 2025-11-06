@@ -1,5 +1,25 @@
 # Version changelog
 
+## Release v1.97.0 (2025-11-06)
+
+### Bug Fixes
+
+* Fixed spurious diffs in `databricks_model_serving` and `databricks_model_serving_provisioned_throughput` resources when the API returns `served_models` or `served_entities` in a different order than specified in the configuration ([#5188](https://github.com/databricks/terraform-provider-databricks/pull/5188)).
+
+### Documentation
+
+* Explain that special characters in URLs should be percent-encoded ([#5178](https://github.com/databricks/terraform-provider-databricks/pull/5178)).
+* Improve documentation about `preloaded_docker_images.basic_auth` in `databricks_cluster` and `databricks_instance_pool` ([#5154](https://github.com/databricks/terraform-provider-databricks/pull/5154)).
+
+### Exporter
+
+* Support exporting of `databricks_mws_ncc_binding` ([#5184](https://github.com/databricks/terraform-provider-databricks/pull/5184)).
+* Initial support for resources implemented with plugin framework ([#5176](https://github.com/databricks/terraform-provider-databricks/pull/5176)).
+
+### Internal Changes
+* Add client support in CustomizeDiff for SDKv2 resources and data sources ([#5171](https://github.com/databricks/terraform-provider-databricks/pull/5171)).
+
+
 ## Release v1.96.0 (2025-10-30)
 
 ### New Features and Improvements

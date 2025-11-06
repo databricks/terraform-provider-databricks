@@ -21,4 +21,6 @@
 * Initial support for resources implemented with plugin framework ([#5176](https://github.com/databricks/terraform-provider-databricks/pull/5176)).
 
 ### Internal Changes
+
+* Decouple library schema used in cluster resource with library resource ([#5189](https://github.com/databricks/terraform-provider-databricks/pull/5189)).
 * Add client support in CustomizeDiff for SDKv2 resources and data sources ([#5171](https://github.com/databricks/terraform-provider-databricks/pull/5171)).

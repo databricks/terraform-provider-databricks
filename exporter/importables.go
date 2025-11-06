@@ -26,6 +26,7 @@ import (
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	alert_v2_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/alert_v2"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -1262,6 +1263,65 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
 			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_alert_v2": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "alerts",
+		Name:            makeNamePlusIdFunc("display_name"),
+		List:            listAlertsV2,
+		// Body function removed - using generic HCL generation for Plugin Framework resources
+		Import: func(ic *importContext, r *resource) error {
+			// Convert Plugin Framework state to Go SDK struct
+			var alert sql.AlertV2
+			if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper, alert_v2_resource.AlertV2{}, &alert); err != nil {
+				return err
+			}
+
+			// Emit dependencies - now using plain Go strings!
+			if alert.WarehouseId != "" {
+				ic.Emit(&resource{Resource: "databricks_sql_endpoint", ID: alert.WarehouseId})
+			}
+
+			if alert.ParentPath != "" {
+				ic.emitDirectoryOrRepo(alert.ParentPath)
+			}
+
+			if alert.OwnerUserName != "" {
+				ic.emitUserOrServicePrincipal(alert.OwnerUserName)
+			}
+
+			// Handle evaluation.notification.subscriptions
+			if alert.Evaluation.Notification != nil {
+				for _, sub := range alert.Evaluation.Notification.Subscriptions {
+					if sub.DestinationId != "" {
+						ic.Emit(&resource{Resource: "databricks_notification_destination", ID: sub.DestinationId})
+					}
+					// user_email is only for users (email addresses), not service principals (UUIDs)
+					// emitUserOrServicePrincipal will automatically handle this correctly
+					if sub.UserEmail != "" {
+						ic.emitUserOrServicePrincipal(sub.UserEmail)
+					}
+				}
+			}
+
+			// For Plugin Framework resources, we can't use r.Data directly, use the wrapper ID
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/alerts/%s", r.ID),
+				"alert_v2_"+r.Name)
+			return nil
+		},
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_alert_v2", "display_name"),
+		Depends: []reference{
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_directory"},
+			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "evaluation.notification.subscriptions.destination_id", Resource: "databricks_notification_destination"},
+			{Path: "evaluation.notification.subscriptions.user_email", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_pipeline": {
@@ -2778,6 +2838,9 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_mws_network_connectivity_config": {
 		AccountLevel: true,
 		Service:      "nccs",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Get("name").(string)
+		},
 		List: func(ic *importContext) error {
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
@@ -2800,7 +2863,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_mws_network_connectivity_config",
 					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
-					Name:     nc.Name,
 				})
 				if nc.EgressConfig.TargetRules != nil {
 					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
@@ -2832,6 +2894,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
 				Match: "network_connectivity_config_id"},
+		},
+	},
+	"databricks_mws_ncc_binding": {
+		AccountLevel: true,
+		Service:      "nccs",
+		List: func(ic *importContext) error {
+			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, workspace := range workspaces {
+				if workspace.NetworkConnectivityConfigId != "" {
+					ic.emitNccBindingAndNcc(workspace.WorkspaceId, workspace.NetworkConnectivityConfigId)
+					if !ic.accountClient.Config.IsAzure() {
+						wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
+						ic.Emit(&resource{
+							Resource: "databricks_mws_workspaces",
+							ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+							Name:     workspace.WorkspaceName + "_" + wsIdString,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
+				Match: "network_connectivity_config_id"},
+			{Path: "workspace_id", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 		},
 	},
 	"databricks_mws_credentials": {
@@ -3052,6 +3143,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "mws",
 		List: func(ic *importContext) error {
 			if ic.accountClient.Config.IsAzure() {
+				// TODO: use listing on Azure just to emit the NCC bindings
 				return nil
 			}
 			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
@@ -3121,6 +3213,9 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_mws_credentials",
 					ID:       ic.accountClient.Config.AccountID + "/" + workspace.CredentialsID,
 				})
+			}
+			if workspace.NetworkConnectivityConfigID != "" {
+				ic.emitNccBindingAndNcc(workspace.WorkspaceID, workspace.NetworkConnectivityConfigID)
 			}
 			if ic.isServiceEnabled("idfed") {
 				err := emitIdfedAndUsersSpsGroups(ic, workspace.WorkspaceID)

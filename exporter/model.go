@@ -1,20 +1,16 @@
 package exporter
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 type regexFix struct {
@@ -137,6 +133,8 @@ func (s *stateApproximation) Append(ra resourceApproximation) {
 type importable struct {
 	// Logical (file) group that resources belong to
 	Service string
+	// Indicates this resource uses Terraform Plugin Framework instead of SDKv2
+	PluginFramework bool
 	// Semantic resource block name
 	Name func(ic *importContext, d *schema.ResourceData) string
 	// Method to perform depth-first search and emit resources
@@ -151,10 +149,14 @@ type importable struct {
 	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
 	// Function to detect if the given resource should be ignored or not
 	Ignore func(ic *importContext, r *resource) bool
-	// Function to check if the field in the given resource should be omitted or not
+	// Function to check if the field in the given resource should be omitted or not (SDKv2 signature - deprecated)
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
-	// Function to check if the field in the given resource should be generated or not independently of the value
+	// Function to check if the field in the given resource should be generated or not independently of the value (SDKv2 signature - deprecated)
 	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool
+	// Unified function to check if field should be omitted (works with both SDKv2 and Plugin Framework)
+	ShouldOmitFieldUnified func(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool
+	// Unified function to check if field should be generated (works with both SDKv2 and Plugin Framework)
+	ShouldGenerateFieldUnified func(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource
@@ -237,8 +239,10 @@ type resource struct {
 	// If not specified, then we generate a normal resource block, or we can generate a data block if it's set to "data"
 	Mode        string
 	Incremental bool
-	// Actual Terraform data
+	// Actual Terraform data (SDKv2 only)
 	Data *schema.ResourceData
+	// Data wrapper for both SDKv2 and Plugin Framework resources
+	DataWrapper ResourceDataWrapper
 	// Arbitrary data to be used by importable
 	ExtraData map[string]any
 	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
@@ -294,15 +298,22 @@ func (r *resource) ImportCommand(ic *importContext) string {
 
 func (r *resource) ImportResource(ic *importContext) {
 	defer ic.waitGroup.Done()
-	pr, ok := ic.Resources[r.Resource]
-	if !ok {
-		log.Printf("[ERROR] %s is not available in provider", r)
-		return
-	}
 	ir, ok := ic.Importables[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
+	}
+	// Check if resource is available in the appropriate provider
+	if ir.PluginFramework {
+		if _, ok := ic.PluginFrameworkResources[r.Resource]; !ok {
+			log.Printf("[ERROR] %s is not available in Plugin Framework provider", r)
+			return
+		}
+	} else {
+		if _, ok := ic.Resources[r.Resource]; !ok {
+			log.Printf("[ERROR] %s is not available in SDKv2 provider", r)
+			return
+		}
 	}
 	rString := r.String()
 	ic.importingMutex.Lock()
@@ -332,33 +343,29 @@ func (r *resource) ImportResource(ic *importContext) {
 			return
 		}
 	}
-	if r.Data == nil {
-		// empty data with resource schema
-		r.Data = pr.Data(&terraform.InstanceState{
-			Attributes: map[string]string{},
-			ID:         r.ID,
-		})
-		r.Data.MarkNewResource()
-		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
-		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
-		apiVersion := ic.Importables[r.Resource].ApiVersion
-		if apiVersion != "" {
-			ctx = context.WithValue(ctx, common.Api, apiVersion)
-		}
-		dia := runWithRetries(func() diag.Diagnostics {
-			return pr.ReadContext(ctx, r.Data, ic.Client)
-		},
-			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
-		if dia.HasError() {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-			return
-		}
-		if r.Data.Id() == "" {
-			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
-				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
-				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+	if r.Data == nil && r.DataWrapper == nil {
+		// Check if this is a Plugin Framework resource
+		if ir.PluginFramework {
+			// Use Plugin Framework read path
+			wrapper := ic.readPluginFrameworkResource(r, ir)
+			if wrapper == nil {
+				return
 			}
-			return
+			r.DataWrapper = wrapper
+		} else {
+			// SDKv2 resource path - use helper function
+			wrapper := ic.readSDKv2Resource(r, ir)
+			if wrapper == nil {
+				return
+			}
+			r.DataWrapper = wrapper
+			// Extract the SDKv2 data from the wrapper for backward compatibility
+			if sdkWrapper, ok := wrapper.(*SDKv2ResourceData); ok {
+				r.Data = sdkWrapper.data
+			} else {
+				log.Printf("[ERROR] Expected SDKv2ResourceData wrapper for %s", r.Resource)
+				return
+			}
 		}
 	}
 	r.Name = ic.ResourceName(r)

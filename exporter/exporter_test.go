@@ -273,6 +273,13 @@ var emptyMlflowWebhooks = qa.HTTPFixture{
 	Response:     ml.ListRegistryWebhooks{},
 }
 
+var emptyAlertsV2 = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/alerts?page_size=100",
+	Response:     sdk_sql.ListAlertsResponse{},
+}
+
 var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/external-locations?",
@@ -531,6 +538,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptySqlAlerts,
+			emptyAlertsV2,
 			emptyVectorSearch,
 			emptyPipelines,
 			emptyClusterPolicies,
@@ -808,6 +816,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,
+			emptyAlertsV2,
 			emptyPipelines,
 			emptyPolicyFamilies,
 			emptyPermissionAssignments,
@@ -1986,6 +1995,7 @@ func TestImportingSqlObjects(t *testing.T) {
 				Resource: "/api/2.0/permissions/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
 				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
 			},
+			emptyAlertsV2,
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())

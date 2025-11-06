@@ -108,6 +108,7 @@ type Workspace struct {
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
 	EffectiveComputeMode                string                   `json:"effective_compute_mode" tf:"computed"`
+	NetworkConnectivityConfigID         string                   `json:"network_connectivity_config_id,omitempty" tf:"computed"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop

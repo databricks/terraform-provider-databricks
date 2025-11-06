@@ -3,10 +3,17 @@ package converters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
+	"github.com/databricks/databricks-sdk-go/common/types/duration"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
+	sdktime "github.com/databricks/databricks-sdk-go/common/types/time"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -136,8 +143,56 @@ func tfsdkToGoSdkStructField(
 		destField.SetInt(v.ValueInt64())
 	case types.Float64:
 		destField.SetFloat(v.ValueFloat64())
+	case timetypes.GoDuration:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil
+			return d
+		}
+		dur, err := v.ValueGoDuration()
+		if err != nil {
+			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Duration. %s", v, common.TerraformBugErrorMessage))
+			return d
+		}
+		destField.Set(reflect.ValueOf(duration.New(dur)))
+	case timetypes.RFC3339:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil
+			return d
+		}
+		t, err := v.ValueRFC3339Time()
+		if err != nil {
+			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Time. %s", v, common.TerraformBugErrorMessage))
+			return d
+		}
+		destField.Set(reflect.ValueOf(sdktime.New(t)))
+	case jsontypes.Normalized:
+		if v.IsNull() || v.IsUnknown() {
+			// Leave the destination field as nil (*json.RawMessage)
+			return d
+		}
+		jsonStr := v.ValueString()
+		if jsonStr == "" {
+			// Empty string means nil value
+			return d
+		}
+		rawMsg := json.RawMessage(jsonStr)
+		destField.Set(reflect.ValueOf(&rawMsg))
 	case types.String:
-		if destField.Type().Name() != "string" {
+		if destField.Type() == reflect.TypeOf(fieldmask.FieldMask{}) {
+			// fieldmask.FieldMask is represented as a types.String in the TF SDK.
+			if v.IsNull() || v.IsUnknown() {
+				// Leave the destination field as zero value (empty fieldmask)
+				return d
+			}
+			strVal := v.ValueString()
+			if strVal == "" {
+				// Empty string means empty fieldmask
+				return d
+			}
+			paths := strings.Split(strVal, ",")
+			fm := fieldmask.New(paths)
+			destField.Set(reflect.ValueOf(*fm))
+		} else if destField.Type().Name() != "string" {
 			// This is the case for enum.
 
 			// Skip unset value.

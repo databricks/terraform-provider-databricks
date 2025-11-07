@@ -336,7 +336,7 @@ func ResourcePipeline() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			// Allow changing catalog value in existing pipelines, but force recreation
 			// when switching between storage and catalog (or vice versa).
 			// This should only run on update, thus we skip this check if the ID is not known.

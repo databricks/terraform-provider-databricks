@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+
 ### Bug Fixes
 
 ### Documentation

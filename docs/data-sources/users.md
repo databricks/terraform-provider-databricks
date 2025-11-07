@@ -6,7 +6,7 @@ subcategory: "Security"
 
 Retrieves information about multiple [databricks_user](../resources/user.md) resources.
 
--> This data source works with both the account-level and workspace-level provider. 
+-> This data source works with both the account-level and workspace-level provider.
 
 ## Example Usage
 
@@ -30,23 +30,23 @@ resource "databricks_group_member" "add_users_to_group" {
 
 ## Argument Reference
 
-This data source allows you to filter the list of users using the following optional arguments: 
+This data source allows you to filter the list of users using the following optional arguments:
 
--> Attribute names and operators used in filters are case-insensitive. Find more information [here](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).  
+-> Attribute names and operators used in filters are case-insensitive. Find more information [here](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).
 
 - `filter` - (Optional) Query by which the results have to be filtered. If not specified, all users will be returned. Supported operators are equals (`eq`), contains (`co`), starts with (`sw`), and not equals (`ne`). Additionally, simple expressions can be formed using logical operators `and` and `or`.
 
   **Examples:**
-    - User whose `displayName` equals "john": 
+    - User whose `displayName` equals "john":
     ```hcl
       filter = "displayName eq \"john\""
     ```
-    - User whose `displayName` contains "john" or `userName` contains "@domain.org": 
+    - User whose `displayName` contains "john" or `userName` contains "@domain.org":
     ```hcl
       filter = "displayName co \"john\" or userName co \"@domain.org\""
     ```
 
-- `extra_attributes` - (Optional) A comma-separated list of additional user attributes to include in the results. By default, the data source returns the following attributes: `id`, `userName`, `displayName`, and `externalId`. Use this argument to request additional attributes as needed. The list of all available attributes can be found in the [API reference](https://docs.databricks.com/api/workspace/users/list). 
+- `extra_attributes` - (Optional) A comma-separated list of additional user attributes to include in the results. By default, the data source returns the following attributes: `id`, `userName`, `displayName`, and `externalId`. Use this argument to request additional attributes as needed. The list of all available attributes can be found in the [API reference](https://docs.databricks.com/api/workspace/users/list).
 
 ## Attribute Reference
 
@@ -59,28 +59,28 @@ This data source exposes the following attributes:
     - `name`
       - `givenName` - Given name of the Databricks user.
       - `familyName` - Family name of the Databricks user.
-    - `displayName` - The display name of the user. 
-    - `groups` - Indicates if the user is part of any groups. 
-      - `$ref`
+    - `displayName` - The display name of the user.
+    - `groups` - Indicates if the user is part of any groups.
+      - `ref`
       - `value`
       - `display`
       - `primary`
       - `type`
-    - `entitlements` - Entitlements assigned to the user. 
-      - `$ref`
+    - `entitlements` - Entitlements assigned to the user.
+      - `ref`
       - `value`
       - `display`
       - `primary`
       - `type`
     - `roles` - Indicates if the user has any associated roles.
-      - `$ref`
+      - `ref`
       - `value`
       - `display`
       - `primary`
       - `type`
-    - `schemas` - The schema of the user. 
-    - `externalId` - Reserved for future use. 
-    - `active` - Boolean that represents if this user is active. 
+    - `schemas` - The schema of the user.
+    - `externalId` - Reserved for future use.
+    - `active` - Boolean that represents if this user is active.
 
 ## Related Resources
 

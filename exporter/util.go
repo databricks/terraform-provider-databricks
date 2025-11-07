@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"golang.org/x/exp/maps"
 
@@ -321,6 +322,18 @@ func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.
 	return false
 }
 
+// DefaultShouldOmitFieldFuncWithAbstraction is the abstracted version that works with both SDKv2 and Plugin Framework
+// This will be used when codegen.go is updated to use abstractions
+func DefaultShouldOmitFieldFuncWithAbstraction(_ *importContext, pathString string, fieldSchema FieldSchema, d ResourceDataWrapper, _ *resource) bool {
+	if fieldSchema.IsComputed() {
+		return true
+	}
+	if def := fieldSchema.GetDefault(); def != nil && d.Get(pathString) == def {
+		return true
+	}
+	return false
+}
+
 func (ic *importContext) generateNewData(data *schema.ResourceData, resourceType, rID string, obj any) *schema.ResourceData {
 	data.MarkNewResource()
 	data.SetId(rID)
@@ -554,4 +567,23 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 		}
 		return name
 	}
+}
+
+func (ic *importContext) emitNccBindingAndNcc(workspaceId int64, nccId string) {
+	id := fmt.Sprintf("%d/%s", workspaceId, nccId)
+	data := mws.ResourceMwsNccBinding().ToResource().TestResourceData()
+	data.MarkNewResource()
+	data.SetId(id)
+	data.Set("workspace_id", workspaceId)
+	data.Set("network_connectivity_config_id", nccId)
+	ic.Emit(&resource{
+		Resource: "databricks_mws_ncc_binding",
+		Data:     data,
+		ID:       id,
+		Name:     fmt.Sprintf("ws_%d_%s", workspaceId, nccId),
+	})
+	ic.Emit(&resource{
+		Resource: "databricks_mws_network_connectivity_config",
+		ID:       ic.accountClient.Config.AccountID + "/" + nccId,
+	})
 }

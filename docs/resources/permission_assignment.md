@@ -113,6 +113,8 @@ The following arguments are supported (exactly one of `principal_id`, `user_name
 * `permissions` (Required) - The list of workspace permissions to assign to the principal:
   * `"USER"` - Adds principal to the workspace `users` group. This gives basic workspace access.
   * `"ADMIN"` - Adds principal to the workspace `admins` group. This gives workspace admin privileges to manage users and groups, workspace configurations, and more.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

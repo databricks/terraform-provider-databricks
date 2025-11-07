@@ -242,19 +242,19 @@ func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["custom_description"] = attrs["custom_description"].SetOptional()
 	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
-	attrs["evaluation"] = attrs["evaluation"].SetOptional()
+	attrs["evaluation"] = attrs["evaluation"].SetRequired()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
-	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetRequired()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetRequired()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
 
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
@@ -404,7 +404,9 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 	}
 
 	var newState AlertV2
+
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
 	if diags.HasError() {
 		return
 	}
@@ -537,11 +539,13 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())
 		return
 	}
+
 }
 
 var _ resource.ResourceWithImportState = &AlertV2Resource{}

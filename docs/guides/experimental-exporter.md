@@ -9,7 +9,7 @@ page_title: "Experimental resource exporter"
 
 Generates `*.tf` files for Databricks resources and `import.sh` to run import state. It's best used when you need to quickly export Terraform configuration for an existing Databricks workspace. After generating the configuration, we strongly recommend manually reviewing all created files.
 
-## Installion
+## Installation
 The Resource Exporter is available in your Terraform plugin cache once you have initialised a Terraform workspace that uses the Databricks Terraform Provider (`.terraform/providers/registry.terraform.io/databricks/databricks/<provider_version>/<arch>/terraform-provider-databricks_v<provider_version>`).
 
 If not, you can also download the [latest released binary](https://github.com/databricks/terraform-provider-databricks/releases), unpack it, and place it in the same folder.
@@ -154,7 +154,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 -> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
-* `alerts` - **listing** [databricks_alert](../resources/alert.md).
+* `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
 * `billing` - **listing** [databricks_budget](../resources/budget.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
@@ -167,7 +167,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
 * `mws` - **listing** resources related to deployment of workspaces on AWS and GCP (networks, credentials, workspaces, ...).
-* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) and [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md).  **Note** we can't export [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) because of the missing API.
+* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md), [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md), and [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md).
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
@@ -219,6 +219,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | Resource | Supported | Incremental | Workspace | Account |
 | --- | --- | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
+| [databricks_alert](../resources/alert.md) | Yes | Yes | Yes | No |
+| [databricks_alert_v2](../resources/alert_v2.md) | Yes | Yes | Yes | No |
 | [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No | Yes | No |
 | [databricks_budget](../resources/budget.md) | Yes | Yes | No | Yes |
 | [databricks_catalog](../resources/catalog.md) | Yes | Yes | Yes | No |
@@ -249,7 +251,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
 | [databricks_mws_credentials](../resources/mws_credentials.md) | Yes | Yes | No | Yes |
 | [databricks_mws_customer_managed_keys](../resources/mws_customer_managed_keys.md) | Yes | Yes | No | Yes |
-| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | No | No | No | No |
+| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | Yes | No | No | Yes |
 | [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md) | Yes | No | No | Yes |
 | [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
 | [databricks_mws_networks](../resources/mws_networks.md) | Yes | No | No | Yes |
@@ -264,6 +266,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_online_table](../resources/online_table.md) | Yes | Yes | Yes | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |
 | [databricks_pipeline](../resources/pipeline.md) | Yes | Yes | Yes | No |
+| [databricks_query](../resources/query.md) | Yes | Yes | Yes | No |
 | [databricks_recipient](../resources/recipient.md) | Yes | Yes | Yes | No |
 | [databricks_registered_model](../resources/registered.md) | Yes | Yes | Yes | No |
 | [databricks_repo](../resources/repo.md) | Yes | No | Yes | No |

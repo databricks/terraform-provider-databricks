@@ -28,6 +28,9 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 // ExternalMetadatasData extends the main model with additional fields.
 type ExternalMetadatasData struct {
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
+	// Specifies the maximum number of external metadata objects to return in a
+	// single response. The value must be less than or equal to 1000.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +40,8 @@ func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]re
 }
 
 func (m ExternalMetadatasData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["external_metadata"] = attrs["external_metadata"].SetComputed()
 	return attrs
 }
@@ -100,7 +105,6 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		results = append(results, external_metadata.ToObjectValue(ctx))
 	}
 
-	var newState ExternalMetadatasData
-	newState.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

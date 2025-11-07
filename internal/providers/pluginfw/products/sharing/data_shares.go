@@ -19,26 +19,29 @@ const dataSourceNameShares = "shares"
 
 type SharesList struct {
 	Shares types.List `tfsdk:"shares"`
+	tfschema.Namespace
 }
 
-func (SharesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["shares"] = attrs["shares"].SetComputed().SetOptional()
-
-	return attrs
-}
-
-func (SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (s SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"shares": reflect.TypeOf(types.String{}),
+		"shares":          reflect.TypeOf(types.String{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
-func (SharesList) ToObjectType(ctx context.Context) types.ObjectType {
+func (s SharesList) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"shares": types.ListType{ElemType: types.StringType},
+			"shares":          types.ListType{ElemType: types.StringType},
+			"provider_config": tfschema.ProviderConfigData{}.Type(ctx),
 		},
 	}
+}
+
+func (s SharesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["shares"] = attrs["shares"].SetComputed().SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	return attrs
 }
 
 func DataSourceShares() datasource.DataSource {
@@ -71,8 +74,22 @@ func (d *SharesDataSource) Configure(_ context.Context, req datasource.Configure
 
 func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameShares)
-	w, diags := d.Client.GetWorkspaceClient()
+
+	var config SharesList
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, config.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	w, clientDiags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+
+	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -88,5 +105,11 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		shareNames[i] = types.StringValue(share.Name)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, SharesList{Shares: types.ListValueMust(types.StringType, shareNames)})...)
+	newState := SharesList{
+		Shares: types.ListValueMust(types.StringType, shareNames),
+		Namespace: tfschema.Namespace{
+			ProviderConfig: config.ProviderConfig,
+		},
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

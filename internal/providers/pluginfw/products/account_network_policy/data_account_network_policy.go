@@ -76,7 +76,8 @@ func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.O
 // and contains additional fields.
 func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"account_id": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"account_id":        types.StringType,
 			"egress":            settings_tf.NetworkPolicyEgress{}.Type(ctx),
 			"network_policy_id": types.StringType,
 		},
@@ -84,9 +85,9 @@ func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
 }
 
 func (m AccountNetworkPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["egress"] = attrs["egress"].SetOptional()
-	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["egress"] = attrs["egress"].SetComputed()
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 
 	return attrs
 }

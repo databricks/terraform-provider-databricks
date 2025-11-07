@@ -97,6 +97,8 @@ type CreatePipeline struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.Object `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *CreatePipeline) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreatePipeline) {
@@ -325,6 +327,7 @@ func (m CreatePipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -392,6 +395,7 @@ func (m CreatePipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"tags":                  m.Tags,
 			"target":                m.Target,
 			"trigger":               m.Trigger,
+			"usage_policy_id":       m.UsagePolicyId,
 		})
 }
 
@@ -437,8 +441,9 @@ func (m CreatePipeline) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"target":  types.StringType,
-			"trigger": PipelineTrigger{}.Type(ctx),
+			"target":          types.StringType,
+			"trigger":         PipelineTrigger{}.Type(ctx),
+			"usage_policy_id": types.StringType,
 		},
 	}
 }
@@ -1167,6 +1172,8 @@ type EditPipeline struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.Object `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *EditPipeline) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditPipeline) {
@@ -1395,6 +1402,7 @@ func (m EditPipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 
 	return attrs
@@ -1464,6 +1472,7 @@ func (m EditPipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tags":                   m.Tags,
 			"target":                 m.Target,
 			"trigger":                m.Trigger,
+			"usage_policy_id":        m.UsagePolicyId,
 		})
 }
 
@@ -1510,8 +1519,9 @@ func (m EditPipeline) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"target":  types.StringType,
-			"trigger": PipelineTrigger{}.Type(ctx),
+			"target":          types.StringType,
+			"trigger":         PipelineTrigger{}.Type(ctx),
+			"usage_policy_id": types.StringType,
 		},
 	}
 }
@@ -6419,6 +6429,8 @@ type PipelineSpec struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.Object `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *PipelineSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineSpec) {
@@ -6627,6 +6639,7 @@ func (m PipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -6690,6 +6703,7 @@ func (m PipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tags":                 m.Tags,
 			"target":               m.Target,
 			"trigger":              m.Trigger,
+			"usage_policy_id":      m.UsagePolicyId,
 		})
 }
 
@@ -6732,8 +6746,9 @@ func (m PipelineSpec) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"target":  types.StringType,
-			"trigger": PipelineTrigger{}.Type(ctx),
+			"target":          types.StringType,
+			"trigger":         PipelineTrigger{}.Type(ctx),
+			"usage_policy_id": types.StringType,
 		},
 	}
 }

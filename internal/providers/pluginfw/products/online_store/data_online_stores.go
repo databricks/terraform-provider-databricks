@@ -28,6 +28,9 @@ func DataSourceOnlineStores() datasource.DataSource {
 // OnlineStoresData extends the main model with additional fields.
 type OnlineStoresData struct {
 	FeatureStore types.List `tfsdk:"online_stores"`
+	// The maximum number of results to return. Defaults to 100 if not
+	// specified.
+	PageSize types.Int64 `tfsdk:"page_size"`
 }
 
 func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -37,6 +40,8 @@ func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect
 }
 
 func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
 	attrs["online_stores"] = attrs["online_stores"].SetComputed()
 	return attrs
 }
@@ -100,7 +105,6 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		results = append(results, online_store.ToObjectValue(ctx))
 	}
 
-	var newState OnlineStoresData
-	newState.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.FeatureStore = types.ListValueMust(OnlineStoreData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

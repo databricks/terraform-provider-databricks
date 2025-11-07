@@ -85,7 +85,8 @@ func (m TagPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 // and contains additional fields.
 func (m TagPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"create_time": types.StringType,
+		AttrTypes: map[string]attr.Type{
+			"create_time": types.StringType,
 			"description": types.StringType,
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
@@ -99,11 +100,11 @@ func (m TagPolicyData) Type(ctx context.Context) attr.Type {
 
 func (m TagPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
+	attrs["description"] = attrs["description"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["values"] = attrs["values"].SetOptional()
+	attrs["values"] = attrs["values"].SetComputed()
 
 	return attrs
 }

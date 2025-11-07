@@ -1196,6 +1196,8 @@ func (m CleanRoomTaskRunState_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Clean Rooms notebook task for V1 Clean Room service (GA). Replaces the
+// deprecated CleanRoomNotebookTask (defined above) which was for V0 service.
 type CleanRoomsNotebookTask_SdkV2 struct {
 	// The clean room that the notebook belongs to.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
@@ -10351,6 +10353,11 @@ type RepairRun_SdkV2 struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -10360,10 +10367,10 @@ type RepairRun_SdkV2 struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
@@ -10382,15 +10389,15 @@ type RepairRun_SdkV2 struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// The performance mode on a serverless job. The performance target
 	// determines the level of compute performance or cost-efficiency for the
@@ -10412,8 +10419,8 @@ type RepairRun_SdkV2 struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -10421,7 +10428,7 @@ type RepairRun_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// If true, repair all failed tasks. Only one of `rerun_tasks` or
 	// `rerun_all_failed_tasks` can be used.
@@ -10442,8 +10449,8 @@ type RepairRun_SdkV2 struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -10451,11 +10458,16 @@ type RepairRun_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -13412,6 +13424,11 @@ type RunJobTask_SdkV2 struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -13421,10 +13438,10 @@ type RunJobTask_SdkV2 struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// ID of the job to trigger.
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -13440,15 +13457,15 @@ type RunJobTask_SdkV2 struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
@@ -13461,8 +13478,8 @@ type RunJobTask_SdkV2 struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13470,7 +13487,7 @@ type RunJobTask_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
@@ -13480,8 +13497,8 @@ type RunJobTask_SdkV2 struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13489,11 +13506,16 @@ type RunJobTask_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -13899,6 +13921,11 @@ type RunNow_SdkV2 struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
@@ -13923,10 +13950,10 @@ type RunNow_SdkV2 struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// The ID of the job to be executed
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -13943,15 +13970,15 @@ type RunNow_SdkV2 struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
@@ -13976,8 +14003,8 @@ type RunNow_SdkV2 struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -13985,7 +14012,7 @@ type RunNow_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// The queue settings of the run.
 	Queue types.List `tfsdk:"queue"`
@@ -13997,8 +14024,8 @@ type RunNow_SdkV2 struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -14006,11 +14033,16 @@ type RunNow_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -15125,6 +15157,11 @@ type RunParameters_SdkV2 struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -15134,10 +15171,10 @@ type RunParameters_SdkV2 struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
@@ -15149,15 +15186,15 @@ type RunParameters_SdkV2 struct {
 	//
 	// notebook_params cannot be specified in conjunction with jar_params.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// The JSON representation of this field (for example
 	// `{"notebook_params":{"name":"john doe","age":"35"}}`) cannot exceed
 	// 10,000 bytes.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
@@ -15170,8 +15207,8 @@ type RunParameters_SdkV2 struct {
 	// representation of this field (for example `{"python_params":["john
 	// doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs.
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -15179,7 +15216,7 @@ type RunParameters_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
@@ -15189,8 +15226,8 @@ type RunParameters_SdkV2 struct {
 	// The JSON representation of this field (for example
 	// `{"python_params":["john doe","35"]}`) cannot exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables] to set parameters containing information
-	// about job runs
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
 	//
 	// Important
 	//
@@ -15198,11 +15235,16 @@ type RunParameters_SdkV2 struct {
 	// Using non-ASCII characters returns an error. Examples of invalid,
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
-	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
+	//
+	// ⚠ **Deprecation note** Use [job parameters] to pass information down to
+	// tasks.
+	//
+	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
@@ -17462,8 +17504,12 @@ func (m *RunTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNo
 }
 
 type SparkJarTask_SdkV2 struct {
-	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
-	// instead. For an example, see :method:jobs/create.
+	// Deprecated since 04/2016. For classic compute, provide a `jar` through
+	// the `libraries` field instead. For serverless compute, provide a `jar`
+	// though the `java_dependencies` field inside the `environments` list.
+	//
+	// See the examples of classic and serverless compute usage at the top of
+	// the page.
 	JarUri types.String `tfsdk:"jar_uri"`
 	// The full name of the class containing the main method to be executed.
 	// This class must be contained in a JAR provided as a library.
@@ -23555,8 +23601,6 @@ type TriggerSettings_SdkV2 struct {
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
 	Periodic types.List `tfsdk:"periodic"`
-	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table types.List `tfsdk:"table"`
 
 	TableUpdate types.List `tfsdk:"table_update"`
 }
@@ -23577,15 +23621,6 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 				// Recursively sync the fields of Periodic
 				toPeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPeriodic)
 				to.SetPeriodic(ctx, toPeriodic)
-			}
-		}
-	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				// Recursively sync the fields of Table
-				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
-				to.SetTable(ctx, toTable)
 			}
 		}
 	}
@@ -23617,14 +23652,6 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				toTable.SyncFieldsDuringRead(ctx, fromTable)
-				to.SetTable(ctx, toTable)
-			}
-		}
-	}
 	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
 		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
 			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
@@ -23641,8 +23668,6 @@ func (m TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table"] = attrs["table"].SetOptional()
-	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_update"] = attrs["table_update"].SetOptional()
 	attrs["table_update"] = attrs["table_update"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -23660,7 +23685,6 @@ func (m TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
-		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 	}
 }
@@ -23675,7 +23699,6 @@ func (m TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"file_arrival": m.FileArrival,
 			"pause_status": m.PauseStatus,
 			"periodic":     m.Periodic,
-			"table":        m.Table,
 			"table_update": m.TableUpdate,
 		})
 }
@@ -23690,9 +23713,6 @@ func (m TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
 				ElemType: PeriodicTriggerConfiguration_SdkV2{}.Type(ctx),
-			},
-			"table": basetypes.ListType{
-				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"table_update": basetypes.ListType{
 				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
@@ -23751,32 +23771,6 @@ func (m *TriggerSettings_SdkV2) SetPeriodic(ctx context.Context, v PeriodicTrigg
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
 	m.Periodic = types.ListValueMust(t, vs)
-}
-
-// GetTable returns the value of the Table field in TriggerSettings_SdkV2 as
-// a TableUpdateTriggerConfiguration_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TriggerSettings_SdkV2) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
-	var e TableUpdateTriggerConfiguration_SdkV2
-	if m.Table.IsNull() || m.Table.IsUnknown() {
-		return e, false
-	}
-	var v []TableUpdateTriggerConfiguration_SdkV2
-	d := m.Table.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTable sets the value of the Table field in TriggerSettings_SdkV2.
-func (m *TriggerSettings_SdkV2) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	m.Table = types.ListValueMust(t, vs)
 }
 
 // GetTableUpdate returns the value of the TableUpdate field in TriggerSettings_SdkV2 as

@@ -272,6 +272,297 @@ type fieldTuple struct {
 	Schema *schema.Schema
 }
 
+// fieldGenerationInfo holds metadata for a single field that needs to be generated
+type fieldGenerationInfo struct {
+	Name        string
+	PathString  string
+	RawValue    interface{}
+	FieldSchema FieldSchema
+	ShouldSkip  bool
+}
+
+// unifiedDataToHcl is the unified entry point for HCL generation that works with both SDKv2 and Plugin Framework
+func (ic *importContext) unifiedDataToHcl(imp importable, path []string,
+	res *resource, body *hclwrite.Body) error {
+
+	wrapper := res.DataWrapper
+	if wrapper == nil {
+		// For backward compatibility, create wrapper on-the-fly for SDKv2 resources
+		if res.Data != nil && !imp.PluginFramework {
+			// Get the schema resource for SDKv2
+			pr, ok := ic.Resources[res.Resource]
+			if !ok {
+				return fmt.Errorf("resource %s not found in provider", res.Resource)
+			}
+			wrapper = &SDKv2ResourceData{
+				data:   res.Data,
+				schema: pr,
+			}
+			res.DataWrapper = wrapper
+		} else {
+			return fmt.Errorf("DataWrapper is nil for resource %s", res.Resource)
+		}
+	}
+
+	// Extract fields with common logic (omission, variable references, skip evaluation)
+	fields, varCnt, err := ic.extractFieldsForGeneration(imp, path, wrapper, res)
+	if err != nil {
+		return err
+	}
+
+	// Generate HCL for each field (type-specific logic)
+	for _, field := range fields {
+		if field.ShouldSkip {
+			continue
+		}
+
+		var genErr error
+		if wrapper.IsPluginFramework() {
+			genErr = ic.generatePluginFrameworkField(imp, path, field, res, body)
+		} else {
+			genErr = ic.generateSdkv2Field(imp, path, field, res, body, varCnt)
+		}
+
+		if genErr != nil {
+			log.Printf("[WARN] Error generating HCL for field %s: %v", field.PathString, genErr)
+		}
+	}
+
+	// Generate depends_on (shared logic)
+	if len(path) == 0 && len(res.DependsOn) > 0 {
+		ic.generateDependsOnAttribute(res, body, wrapper)
+	}
+
+	return nil
+}
+
+// extractFieldsForGeneration extracts all fields that need to be generated with common omission and skip logic
+func (ic *importContext) extractFieldsForGeneration(imp importable, path []string,
+	wrapper ResourceDataWrapper, res *resource) ([]fieldGenerationInfo, int, error) {
+
+	schema := wrapper.GetSchema()
+	fieldNames := schema.GetFields()
+
+	// Sort fields in reverse order for consistent output
+	sort.Slice(fieldNames, func(i, j int) bool {
+		return fieldNames[i] > fieldNames[j]
+	})
+
+	fields := []fieldGenerationInfo{}
+	varCnt := 0
+
+	for _, fieldName := range fieldNames {
+		pathString := strings.Join(append(path, fieldName), ".")
+		raw, nonZero := wrapper.GetOk(fieldName)
+
+		fieldSchema := schema.GetField(fieldName)
+		if fieldSchema == nil {
+			continue
+		}
+
+		// Apply field omission logic with unified callbacks
+		shouldOmit := false
+		if imp.ShouldOmitFieldUnified != nil {
+			shouldOmit = imp.ShouldOmitFieldUnified(ic, pathString, fieldSchema, wrapper, res)
+		} else if imp.ShouldOmitField != nil && !wrapper.IsPluginFramework() {
+			// Fall back to legacy callback for SDKv2 only
+			if sdkSchema := fieldSchema.GetSDKv2Schema(); sdkSchema != nil {
+				shouldOmit = imp.ShouldOmitField(ic, pathString, sdkSchema, res.Data, res)
+			}
+		} else {
+			// Use default omission logic (match original SDKv2 behavior)
+			shouldOmit = DefaultShouldOmitFieldFuncWithAbstraction(ic, pathString, fieldSchema, wrapper, res)
+		}
+
+		if shouldOmit {
+			continue
+		}
+
+		// Handle variable references for sensitive fields
+		mpath := dependsRe.ReplaceAllString(pathString, "")
+		for _, ref := range imp.Depends {
+			if ref.Path == mpath && ref.Variable {
+				raw = ic.regexFix(ic.ResourceName(res), simpleNameFixes)
+				if varCnt > 0 {
+					raw = fmt.Sprintf("%s_%d", raw, varCnt)
+				}
+				nonZero = true
+				varCnt++
+			}
+		}
+
+		// Determine if we should skip this field
+		shouldSkip := !nonZero
+		if fieldSchema.IsRequired() {
+			shouldSkip = false
+		} else if def := fieldSchema.GetDefault(); def != nil && !reflect.DeepEqual(raw, def) {
+			shouldSkip = false
+		}
+
+		// Check if ShouldGenerateField forces generation
+		if shouldSkip {
+			forceGenerate := false
+			if imp.ShouldGenerateFieldUnified != nil {
+				forceGenerate = imp.ShouldGenerateFieldUnified(ic, pathString, fieldSchema, wrapper, res)
+			} else if imp.ShouldGenerateField != nil && !wrapper.IsPluginFramework() {
+				if sdkSchema := fieldSchema.GetSDKv2Schema(); sdkSchema != nil {
+					forceGenerate = imp.ShouldGenerateField(ic, pathString, sdkSchema, res.Data, res)
+				}
+			}
+
+			if !forceGenerate {
+				// Don't add to list at all
+				continue
+			}
+			// Force generation by not skipping
+			shouldSkip = false
+		}
+
+		fields = append(fields, fieldGenerationInfo{
+			Name:        fieldName,
+			PathString:  pathString,
+			RawValue:    raw,
+			FieldSchema: fieldSchema,
+			ShouldSkip:  shouldSkip,
+		})
+	}
+
+	return fields, varCnt, nil
+}
+
+// generateDependsOnAttribute generates the depends_on attribute (shared between SDKv2 and Plugin Framework)
+func (ic *importContext) generateDependsOnAttribute(res *resource, body *hclwrite.Body, wrapper ResourceDataWrapper) {
+	notIgnoredResources := []*resource{}
+	for _, dr := range res.DependsOn {
+		dr := dr
+		if dr.Data == nil && dr.DataWrapper == nil {
+			tdr := ic.Scope.FindById(dr.Resource, dr.ID)
+			if tdr == nil {
+				log.Printf("[WARN] can't find resource %s in scope", dr)
+				continue
+			}
+			dr = tdr
+		}
+		if ic.Importables[dr.Resource].Ignore == nil || !ic.Importables[dr.Resource].Ignore(ic, dr) {
+			found := false
+			for _, v := range notIgnoredResources {
+				if v.ID == dr.ID && v.Resource == dr.Resource {
+					found = true
+					break
+				}
+			}
+			if !found {
+				notIgnoredResources = append(notIgnoredResources, dr)
+			}
+		}
+	}
+
+	if len(notIgnoredResources) > 0 {
+		toks := hclwrite.Tokens{}
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenOBrack,
+			Bytes: []byte{'['},
+		})
+		for i, dr := range notIgnoredResources {
+			if i > 0 {
+				toks = append(toks, &hclwrite.Token{
+					Type:  hclsyntax.TokenComma,
+					Bytes: []byte{','},
+				})
+			}
+			toks = append(toks, hclwrite.TokensForTraversal(hcl.Traversal{
+				hcl.TraverseRoot{Name: dr.Resource},
+				hcl.TraverseAttr{Name: ic.ResourceName(dr)},
+			})...)
+		}
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenCBrack,
+			Bytes: []byte{']'},
+		})
+		body.SetAttributeRaw("depends_on", toks)
+	}
+}
+
+// generateSdkv2Field generates HCL for a single SDKv2 field
+func (ic *importContext) generateSdkv2Field(imp importable, path []string,
+	field fieldGenerationInfo, res *resource, body *hclwrite.Body, varCnt int) error {
+
+	sdkSchema := field.FieldSchema.GetSDKv2Schema()
+	if sdkSchema == nil {
+		return fmt.Errorf("SDKv2 schema is nil for field %s", field.Name)
+	}
+
+	switch sdkSchema.Type {
+	case schema.TypeString:
+		value := field.RawValue.(string)
+		tokens := ic.reference(imp, append(path, field.Name), value, cty.StringVal(value), res)
+		body.SetAttributeRaw(field.Name, tokens)
+	case schema.TypeBool:
+		body.SetAttributeValue(field.Name, cty.BoolVal(field.RawValue.(bool)))
+	case schema.TypeInt:
+		var num int64
+		switch iv := field.RawValue.(type) {
+		case int:
+			num = int64(iv)
+		case int32:
+			num = int64(iv)
+		case int64:
+			num = iv
+		}
+		body.SetAttributeRaw(field.Name, ic.reference(imp, append(path, field.Name),
+			strconv.FormatInt(num, 10), cty.NumberIntVal(num), res))
+	case schema.TypeFloat:
+		body.SetAttributeValue(field.Name, cty.NumberFloatVal(field.RawValue.(float64)))
+	case schema.TypeMap:
+		attrs := []hclwrite.ObjectAttrTokens{}
+		m := field.RawValue.(map[string]any)
+		keys := slices.Sorted(maps.Keys(m))
+		for _, key := range keys {
+			iv := m[key]
+			var nameTokens hclwrite.Tokens
+			if hclsyntax.ValidIdentifier(key) {
+				nameTokens = hclwrite.TokensForIdentifier(key)
+			} else {
+				nameTokens = hclwrite.TokensForValue(cty.StringVal(key))
+			}
+			v := cty.StringVal(fmt.Sprintf("%v", iv))
+			attrs = append(attrs, hclwrite.ObjectAttrTokens{
+				Name:  nameTokens,
+				Value: ic.reference(imp, append(path, field.Name), v.AsString(), v, res),
+			})
+		}
+		body.SetAttributeRaw(field.Name, hclwrite.TokensForObject(attrs))
+	case schema.TypeSet:
+		if rawSet, ok := field.RawValue.(*schema.Set); ok {
+			rawList := rawSet.List()
+			err := ic.readListFromData(imp, append(path, field.Name), res, rawList, body, sdkSchema, func(i int) string {
+				return strconv.Itoa(rawSet.F(rawList[i]))
+			})
+			if err != nil {
+				return err
+			}
+		}
+	case schema.TypeList:
+		if rawList, ok := field.RawValue.([]any); ok {
+			err := ic.readListFromData(imp, append(path, field.Name), res, rawList, body, sdkSchema, strconv.Itoa)
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("unsupported schema type: %v", path)
+	}
+
+	return nil
+}
+
+// generatePluginFrameworkField generates HCL for a single Plugin Framework field
+func (ic *importContext) generatePluginFrameworkField(imp importable, path []string,
+	field fieldGenerationInfo, res *resource, body *hclwrite.Body) error {
+
+	return ic.pluginFrameworkFieldToHcl(imp, path, field.Name, field.FieldSchema, field.RawValue, res, body)
+}
+
 func (ic *importContext) dataToHcl(imp importable, path []string,
 	pr *schema.Resource, res *resource, body *hclwrite.Body) error {
 	d := res.Data
@@ -434,6 +725,322 @@ func (ic *importContext) dataToHcl(imp importable, path []string,
 		}
 	}
 	return nil
+}
+
+// pluginFrameworkFieldToHcl generates HCL for a single Plugin Framework field
+func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string, fieldName string,
+	fieldSchema FieldSchema, raw interface{}, res *resource, body *hclwrite.Body) error {
+
+	// Check for nested types first (before checking primitive types)
+	// This handles ListNestedAttribute, SetNestedAttribute, SingleNestedAttribute, etc.
+	if fieldSchema.IsNested() {
+		// Check if this is a list/set of nested objects
+		if rawList, ok := raw.([]interface{}); ok {
+			if len(rawList) == 0 {
+				return nil
+			}
+
+			nestedSchema := fieldSchema.GetNestedSchema()
+			if nestedSchema != nil {
+				// Generate list/set of objects as attribute: field = [{ ... }, { ... }]
+				listTokens := hclwrite.Tokens{}
+				listTokens = append(listTokens, &hclwrite.Token{
+					Type:  hclsyntax.TokenOBrack,
+					Bytes: []byte{'['},
+				})
+
+				for i, item := range rawList {
+					if i > 0 {
+						listTokens = append(listTokens, &hclwrite.Token{
+							Type:  hclsyntax.TokenComma,
+							Bytes: []byte{','},
+						})
+						listTokens = append(listTokens, &hclwrite.Token{
+							Type:  hclsyntax.TokenNewline,
+							Bytes: []byte{'\n'},
+						})
+					}
+
+					if nestedData, ok := item.(map[string]interface{}); ok {
+						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res)
+						listTokens = append(listTokens, objTokens...)
+					}
+				}
+
+				listTokens = append(listTokens, &hclwrite.Token{
+					Type:  hclsyntax.TokenCBrack,
+					Bytes: []byte{']'},
+				})
+				body.SetAttributeRaw(fieldName, listTokens)
+				return nil
+			}
+		}
+
+		// Single nested object (not in a list)
+		if nestedData, ok := raw.(map[string]interface{}); ok {
+			nestedSchema := fieldSchema.GetNestedSchema()
+			if nestedSchema != nil {
+				// Generate single nested object as attribute: field = { ... }
+				objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res)
+				body.SetAttributeRaw(fieldName, objTokens)
+				return nil
+			}
+		}
+
+		log.Printf("[DEBUG] Nested field %s could not be processed, raw type: %T", fieldName, raw)
+		return nil
+	}
+
+	// Now handle primitive types
+	switch {
+	case fieldSchema.IsString():
+		value, ok := raw.(string)
+		if !ok {
+			return nil
+		}
+		tokens := ic.reference(imp, append(path, fieldName), value, cty.StringVal(value), res)
+		body.SetAttributeRaw(fieldName, tokens)
+
+	case fieldSchema.IsBool():
+		value, ok := raw.(bool)
+		if !ok {
+			return nil
+		}
+		body.SetAttributeValue(fieldName, cty.BoolVal(value))
+
+	case fieldSchema.IsInt():
+		var num int64
+		switch iv := raw.(type) {
+		case int:
+			num = int64(iv)
+		case int32:
+			num = int64(iv)
+		case int64:
+			num = iv
+		default:
+			return nil
+		}
+		body.SetAttributeRaw(fieldName, ic.reference(imp, append(path, fieldName),
+			strconv.FormatInt(num, 10), cty.NumberIntVal(num), res))
+
+	case fieldSchema.IsFloat():
+		value, ok := raw.(float64)
+		if !ok {
+			return nil
+		}
+		body.SetAttributeValue(fieldName, cty.NumberFloatVal(value))
+
+	case fieldSchema.IsMap():
+		// Handle maps
+		m, ok := raw.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		attrs := []hclwrite.ObjectAttrTokens{}
+		keys := slices.Sorted(maps.Keys(m))
+		for _, key := range keys {
+			iv := m[key]
+			var nameTokens hclwrite.Tokens
+			if hclsyntax.ValidIdentifier(key) {
+				nameTokens = hclwrite.TokensForIdentifier(key)
+			} else {
+				nameTokens = hclwrite.TokensForValue(cty.StringVal(key))
+			}
+			v := cty.StringVal(fmt.Sprintf("%v", iv))
+			attrs = append(attrs, hclwrite.ObjectAttrTokens{
+				Name:  nameTokens,
+				Value: ic.reference(imp, append(path, fieldName), v.AsString(), v, res),
+			})
+		}
+		body.SetAttributeRaw(fieldName, hclwrite.TokensForObject(attrs))
+
+	case fieldSchema.IsList() || fieldSchema.IsSet():
+		// Handle lists and sets of primitives (nested types are handled above)
+		rawList, ok := raw.([]interface{})
+		if !ok {
+			return nil
+		}
+		if len(rawList) == 0 {
+			return nil
+		}
+
+		// Generate list/set of primitives
+		toks := hclwrite.Tokens{}
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenOBrack,
+			Bytes: []byte{'['},
+		})
+		for _, item := range rawList {
+			if len(toks) != 1 {
+				toks = append(toks, &hclwrite.Token{
+					Type:  hclsyntax.TokenComma,
+					Bytes: []byte{','},
+				})
+			}
+			switch x := item.(type) {
+			case string:
+				toks = append(toks, ic.reference(imp, append(path, fieldName), x, cty.StringVal(x), res)...)
+			case int, int32, int64:
+				var num int64
+				switch v := x.(type) {
+				case int:
+					num = int64(v)
+				case int32:
+					num = int64(v)
+				case int64:
+					num = v
+				}
+				toks = append(toks, hclwrite.TokensForValue(cty.NumberIntVal(num))...)
+			default:
+				// For complex types, convert to string
+				toks = append(toks, hclwrite.TokensForValue(cty.StringVal(fmt.Sprintf("%v", x)))...)
+			}
+		}
+		toks = append(toks, &hclwrite.Token{
+			Type:  hclsyntax.TokenCBrack,
+			Bytes: []byte{']'},
+		})
+		body.SetAttributeRaw(fieldName, toks)
+
+	default:
+		log.Printf("[DEBUG] Unsupported field type for %s in Plugin Framework resource (type: %T, fieldType: %v)", fieldName, raw, fieldSchema.GetType())
+	}
+
+	return nil
+}
+
+// pluginFrameworkNestedObjectToTokens generates HCL tokens for a nested object
+func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, path []string,
+	nestedSchema SchemaWrapper, nestedData map[string]interface{}, res *resource) hclwrite.Tokens {
+
+	if nestedSchema == nil || nestedData == nil {
+		return hclwrite.Tokens{}
+	}
+
+	// Create a temporary body to generate the nested attributes
+	tempFile := hclwrite.NewEmptyFile()
+	tempBody := tempFile.Body()
+
+	fields := nestedSchema.GetFields()
+	// Sort fields for consistent output (reverse order like SDKv2)
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i] > fields[j]
+	})
+
+	for _, fieldName := range fields {
+		raw, ok := nestedData[fieldName]
+		nonZero := ok && raw != nil
+
+		fieldSchema := nestedSchema.GetField(fieldName)
+		if fieldSchema == nil {
+			log.Printf("[DEBUG] No schema found for field %s in path %v", fieldName, path)
+			continue
+		}
+
+		// Apply field omission logic - check computed-only fields
+		if fieldSchema.IsComputed() && !fieldSchema.IsOptional() && !fieldSchema.IsRequired() {
+			log.Printf("[DEBUG] Skipping computed-only field %s in path %v", fieldName, path)
+			continue
+		}
+
+		// Skip fields with zero values unless required or different from default
+		shouldSkip := !nonZero
+		if fieldSchema.IsRequired() {
+			// For required fields we must produce a value, even empty
+			shouldSkip = false
+		} else if def := fieldSchema.GetDefault(); def != nil && !reflect.DeepEqual(raw, def) {
+			// If field has a default value and current value is different, we need to generate it
+			shouldSkip = false
+		}
+
+		// Check for zero values in primitives
+		if !shouldSkip && nonZero {
+			switch v := raw.(type) {
+			case bool:
+				if !v && !fieldSchema.IsRequired() {
+					// Skip false for optional boolean fields
+					shouldSkip = true
+				}
+			case int, int32, int64:
+				var num int64
+				switch n := v.(type) {
+				case int:
+					num = int64(n)
+				case int32:
+					num = int64(n)
+				case int64:
+					num = n
+				}
+				if num == 0 && !fieldSchema.IsRequired() {
+					// Skip 0 for optional numeric fields
+					shouldSkip = true
+				}
+			case float32, float64:
+				var fnum float64
+				switch n := v.(type) {
+				case float32:
+					fnum = float64(n)
+				case float64:
+					fnum = n
+				}
+				if fnum == 0 && !fieldSchema.IsRequired() {
+					// Skip 0.0 for optional float fields
+					shouldSkip = true
+				}
+			case string:
+				if v == "" && !fieldSchema.IsRequired() {
+					// Skip empty strings for optional string fields
+					shouldSkip = true
+				}
+			}
+		}
+
+		// Check if ShouldGenerateField forces generation
+		pathString := strings.Join(append(path, fieldName), ".")
+		if shouldSkip && (imp.ShouldGenerateField == nil || !imp.ShouldGenerateField(ic, pathString, nil, nil, res)) {
+			log.Printf("[DEBUG] Skipping field %s with zero value in path %v", fieldName, path)
+			continue
+		}
+
+		log.Printf("[DEBUG] Processing field %s in path %v, value type: %T", fieldName, path, raw)
+
+		// Generate HCL for this nested field
+		if err := ic.pluginFrameworkFieldToHcl(imp, path, fieldName, fieldSchema, raw, res, tempBody); err != nil {
+			log.Printf("[WARN] Error generating HCL for nested field %s: %v", fieldName, err)
+		}
+	}
+
+	// Extract the attributes from the temp body and convert to object tokens
+	attrs := []hclwrite.ObjectAttrTokens{}
+	for name, attr := range tempBody.Attributes() {
+		attrs = append(attrs, hclwrite.ObjectAttrTokens{
+			Name:  hclwrite.TokensForIdentifier(name),
+			Value: attr.Expr().BuildTokens(nil),
+		})
+	}
+
+	// Also include any nested blocks (though for Plugin Framework these should be rare)
+	// Convert nested blocks to attribute syntax
+	for _, block := range tempBody.Blocks() {
+		blockName := block.Type()
+		blockBody := block.Body()
+
+		// Recursively convert block body to object tokens
+		blockAttrs := []hclwrite.ObjectAttrTokens{}
+		for name, attr := range blockBody.Attributes() {
+			blockAttrs = append(blockAttrs, hclwrite.ObjectAttrTokens{
+				Name:  hclwrite.TokensForIdentifier(name),
+				Value: attr.Expr().BuildTokens(nil),
+			})
+		}
+
+		attrs = append(attrs, hclwrite.ObjectAttrTokens{
+			Name:  hclwrite.TokensForIdentifier(blockName),
+			Value: hclwrite.TokensForObject(blockAttrs),
+		})
+	}
+
+	return hclwrite.TokensForObject(attrs)
 }
 
 func (ic *importContext) readListFromData(i importable, path []string, res *resource,
@@ -683,8 +1290,10 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
 				blockType = r.Mode
 			}
 			resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-			err = ic.dataToHcl(ic.Importables[r.Resource],
-				[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
+
+			// Use unified HCL generation for both SDKv2 and Plugin Framework
+			err = ic.unifiedDataToHcl(ic.Importables[r.Resource],
+				[]string{}, r, resourceBlock.Body())
 			if err != nil {
 				log.Printf("[ERROR] error generating body for %v: %s", r, err.Error())
 			}
@@ -697,7 +1306,16 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
 				ResourceBody: string(formatted),
 				BlockName:    generateBlockFullName(body.Blocks()[0]),
 			}
-			if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
+			// Check if resource supports import
+			// For Plugin Framework resources, import is always supported
+			// For SDKv2 resources, check if Importer is defined
+			supportsImport := false
+			if ir.PluginFramework {
+				supportsImport = true
+			} else if sdkResource, ok := ic.Resources[r.Resource]; ok && sdkResource.Importer != nil {
+				supportsImport = true
+			}
+			if r.Mode != "data" && supportsImport {
 				writeData.ImportCommand = r.ImportCommand(ic)
 				if ic.nativeImportSupported { // generate import block for native import
 					imp := hclwrite.NewEmptyFile()

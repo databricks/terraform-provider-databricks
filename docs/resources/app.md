@@ -47,7 +47,7 @@ The following arguments are required:
 * `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
-* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`, `LIQUID`.
+* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
 
 ### resources Configuration Attribute
 

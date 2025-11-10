@@ -269,7 +269,11 @@ var goroutinesNumber = map[string]int{
 
 func makeResourcesChannels() map[string]resourceChannel {
 	resources := []string{"databricks_user", "databricks_service_principal", "databricks_group"}
-	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOURCES_CHANNELS"); exists {
+		resources = strings.Split(val, ",")
+	} else if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+		// Support legacy typo with deprecation warning
+		log.Printf("[WARN] Environment variable 'EXPORTER_DEDICATED_RESOUSE_CHANNELS' is deprecated due to typo. Please use 'EXPORTER_DEDICATED_RESOURCES_CHANNELS' instead.")
 		resources = strings.Split(val, ",")
 	}
 	channels := make(map[string]resourceChannel, len(resources))

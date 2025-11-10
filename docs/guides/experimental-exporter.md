@@ -146,9 +146,9 @@ Migration of resources between two workspaces with Identity Federation enabled s
 
   and do `terraform apply` on the account level to assign users, service principals, and groups to a destination workspace.
 
-1. Export resources from the source workspace using the exporter on the workspace level. It will automatically detect that Identity Federation is enabled and export account-level objects as data sources instead of resources.
+2. Export resources from the source workspace using the exporter on the workspace level. It will automatically detect that Identity Federation is enabled and export account-level objects as data sources instead of resources.
 
-1. Apply exported code against the destination workspace.
+3. Apply exported code against the destination workspace.
 
 #### Workspace-level approach (same Databricks account)
 
@@ -159,10 +159,10 @@ When migrating between workspaces inside the same Databricks account, the users/
 Migration between Databricks accounts should be done in multiple steps:
 
 1. Export users/SPs/groups on the account level.
-1. Export workspace(s) with `idfed` listing included.
-1. Apply account-level export to a new account.  Extract application IDs of newly created service principals.
-1. Adjust service principal IDs in the workspace export.
-1. Apply workspace export to a new workspace.
+2. Export workspace(s) with `idfed` listing included.
+3. Apply account-level export to a new account.  Extract application IDs of newly created service principals.
+4. Adjust service principal IDs in the workspace export.
+5. Apply workspace export to a new workspace.
 
 ## Services
 

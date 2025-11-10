@@ -31,16 +31,16 @@ The logic of importing the individual resource type is isolated from the generat
 When adding a new resource to Terraform Exporter we need to perform next steps:
 
 1. Define a new `importable` instance in the `importables.go`.
-1. Specify if it's account-level or workspace-level resource, or both.
-1. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).
-1. Implement the `List` function that will be discover and emit instances of the specific resource.
-1. (Optional) Implement the `Name` function that will extract TF resource name from an instance of a specific resource.
-1. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
-1. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.
-1. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
-1. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
-1. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
-1. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
+2. Specify if it's account-level or workspace-level resource, or both.
+3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).
+4. Implement the `List` function that will be discover and emit instances of the specific resource.
+5. (Optional) Implement the `Name` function that will extract TF resource name from an instance of a specific resource.
+6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
+7. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.
+8. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
+9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
+10. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
+11. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
 
 Recommendations:
 
@@ -53,8 +53,8 @@ Recommendations:
 **When Adding Exporter Support for resource implemented with Terraform plugin framework**:
 
 1. Define resource in `exporter/importables.go` with `PluginFramework: true` for Plugin Framework resources
-1. Use `convertPluginFrameworkToGoSdk` helper for Plugin Framework
-1. Use unified callbacks (`ShouldOmitFieldUnified`, `ShouldGenerateFieldUnified`) for custom field logic
+2. Use `convertPluginFrameworkToGoSdk` helper for Plugin Framework
+3. Use unified callbacks (`ShouldOmitFieldUnified`, `ShouldGenerateFieldUnified`) for custom field logic
 
 
 ## Unified HCL Code Generation

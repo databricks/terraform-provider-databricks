@@ -52,6 +52,9 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii").SetOptional().SetComputed()
 			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii", "behavior").SetOptional().SetComputed()
 
+			// Tags should have Set type
+			m["tags"].Type = schema.TypeSet
+
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,

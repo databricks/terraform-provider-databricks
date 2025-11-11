@@ -2169,6 +2169,41 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_data_quality_monitor": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "dq",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "object_type,object_id" (e.g., "table,abc-123-def")
+			id := d.Id()
+			parts := strings.Split(id, ",")
+			if len(parts) == 2 {
+				objectType := parts[0]
+				objectId := parts[1]
+				// Create name like "table_monitor_abc12345"
+				if len(objectId) > 8 {
+					return fmt.Sprintf("%s_monitor_%s", objectType, objectId[:8])
+				}
+				return fmt.Sprintf("%s_monitor_%s", objectType, objectId)
+			}
+			return "monitor_" + generateUniqueID(id)
+		},
+		Import: importDataQualityMonitor,
+		List:   listDataQualityMonitors,
+		// No List function - monitors are emitted as dependencies from tables/schemas
+		Depends: []reference{
+			// object_id matches either table_id or schema_id depending on object_type
+			{Path: "object_id", Resource: "databricks_sql_table", Match: "table_id"},
+			{Path: "object_id", Resource: "databricks_schema", Match: "schema_id"},
+			// Full names match resource.id directly
+			{Path: "data_profiling_config.monitored_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.baseline_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.warehouse_id", Resource: "databricks_sql_endpoint"},
+			// Email addresses match user_name field
+			{Path: "data_profiling_config.notification_settings.on_failure.email_addresses",
+				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
 	"databricks_grants": {
 		WorkspaceLevel: true,
 		Service:        "uc-grants",

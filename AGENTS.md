@@ -95,44 +95,11 @@ Resources are being migrated from SDKv2 to Plugin Framework. When migrating:
   - `TestMwsAcc*` - Account-level tests across all clouds
   - `TestUcAcc*` - Unity Catalog tests across all clouds
 
-### Exporter Architecture
+### Terraform Exporter
 
 The exporter (`exporter/` directory) generates Terraform configuration (`.tf` files) and import scripts from existing Databricks resources.
 
-#### Unified HCL Code Generation
-
-The exporter uses a **unified code generation approach** for both SDKv2 and Plugin Framework resources:
-
-**Entry Point**: `unifiedDataToHcl()` in `exporter/codegen.go`
-- Works with both SDKv2 and Plugin Framework resources through abstraction layers
-- Uses `ResourceDataWrapper` and `SchemaWrapper` interfaces for unified data access
-- Extracts ~70% of common logic into shared helper functions
-
-**Architecture**:
-```
-unifiedDataToHcl()
-├── extractFieldsForGeneration() ← Shared: field iteration, omission, variable refs, skip logic
-├── generateSdkv2Field() ← SDKv2-specific: generates blocks
-├── generatePluginFrameworkField() ← Plugin Framework-specific: generates attributes
-└── generateDependsOnAttribute() ← Shared: depends_on generation
-```
-
-**Resource Definition Callbacks** (`importable` struct in `exporter/model.go`):
-- `ShouldOmitFieldUnified` - Unified callback for field omission (works with both frameworks)
-- `ShouldGenerateFieldUnified` - Unified callback for field generation (works with both frameworks)
-- `ShouldOmitField` - Legacy SDKv2-only callback (deprecated, use Unified version)
-- `ShouldGenerateField` - Legacy SDKv2-only callback (deprecated, use Unified version)
-
-**Key Differences**:
-- SDKv2 generates nested structures as **blocks**: `evaluation { ... }`
-- Plugin Framework generates nested structures as **attributes**: `evaluation = { ... }`
-
-**When Adding Exporter Support**:
-1. Define resource in `exporter/importables.go` with `PluginFramework: true` for Plugin Framework resources
-2. Implement `List` function to discover resources
-3. Implement `Import` function to emit dependencies (use `convertPluginFrameworkToGoSdk` helper for Plugin Framework)
-4. Define `Depends` relationships for cross-resource references
-5. Use unified callbacks (`ShouldOmitFieldUnified`, `ShouldGenerateFieldUnified`) for custom field logic
+When working on exporter code, read `exporter/AGENTS.md` for additional instructions.
 
 ### Dual-Provider Resource Patterns
 

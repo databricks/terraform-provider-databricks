@@ -1004,6 +1004,26 @@ func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable)
 	// Set the ID in the state
 	state.SetAttribute(ic.Context, path.Root("id"), types.StringValue(r.ID))
 
+	// Call ImportState if the resource supports it (for composite IDs, etc.)
+	if importableResource, ok := pfResource.(frameworkresource.ResourceWithImportState); ok {
+		importReq := frameworkresource.ImportStateRequest{
+			ID: r.ID,
+		}
+		importResp := frameworkresource.ImportStateResponse{
+			State: state,
+		}
+
+		importableResource.ImportState(ic.Context, importReq, &importResp)
+
+		if importResp.Diagnostics.HasError() {
+			log.Printf("[ERROR] Error importing state for %s#%s: %v", r.Resource, r.ID, importResp.Diagnostics)
+			return nil
+		}
+
+		// Use the state from ImportState for the Read call
+		state = importResp.State
+	}
+
 	var finalState *tfsdk.State
 
 	// Call Plugin Framework Read with retry logic

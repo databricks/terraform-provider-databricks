@@ -179,6 +179,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
+* `dq` - **listing** [databricks_data_quality_monitor](../resources/data_quality_monitor.md)
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) (account-level) and [databricks_permission_assignment](../resources/permission_assignment.md) (workspace-level).  When listing is done on account level, you can filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
@@ -248,6 +249,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
 | [databricks_credential](../resources/credential.md) | Yes | Yes | Yes | No |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
+| [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |

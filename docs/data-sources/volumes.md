@@ -30,6 +30,8 @@ output "all_volumes" {
 
 * `catalog_name` - (Required) Name of [databricks_catalog](../resources/catalog.md)
 * `schema_name` - (Required) Name of [databricks_schema](../resources/schema.md)
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -135,8 +135,8 @@ The following arguments are supported:
 * `permission` (string, required) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string, required) - Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
-* `securable_type` (string, required) - Possible values are: `VOLUME`
+* `permission` (string, required) - Possible values are: `MANAGE`, `READ_VOLUME`, `SELECT`, `WRITE_VOLUME`
+* `securable_type` (string, required) - Possible values are: `TABLE`, `VOLUME`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

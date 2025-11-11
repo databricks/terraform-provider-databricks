@@ -11,6 +11,7 @@ import (
 
 func DataSourceCurrentMetastore() common.Resource {
 	type CurrentMetastore struct {
+		common.Namespace
 		Id        string                               `json:"id,omitempty" tf:"computed"`
 		Metastore *catalog.GetMetastoreSummaryResponse `json:"metastore_info,omitempty" tf:"computed" `
 	}

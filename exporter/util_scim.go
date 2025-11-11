@@ -137,13 +137,16 @@ func (ic *importContext) emitGroups(u scim.User) {
 			Resource: "databricks_group",
 			ID:       g.Value,
 		})
-		id := fmt.Sprintf("%s|%s", g.Value, u.ID)
-		ic.Emit(&resource{
-			Resource: "databricks_group_member",
-			ID:       id,
-			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
-			Data:     ic.makeGroupMemberData(id, g.Value, u.ID),
-		})
+		// emit group_member only if it's a workspace-level group or if it's an account level group
+		if ic.accountLevel || isWorkspaceLevelGroup(ic, g.Display) {
+			id := fmt.Sprintf("%s|%s", g.Value, u.ID)
+			ic.Emit(&resource{
+				Resource: "databricks_group_member",
+				ID:       id,
+				Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
+				Data:     ic.makeGroupMemberData(id, g.Value, u.ID),
+			})
+		}
 	}
 }
 

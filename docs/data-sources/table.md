@@ -29,6 +29,8 @@ resource "databricks_grants" "things" {
 ## Argument Reference
 
 * `name` - (Required) Full name of the databricks_table: _`catalog`.`schema`.`table`_
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

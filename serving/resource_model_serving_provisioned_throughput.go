@@ -14,6 +14,28 @@ const (
 	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
+// preserveConfigOrderPt re-orders the served_entities in the API response for provisioned
+// throughput endpoints to match the order specified in the HCL configuration. This prevents
+// spurious diffs when the API returns items in a different order (e.g., alphabetically).
+func preserveConfigOrderPt(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreatePtEndpointRequest
+	common.DataToStructPointer(d, s, &config)
+
+	if apiResponse == nil {
+		return
+	}
+
+	// Re-order served_entities to match config order
+	if len(config.Config.ServedEntities) > 0 && len(apiResponse.ServedEntities) > 0 {
+		configNames := make([]string, len(config.Config.ServedEntities))
+		for i, entity := range config.Config.ServedEntities {
+			configNames[i] = entity.Name
+		}
+		apiResponse.ServedEntities = reorderByName(configNames, apiResponse.ServedEntities,
+			func(e serving.ServedEntityOutput) string { return e.Name })
+	}
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
 		serving.CreatePtEndpointRequest{},
@@ -74,6 +96,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			}
 			// Copy sensitive plaintext fields from state to API response to prevent drift
 			copySensitiveExternalModelFields(&sOrig, endpoint)
+			preserveConfigOrderPt(s, d, endpoint.Config)
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err

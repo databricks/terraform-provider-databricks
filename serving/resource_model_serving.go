@@ -272,6 +272,82 @@ func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, apiR
 	}
 }
 
+// reorderByName is a generic helper that re-orders a slice of items from the API response
+// to match the order of names in the config. Items are matched by name, and any items in
+// the API response that aren't in the config are appended at the end.
+//
+// Parameters:
+//   - configNames: ordered list of names from the user's HCL configuration
+//   - apiItems: slice of items from the API response
+//   - getName: function to extract the name from an API item
+//
+// Returns: re-ordered slice maintaining the same type as apiItems
+func reorderByName[T any](configNames []string, apiItems []T, getName func(T) string) []T {
+	if len(configNames) == 0 || len(apiItems) == 0 {
+		return apiItems
+	}
+
+	reordered := make([]T, 0, len(apiItems))
+
+	// First pass: add items in config order
+	for _, configName := range configNames {
+		for _, apiItem := range apiItems {
+			if getName(apiItem) == configName {
+				reordered = append(reordered, apiItem)
+				break
+			}
+		}
+	}
+
+	// Second pass: append any items from API that weren't in config
+	for _, apiItem := range apiItems {
+		found := false
+		for _, reorderedItem := range reordered {
+			if getName(reorderedItem) == getName(apiItem) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			reordered = append(reordered, apiItem)
+		}
+	}
+
+	return reordered
+}
+
+// preserveConfigOrder re-orders the served_models and served_entities in the API response
+// to match the order specified in the HCL configuration. This prevents spurious diffs when
+// the API returns items in a different order (e.g., alphabetically) than submitted.
+func preserveConfigOrder(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil || apiResponse == nil {
+		return
+	}
+
+	// Re-order served_models to match config order
+	if len(config.Config.ServedModels) > 0 && len(apiResponse.ServedModels) > 0 {
+		configNames := make([]string, len(config.Config.ServedModels))
+		for i, model := range config.Config.ServedModels {
+			configNames[i] = model.Name
+		}
+		apiResponse.ServedModels = reorderByName(configNames, apiResponse.ServedModels,
+			func(m serving.ServedModelOutput) string { return m.Name })
+	}
+
+	// Re-order served_entities to match config order
+	if len(config.Config.ServedEntities) > 0 && len(apiResponse.ServedEntities) > 0 {
+		configNames := make([]string, len(config.Config.ServedEntities))
+		for i, entity := range config.Config.ServedEntities {
+			configNames[i] = entity.Name
+		}
+		apiResponse.ServedEntities = reorderByName(configNames, apiResponse.ServedEntities,
+			func(e serving.ServedEntityOutput) string { return e.Name })
+	}
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -376,6 +452,7 @@ func ResourceModelServing() common.Resource {
 				}
 			}
 			cleanWorkloadSize(s, d, endpoint.Config)
+			preserveConfigOrder(s, d, endpoint.Config)
 
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {

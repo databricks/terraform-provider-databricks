@@ -842,3 +842,41 @@ func TestCatalogSuppressCaseSensitivity(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestUpdateCatalogName(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:    "old_catalog_name",
+				NewName: "new_catalog_name",
+				Comment: "c",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "new_catalog_name",
+				Comment: "c",
+			}, nil)
+			e.GetByName(mock.Anything, "new_catalog_name").Return(&catalog.CatalogInfo{
+				Name:    "new_catalog_name",
+				Comment: "c",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "old_catalog_name",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "old_catalog_name",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "new_catalog_name"
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":    "new_catalog_name",
+		"comment": "c",
+	})
+}

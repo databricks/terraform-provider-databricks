@@ -288,9 +288,10 @@ func importUcCredential(ic *importContext, r *resource) error {
 		isolationMode := r.Data.Get("isolation_mode").(string)
 		if isolationMode == "ISOLATION_MODE_ISOLATED" {
 			purpose := r.Data.Get("purpose").(string)
-			if purpose == "SERVICE" {
+			switch purpose {
+			case "SERVICE":
 				ic.emitWorkspaceBindings("credential", r.ID)
-			} else if purpose == "STORAGE" {
+			case "STORAGE":
 				ic.emitWorkspaceBindings("storage_credential", r.ID)
 			}
 		}

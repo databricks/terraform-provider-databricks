@@ -33,7 +33,7 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 1. Define a new `importable` instance in the `importables.go`.
 2. Specify if it's account-level or workspace-level resource, or both.
 3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).
-4. Implement the `List` function that will be discover and emit instances of the specific resource.
+4. Implement the `List` function that will be discover and emit instances of the specific resource.  When implementing it, prefer to use `List` method of Go SDK instead of `ListAll`.
 5. (Optional) Implement the `Name` function that will extract TF resource name from an instance of a specific resource.
 6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
 7. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.

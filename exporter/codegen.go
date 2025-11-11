@@ -762,7 +762,9 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 					}
 
 					if nestedData, ok := item.(map[string]interface{}); ok {
-						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res)
+						// Include the index in the path for proper reference resolution
+						nestedPath := append(path, fieldName, strconv.Itoa(i))
+						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, nestedPath, nestedSchema, nestedData, res)
 						listTokens = append(listTokens, objTokens...)
 					}
 				}

@@ -173,6 +173,11 @@ func (ic *importContext) cacheGroups() error {
 	ic.groupsMutex.Lock()
 	defer ic.groupsMutex.Unlock()
 	if ic.allGroups == nil {
+		if !ic.isServiceEnabled("groups") {
+			log.Printf("[INFO] Groups service is not enabled, skipping caching of groups")
+			ic.allGroups = make([]scim.Group, 0)
+			return nil
+		}
 		log.Printf("[INFO] Caching groups in memory ...")
 		var groups *[]iam.Group
 		var err error

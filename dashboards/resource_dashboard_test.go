@@ -2,6 +2,7 @@ package dashboards
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -60,6 +61,68 @@ func TestDashboardCreate(t *testing.T) {
 			parent_path = "/path"
 			serialized_dashboard = "serialized_json"
 		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           "xyz",
+		"display_name": "Dashboard name",
+	})
+}
+
+func TestDashboardCreateWithFilePath(t *testing.T) {
+	// Create a temporary file with dashboard JSON content
+	tmpFile, err := os.CreateTemp("", "dashboard-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+
+	_, err = tmpFile.WriteString("serialized_json")
+	assert.NoError(t, err)
+	tmpFile.Close()
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockLakeviewAPI().EXPECT()
+			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
+				Dashboard: dashboards.Dashboard{
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					ParentPath:          "/path",
+					SerializedDashboard: "serialized_json",
+				},
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+			e.Publish(mock.Anything, dashboards.PublishRequest{
+				EmbedCredentials: true,
+				WarehouseId:      "abc",
+				DashboardId:      "xyz",
+				ForceSendFields:  []string{"EmbedCredentials"},
+			}).Return(&dashboards.PublishedDashboard{
+				EmbedCredentials:   true,
+				WarehouseId:        "abc",
+				DisplayName:        "Dashboard name",
+				RevisionCreateTime: "823828",
+			}, nil)
+			e.Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+		},
+		Resource: ResourceDashboard(),
+		Create:   true,
+		HCL: fmt.Sprintf(`
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			file_path = "%s"
+		`, tmpFile.Name()),
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
 		"display_name": "Dashboard name",

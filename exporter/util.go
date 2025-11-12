@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -586,4 +587,12 @@ func (ic *importContext) emitNccBindingAndNcc(workspaceId int64, nccId string) {
 		Resource: "databricks_mws_network_connectivity_config",
 		ID:       ic.accountClient.Config.AccountID + "/" + nccId,
 	})
+}
+
+// normalizeWhitespace converts multiple consecutive spaces and tabs into a single space character
+// while preserving newlines. This is useful for comparing generated Terraform code where
+// indentation may vary but line structure should be preserved.
+func normalizeWhitespace(s string) string {
+	re := regexp.MustCompile(`[ \t]+`)
+	return strings.TrimSpace(re.ReplaceAllString(s, " "))
 }

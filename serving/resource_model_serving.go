@@ -290,6 +290,9 @@ func ResourceModelServing() common.Resource {
 			// route_optimized cannot be updated.
 			common.CustomizeSchemaPath(m, "route_optimized").SetForceNew()
 
+			// Tags should have Set type
+			m["tags"].Type = schema.TypeSet
+
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,

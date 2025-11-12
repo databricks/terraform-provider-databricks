@@ -257,6 +257,53 @@ resource "databricks_access_control_rule_set" "budget_policy_usage" {
 }
 ```
 
+## Tag policy usage
+
+Access to [tag policies](tag_policy.md) could be controlled with this resource:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// account level group
+data "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_tag_policy" "this" {
+  tag_key     = "example_tag_key"
+  description = "Example description."
+  values = [
+    {
+      name = "example_value_2"
+    },
+    {
+      name = "example_value_3"
+    }
+  ]
+}
+
+resource "databricks_access_control_rule_set" "tag_policy_usage" {
+  name = "accounts/${local.account_id}/tagPolicies/${databricks_tag_policy.this.id}/ruleSets/default"
+
+  // user john is the manager of this tag policy
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/tagPolicy.manager"
+  }
+
+  // group data science is the assigner of the given tag policy
+  grant_rules {
+    principals = [data.databricks_group.ds.acl_principal_id]
+    role       = "roles/tagPolicy.assigner"
+  }
+}
+```
 
 ## Argument Reference
 
@@ -264,7 +311,8 @@ resource "databricks_access_control_rule_set" "budget_policy_usage" {
   * `accounts/{account_id}/ruleSets/default` - account-level access control.
   * `accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default` - access control for a specific service principal.
   * `accounts/{account_id}/groups/{group_id}/ruleSets/default` - access control for a specific group.
-  * `accounts/{account_id}/budgetPolicies/{budget_policy_id}/ruleSets/default` - access control for a specific budget policy.
+  * `accounts/{account_id}/budgetPolicies/{budget_policy_id}/ruleSets/default` - access control for a specific [budget policy](budget_policy.md).
+  * `accounts/{account_id}/tagPolicies/{tag_policy_id}/ruleSets/default` - access control for a specific [tag policy](tag_policy.md).
 
 * `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 
@@ -289,6 +337,9 @@ Arguments of the `grant_rules` block are:
   * `accounts/{account_id}/ruleSets/default`
     * `roles/marketplace.admin` - Databricks Marketplace administrator.
     * `roles/billing.admin` - Billing administrator.
+    * `roles/tagPolicy.creator` - Creator of tag policies.
+    * `roles/tagPolicy.manager` - Manager of tag policies.
+    * `roles/tagPolicy.assigner` - Assigner of tag policies.
   * `accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default`
     * `roles/servicePrincipal.manager` - Manager of a service principal.
     * `roles/servicePrincipal.user` - User of a service principal.
@@ -297,6 +348,9 @@ Arguments of the `grant_rules` block are:
   * `accounts/{account_id}/budgetPolicies/{budget_policy_id}/ruleSets/default`
     * `roles/budgetPolicy.manager` - Manager of a budget policy.
     * `roles/budgetPolicy.user` - User of a budget policy.
+  * `accounts/{account_id}/tagPolicies/{tag_policy_id}/ruleSets/default`
+    * `roles/tagPolicy.manager` - Manager of a specific tag policy.
+    * `roles/tagPolicy.assigner` - Assigner of a specific tag policy.
 * `principals` - (Required) a list of principals who are granted a role. The following format is supported:
   * `users/{username}` (also exposed as `acl_principal_id` attribute of `databricks_user` resource).
   * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).

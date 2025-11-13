@@ -212,6 +212,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-shares` - **listing** [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
+* `uc-tags` - **listing** exports [databricks_tag_policy](../resources/tag_policy.md) resources.
 * `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
 * `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own files, simply because of their number. If Identity Federation is enabled on the workspace (when UC Metastore is attached), then users and service principals are exposed as data sources because they are defined on an account level.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
@@ -313,6 +314,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
 | [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
+| [databricks_tag_policy](../resources/tag_policy.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
 | [databricks_user](../resources/user.md) | Yes | No | Yes | Yes |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No | No | No | No |

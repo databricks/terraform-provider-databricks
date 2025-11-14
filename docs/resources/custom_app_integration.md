@@ -1,5 +1,5 @@
 ---
-subcategory: "Apps"
+subcategory: "OAuth"
 ---
 # databricks_custom_app_integration Resource
 

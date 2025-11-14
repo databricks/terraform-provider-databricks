@@ -81,7 +81,7 @@ resource "databricks_pipeline" "this" {
 The following arguments are supported:
 
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
-* `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
+* `catalog` - The name of default catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline if you switch from `storage` to `catalog` or vice versa.  If pipeline was already created with `catalog` set, the value could be changed.* (Conflicts with `storage`).
 * `schema` - (Optional, String, Conflicts with `target`) The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.
 * `storage` - A location on cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
 * `target` - (Optional, String, Conflicts with `schema`) The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.

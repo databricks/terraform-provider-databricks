@@ -12,6 +12,7 @@
 ### Bug Fixes
 
 * Fix spurious plan diffs in `databricks_model_serving` and `databricks_model_serving_provisioned_throughput` resources due to tag reordering ([#5120](https://github.com/databricks/terraform-provider-databricks/pull/5120))
+* Move Spark Version selector defaults to Terraform ([#5219](https://github.com/databricks/terraform-provider-databricks/pull/5219)).
 
 ### Documentation
 

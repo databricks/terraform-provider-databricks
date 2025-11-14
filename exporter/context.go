@@ -269,7 +269,11 @@ var goroutinesNumber = map[string]int{
 
 func makeResourcesChannels() map[string]resourceChannel {
 	resources := []string{"databricks_user", "databricks_service_principal", "databricks_group"}
-	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOURCES_CHANNELS"); exists {
+		resources = strings.Split(val, ",")
+	} else if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+		// Support legacy typo with deprecation warning
+		log.Printf("[WARN] Environment variable 'EXPORTER_DEDICATED_RESOUSE_CHANNELS' is deprecated due to typo. Please use 'EXPORTER_DEDICATED_RESOURCES_CHANNELS' instead.")
 		resources = strings.Split(val, ",")
 	}
 	channels := make(map[string]resourceChannel, len(resources))
@@ -999,6 +1003,26 @@ func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable)
 
 	// Set the ID in the state
 	state.SetAttribute(ic.Context, path.Root("id"), types.StringValue(r.ID))
+
+	// Call ImportState if the resource supports it (for composite IDs, etc.)
+	if importableResource, ok := pfResource.(frameworkresource.ResourceWithImportState); ok {
+		importReq := frameworkresource.ImportStateRequest{
+			ID: r.ID,
+		}
+		importResp := frameworkresource.ImportStateResponse{
+			State: state,
+		}
+
+		importableResource.ImportState(ic.Context, importReq, &importResp)
+
+		if importResp.Diagnostics.HasError() {
+			log.Printf("[ERROR] Error importing state for %s#%s: %v", r.Resource, r.ID, importResp.Diagnostics)
+			return nil
+		}
+
+		// Use the state from ImportState for the Read call
+		state = importResp.State
+	}
 
 	var finalState *tfsdk.State
 

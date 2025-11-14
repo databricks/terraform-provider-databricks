@@ -660,6 +660,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
+	"databricks_permission_assignment": {
+		Service:        "idfed",
+		WorkspaceLevel: true,
+		List:           listWorkspacePermissionAssignments,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
+			switch pathString {
+			case "principal_id":
+				return true
+			case "user_name", "service_principal_name", "group_name":
+				return d.Get(pathString).(string) == ""
+			default:
+				return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
+			}
+		},
+		// Note: We don't need dependencies here as we assign permissions by name, not by ID
+	},
 	"databricks_secret_scope": {
 		Service:        "secrets",
 		WorkspaceLevel: true,
@@ -1306,6 +1322,33 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "evaluation.notification.subscriptions.destination_id", Resource: "databricks_notification_destination"},
 			{Path: "evaluation.notification.subscriptions.user_email", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_apps_settings_custom_template": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listAppsSettingsCustomTemplates,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_apps_settings_custom_template", "name"),
+	},
+	"databricks_app": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listApps,
+		Import:          importApp,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_app", "name"),
+		Depends: []reference{
+			{Path: "resources.sql_warehouse.id", Resource: "databricks_sql_endpoint"},
+			{Path: "resources.serving_endpoint.name", Resource: "databricks_model_serving"},
+			{Path: "resources.job.id", Resource: "databricks_job"},
+			{Path: "resources.secret.scope", Resource: "databricks_secret_scope"},
+			{Path: "resources.secret.key", Resource: "databricks_secret", Match: "key",
+				IsValidApproximation: createIsMatchingScopeAndKey("scope", "key")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume"},
+			// {Path: "budget_policy_id", Resource: "databricks_budget"},
 		},
 	},
 	"databricks_pipeline": {
@@ -2151,6 +2194,41 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_data_quality_monitor": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "dq",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "object_type,object_id" (e.g., "table,abc-123-def")
+			id := d.Id()
+			parts := strings.Split(id, ",")
+			if len(parts) == 2 {
+				objectType := parts[0]
+				objectId := parts[1]
+				// Create name like "table_monitor_abc12345"
+				if len(objectId) > 8 {
+					return fmt.Sprintf("%s_monitor_%s", objectType, objectId[:8])
+				}
+				return fmt.Sprintf("%s_monitor_%s", objectType, objectId)
+			}
+			return "monitor_" + generateUniqueID(id)
+		},
+		Import: importDataQualityMonitor,
+		List:   listDataQualityMonitors,
+		// No List function - monitors are emitted as dependencies from tables/schemas
+		Depends: []reference{
+			// object_id matches either table_id or schema_id depending on object_type
+			{Path: "object_id", Resource: "databricks_sql_table", Match: "table_id"},
+			{Path: "object_id", Resource: "databricks_schema", Match: "schema_id"},
+			// Full names match resource.id directly
+			{Path: "data_profiling_config.monitored_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.baseline_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.warehouse_id", Resource: "databricks_sql_endpoint"},
+			// Email addresses match user_name field
+			{Path: "data_profiling_config.notification_settings.on_failure.email_addresses",
+				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_grants": {

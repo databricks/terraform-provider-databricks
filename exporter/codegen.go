@@ -399,6 +399,14 @@ func (ic *importContext) extractFieldsForGeneration(imp importable, path []strin
 			shouldSkip = false
 		}
 
+		// For Plugin Framework, also check for zero values in primitives
+		if !shouldSkip && wrapper.IsPluginFramework() && nonZero && fieldSchema.IsOptional() {
+			rv := reflect.ValueOf(raw)
+			if rv.IsValid() && rv.IsZero() {
+				shouldSkip = true
+			}
+		}
+
 		// Check if ShouldGenerateField forces generation
 		if shouldSkip {
 			forceGenerate := false

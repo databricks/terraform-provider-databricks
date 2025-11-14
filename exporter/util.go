@@ -596,3 +596,42 @@ func normalizeWhitespace(s string) string {
 	re := regexp.MustCompile(`[ \t]+`)
 	return strings.TrimSpace(re.ReplaceAllString(s, " "))
 }
+
+func shouldOmitWithEffectiveFields(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool {
+	// Allow input-only fields that have effective_* counterparts to pass through
+	// to the zero-value filtering stage in the codegen
+	effectiveFieldName := "effective_" + pathString
+	effectiveFieldSchema := wrapper.GetSchema().GetField(effectiveFieldName)
+	if effectiveFieldSchema != nil {
+		// This is an input field that has an effective_* counterpart
+		// Check if the value is actually a zero value for its type
+		v, ok := wrapper.GetOk(pathString)
+		if !ok {
+			return true // Field not set, omit it
+		}
+
+		// Required fields should never be omitted, even if zero
+		if fieldSchema.IsRequired() {
+			return false
+		}
+
+		// Check if it's a zero value using reflection
+		if v == nil {
+			return true
+		}
+		rv := reflect.ValueOf(v)
+		if rv.IsZero() {
+			return true // Zero value, omit it
+		}
+
+		// Check against default value if one is defined
+		if def := fieldSchema.GetDefault(); def != nil && reflect.DeepEqual(v, def) {
+			return true
+		}
+
+		// Non-zero value, don't omit it
+		return false
+	}
+	// Use default omission logic for other fields (e.g., omit computed-only fields)
+	return DefaultShouldOmitFieldFuncWithAbstraction(ic, pathString, fieldSchema, wrapper, r)
+}

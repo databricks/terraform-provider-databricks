@@ -26,6 +26,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
@@ -311,6 +312,13 @@ var emptyConnections = qa.HTTPFixture{
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
+var emptyTagPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/tag-policies?",
+	Response:     tags.ListTagPoliciesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -556,6 +564,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyShares,
 			emptyDataQualityMonitors,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyGitCredentials,
 			emptyWorkspace,
@@ -835,6 +844,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyUcCredentials,
 			emptyShares,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyModelServing,
 			emptyMlflowWebhooks,

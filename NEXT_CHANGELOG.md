@@ -15,6 +15,8 @@
 
 ### Documentation
 
+ * Clarify scope of `databricks_grant`, reword reference to principals ([#5182](https://github.com/databricks/terraform-provider-databricks/pull/5182)).
+
 ### Exporter
 
 * Added support for `databricks_data_quality_monitor` resource ([#5193](https://github.com/databricks/terraform-provider-databricks/pull/5193)).

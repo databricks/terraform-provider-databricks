@@ -23,3 +23,5 @@
 * Added support for Databricks Apps resources ([#5208](https://github.com/databricks/terraform-provider-databricks/pull/5208)).
 
 ### Internal Changes
+
+* Make `databricks_entitlements` forward-compatible with new entitlements ([#4763](https://github.com/databricks/terraform-provider-databricks/pull/4763))

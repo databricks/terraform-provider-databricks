@@ -8,6 +8,7 @@
 
 * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Add `feature_engineering_kafka_config` resource and data source ([#5225](https://github.com/databricks/terraform-provider-databricks/pull/5225))
 
 ### Bug Fixes
 

@@ -21,6 +21,8 @@
 * Fix typo in the name of environment variable ([#5158](https://github.com/databricks/terraform-provider-databricks/pull/5158)).
 * Export permission assignments on workspace level ([#5169](https://github.com/databricks/terraform-provider-databricks/pull/5169)).
 * Added support for Databricks Apps resources ([#5208](https://github.com/databricks/terraform-provider-databricks/pull/5208)).
+* Added `-targetCloud` flag to exporter for cross-cloud attribute conversion ([#5229](https://github.com/databricks/terraform-provider-databricks/issues/4299)).
+* Added `-nodeTypeMappingFile` flag to exporter for cross-cloud node type conversion ([#5229](https://github.com/databricks/terraform-provider-databricks/issues/4299)).
 
 ### Internal Changes
 

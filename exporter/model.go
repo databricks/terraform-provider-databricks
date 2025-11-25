@@ -368,6 +368,10 @@ func (r *resource) ImportResource(ic *importContext) {
 			}
 		}
 	}
+	// Convert cloud attributes if target cloud is specified
+	if r.DataWrapper != nil {
+		ic.convertResourceDataCloudAttributes(r.DataWrapper, r.Resource)
+	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
 		err := runWithRetries(func() error {

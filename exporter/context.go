@@ -126,6 +126,8 @@ type importContext struct {
 	notebooksFormat                         string
 	updatedSinceStr                         string
 	updatedSinceMs                          int64
+	targetCloud                             string
+	nodeTypeMappings                        *nodeTypeMappings
 
 	waitGroup *sync.WaitGroup
 

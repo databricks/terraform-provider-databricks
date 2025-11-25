@@ -77,6 +77,55 @@ All arguments are optional, and they tune what code is being generated.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources from multiple workspaces for merging into a single one.
+* `-targetCloud` - Target cloud for generated code (`aws`, `azure`, `gcp`). If different from the source cloud, the exporter will convert cloud-specific attributes (`aws_attributes`, `azure_attributes`, `gcp_attributes`) to the target cloud format. Only compatible attributes are converted:
+  * `availability` - Converted between cloud-specific formats (e.g., `SPOT` → `SPOT_AZURE` → `PREEMPTIBLE_GCP`)
+  * `first_on_demand` - Preserved across all clouds
+  * `zone_id` - Only converted between AWS and GCP when value is `auto`
+  * `ebs_volume_count` (AWS) ↔ `local_ssd_count` (GCP) - Only when `ebs_volume_type` is `GENERAL_PURPOSE_SSD`
+  * `disk_spec.disk_type` (for instance pools):
+    * AWS `ebs_volume_type` (`GENERAL_PURPOSE_SSD`, `THROUGHPUT_OPTIMIZED_HDD`) ↔ Azure `azure_disk_volume_type` (`PREMIUM_LRS`, `STANDARD_LRS`)
+    * When converting to GCP, `disk_type` is removed entirely (GCP only supports `disk_count`)
+    * When converting from GCP, `disk_count` is preserved but `disk_type` cannot be added
+  * Other attributes (e.g., `instance_profile_arn`) are not compatible and will be omitted
+* `-nodeTypeMappingFile` - Path to JSON file containing node type mappings between clouds. Can only be used with `-targetCloud` flag. When specified, the exporter will convert `node_type_id` and `driver_node_type_id` fields to the target cloud's node types. The JSON file should have the following format:
+
+  ```json
+  {
+    "version": "1.0",
+    "mappings": [
+      {
+        "azure": "Standard_F4s",
+        "aws": "i3.xlarge",
+        "gcp": "n1-standard-4"
+      },
+      {
+        "azure": "Standard_F8s",
+        "aws": "i3.2xlarge",
+        "gcp": "n1-standard-8"
+      }
+    ]
+  }
+  ```
+  
+  Node types without mappings will be preserved unchanged with a warning logged.
+
+  To generate a mapping file, use the `exporter/generate_node_mappings.py` script:
+  
+  ```bash
+  # Extract node types from each cloud workspace
+  databricks api get /api/2.1/clusters/list-node-types --profile aws > node-types-aws.json
+  databricks api get /api/2.1/clusters/list-node-types --profile azure > node-types-azure.json
+  databricks api get /api/2.1/clusters/list-node-types --profile gcp > node-types-gcp.json
+
+  # Generate the mapping file
+  python3 exporter/generate_node_mappings.py \
+    --aws node-types-aws.json \
+    --azure node-types-azure.json \
+    --gcp node-types-gcp.json \
+    --output node_type_mapping.json
+  ```
+
+  The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.

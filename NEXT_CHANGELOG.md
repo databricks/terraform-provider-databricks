@@ -22,5 +22,6 @@
 * Export permission assignments on workspace level ([#5169](https://github.com/databricks/terraform-provider-databricks/pull/5169)).
 * Added support for Databricks Apps resources ([#5208](https://github.com/databricks/terraform-provider-databricks/pull/5208)).
 * Added support for Database Instance resource (aka Lakebase) ([#5212](https://github.com/databricks/terraform-provider-databricks/pull/5212)).
+* Added support for workspace and account settings v2 ([#5230](https://github.com/databricks/terraform-provider-databricks/pull/5230)).
 
 ### Internal Changes

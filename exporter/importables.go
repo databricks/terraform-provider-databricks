@@ -625,6 +625,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "repo_id", Resource: "databricks_repo"},
 			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
 			{Path: "serving_endpoint_id", Resource: "databricks_model_serving", Match: "serving_endpoint_id"},
+			{Path: "database_instance_name", Resource: "databricks_database_instance", Match: "name"},
+			{Path: "app_name", Resource: "databricks_app", Match: "name"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
@@ -1324,6 +1326,34 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "evaluation.notification.subscriptions.user_email", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_apps_settings_custom_template": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listAppsSettingsCustomTemplates,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_apps_settings_custom_template", "name"),
+	},
+	"databricks_app": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listApps,
+		Import:          importApp,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_app", "name"),
+		Depends: []reference{
+			{Path: "resources.sql_warehouse.id", Resource: "databricks_sql_endpoint"},
+			{Path: "resources.serving_endpoint.name", Resource: "databricks_model_serving"},
+			{Path: "resources.job.id", Resource: "databricks_job"},
+			{Path: "resources.secret.scope", Resource: "databricks_secret_scope"},
+			{Path: "resources.secret.key", Resource: "databricks_secret", Match: "key",
+				IsValidApproximation: createIsMatchingScopeAndKey("scope", "key")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume"},
+			{Path: "resources.database.instance_name", Resource: "databricks_database_instance", Match: "name"},
+			// {Path: "budget_policy_id", Resource: "databricks_budget"},
+		},
+	},
 	"databricks_pipeline": {
 		WorkspaceLevel: true,
 		Service:        "dlt",
@@ -1928,6 +1958,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_update_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_update_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
+	},
+	"databricks_database_instance": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakebase",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Id()
+		},
+		List:                   listDatabaseInstances,
+		Import:                 importDatabaseInstance,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		Ignore:                 generateIgnoreObjectWithEmptyAttributeValue("databricks_database_instance", "name"),
 	},
 	"databricks_mlflow_webhook": {
 		WorkspaceLevel: true,

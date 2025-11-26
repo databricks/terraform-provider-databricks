@@ -556,6 +556,7 @@ func TestGroupCacheAndSearchError(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("groups")
 		err := resourcesMap["databricks_group"].List(ic)
 		assert.EqualError(t, err, "nope")
 

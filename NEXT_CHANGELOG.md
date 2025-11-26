@@ -11,14 +11,19 @@
 
 ### Bug Fixes
 
+* Fix spurious plan diffs in `databricks_model_serving` and `databricks_model_serving_provisioned_throughput` resources due to tag reordering ([#5120](https://github.com/databricks/terraform-provider-databricks/pull/5120))
+
 ### Documentation
 
 * Document tag policies in `databricks_access_control_rule_set` ([#5209](https://github.com/databricks/terraform-provider-databricks/pull/5209)).
+* Document missing `aws_attributes.ebs_*` properties in `databricks_cluster` ([#5196](https://github.com/databricks/terraform-provider-databricks/pull/5196)).
 
 ### Exporter
 
 * Added support for `databricks_data_quality_monitor` resource ([#5193](https://github.com/databricks/terraform-provider-databricks/pull/5193)).
 * Fix typo in the name of environment variable ([#5158](https://github.com/databricks/terraform-provider-databricks/pull/5158)).
 * Export permission assignments on workspace level ([#5169](https://github.com/databricks/terraform-provider-databricks/pull/5169)).
+* Added support for Databricks Apps resources ([#5208](https://github.com/databricks/terraform-provider-databricks/pull/5208)).
+* Added support for Database Instance resource (aka Lakebase) ([#5212](https://github.com/databricks/terraform-provider-databricks/pull/5212)).
 
 ### Internal Changes

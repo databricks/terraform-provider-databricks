@@ -174,6 +174,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
+* `apps` - **listing** [databricks_app](../resources/app.md) and [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md).
 * `billing` - **listing** [databricks_budget](../resources/budget.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
@@ -183,6 +184,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) (account-level) and [databricks_permission_assignment](../resources/permission_assignment.md) (workspace-level).  When listing is done on account level, you can filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
+* `lakebase` - **listing** [databricks_database_instance](../resources/database_instance.md).
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
@@ -241,6 +243,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
 | [databricks_alert](../resources/alert.md) | Yes | Yes | Yes | No |
 | [databricks_alert_v2](../resources/alert_v2.md) | Yes | Yes | Yes | No |
+| [databricks_app](../resources/app.md) | Yes | No | Yes | No |
+| [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md) | Yes | No | Yes | No |
 | [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No | Yes | No |
 | [databricks_budget](../resources/budget.md) | Yes | Yes | No | Yes |
 | [databricks_catalog](../resources/catalog.md) | Yes | Yes | Yes | No |
@@ -249,6 +253,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
 | [databricks_credential](../resources/credential.md) | Yes | Yes | Yes | No |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
+| [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |

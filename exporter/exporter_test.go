@@ -13,9 +13,11 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/apps"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
+	"github.com/databricks/databricks-sdk-go/service/database"
 	sdk_dataquality "github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -345,6 +347,24 @@ var emptyGitCredentials = qa.HTTPFixture{
 	},
 }
 
+var emptyAppsSettingsCustomTemplates = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/apps-settings/templates?",
+	Response: apps.ListCustomTemplatesResponse{
+		Templates: []apps.CustomTemplate{},
+	},
+	ReuseRequest: true,
+}
+
+var emptyApps = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/apps?",
+	Response: apps.ListAppsResponse{
+		Apps: []apps.App{},
+	},
+	ReuseRequest: true,
+}
+
 var emptyModelServing = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.0/serving-endpoints",
@@ -357,6 +377,15 @@ var emptyDataQualityMonitors = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/data-quality/v1/monitors?",
 	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyDatabaseInstances = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/database/instances?",
+	Response: database.ListDatabaseInstancesResponse{
+		DatabaseInstances: []database.DatabaseInstance{},
+	},
 	ReuseRequest: true,
 }
 
@@ -527,12 +556,15 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 		[]qa.HTTPFixture{
 			emptyDestinationNotficationsList,
 			noCurrentMetastoreAttached,
+			emptyApps,
+			emptyAppsSettingsCustomTemplates,
 			emptyLakeviewList,
 			emptyMetastoreList,
 			meAdminFixture,
 			emptyRepos,
 			emptyShares,
 			emptyDataQualityMonitors,
+			emptyDatabaseInstances,
 			emptyConnections,
 			emptyRecipients,
 			emptyGitCredentials,
@@ -798,7 +830,10 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Groups: []scim.ComplexValue{},
 				},
 			},
+			emptyApps,
+			emptyAppsSettingsCustomTemplates,
 			emptyDataQualityMonitors,
+			emptyDatabaseInstances,
 			emptyUsersList,
 			emptySpnsList,
 			noCurrentMetastoreAttached,

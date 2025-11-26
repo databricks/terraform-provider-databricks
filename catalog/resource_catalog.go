@@ -116,6 +116,14 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
+			var origCatalogUpdateData catalog.UpdateCatalog
+			common.DataToStructPointer(d, catalogSchema, &origCatalogUpdateData)
+			var origCatalogCreateData catalog.CreateCatalog
+			common.DataToStructPointer(d, catalogSchema, &origCatalogCreateData)
+			if (origCatalogCreateData.ShareName != "" || origCatalogCreateData.ConnectionName != "" || origCatalogCreateData.ProviderName != "") &&
+				string(origCatalogUpdateData.EnablePredictiveOptimization) == "" {
+				ci.EnablePredictiveOptimization = origCatalogUpdateData.EnablePredictiveOptimization
+			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

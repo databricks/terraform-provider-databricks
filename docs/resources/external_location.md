@@ -127,7 +127,7 @@ encryption_details {
 The following arguments are required:
 
 - `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).
+- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).   If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.).
 - `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this external location.
 - `owner` - (Optional) Username/groupname/sp application_id of the external location owner.
 - `comment` - (Optional) User-supplied free-form text.

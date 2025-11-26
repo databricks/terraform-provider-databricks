@@ -16,8 +16,8 @@ CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
 """
-This script tags the release of the SDKs using a combination of the GitHub API and Git commands.  
-It reads the local repository to determine necessary changes, updates changelogs, and creates tags.  
+This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
+It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
 
 ### How it Works:
 - It does **not** modify the local repository directly.
@@ -99,8 +99,9 @@ class TagInfo:
     :package: package info.
     :version: release version for the package. Format: v<major>.<minor>.<pacth>
     :content: changes for the release, as they appear in the changelog.
+              When written to CHANGELOG.md, the current date (YYYY-MM-DD) is automatically added.
 
-    Example:
+    Example (from NEXT_CHANGELOG.md):
 
     ## Release v0.56.0
 
@@ -119,6 +120,8 @@ class TagInfo:
 
     ### API Changes
     * Add new Service
+
+    Note: When written to CHANGELOG.md, the header becomes: ## Release v0.56.0 (YYYY-MM-DD)
 
     """
 
@@ -275,7 +278,14 @@ def write_changelog(tag_info: TagInfo) -> None:
     changelog_path = os.path.join(os.getcwd(), tag_info.package.path, CHANGELOG_FILE_NAME)
     with open(changelog_path, "r") as f:
         changelog = f.read()
-    updated_changelog = re.sub(r"(# Version changelog\n\n)", f"\\1{tag_info.content.strip()}\n\n\n", changelog)
+
+    # Add current date to the release header
+    current_date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+    content_with_date = re.sub(
+        r"## Release v(\d+\.\d+\.\d+)", rf"## Release v\1 ({current_date})", tag_info.content.strip()
+    )
+
+    updated_changelog = re.sub(r"(# Version changelog\n\n)", f"\\1{content_with_date}\n\n\n", changelog)
     gh.add_file(changelog_path, updated_changelog)
 
 

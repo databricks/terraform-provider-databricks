@@ -29,13 +29,13 @@ const (
 	resourceNamePlural = "apps"
 )
 
-type appResource struct {
+type AppResource struct {
 	apps_tf.App
 	NoCompute types.Bool `tfsdk:"no_compute"`
 	tfschema.Namespace
 }
 
-func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["compute_size"] = s["compute_size"].SetComputed()
@@ -43,7 +43,7 @@ func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	return s
 }
 
-func (a appResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	attrs := a.App.GetComplexFieldTypes(ctx)
 	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
 	return attrs
@@ -62,7 +62,7 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = tfschema.ResourceStructToSchema(ctx, appResource{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	resp.Schema = tfschema.ResourceStructToSchema(ctx, AppResource{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
 		exclusiveFields := []string{}
 		t := reflect.TypeOf(apps_tf.AppResource{})
@@ -103,7 +103,7 @@ func (a *resourceApp) Configure(ctx context.Context, req resource.ConfigureReque
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var app appResource
+	var app AppResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -143,7 +143,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	// Store the initial version of the app in state
-	var newApp appResource
+	var newApp AppResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waiter.Response, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -214,7 +214,7 @@ func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceCli
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var app appResource
+	var app AppResource
 	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -238,7 +238,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	var newApp appResource
+	var newApp AppResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, appGoSdk, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -254,7 +254,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var app appResource
+	var app AppResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -285,7 +285,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	// Store the updated version of the app in state
-	var newApp appResource
+	var newApp AppResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -302,7 +302,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var app appResource
+	var app AppResource
 	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -494,11 +494,10 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourcePermissionAssignment(),
-		Read:      true,
-		Removed:   true,
-		AccountID: "abc",
-		ID:        "123",
+		Resource: ResourcePermissionAssignment(),
+		Read:     true,
+		Removed:  true,
+		ID:       "123",
 	}.ApplyNoError(t)
 }
 

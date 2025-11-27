@@ -3,10 +3,12 @@ package exporter
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	frameworkschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -715,5 +717,126 @@ func convertGoToPluginFrameworkType(value interface{}) attr.Value {
 	default:
 		// For complex types, convert to string as fallback
 		return types.StringValue(fmt.Sprintf("%v", value))
+	}
+}
+
+// copyEffectiveFieldsToInputFieldsWithConverters automatically copies values from effective_* fields
+// to their corresponding input fields (e.g., effective_node_count -> node_count).
+// This is useful for Plugin Framework resources where the API returns effective_* fields but doesn't
+// return the input fields that were originally set.
+//
+// NOTE: This function only works with Plugin Framework resources. The effective_* field pattern
+// is not used by SDKv2 resources.
+//
+// This function works by converting the TF state to a Go SDK struct, copying fields
+// using reflection, and then converting back to TF state. This approach:
+// - Handles complex types (lists, maps, nested objects) automatically via converters
+// - Leverages existing converter infrastructure for type safety
+// - Works for all field types including custom_tags (lists of objects)
+//
+// Type parameters:
+//   - TTF: The Terraform Plugin Framework struct type
+//   - TGo: The Go SDK struct type
+//
+// Example usage in an import function:
+//
+//	func importDatabaseInstance(ic *importContext, r *resource) error {
+//	    copyEffectiveFieldsToInputFieldsWithConverters[database_instance_resource.DatabaseInstance](
+//	        ic, r, database.DatabaseInstance{})
+//	    return nil
+//	}
+func copyEffectiveFieldsToInputFieldsWithConverters[TTF any, TGo any](
+	ic *importContext,
+	r *resource,
+	_ TGo,
+) {
+	if r.DataWrapper == nil {
+		return
+	}
+
+	wrapper := r.DataWrapper
+	ctx := ic.Context
+
+	// Effective fields pattern is only applicable to Plugin Framework resources
+	if !wrapper.IsPluginFramework() {
+		log.Printf("[DEBUG] copyEffectiveFieldsToInputFieldsWithConverters called on non-Plugin Framework resource %s, skipping", r.ID)
+		return
+	}
+
+	// Step 1: Convert TF state to Go SDK struct
+	var goSdkStruct TGo
+	var tfStruct TTF
+	if err := wrapper.GetTypedStruct(ctx, &tfStruct); err != nil {
+		log.Printf("[WARN] Failed to extract TF struct for %s: %v", r.ID, err)
+		return
+	}
+
+	diags := converters.TfSdkToGoSdkStruct(ctx, tfStruct, &goSdkStruct)
+	if diags.HasError() {
+		log.Printf("[WARN] Failed to convert TF to Go SDK struct for %s: %v", r.ID, diags)
+		return
+	}
+
+	// Step 2: Copy effective_* fields to their input counterparts using reflection
+	goSdkValue := reflect.ValueOf(&goSdkStruct).Elem()
+	goSdkType := goSdkValue.Type()
+
+	copiedFields := []string{}
+	for i := 0; i < goSdkValue.NumField(); i++ {
+		field := goSdkType.Field(i)
+		fieldName := field.Name
+
+		// Check if this is an effective_* field
+		if !strings.HasPrefix(fieldName, "Effective") {
+			continue
+		}
+
+		// Derive the input field name (e.g., "EffectiveNodeCount" -> "NodeCount")
+		inputFieldName := strings.TrimPrefix(fieldName, "Effective")
+
+		// Check if the corresponding input field exists
+		inputField := goSdkValue.FieldByName(inputFieldName)
+		if !inputField.IsValid() || !inputField.CanSet() {
+			continue
+		}
+
+		// Get the effective field value
+		effectiveField := goSdkValue.Field(i)
+		if !effectiveField.IsValid() {
+			continue
+		}
+
+		// Check if types match
+		if effectiveField.Type() != inputField.Type() {
+			log.Printf("[DEBUG] Type mismatch for %s: effective=%v, input=%v", inputFieldName, effectiveField.Type(), inputField.Type())
+			continue
+		}
+
+		// Copy the value
+		inputField.Set(effectiveField)
+		copiedFields = append(copiedFields, fmt.Sprintf("%s->%s", fieldName, inputFieldName))
+	}
+
+	if len(copiedFields) > 0 {
+		log.Printf("[TRACE] Copied effective fields for %s: %s", r.ID, strings.Join(copiedFields, ", "))
+	}
+
+	// Step 3: Convert back to TF state
+	var tfStruct2 TTF
+	diags = converters.GoSdkToTfSdkStruct(ctx, goSdkStruct, &tfStruct2)
+	if diags.HasError() {
+		log.Printf("[WARN] Failed to convert Go SDK to TF struct for %s: %v", r.ID, diags)
+		return
+	}
+
+	// Step 4: Write back to the state using Set method on Plugin Framework state
+	// Access the underlying state from PluginFrameworkResourceData
+	if pfWrapper, ok := wrapper.(*PluginFrameworkResourceData); ok {
+		diags := pfWrapper.state.Set(ctx, &tfStruct2)
+		if diags.HasError() {
+			log.Printf("[WARN] Failed to write TF struct back to state for %s: %v", r.ID, diags)
+		}
+	} else {
+		log.Printf("[WARN] Unable to write TF struct back to state: wrapper is not PluginFrameworkResourceData for %s", r.ID)
 	}
 }

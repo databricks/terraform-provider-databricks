@@ -116,13 +116,11 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
-			var origCatalogUpdateData catalog.UpdateCatalog
-			common.DataToStructPointer(d, catalogSchema, &origCatalogUpdateData)
-			var origCatalogCreateData catalog.CreateCatalog
-			common.DataToStructPointer(d, catalogSchema, &origCatalogCreateData)
-			if (origCatalogCreateData.ShareName != "" || origCatalogCreateData.ConnectionName != "" || origCatalogCreateData.ProviderName != "") &&
-				string(origCatalogUpdateData.EnablePredictiveOptimization) == "" {
-				ci.EnablePredictiveOptimization = origCatalogUpdateData.EnablePredictiveOptimization
+			var origCatalogData catalog.CatalogInfo
+			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
+			if (origCatalogData.ShareName != "" || origCatalogData.ConnectionName != "" || origCatalogData.ProviderName != "") &&
+				string(origCatalogData.EnablePredictiveOptimization) == "" {
+				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
 			}
 			return common.StructToData(ci, catalogSchema, d)
 		},

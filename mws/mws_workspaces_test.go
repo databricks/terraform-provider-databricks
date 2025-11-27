@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
@@ -146,8 +147,12 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
 				workspaceUrl, ok := state.Attributes["workspace_url"]
 				assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
+				workspaceIdStr, ok := state.Attributes["workspace_id"]
+				assert.True(t, ok, "workspace_id is absent from databricks_mws_workspaces instance state")
+				workspaceId, err := strconv.ParseInt(workspaceIdStr, 10, 64)
+				assert.NoError(t, err)
 
-				workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+				workspaceClient, err := client.ClientForHost(ctx, workspaceUrl, workspaceId)
 				assert.NoError(t, err)
 
 				tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
@@ -219,8 +224,12 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 				func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
 					workspaceUrl, ok := state.Attributes["workspace_url"]
 					assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
+					workspaceIdStr, ok := state.Attributes["workspace_id"]
+					assert.True(t, ok, "workspace_id is absent from databricks_mws_workspaces instance state")
+					workspaceId, err := strconv.ParseInt(workspaceIdStr, 10, 64)
+					assert.NoError(t, err)
 
-					workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+					workspaceClient, err := client.ClientForHost(ctx, workspaceUrl, workspaceId)
 					assert.NoError(t, err)
 
 					tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)

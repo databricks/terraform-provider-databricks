@@ -8,6 +8,7 @@
 
 * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Added `databricks_permission` resource for managing permissions on Databricks objects for individual principals ([#5186](https://github.com/databricks/terraform-provider-databricks/pull/5186)).
 
 ### Bug Fixes
 

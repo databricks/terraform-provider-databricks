@@ -141,6 +141,14 @@ func Run(args ...string) error {
 		"all dependencies of just one cluster, specify -listing=compute")
 	prefix := ""
 	flags.StringVar(&prefix, "prefix", "", "Prefix that will be added to the name of all exported resources")
+	var targetCloud string
+	flags.StringVar(&targetCloud, "targetCloud", "",
+		"Target cloud for generated code (aws, azure, gcp). "+
+			"If different from source cloud, will convert cloud-specific attributes.")
+	var nodeTypeMappingFile string
+	flags.StringVar(&nodeTypeMappingFile, "nodeTypeMappingFile", "",
+		"Path to JSON file containing node type mappings between clouds. "+
+			"Can only be used with -targetCloud flag.")
 	newArgs := args
 	if len(args) > 1 && args[1] == "exporter" {
 		newArgs = args[2:]
@@ -154,6 +162,25 @@ func Run(args ...string) error {
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"
+	}
+	if !isValidTargetCloud(targetCloud) {
+		return fmt.Errorf("invalid targetCloud value: %s. Must be one of: aws, azure, gcp", targetCloud)
+	}
+	ic.targetCloud = targetCloud
+
+	// Validate nodeTypeMappingFile can only be used with targetCloud
+	if nodeTypeMappingFile != "" && targetCloud == "" {
+		return fmt.Errorf("nodeTypeMappingFile can only be specified together with targetCloud")
+	}
+
+	// Load node type mappings if specified
+	if nodeTypeMappingFile != "" {
+		mappings, err := loadNodeTypeMappings(nodeTypeMappingFile)
+		if err != nil {
+			return fmt.Errorf("failed to load node type mappings: %w", err)
+		}
+		ic.nodeTypeMappings = mappings
+		log.Printf("[INFO] Loaded %d node type mappings from %s", len(mappings.Mappings), nodeTypeMappingFile)
 	}
 	if trace {
 		logLevel = append(logLevel, "[DEBUG]", "[TRACE]")

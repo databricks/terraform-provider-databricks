@@ -19,7 +19,9 @@
 
 ### Documentation
 
+* Document tag policies in `databricks_access_control_rule_set` ([#5209](https://github.com/databricks/terraform-provider-databricks/pull/5209)).
 * Document missing `aws_attributes.ebs_*` properties in `databricks_cluster` ([#5196](https://github.com/databricks/terraform-provider-databricks/pull/5196)).
+* Document support for serverless workspaces on GCP ([#5124](https://github.com/databricks/terraform-provider-databricks/pull/5124))
 
 ### Exporter
 

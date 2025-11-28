@@ -1334,6 +1334,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		List:            listAppsSettingsCustomTemplates,
 		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_apps_settings_custom_template", "name"),
 	},
+
+	"databricks_custom_app_integration": {
+		AccountLevel: true,
+		Service:      "oauth",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return "custom_app_" + d.Id()
+			}
+			return name + "_" + d.Id()[:8]
+		},
+		List:   listCustomAppIntegrations,
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_custom_app_integration", "name"),
+	},
+	"databricks_account_federation_policy": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "oauth",
+		List:            listAccountFederationPolicies,
+	},
+	"databricks_service_principal_federation_policy": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "oauth",
+		List:            listServicePrincipalFederationPolicies,
+		Depends: []reference{
+			{Path: "service_principal_id", Resource: "databricks_service_principal"},
+		},
+	},
 	"databricks_app": {
 		WorkspaceLevel:  true,
 		PluginFramework: true,
@@ -2232,7 +2261,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: importDataQualityMonitor,
 		List:   listDataQualityMonitors,
-		// No List function - monitors are emitted as dependencies from tables/schemas
+		// Monitors should be also emitted as dependencies from tables/schemas (TODO: we need to add it)
 		Depends: []reference{
 			// object_id matches either table_id or schema_id depending on object_type
 			{Path: "object_id", Resource: "databricks_sql_table", Match: "table_id"},
@@ -2246,6 +2275,34 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_quality_monitor_v2": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "dq",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "object_type,object_id" (e.g., "schema,abc-123-def")
+			id := d.Id()
+			parts := strings.Split(id, ",")
+			if len(parts) == 2 {
+				objectType := parts[0]
+				objectId := parts[1]
+				// Create name like "schema_monitor_v2_abc12345"
+				if len(objectId) > 8 {
+					return fmt.Sprintf("%s_monitor_v2_%s", objectType, objectId[:8])
+				}
+				return fmt.Sprintf("%s_monitor_v2_%s", objectType, objectId)
+			}
+			return "monitor_v2_" + generateUniqueID(id)
+		},
+		Import: importQualityMonitorV2,
+		List:   listQualityMonitorsV2,
+		// Monitors should be also emitted as dependencies from tables/schemas (TODO: we need to add it)
+		Depends: []reference{
+			// object_id matches schema_id for schema-level monitors
+			{Path: "object_id", Resource: "databricks_schema", Match: "schema_id"},
+		},
+	},
+
 	"databricks_grants": {
 		WorkspaceLevel: true,
 		Service:        "uc-grants",

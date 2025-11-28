@@ -32,13 +32,13 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 
 1. Define a new `importable` instance in the `importables.go`.
 2. Specify if it's account-level or workspace-level resource, or both.
-3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).
+3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).  Put new functions to `impl_<service>.go` and tests into `impl_<service>_test.go`.
 4. Implement the `List` function that will be discover and emit instances of the specific resource.  When implementing it, prefer to use `List` method of Go SDK instead of `ListAll`.
 5. (Optional) Implement the `Name` function that will extract TF resource name from an instance of a specific resource.
 6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
 7. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.
 8. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
-9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
+9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.
 10. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
 11. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
 

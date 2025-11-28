@@ -11,7 +11,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	data_quality_monitor "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/data_quality_monitor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"golang.org/x/exp/slices"
@@ -697,62 +696,5 @@ func listDataQualityMonitors(ic *importContext) error {
 			ID:       fmt.Sprintf("%s,%s", monitor.ObjectType, monitor.ObjectId),
 		})
 	}
-	return nil
-}
-
-func importDataQualityMonitor(ic *importContext, r *resource) error {
-	log.Printf("[DEBUG] Importing data quality monitor: %s", r.ID)
-	// Convert Plugin Framework state to Go SDK struct
-	var monitor dataquality.Monitor
-	if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper,
-		data_quality_monitor.Monitor{}, &monitor); err != nil {
-		return err
-	}
-
-	// TODO: Figure out how to emit the monitored schema/table directly by object_id (UUID)
-	// Currently relying on Depends references (object_id -> table_id/schema_id) and
-	// full name fields (monitored_table_name). Could be more robust if we could lookup
-	// table/schema by UUID and emit them directly here.
-	// Challenges: SDK's Tables.Get() and Schemas.Get() only accept full names, not UUIDs
-
-	// Emit dependencies based on monitor type
-	if monitor.ObjectType == "table" && monitor.DataProfilingConfig != nil {
-		config := monitor.DataProfilingConfig
-
-		// Emit the monitored table - table's import will emit schema and catalog
-		if config.MonitoredTableName != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_sql_table",
-				ID:       config.MonitoredTableName,
-			})
-		}
-
-		// Warehouse for running monitor queries
-		if config.WarehouseId != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_sql_endpoint",
-				ID:       config.WarehouseId,
-			})
-		}
-
-		// Baseline table for drift analysis - table's import will emit its schema/catalog
-		if config.BaselineTableName != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_sql_table",
-				ID:       config.BaselineTableName,
-			})
-		}
-
-		// Notification emails
-		if config.NotificationSettings != nil &&
-			config.NotificationSettings.OnFailure != nil {
-			for _, email := range config.NotificationSettings.OnFailure.EmailAddresses {
-				ic.emitUserOrServicePrincipal(email)
-			}
-		}
-	}
-	// Note: For schema monitors (object_type == "schema"), the schema dependency is already
-	// handled via the Depends reference: object_id -> schema_id. No need to emit it here.
-
 	return nil
 }

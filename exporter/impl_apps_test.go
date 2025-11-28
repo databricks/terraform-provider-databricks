@@ -336,3 +336,7 @@ func TestAppsSettingsCustomTemplateExport(t *testing.T) {
 		assert.Contains(t, contentStr, `path = "templates/app"`)
 	})
 }
+
+// TODO: Add test for databricks_custom_app_integration export
+// The test needs proper account-level authentication mocking which requires
+// more investigation into how the OAuth2 API authenticates in test mode

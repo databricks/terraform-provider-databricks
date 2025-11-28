@@ -8,6 +8,9 @@
 
 * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Add `http_headers` and `http_path_prefix` provider configuration options for HTTP proxy support ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX)).
+
+  These options enable the provider to work with HTTP proxies that require custom authentication headers or URL path rewriting.
 
 ### Bug Fixes
 

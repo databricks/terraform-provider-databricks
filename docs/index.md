@@ -142,6 +142,28 @@ The provider supports additional configuration parameters not related to authent
 * `debug_headers` - (optional, environment variable `DATABRICKS_DEBUG_HEADERS`) Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend turning this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
 * `skip_verify` - skips SSL certificate verification for HTTP calls. *Use at your own risk.* Default is *false* (don't skip verification).
 
+The following parameters can be used for HTTP proxy scenarios:
+
+* `http_headers` - (optional) A map of custom HTTP headers to add to all API requests. This is useful when working with HTTP proxies that require custom authentication headers. This field is marked as sensitive.
+* `http_path_prefix` - (optional) A path prefix to prepend to all API request URLs. This is useful when working with HTTP proxies that use path-based routing.
+
+### HTTP Proxy Configuration Example
+
+When using an HTTP proxy that requires custom headers or path rewriting:
+
+```hcl
+provider "databricks" {
+  host  = "https://proxy.example.com"
+  token = "your-token"
+
+  http_headers = {
+    "X-Custom-Auth" = "auth-value"
+  }
+
+  http_path_prefix = "/proxy"
+}
+```
+
 !> **Warning** Sensitive credentials are printed to the log when `debug_headers` is `true`. Use it for troubleshooting purposes only.
 
 ### `host` argument
@@ -173,7 +195,7 @@ There are currently a number of supported methods to [authenticate](https://docs
 !> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
 ### Authenticating with GitHub OpenID Connect (OIDC)
-The arguments `host` and `client_id` are used for the authentication which maps to the `github-oidc` authentication type. 
+The arguments `host` and `client_id` are used for the authentication which maps to the `github-oidc` authentication type.
 
 These can be declared in the provider block or set in the environment variables `DATABRICKS_HOST` and `DATABRICKS_CLIENT_ID` respectively. Example:
 
@@ -200,7 +222,7 @@ provider "databricks" {
 
 ### Authenticating with Databricks CLI
 
-The provider can authenticate using the Databricks CLI. After logging in with the `databricks auth login` command to your account or workspace, you only need to specify the name of the profile in your provider configuration. Terraform will automatically read and reuse the cached OAuth token to interact with the Databricks REST API. See [the user-to-machine authentication guide](https://docs.databricks.com/aws/en/dev-tools/cli/authentication#oauth-user-to-machine-u2m-authentication) for more details. 
+The provider can authenticate using the Databricks CLI. After logging in with the `databricks auth login` command to your account or workspace, you only need to specify the name of the profile in your provider configuration. Terraform will automatically read and reuse the cached OAuth token to interact with the Databricks REST API. See [the user-to-machine authentication guide](https://docs.databricks.com/aws/en/dev-tools/cli/authentication#oauth-user-to-machine-u2m-authentication) for more details.
 
 You can specify a [CLI connection profile](https://docs.databricks.com/aws/en/dev-tools/cli/profiles) through `profile` parameter or `DATABRICKS_CONFIG_PROFILE` environment variable:
 
@@ -275,7 +297,7 @@ provider "databricks" {
 
 ### Authenticating with Workload Identity Federation (WIF)
 
-Workload Identity Federation can be used to authenticate Databricks from automated workflows. This is done through the tokens issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider. 
+Workload Identity Federation can be used to authenticate Databricks from automated workflows. This is done through the tokens issued by the automation environment. For more details on environment variables regarding the specific environments, please see: https://docs.databricks.com/aws/en/dev-tools/auth/oauth-federation-provider.
 
 To create resources at both the account and workspace levels, you can create two providers as shown below:
 
@@ -300,7 +322,7 @@ provider "databricks" {
 }
 ```
 
-Note: `auth_type` for Github Actions would be "github-oidc". For more details, please see the document linked above. 
+Note: `auth_type` for Github Actions would be "github-oidc". For more details, please see the document linked above.
 
 
 ## Special configurations for Azure
@@ -351,7 +373,7 @@ resource "databricks_user" "my-user" {
 }
 ```
 
-Follow the [Configuring OpenID Connect in Azure](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure). You can then use the Azure service principal to authenticate in databricks. 
+Follow the [Configuring OpenID Connect in Azure](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure). You can then use the Azure service principal to authenticate in databricks.
 
 
 There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
@@ -462,7 +484,7 @@ To make Databricks Terraform Provider generally available, we've moved it from [
 You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
 
 ```text
-Warning: Additional provider information from registry 
+Warning: Additional provider information from registry
 
 The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
 - For users on Terraform 0.13 or greater, this provider has moved to databricks/databricks. Please update your source in required_providers.

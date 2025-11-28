@@ -92,6 +92,17 @@ func providerSchemaPluginFramework() schema.Schema {
 			}
 		}
 	}
+	// Custom HTTP proxy configuration options
+	ps["http_headers"] = schema.MapAttribute{
+		Optional:    true,
+		Sensitive:   true,
+		ElementType: types.StringType,
+		Description: "Custom HTTP headers to add to all API requests. Useful for HTTP proxies that require custom authentication headers.",
+	}
+	ps["http_path_prefix"] = schema.StringAttribute{
+		Optional:    true,
+		Description: "Path prefix to prepend to all API request URLs. Useful for HTTP proxies that use path-based routing.",
+	}
 	return schema.Schema{
 		Attributes: ps,
 	}
@@ -169,7 +180,36 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 	} else {
 		tflog.Info(ctx, "(plugin framework) No attributes specified in provider configuration")
 	}
-	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, p.configCustomizer)
+	// Read custom HTTP configuration
+	var httpConfig *client.HTTPConfig
+	var httpHeaders types.Map
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("http_headers"), &httpHeaders)...)
+	var httpPathPrefix types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("http_path_prefix"), &httpPathPrefix)...)
+	if resp.Diagnostics.HasError() {
+		return nil
+	}
+	if !httpHeaders.IsNull() && !httpHeaders.IsUnknown() || !httpPathPrefix.IsNull() && !httpPathPrefix.IsUnknown() {
+		headers := make(map[string]string)
+		if !httpHeaders.IsNull() && !httpHeaders.IsUnknown() {
+			for k, v := range httpHeaders.Elements() {
+				if strVal, ok := v.(types.String); ok && !strVal.IsNull() {
+					headers[k] = strVal.ValueString()
+				}
+			}
+		}
+		pathPrefix := ""
+		if !httpPathPrefix.IsNull() && !httpPathPrefix.IsUnknown() {
+			pathPrefix = httpPathPrefix.ValueString()
+		}
+		if len(headers) > 0 || pathPrefix != "" {
+			httpConfig = &client.HTTPConfig{
+				Headers:    headers,
+				PathPrefix: pathPrefix,
+			}
+		}
+	}
+	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, p.configCustomizer, httpConfig)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to configure Databricks client", err.Error())
 		return nil

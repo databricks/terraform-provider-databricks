@@ -321,6 +321,19 @@ func providerSchema() map[string]*schema.Schema {
 		}
 		ps[attr.Name] = fieldSchema
 	}
+	// Custom HTTP proxy configuration options
+	ps["http_headers"] = &schema.Schema{
+		Type:        schema.TypeMap,
+		Optional:    true,
+		Sensitive:   true,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		Description: "Custom HTTP headers to add to all API requests. Useful for HTTP proxies that require custom authentication headers.",
+	}
+	ps["http_path_prefix"] = &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Path prefix to prepend to all API request URLs. Useful for HTTP proxies that use path-based routing.",
+	}
 	return ps
 }
 
@@ -342,7 +355,21 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 	} else {
 		tflog.Info(ctx, "(sdkv2) No attributes specified in provider configuration")
 	}
-	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, configCustomizer)
+	// Read custom HTTP configuration
+	var httpConfig *client.HTTPConfig
+	httpHeaders := d.Get("http_headers").(map[string]interface{})
+	httpPathPrefix := d.Get("http_path_prefix").(string)
+	if len(httpHeaders) > 0 || httpPathPrefix != "" {
+		headers := make(map[string]string)
+		for k, v := range httpHeaders {
+			headers[k] = v.(string)
+		}
+		httpConfig = &client.HTTPConfig{
+			Headers:    headers,
+			PathPrefix: httpPathPrefix,
+		}
+	}
+	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, configCustomizer, httpConfig)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

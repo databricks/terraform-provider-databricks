@@ -126,3 +126,12 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/secrets
       test_name: TestAccSecretAclResourceDefaultPrincipal
       comment: Failures due to 500s in secrets ACLs APIs.
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestAccDisableLegacyAccessSetting
+      comment: These settings were moved to Settings v2 platform and now flacky
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestAccDisableLegacyDbfsSetting
+      comment: These settings were moved to Settings v2 platform and now flacky
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestMwsAccDisableLegacyFeaturesSetting
+      comment: These settings were moved to Settings v2 platform and now flacky

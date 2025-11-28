@@ -734,6 +734,7 @@ func (m GetPublicAccountSettingRequest_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type GetPublicWorkspaceSettingRequest_SdkV2 struct {
+	// Name of the setting
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1244,6 +1245,7 @@ func (m *PatchPublicAccountSettingRequest_SdkV2) SetSetting(ctx context.Context,
 }
 
 type PatchPublicWorkspaceSettingRequest_SdkV2 struct {
+	// Name of the setting
 	Name types.String `tfsdk:"-"`
 
 	Setting types.List `tfsdk:"setting"`
@@ -1438,38 +1440,64 @@ func (m RestrictWorkspaceAdminsMessage_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type Setting_SdkV2 struct {
+	// Setting value for aibi_dashboard_embedding_access_policy setting. This is
+	// the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_access_policy for final setting value.
 	AibiDashboardEmbeddingAccessPolicy types.List `tfsdk:"aibi_dashboard_embedding_access_policy"`
-
+	// Setting value for aibi_dashboard_embedding_approved_domains setting. This
+	// is the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_approved_domains for final setting
+	// value.
 	AibiDashboardEmbeddingApprovedDomains types.List `tfsdk:"aibi_dashboard_embedding_approved_domains"`
-
+	// Setting value for automatic_cluster_update_workspace setting. This is the
+	// setting value set by consumers, check
+	// effective_automatic_cluster_update_workspace for final setting value.
 	AutomaticClusterUpdateWorkspace types.List `tfsdk:"automatic_cluster_update_workspace"`
-
+	// Setting value for boolean type setting. This is the setting value set by
+	// consumers, check effective_boolean_val for final setting value.
 	BooleanVal types.List `tfsdk:"boolean_val"`
-
+	// Effective setting value for aibi_dashboard_embedding_access_policy
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_access_policy.
 	EffectiveAibiDashboardEmbeddingAccessPolicy types.List `tfsdk:"effective_aibi_dashboard_embedding_access_policy"`
-
+	// Effective setting value for aibi_dashboard_embedding_approved_domains
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_approved_domains.
 	EffectiveAibiDashboardEmbeddingApprovedDomains types.List `tfsdk:"effective_aibi_dashboard_embedding_approved_domains"`
-
+	// Effective setting value for automatic_cluster_update_workspace setting.
+	// This is the final effective value of setting. To set a value use
+	// automatic_cluster_update_workspace.
 	EffectiveAutomaticClusterUpdateWorkspace types.List `tfsdk:"effective_automatic_cluster_update_workspace"`
-
+	// Effective setting value for boolean type setting. This is the final
+	// effective value of setting. To set a value use boolean_val.
 	EffectiveBooleanVal types.List `tfsdk:"effective_boolean_val"`
-
+	// Effective setting value for integer type setting. This is the final
+	// effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.List `tfsdk:"effective_integer_val"`
-
+	// Effective setting value for personal_compute setting. This is the final
+	// effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.List `tfsdk:"effective_personal_compute"`
-
+	// Effective setting value for restrict_workspace_admins setting. This is
+	// the final effective value of setting. To set a value use
+	// restrict_workspace_admins.
 	EffectiveRestrictWorkspaceAdmins types.List `tfsdk:"effective_restrict_workspace_admins"`
-
+	// Effective setting value for string type setting. This is the final
+	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.List `tfsdk:"effective_string_val"`
-
+	// Setting value for integer type setting. This is the setting value set by
+	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.List `tfsdk:"integer_val"`
 	// Name of the setting.
 	Name types.String `tfsdk:"name"`
-
+	// Setting value for personal_compute setting. This is the setting value set
+	// by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.List `tfsdk:"personal_compute"`
-
+	// Setting value for restrict_workspace_admins setting. This is the setting
+	// value set by consumers, check effective_restrict_workspace_admins for
+	// final setting value.
 	RestrictWorkspaceAdmins types.List `tfsdk:"restrict_workspace_admins"`
-
+	// Setting value for string type setting. This is the setting value set by
+	// consumers, check effective_string_val for final setting value.
 	StringVal types.List `tfsdk:"string_val"`
 }
 
@@ -2324,8 +2352,8 @@ type SettingsMetadata_SdkV2 struct {
 	DocsLink types.String `tfsdk:"docs_link"`
 	// Name of the setting.
 	Name types.String `tfsdk:"name"`
-	// Type of the setting. To set this setting, the value sent must match this
-	// type.
+	// Sample message depicting the type of the setting. To set this setting,
+	// the value sent must match this type.
 	Type_ types.String `tfsdk:"type"`
 }
 

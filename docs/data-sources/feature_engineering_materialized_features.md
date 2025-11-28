@@ -22,7 +22,7 @@ This data source exports a single attribute, `materialized_features`. It is a li
   If the pipeline has not run yet, this field will be null
 * `materialized_feature_id` (string) - Unique identifier for the materialized feature
 * `offline_store_config` (OfflineStoreConfig)
-* `online_store_config` (OnlineStore)
+* `online_store_config` (OnlineStoreConfig)
 * `pipeline_schedule_state` (string) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only
 
@@ -32,10 +32,9 @@ This data source exports a single attribute, `materialized_features`. It is a li
 * `table_name_prefix` (string) - Prefix for Unity Catalog table name.
   The materialized feature will be stored in a table with this prefix and a generated postfix
 
-### OnlineStore
-* `capacity` (string) - The capacity of the online store. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
-* `creation_time` (string) - The timestamp when the online store was created
-* `creator` (string) - The email of the creator of the online store
-* `name` (string) - The name of the online store. This is the unique identifier for the online store
-* `read_replica_count` (integer) - The number of read replicas for the online store. Defaults to 0
-* `state` (string) - The current state of the online store. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
+### OnlineStoreConfig
+* `catalog_name` (string) - The Unity Catalog catalog name. This name is also used as the Lakebase logical database name
+* `online_store_name` (string) - The name of the target online store
+* `schema_name` (string) - The Unity Catalog schema name
+* `table_name_prefix` (string) - Prefix for Unity Catalog table name.
+  The materialized feature will be stored in a Lakebase table with this prefix and a generated postfix

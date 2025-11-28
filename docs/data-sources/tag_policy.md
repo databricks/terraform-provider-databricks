@@ -4,9 +4,10 @@ subcategory: "Tags"
 # databricks_tag_policy Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-This data source can be used to get a single tag policy by its tag key.
+This data source can be used to get a single tag policy by its tag key. Manage tag policy permissions using the `databricks_access_control_rule_set` resource.
 
 -> **Note** This resource can only be used with a workspace-level provider!
+
 
 ## Example Usage
 Referring to a tag policy by its tag key:

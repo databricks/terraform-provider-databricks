@@ -7524,7 +7524,8 @@ type PersonalizationRequest struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 
 	RecipientType types.String `tfsdk:"recipient_type"`
-
+	// Share information is required for data listings but should be
+	// empty/ignored for non-data listings (MCP and App).
 	Share types.Object `tfsdk:"share"`
 
 	Status types.String `tfsdk:"status"`

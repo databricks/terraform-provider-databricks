@@ -949,6 +949,9 @@ type CreateBillingUsageDashboardRequest struct {
 	// workspace ID. Global level usage dashboard shows usage data for all
 	// workspaces in the account.
 	DashboardType types.String `tfsdk:"dashboard_type"`
+	// The major version of the usage dashboard template to use. Defaults to
+	// VERSION_1.
+	MajorVersion types.String `tfsdk:"major_version"`
 	// The workspace ID of the workspace in which the usage dashboard is
 	// created.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
@@ -962,6 +965,7 @@ func (to *CreateBillingUsageDashboardRequest) SyncFieldsDuringRead(ctx context.C
 
 func (m CreateBillingUsageDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
+	attrs["major_version"] = attrs["major_version"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["account_id"] = attrs["account_id"].SetRequired()
 
@@ -987,6 +991,7 @@ func (m CreateBillingUsageDashboardRequest) ToObjectValue(ctx context.Context) b
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dashboard_type": m.DashboardType,
+			"major_version":  m.MajorVersion,
 			"workspace_id":   m.WorkspaceId,
 		})
 }
@@ -996,6 +1001,7 @@ func (m CreateBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type 
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_type": types.StringType,
+			"major_version":  types.StringType,
 			"workspace_id":   types.Int64Type,
 		},
 	}

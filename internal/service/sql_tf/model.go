@@ -1767,6 +1767,7 @@ func (m *AlertV2Operand) SetValue(ctx context.Context, v AlertV2OperandValue) {
 }
 
 type AlertV2OperandColumn struct {
+	// If not set, the behavior is equivalent to using `First row` in the UI.
 	Aggregation types.String `tfsdk:"aggregation"`
 
 	Display types.String `tfsdk:"display"`

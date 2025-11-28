@@ -18,6 +18,14 @@ The following arguments are supported:
 * `time_window` (TimeWindow, required) - The time window in which the feature is computed
 * `description` (string, optional) - The description of the feature
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+* `lineage_context` (LineageContext, optional) - WARNING: This field is primarily intended for internal use by Databricks systems and
+  is automatically populated when features are created through Databricks notebooks or jobs.
+  Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
+  This field will be set by feature-engineering client and should be left unset by SDK and terraform users
+
+### ColumnIdentifier
+* `variant_expr_path` (string, required) - String representation of the column name or variant expression path. For nested fields, the leaf value is what will be present in materialized tables
+  and expected to match at query time. For example, the leaf node of value:trip_details.location_details.pickup_zip is pickup_zip
 
 ### ContinuousWindow
 * `window_duration` (string, required) - The duration of the continuous window (must be positive)
@@ -25,6 +33,7 @@ The following arguments are supported:
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional)
+* `kafka_source` (KafkaSource, optional)
 
 ### DeltaTableSource
 * `entity_columns` (list of string, required) - The entity columns of the Delta table
@@ -38,6 +47,19 @@ The following arguments are supported:
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
+
+### JobContext
+* `job_id` (integer, optional) - The job ID where this API invoked
+* `job_run_id` (integer, optional) - The job run ID where this API was invoked
+
+### KafkaSource
+* `entity_column_identifiers` (list of ColumnIdentifier, required) - The entity column identifiers of the Kafka source
+* `name` (string, required) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
+* `timeseries_column_identifier` (ColumnIdentifier, required) - The timeseries column identifier of the Kafka source
+
+### LineageContext
+* `job_context` (JobContext, optional) - Job context information including job ID and run ID
+* `notebook_id` (integer, optional) - The notebook ID where this API was invoked
 
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)

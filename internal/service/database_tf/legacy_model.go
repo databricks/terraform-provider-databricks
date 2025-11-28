@@ -2901,6 +2901,8 @@ func (m *ListSyncedDatabaseTablesResponse_SdkV2) SetSyncedTables(ctx context.Con
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec_SdkV2 struct {
+	// Budget policy to set on the newly created pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// This field needs to be specified if the destination catalog is a managed
 	// postgres catalog.
 	//
@@ -2924,6 +2926,7 @@ func (to *NewPipelineSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m NewPipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -2948,8 +2951,9 @@ func (m NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"storage_catalog": m.StorageCatalog,
-			"storage_schema":  m.StorageSchema,
+			"budget_policy_id": m.BudgetPolicyId,
+			"storage_catalog":  m.StorageCatalog,
+			"storage_schema":   m.StorageSchema,
 		})
 }
 
@@ -2957,8 +2961,9 @@ func (m NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m NewPipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"storage_catalog": types.StringType,
-			"storage_schema":  types.StringType,
+			"budget_policy_id": types.StringType,
+			"storage_catalog":  types.StringType,
+			"storage_schema":   types.StringType,
 		},
 	}
 }

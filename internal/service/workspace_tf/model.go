@@ -2020,7 +2020,9 @@ func (m GetStatusRequest) Type(ctx context.Context) attr.Type {
 type GetWorkspaceObjectPermissionLevelsRequest struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
-	// The workspace object type for which to get or manage permissions.
+	// The workspace object type for which to get or manage permissions. Could
+	// be one of the following: alerts, alertsv2, dashboards, dbsql-dashboards,
+	// directories, experiments, files, genie, notebooks, queries
 	WorkspaceObjectType types.String `tfsdk:"-"`
 }
 
@@ -2163,7 +2165,9 @@ func (m *GetWorkspaceObjectPermissionLevelsResponse) SetPermissionLevels(ctx con
 type GetWorkspaceObjectPermissionsRequest struct {
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
-	// The workspace object type for which to get or manage permissions.
+	// The workspace object type for which to get or manage permissions. Could
+	// be one of the following: alerts, alertsv2, dashboards, dbsql-dashboards,
+	// directories, experiments, files, genie, notebooks, queries
 	WorkspaceObjectType types.String `tfsdk:"-"`
 }
 
@@ -5181,7 +5185,9 @@ type WorkspaceObjectPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
-	// The workspace object type for which to get or manage permissions.
+	// The workspace object type for which to get or manage permissions. Could
+	// be one of the following: alerts, alertsv2, dashboards, dbsql-dashboards,
+	// directories, experiments, files, genie, notebooks, queries
 	WorkspaceObjectType types.String `tfsdk:"-"`
 }
 

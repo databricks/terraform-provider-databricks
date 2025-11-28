@@ -53,6 +53,7 @@ The following attributes are exported:
 * `delta_commit_version` (integer) - The Delta Lake commit version that was last successfully synced
 
 ### NewPipelineSpec
+* `budget_policy_id` (string) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).

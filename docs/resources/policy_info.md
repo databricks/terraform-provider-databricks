@@ -2,11 +2,101 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_info Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+Attribute-Based Access Control (ABAC) policies in Unity Catalog provide high leverage governance for enforcing compliance policies. With ABAC policies, access is controlled in a hierarchical and scalable manner, based on data attributes rather than specific resources, enabling more flexible and comprehensive access control.
+
+ABAC policies in Unity Catalog support conditions on governance tags and the user identity. Callers must have the `MANAGE` privilege on a securable to view, create, update, or delete ABAC policies.
+
+### Policy Components
+
+ABAC policies consist of:
+- **Conditions**: Define when the policy applies based on governance tags and the user identity
+- **Actions**: What operations to be taken when policy condition meets. Supported actions include applying a row filter or a column mask to a table
+- **Scope**: The securable hierarchy (a catalog, a schema or a table) in which the policy could take effect.
+
+### Supported Securables
+
+ABAC policies can be applied to the following securable types:
+- Catalogs
+- Schemas
+- Tables
 
 
 
 ## Example Usage
+### Row Filter Policy
+
+```hcl
+resource "databricks_policy_info" "pii_row_filter" {
+  on_securable_type     = "catalog"
+  on_securable_fullname = "main"
+  name                  = "pii_data_policy"
+  
+  policy_type           = "POLICY_TYPE_ROW_FILTER"
+  for_securable_type    = "table"
+  to_principals         = ["account users"]
+  
+  # Condition for when the policy applies
+  when_condition = "hasTag('pii')"
+  
+  # Match specific columns
+  match_columns = [
+    {
+      condition = "hasTag('pii')"
+      alias     = "pii_col"
+    }
+  ]
+  
+  # Row filter function to apply
+  row_filter = {
+    function_name = "main.filters.mask_pii_rows"
+    using = [
+      {
+        alias = "pii_col"
+      }
+    ]
+  }
+}
+```
+
+### Column Mask Policy
+
+```hcl
+resource "databricks_policy_info" "sensitive_column_mask" {
+  on_securable_type     = "schema"
+  on_securable_fullname = "main.finance"
+  name                  = "sensitive_data_mask"
+  
+  policy_type           = "POLICY_TYPE_COLUMN_MASK"
+  for_securable_type    = "table"
+  to_principals         = ["account users"]
+  except_principals     = ["finance_admins"]
+  
+  # Condition for when the policy applies
+  when_condition = "hasTag('pii')"
+  
+  # Match columns to mask
+  match_columns = [
+    {
+      condition = "hasTag('pii')"
+      alias     = "sensitive_col"
+    }
+  ]
+  
+  # Column mask function to apply
+  column_mask = {
+    function_name = "main.masks.redact_sensitive"
+    on_column     = "sensitive_col"
+    using = [
+      {
+        constant = "4"
+      }
+    ]
+  }
+}
+```
+
 
 
 ## Arguments

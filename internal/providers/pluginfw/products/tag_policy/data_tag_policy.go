@@ -45,7 +45,7 @@ type TagPolicyData struct {
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
 
-	Values types.List `tfsdk:"values"`
+	Values types.Set `tfsdk:"values"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -91,7 +91,7 @@ func (m TagPolicyData) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
 			"update_time": types.StringType,
-			"values": basetypes.ListType{
+			"values": basetypes.SetType{
 				ElemType: tags_tf.Value{}.Type(ctx),
 			},
 		},

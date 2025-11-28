@@ -38,6 +38,20 @@ resource "databricks_mws_storage_configurations" "this" {
 }
 ```
 
+### Example Usage with Role ARN
+
+When sharing an S3 bucket between root storage and a Unity Catalog metastore, you can specify a role ARN:
+
+```hcl
+resource "databricks_mws_storage_configurations" "this" {
+  provider                   = databricks.mws
+  account_id                 = var.databricks_account_id
+  storage_configuration_name = "${var.prefix}-storage"
+  bucket_name                = aws_s3_bucket.root_storage_bucket.bucket
+  role_arn                   = aws_iam_role.unity_catalog_role.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -45,6 +59,10 @@ The following arguments are required:
 * `bucket_name` - name of AWS S3 bucket
 * `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `storage_configuration_name` - name under which this storage configuration is stored
+
+The following arguments are optional:
+
+* `role_arn` - (Optional) The ARN of the IAM role that Databricks will assume to access the S3 bucket. This allows sharing an S3 bucket between root storage and the default catalog for a workspace. See the [Databricks API documentation](https://docs.databricks.com/api/account/storage/create) for more details.
 
 ## Attribute Reference
 

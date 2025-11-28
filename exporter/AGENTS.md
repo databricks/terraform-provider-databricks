@@ -84,3 +84,43 @@ unifiedDataToHcl()
 **Key Differences**:
 - SDKv2 generates nested structures as **blocks**: `evaluation { ... }`
 - Plugin Framework generates nested structures as **attributes**: `evaluation = { ... }`
+
+## Helper Functions for Field Omission Logic
+
+### `shouldOmitWithEffectiveFields`
+
+A reusable helper function (`exporter/util.go`) for resources that have input-only fields with corresponding `effective_*` fields. This pattern is common in resources where the API returns `effective_*` versions of input fields (e.g., `effective_node_count` for `node_count`).
+
+**When to Use**:
+- Your resource has input-only fields that are not returned by the API
+- The API returns corresponding `effective_*` fields with the actual values
+- You want to generate HCL with non-zero values from the `effective_*` fields
+
+**Usage**:
+```go
+"databricks_database_instance": {
+    // ... other fields ...
+    ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+},
+```
+
+**How it Works**:
+1. Checks if the field has a corresponding `effective_*` field in the schema
+2. If found, applies smart filtering:
+   - Always includes required fields (even if zero value)
+   - Omits fields with zero values (`false`, `0`, `""`, etc.)
+   - Omits fields that match their default value
+   - Includes fields with non-zero values
+3. Uses `reflect.ValueOf(v).IsZero()` for proper zero-value detection (important because `wrapper.GetOk()` returns `nonZero=true` even for `false` booleans)
+
+**Prerequisites**:
+Your resource's `Import` function must call `copyEffectiveFieldsToInputFieldsWithConverters[TfType](ic, r, GoSdkType{})` to copy values from `effective_*` fields to their input counterparts. See `exporter/impl_lakebase.go` for an example.
+
+**Example**:
+For a resource with `node_count` (input-only) and `effective_node_count` (API-returned):
+- API returns: `{"effective_node_count": 2, "effective_enable_readable_secondaries": false}`
+- Import function copies: `node_count = 2`, `enable_readable_secondaries = false`
+- Generated HCL includes: `node_count = 2` (non-zero)
+- Generated HCL omits: `enable_readable_secondaries = false` (zero value)
+
+For more details, see `exporter/EFFECTIVE_FIELDS_PATTERN.md`.

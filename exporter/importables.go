@@ -3365,4 +3365,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "alert_configurations.action_configurations.target", Resource: "databricks_user", Match: "user_name"},
 		},
 	},
+	"databricks_tag_policy": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-tags",
+		List:            listTagPolicies,
+		// TODO: add import function that will emit access control rule set for the tag policy
+		// This requires knowing the account ID, so will be added later
+	},
 }

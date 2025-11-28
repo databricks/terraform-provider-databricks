@@ -2787,6 +2787,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_workspace_setting_v2": {
+		WorkspaceLevel:         true,
+		Service:                "settings",
+		PluginFramework:        true,
+		List:                   listWorkspaceSettingsV2,
+		Import:                 importWorkspaceSettingV2,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+	},
+	"databricks_account_setting_v2": {
+		AccountLevel:           true,
+		Service:                "settings",
+		PluginFramework:        true,
+		List:                   listAccountSettingsV2,
+		Import:                 importAccountSettingV2,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+	},
 	"databricks_online_table": {
 		WorkspaceLevel: true,
 		Service:        "uc-online-tables",

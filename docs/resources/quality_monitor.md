@@ -1,5 +1,5 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor Resource
 

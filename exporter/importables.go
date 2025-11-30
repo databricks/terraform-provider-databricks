@@ -1271,7 +1271,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel:  true,
 		PluginFramework: true,
 		Service:         "alerts",
-		Name:            makeNamePlusIdFunc("display_name"),
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
 		List:            listAlertsV2,
 		// Body function removed - using generic HCL generation for Plugin Framework resources
 		Import: func(ic *importContext, r *resource) error {
@@ -1330,7 +1330,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel:  true,
 		PluginFramework: true,
 		Service:         "apps",
-		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		NameUnified:     func(ic *importContext, wrapper ResourceDataWrapper) string { return wrapper.Id() },
 		List:            listAppsSettingsCustomTemplates,
 		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_apps_settings_custom_template", "name"),
 	},
@@ -1338,7 +1338,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel:  true,
 		PluginFramework: true,
 		Service:         "apps",
-		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		NameUnified:     func(ic *importContext, wrapper ResourceDataWrapper) string { return wrapper.Id() },
 		List:            listApps,
 		Import:          importApp,
 		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_app", "name"),
@@ -1960,12 +1960,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_database_instance": {
-		WorkspaceLevel:  true,
-		PluginFramework: true,
-		Service:         "lakebase",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id()
-		},
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            func(ic *importContext, wrapper ResourceDataWrapper) string { return wrapper.Id() },
 		List:                   listDatabaseInstances,
 		Import:                 importDatabaseInstance,
 		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
@@ -2215,20 +2213,20 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel:  true,
 		PluginFramework: true,
 		Service:         "dq",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
 			// ID format is "object_type,object_id" (e.g., "table,abc-123-def")
-			id := d.Id()
+			id := wrapper.Id()
 			parts := strings.Split(id, ",")
 			if len(parts) == 2 {
 				objectType := parts[0]
 				objectId := parts[1]
-				// Create name like "table_monitor_abc12345"
+				// Create name like "table_abc12345"
 				if len(objectId) > 8 {
-					return fmt.Sprintf("%s_monitor_%s", objectType, objectId[:8])
+					return fmt.Sprintf("%s_%s", objectType, objectId[:8])
 				}
-				return fmt.Sprintf("%s_monitor_%s", objectType, objectId)
+				return fmt.Sprintf("%s_%s", objectType, objectId)
 			}
-			return "monitor_" + generateUniqueID(id)
+			return generateUniqueID(id)
 		},
 		Import: importDataQualityMonitor,
 		List:   listDataQualityMonitors,
@@ -2915,55 +2913,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_mws_network_connectivity_config": {
 		AccountLevel: true,
 		Service:      "nccs",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Get("name").(string)
-		},
-		List: func(ic *importContext) error {
-			updatedSinceMs := ic.getUpdatedSinceMs()
-			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
-				settings.ListNetworkConnectivityConfigurationsRequest{})
-			for it.HasNext(ic.Context) {
-				nc, err := it.Next(ic.Context)
-				if err != nil {
-					return err
-				}
-				if !ic.MatchesName(nc.Name) {
-					log.Printf("[INFO] Skipping mws_network_connectivity_config %s because it doesn't match %s", nc.Name, ic.match)
-					continue
-				}
-				if ic.incremental && nc.UpdatedTime < updatedSinceMs {
-					log.Printf("[DEBUG] skipping mws_network_connectivity_config '%s' that was modified at %d (last active=%d)",
-						nc.Name, nc.UpdatedTime, updatedSinceMs)
-					continue
-				}
-				// TODO: technically we can create data directly from the API response
-				ic.Emit(&resource{
-					Resource: "databricks_mws_network_connectivity_config",
-					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
-				})
-				if nc.EgressConfig.TargetRules != nil {
-					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
-						// TODO: technically we can create data directly from the API response
-						resourceId := strings.ReplaceAll(rule.ResourceId, "/subscriptions/", "")
-						resourceId = strings.ReplaceAll(resourceId, "/resourceGroups/", "_")
-						resourceId = strings.ReplaceAll(resourceId, "/providers/Microsoft", "_")
-						ic.Emit(&resource{
-							Resource: "databricks_mws_ncc_private_endpoint_rule",
-							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
-							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId,
-						})
-					}
-					for _, rule := range nc.EgressConfig.TargetRules.AwsPrivateEndpointRules {
-						ic.Emit(&resource{
-							Resource: "databricks_mws_ncc_private_endpoint_rule",
-							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
-							Name:     nc.Name + "_" + rule.EndpointService,
-						})
-					}
-				}
-			}
-			return nil
-		},
+		NameUnified:  makeNameOrIdFuncUnified("name"),
+		List:         listMwsNetworkConnectivityConfigs,
 	},
 	"databricks_mws_ncc_private_endpoint_rule": {
 		AccountLevel: true,
@@ -2976,30 +2927,49 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_mws_ncc_binding": {
 		AccountLevel: true,
 		Service:      "nccs",
-		List: func(ic *importContext) error {
-			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
-			if err != nil {
-				return err
-			}
-			for _, workspace := range workspaces {
-				if workspace.NetworkConnectivityConfigId != "" {
-					ic.emitNccBindingAndNcc(workspace.WorkspaceId, workspace.NetworkConnectivityConfigId)
-					if !ic.accountClient.Config.IsAzure() {
-						wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
-						ic.Emit(&resource{
-							Resource: "databricks_mws_workspaces",
-							ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
-							Name:     workspace.WorkspaceName + "_" + wsIdString,
-						})
-					}
-				}
-			}
-			return nil
-		},
+		List:         listMwsWorkspaceNccBindings,
 		Depends: []reference{
 			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
 				Match: "network_connectivity_config_id"},
 			{Path: "workspace_id", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
+		},
+	},
+	"databricks_account_network_policy": {
+		Service:         "seg",
+		AccountLevel:    true,
+		PluginFramework: true,
+		List:            listAccountNetworkPolicies,
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if name, ok := wrapper.GetOk("network_policy_id"); ok && name != "" {
+				return name.(string)
+			}
+			return wrapper.Id()
+		},
+	},
+	"databricks_workspace_network_option": {
+		Service:         "seg",
+		AccountLevel:    true,
+		PluginFramework: true,
+		List:            listWorkspaceNetworkOptions,
+		Import:          importWorkspaceNetworkOption,
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if workspaceId, ok := wrapper.GetOk("workspace_id"); ok {
+				return fmt.Sprintf("ws_%v", workspaceId)
+			}
+			return wrapper.Id()
+		},
+		Depends: []reference{
+			{Path: "network_policy_id", Resource: "databricks_account_network_policy", Match: "network_policy_id"},
+			{Path: "workspace_id", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			if r.DataWrapper != nil {
+				if v, ok := r.DataWrapper.GetOk("network_policy_id"); ok {
+					strVal, ok := v.(string)
+					return ok && strVal == "default-policy"
+				}
+			}
+			return false
 		},
 	},
 	"databricks_mws_credentials": {
@@ -3300,6 +3270,12 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
 						workspace.WorkspaceID, err.Error())
 				}
+			}
+			if ic.isServiceEnabled("seg") {
+				ic.Emit(&resource{
+					Resource: "databricks_workspace_network_option",
+					ID:       strconv.FormatInt(workspace.WorkspaceID, 10),
+				})
 			}
 			return nil
 		},

@@ -62,7 +62,7 @@ type MaterializedFeatureData struct {
 func (m MaterializedFeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStore{}),
+		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
 	}
 }
 
@@ -96,7 +96,7 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
-			"online_store_config":       ml_tf.OnlineStore{}.Type(ctx),
+			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
 			"table_name":                types.StringType,
 		},

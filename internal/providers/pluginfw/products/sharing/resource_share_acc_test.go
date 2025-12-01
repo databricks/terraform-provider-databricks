@@ -780,3 +780,35 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 		},
 	})
 }
+
+const shareVolumeTemplate = preTestTemplate + `
+resource "databricks_volume" "this" {
+	name         = "share_volume_test{var.RANDOM}"
+	catalog_name = databricks_catalog.sandbox.name
+	schema_name  = databricks_schema.things.name
+	volume_type  = "MANAGED"
+}
+resource "databricks_share" "myshare" {
+	name  = "{var.STICKY_RANDOM}-terraform-share-with-volume"
+	object {
+		name = databricks_volume.this.id
+		data_object_type = "VOLUME"
+	}
+}
+`
+
+func TestUcAccShareVolume(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		// Step 1: Create share with volume using SDKv2 implementation
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"databricks": func() (tfprotov6.ProviderServer, error) {
+				sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+				return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+			},
+		},
+		Template: shareVolumeTemplate,
+	}, acceptance.Step{
+		// Step 2: Update the share using plugin framework implementation (default)
+		Template: shareVolumeTemplate,
+	})
+}

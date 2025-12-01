@@ -85,7 +85,7 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
-func NamespaceCustomizeDiff(d *schema.ResourceDiff) error {
+func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	// Force New
 	workspaceIDKey := workspaceIDSchemaKey
 	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)

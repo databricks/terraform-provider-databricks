@@ -49,8 +49,7 @@ Data source exposes the following attributes:
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
 - `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
 - `active` - Whether service principal is active or not.
-
-* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
+- `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Related Resources
 

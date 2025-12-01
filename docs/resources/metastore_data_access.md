@@ -3,9 +3,57 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
+!> **DEPRECATED** This resource is deprecated. Please use [databricks_storage_credential](storage_credential.md) and set it as `storage_root_credential_id` on the [databricks_metastore](metastore.md) resource instead. See the [Unity Catalog API documentation](https://docs.databricks.com/api-explorer/workspace/metastores/create) for more details.
+
 -> This resource can be used with an account or workspace-level provider.
 
 Optionally, each [databricks_metastore](metastore.md) can have a default [databricks_storage_credential](storage_credential.md) defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
+
+## Migration to databricks_storage_credential
+
+Instead of using `databricks_metastore_data_access`, you should create a [databricks_storage_credential](storage_credential.md) and reference it in your metastore configuration using the `storage_root_credential_id` attribute.
+
+**Old approach (deprecated):**
+
+```hcl
+resource "databricks_metastore" "this" {
+  name          = "primary"
+  storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
+  owner         = "uc admins"
+  region        = "us-east-1"
+  force_destroy = true
+}
+
+resource "databricks_metastore_data_access" "this" {
+  metastore_id = databricks_metastore.this.id
+  name         = aws_iam_role.metastore_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.metastore_data_access.arn
+  }
+  is_default = true
+}
+```
+
+**New approach (although the use of `storage_root` isn't recommended anymore):**
+
+```hcl
+resource "databricks_storage_credential" "this" {
+  name = aws_iam_role.metastore_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.metastore_data_access.arn
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_metastore" "this" {
+  name                        = "primary"
+  storage_root                = "s3://${aws_s3_bucket.metastore.id}/metastore"
+  owner                       = "uc admins"
+  region                      = "us-east-1"
+  force_destroy               = true
+  storage_root_credential_id  = databricks_storage_credential.this.id
+}
+```
 
 ## Example Usage
 

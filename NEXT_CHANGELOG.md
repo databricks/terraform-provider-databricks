@@ -8,6 +8,7 @@
 
 * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Deprecate `databricks_metastore_data_access` resource in favor of using `databricks_storage_credential` with `storage_root_credential_id` on `databricks_metastore` ([#5239](https://github.com/databricks/terraform-provider-databricks/issues/5239)).
 
 ### Bug Fixes
 
@@ -18,7 +19,8 @@
 
 * Document tag policies in `databricks_access_control_rule_set` ([#5209](https://github.com/databricks/terraform-provider-databricks/pull/5209)).
 * Document missing `aws_attributes.ebs_*` properties in `databricks_cluster` ([#5196](https://github.com/databricks/terraform-provider-databricks/pull/5196)).
-* Document support for serverless workspaces on GCP ([#5124](https://github.com/databricks/terraform-provider-databricks/pull/5124))
+* Document support for serverless workspaces on GCP ([#5124](https://github.com/databricks/terraform-provider-databricks/pull/5124)).
+* Fix Unity Catalog GCP guide by removing references to non-existent resources ([#2156](https://github.com/databricks/terraform-provider-databricks/issues/2156))
 
 ### Exporter
 

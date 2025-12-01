@@ -101,18 +101,6 @@ resource "databricks_metastore" "this" {
   force_destroy = true
 }
 
-resource "google_storage_bucket_iam_member" "unity_sa_admin" {
-  bucket = google_storage_bucket.unity_metastore.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
-}
-
-resource "google_storage_bucket_iam_member" "unity_sa_reader" {
-  bucket = google_storage_bucket.unity_metastore.name
-  role   = "roles/storage.legacyBucketReader"
-  member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
-}
-
 resource "databricks_metastore_assignment" "this" {
   provider     = databricks.accounts
   workspace_id = var.databricks_workspace_id
@@ -127,7 +115,7 @@ Unity Catalog introduces two new objects to access and work with external cloud 
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage. Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
-First, create the required object in GCPs, including granting permissions on the bucket to the Databricks-managed Service Account.
+First, create the required object in GCPs, including granting permissions on the bucket to the Databricks-managed Service Account created by the [databricks_storage_credential](../resources/storage_credential.md).
 
 ```hcl
 resource "google_storage_bucket" "ext_bucket" {
@@ -189,7 +177,7 @@ resource "google_storage_bucket_iam_member" "unity_cred_reader" {
 }
 ```
 
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
+Then create [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
 resource "databricks_grants" "external_creds" {

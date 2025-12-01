@@ -109,6 +109,9 @@ func ResourceMetastoreDataAccess() common.Resource {
 	return common.Resource{
 		Schema:        dacSchema,
 		SchemaVersion: 1,
+		DeprecationMessage: "This resource is deprecated. Please use `databricks_storage_credential` " +
+			"and set it as `storage_root_credential_id` on the `databricks_metastore` resource instead. " +
+			"See https://docs.databricks.com/api-explorer/workspace/metastores/create for more details.",
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,

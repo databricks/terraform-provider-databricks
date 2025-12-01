@@ -101,11 +101,7 @@ func TestAccJobCluster_ProviderConfig_Invalid(t *testing.T) {
 				workspace_id = "invalid"
 			}
 		`),
-<<<<<<< HEAD
-		ExpectError: regexp.MustCompile(`workspace_id must be a valid integer`),
-=======
 		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
->>>>>>> d3264a686497fd3bff26572b29e7db25ef11673c
 		PlanOnly:    true,
 	})
 }

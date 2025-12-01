@@ -45,13 +45,8 @@ func ResourceLibrary() common.Resource {
 	}
 	return common.Resource{
 		Schema: libraySdkSchema,
-<<<<<<< HEAD
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			return common.NamespaceCustomizeDiff(d)
-=======
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
->>>>>>> d3264a686497fd3bff26572b29e7db25ef11673c
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

@@ -31,8 +31,13 @@ const (
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
+<<<<<<< HEAD
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			return common.NamespaceCustomizeDiff(d)
+=======
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+>>>>>>> d3264a686497fd3bff26572b29e7db25ef11673c
 		},
 		Create:        resourceClusterCreate,
 		Read:          resourceClusterRead,

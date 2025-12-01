@@ -1155,6 +1155,8 @@ func (m CleanRoomTaskRunState) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Clean Rooms notebook task for V1 Clean Room service (GA). Replaces the
+// deprecated CleanRoomNotebookTask (defined above) which was for V0 service.
 type CleanRoomsNotebookTask struct {
 	// The clean room that the notebook belongs to.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
@@ -17049,8 +17051,12 @@ func (m *RunTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifica
 }
 
 type SparkJarTask struct {
-	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
-	// instead. For an example, see :method:jobs/create.
+	// Deprecated since 04/2016. For classic compute, provide a `jar` through
+	// the `libraries` field instead. For serverless compute, provide a `jar`
+	// though the `java_dependencies` field inside the `environments` list.
+	//
+	// See the examples of classic and serverless compute usage at the top of
+	// the page.
 	JarUri types.String `tfsdk:"jar_uri"`
 	// The full name of the class containing the main method to be executed.
 	// This class must be contained in a JAR provided as a library.
@@ -22906,8 +22912,6 @@ type TriggerSettings struct {
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
 	Periodic types.Object `tfsdk:"periodic"`
-	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table types.Object `tfsdk:"table"`
 
 	TableUpdate types.Object `tfsdk:"table_update"`
 }
@@ -22928,15 +22932,6 @@ func (to *TriggerSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				// Recursively sync the fields of Periodic
 				toPeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPeriodic)
 				to.SetPeriodic(ctx, toPeriodic)
-			}
-		}
-	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				// Recursively sync the fields of Table
-				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
-				to.SetTable(ctx, toTable)
 			}
 		}
 	}
@@ -22968,14 +22963,6 @@ func (to *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, from Trigge
 			}
 		}
 	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				toTable.SyncFieldsDuringRead(ctx, fromTable)
-				to.SetTable(ctx, toTable)
-			}
-		}
-	}
 	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
 		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
 			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
@@ -22990,7 +22977,6 @@ func (m TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
-	attrs["table"] = attrs["table"].SetOptional()
 	attrs["table_update"] = attrs["table_update"].SetOptional()
 
 	return attrs
@@ -23007,7 +22993,6 @@ func (m TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
-		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 	}
 }
@@ -23022,7 +23007,6 @@ func (m TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"file_arrival": m.FileArrival,
 			"pause_status": m.PauseStatus,
 			"periodic":     m.Periodic,
-			"table":        m.Table,
 			"table_update": m.TableUpdate,
 		})
 }
@@ -23034,7 +23018,6 @@ func (m TriggerSettings) Type(ctx context.Context) attr.Type {
 			"file_arrival": FileArrivalTriggerConfiguration{}.Type(ctx),
 			"pause_status": types.StringType,
 			"periodic":     PeriodicTriggerConfiguration{}.Type(ctx),
-			"table":        TableUpdateTriggerConfiguration{}.Type(ctx),
 			"table_update": TableUpdateTriggerConfiguration{}.Type(ctx),
 		},
 	}
@@ -23088,31 +23071,6 @@ func (m *TriggerSettings) GetPeriodic(ctx context.Context) (PeriodicTriggerConfi
 func (m *TriggerSettings) SetPeriodic(ctx context.Context, v PeriodicTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	m.Periodic = vs
-}
-
-// GetTable returns the value of the Table field in TriggerSettings as
-// a TableUpdateTriggerConfiguration value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TriggerSettings) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration, bool) {
-	var e TableUpdateTriggerConfiguration
-	if m.Table.IsNull() || m.Table.IsUnknown() {
-		return e, false
-	}
-	var v TableUpdateTriggerConfiguration
-	d := m.Table.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTable sets the value of the Table field in TriggerSettings.
-func (m *TriggerSettings) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration) {
-	vs := v.ToObjectValue(ctx)
-	m.Table = vs
 }
 
 // GetTableUpdate returns the value of the TableUpdate field in TriggerSettings as

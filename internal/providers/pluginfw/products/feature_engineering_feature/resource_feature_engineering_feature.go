@@ -45,6 +45,8 @@ type FeatureResource struct {
 type Feature struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
@@ -83,11 +85,12 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"description": m.Description,
-			"full_name":   m.FullName,
-			"function":    m.Function,
-			"inputs":      m.Inputs,
-			"source":      m.Source,
-			"time_window": m.TimeWindow,
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+			"function":         m.Function,
+			"inputs":           m.Inputs,
+			"source":           m.Source,
+			"time_window":      m.TimeWindow,
 		},
 	)
 }
@@ -97,8 +100,9 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Feature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"description": types.StringType,
-			"full_name": types.StringType,
-			"function":  ml_tf.Function{}.Type(ctx),
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+			"function":         ml_tf.Function{}.Type(ctx),
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -173,6 +177,7 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 
 func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetRequired()
@@ -317,7 +322,7 @@ func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.
 	updateRequest := ml.UpdateFeatureRequest{
 		Feature:    feature,
 		FullName:   plan.FullName.ValueString(),
-		UpdateMask: "description",
+		UpdateMask: "description,filter_condition",
 	}
 
 	client, clientDiags := r.Client.GetWorkspaceClient()

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -67,6 +68,8 @@ func init() {
 		useragent.WithUserAgentExtra(extra.Key, extra.Value)
 	}
 }
+
+var terraformVersionOnce sync.Once
 
 type sdkV2ProviderOptions struct {
 	sdkV2ResourceFallbacks   []string
@@ -291,7 +294,9 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		if p.TerraformVersion != "" {
-			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
+			terraformVersionOnce.Do(func() {
+				useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
+			})
 		}
 		logger.SetTfLogger(logger.NewTfLogger(ctx))
 		return ConfigureDatabricksClient(ctx, d, providerOptions.configCustomizer)

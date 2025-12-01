@@ -5,11 +5,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +19,7 @@ type Resource struct {
 	Read                            func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Update                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Delete                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff                   func(ctx context.Context, d *schema.ResourceDiff) error
+	CustomizeDiff                   func(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error
 	StateUpgraders                  []schema.StateUpgrader
 	Schema                          map[string]*schema.Schema
 	SchemaVersion                   int
@@ -62,7 +60,7 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	if r.CustomizeDiff == nil {
 		return nil
 	}
-	return func(ctx context.Context, rd *schema.ResourceDiff, _ any) (err error) {
+	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -73,10 +71,11 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
-		// we don't propagate instance of SDK client to the diff function, because
-		// authentication is not deterministic at this stage with the recent Terraform
-		// versions. Diff customization must be limited to hermetic checks only anyway.
-		err = r.CustomizeDiff(ctx, rd)
+		c, ok := m.(*DatabricksClient)
+		if !ok {
+			return nicerError(ctx, fmt.Errorf("expected *DatabricksClient, got %T", m), "customize diff for")
+		}
+		err = r.CustomizeDiff(ctx, rd, c)
 		if err != nil {
 			err = nicerError(ctx, err, "customize diff for")
 		}
@@ -216,6 +215,7 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 	return regexp.MustCompile(regexFromName)
 }
 
+<<<<<<< HEAD
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
@@ -467,6 +467,8 @@ func genericDatabricksData[T, P, C any](
 	}
 }
 
+=======
+>>>>>>> d3264a686497fd3bff26572b29e7db25ef11673c
 // WorkspacePathPrefixDiffSuppress suppresses diffs for workspace paths where both sides
 // may or may not include the `/Workspace` prefix.
 //
@@ -509,6 +511,7 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 	}
 	return s
 }
+<<<<<<< HEAD
 
 // NoClientData is a generic way to define data resources in Terraform provider that doesn't require any client.
 // usage is similar to AccountData and WorkspaceData, but the read function doesn't take a client.
@@ -521,3 +524,5 @@ func NoClientData[T any](read func(context.Context, *T) error) Resource {
 			return read(ctx, t)
 		}, false, NoCustomize)
 }
+=======
+>>>>>>> d3264a686497fd3bff26572b29e7db25ef11673c

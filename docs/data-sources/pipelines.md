@@ -44,11 +44,11 @@ output "wildcard_pipelines" {
 ```
 
 ## Argument Reference
-
 This data source exports the following attributes:
-
 * `pipeline_name` - (Optional) Filter Lakeflow Declarative Pipelines by name for a given search term. `%` is the supported wildcard operator.
-  
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 This data source exports the following attributes:

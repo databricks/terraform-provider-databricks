@@ -9,6 +9,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -52,9 +54,15 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			scmAttr[fieldName] = Int64AttributeBuilder{}
 		case types.Float64:
 			scmAttr[fieldName] = Float64AttributeBuilder{}
+		case timetypes.GoDuration:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: timetypes.GoDurationType{}}
+		case timetypes.RFC3339:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: timetypes.RFC3339Type{}}
+		case jsontypes.Normalized:
+			scmAttr[fieldName] = StringAttributeBuilder{CustomType: jsontypes.NormalizedType{}}
 		case types.String:
 			scmAttr[fieldName] = StringAttributeBuilder{}
-		case types.List, types.Map, types.Object:
+		case types.List, types.Set, types.Map, types.Object:
 			// Additional metadata is required to determine the type of the list elements.
 			// This is available via the ComplexFieldTypeProvider interface, implemented on the parent type.
 			provider, ok := v.Interface().(tfcommon.ComplexFieldTypeProvider)
@@ -83,6 +91,8 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				switch value.(type) {
 				case types.List:
 					scmAttr[fieldName] = ListAttributeBuilder{ElementType: containerType.ElementType()}
+				case types.Set:
+					scmAttr[fieldName] = SetAttributeBuilder{ElementType: containerType.ElementType()}
 				case types.Map:
 					scmAttr[fieldName] = MapAttributeBuilder{ElementType: containerType.ElementType()}
 				}
@@ -97,6 +107,12 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				case types.List:
 					validators := []validator.List{}
 					scmAttr[fieldName] = ListNestedAttributeBuilder{
+						NestedObject: nestedSchema.ToNestedAttributeObject(),
+						Validators:   validators,
+					}
+				case types.Set:
+					validators := []validator.Set{}
+					scmAttr[fieldName] = SetNestedAttributeBuilder{
 						NestedObject: nestedSchema.ToNestedAttributeObject(),
 						Validators:   validators,
 					}

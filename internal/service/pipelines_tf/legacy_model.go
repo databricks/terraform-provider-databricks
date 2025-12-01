@@ -98,6 +98,8 @@ type CreatePipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *CreatePipeline_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreatePipeline_SdkV2) {
@@ -335,6 +337,7 @@ func (m CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -402,6 +405,7 @@ func (m CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"tags":                  m.Tags,
 			"target":                m.Target,
 			"trigger":               m.Trigger,
+			"usage_policy_id":       m.UsagePolicyId,
 		})
 }
 
@@ -467,6 +471,7 @@ func (m CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
+			"usage_policy_id": types.StringType,
 		},
 	}
 }
@@ -1208,6 +1213,8 @@ type EditPipeline_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *EditPipeline_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditPipeline_SdkV2) {
@@ -1445,6 +1452,7 @@ func (m EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 
 	return attrs
@@ -1514,6 +1522,7 @@ func (m EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"tags":                   m.Tags,
 			"target":                 m.Target,
 			"trigger":                m.Trigger,
+			"usage_policy_id":        m.UsagePolicyId,
 		})
 }
 
@@ -1580,6 +1589,7 @@ func (m EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
+			"usage_policy_id": types.StringType,
 		},
 	}
 }
@@ -6572,6 +6582,8 @@ type PipelineSpec_SdkV2 struct {
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *PipelineSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineSpec_SdkV2) {
@@ -6788,6 +6800,7 @@ func (m PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -6851,6 +6864,7 @@ func (m PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"tags":                 m.Tags,
 			"target":               m.Target,
 			"trigger":              m.Trigger,
+			"usage_policy_id":      m.UsagePolicyId,
 		})
 }
 
@@ -6911,6 +6925,7 @@ func (m PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
+			"usage_policy_id": types.StringType,
 		},
 	}
 }

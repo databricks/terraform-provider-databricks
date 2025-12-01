@@ -171,8 +171,8 @@ func isAuxiliaryDirectory(v workspace.ObjectStatus) bool {
 	}
 	// TODO: rewrite to use suffix check, etc., instead of split and slice contains?
 	parts := strings.Split(v.Path, "/")
-	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
-	log.Printf("[DEBUG] directory %s: %v", v.Path, result)
+	result := len(parts) > 1 && slices.Contains(directoriesToIgnore, parts[len(parts)-1])
+	// log.Printf("[DEBUG] directory %s: %v", v.Path, result)
 	if result {
 		log.Printf("[DEBUG] Ignoring directory %s", v.Path)
 	}

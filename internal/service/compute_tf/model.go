@@ -14405,6 +14405,17 @@ func (m *InstancePoolAndStats) SetStatus(ctx context.Context, v InstancePoolStat
 type InstancePoolAwsAttributes struct {
 	// Availability type used for the spot nodes.
 	Availability types.String `tfsdk:"availability"`
+	// All AWS instances belonging to the instance pool will have this instance
+	// profile. If omitted, instances will initially be launched with the
+	// workspace's default instance profile. If defined, clusters that use the
+	// pool will inherit the instance profile, and must not specify their own
+	// instance profile on cluster creation or update. If the pool does not
+	// specify an instance profile, clusters using the pool may specify any
+	// instance profile. The instance profile must have previously been added to
+	// the Databricks environment by an account administrator.
+	//
+	// This feature may only be available to certain customer plans.
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Calculates the bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
 	// is set to 50, and the cluster needs a new `r3.xlarge` spot instance, then
@@ -14435,6 +14446,7 @@ func (to *InstancePoolAwsAttributes) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m InstancePoolAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
 	attrs["zone_id"] = attrs["zone_id"].SetOptional()
 
@@ -14460,6 +14472,7 @@ func (m InstancePoolAwsAttributes) ToObjectValue(ctx context.Context) basetypes.
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"availability":           m.Availability,
+			"instance_profile_arn":   m.InstanceProfileArn,
 			"spot_bid_price_percent": m.SpotBidPricePercent,
 			"zone_id":                m.ZoneId,
 		})
@@ -14470,6 +14483,7 @@ func (m InstancePoolAwsAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"availability":           types.StringType,
+			"instance_profile_arn":   types.StringType,
 			"spot_bid_price_percent": types.Int64Type,
 			"zone_id":                types.StringType,
 		},

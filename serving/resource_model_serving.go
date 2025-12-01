@@ -131,6 +131,123 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// cleanWorkloadSize clears the workload_size field from the config (the API response) if it is not set in the corresponding schema.ResourceData.
+// This is applied to both the ServedModels and ServedEntities fields.
+//
+// If neither workload_size nor min_provisioned_concurrency/max_provisioned_concurrency are provided in API requests, workload_size is set in the
+// API response. This results in a configuration drift for workload_size.
+//
+// The resulting behavior is:
+//
+// - If the workload_size is set in the ResourceData, the provider respects the value specified in the API response.
+// - If the workload_size is not set in the ResourceData, the provider clears the workload_size from the API response.
+func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil {
+		return
+	}
+	for _, configModel := range config.Config.ServedModels {
+		if configModel.WorkloadSize != "" {
+			continue
+		}
+		for i, apiModel := range apiResponse.ServedModels {
+			if apiModel.Name == configModel.Name {
+				apiResponse.ServedModels[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+	for _, configEntity := range config.Config.ServedEntities {
+		if configEntity.WorkloadSize != "" {
+			continue
+		}
+		for i, apiEntity := range apiResponse.ServedEntities {
+			if apiEntity.Name == configEntity.Name {
+				apiResponse.ServedEntities[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+}
+
+// reorderByName is a generic helper that re-orders a slice of items from the API response
+// to match the order of names in the config. Items are matched by name, and any items in
+// the API response that aren't in the config are appended at the end.
+//
+// Parameters:
+//   - configNames: ordered list of names from the user's HCL configuration
+//   - apiItems: slice of items from the API response
+//   - getName: function to extract the name from an API item
+//
+// Returns: re-ordered slice maintaining the same type as apiItems
+func reorderByName[T any](configNames []string, apiItems []T, getName func(T) string) []T {
+	if len(configNames) == 0 || len(apiItems) == 0 {
+		return apiItems
+	}
+
+	reordered := make([]T, 0, len(apiItems))
+
+	// First pass: add items in config order
+	for _, configName := range configNames {
+		for _, apiItem := range apiItems {
+			if getName(apiItem) == configName {
+				reordered = append(reordered, apiItem)
+				break
+			}
+		}
+	}
+
+	// Second pass: append any items from API that weren't in config
+	for _, apiItem := range apiItems {
+		found := false
+		for _, reorderedItem := range reordered {
+			if getName(reorderedItem) == getName(apiItem) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			reordered = append(reordered, apiItem)
+		}
+	}
+
+	return reordered
+}
+
+// preserveConfigOrder re-orders the served_models and served_entities in the API response
+// to match the order specified in the HCL configuration. This prevents spurious diffs when
+// the API returns items in a different order (e.g., alphabetically) than submitted.
+func preserveConfigOrder(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil || apiResponse == nil {
+		return
+	}
+
+	// Re-order served_models to match config order
+	if len(config.Config.ServedModels) > 0 && len(apiResponse.ServedModels) > 0 {
+		configNames := make([]string, len(config.Config.ServedModels))
+		for i, model := range config.Config.ServedModels {
+			configNames[i] = model.Name
+		}
+		apiResponse.ServedModels = reorderByName(configNames, apiResponse.ServedModels,
+			func(m serving.ServedModelOutput) string { return m.Name })
+	}
+
+	// Re-order served_entities to match config order
+	if len(config.Config.ServedEntities) > 0 && len(apiResponse.ServedEntities) > 0 {
+		configNames := make([]string, len(config.Config.ServedEntities))
+		for i, entity := range config.Config.ServedEntities {
+			configNames[i] = entity.Name
+		}
+		apiResponse.ServedEntities = reorderByName(configNames, apiResponse.ServedEntities,
+			func(e serving.ServedEntityOutput) string { return e.Name })
+	}
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -154,14 +271,12 @@ func ResourceModelServing() common.Resource {
 
 			common.CustomizeSchemaPath(m, "config", "served_models", "name").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_models", "workload_type").SetComputed()
-			common.CustomizeSchemaPath(m, "config", "served_models", "workload_size").SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").SetOptional().SetDefault(true)
 			common.CustomizeSchemaPath(m, "config", "served_models").SetDeprecated("Please use 'config.served_entities' instead of 'config.served_models'.")
 			common.CustomizeSchemaPath(m, "rate_limits").SetDeprecated("Please use AI Gateway to manage rate limits.")
 
 			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_type").SetComputed()
-			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_size").SetSuppressDiff()
 
 			// Apply custom suppress diff to traffic config routes for served_model_name and served_entity_name
 			common.CustomizeSchemaPath(m, "config", "traffic_config", "routes", "served_model_name").SetCustomSuppressDiff(suppressRouteModelEntityNameDiff)
@@ -174,6 +289,9 @@ func ResourceModelServing() common.Resource {
 
 			// route_optimized cannot be updated.
 			common.CustomizeSchemaPath(m, "route_optimized").SetForceNew()
+
+			// Tags should have Set type
+			m["tags"].Type = schema.TypeSet
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
@@ -234,6 +352,9 @@ func ResourceModelServing() common.Resource {
 					endpoint.Config.ServedEntities = nil
 				}
 			}
+			cleanWorkloadSize(s, d, endpoint.Config)
+			preserveConfigOrder(s, d, endpoint.Config)
+
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err

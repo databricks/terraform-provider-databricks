@@ -1196,6 +1196,8 @@ func (m CleanRoomTaskRunState_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Clean Rooms notebook task for V1 Clean Room service (GA). Replaces the
+// deprecated CleanRoomNotebookTask (defined above) which was for V0 service.
 type CleanRoomsNotebookTask_SdkV2 struct {
 	// The clean room that the notebook belongs to.
 	CleanRoomName types.String `tfsdk:"clean_room_name"`
@@ -17502,8 +17504,12 @@ func (m *RunTask_SdkV2) SetWebhookNotifications(ctx context.Context, v WebhookNo
 }
 
 type SparkJarTask_SdkV2 struct {
-	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
-	// instead. For an example, see :method:jobs/create.
+	// Deprecated since 04/2016. For classic compute, provide a `jar` through
+	// the `libraries` field instead. For serverless compute, provide a `jar`
+	// though the `java_dependencies` field inside the `environments` list.
+	//
+	// See the examples of classic and serverless compute usage at the top of
+	// the page.
 	JarUri types.String `tfsdk:"jar_uri"`
 	// The full name of the class containing the main method to be executed.
 	// This class must be contained in a JAR provided as a library.
@@ -23595,8 +23601,6 @@ type TriggerSettings_SdkV2 struct {
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
 	Periodic types.List `tfsdk:"periodic"`
-	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table types.List `tfsdk:"table"`
 
 	TableUpdate types.List `tfsdk:"table_update"`
 }
@@ -23617,15 +23621,6 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 				// Recursively sync the fields of Periodic
 				toPeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPeriodic)
 				to.SetPeriodic(ctx, toPeriodic)
-			}
-		}
-	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				// Recursively sync the fields of Table
-				toTable.SyncFieldsDuringCreateOrUpdate(ctx, fromTable)
-				to.SetTable(ctx, toTable)
 			}
 		}
 	}
@@ -23657,14 +23652,6 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
-	if !from.Table.IsNull() && !from.Table.IsUnknown() {
-		if toTable, ok := to.GetTable(ctx); ok {
-			if fromTable, ok := from.GetTable(ctx); ok {
-				toTable.SyncFieldsDuringRead(ctx, fromTable)
-				to.SetTable(ctx, toTable)
-			}
-		}
-	}
 	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
 		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
 			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
@@ -23681,8 +23668,6 @@ func (m TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["table"] = attrs["table"].SetOptional()
-	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_update"] = attrs["table_update"].SetOptional()
 	attrs["table_update"] = attrs["table_update"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -23700,7 +23685,6 @@ func (m TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
-		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 	}
 }
@@ -23715,7 +23699,6 @@ func (m TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"file_arrival": m.FileArrival,
 			"pause_status": m.PauseStatus,
 			"periodic":     m.Periodic,
-			"table":        m.Table,
 			"table_update": m.TableUpdate,
 		})
 }
@@ -23730,9 +23713,6 @@ func (m TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
 				ElemType: PeriodicTriggerConfiguration_SdkV2{}.Type(ctx),
-			},
-			"table": basetypes.ListType{
-				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"table_update": basetypes.ListType{
 				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
@@ -23791,32 +23771,6 @@ func (m *TriggerSettings_SdkV2) SetPeriodic(ctx context.Context, v PeriodicTrigg
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
 	m.Periodic = types.ListValueMust(t, vs)
-}
-
-// GetTable returns the value of the Table field in TriggerSettings_SdkV2 as
-// a TableUpdateTriggerConfiguration_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TriggerSettings_SdkV2) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration_SdkV2, bool) {
-	var e TableUpdateTriggerConfiguration_SdkV2
-	if m.Table.IsNull() || m.Table.IsUnknown() {
-		return e, false
-	}
-	var v []TableUpdateTriggerConfiguration_SdkV2
-	d := m.Table.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTable sets the value of the Table field in TriggerSettings_SdkV2.
-func (m *TriggerSettings_SdkV2) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	m.Table = types.ListValueMust(t, vs)
 }
 
 // GetTableUpdate returns the value of the TableUpdate field in TriggerSettings_SdkV2 as

@@ -36,6 +36,8 @@ type FeatureDataSource struct {
 type FeatureData struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
@@ -74,12 +76,13 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description": m.Description,
-			"full_name":   m.FullName,
-			"function":    m.Function,
-			"inputs":      m.Inputs,
-			"source":      m.Source,
-			"time_window": m.TimeWindow,
+			"description":      m.Description,
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+			"function":         m.Function,
+			"inputs":           m.Inputs,
+			"source":           m.Source,
+			"time_window":      m.TimeWindow,
 		},
 	)
 }
@@ -89,9 +92,10 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m FeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
-			"full_name":   types.StringType,
-			"function":    ml_tf.Function{}.Type(ctx),
+			"description":      types.StringType,
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+			"function":         ml_tf.Function{}.Type(ctx),
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -103,6 +107,7 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 
 func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetComputed()
+	attrs["filter_condition"] = attrs["filter_condition"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["function"] = attrs["function"].SetComputed()
 	attrs["inputs"] = attrs["inputs"].SetComputed()

@@ -148,6 +148,11 @@ func ResourceCatalog() common.Resource {
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
 
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCatalogRequest.Name, bindings.BindingsSecurableTypeCatalog)
+			if err != nil {
+				return err
+			}
+
 			if d.HasChange("owner") {
 				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
 					Name:  updateCatalogRequest.Name,
@@ -197,7 +202,7 @@ func ResourceCatalog() common.Resource {
 			d.SetId(ci.Name)
 
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

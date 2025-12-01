@@ -148,6 +148,7 @@ func ResourceCatalog() common.Resource {
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
 
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
 			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCatalogRequest.Name, bindings.BindingsSecurableTypeCatalog)
 			if err != nil {
 				return err
@@ -201,7 +202,6 @@ func ResourceCatalog() common.Resource {
 			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
 			d.SetId(ci.Name)
 
-			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

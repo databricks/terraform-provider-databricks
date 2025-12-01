@@ -69,7 +69,7 @@ type MaterializedFeature struct {
 func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStore{}),
+		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
 	}
 }
 
@@ -101,7 +101,7 @@ func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
-			"online_store_config":       ml_tf.OnlineStore{}.Type(ctx),
+			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
 			"table_name":                types.StringType,
 		},
@@ -193,14 +193,14 @@ func (m *MaterializedFeature) SetOfflineStoreConfig(ctx context.Context, v ml_tf
 }
 
 // GetOnlineStoreConfig returns the value of the OnlineStoreConfig field in MaterializedFeature as
-// a ml_tf.OnlineStore value.
+// a ml_tf.OnlineStoreConfig value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (ml_tf.OnlineStore, bool) {
-	var e ml_tf.OnlineStore
+func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (ml_tf.OnlineStoreConfig, bool) {
+	var e ml_tf.OnlineStoreConfig
 	if m.OnlineStoreConfig.IsNull() || m.OnlineStoreConfig.IsUnknown() {
 		return e, false
 	}
-	var v ml_tf.OnlineStore
+	var v ml_tf.OnlineStoreConfig
 	d := m.OnlineStoreConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -212,7 +212,7 @@ func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (ml_tf.O
 }
 
 // SetOnlineStoreConfig sets the value of the OnlineStoreConfig field in MaterializedFeature.
-func (m *MaterializedFeature) SetOnlineStoreConfig(ctx context.Context, v ml_tf.OnlineStore) {
+func (m *MaterializedFeature) SetOnlineStoreConfig(ctx context.Context, v ml_tf.OnlineStoreConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.OnlineStoreConfig = vs
 }

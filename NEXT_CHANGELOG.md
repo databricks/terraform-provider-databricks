@@ -6,8 +6,10 @@
 
 ### New Features and Improvements
 
+* Relaxed `force_new` constraint on `catalog` attribute in `databricks_pipeline` resource to allow changing the default catalog for existing pipelines ([#5180](https://github.com/databricks/terraform-provider-databricks/issues/5180)).
 * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Add `feature_engineering_kafka_config` resource and data source ([#5240](https://github.com/databricks/terraform-provider-databricks/pull/5240))
 
 ### Bug Fixes
 
@@ -30,3 +32,4 @@
 * Added support for Database Instance resource (aka Lakebase) ([#5212](https://github.com/databricks/terraform-provider-databricks/pull/5212)).
 
 ### Internal Changes
+* Update Go SDK to v0.92.0

@@ -93,6 +93,8 @@ The following arguments are required:
 * `name` - (Required) Full name of the object, e.g. `catalog.schema.name` for a tables, views, volumes and models, or `catalog.schema` for schemas.
 * `data_object_type` - (Required) Type of the data object. Supported types: `TABLE`, `FOREIGN_TABLE`, `SCHEMA`, `VIEW`, `MATERIALIZED_VIEW`, `STREAMING_TABLE`, `MODEL`, `NOTEBOOK_FILE`, `FUNCTION`, `FEATURE_SPEC`, and `VOLUME`.
 * `comment` - (Optional) Description about the object.
+* `content` - (Optional) The content of the notebook file when the data object type is NOTEBOOK_FILE. This should be base64 encoded. Required for adding a NOTEBOOK_FILE, optional for updating, ignored for other types.
+* `partition` - (Optional) Array of partitions for the shared data.
 * `shared_as` - (Optional) A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
 * `cdf_enabled` - (Optional) Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
 * `start_version` - (Optional) The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.

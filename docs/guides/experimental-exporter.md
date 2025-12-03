@@ -196,7 +196,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `queries` - **listing** [databricks_query](../resources/query.md).
 * `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in arbitrary locations).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
-* `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
+* `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md), [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md), and [databricks_account_setting_v2](../resources/account_setting_v2.md) (account-level).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into the Terraform state.
@@ -242,6 +242,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | Resource | Supported | Incremental | Workspace | Account |
 | --- | --- | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
+| [databricks_account_setting_v2](../resources/account_setting_v2.md) | Yes | No | No | Yes |
 | [databricks_alert](../resources/alert.md) | Yes | Yes | Yes | No |
 | [databricks_alert_v2](../resources/alert_v2.md) | Yes | Yes | Yes | No |
 | [databricks_app](../resources/app.md) | Yes | No | Yes | No |
@@ -327,6 +328,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |
+| [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md) | Yes | No | Yes | No |
 
 Notes:
 

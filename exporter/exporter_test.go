@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/apps"
+	"github.com/databricks/databricks-sdk-go/service/billing"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
@@ -398,6 +399,16 @@ var emptyDatabaseInstances = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyBudgetPolicies = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/accounts/[^/]+/budget/policies?",
+	Response: billing.ListBudgetPoliciesResponse{
+		Policies:      []billing.BudgetPolicy{},
+		NextPageToken: "",
+	},
+	ReuseRequest: true,
+}
+
 var emptyIpAccessLIst = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/ip-access-lists",
@@ -575,6 +586,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			noCurrentMetastoreAttached,
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyLakeviewList,
 			emptyMetastoreList,
 			meAdminFixture,
@@ -850,6 +862,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyDataQualityMonitors,
 			emptyDatabaseInstances,
 			emptyUsersList,

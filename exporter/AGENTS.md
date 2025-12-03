@@ -39,7 +39,7 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
 7. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.
 8. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
-9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `MockWorkspaceClientFunc` from Databricks Go SDK instead of `HTTPFixture`.
+9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `qa.MockAccountsApply` or `qa.MockWorkspaceApply` from Databricks Go SDK instead of `qa.HTTPFixturesApply`.
 10. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
 11. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
 

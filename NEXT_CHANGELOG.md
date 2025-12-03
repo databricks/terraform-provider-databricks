@@ -32,4 +32,6 @@
 * Added support for Database Instance resource (aka Lakebase) ([#5212](https://github.com/databricks/terraform-provider-databricks/pull/5212)).
 
 ### Internal Changes
-* Update Go SDK to v0.92.0
+
+* Update Go SDK to v0.92.0 ([#5240](https://github.com/databricks/terraform-provider-databricks/pull/5240))
+* Bump github.com/hashicorp/terraform-plugin-framework from 1.16.1 to 1.17.0 ([#5247](https://github.com/databricks/terraform-provider-databricks/pull/5247))

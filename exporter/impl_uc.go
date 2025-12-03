@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
+	"github.com/databricks/databricks-sdk-go/service/tags"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	data_quality_monitor "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/data_quality_monitor"
@@ -671,6 +672,29 @@ func listArtifactAllowLists(ic *importContext) error {
 			Name:     nameNormalizationRegex.ReplaceAllString(name, "_"),
 		})
 	}
+	return nil
+}
+
+func listTagPolicies(ic *importContext) error {
+	tagPolicies, err := ic.workspaceClient.TagPolicies.ListTagPoliciesAll(ic.Context, tags.ListTagPoliciesRequest{})
+	if err != nil {
+		return err
+	}
+	i := 0
+	for _, tagPolicy := range tagPolicies {
+		i++
+		if !ic.MatchesName(tagPolicy.TagKey) {
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_tag_policy",
+			ID:       tagPolicy.TagKey,
+		})
+		if i%50 == 0 {
+			log.Printf("[INFO] Imported %d Tag Policies", i)
+		}
+	}
+	log.Printf("[INFO] Listed %d Tag Policies", i)
 	return nil
 }
 

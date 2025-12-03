@@ -200,11 +200,14 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("storage").SetForceNew()
 	// catalog can be updated in-place, but switching between storage and catalog requires recreation
 	// (handled in CustomizeDiff)
-	s.SchemaPath("gateway_definition", "connection_id").SetForceNew()
-	s.SchemaPath("gateway_definition", "gateway_storage_catalog").SetForceNew()
-	s.SchemaPath("gateway_definition", "gateway_storage_schema").SetForceNew()
-	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
-	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
+	for _, field := range []string{"connection_id", "connection_name",
+		"gateway_storage_catalog", "gateway_storage_schema"} {
+		s.SchemaPath("gateway_definition", field).SetForceNew()
+	}
+	for _, field := range []string{"connection_name", "ingestion_gateway_id",
+		"ingest_from_uc_foreign_catalog"} {
+		s.SchemaPath("ingestion_definition", field).SetForceNew()
+	}
 
 	// Required fields
 	s.SchemaPath("library", "glob", "include").SetRequired()

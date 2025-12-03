@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/apps"
+	"github.com/databricks/databricks-sdk-go/service/billing"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
@@ -25,8 +26,10 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
@@ -311,6 +314,13 @@ var emptyConnections = qa.HTTPFixture{
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
+var emptyTagPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/tag-policies?",
+	Response:     tags.ListTagPoliciesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -394,6 +404,16 @@ var emptyDatabaseInstances = qa.HTTPFixture{
 	Resource: "/api/2.0/database/instances?",
 	Response: database.ListDatabaseInstancesResponse{
 		DatabaseInstances: []database.DatabaseInstance{},
+	},
+	ReuseRequest: true,
+}
+
+var emptyBudgetPolicies = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/accounts/[^/]+/budget/policies?",
+	Response: billing.ListBudgetPoliciesResponse{
+		Policies:      []billing.BudgetPolicy{},
+		NextPageToken: "",
 	},
 	ReuseRequest: true,
 }
@@ -521,6 +541,13 @@ var emptyDestinationNotficationsList = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWorkspaceSettingsMetadataList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/settings-metadata?",
+	Response:     settingsv2.ListWorkspaceSettingsMetadataResponse{},
+	ReuseRequest: true,
+}
+
 var emptyUsersList = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
@@ -564,9 +591,11 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			emptyDestinationNotficationsList,
+			emptyWorkspaceSettingsMetadataList,
 			noCurrentMetastoreAttached,
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyLakeviewList,
 			emptyMetastoreList,
 			meAdminFixture,
@@ -576,6 +605,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyGitCredentials,
 			emptyWorkspace,
@@ -842,6 +872,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyDataQualityMonitors,
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
@@ -850,6 +881,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			noCurrentMetastoreAttached,
 			emptyLakeviewList,
 			emptyDestinationNotficationsList,
+			emptyWorkspaceSettingsMetadataList,
 			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
@@ -857,6 +889,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyUcCredentials,
 			emptyShares,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyModelServing,
 			emptyMlflowWebhooks,
@@ -1605,6 +1638,8 @@ func TestImportingSecrets(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
+			emptyWorkspaceSettingsMetadataList,
+			emptyDestinationNotficationsList,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1690,6 +1725,8 @@ func TestImportingGlobalInitScriptsAndWorkspaceConf(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
+			emptyWorkspaceSettingsMetadataList,
+			emptyDestinationNotficationsList,
 			emptyWorkspaceConf,
 			emptyGlobalSQLConfig,
 			{
@@ -3125,6 +3162,7 @@ func TestNotificationDestinationExport(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		meAdminFixture,
 		noCurrentMetastoreAttached,
+		emptyWorkspaceSettingsMetadataList,
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/notification-destinations?",

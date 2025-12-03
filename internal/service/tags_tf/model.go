@@ -370,7 +370,7 @@ type TagPolicy struct {
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
 
-	Values types.List `tfsdk:"values"`
+	Values types.Set `tfsdk:"values"`
 }
 
 func (to *TagPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagPolicy) {
@@ -441,7 +441,7 @@ func (m TagPolicy) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
 			"update_time": types.StringType,
-			"values": basetypes.ListType{
+			"values": basetypes.SetType{
 				ElemType: Value{}.Type(ctx),
 			},
 		},
@@ -471,7 +471,7 @@ func (m *TagPolicy) SetValues(ctx context.Context, v []Value) {
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Values = types.ListValueMust(t, vs)
+	m.Values = types.SetValueMust(t, vs)
 }
 
 type UpdateTagPolicyRequest struct {

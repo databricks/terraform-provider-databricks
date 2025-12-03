@@ -619,6 +619,9 @@ func normalizeWhitespace(s string) string {
 }
 
 func shouldOmitWithEffectiveFields(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool {
+	if strings.HasPrefix(pathString, "effective_") {
+		return true // Effective fields are not input-only fields, so we omit them
+	}
 	// Allow input-only fields that have effective_* counterparts to pass through
 	// to the zero-value filtering stage in the codegen
 	effectiveFieldName := "effective_" + pathString

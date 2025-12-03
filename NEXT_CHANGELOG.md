@@ -26,6 +26,7 @@
 ### Exporter
 
 * Added support for `databricks_data_quality_monitor` resource ([#5193](https://github.com/databricks/terraform-provider-databricks/pull/5193)).
+* Added support for `databricks_account_federation_policy`, `databricks_custom_app_integration`, `databricks_quality_monitor_v2`, `databricks_service_principal_federation_policy` resources ([#5237](https://github.com/databricks/terraform-provider-databricks/pull/5237)).
 * Added support for `databricks_budget_policy` resource ([#5217](https://github.com/databricks/terraform-provider-databricks/pull/5217)).
 * Fix typo in the name of environment variable ([#5158](https://github.com/databricks/terraform-provider-databricks/pull/5158)).
 * Export permission assignments on workspace level ([#5169](https://github.com/databricks/terraform-provider-databricks/pull/5169)).

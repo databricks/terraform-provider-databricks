@@ -105,6 +105,14 @@ func importApp(ic *importContext, r *resource) error {
 		}
 	}
 
+	// Budget Policy
+	if app.BudgetPolicyId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_budget_policy",
+			ID:       app.BudgetPolicyId,
+		})
+	}
+
 	// Emit permissions
 	ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/apps/%s", app.Name), "app_"+r.Name)
 	return nil

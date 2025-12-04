@@ -175,12 +175,12 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
 * `apps` - **listing** [databricks_app](../resources/app.md) and [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md).
-* `billing` - **listing** [databricks_budget](../resources/budget.md).
+* `billing` - **listing** [databricks_budget](../resources/budget.md) and [databricks_budget_policy](../resources/budget_policy.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
-* `dq` - **listing** [databricks_data_quality_monitor](../resources/data_quality_monitor.md)
+* `dq` - **listing** [databricks_data_quality_monitor](../resources/data_quality_monitor.md) and [databricks_quality_monitor_v2](../resources/quality_monitor_v2.md)
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) (account-level) and [databricks_permission_assignment](../resources/permission_assignment.md) (workspace-level).  When listing is done on account level, you can filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
@@ -191,12 +191,13 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `mws` - **listing** resources related to deployment of workspaces on AWS and GCP (networks, credentials, workspaces, ...).
 * `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md), [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md), and [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md).
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
+* `oauth` - **listing** [databricks_account_federation_policy](../resources/account_federation_policy.md), [databricks_custom_app_integration](../resources/custom_app_integration.md), [databricks_service_principal_federation_policy](../resources/service_principal_federation_policy.md)
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
 * `queries` - **listing** [databricks_query](../resources/query.md).
 * `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in arbitrary locations).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
-* `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
+* `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md), [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md), and [databricks_account_setting_v2](../resources/account_setting_v2.md) (account-level).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into the Terraform state.
@@ -213,6 +214,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-shares` - **listing** [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
+* `uc-tags` - **listing** exports [databricks_tag_policy](../resources/tag_policy.md) resources.
 * `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
 * `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own files, simply because of their number. If Identity Federation is enabled on the workspace (when UC Metastore is attached), then users and service principals are exposed as data sources because they are defined on an account level.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
@@ -241,17 +243,21 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | Resource | Supported | Incremental | Workspace | Account |
 | --- | --- | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
+| [databricks_account_federation_policy](../resources/account_federation_policy.md) | Yes | No | No | Yes |
+| [databricks_account_setting_v2](../resources/account_setting_v2.md) | Yes | No | No | Yes |
 | [databricks_alert](../resources/alert.md) | Yes | Yes | Yes | No |
 | [databricks_alert_v2](../resources/alert_v2.md) | Yes | Yes | Yes | No |
 | [databricks_app](../resources/app.md) | Yes | No | Yes | No |
 | [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md) | Yes | No | Yes | No |
 | [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No | Yes | No |
 | [databricks_budget](../resources/budget.md) | Yes | Yes | No | Yes |
+| [databricks_budget_policy](../resources/budget_policy.md) | Yes | Yes | No | Yes |
 | [databricks_catalog](../resources/catalog.md) | Yes | Yes | Yes | No |
 | [databricks_cluster](../resources/cluster.md) | Yes | No | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No | Yes | No |
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
 | [databricks_credential](../resources/credential.md) | Yes | Yes | Yes | No |
+| [databricks_custom_app_integration](../resources/custom_app_integration.md) | Yes | No | No | Yes |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
 | [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
@@ -293,6 +299,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_permission_assignment](../resources/permission_assignment.md) | Yes | No | Yes | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |
 | [databricks_pipeline](../resources/pipeline.md) | Yes | Yes | Yes | No |
+| [databricks_quality_monitor_v2](../resources/quality_monitor_v2.md) | Yes | Yes | Yes | No |
 | [databricks_query](../resources/query.md) | Yes | Yes | Yes | No |
 | [databricks_recipient](../resources/recipient.md) | Yes | Yes | Yes | No |
 | [databricks_registered_model](../resources/registered.md) | Yes | Yes | Yes | No |
@@ -302,6 +309,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes | No | Yes | No |
 | [databricks_secret_scope](../resources/secret_scope.md) | Yes | No | Yes | No |
 | [databricks_service_principal](../resources/service_principal.md) | Yes | No | Yes | Yes |
+| [databricks_service_principal_federation_policy](../resources/service_principal_federation_policy.md) | Yes | No | No | Yes |
 | [databricks_service_principal_role](../resources/service_principal_role.md) | Yes | No | Yes | Yes |
 | [databricks_share](../resources/share.md) | Yes | Yes | Yes | No |
 | [databricks_sql_alert](../resources/sql_alert.md) | Yes | Yes | Yes | No |
@@ -315,6 +323,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
 | [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
+| [databricks_tag_policy](../resources/tag_policy.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
 | [databricks_user](../resources/user.md) | Yes | No | Yes | Yes |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No | No | No | No |
@@ -325,6 +334,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |
+| [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md) | Yes | No | Yes | No |
 
 Notes:
 

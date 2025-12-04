@@ -1,11 +1,10 @@
 # NEXT CHANGELOG
 
-## Release v1.99.0
+## Release v1.100.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Added `databricks_workspace_entity_tag_assignment` resource and data source ([#5252](https://github.com/databricks/terraform-provider-databricks/pull/5252))
 
 ### Bug Fixes
 
@@ -14,6 +13,3 @@
 ### Exporter
 
 ### Internal Changes
-* Update Go SDK to v0.93.0 ([#5252](https://github.com/databricks/terraform-provider-databricks/pull/5252))
-* Bump github.com/hashicorp/terraform-plugin-testing from 1.13.3 to 1.14.0 ([#5254](https://github.com/databricks/terraform-provider-databricks/pull/5254))
-* Bump google.golang.org/api from 0.256.0 to 0.257.0 ([#5253](https://github.com/databricks/terraform-provider-databricks/pull/5253))

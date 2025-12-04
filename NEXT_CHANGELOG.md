@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fix retrieving of latest DBR versions in `databricks_spark_version` ([#5255](https://github.com/databricks/terraform-provider-databricks/pull/5255))
+
 ### Documentation
 
 ### Exporter

@@ -783,7 +783,7 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 
 const shareVolumeTemplate = preTestTemplate + `
 resource "databricks_volume" "this" {
-	name         = "share_volume_test{var.RANDOM}"
+	name         = "share_volume_test{var.STICKY_RANDOM}"
 	catalog_name = databricks_catalog.sandbox.name
 	schema_name  = databricks_schema.things.name
 	volume_type  = "MANAGED"
@@ -808,7 +808,7 @@ func TestUcAccShareVolume(t *testing.T) {
 		},
 		Template: shareVolumeTemplate,
 	}, acceptance.Step{
-		// Step 2: Update the share using plugin framework implementation (default)
+		// Step 2: Apply using plugin framework implementation (default)
 		Template: shareVolumeTemplate,
 	})
 }

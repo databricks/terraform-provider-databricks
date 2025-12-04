@@ -45,30 +45,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Generate GitHub App Token for Check Updates
-      id: generate-check-token
-      uses: actions/create-github-app-token@v1
-      with:
-        app-id: ${{ secrets.DECO_TEST_APPROVAL_APP_ID }}
-        private-key: ${{ secrets.DECO_TEST_APPROVAL_PRIVATE_KEY }}
-        owner: databricks
-
-    - name: Create Check Run
-      id: create-check
-      env:
-        GH_TOKEN: ${{ steps.generate-check-token.outputs.token }}
-      run: |
-        response=$(gh api -X POST \
-          /repos/${{ github.repository }}/check-runs \
-          -f name="Integration Tests" \
-          -f head_sha="${{ github.event.pull_request.head.sha }}" \
-          -f status="queued" \
-          -f output[title]="Integration Tests" \
-          -f output[summary]="Tests queued and will be triggered shortly...")
-
-        check_run_id=$(echo "$response" | jq -r .id)
-        echo "check_run_id=$check_run_id" >> $GITHUB_OUTPUT
-
     - name: Generate GitHub App Token for Workflow Trigger
       id: generate-token
       uses: actions/create-github-app-token@v1
@@ -85,8 +61,7 @@ jobs:
         gh workflow run terraform-isolated-pr.yml -R ${{ secrets.ORG_NAME }}/${{secrets.REPO_NAME}} \
         --ref main \
         -f pull_request_number=${{ github.event.pull_request.number }} \
-        -f commit_sha=${{ github.event.pull_request.head.sha }} \
-        -f check_run_id=${{ steps.create-check.outputs.check_run_id }}
+        -f commit_sha=${{ github.event.pull_request.head.sha }}
 
 
 

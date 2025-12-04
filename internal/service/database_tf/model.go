@@ -1723,6 +1723,9 @@ func (m DeleteDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
+	// Optional. When set to true, the actual PostgreSQL table will be dropped
+	// from the database.
+	PurgeData types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSyncedDatabaseTableRequest) {
@@ -1733,6 +1736,7 @@ func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m DeleteSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge_data"] = attrs["purge_data"].SetOptional()
 
 	return attrs
 }
@@ -1755,7 +1759,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":       m.Name,
+			"purge_data": m.PurgeData,
 		})
 }
 
@@ -1763,7 +1768,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 func (m DeleteSyncedDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":       types.StringType,
+			"purge_data": types.BoolType,
 		},
 	}
 }

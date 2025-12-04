@@ -46,9 +46,20 @@ func TestAccDisableLegacyAccessSetting(t *testing.T) {
 				w, err := client.WorkspaceClient()
 				require.NoError(t, err)
 				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
-				// Previously we were making an update call to get the correct eTag in the response error,
-				// but now it works just without eTag.
-				res, err := w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{})
+				// We are making an update call to get the current eTag in the response.
+				updateResp, err := w.Settings.DisableLegacyAccess().Update(ctx, settings.UpdateDisableLegacyAccessRequest{
+					AllowMissing: true,
+					Setting: settings.DisableLegacyAccess{
+						DisableLegacyAccess: settings.BooleanMessage{
+							Value: false,
+						},
+					},
+					FieldMask: "disable_legacy_access.value",
+				})
+				require.NoError(t, err)
+				res, err := w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{
+					Etag: updateResp.Etag,
+				})
 				// we should not be getting any error
 				assert.NoError(t, err)
 				// setting should go back to default

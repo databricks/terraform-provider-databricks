@@ -186,6 +186,16 @@ func (m AuthorizationDetailsGrantRule_SdkV2) Type(ctx context.Context) attr.Type
 
 type CreateDashboardRequest_SdkV2 struct {
 	Dashboard types.List `tfsdk:"dashboard"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *CreateDashboardRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDashboardRequest_SdkV2) {
@@ -214,6 +224,8 @@ func (to *CreateDashboardRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 func (m CreateDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
 	attrs["dashboard"] = attrs["dashboard"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -238,7 +250,9 @@ func (m CreateDashboardRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard": m.Dashboard,
+			"dashboard":       m.Dashboard,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -249,6 +263,8 @@ func (m CreateDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard": basetypes.ListType{
 				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }
@@ -5435,6 +5451,16 @@ type UpdateDashboardRequest_SdkV2 struct {
 	Dashboard types.List `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *UpdateDashboardRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDashboardRequest_SdkV2) {
@@ -5464,6 +5490,8 @@ func (m UpdateDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
 	attrs["dashboard"] = attrs["dashboard"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -5488,8 +5516,10 @@ func (m UpdateDashboardRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard":    m.Dashboard,
-			"dashboard_id": m.DashboardId,
+			"dashboard":       m.Dashboard,
+			"dashboard_id":    m.DashboardId,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -5500,7 +5530,9 @@ func (m UpdateDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard": basetypes.ListType{
 				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
-			"dashboard_id": types.StringType,
+			"dashboard_id":    types.StringType,
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }

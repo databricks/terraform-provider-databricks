@@ -5808,6 +5808,11 @@ type PipelineEvent_SdkV2 struct {
 	Sequence types.List `tfsdk:"sequence"`
 	// The time of the event.
 	Timestamp types.String `tfsdk:"timestamp"`
+	// Information about which fields were truncated from this event due to size
+	// constraints. If empty or absent, no truncation occurred. See
+	// https://docs.databricks.com/en/ldp/monitor-event-logs for information on
+	// retrieving complete event data.
+	Truncation types.List `tfsdk:"truncation"`
 }
 
 func (to *PipelineEvent_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineEvent_SdkV2) {
@@ -5838,6 +5843,15 @@ func (to *PipelineEvent_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.Truncation.IsNull() && !from.Truncation.IsUnknown() {
+		if toTruncation, ok := to.GetTruncation(ctx); ok {
+			if fromTruncation, ok := from.GetTruncation(ctx); ok {
+				// Recursively sync the fields of Truncation
+				toTruncation.SyncFieldsDuringCreateOrUpdate(ctx, fromTruncation)
+				to.SetTruncation(ctx, toTruncation)
+			}
+		}
+	}
 }
 
 func (to *PipelineEvent_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineEvent_SdkV2) {
@@ -5865,6 +5879,14 @@ func (to *PipelineEvent_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Pi
 			}
 		}
 	}
+	if !from.Truncation.IsNull() && !from.Truncation.IsUnknown() {
+		if toTruncation, ok := to.GetTruncation(ctx); ok {
+			if fromTruncation, ok := from.GetTruncation(ctx); ok {
+				toTruncation.SyncFieldsDuringRead(ctx, fromTruncation)
+				to.SetTruncation(ctx, toTruncation)
+			}
+		}
+	}
 }
 
 func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5880,6 +5902,8 @@ func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["sequence"] = attrs["sequence"].SetOptional()
 	attrs["sequence"] = attrs["sequence"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["truncation"] = attrs["truncation"].SetOptional()
+	attrs["truncation"] = attrs["truncation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -5893,9 +5917,10 @@ func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m PipelineEvent_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"error":    reflect.TypeOf(ErrorDetail_SdkV2{}),
-		"origin":   reflect.TypeOf(Origin_SdkV2{}),
-		"sequence": reflect.TypeOf(Sequencing_SdkV2{}),
+		"error":      reflect.TypeOf(ErrorDetail_SdkV2{}),
+		"origin":     reflect.TypeOf(Origin_SdkV2{}),
+		"sequence":   reflect.TypeOf(Sequencing_SdkV2{}),
+		"truncation": reflect.TypeOf(Truncation_SdkV2{}),
 	}
 }
 
@@ -5915,6 +5940,7 @@ func (m PipelineEvent_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"origin":         m.Origin,
 			"sequence":       m.Sequence,
 			"timestamp":      m.Timestamp,
+			"truncation":     m.Truncation,
 		})
 }
 
@@ -5937,6 +5963,9 @@ func (m PipelineEvent_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Sequencing_SdkV2{}.Type(ctx),
 			},
 			"timestamp": types.StringType,
+			"truncation": basetypes.ListType{
+				ElemType: Truncation_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6017,6 +6046,32 @@ func (m *PipelineEvent_SdkV2) SetSequence(ctx context.Context, v Sequencing_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sequence"]
 	m.Sequence = types.ListValueMust(t, vs)
+}
+
+// GetTruncation returns the value of the Truncation field in PipelineEvent_SdkV2 as
+// a Truncation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineEvent_SdkV2) GetTruncation(ctx context.Context) (Truncation_SdkV2, bool) {
+	var e Truncation_SdkV2
+	if m.Truncation.IsNull() || m.Truncation.IsUnknown() {
+		return e, false
+	}
+	var v []Truncation_SdkV2
+	d := m.Truncation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTruncation sets the value of the Truncation field in PipelineEvent_SdkV2.
+func (m *PipelineEvent_SdkV2) SetTruncation(ctx context.Context, v Truncation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["truncation"]
+	m.Truncation = types.ListValueMust(t, vs)
 }
 
 type PipelineLibrary_SdkV2 struct {
@@ -9771,6 +9826,148 @@ func (m *TableSpecificConfig_SdkV2) SetWorkdayReportParameters(ctx context.Conte
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workday_report_parameters"]
 	m.WorkdayReportParameters = types.ListValueMust(t, vs)
+}
+
+// Information about truncations applied to this event.
+type Truncation_SdkV2 struct {
+	// List of fields that were truncated from this event. If empty or absent,
+	// no truncation occurred.
+	TruncatedFields types.List `tfsdk:"truncated_fields"`
+}
+
+func (to *Truncation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Truncation_SdkV2) {
+	if !from.TruncatedFields.IsNull() && !from.TruncatedFields.IsUnknown() && to.TruncatedFields.IsNull() && len(from.TruncatedFields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TruncatedFields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TruncatedFields = from.TruncatedFields
+	}
+}
+
+func (to *Truncation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Truncation_SdkV2) {
+	if !from.TruncatedFields.IsNull() && !from.TruncatedFields.IsUnknown() && to.TruncatedFields.IsNull() && len(from.TruncatedFields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TruncatedFields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TruncatedFields = from.TruncatedFields
+	}
+}
+
+func (m Truncation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["truncated_fields"] = attrs["truncated_fields"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Truncation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Truncation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"truncated_fields": reflect.TypeOf(TruncationTruncationDetail_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Truncation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Truncation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"truncated_fields": m.TruncatedFields,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Truncation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"truncated_fields": basetypes.ListType{
+				ElemType: TruncationTruncationDetail_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTruncatedFields returns the value of the TruncatedFields field in Truncation_SdkV2 as
+// a slice of TruncationTruncationDetail_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Truncation_SdkV2) GetTruncatedFields(ctx context.Context) ([]TruncationTruncationDetail_SdkV2, bool) {
+	if m.TruncatedFields.IsNull() || m.TruncatedFields.IsUnknown() {
+		return nil, false
+	}
+	var v []TruncationTruncationDetail_SdkV2
+	d := m.TruncatedFields.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTruncatedFields sets the value of the TruncatedFields field in Truncation_SdkV2.
+func (m *Truncation_SdkV2) SetTruncatedFields(ctx context.Context, v []TruncationTruncationDetail_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["truncated_fields"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TruncatedFields = types.ListValueMust(t, vs)
+}
+
+// Details about a specific field that was truncated.
+type TruncationTruncationDetail_SdkV2 struct {
+	// The name of the truncated field (e.g., "error"). Corresponds to field
+	// names in PipelineEvent.
+	FieldName types.String `tfsdk:"field_name"`
+}
+
+func (to *TruncationTruncationDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TruncationTruncationDetail_SdkV2) {
+}
+
+func (to *TruncationTruncationDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TruncationTruncationDetail_SdkV2) {
+}
+
+func (m TruncationTruncationDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["field_name"] = attrs["field_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TruncationTruncationDetail.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TruncationTruncationDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TruncationTruncationDetail_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TruncationTruncationDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"field_name": m.FieldName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TruncationTruncationDetail_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"field_name": types.StringType,
+		},
+	}
 }
 
 type UpdateInfo_SdkV2 struct {

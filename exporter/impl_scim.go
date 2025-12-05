@@ -418,3 +418,30 @@ func emitIdfedAndUsersSpsGroups(ic *importContext, workspaceId int64) error {
 
 	return nil
 }
+
+func listMwsPermissionAssignments(ic *importContext) error {
+	workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+	if err != nil {
+		return err
+	}
+	for _, ws := range workspaces {
+		// list only specific workspaces if ic.match is set
+		if !ic.MatchesName(strconv.FormatInt(ws.WorkspaceId, 10)) {
+			log.Printf("[DEBUG] Skipping workspace %d because it doesn't match to the filter", ws.WorkspaceId)
+			continue
+		}
+		wsIdString := strconv.FormatInt(ws.WorkspaceId, 10)
+		ic.Emit(&resource{
+			Resource: "databricks_mws_workspaces",
+			ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+			Name:     ws.WorkspaceName + "_" + wsIdString,
+		})
+		err = emitIdfedAndUsersSpsGroups(ic, ws.WorkspaceId)
+		if err != nil {
+			log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
+				ws.WorkspaceId, err.Error())
+			continue
+		}
+	}
+	return nil
+}

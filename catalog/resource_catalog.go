@@ -118,7 +118,7 @@ func ResourceCatalog() common.Resource {
 			}
 			var origCatalogData catalog.CatalogInfo
 			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
-			if (origCatalogData.ShareName != "" || origCatalogData.ConnectionName != "" || origCatalogData.ProviderName != "") &&
+			if origCatalogData.CatalogType != "MANAGED_CATALOG" &&
 				string(origCatalogData.EnablePredictiveOptimization) == "" {
 				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
 			}

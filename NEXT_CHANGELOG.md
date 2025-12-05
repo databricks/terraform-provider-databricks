@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 * Fix retrieving of latest DBR versions in `databricks_spark_version` ([#5255](https://github.com/databricks/terraform-provider-databricks/pull/5255))
+* Reset PO flag for non-managed UC Catalogs ([#5260](https://github.com/databricks/terraform-provider-databricks/pull/5260)).
 
 ### Documentation
 

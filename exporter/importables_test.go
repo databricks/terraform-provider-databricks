@@ -93,6 +93,15 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 	return ic
 }
 
+// importContextForAccountTestWithClient creates an import context configured for account-level testing
+func importContextForAccountTestWithClient(ctx context.Context, client *common.DatabricksClient, services string) *importContext {
+	client.Config.AccountID = testAccountID
+	client.Config.WithTesting()
+	ic := importContextForTestWithClient(ctx, client)
+	ic.enableServices(services)
+	return ic
+}
+
 func TestInstancePool(t *testing.T) {
 	d := pools.ResourceInstancePool().ToResource().TestResourceData()
 	d.Set("instance_pool_name", "blah-bah")

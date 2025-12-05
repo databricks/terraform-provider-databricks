@@ -571,12 +571,17 @@ var resourcesMap map[string]importable = map[string]importable{
 		List:   listServicePrincipals,
 		Search: searchServicePrincipal,
 		Import: importServicePrincipal,
+		// TODO: think how to handle references when doing cross-cloud migration
+		// Should we generate resources for SPs instead of using data sources?
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 			if r.Mode == "data" {
 				return pathString != "application_id"
 			}
 			if pathString == "display_name" {
 				if ic.Client.IsAzure() {
+					if ic.targetCloud != "azure" && ic.targetCloud != "" {
+						return false
+					}
 					applicationID := d.Get("application_id").(string)
 					displayName := d.Get("display_name").(string)
 					externalID := d.Get("external_id").(string)
@@ -584,9 +589,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				return false
 			}
-			// application_id should be provided only on Azure and only for Azure-managed SPs that have external_id set
+			// application_id should be provided only on Azure and only for Azure-managed SPs that
+			// have external_id set
 			if pathString == "application_id" {
-				return !ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+				return (ic.Client.IsAzure() && ic.targetCloud != "azure" && ic.targetCloud != "") ||
+					!ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},

@@ -277,6 +277,12 @@ func importServicePrincipal(ic *importContext, r *resource) error {
 				ic.Client.Config.AccountID, applicationID),
 		})
 	}
+	if ic.accountLevel {
+		err = emitServicePrincipalFederationPolicies(ic, u.ID)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -24,6 +24,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type ConnectionParameters_SdkV2 struct {
+	// Source catalog for initial connection. This is necessary for schema
+	// exploration in some database systems like Oracle, and optional but
+	// nice-to-have in some other database systems like Postgres. For Oracle
+	// databases, this maps to a service name.
+	SourceCatalog types.String `tfsdk:"source_catalog"`
+}
+
+func (to *ConnectionParameters_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectionParameters_SdkV2) {
+}
+
+func (to *ConnectionParameters_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ConnectionParameters_SdkV2) {
+}
+
+func (m ConnectionParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConnectionParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ConnectionParameters_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConnectionParameters_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ConnectionParameters_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"source_catalog": m.SourceCatalog,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ConnectionParameters_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"source_catalog": types.StringType,
+		},
+	}
+}
+
 type CreatePipeline_SdkV2 struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
@@ -3176,13 +3227,16 @@ type IngestionGatewayPipelineDefinition_SdkV2 struct {
 	// Immutable. The Unity Catalog connection that this gateway pipeline uses
 	// to communicate with the source.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Optional, Internal. Parameters required to establish an initial
+	// connection with the source.
+	ConnectionParameters types.List `tfsdk:"connection_parameters"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog"`
 	// Optional. The Unity Catalog-compatible name for the gateway storage
 	// location. This is the destination to use for the data that is extracted
-	// by the gateway. Delta Live Tables system will automatically create the
-	// storage location under the catalog and schema.
+	// by the gateway. Spark Declarative Pipelines system will automatically
+	// create the storage location under the catalog and schema.
 	GatewayStorageName types.String `tfsdk:"gateway_storage_name"`
 	// Required, Immutable. The name of the schema for the gateway pipelines's
 	// storage location.
@@ -3190,14 +3244,33 @@ type IngestionGatewayPipelineDefinition_SdkV2 struct {
 }
 
 func (to *IngestionGatewayPipelineDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionGatewayPipelineDefinition_SdkV2) {
+	if !from.ConnectionParameters.IsNull() && !from.ConnectionParameters.IsUnknown() {
+		if toConnectionParameters, ok := to.GetConnectionParameters(ctx); ok {
+			if fromConnectionParameters, ok := from.GetConnectionParameters(ctx); ok {
+				// Recursively sync the fields of ConnectionParameters
+				toConnectionParameters.SyncFieldsDuringCreateOrUpdate(ctx, fromConnectionParameters)
+				to.SetConnectionParameters(ctx, toConnectionParameters)
+			}
+		}
+	}
 }
 
 func (to *IngestionGatewayPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Context, from IngestionGatewayPipelineDefinition_SdkV2) {
+	if !from.ConnectionParameters.IsNull() && !from.ConnectionParameters.IsUnknown() {
+		if toConnectionParameters, ok := to.GetConnectionParameters(ctx); ok {
+			if fromConnectionParameters, ok := from.GetConnectionParameters(ctx); ok {
+				toConnectionParameters.SyncFieldsDuringRead(ctx, fromConnectionParameters)
+				to.SetConnectionParameters(ctx, toConnectionParameters)
+			}
+		}
+	}
 }
 
 func (m IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_id"] = attrs["connection_id"].SetOptional()
 	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["connection_parameters"] = attrs["connection_parameters"].SetOptional()
+	attrs["connection_parameters"] = attrs["connection_parameters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetRequired()
 	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
 	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetRequired()
@@ -3213,7 +3286,9 @@ func (m IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m IngestionGatewayPipelineDefinition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"connection_parameters": reflect.TypeOf(ConnectionParameters_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3225,6 +3300,7 @@ func (m IngestionGatewayPipelineDefinition_SdkV2) ToObjectValue(ctx context.Cont
 		map[string]attr.Value{
 			"connection_id":           m.ConnectionId,
 			"connection_name":         m.ConnectionName,
+			"connection_parameters":   m.ConnectionParameters,
 			"gateway_storage_catalog": m.GatewayStorageCatalog,
 			"gateway_storage_name":    m.GatewayStorageName,
 			"gateway_storage_schema":  m.GatewayStorageSchema,
@@ -3235,8 +3311,11 @@ func (m IngestionGatewayPipelineDefinition_SdkV2) ToObjectValue(ctx context.Cont
 func (m IngestionGatewayPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection_id":           types.StringType,
-			"connection_name":         types.StringType,
+			"connection_id":   types.StringType,
+			"connection_name": types.StringType,
+			"connection_parameters": basetypes.ListType{
+				ElemType: ConnectionParameters_SdkV2{}.Type(ctx),
+			},
 			"gateway_storage_catalog": types.StringType,
 			"gateway_storage_name":    types.StringType,
 			"gateway_storage_schema":  types.StringType,
@@ -3244,11 +3323,43 @@ func (m IngestionGatewayPipelineDefinition_SdkV2) Type(ctx context.Context) attr
 	}
 }
 
+// GetConnectionParameters returns the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition_SdkV2 as
+// a ConnectionParameters_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionGatewayPipelineDefinition_SdkV2) GetConnectionParameters(ctx context.Context) (ConnectionParameters_SdkV2, bool) {
+	var e ConnectionParameters_SdkV2
+	if m.ConnectionParameters.IsNull() || m.ConnectionParameters.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectionParameters_SdkV2
+	d := m.ConnectionParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectionParameters sets the value of the ConnectionParameters field in IngestionGatewayPipelineDefinition_SdkV2.
+func (m *IngestionGatewayPipelineDefinition_SdkV2) SetConnectionParameters(ctx context.Context, v ConnectionParameters_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connection_parameters"]
+	m.ConnectionParameters = types.ListValueMust(t, vs)
+}
+
 type IngestionPipelineDefinition_SdkV2 struct {
 	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
 	// to communicate with the source. This is used with connectors for
 	// applications like Salesforce, Workday, and so on.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Immutable. If set to true, the pipeline will ingest tables from the UC
+	// foreign catalogs directly without the need to specify a UC connection or
+	// ingestion gateway. The `source_catalog` fields in objects of
+	// IngestionConfig are interpreted as the UC foreign catalogs to ingest
+	// from.
+	IngestFromUcForeignCatalog types.Bool `tfsdk:"ingest_from_uc_foreign_catalog"`
 	// Immutable. Identifier for the gateway that is used by this ingestion
 	// pipeline to communicate with the source database. This is used with
 	// connectors to databases like SQL Server.
@@ -3320,6 +3431,7 @@ func (to *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Co
 
 func (m IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["ingest_from_uc_foreign_catalog"] = attrs["ingest_from_uc_foreign_catalog"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["netsuite_jar_path"] = attrs["netsuite_jar_path"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
@@ -3353,13 +3465,14 @@ func (m IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection_name":       m.ConnectionName,
-			"ingestion_gateway_id":  m.IngestionGatewayId,
-			"netsuite_jar_path":     m.NetsuiteJarPath,
-			"objects":               m.Objects,
-			"source_configurations": m.SourceConfigurations,
-			"source_type":           m.SourceType,
-			"table_configuration":   m.TableConfiguration,
+			"connection_name":                m.ConnectionName,
+			"ingest_from_uc_foreign_catalog": m.IngestFromUcForeignCatalog,
+			"ingestion_gateway_id":           m.IngestionGatewayId,
+			"netsuite_jar_path":              m.NetsuiteJarPath,
+			"objects":                        m.Objects,
+			"source_configurations":          m.SourceConfigurations,
+			"source_type":                    m.SourceType,
+			"table_configuration":            m.TableConfiguration,
 		})
 }
 
@@ -3367,9 +3480,10 @@ func (m IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 func (m IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection_name":      types.StringType,
-			"ingestion_gateway_id": types.StringType,
-			"netsuite_jar_path":    types.StringType,
+			"connection_name":                types.StringType,
+			"ingest_from_uc_foreign_catalog": types.BoolType,
+			"ingestion_gateway_id":           types.StringType,
+			"netsuite_jar_path":              types.StringType,
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
@@ -5694,6 +5808,11 @@ type PipelineEvent_SdkV2 struct {
 	Sequence types.List `tfsdk:"sequence"`
 	// The time of the event.
 	Timestamp types.String `tfsdk:"timestamp"`
+	// Information about which fields were truncated from this event due to size
+	// constraints. If empty or absent, no truncation occurred. See
+	// https://docs.databricks.com/en/ldp/monitor-event-logs for information on
+	// retrieving complete event data.
+	Truncation types.List `tfsdk:"truncation"`
 }
 
 func (to *PipelineEvent_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineEvent_SdkV2) {
@@ -5724,6 +5843,15 @@ func (to *PipelineEvent_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.Truncation.IsNull() && !from.Truncation.IsUnknown() {
+		if toTruncation, ok := to.GetTruncation(ctx); ok {
+			if fromTruncation, ok := from.GetTruncation(ctx); ok {
+				// Recursively sync the fields of Truncation
+				toTruncation.SyncFieldsDuringCreateOrUpdate(ctx, fromTruncation)
+				to.SetTruncation(ctx, toTruncation)
+			}
+		}
+	}
 }
 
 func (to *PipelineEvent_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineEvent_SdkV2) {
@@ -5751,6 +5879,14 @@ func (to *PipelineEvent_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Pi
 			}
 		}
 	}
+	if !from.Truncation.IsNull() && !from.Truncation.IsUnknown() {
+		if toTruncation, ok := to.GetTruncation(ctx); ok {
+			if fromTruncation, ok := from.GetTruncation(ctx); ok {
+				toTruncation.SyncFieldsDuringRead(ctx, fromTruncation)
+				to.SetTruncation(ctx, toTruncation)
+			}
+		}
+	}
 }
 
 func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5766,6 +5902,8 @@ func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["sequence"] = attrs["sequence"].SetOptional()
 	attrs["sequence"] = attrs["sequence"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["truncation"] = attrs["truncation"].SetOptional()
+	attrs["truncation"] = attrs["truncation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -5779,9 +5917,10 @@ func (m PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m PipelineEvent_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"error":    reflect.TypeOf(ErrorDetail_SdkV2{}),
-		"origin":   reflect.TypeOf(Origin_SdkV2{}),
-		"sequence": reflect.TypeOf(Sequencing_SdkV2{}),
+		"error":      reflect.TypeOf(ErrorDetail_SdkV2{}),
+		"origin":     reflect.TypeOf(Origin_SdkV2{}),
+		"sequence":   reflect.TypeOf(Sequencing_SdkV2{}),
+		"truncation": reflect.TypeOf(Truncation_SdkV2{}),
 	}
 }
 
@@ -5801,6 +5940,7 @@ func (m PipelineEvent_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"origin":         m.Origin,
 			"sequence":       m.Sequence,
 			"timestamp":      m.Timestamp,
+			"truncation":     m.Truncation,
 		})
 }
 
@@ -5823,6 +5963,9 @@ func (m PipelineEvent_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Sequencing_SdkV2{}.Type(ctx),
 			},
 			"timestamp": types.StringType,
+			"truncation": basetypes.ListType{
+				ElemType: Truncation_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5903,6 +6046,32 @@ func (m *PipelineEvent_SdkV2) SetSequence(ctx context.Context, v Sequencing_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sequence"]
 	m.Sequence = types.ListValueMust(t, vs)
+}
+
+// GetTruncation returns the value of the Truncation field in PipelineEvent_SdkV2 as
+// a Truncation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineEvent_SdkV2) GetTruncation(ctx context.Context) (Truncation_SdkV2, bool) {
+	var e Truncation_SdkV2
+	if m.Truncation.IsNull() || m.Truncation.IsUnknown() {
+		return e, false
+	}
+	var v []Truncation_SdkV2
+	d := m.Truncation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTruncation sets the value of the Truncation field in PipelineEvent_SdkV2.
+func (m *PipelineEvent_SdkV2) SetTruncation(ctx context.Context, v Truncation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["truncation"]
+	m.Truncation = types.ListValueMust(t, vs)
 }
 
 type PipelineLibrary_SdkV2 struct {
@@ -8017,6 +8186,170 @@ func (m *RestartWindow_SdkV2) SetDaysOfWeek(ctx context.Context, v []types.Strin
 	m.DaysOfWeek = types.ListValueMust(t, vs)
 }
 
+// Configuration for rewinding a specific dataset.
+type RewindDatasetSpec_SdkV2 struct {
+	// Whether to cascade the rewind to dependent datasets. Must be specified.
+	Cascade types.Bool `tfsdk:"cascade"`
+	// The identifier of the dataset (e.g., "main.foo.tbl1").
+	Identifier types.String `tfsdk:"identifier"`
+	// Whether to reset checkpoints for this dataset.
+	ResetCheckpoints types.Bool `tfsdk:"reset_checkpoints"`
+}
+
+func (to *RewindDatasetSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RewindDatasetSpec_SdkV2) {
+}
+
+func (to *RewindDatasetSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RewindDatasetSpec_SdkV2) {
+}
+
+func (m RewindDatasetSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cascade"] = attrs["cascade"].SetOptional()
+	attrs["identifier"] = attrs["identifier"].SetOptional()
+	attrs["reset_checkpoints"] = attrs["reset_checkpoints"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RewindDatasetSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RewindDatasetSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RewindDatasetSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RewindDatasetSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cascade":           m.Cascade,
+			"identifier":        m.Identifier,
+			"reset_checkpoints": m.ResetCheckpoints,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RewindDatasetSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cascade":           types.BoolType,
+			"identifier":        types.StringType,
+			"reset_checkpoints": types.BoolType,
+		},
+	}
+}
+
+// Information about a rewind being requested for this pipeline or some of the
+// datasets in it.
+type RewindSpec_SdkV2 struct {
+	// List of datasets to rewind with specific configuration for each. When not
+	// specified, all datasets will be rewound with cascade = true and
+	// reset_checkpoints = true.
+	Datasets types.List `tfsdk:"datasets"`
+	// If true, this is a dry run and we should emit the RewindSummary but not
+	// perform the rewind.
+	DryRun types.Bool `tfsdk:"dry_run"`
+	// The base timestamp to rewind to. Must be specified.
+	RewindTimestamp types.String `tfsdk:"rewind_timestamp"`
+}
+
+func (to *RewindSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RewindSpec_SdkV2) {
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() && to.Datasets.IsNull() && len(from.Datasets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Datasets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Datasets = from.Datasets
+	}
+}
+
+func (to *RewindSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RewindSpec_SdkV2) {
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() && to.Datasets.IsNull() && len(from.Datasets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Datasets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Datasets = from.Datasets
+	}
+}
+
+func (m RewindSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["dry_run"] = attrs["dry_run"].SetOptional()
+	attrs["rewind_timestamp"] = attrs["rewind_timestamp"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RewindSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RewindSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"datasets": reflect.TypeOf(RewindDatasetSpec_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RewindSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RewindSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"datasets":         m.Datasets,
+			"dry_run":          m.DryRun,
+			"rewind_timestamp": m.RewindTimestamp,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RewindSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"datasets": basetypes.ListType{
+				ElemType: RewindDatasetSpec_SdkV2{}.Type(ctx),
+			},
+			"dry_run":          types.BoolType,
+			"rewind_timestamp": types.StringType,
+		},
+	}
+}
+
+// GetDatasets returns the value of the Datasets field in RewindSpec_SdkV2 as
+// a slice of RewindDatasetSpec_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RewindSpec_SdkV2) GetDatasets(ctx context.Context) ([]RewindDatasetSpec_SdkV2, bool) {
+	if m.Datasets.IsNull() || m.Datasets.IsUnknown() {
+		return nil, false
+	}
+	var v []RewindDatasetSpec_SdkV2
+	d := m.Datasets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatasets sets the value of the Datasets field in RewindSpec_SdkV2.
+func (m *RewindSpec_SdkV2) SetDatasets(ctx context.Context, v []RewindDatasetSpec_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Datasets = types.ListValueMust(t, vs)
+}
+
 // Write-only setting, available only in Create/Update calls. Specifies the user
 // or service principal that the pipeline runs as. If not specified, the
 // pipeline runs as the user who created the pipeline.
@@ -8678,6 +9011,9 @@ type StartUpdate_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// The information about the requested rewind operation. If specified this
+	// is a rewind mode update.
+	RewindSpec types.List `tfsdk:"rewind_spec"`
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
@@ -8696,6 +9032,15 @@ func (to *StartUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
 	}
+	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
+		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
+			if fromRewindSpec, ok := from.GetRewindSpec(ctx); ok {
+				// Recursively sync the fields of RewindSpec
+				toRewindSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromRewindSpec)
+				to.SetRewindSpec(ctx, toRewindSpec)
+			}
+		}
+	}
 }
 
 func (to *StartUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StartUpdate_SdkV2) {
@@ -8711,6 +9056,14 @@ func (to *StartUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Star
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
 	}
+	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
+		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
+			if fromRewindSpec, ok := from.GetRewindSpec(ctx); ok {
+				toRewindSpec.SyncFieldsDuringRead(ctx, fromRewindSpec)
+				to.SetRewindSpec(ctx, toRewindSpec)
+			}
+		}
+	}
 }
 
 func (m StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8718,6 +9071,8 @@ func (m StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["rewind_spec"] = attrs["rewind_spec"].SetOptional()
+	attrs["rewind_spec"] = attrs["rewind_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 
@@ -8735,6 +9090,7 @@ func (m StartUpdate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{
 		"full_refresh_selection": reflect.TypeOf(types.String{}),
 		"refresh_selection":      reflect.TypeOf(types.String{}),
+		"rewind_spec":            reflect.TypeOf(RewindSpec_SdkV2{}),
 	}
 }
 
@@ -8750,6 +9106,7 @@ func (m StartUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"full_refresh_selection": m.FullRefreshSelection,
 			"pipeline_id":            m.PipelineId,
 			"refresh_selection":      m.RefreshSelection,
+			"rewind_spec":            m.RewindSpec,
 			"validate_only":          m.ValidateOnly,
 		})
 }
@@ -8766,6 +9123,9 @@ func (m StartUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 			"pipeline_id": types.StringType,
 			"refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
+			},
+			"rewind_spec": basetypes.ListType{
+				ElemType: RewindSpec_SdkV2{}.Type(ctx),
 			},
 			"validate_only": types.BoolType,
 		},
@@ -8822,6 +9182,32 @@ func (m *StartUpdate_SdkV2) SetRefreshSelection(ctx context.Context, v []types.S
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRewindSpec returns the value of the RewindSpec field in StartUpdate_SdkV2 as
+// a RewindSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate_SdkV2) GetRewindSpec(ctx context.Context) (RewindSpec_SdkV2, bool) {
+	var e RewindSpec_SdkV2
+	if m.RewindSpec.IsNull() || m.RewindSpec.IsUnknown() {
+		return e, false
+	}
+	var v []RewindSpec_SdkV2
+	d := m.RewindSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRewindSpec sets the value of the RewindSpec field in StartUpdate_SdkV2.
+func (m *StartUpdate_SdkV2) SetRewindSpec(ctx context.Context, v RewindSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rewind_spec"]
+	m.RewindSpec = types.ListValueMust(t, vs)
 }
 
 type StartUpdateResponse_SdkV2 struct {
@@ -9112,8 +9498,8 @@ type TableSpecificConfig_SdkV2 struct {
 	// The SCD type to use to ingest the table.
 	ScdType types.String `tfsdk:"scd_type"`
 	// The column names specifying the logical order of events in the source
-	// data. Delta Live Tables uses this sequencing to handle change events that
-	// arrive out of order.
+	// data. Spark Declarative Pipelines uses this sequencing to handle change
+	// events that arrive out of order.
 	SequenceBy types.List `tfsdk:"sequence_by"`
 	// (Optional) Additional custom parameters for Workday Report
 	WorkdayReportParameters types.List `tfsdk:"workday_report_parameters"`
@@ -9440,6 +9826,148 @@ func (m *TableSpecificConfig_SdkV2) SetWorkdayReportParameters(ctx context.Conte
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workday_report_parameters"]
 	m.WorkdayReportParameters = types.ListValueMust(t, vs)
+}
+
+// Information about truncations applied to this event.
+type Truncation_SdkV2 struct {
+	// List of fields that were truncated from this event. If empty or absent,
+	// no truncation occurred.
+	TruncatedFields types.List `tfsdk:"truncated_fields"`
+}
+
+func (to *Truncation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Truncation_SdkV2) {
+	if !from.TruncatedFields.IsNull() && !from.TruncatedFields.IsUnknown() && to.TruncatedFields.IsNull() && len(from.TruncatedFields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TruncatedFields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TruncatedFields = from.TruncatedFields
+	}
+}
+
+func (to *Truncation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Truncation_SdkV2) {
+	if !from.TruncatedFields.IsNull() && !from.TruncatedFields.IsUnknown() && to.TruncatedFields.IsNull() && len(from.TruncatedFields.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TruncatedFields, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TruncatedFields = from.TruncatedFields
+	}
+}
+
+func (m Truncation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["truncated_fields"] = attrs["truncated_fields"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Truncation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Truncation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"truncated_fields": reflect.TypeOf(TruncationTruncationDetail_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Truncation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Truncation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"truncated_fields": m.TruncatedFields,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Truncation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"truncated_fields": basetypes.ListType{
+				ElemType: TruncationTruncationDetail_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTruncatedFields returns the value of the TruncatedFields field in Truncation_SdkV2 as
+// a slice of TruncationTruncationDetail_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Truncation_SdkV2) GetTruncatedFields(ctx context.Context) ([]TruncationTruncationDetail_SdkV2, bool) {
+	if m.TruncatedFields.IsNull() || m.TruncatedFields.IsUnknown() {
+		return nil, false
+	}
+	var v []TruncationTruncationDetail_SdkV2
+	d := m.TruncatedFields.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTruncatedFields sets the value of the TruncatedFields field in Truncation_SdkV2.
+func (m *Truncation_SdkV2) SetTruncatedFields(ctx context.Context, v []TruncationTruncationDetail_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["truncated_fields"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TruncatedFields = types.ListValueMust(t, vs)
+}
+
+// Details about a specific field that was truncated.
+type TruncationTruncationDetail_SdkV2 struct {
+	// The name of the truncated field (e.g., "error"). Corresponds to field
+	// names in PipelineEvent.
+	FieldName types.String `tfsdk:"field_name"`
+}
+
+func (to *TruncationTruncationDetail_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TruncationTruncationDetail_SdkV2) {
+}
+
+func (to *TruncationTruncationDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TruncationTruncationDetail_SdkV2) {
+}
+
+func (m TruncationTruncationDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["field_name"] = attrs["field_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TruncationTruncationDetail.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TruncationTruncationDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TruncationTruncationDetail_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TruncationTruncationDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"field_name": m.FieldName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TruncationTruncationDetail_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"field_name": types.StringType,
+		},
+	}
 }
 
 type UpdateInfo_SdkV2 struct {

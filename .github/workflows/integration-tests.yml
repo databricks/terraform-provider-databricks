@@ -20,14 +20,14 @@ jobs:
     outputs:
       has_token: ${{ steps.set-token-status.outputs.has_token }}
     steps:
-      - name: Check if DECO_WORKFLOW_TRIGGER_APP_ID is set
+      - name: Check if required secrets are set
         id: set-token-status
         run: |
-            if [ -z "${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}" ]; then
-              echo "DECO_WORKFLOW_TRIGGER_APP_ID is empty. User has no access to secrets."
+            if [ -z "${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}" ] || [ -z "${{ secrets.DECO_TEST_APPROVAL_APP_ID }}" ]; then
+              echo "Required secrets are missing. User has no access to secrets."
               echo "::set-output name=has_token::false"
             else
-              echo "DECO_WORKFLOW_TRIGGER_APP_ID is set. User has access to secrets."
+              echo "All required secrets are set. User has access to secrets."
               echo "::set-output name=has_token::true"
             fi
 
@@ -45,7 +45,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Generate GitHub App Token
+    - name: Generate GitHub App Token for Workflow Trigger
       id: generate-token
       uses: actions/create-github-app-token@v1
       with:
@@ -79,14 +79,24 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
+    permissions:
+      checks: write
+      contents: read
+
     steps:
-      - name: Mark Check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-            gh api -X POST -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/statuses/${{ github.sha }} \
-              -f 'state=success' \
-              -f 'context=Integration Tests Check'
+      - name: Auto-approve Check for Merge Queue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Integration Tests',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Integration Tests',
+                summary: 'Auto-approved for merge queue (tests already passed on PR)'
+              }
+            });

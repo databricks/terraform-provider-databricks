@@ -251,7 +251,7 @@ func searchServicePrincipal(ic *importContext, r *resource) error {
 
 func importServicePrincipal(ic *importContext, r *resource) error {
 	applicationID := r.Data.Get("application_id").(string)
-	if ic.currentMetastore != nil {
+	if ic.currentMetastore != nil && ic.targetCloud == "" {
 		// Users are maintained on account level and are referenced via data sources
 		setDataForDataScimBlock(r)
 		r.Data.Set("display_name", "")

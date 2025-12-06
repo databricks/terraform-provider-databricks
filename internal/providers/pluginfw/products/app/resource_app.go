@@ -127,6 +127,11 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	if err := waitForAppDeleted(ctx, w, appGoSdk.Name); err != nil {
+		resp.Diagnostics.AddError("failed to wait for app deletion", err.Error())
+		return
+	}
+
 	// Create the app
 	var forceSendFields []string
 	if !app.NoCompute.IsNull() {
@@ -209,6 +214,24 @@ func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceCli
 			return nil, retries.Continues(statusMessage)
 		}
 	})
+}
+
+func waitForAppDeleted(ctx context.Context, w *databricks.WorkspaceClient, name string) error {
+	retrier := retries.New[struct{}](retries.WithTimeout(-1), retries.WithRetryFunc(shouldRetry))
+	_, err := retrier.Run(ctx, func(ctx context.Context) (*struct{}, error) {
+		app, err := w.Apps.GetByName(ctx, name)
+		if apierr.IsMissing(err) {
+			return &struct{}{}, nil
+		}
+		if err != nil {
+			return nil, retries.Halt(err)
+		}
+		if app.ComputeStatus.State == apps.ComputeStateDeleting {
+			return nil, retries.Continues(fmt.Sprintf("app %s is still deleting", name))
+		}
+		return &struct{}{}, nil
+	})
+	return err
 }
 
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

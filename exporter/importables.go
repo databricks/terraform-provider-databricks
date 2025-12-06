@@ -713,7 +713,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
-			if backendType != "AZURE_KEYVAULT" {
+			if backendType != "AZURE_KEYVAULT" || ic.targetCloud != "" {
 				secrets := ic.workspaceClient.Secrets.ListSecrets(ic.Context, sdk_workspace.ListSecretsRequest{
 					Scope: r.ID,
 				})
@@ -727,6 +727,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
+			}
+			if backendType == "AZURE_KEYVAULT" || ic.targetCloud != "" {
+				r.Data.Set("backend_type ", "DATABRICKS")
+				r.Data.Set("keyvault_metadata", nil)
 			}
 			acls, err := ic.workspaceClient.Secrets.ListAclsByScope(ic.Context, r.ID)
 			if err != nil {

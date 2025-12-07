@@ -13,6 +13,7 @@
 * Fix retrieving of latest DBR versions in `databricks_spark_version` ([#5255](https://github.com/databricks/terraform-provider-databricks/pull/5255))
 
 ### Documentation
+* Correct the examples for `databricks_policy_info` ([#5265](https://github.com/databricks/terraform-provider-databricks/pull/5265))
 
 ### Exporter
 

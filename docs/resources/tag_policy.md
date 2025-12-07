@@ -56,3 +56,11 @@ If you are using an older version of Terraform, import the resource using the `t
 ```sh
 terraform import databricks_tag_policy.this "tag_key"
 ```
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [databricks_entity_tag_assignment](entity_tag_assignment.md) for assigning tags to Unity Catalog entities.
+* [databricks_workspace_entity_tag_assignment](workspace_entity_tag_assignment.md) for assigning tags to workspaces entities.
+* [databricks_policy_info](policy_info.md) for defining ABAC column masking and row filtering tag policies.

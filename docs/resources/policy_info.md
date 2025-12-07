@@ -29,12 +29,12 @@ ABAC policies can be applied to the following securable types:
 
 ```hcl
 resource "databricks_policy_info" "pii_row_filter" {
-  on_securable_type     = "catalog"
+  on_securable_type     = "CATALOG"
   on_securable_fullname = "main"
   name                  = "pii_data_policy"
   
   policy_type           = "POLICY_TYPE_ROW_FILTER"
-  for_securable_type    = "table"
+  for_securable_type    = "TABLE"
   to_principals         = ["account users"]
   
   # Condition for when the policy applies
@@ -64,12 +64,12 @@ resource "databricks_policy_info" "pii_row_filter" {
 
 ```hcl
 resource "databricks_policy_info" "sensitive_column_mask" {
-  on_securable_type     = "schema"
+  on_securable_type     = "SCHEMA"
   on_securable_fullname = "main.finance"
   name                  = "sensitive_data_mask"
   
   policy_type           = "POLICY_TYPE_COLUMN_MASK"
-  for_securable_type    = "table"
+  for_securable_type    = "TABLE"
   to_principals         = ["account users"]
   except_principals     = ["finance_admins"]
   

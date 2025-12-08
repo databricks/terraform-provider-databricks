@@ -169,6 +169,10 @@ func ResourceCatalog() common.Resource {
 					updateCatalogRequest.Options = nil
 				}
 			}
+			// we shouldn't send PO flag for non-managed catalogs
+			if d.Get("catalog_type").(string) != "MANAGED_CATALOG" && updateCatalogRequest.EnablePredictiveOptimization != "" {
+				updateCatalogRequest.EnablePredictiveOptimization = ""
+			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 
 			if err != nil {

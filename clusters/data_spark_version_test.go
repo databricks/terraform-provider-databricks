@@ -19,7 +19,7 @@ func TestSparkVersionLatest(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest: true,
-				Scala:  "2.12",
+				Scala:  "2.1",
 			}).Return("7.4.x-scala2.12", nil)
 		},
 		Read:        true,
@@ -38,7 +38,7 @@ func TestSparkVersionLTS(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest:          true,
-				Scala:           "2.12",
+				Scala:           "2.1",
 				LongTermSupport: true,
 			}).Return("7.3.x-scala2.12", nil)
 		},
@@ -85,7 +85,7 @@ func TestSparkVersionGpuMl(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest: true,
-				Scala:  "2.12",
+				Scala:  "2.1",
 				GPU:    true,
 				ML:     true,
 			}).Return("7.1.x-gpu-ml-scala2.12", nil)
@@ -109,7 +109,7 @@ func TestSparkVersionGenomics(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest:   true,
-				Scala:    "2.12",
+				Scala:    "2.1",
 				Genomics: true,
 			}).Return("7.3.x-hls-scala2.12", nil)
 		},
@@ -131,7 +131,7 @@ func TestSparkVersion300(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest:       true,
-				Scala:        "2.12",
+				Scala:        "2.1",
 				SparkVersion: "3.0.0",
 			}).Return("7.1.x-scala2.12", nil)
 		},
@@ -153,7 +153,7 @@ func TestSparkVersionBeta(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest: true,
-				Scala:  "2.12",
+				Scala:  "2.1",
 				Beta:   true,
 			}).Return("7.5.x-scala2.12", nil)
 		},
@@ -175,7 +175,7 @@ func TestSparkVersionPhoton(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest: true,
-				Scala:  "2.12",
+				Scala:  "2.1",
 				Photon: true,
 			}).Return("8.3.x-photon-scala2.12", nil)
 		},
@@ -197,7 +197,7 @@ func TestSparkVersionErrorNoResults(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest:          true,
-				Scala:           "2.12",
+				Scala:           "2.1",
 				Beta:            true,
 				LongTermSupport: true,
 			}).Return("", fmt.Errorf("spark versions query returned no results. Please change your search criteria and try again"))
@@ -219,7 +219,7 @@ func TestSparkVersionErrorMultipleResults(t *testing.T) {
 			e := m.GetMockClustersAPI().EXPECT()
 			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
 				Latest: false,
-				Scala:  "2.12",
+				Scala:  "2.1",
 			}).Return("", fmt.Errorf("spark versions query returned multiple results. Please change your search criteria and try again"))
 		},
 		Read:        true,

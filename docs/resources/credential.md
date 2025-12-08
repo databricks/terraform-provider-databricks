@@ -79,7 +79,7 @@ resource "databricks_grants" "external_creds" {
 
 The following arguments are required:
 
-- `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change of the `name` forces creation of a new resource.
 - `purpose` - Indicates the purpose of the credential. Can be `SERVICE` or `STORAGE`.
 - `owner` - (Optional) Username/groupname/sp application_id of the credential owner.
 - `read_only` - (Optional) Indicates whether the credential is only usable for read operations. Only applicable when purpose is `STORAGE`.

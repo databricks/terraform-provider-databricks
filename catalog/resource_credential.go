@@ -26,6 +26,7 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			common.CustomizeSchemaPath(m, computed).SetComputed()
 		}
 
+		common.CustomizeSchemaPath(m, "name").SetForceNew()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account").SetComputed()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "email").SetComputed()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "credential_id").SetComputed()

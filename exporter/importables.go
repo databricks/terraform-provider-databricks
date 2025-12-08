@@ -577,6 +577,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			if pathString == "display_name" {
 				if ic.Client.IsAzure() {
+					if ic.targetCloud != "" {
+						return false
+					}
 					applicationID := d.Get("application_id").(string)
 					displayName := d.Get("display_name").(string)
 					externalID := d.Get("external_id").(string)
@@ -584,9 +587,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				return false
 			}
-			// application_id should be provided only on Azure and only for Azure-managed SPs that have external_id set
+			// application_id should be provided only on Azure and only for Azure-managed SPs that
+			// have external_id set
 			if pathString == "application_id" {
-				return !ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+				return (ic.Client.IsAzure() && ic.targetCloud != "azure" && ic.targetCloud != "") ||
+					!ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+
+			}
+			if pathString == "external_id" {
+				return ic.targetCloud != "" || d.Get("external_id").(string) == ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
@@ -704,7 +713,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
-			if backendType != "AZURE_KEYVAULT" {
+			if backendType != "AZURE_KEYVAULT" || ic.targetCloud != "" {
 				secrets := ic.workspaceClient.Secrets.ListSecrets(ic.Context, sdk_workspace.ListSecretsRequest{
 					Scope: r.ID,
 				})
@@ -718,6 +727,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
+			}
+			if backendType == "AZURE_KEYVAULT" || ic.targetCloud != "" {
+				r.Data.Set("backend_type ", "DATABRICKS")
+				r.Data.Set("keyvault_metadata", nil)
 			}
 			acls, err := ic.workspaceClient.Secrets.ListAclsByScope(ic.Context, r.ID)
 			if err != nil {

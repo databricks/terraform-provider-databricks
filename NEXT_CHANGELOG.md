@@ -15,7 +15,7 @@
 
 ### Documentation
 
-* Add missing GCP IAM permission `topics.detachSubscription` for Databricks file events
+* Add missing GCP IAM permission `topics.detachSubscription` for Databricks file events ([#5269](https://github.com/databricks/terraform-provider-databricks/pull/5269))
 
 ### Exporter
 

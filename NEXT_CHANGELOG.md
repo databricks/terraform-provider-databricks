@@ -6,6 +6,7 @@
 
 ### New Features and Improvements
 
+* Added `databricks_permission` resource for managing permissions on Databricks objects for individual principals ([#5161](https://github.com/databricks/terraform-provider-databricks/pull/5161)).
 * Recreate `databricks_credential` on the `name` change ([#5248](https://github.com/databricks/terraform-provider-databricks/pull/5248)).
 * Allow to specify default catalog and schema for `databricks_dashboard` ([#5259](https://github.com/databricks/terraform-provider-databricks/pull/5259)).
 

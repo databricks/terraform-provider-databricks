@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// resourcePermissions captures all the information needed to manage permissions for a given object type.
-type resourcePermissions struct {
+// WorkspaceObjectPermissions captures all the information needed to manage permissions for a given object type.
+type WorkspaceObjectPermissions struct {
 	// Mandatory Fields
 
 	// The attribute name that users configure with the ID of the object to manage
@@ -77,8 +77,8 @@ type resourcePermissions struct {
 	fetchObjectCreator func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error)
 }
 
-// getAllowedPermissionLevels returns the list of permission levels that are allowed for this resource type.
-func (p resourcePermissions) getAllowedPermissionLevels(includeNonManagementPermissions bool) []string {
+// GetAllowedPermissionLevels returns the list of permission levels that are allowed for this resource type.
+func (p WorkspaceObjectPermissions) GetAllowedPermissionLevels(includeNonManagementPermissions bool) []string {
 	levels := make([]string, 0, len(p.allowedPermissionLevels))
 	for level := range p.allowedPermissionLevels {
 		if includeNonManagementPermissions || p.allowedPermissionLevels[level].isManagementPermission {
@@ -99,7 +99,7 @@ type resourceStatus struct {
 
 // getObjectStatus returns the creator of the object and whether the object exists. If the object creator cannot be determined for this
 // resource type, an empty string is returned. Resources without fetchObjectCreator are assumed to exist and have an unknown creator.
-func (p resourcePermissions) getObjectStatus(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (resourceStatus, error) {
+func (p WorkspaceObjectPermissions) getObjectStatus(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (resourceStatus, error) {
 	if p.fetchObjectCreator != nil {
 		creator, err := p.fetchObjectCreator(ctx, w, objectID)
 		if err != nil {
@@ -111,7 +111,7 @@ func (p resourcePermissions) getObjectStatus(ctx context.Context, w *databricks.
 }
 
 // getPathVariant returns the name of the path attribute for this resource type.
-func (p resourcePermissions) getPathVariant() string {
+func (p WorkspaceObjectPermissions) getPathVariant() string {
 	if p.pathVariant != "" {
 		return p.pathVariant
 	}
@@ -119,7 +119,7 @@ func (p resourcePermissions) getPathVariant() string {
 }
 
 // validate checks that the user is not trying to set permissions for the admin group or remove their own management permissions.
-func (p resourcePermissions) validate(ctx context.Context, entity entity.PermissionsEntity, currentUsername string) error {
+func (p WorkspaceObjectPermissions) validate(ctx context.Context, entity entity.PermissionsEntity, currentUsername string) error {
 	for _, change := range entity.AccessControlList {
 		// Prevent users from setting permissions for admins.
 		if change.GroupName == "admins" && !p.allowConfiguringAdmins {
@@ -128,7 +128,7 @@ func (p resourcePermissions) validate(ctx context.Context, entity entity.Permiss
 		// Check that the user is preventing themselves from managing the object
 		level := p.allowedPermissionLevels[string(change.PermissionLevel)]
 		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !level.isManagementPermission {
-			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
+			allowedLevelsForCurrentUser := p.GetAllowedPermissionLevels(false)
 			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
 		}
 
@@ -140,7 +140,7 @@ func (p resourcePermissions) validate(ctx context.Context, entity entity.Permiss
 }
 
 // getID returns the object ID for the given user-specified ID.
-func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
+func (p WorkspaceObjectPermissions) getID(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
 	var err error
 	if p.idRetriever != nil {
 		id, err = p.idRetriever(ctx, w, id)
@@ -152,7 +152,7 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 }
 
 // prepareForUpdate prepares the access control list for an update request by calling all update customizers.
-func (p resourcePermissions) prepareForUpdate(objectID string, e entity.PermissionsEntity, currentUser string) (entity.PermissionsEntity, error) {
+func (p WorkspaceObjectPermissions) prepareForUpdate(objectID string, e entity.PermissionsEntity, currentUser string) (entity.PermissionsEntity, error) {
 	cachedCurrentUser := func() (string, error) { return currentUser, nil }
 	ctx := update.ACLCustomizerContext{
 		GetCurrentUser: cachedCurrentUser,
@@ -169,7 +169,7 @@ func (p resourcePermissions) prepareForUpdate(objectID string, e entity.Permissi
 }
 
 // prepareForDelete prepares the access control list for a delete request by calling all delete customizers.
-func (p resourcePermissions) prepareForDelete(objectACL *iam.ObjectPermissions, getCurrentUser func() (string, error)) ([]iam.AccessControlRequest, error) {
+func (p WorkspaceObjectPermissions) prepareForDelete(objectACL *iam.ObjectPermissions, getCurrentUser func() (string, error)) ([]iam.AccessControlRequest, error) {
 	accl := make([]iam.AccessControlRequest, 0, len(objectACL.AccessControlList))
 	// By default, only admins have access to a resource when databricks_permissions for that resource are deleted.
 	for _, acl := range objectACL.AccessControlList {
@@ -211,7 +211,7 @@ func (p resourcePermissions) prepareForDelete(objectACL *iam.ObjectPermissions, 
 // For example, the SQL API previously used CAN_VIEW for read-only permission, but the GA API uses CAN_READ. Users may
 // have CAN_VIEW in their resource configuration, so the read customizer will rewrite the response from CAN_READ to
 // CAN_VIEW to match the user's configuration.
-func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.ObjectPermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
+func (p WorkspaceObjectPermissions) prepareResponse(objectID string, objectACL *iam.ObjectPermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
 	ctx := read.ACLCustomizerContext{
 		GetId:                        func() string { return objectID },
 		GetExistingPermissionsEntity: func() entity.PermissionsEntity { return existing },
@@ -254,7 +254,7 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 }
 
 // addOwnerPermissionIfNeeded adds the owner permission to the object ACL if the owner permission is allowed and not already set.
-func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []iam.AccessControlRequest, ownerOpt string) []iam.AccessControlRequest {
+func (p WorkspaceObjectPermissions) addOwnerPermissionIfNeeded(objectACL []iam.AccessControlRequest, ownerOpt string) []iam.AccessControlRequest {
 	_, ok := p.allowedPermissionLevels["IS_OWNER"]
 	if !ok {
 		return objectACL
@@ -286,7 +286,8 @@ type permissionLevelOptions struct {
 	deprecated string
 }
 
-func getResourcePermissionsFromId(id string) (resourcePermissions, error) {
+// GetResourcePermissionsFromId returns the resource permissions mapping for a given ID.
+func GetResourcePermissionsFromId(id string) (WorkspaceObjectPermissions, error) {
 	idParts := strings.Split(id, "/")
 	objectType := strings.Join(idParts[1:len(idParts)-1], "/")
 	for _, mapping := range allResourcePermissions() {
@@ -300,11 +301,11 @@ func getResourcePermissionsFromId(id string) (resourcePermissions, error) {
 			return mapping, nil
 		}
 	}
-	return resourcePermissions{}, fmt.Errorf("resource type for %s not found", id)
+	return WorkspaceObjectPermissions{}, fmt.Errorf("resource type for %s not found", id)
 }
 
-// getResourcePermissionsFromState returns the resourcePermissions for the given state.
-func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (resourcePermissions, string, error) {
+// getResourcePermissionsFromState returns the WorkspaceObjectPermissions for the given state.
+func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (WorkspaceObjectPermissions, string, error) {
 	allPermissions := allResourcePermissions()
 	for _, mapping := range allPermissions {
 		if v, ok := d.GetOk(mapping.field); ok {
@@ -325,12 +326,61 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 		allFields = append(allFields, mapping.field)
 	}
 	sort.Strings(allFields)
-	return resourcePermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
+	return WorkspaceObjectPermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
 }
 
-// getResourcePermissionsForObjectAcl returns the resourcePermissions for the given ObjectAclApiResponse.
-// allResourcePermissions is the list of all resource types that can be managed by the databricks_permissions resource.
-func allResourcePermissions() []resourcePermissions {
+// GetRequestObjectType returns the request object type for the permission mapping
+func (p WorkspaceObjectPermissions) GetRequestObjectType() string {
+	return p.requestObjectType
+}
+
+// GetObjectType returns the object type for the permission mapping
+func (p WorkspaceObjectPermissions) GetObjectType() string {
+	return p.objectType
+}
+
+// GetField returns the field name for the permission mapping
+func (p WorkspaceObjectPermissions) GetField() string {
+	return p.field
+}
+
+// GetID returns the object ID for the given user-specified ID
+func (p WorkspaceObjectPermissions) GetID(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
+	return p.getID(ctx, w, id)
+}
+
+// GetResourcePermissionsFromFieldValue finds the appropriate resource permissions mapping
+// by checking which field is set in the provided map
+func GetResourcePermissionsFromFieldValue(fieldValues map[string]string) (WorkspaceObjectPermissions, string, error) {
+	allPermissions := allResourcePermissions()
+	for _, mapping := range allPermissions {
+		if val, ok := fieldValues[mapping.field]; ok && val != "" {
+			if mapping.stateMatcher != nil && !mapping.stateMatcher(val) {
+				continue
+			}
+			return mapping, val, nil
+		}
+	}
+	allFields := make([]string, 0, len(allPermissions))
+	seen := make(map[string]struct{})
+	for _, mapping := range allPermissions {
+		if _, ok := seen[mapping.field]; ok {
+			continue
+		}
+		seen[mapping.field] = struct{}{}
+		allFields = append(allFields, mapping.field)
+	}
+	sort.Strings(allFields)
+	return WorkspaceObjectPermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
+}
+
+// AllResourcePermissions returns all permission type definitions.
+// Exported for use by Plugin Framework resources to dynamically generate schemas.
+func AllResourcePermissions() []WorkspaceObjectPermissions {
+	return allResourcePermissions()
+}
+
+func allResourcePermissions() []WorkspaceObjectPermissions {
 	PATH := func(ctx context.Context, w *databricks.WorkspaceClient, path string) (string, error) {
 		info, err := w.Workspace.GetStatusByPath(ctx, path)
 		if err != nil {
@@ -344,7 +394,7 @@ func allResourcePermissions() []resourcePermissions {
 	rewriteCanReadToCanView := read.RewritePermissions(map[iam.PermissionLevel]iam.PermissionLevel{
 		iam.PermissionLevelCanRead: iam.PermissionLevelCanView,
 	})
-	return []resourcePermissions{
+	return []WorkspaceObjectPermissions{
 		{
 			field:             "cluster_policy_id",
 			objectType:        "cluster-policy",

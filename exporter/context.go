@@ -18,15 +18,26 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkv2diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"golang.org/x/exp/maps"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	frameworkschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 /** High level overview of importer design:
@@ -59,17 +70,22 @@ type gitInfoCacheEntry struct {
 
 type importContext struct {
 	// not modified/used only in single thread
-	Module            string
-	Context           context.Context
-	Client            *common.DatabricksClient
-	Importables       map[string]importable
-	Resources         map[string]*schema.Resource
-	Directory         string
-	nameFixes         []regexFix
-	hclFixes          []regexFix
-	variables         map[string]string
-	variablesLock     sync.Mutex
-	workspaceConfKeys map[string]any
+	Module      string
+	Context     context.Context
+	Client      *common.DatabricksClient
+	Importables map[string]importable
+	Resources   map[string]*schema.Resource
+	Directory   string
+
+	// Plugin Framework support
+	PluginFrameworkProvider  provider.Provider
+	PluginFrameworkResources map[string]frameworkresource.Resource
+	PluginFrameworkSchemas   map[string]frameworkschema.Schema
+	nameFixes                []regexFix
+	hclFixes                 []regexFix
+	variables                map[string]string
+	variablesLock            sync.Mutex
+	workspaceConfKeys        map[string]any
 
 	workspaceClient *databricks.WorkspaceClient
 	accountClient   *databricks.AccountClient
@@ -110,6 +126,8 @@ type importContext struct {
 	notebooksFormat                         string
 	updatedSinceStr                         string
 	updatedSinceMs                          int64
+	targetCloud                             string
+	nodeTypeMappings                        *nodeTypeMappings
 
 	waitGroup *sync.WaitGroup
 
@@ -253,7 +271,11 @@ var goroutinesNumber = map[string]int{
 
 func makeResourcesChannels() map[string]resourceChannel {
 	resources := []string{"databricks_user", "databricks_service_principal", "databricks_group"}
-	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOURCES_CHANNELS"); exists {
+		resources = strings.Split(val, ",")
+	} else if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+		// Support legacy typo with deprecation warning
+		log.Printf("[WARN] Environment variable 'EXPORTER_DEDICATED_RESOUSE_CHANNELS' is deprecated due to typo. Please use 'EXPORTER_DEDICATED_RESOURCES_CHANNELS' instead.")
 		resources = strings.Split(val, ",")
 	}
 	channels := make(map[string]resourceChannel, len(resources))
@@ -261,6 +283,35 @@ func makeResourcesChannels() map[string]resourceChannel {
 		channels[r] = make(resourceChannel, defaultChannelSize)
 	}
 	return channels
+}
+
+// initializePluginFrameworkProvider initializes the Plugin Framework provider and caches all resource schemas
+func initializePluginFrameworkProvider(ctx context.Context) (provider.Provider, map[string]frameworkresource.Resource, map[string]frameworkschema.Schema) {
+	pfProvider := pluginfw.GetDatabricksProviderPluginFramework()
+	pfResources := make(map[string]frameworkresource.Resource)
+	pfSchemas := make(map[string]frameworkschema.Schema)
+
+	// Get all Plugin Framework resources
+	resourceFuncs := pfProvider.Resources(ctx)
+	for _, resourceFunc := range resourceFuncs {
+		res := resourceFunc()
+
+		// Get resource metadata to find its name
+		metadataReq := frameworkresource.MetadataRequest{}
+		metadataResp := frameworkresource.MetadataResponse{}
+		res.Metadata(ctx, metadataReq, &metadataResp)
+
+		// Store resource instance
+		pfResources[metadataResp.TypeName] = res
+
+		// Cache schema
+		schemaReq := frameworkresource.SchemaRequest{}
+		schemaResp := frameworkresource.SchemaResponse{}
+		res.Schema(ctx, schemaReq, &schemaResp)
+		pfSchemas[metadataResp.TypeName] = schemaResp.Schema
+	}
+
+	return pfProvider, pfResources, pfSchemas
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -278,12 +329,19 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize*3)
 
 	supportedResources := maps.Keys(resourcesMap)
+
+	// Initialize Plugin Framework provider
+	pfProvider, pfResources, pfSchemas := initializePluginFrameworkProvider(ctx)
+
 	return &importContext{
 		Client:                    c,
 		Context:                   ctx,
 		State:                     newStateApproximation(supportedResources),
 		Importables:               resourcesMap,
 		Resources:                 p.ResourcesMap,
+		PluginFrameworkProvider:   pfProvider,
+		PluginFrameworkResources:  pfResources,
+		PluginFrameworkSchemas:    pfSchemas,
 		Scope:                     importedResources{},
 		importing:                 map[string]bool{},
 		nameFixes:                 nameFixes,
@@ -673,21 +731,51 @@ func (ic *importContext) Add(r *resource) {
 	}
 	ic.importing[rString] = true // mark resource as added
 	ic.importingMutex.Unlock()
-	state := r.Data.State()
-	if state == nil {
-		log.Printf("[ERROR] state is nil for %s", r)
-		return
-	}
+
 	inst := instanceApproximation{
 		Attributes: map[string]any{},
 	}
-	for k, v := range state.Attributes {
-		inst.Attributes[k] = v
+
+	// For Plugin Framework resources, we need to extract attributes differently
+	ir := ic.Importables[r.Resource]
+	if ir.PluginFramework && r.Data == nil && r.DataWrapper != nil {
+		// For Plugin Framework, we'll create a minimal approximation
+		// The actual attributes will be generated from the wrapper during HCL generation
+		// For now, we just need the ID and basic info for dependency resolution
+		inst.Attributes["id"] = r.ID
+
+		// Try to extract commonly used fields for dependency matching
+		if wrapper := r.DataWrapper; wrapper != nil {
+			// Extract all top-level string fields that might be used for matching
+			schema := wrapper.GetSchema()
+			for _, fieldName := range schema.GetFields() {
+				if val, ok := wrapper.GetOk(fieldName); ok {
+					// Only store simple types that can be used for matching
+					switch v := val.(type) {
+					case string:
+						inst.Attributes[fieldName] = v
+					case int, int32, int64, float32, float64, bool:
+						inst.Attributes[fieldName] = v
+					}
+				}
+			}
+		}
+	} else {
+		// SDKv2 resource - use existing logic
+		state := r.Data.State()
+		if state == nil {
+			log.Printf("[ERROR] state is nil for %s", r)
+			return
+		}
+		for k, v := range state.Attributes {
+			inst.Attributes[k] = v
+		}
+		inst.Attributes["id"] = r.ID
 	}
+
 	if r.Mode == "" {
 		r.Mode = "managed"
 	}
-	inst.Attributes["id"] = r.ID
 	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
 		Type:      r.Resource,
@@ -708,7 +796,23 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(ic, r.Data)
+		// For Plugin Framework resources, r.Data is nil but r.DataWrapper exists
+		// We need to handle name generation differently
+		ir := ic.Importables[r.Resource]
+		if ir.PluginFramework && r.Data == nil && r.DataWrapper != nil {
+			// For Plugin Framework, generate name directly from wrapper
+			// Most Plugin Framework resources use makeNamePlusIdFunc("field_name")
+			// For alert_v2, it's makeNamePlusIdFunc("display_name")
+			// We'll extract the display_name value and append the ID
+			if displayName, ok := r.DataWrapper.GetOk("display_name"); ok && displayName != "" {
+				name = displayName.(string) + "_" + r.ID
+			} else {
+				// Fallback to just using ID
+				name = r.ID
+			}
+		} else {
+			name = ir.Name(ic, r.Data)
+		}
 	}
 	if name == "" {
 		name = r.ID
@@ -788,8 +892,11 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	ic.importing[rString] = false // we're starting to add a new resource
 	ic.importingMutex.Unlock()
-	_, ok = ic.Resources[r.Resource]
-	if !ok {
+
+	// Check if resource is available in either SDKv2 or Plugin Framework provider
+	_, okSDKv2 := ic.Resources[r.Resource]
+	_, okPluginFW := ic.PluginFrameworkResources[r.Resource]
+	if !okSDKv2 && !okPluginFW {
 		log.Printf("[ERROR] %s is not available in provider", r)
 		return
 	}
@@ -815,4 +922,190 @@ func (ic *importContext) Emit(r *resource) {
 		ic.waitGroup.Add(1)
 		ic.defaultChannel <- r
 	}
+}
+
+// readSDKv2Resource reads an SDKv2 resource and wraps it in ResourceDataWrapper
+func (ic *importContext) readSDKv2Resource(r *resource, ir importable) ResourceDataWrapper {
+	pr := ic.Resources[r.Resource]
+	sdkData := pr.Data(&terraform.InstanceState{
+		Attributes: map[string]string{},
+		ID:         r.ID,
+	})
+	sdkData.MarkNewResource()
+
+	resourceName := strings.ReplaceAll(r.Resource, "databricks_", "")
+	ctx := context.WithValue(ic.Context, common.ResourceName, resourceName)
+	if ir.ApiVersion != "" {
+		ctx = context.WithValue(ctx, common.Api, ir.ApiVersion)
+	}
+
+	dia := runWithRetries(func() sdkv2diag.Diagnostics {
+		return pr.ReadContext(ctx, sdkData, ic.Client)
+	}, fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+
+	if dia.HasError() {
+		log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
+		return nil
+	}
+
+	if sdkData.Id() == "" {
+		if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+			log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+		}
+		return nil
+	}
+
+	return &SDKv2ResourceData{data: sdkData, schema: pr}
+}
+
+func (ic *importContext) readPluginFrameworkResource(r *resource, ir importable) ResourceDataWrapper {
+	pfResource := ic.PluginFrameworkResources[r.Resource]
+	if pfResource == nil {
+		log.Printf("[ERROR] Plugin Framework resource %s not found", r.Resource)
+		return nil
+	}
+
+	pfSchema := ic.PluginFrameworkSchemas[r.Resource]
+
+	// Configure the resource with client if it supports configuration
+	if configurable, ok := pfResource.(frameworkresource.ResourceWithConfigure); ok {
+		configureReq := frameworkresource.ConfigureRequest{
+			ProviderData: ic.Client,
+		}
+		configureResp := frameworkresource.ConfigureResponse{}
+		configurable.Configure(ic.Context, configureReq, &configureResp)
+
+		if configureResp.Diagnostics.HasError() {
+			log.Printf("[ERROR] Error configuring %s: %v", r.Resource, configureResp.Diagnostics)
+			return nil
+		}
+	}
+
+	// Create state with proper initialization
+	// We need to initialize the Raw field with an ObjectType that matches the schema
+	attrTypes := make(map[string]attr.Type)
+	for name, attr := range pfSchema.GetAttributes() {
+		attrTypes[name] = attr.GetType()
+	}
+
+	// Convert to tftypes.Value for the Raw field
+	nullObj := types.ObjectNull(attrTypes)
+	rawValue, err := nullObj.ToTerraformValue(ic.Context)
+	if err != nil {
+		log.Printf("[ERROR] Failed to convert null object to terraform value for %s: %v", r.Resource, err)
+		return nil
+	}
+
+	// Initialize state with a null object of the correct type
+	state := tfsdk.State{
+		Schema: pfSchema,
+		Raw:    rawValue,
+	}
+
+	// Set the ID in the state
+	state.SetAttribute(ic.Context, path.Root("id"), types.StringValue(r.ID))
+
+	// Call ImportState if the resource supports it (for composite IDs, etc.)
+	if importableResource, ok := pfResource.(frameworkresource.ResourceWithImportState); ok {
+		importReq := frameworkresource.ImportStateRequest{
+			ID: r.ID,
+		}
+		importResp := frameworkresource.ImportStateResponse{
+			State: state,
+		}
+
+		importableResource.ImportState(ic.Context, importReq, &importResp)
+
+		if importResp.Diagnostics.HasError() {
+			log.Printf("[ERROR] Error importing state for %s#%s: %v", r.Resource, r.ID, importResp.Diagnostics)
+			return nil
+		}
+
+		// Use the state from ImportState for the Read call
+		state = importResp.State
+	}
+
+	var finalState *tfsdk.State
+
+	// Call Plugin Framework Read with retry logic
+	err = runWithRetries(func() error {
+		// Create a fresh response state for each retry
+		respState := tfsdk.State{
+			Schema: pfSchema,
+			Raw:    rawValue,
+		}
+
+		readReq := frameworkresource.ReadRequest{
+			State: state,
+		}
+		readResp := frameworkresource.ReadResponse{
+			State: respState,
+		}
+
+		pfResource.Read(ic.Context, readReq, &readResp)
+
+		if readResp.Diagnostics.HasError() {
+			return fmt.Errorf("read failed: %v", readResp.Diagnostics)
+		}
+
+		finalState = &readResp.State
+		return nil
+	}, fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+
+	if err != nil {
+		log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, err)
+		return nil
+	}
+
+	// Check if resource still exists
+	if finalState.Raw.IsNull() {
+		log.Printf("[WARN] %s %s has been deleted", r.Resource, r.ID)
+		ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+		return nil
+	}
+
+	return &PluginFrameworkResourceData{state: finalState, schema: pfSchema}
+}
+
+// convertPluginFrameworkToGoSdk is a generic helper that converts Plugin Framework state to Go SDK struct.
+// It performs a two-step conversion:
+// 1. Extracts the typed TF struct from the wrapper (Plugin Framework types)
+// 2. Converts the TF struct to Go SDK struct (native Go types)
+//
+// Type parameters:
+//   - TTF: The Terraform Plugin Framework struct type (e.g., alert_v2_resource.AlertV2)
+//   - TGo: The Go SDK struct type (e.g., sql.AlertV2)
+//
+// Example usage:
+//
+//	var alert sql.AlertV2
+//	err := ic.convertPluginFrameworkToGoSdk(
+//	    wrapper,
+//	    alert_v2_resource.AlertV2{},
+//	    &alert,
+//	)
+func convertPluginFrameworkToGoSdk[TTF any, TGo any](
+	ic *importContext,
+	wrapper ResourceDataWrapper,
+	_ TTF,
+	goSdkTarget *TGo,
+) error {
+	if wrapper == nil {
+		return fmt.Errorf("wrapper is nil")
+	}
+
+	// Step 1: Extract typed TF struct from state
+	var tfStruct TTF
+	if err := wrapper.GetTypedStruct(ic.Context, &tfStruct); err != nil {
+		return fmt.Errorf("failed to extract TF struct: %w", err)
+	}
+
+	// Step 2: Convert TF struct to Go SDK struct
+	diags := converters.TfSdkToGoSdkStruct(ic.Context, tfStruct, goSdkTarget)
+	if diags.HasError() {
+		return fmt.Errorf("failed to convert to Go SDK struct: %v", diags)
+	}
+
+	return nil
 }

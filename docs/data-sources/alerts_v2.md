@@ -2,7 +2,7 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alerts_v2 Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 The SQL Alerts v2 data source allows you to retrieve a list of alerts in Databricks SQL that are accessible to the current user. This data source returns alerts ordered by their creation time.
 
@@ -38,7 +38,7 @@ This data source exports a single attribute, `alerts`. It is a list of resources
   permissions and defaults
 * `evaluation` (AlertV2Evaluation)
 * `id` (string) - UUID identifying the alert
-* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
+* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
@@ -65,7 +65,9 @@ This data source exports a single attribute, `alerts`. It is a list of resources
 
 ### AlertV2Notification
 * `notify_on_ok` (boolean) - Whether to notify alert subscribers when alert returns back to normal
-* `retrigger_seconds` (integer) - Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again
+* `retrigger_seconds` (integer) - Number of seconds an alert waits after being triggered before it is allowed to send another notification.
+  If set to 0 or omitted, the alert will not send any further notifications after the first trigger
+  Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes
 * `subscriptions` (list of AlertV2Subscription)
 
 ### AlertV2Operand
@@ -73,7 +75,7 @@ This data source exports a single attribute, `alerts`. It is a list of resources
 * `value` (AlertV2OperandValue)
 
 ### AlertV2OperandColumn
-* `aggregation` (string) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string) - If not set, the behavior is equivalent to using `First row` in the UI. Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string)
 * `name` (string)
 

@@ -157,3 +157,53 @@ func TestCreateIsolatedCredential(t *testing.T) {
 		"isolation_mode":             "ISOLATION_MODE_ISOLATED",
 	})
 }
+
+func TestUpdateCredentialSchemaForceNew(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCredentialsAPI().EXPECT()
+			e.UpdateCredential(mock.Anything, catalog.UpdateCredentialRequest{
+				NameArg: "name",
+				AwsIamRole: &catalog.AwsIamRole{
+					RoleArn: "arn:aws:iam::account:role/role",
+				},
+				Comment: "comment",
+			}).Return(&catalog.CredentialInfo{
+				Id:   "1234-5678",
+				Name: "name",
+				AwsIamRole: &catalog.AwsIamRole{
+					RoleArn: "arn:aws:iam::account:role/role",
+				},
+				Comment: "comment",
+			}, nil)
+			e.GetCredentialByNameArg(mock.Anything, "name").Return(&catalog.CredentialInfo{
+				Id:      "1234-5678",
+				Name:    "name",
+				Purpose: "SERVICE",
+				AwsIamRole: &catalog.AwsIamRole{
+					RoleArn: "arn:aws:iam::account:role/role",
+				},
+				Comment: "comment",
+			}, nil)
+		},
+		RequiresNew: true,
+		Resource:    ResourceCredential(),
+		Update:      true,
+		ID:          "name",
+		InstanceState: map[string]string{
+			"name":                    "name",
+			"purpose":                 "SERVICE",
+			"aws_iam_role.#":          "1",
+			"aws_iam_role.0.role_arn": "arn:aws:iam::account:role/role",
+			"comment":                 "comment",
+		},
+		HCL: `
+		name    = "rename"
+		purpose = "SERVICE"
+		aws_iam_role {
+		    role_arn = "arn:aws:iam::account:role/role"
+		}
+		comment = "comment"
+		`,
+	}.ApplyNoError(t)
+}

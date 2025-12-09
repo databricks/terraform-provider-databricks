@@ -83,7 +83,7 @@ The following arguments are supported:
 * `schema_name` - Name of parent Schema relative to parent Catalog. Change forces creation of a new resource.
 * `volume_type` - Volume type. `EXTERNAL` or `MANAGED`. Change forces creation of a new resource.
 * `owner` - (Optional) Name of the volume owner.
-* `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes. Change forces creation of a new resource.
+* `storage_location` - (Optional) URL for the volume (should be inside of an existing [External Location](external_location.md)). Only used for `EXTERNAL` Volumes.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). Change forces creation of a new resource.
 * `comment` - (Optional) Free-form text.
 
 ## Attribute Reference

@@ -45,12 +45,21 @@ type FeatureResource struct {
 type Feature struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
 	// The input columns from which the feature is computed.
 	Inputs types.List `tfsdk:"inputs"`
+	// WARNING: This field is primarily intended for internal use by Databricks
+	// systems and is automatically populated when features are created through
+	// Databricks notebooks or jobs. Users should not manually set this field as
+	// incorrect values may lead to inaccurate lineage tracking or unexpected
+	// behavior. This field will be set by feature-engineering client and should
+	// be left unset by SDK and terraform users.
+	LineageContext types.Object `tfsdk:"lineage_context"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
 	// The time window in which the feature is computed.
@@ -66,10 +75,11 @@ type Feature struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"function":    reflect.TypeOf(ml_tf.Function{}),
-		"inputs":      reflect.TypeOf(types.String{}),
-		"source":      reflect.TypeOf(ml_tf.DataSource{}),
-		"time_window": reflect.TypeOf(ml_tf.TimeWindow{}),
+		"function":        reflect.TypeOf(ml_tf.Function{}),
+		"inputs":          reflect.TypeOf(types.String{}),
+		"lineage_context": reflect.TypeOf(ml_tf.LineageContext{}),
+		"source":          reflect.TypeOf(ml_tf.DataSource{}),
+		"time_window":     reflect.TypeOf(ml_tf.TimeWindow{}),
 	}
 }
 
@@ -83,11 +93,13 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"description": m.Description,
-			"full_name":   m.FullName,
-			"function":    m.Function,
-			"inputs":      m.Inputs,
-			"source":      m.Source,
-			"time_window": m.TimeWindow,
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+			"function":         m.Function,
+			"inputs":           m.Inputs,
+			"lineage_context":  m.LineageContext,
+			"source":           m.Source,
+			"time_window":      m.TimeWindow,
 		},
 	)
 }
@@ -97,13 +109,15 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Feature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"description": types.StringType,
-			"full_name": types.StringType,
-			"function":  ml_tf.Function{}.Type(ctx),
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+			"function":         ml_tf.Function{}.Type(ctx),
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"source":      ml_tf.DataSource{}.Type(ctx),
-			"time_window": ml_tf.TimeWindow{}.Type(ctx),
+			"lineage_context": ml_tf.LineageContext{}.Type(ctx),
+			"source":          ml_tf.DataSource{}.Type(ctx),
+			"time_window":     ml_tf.TimeWindow{}.Type(ctx),
 		},
 	}
 }
@@ -118,6 +132,15 @@ func (to *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Feat
 				// Recursively sync the fields of Function
 				toFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromFunction)
 				to.SetFunction(ctx, toFunction)
+			}
+		}
+	}
+	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
+		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
+			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
+				// Recursively sync the fields of LineageContext
+				toLineageContext.SyncFieldsDuringCreateOrUpdate(ctx, fromLineageContext)
+				to.SetLineageContext(ctx, toLineageContext)
 			}
 		}
 	}
@@ -153,6 +176,14 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 			}
 		}
 	}
+	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
+		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
+			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
+				toLineageContext.SyncFieldsDuringRead(ctx, fromLineageContext)
+				to.SetLineageContext(ctx, toLineageContext)
+			}
+		}
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -173,12 +204,14 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 
 func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetRequired()
 	attrs["function"] = attrs["function"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["inputs"] = attrs["inputs"].SetRequired()
 	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["time_window"] = attrs["time_window"].SetRequired()
@@ -237,6 +270,31 @@ func (m *Feature) SetInputs(ctx context.Context, v []types.String) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inputs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Inputs = types.ListValueMust(t, vs)
+}
+
+// GetLineageContext returns the value of the LineageContext field in Feature as
+// a ml_tf.LineageContext value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetLineageContext(ctx context.Context) (ml_tf.LineageContext, bool) {
+	var e ml_tf.LineageContext
+	if m.LineageContext.IsNull() || m.LineageContext.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.LineageContext
+	d := m.LineageContext.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLineageContext sets the value of the LineageContext field in Feature.
+func (m *Feature) SetLineageContext(ctx context.Context, v ml_tf.LineageContext) {
+	vs := v.ToObjectValue(ctx)
+	m.LineageContext = vs
 }
 
 // GetSource returns the value of the Source field in Feature as
@@ -317,7 +375,7 @@ func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.
 	updateRequest := ml.UpdateFeatureRequest{
 		Feature:    feature,
 		FullName:   plan.FullName.ValueString(),
-		UpdateMask: "description",
+		UpdateMask: "description,filter_condition,lineage_context",
 	}
 
 	client, clientDiags := r.Client.GetWorkspaceClient()

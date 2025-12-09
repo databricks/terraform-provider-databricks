@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"golang.org/x/exp/maps"
 
@@ -321,6 +323,18 @@ func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.
 	return false
 }
 
+// DefaultShouldOmitFieldFuncWithAbstraction is the abstracted version that works with both SDKv2 and Plugin Framework
+// This will be used when codegen.go is updated to use abstractions
+func DefaultShouldOmitFieldFuncWithAbstraction(_ *importContext, pathString string, fieldSchema FieldSchema, d ResourceDataWrapper, _ *resource) bool {
+	if fieldSchema.IsComputed() {
+		return true
+	}
+	if def := fieldSchema.GetDefault(); def != nil && d.Get(pathString) == def {
+		return true
+	}
+	return false
+}
+
 func (ic *importContext) generateNewData(data *schema.ResourceData, resourceType, rID string, obj any) *schema.ResourceData {
 	data.MarkNewResource()
 	data.SetId(rID)
@@ -554,4 +568,73 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 		}
 		return name
 	}
+}
+
+func (ic *importContext) emitNccBindingAndNcc(workspaceId int64, nccId string) {
+	id := fmt.Sprintf("%d/%s", workspaceId, nccId)
+	data := mws.ResourceMwsNccBinding().ToResource().TestResourceData()
+	data.MarkNewResource()
+	data.SetId(id)
+	data.Set("workspace_id", workspaceId)
+	data.Set("network_connectivity_config_id", nccId)
+	ic.Emit(&resource{
+		Resource: "databricks_mws_ncc_binding",
+		Data:     data,
+		ID:       id,
+		Name:     fmt.Sprintf("ws_%d_%s", workspaceId, nccId),
+	})
+	ic.Emit(&resource{
+		Resource: "databricks_mws_network_connectivity_config",
+		ID:       ic.accountClient.Config.AccountID + "/" + nccId,
+	})
+}
+
+// normalizeWhitespace converts multiple consecutive spaces and tabs into a single space character
+// while preserving newlines. This is useful for comparing generated Terraform code where
+// indentation may vary but line structure should be preserved.
+func normalizeWhitespace(s string) string {
+	re := regexp.MustCompile(`[ \t]+`)
+	return strings.TrimSpace(re.ReplaceAllString(s, " "))
+}
+
+func shouldOmitWithEffectiveFields(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool {
+	if strings.HasPrefix(pathString, "effective_") {
+		return true // Effective fields are not input-only fields, so we omit them
+	}
+	// Allow input-only fields that have effective_* counterparts to pass through
+	// to the zero-value filtering stage in the codegen
+	effectiveFieldName := "effective_" + pathString
+	effectiveFieldSchema := wrapper.GetSchema().GetField(effectiveFieldName)
+	if effectiveFieldSchema != nil {
+		// This is an input field that has an effective_* counterpart
+		// Check if the value is actually a zero value for its type
+		v, ok := wrapper.GetOk(pathString)
+		if !ok {
+			return true // Field not set, omit it
+		}
+
+		// Required fields should never be omitted, even if zero
+		if fieldSchema.IsRequired() {
+			return false
+		}
+
+		// Check if it's a zero value using reflection
+		if v == nil {
+			return true
+		}
+		rv := reflect.ValueOf(v)
+		if rv.IsZero() {
+			return true // Zero value, omit it
+		}
+
+		// Check against default value if one is defined
+		if def := fieldSchema.GetDefault(); def != nil && reflect.DeepEqual(v, def) {
+			return true
+		}
+
+		// Non-zero value, don't omit it
+		return false
+	}
+	// Use default omission logic for other fields (e.g., omit computed-only fields)
+	return DefaultShouldOmitFieldFuncWithAbstraction(ic, pathString, fieldSchema, wrapper, r)
 }

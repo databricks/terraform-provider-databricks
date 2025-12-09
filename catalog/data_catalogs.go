@@ -10,6 +10,7 @@ import (
 
 func DataSourceCatalogs() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		common.Namespace
 		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}, w *databricks.WorkspaceClient) error {
 		catalogs, err := w.Catalogs.ListAll(ctx, catalog.ListCatalogsRequest{})

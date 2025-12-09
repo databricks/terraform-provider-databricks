@@ -1,5 +1,5 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor Resource
 
@@ -99,6 +99,7 @@ table.
     * `output_data_type` - The output type of the custom metric.
     * `type` - The type of the custom metric.
 * `data_classification_config` - The data classification config for the monitor
+    * `enabled` - Whether to enable data classification
 * `inference_log` - Configuration for the inference log monitor
     * `granularities` -  List of granularities to use when aggregating data into time windows based on their timestamp.
     * `label_col` - Column of the model label

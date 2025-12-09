@@ -45,7 +45,7 @@ resource "databricks_database_synced_database_table" "this" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = "my-database-instance"
   spec = {
@@ -78,7 +78,7 @@ resource "databricks_database_synced_database_table" "synced_table_1" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
@@ -98,7 +98,7 @@ resource "databricks_database_synced_database_table" "synced_table_2" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
@@ -107,6 +107,53 @@ resource "databricks_database_synced_database_table" "synced_table_2" {
     primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     existing_pipeline_id = databricks_database_synced_database_table.synced_table_1.data_synchronization_status.pipeline_id
+  }
+}
+```
+
+### Creating a Synced Database Table with a custom Jobs schedule
+
+This example creates a Synced Database Table and customizes the pipeline schedule. It assumes you already have 
+
+- A database instance named `"my-database-instance"`
+- A standard catalog named `"my_standard_catalog"`
+- A schema in the standard catalog named `"default"`
+- A source delta table named `"source_delta.schema.customer"` with the primary key `"c_custkey"`
+
+```hcl
+resource "databricks_database_synced_database_table" "synced_table" {
+  name = "my_standard_catalog.default.my_synced_table"
+  # logical_database_name is required for synced tables created in
+  # standard catalogs.
+  logical_database_name = "terraform_test_db"
+  # database instance name is required for synced tables created in
+  # standard catalogs.
+  database_instance_name = "my-database-instance"
+  spec = {
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.schema.customer"
+    primary_key_columns = ["c_custkey"]
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "source_delta"
+      storage_schema = "schema"
+    }
+  }
+}
+
+resource "databricks_job" "sync_pipeline_schedule_job" {
+  name        = "Synced Pipeline Refresh"
+  description = "Job to schedule synced database table pipeline. "
+
+  task {
+    task_key = "synced-table-pipeline"
+    pipeline_task {
+      pipeline_id = databricks_database_synced_database_table.synced_table.data_synchronization_status.pipeline_id
+    }
+  }
+  schedule {
+    quartz_cron_expression = "0 0 0 * * ?"
+    timezone_id            = "Europe/Helsinki"
   }
 }
 ```
@@ -133,6 +180,7 @@ The following arguments are supported:
 * `spec` (SyncedTableSpec, optional)
 
 ### NewPipelineSpec
+* `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).

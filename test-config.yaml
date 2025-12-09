@@ -25,6 +25,12 @@ ignored_tests:
       test_name: TestMwsAccGcpWorkspaces
       comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
     - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestMwsAccGcpWorkspacesProvisioningToRunning
+      comment: Failure due GCP provisioning problems...
+    - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestMwsAccGcpWorkspacesUnsetExpectedState
+      comment: Failure due GCP provisioning problems...
+    - package: github.com/databricks/terraform-provider-databricks/mws
       test_name: TestMwsAccGcpByovpcWorkspaces
       comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
     - package: github.com/databricks/terraform-provider-databricks/permissions
@@ -120,3 +126,6 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/secrets
       test_name: TestAccSecretAclResourceDefaultPrincipal
       comment: Failures due to 500s in secrets ACLs APIs.
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestMwsAccDisableLegacyFeaturesSetting
+      comment: These settings were moved to Settings v2 platform and now flacky

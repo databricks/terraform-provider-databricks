@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/dataquality"
+	"github.com/databricks/databricks-sdk-go/service/tags"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -288,9 +290,10 @@ func importUcCredential(ic *importContext, r *resource) error {
 		isolationMode := r.Data.Get("isolation_mode").(string)
 		if isolationMode == "ISOLATION_MODE_ISOLATED" {
 			purpose := r.Data.Get("purpose").(string)
-			if purpose == "SERVICE" {
+			switch purpose {
+			case "SERVICE":
 				ic.emitWorkspaceBindings("credential", r.ID)
-			} else if purpose == "STORAGE" {
+			case "STORAGE":
 				ic.emitWorkspaceBindings("storage_credential", r.ID)
 			}
 		}
@@ -671,6 +674,29 @@ func listArtifactAllowLists(ic *importContext) error {
 	return nil
 }
 
+func listTagPolicies(ic *importContext) error {
+	tagPolicies, err := ic.workspaceClient.TagPolicies.ListTagPoliciesAll(ic.Context, tags.ListTagPoliciesRequest{})
+	if err != nil {
+		return err
+	}
+	i := 0
+	for _, tagPolicy := range tagPolicies {
+		i++
+		if !ic.MatchesName(tagPolicy.TagKey) {
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_tag_policy",
+			ID:       tagPolicy.TagKey,
+		})
+		if i%50 == 0 {
+			log.Printf("[INFO] Imported %d Tag Policies", i)
+		}
+	}
+	log.Printf("[INFO] Listed %d Tag Policies", i)
+	return nil
+}
+
 func importSqlTable(ic *importContext, r *resource) error {
 	tableFullName := r.ID
 	ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
@@ -679,5 +705,20 @@ func importSqlTable(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
+	return nil
+}
+
+func listDataQualityMonitors(ic *importContext) error {
+	it := ic.workspaceClient.DataQuality.ListMonitor(ic.Context, dataquality.ListMonitorRequest{})
+	for it.HasNext(ic.Context) {
+		monitor, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_data_quality_monitor",
+			ID:       fmt.Sprintf("%s,%s", monitor.ObjectType, monitor.ObjectId),
+		})
+	}
 	return nil
 }

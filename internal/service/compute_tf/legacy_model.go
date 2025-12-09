@@ -320,7 +320,7 @@ type AwsAttributes_SdkV2 struct {
 	// availability zone must be in the same region as the Databricks
 	// deployment. For example, "us-west-2a" is not a valid zone id if the
 	// Databricks deployment resides in the "us-east-1" region. This is an
-	// optional field at cluster creation, and if not specified, a default zone
+	// optional field at cluster creation, and if not specified, the zone "auto"
 	// will be used. If the zone specified is "auto", will try to place cluster
 	// in a zone with high availability, and will retry placement in a different
 	// AZ if there is not enough capacity.
@@ -1137,8 +1137,7 @@ type ClusterAttributes_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -1986,8 +1985,7 @@ type ClusterDetails_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -4630,8 +4628,7 @@ type ClusterSpec_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -5803,8 +5800,7 @@ type CreateCluster_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -8490,8 +8486,7 @@ type EditCluster_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -14750,6 +14745,17 @@ func (m *InstancePoolAndStats_SdkV2) SetStatus(ctx context.Context, v InstancePo
 type InstancePoolAwsAttributes_SdkV2 struct {
 	// Availability type used for the spot nodes.
 	Availability types.String `tfsdk:"availability"`
+	// All AWS instances belonging to the instance pool will have this instance
+	// profile. If omitted, instances will initially be launched with the
+	// workspace's default instance profile. If defined, clusters that use the
+	// pool will inherit the instance profile, and must not specify their own
+	// instance profile on cluster creation or update. If the pool does not
+	// specify an instance profile, clusters using the pool may specify any
+	// instance profile. The instance profile must have previously been added to
+	// the Databricks environment by an account administrator.
+	//
+	// This feature may only be available to certain customer plans.
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Calculates the bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
 	// is set to 50, and the cluster needs a new `r3.xlarge` spot instance, then
@@ -14780,6 +14786,7 @@ func (to *InstancePoolAwsAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 
 func (m InstancePoolAwsAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
 	attrs["zone_id"] = attrs["zone_id"].SetOptional()
 
@@ -14805,6 +14812,7 @@ func (m InstancePoolAwsAttributes_SdkV2) ToObjectValue(ctx context.Context) base
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"availability":           m.Availability,
+			"instance_profile_arn":   m.InstanceProfileArn,
 			"spot_bid_price_percent": m.SpotBidPricePercent,
 			"zone_id":                m.ZoneId,
 		})
@@ -14815,6 +14823,7 @@ func (m InstancePoolAwsAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"availability":           types.StringType,
+			"instance_profile_arn":   types.StringType,
 			"spot_bid_price_percent": types.Int64Type,
 			"zone_id":                types.StringType,
 		},
@@ -20256,8 +20265,7 @@ type UpdateClusterResource_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`

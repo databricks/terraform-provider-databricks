@@ -116,6 +116,12 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
+			var origCatalogData catalog.CatalogInfo
+			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
+			if (origCatalogData.ShareName != "" || origCatalogData.ConnectionName != "" || origCatalogData.ProviderName != "") &&
+				string(origCatalogData.EnablePredictiveOptimization) == "" {
+				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
+			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -216,7 +222,7 @@ func ResourceCatalog() common.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			// The only scenario in which we can update options is for the `authorized_paths` key. Any
 			// other changes to the options field will result in an error.
 			if d.HasChange("options") {

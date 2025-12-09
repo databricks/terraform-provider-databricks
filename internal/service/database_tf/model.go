@@ -1723,6 +1723,9 @@ func (m DeleteDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
+	// Optional. When set to true, the actual PostgreSQL table will be dropped
+	// from the database.
+	PurgeData types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSyncedDatabaseTableRequest) {
@@ -1733,6 +1736,7 @@ func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m DeleteSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge_data"] = attrs["purge_data"].SetOptional()
 
 	return attrs
 }
@@ -1755,7 +1759,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":       m.Name,
+			"purge_data": m.PurgeData,
 		})
 }
 
@@ -1763,7 +1768,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 func (m DeleteSyncedDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":       types.StringType,
+			"purge_data": types.BoolType,
 		},
 	}
 }
@@ -2869,6 +2875,8 @@ func (m *ListSyncedDatabaseTablesResponse) SetSyncedTables(ctx context.Context, 
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec struct {
+	// Budget policy to set on the newly created pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// This field needs to be specified if the destination catalog is a managed
 	// postgres catalog.
 	//
@@ -2892,6 +2900,7 @@ func (to *NewPipelineSpec) SyncFieldsDuringRead(ctx context.Context, from NewPip
 }
 
 func (m NewPipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -2916,8 +2925,9 @@ func (m NewPipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"storage_catalog": m.StorageCatalog,
-			"storage_schema":  m.StorageSchema,
+			"budget_policy_id": m.BudgetPolicyId,
+			"storage_catalog":  m.StorageCatalog,
+			"storage_schema":   m.StorageSchema,
 		})
 }
 
@@ -2925,8 +2935,9 @@ func (m NewPipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m NewPipelineSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"storage_catalog": types.StringType,
-			"storage_schema":  types.StringType,
+			"budget_policy_id": types.StringType,
+			"storage_catalog":  types.StringType,
+			"storage_schema":   types.StringType,
 		},
 	}
 }

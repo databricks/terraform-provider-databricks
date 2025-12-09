@@ -25,7 +25,7 @@ func TestWaitForAppDeleted_AppDoesNotExist(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestWaitForAppDeleted_AppInDeletingState(t *testing.T) {
+func TestWaitForAppDeleted_WaitsUntilDeleted(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	mockClient := mocks.NewMockWorkspaceClient(t)
 	mockAppsAPI := mockClient.GetMockAppsAPI()
@@ -33,8 +33,7 @@ func TestWaitForAppDeleted_AppInDeletingState(t *testing.T) {
 	mockAppsAPI.EXPECT().GetByName(mock.Anything, "test-app").Return(&apps.App{
 		Name: "test-app",
 		ComputeStatus: &apps.ComputeStatus{
-			State:   apps.ComputeStateDeleting,
-			Message: "App is being deleted",
+			State: apps.ComputeStateDeleting,
 		},
 	}, nil).Once()
 
@@ -49,23 +48,21 @@ func TestWaitForAppDeleted_AppInDeletingState(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestWaitForAppDeleted_AppNotInDeletingState_ReturnsImmediately(t *testing.T) {
+func TestWaitForAppDeleted_AppNotDeleted_Halts(t *testing.T) {
 	ctx := context.Background()
 	mockClient := mocks.NewMockWorkspaceClient(t)
 	mockAppsAPI := mockClient.GetMockAppsAPI()
 
-	// If app exists but is not in DELETING state, return immediately.
-	// The subsequent Create() call will fail with a proper API error.
 	mockAppsAPI.EXPECT().GetByName(mock.Anything, "test-app").Return(&apps.App{
 		Name: "test-app",
 		ComputeStatus: &apps.ComputeStatus{
-			State:   apps.ComputeStateActive,
-			Message: "App is active",
+			State: apps.ComputeStateActive,
 		},
 	}, nil).Once()
 
 	err := waitForAppDeleted(ctx, mockClient.WorkspaceClient, "test-app")
-	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "was not deleted")
 }
 
 func TestWaitForAppDeleted_APIError(t *testing.T) {

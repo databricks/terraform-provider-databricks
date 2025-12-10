@@ -9,11 +9,47 @@ import (
 )
 
 func DataSourceDbfsFilePaths() common.Resource {
+	s := map[string]*schema.Schema{
+		"path": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"recursive": {
+			Type:     schema.TypeBool,
+			Required: true,
+			ForceNew: true,
+		},
+		"path_list": {
+			Type:     schema.TypeSet,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"path": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"file_size": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+				},
+			},
+			Set: workspace.PathListHash,
+		},
+	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
+		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
-			paths, err := NewDbfsAPI(ctx, m).List(path, recursive)
+			paths, err := NewDbfsAPI(ctx, newClient).List(path, recursive)
 			if err != nil {
 				return err
 			}
@@ -28,35 +64,6 @@ func DataSourceDbfsFilePaths() common.Resource {
 			// nolint
 			d.Set("path_list", pathList)
 			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"path": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"recursive": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			"path_list": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"file_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-				Set: workspace.PathListHash,
-			},
 		},
 	}
 }

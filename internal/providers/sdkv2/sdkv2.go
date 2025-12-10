@@ -146,6 +146,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
 		"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 		"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
+		"databricks_pipeline":                             pipelines.DataSourcePipeline().ToResource(),
 		"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
 		"databricks_schema":                               catalog.DataSourceSchema().ToResource(),
 		"databricks_schemas":                              catalog.DataSourceSchemas().ToResource(),

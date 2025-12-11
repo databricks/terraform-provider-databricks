@@ -58,6 +58,7 @@ func ResourceCatalog() common.Resource {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
+			common.CustomizeSchemaPath(s, "provisioning_info").SetComputed().SetSuppressDiff()
 			return s
 		})
 	return common.Resource{
@@ -116,6 +117,12 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
+			var origCatalogData catalog.CatalogInfo
+			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
+			if origCatalogData.CatalogType != "MANAGED_CATALOG" &&
+				string(origCatalogData.EnablePredictiveOptimization) == "" {
+				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
+			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -162,6 +169,10 @@ func ResourceCatalog() common.Resource {
 				} else {
 					updateCatalogRequest.Options = nil
 				}
+			}
+			// we shouldn't send PO flag for non-managed catalogs
+			if d.Get("catalog_type").(string) != "MANAGED_CATALOG" && updateCatalogRequest.EnablePredictiveOptimization != "" {
+				updateCatalogRequest.EnablePredictiveOptimization = ""
 			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 
@@ -216,7 +227,7 @@ func ResourceCatalog() common.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			// The only scenario in which we can update options is for the `authorized_paths` key. Any
 			// other changes to the options field will result in an error.
 			if d.HasChange("options") {

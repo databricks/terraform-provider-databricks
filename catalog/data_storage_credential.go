@@ -10,6 +10,7 @@ import (
 
 func DataSourceStorageCredential() common.Resource {
 	type AccountMetastoreByID struct {
+		common.Namespace
 		Id                string                         `json:"id,omitempty" tf:"computed"`
 		Name              string                         `json:"name"`
 		StorageCredential *catalog.StorageCredentialInfo `json:"storage_credential_info,omitempty" tf:"computed" `

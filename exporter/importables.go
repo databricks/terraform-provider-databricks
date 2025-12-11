@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/billing"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -26,6 +25,7 @@ import (
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	alert_v2_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/alert_v2"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -577,6 +577,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			if pathString == "display_name" {
 				if ic.Client.IsAzure() {
+					if ic.targetCloud != "" {
+						return false
+					}
 					applicationID := d.Get("application_id").(string)
 					displayName := d.Get("display_name").(string)
 					externalID := d.Get("external_id").(string)
@@ -584,9 +587,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				return false
 			}
-			// application_id should be provided only on Azure and only for Azure-managed SPs that have external_id set
+			// application_id should be provided only on Azure and only for Azure-managed SPs that
+			// have external_id set
 			if pathString == "application_id" {
-				return !ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+				return (ic.Client.IsAzure() && ic.targetCloud != "azure" && ic.targetCloud != "") ||
+					!ic.Client.IsAzure() || (d.Get("external_id").(string) == "")
+
+			}
+			if pathString == "external_id" {
+				return ic.targetCloud != "" || d.Get("external_id").(string) == ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
@@ -624,6 +633,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "repo_id", Resource: "databricks_repo"},
 			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
 			{Path: "serving_endpoint_id", Resource: "databricks_model_serving", Match: "serving_endpoint_id"},
+			{Path: "database_instance_name", Resource: "databricks_database_instance", Match: "name"},
+			{Path: "app_name", Resource: "databricks_app", Match: "name"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
@@ -659,6 +670,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
+	"databricks_permission_assignment": {
+		Service:        "idfed",
+		WorkspaceLevel: true,
+		List:           listWorkspacePermissionAssignments,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
+			switch pathString {
+			case "principal_id":
+				return true
+			case "user_name", "service_principal_name", "group_name":
+				return d.Get(pathString).(string) == ""
+			default:
+				return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
+			}
+		},
+		// Note: We don't need dependencies here as we assign permissions by name, not by ID
+	},
 	"databricks_secret_scope": {
 		Service:        "secrets",
 		WorkspaceLevel: true,
@@ -686,7 +713,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
-			if backendType != "AZURE_KEYVAULT" {
+			if backendType != "AZURE_KEYVAULT" || ic.targetCloud != "" {
 				secrets := ic.workspaceClient.Secrets.ListSecrets(ic.Context, sdk_workspace.ListSecretsRequest{
 					Scope: r.ID,
 				})
@@ -700,6 +727,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
+			}
+			if backendType == "AZURE_KEYVAULT" || ic.targetCloud != "" {
+				r.Data.Set("backend_type ", "DATABRICKS")
+				r.Data.Set("keyvault_metadata", nil)
 			}
 			acls, err := ic.workspaceClient.Secrets.ListAclsByScope(ic.Context, r.ID)
 			if err != nil {
@@ -1246,6 +1277,122 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
 			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_alert_v2": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "alerts",
+		Name:            makeNamePlusIdFunc("display_name"),
+		List:            listAlertsV2,
+		// Body function removed - using generic HCL generation for Plugin Framework resources
+		Import: func(ic *importContext, r *resource) error {
+			// Convert Plugin Framework state to Go SDK struct
+			var alert sql.AlertV2
+			if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper, alert_v2_resource.AlertV2{}, &alert); err != nil {
+				return err
+			}
+
+			// Emit dependencies - now using plain Go strings!
+			if alert.WarehouseId != "" {
+				ic.Emit(&resource{Resource: "databricks_sql_endpoint", ID: alert.WarehouseId})
+			}
+
+			if alert.ParentPath != "" {
+				ic.emitDirectoryOrRepo(alert.ParentPath)
+			}
+
+			if alert.OwnerUserName != "" {
+				ic.emitUserOrServicePrincipal(alert.OwnerUserName)
+			}
+
+			// Handle evaluation.notification.subscriptions
+			if alert.Evaluation.Notification != nil {
+				for _, sub := range alert.Evaluation.Notification.Subscriptions {
+					if sub.DestinationId != "" {
+						ic.Emit(&resource{Resource: "databricks_notification_destination", ID: sub.DestinationId})
+					}
+					// user_email is only for users (email addresses), not service principals (UUIDs)
+					// emitUserOrServicePrincipal will automatically handle this correctly
+					if sub.UserEmail != "" {
+						ic.emitUserOrServicePrincipal(sub.UserEmail)
+					}
+				}
+			}
+
+			// For Plugin Framework resources, we can't use r.Data directly, use the wrapper ID
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/alerts/%s", r.ID),
+				"alert_v2_"+r.Name)
+			return nil
+		},
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_alert_v2", "display_name"),
+		Depends: []reference{
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_directory"},
+			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "evaluation.notification.subscriptions.destination_id", Resource: "databricks_notification_destination"},
+			{Path: "evaluation.notification.subscriptions.user_email", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_apps_settings_custom_template": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listAppsSettingsCustomTemplates,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_apps_settings_custom_template", "name"),
+	},
+
+	"databricks_custom_app_integration": {
+		AccountLevel: true,
+		Service:      "oauth",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return "custom_app_" + d.Id()
+			}
+			return name + "_" + d.Id()[:8]
+		},
+		List:   listCustomAppIntegrations,
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_custom_app_integration", "name"),
+	},
+	"databricks_account_federation_policy": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "oauth",
+		List:            listAccountFederationPolicies,
+	},
+	"databricks_service_principal_federation_policy": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "oauth",
+		List:            listServicePrincipalFederationPolicies,
+		Depends: []reference{
+			{Path: "service_principal_id", Resource: "databricks_service_principal"},
+		},
+	},
+	"databricks_app": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "apps",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listApps,
+		Import:          importApp,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_app", "name"),
+		Depends: []reference{
+			{Path: "resources.sql_warehouse.id", Resource: "databricks_sql_endpoint"},
+			{Path: "resources.serving_endpoint.name", Resource: "databricks_model_serving"},
+			{Path: "resources.job.id", Resource: "databricks_job"},
+			{Path: "resources.secret.scope", Resource: "databricks_secret_scope"},
+			{Path: "resources.secret.key", Resource: "databricks_secret", Match: "key",
+				IsValidApproximation: createIsMatchingScopeAndKey("scope", "key")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume"},
+			{Path: "resources.database.instance_name", Resource: "databricks_database_instance", Match: "name"},
+			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
 		},
 	},
 	"databricks_pipeline": {
@@ -1853,6 +2000,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_update_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_database_instance": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakebase",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Id()
+		},
+		List:                   listDatabaseInstances,
+		Import:                 importDatabaseInstance,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		Ignore:                 generateIgnoreObjectWithEmptyAttributeValue("databricks_database_instance", "name"),
+	},
 	"databricks_mlflow_webhook": {
 		WorkspaceLevel: true,
 		Service:        "mlflow-webhooks",
@@ -1947,6 +2106,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				Regexp: regexp.MustCompile("^accounts/[^/]+/servicePrincipals/([^/]+)/ruleSets/default$")},
 			{Path: "name", Resource: "databricks_group", MatchType: MatchRegexp,
 				Regexp: regexp.MustCompile("^accounts/[^/]+/groups/([^/]+)/ruleSets/default$")},
+			{Path: "name", Resource: "databricks_budget_policy", Match: "policy_id", MatchType: MatchRegexp,
+				Regexp: regexp.MustCompile(`^accounts/[^/]+/budgetPolicies/([^/]+)/ruleSets/default$`)},
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			// We're ignoring ACLs without grant rules because we don't know about that at time of emitting from groups/service principals
@@ -2093,6 +2254,69 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_data_quality_monitor": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "dq",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "object_type,object_id" (e.g., "table,abc-123-def")
+			id := d.Id()
+			parts := strings.Split(id, ",")
+			if len(parts) == 2 {
+				objectType := parts[0]
+				objectId := parts[1]
+				// Create name like "table_monitor_abc12345"
+				if len(objectId) > 8 {
+					return fmt.Sprintf("%s_monitor_%s", objectType, objectId[:8])
+				}
+				return fmt.Sprintf("%s_monitor_%s", objectType, objectId)
+			}
+			return "monitor_" + generateUniqueID(id)
+		},
+		Import: importDataQualityMonitor,
+		List:   listDataQualityMonitors,
+		// Monitors should be also emitted as dependencies from tables/schemas (TODO: we need to add it)
+		Depends: []reference{
+			// object_id matches either table_id or schema_id depending on object_type
+			{Path: "object_id", Resource: "databricks_sql_table", Match: "table_id"},
+			{Path: "object_id", Resource: "databricks_schema", Match: "schema_id"},
+			// Full names match resource.id directly
+			{Path: "data_profiling_config.monitored_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.baseline_table_name", Resource: "databricks_sql_table"},
+			{Path: "data_profiling_config.warehouse_id", Resource: "databricks_sql_endpoint"},
+			// Email addresses match user_name field
+			{Path: "data_profiling_config.notification_settings.on_failure.email_addresses",
+				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_quality_monitor_v2": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "dq",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "object_type,object_id" (e.g., "schema,abc-123-def")
+			id := d.Id()
+			parts := strings.Split(id, ",")
+			if len(parts) == 2 {
+				objectType := parts[0]
+				objectId := parts[1]
+				// Create name like "schema_monitor_v2_abc12345"
+				if len(objectId) > 8 {
+					return fmt.Sprintf("%s_monitor_v2_%s", objectType, objectId[:8])
+				}
+				return fmt.Sprintf("%s_monitor_v2_%s", objectType, objectId)
+			}
+			return "monitor_v2_" + generateUniqueID(id)
+		},
+		Import: importQualityMonitorV2,
+		List:   listQualityMonitorsV2,
+		// Monitors should be also emitted as dependencies from tables/schemas (TODO: we need to add it)
+		Depends: []reference{
+			// object_id matches schema_id for schema-level monitors
+			{Path: "object_id", Resource: "databricks_schema", Match: "schema_id"},
+		},
+	},
+
 	"databricks_grants": {
 		WorkspaceLevel: true,
 		Service:        "uc-grants",
@@ -2634,6 +2858,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_workspace_setting_v2": {
+		WorkspaceLevel:         true,
+		Service:                "settings",
+		PluginFramework:        true,
+		List:                   listWorkspaceSettingsV2,
+		Import:                 importWorkspaceSettingV2,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+	},
+	"databricks_account_setting_v2": {
+		AccountLevel:           true,
+		Service:                "settings",
+		PluginFramework:        true,
+		List:                   listAccountSettingsV2,
+		Import:                 importAccountSettingV2,
+		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+	},
 	"databricks_online_table": {
 		WorkspaceLevel: true,
 		Service:        "uc-online-tables",
@@ -2762,6 +3002,9 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_mws_network_connectivity_config": {
 		AccountLevel: true,
 		Service:      "nccs",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Get("name").(string)
+		},
 		List: func(ic *importContext) error {
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
@@ -2784,7 +3027,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_mws_network_connectivity_config",
 					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
-					Name:     nc.Name,
 				})
 				if nc.EgressConfig.TargetRules != nil {
 					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
@@ -2816,6 +3058,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
 				Match: "network_connectivity_config_id"},
+		},
+	},
+	"databricks_mws_ncc_binding": {
+		AccountLevel: true,
+		Service:      "nccs",
+		List: func(ic *importContext) error {
+			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, workspace := range workspaces {
+				if workspace.NetworkConnectivityConfigId != "" {
+					ic.emitNccBindingAndNcc(workspace.WorkspaceId, workspace.NetworkConnectivityConfigId)
+					if !ic.accountClient.Config.IsAzure() {
+						wsIdString := strconv.FormatInt(workspace.WorkspaceId, 10)
+						ic.Emit(&resource{
+							Resource: "databricks_mws_workspaces",
+							ID:       ic.accountClient.Config.AccountID + "/" + wsIdString,
+							Name:     workspace.WorkspaceName + "_" + wsIdString,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
+				Match: "network_connectivity_config_id"},
+			{Path: "workspace_id", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 		},
 	},
 	"databricks_mws_credentials": {
@@ -3036,6 +3307,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "mws",
 		List: func(ic *importContext) error {
 			if ic.accountClient.Config.IsAzure() {
+				// TODO: use listing on Azure just to emit the NCC bindings
 				return nil
 			}
 			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
@@ -3106,6 +3378,9 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       ic.accountClient.Config.AccountID + "/" + workspace.CredentialsID,
 				})
 			}
+			if workspace.NetworkConnectivityConfigID != "" {
+				ic.emitNccBindingAndNcc(workspace.WorkspaceID, workspace.NetworkConnectivityConfigID)
+			}
 			if ic.isServiceEnabled("idfed") {
 				err := emitIdfedAndUsersSpsGroups(ic, workspace.WorkspaceID)
 				if err != nil {
@@ -3124,57 +3399,34 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "credentials_id", Resource: "databricks_mws_credentials", Match: "credentials_id"},
 		},
 	},
+	"databricks_budget_policy": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "billing",
+		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
+		List:            listBudgetPolicies,
+		Import:          importBudgetPolicy,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_budget_policy", "policy_id"),
+		Depends: []reference{
+			{Path: "binding_workspace_ids", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
+		},
+	},
 	"databricks_budget": {
 		AccountLevel: true,
 		Service:      "billing",
-		List: func(ic *importContext) error {
-			updatedSinceMs := ic.getUpdatedSinceMs()
-			budgets, err := ic.accountClient.Budgets.ListAll(ic.Context, billing.ListBudgetConfigurationsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, budget := range budgets {
-				if ic.incremental && budget.CreateTime < updatedSinceMs {
-					log.Printf("[DEBUG] skipping budget '%s' that was updated at %d (last active=%d)",
-						budget.DisplayName, budget.UpdateTime, updatedSinceMs)
-					continue
-				}
-				ic.Emit(&resource{
-					Resource: "databricks_budget",
-					ID:       ic.accountClient.Config.AccountID + "|" + budget.BudgetConfigurationId,
-					Name:     budget.DisplayName,
-				})
-			}
-			return nil
-		},
-		Import: func(ic *importContext, r *resource) error {
-			var budget billing.BudgetConfiguration
-			s := ic.Resources["databricks_budget"].Schema
-			common.DataToStructPointer(r.Data, s, &budget)
-			if budget.Filter != nil && budget.Filter.WorkspaceId != nil && !ic.accountClient.Config.IsAzure() {
-				for _, workspaceId := range budget.Filter.WorkspaceId.Values {
-					ic.Emit(&resource{
-						Resource: "databricks_mws_workspaces",
-						ID:       ic.accountClient.Config.AccountID + "/" + strconv.FormatInt(workspaceId, 10),
-					})
-				}
-			}
-			for _, alert := range budget.AlertConfigurations {
-				for _, action := range alert.ActionConfigurations {
-					if action.ActionType == billing.ActionConfigurationTypeEmailNotification {
-						ic.Emit(&resource{
-							Resource:  "databricks_user",
-							Attribute: "user_name",
-							Value:     action.Target,
-						})
-					}
-				}
-			}
-			return nil
-		},
+		List:         listBudgets,
+		Import:       importBudget,
 		Depends: []reference{
 			{Path: "filter.workspace_id.values", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 			{Path: "alert_configurations.action_configurations.target", Resource: "databricks_user", Match: "user_name"},
 		},
+	},
+	"databricks_tag_policy": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-tags",
+		List:            listTagPolicies,
+		// TODO: add import function that will emit access control rule set for the tag policy
+		// This requires knowing the account ID, so will be added later
 	},
 }

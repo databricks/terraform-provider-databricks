@@ -169,43 +169,6 @@ func (r *AccountNetworkPolicyResource) Configure(ctx context.Context, req resour
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan AccountNetworkPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var account_network_policy settings.AccountNetworkPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &account_network_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := settings.UpdateNetworkPolicyRequest{
-		NetworkPolicy:   account_network_policy,
-		NetworkPolicyId: plan.NetworkPolicyId.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetAccountClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.NetworkPolicies.UpdateNetworkPolicyRpc(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update account_network_policy", err.Error())
-		return
-	}
-
-	var newState AccountNetworkPolicy
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *AccountNetworkPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -295,6 +258,43 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *AccountNetworkPolicyResource) update(ctx context.Context, plan AccountNetworkPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+	var account_network_policy settings.AccountNetworkPolicy
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &account_network_policy)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := settings.UpdateNetworkPolicyRequest{
+		NetworkPolicy:   account_network_policy,
+		NetworkPolicyId: plan.NetworkPolicyId.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.NetworkPolicies.UpdateNetworkPolicyRpc(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update account_network_policy", err.Error())
+		return
+	}
+
+	var newState AccountNetworkPolicy
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *AccountNetworkPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

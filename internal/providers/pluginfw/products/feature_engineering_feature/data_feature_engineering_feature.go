@@ -36,12 +36,21 @@ type FeatureDataSource struct {
 type FeatureData struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
 	// The input columns from which the feature is computed.
 	Inputs types.List `tfsdk:"inputs"`
+	// WARNING: This field is primarily intended for internal use by Databricks
+	// systems and is automatically populated when features are created through
+	// Databricks notebooks or jobs. Users should not manually set this field as
+	// incorrect values may lead to inaccurate lineage tracking or unexpected
+	// behavior. This field will be set by feature-engineering client and should
+	// be left unset by SDK and terraform users.
+	LineageContext types.Object `tfsdk:"lineage_context"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
 	// The time window in which the feature is computed.
@@ -57,10 +66,11 @@ type FeatureData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"function":    reflect.TypeOf(ml_tf.Function{}),
-		"inputs":      reflect.TypeOf(types.String{}),
-		"source":      reflect.TypeOf(ml_tf.DataSource{}),
-		"time_window": reflect.TypeOf(ml_tf.TimeWindow{}),
+		"function":        reflect.TypeOf(ml_tf.Function{}),
+		"inputs":          reflect.TypeOf(types.String{}),
+		"lineage_context": reflect.TypeOf(ml_tf.LineageContext{}),
+		"source":          reflect.TypeOf(ml_tf.DataSource{}),
+		"time_window":     reflect.TypeOf(ml_tf.TimeWindow{}),
 	}
 }
 
@@ -74,12 +84,14 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description": m.Description,
-			"full_name":   m.FullName,
-			"function":    m.Function,
-			"inputs":      m.Inputs,
-			"source":      m.Source,
-			"time_window": m.TimeWindow,
+			"description":      m.Description,
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+			"function":         m.Function,
+			"inputs":           m.Inputs,
+			"lineage_context":  m.LineageContext,
+			"source":           m.Source,
+			"time_window":      m.TimeWindow,
 		},
 	)
 }
@@ -89,23 +101,27 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m FeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
-			"full_name":   types.StringType,
-			"function":    ml_tf.Function{}.Type(ctx),
+			"description":      types.StringType,
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+			"function":         ml_tf.Function{}.Type(ctx),
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"source":      ml_tf.DataSource{}.Type(ctx),
-			"time_window": ml_tf.TimeWindow{}.Type(ctx),
+			"lineage_context": ml_tf.LineageContext{}.Type(ctx),
+			"source":          ml_tf.DataSource{}.Type(ctx),
+			"time_window":     ml_tf.TimeWindow{}.Type(ctx),
 		},
 	}
 }
 
 func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetComputed()
+	attrs["filter_condition"] = attrs["filter_condition"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["function"] = attrs["function"].SetComputed()
 	attrs["inputs"] = attrs["inputs"].SetComputed()
+	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
 	attrs["source"] = attrs["source"].SetComputed()
 	attrs["time_window"] = attrs["time_window"].SetComputed()
 

@@ -12,6 +12,7 @@ import (
 )
 
 type NodeTypeRequest struct {
+	common.Namespace
 	compute.NodeTypeRequest
 	Arm bool `json:"arm,omitempty"`
 }
@@ -65,6 +66,7 @@ func DataSourceNodeType() common.Resource {
 		return nil
 	}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "graviton").SetDeprecated("Use `arm` instead")
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 }

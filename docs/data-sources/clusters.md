@@ -58,6 +58,8 @@ data "databricks_clusters" "all_pinned_clusters" {
 
 * `cluster_name_contains` - (Optional) Only return [databricks_cluster](../resources/cluster.md#cluster_id) ids that match the given name string.
 * `filter_by` - (Optional) Filters to apply to the listed clusters. See [filter_by Configuration Block](#filter_by-configuration-block) below for details.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### filter_by Configuration Block
 

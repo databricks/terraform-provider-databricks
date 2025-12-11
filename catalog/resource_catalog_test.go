@@ -601,11 +601,13 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 				ProviderName: "foo",
 				ShareName:    "bar",
 			}).Return(&catalog.CatalogInfo{
-				Name:         "a",
-				Comment:      "b",
-				Properties:   map[string]string{"c": "d"},
-				ProviderName: "foo",
-				ShareName:    "bar",
+				Name:                         "a",
+				Comment:                      "b",
+				Properties:                   map[string]string{"c": "d"},
+				ProviderName:                 "foo",
+				ShareName:                    "bar",
+				CatalogType:                  "DELTASHARING_CATALOG",
+				EnablePredictiveOptimization: "INHERIT",
 			}, nil)
 			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
 				Name:         "a",
@@ -626,7 +628,14 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 		provider_name = "foo"
 		share_name = "bar"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                             "a",
+		"name":                           "a",
+		"comment":                        "b",
+		"provider_name":                  "foo",
+		"share_name":                     "bar",
+		"enable_predictive_optimization": "",
+	})
 }
 
 func TestCatalogCreateForeign(t *testing.T) {
@@ -833,6 +842,7 @@ func TestCatalogSuppressCaseSensitivity(t *testing.T) {
 			"securable_type":                 {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"catalog_type":                   {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"storage_location":               {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"provisioning_info.#":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"effective_predictive_optimization_flag.#": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"full_name": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 		},

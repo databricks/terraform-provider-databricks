@@ -41,38 +41,64 @@ type SettingResource struct {
 
 // Setting extends the main model with additional fields.
 type Setting struct {
+	// Setting value for aibi_dashboard_embedding_access_policy setting. This is
+	// the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_access_policy for final setting value.
 	AibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"aibi_dashboard_embedding_access_policy"`
-
+	// Setting value for aibi_dashboard_embedding_approved_domains setting. This
+	// is the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_approved_domains for final setting
+	// value.
 	AibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"aibi_dashboard_embedding_approved_domains"`
-
+	// Setting value for automatic_cluster_update_workspace setting. This is the
+	// setting value set by consumers, check
+	// effective_automatic_cluster_update_workspace for final setting value.
 	AutomaticClusterUpdateWorkspace types.Object `tfsdk:"automatic_cluster_update_workspace"`
-
+	// Setting value for boolean type setting. This is the setting value set by
+	// consumers, check effective_boolean_val for final setting value.
 	BooleanVal types.Object `tfsdk:"boolean_val"`
-
+	// Effective setting value for aibi_dashboard_embedding_access_policy
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_access_policy.
 	EffectiveAibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"effective_aibi_dashboard_embedding_access_policy"`
-
+	// Effective setting value for aibi_dashboard_embedding_approved_domains
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_approved_domains.
 	EffectiveAibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"effective_aibi_dashboard_embedding_approved_domains"`
-
+	// Effective setting value for automatic_cluster_update_workspace setting.
+	// This is the final effective value of setting. To set a value use
+	// automatic_cluster_update_workspace.
 	EffectiveAutomaticClusterUpdateWorkspace types.Object `tfsdk:"effective_automatic_cluster_update_workspace"`
-
+	// Effective setting value for boolean type setting. This is the final
+	// effective value of setting. To set a value use boolean_val.
 	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
-
+	// Effective setting value for integer type setting. This is the final
+	// effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
-
+	// Effective setting value for personal_compute setting. This is the final
+	// effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
-
+	// Effective setting value for restrict_workspace_admins setting. This is
+	// the final effective value of setting. To set a value use
+	// restrict_workspace_admins.
 	EffectiveRestrictWorkspaceAdmins types.Object `tfsdk:"effective_restrict_workspace_admins"`
-
+	// Effective setting value for string type setting. This is the final
+	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
-
+	// Setting value for integer type setting. This is the setting value set by
+	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
 	// Name of the setting.
 	Name types.String `tfsdk:"name"`
-
+	// Setting value for personal_compute setting. This is the setting value set
+	// by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.Object `tfsdk:"personal_compute"`
-
+	// Setting value for restrict_workspace_admins setting. This is the setting
+	// value set by consumers, check effective_restrict_workspace_admins for
+	// final setting value.
 	RestrictWorkspaceAdmins types.Object `tfsdk:"restrict_workspace_admins"`
-
+	// Setting value for string type setting. This is the setting value set by
+	// consumers, check effective_string_val for final setting value.
 	StringVal types.Object `tfsdk:"string_val"`
 }
 
@@ -883,43 +909,6 @@ func (r *SettingResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.Diagnostics, state *tfsdk.State) {
-	var setting settingsv2.Setting
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &setting)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := settingsv2.PatchPublicAccountSettingRequest{
-		Setting: setting,
-		Name:    plan.Name.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetAccountClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.SettingsV2.PatchPublicAccountSetting(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update account_setting_v2", err.Error())
-		return
-	}
-
-	var newState Setting
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *SettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -973,6 +962,43 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.Diagnostics, state *tfsdk.State) {
+	var setting settingsv2.Setting
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &setting)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := settingsv2.PatchPublicAccountSettingRequest{
+		Setting: setting,
+		Name:    plan.Name.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.SettingsV2.PatchPublicAccountSetting(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update account_setting_v2", err.Error())
+		return
+	}
+
+	var newState Setting
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *SettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

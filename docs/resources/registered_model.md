@@ -26,7 +26,7 @@ The following arguments are supported:
 * `schema_name` - (Required) The name of the schema where the registered model resides. *Change of this parameter forces recreation of the resource.*
 * `owner` - (Optional) Name of the registered model owner.
 * `comment` - (Optional) The comment attached to the registered model.
-* `storage_location` - (Optional) The storage location under which model version data files are stored. *Change of this parameter forces recreation of the resource.*
+* `storage_location` - (Optional) The storage location under which model version data files are stored.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). *Change of this parameter forces recreation of the resource.*
 
 ## Attribute Reference
 

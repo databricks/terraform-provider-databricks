@@ -198,12 +198,16 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()
-	s.SchemaPath("catalog").SetForceNew()
-	s.SchemaPath("gateway_definition", "connection_id").SetForceNew()
-	s.SchemaPath("gateway_definition", "gateway_storage_catalog").SetForceNew()
-	s.SchemaPath("gateway_definition", "gateway_storage_schema").SetForceNew()
-	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
-	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
+	// catalog can be updated in-place, but switching between storage and catalog requires recreation
+	// (handled in CustomizeDiff)
+	for _, field := range []string{"connection_id", "connection_name",
+		"gateway_storage_catalog", "gateway_storage_schema"} {
+		s.SchemaPath("gateway_definition", field).SetForceNew()
+	}
+	for _, field := range []string{"connection_name", "ingestion_gateway_id",
+		"ingest_from_uc_foreign_catalog"} {
+		s.SchemaPath("ingestion_definition", field).SetForceNew()
+	}
 
 	// Required fields
 	s.SchemaPath("library", "glob", "include").SetRequired()
@@ -334,6 +338,23 @@ func ResourcePipeline() common.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			// Allow changing catalog value in existing pipelines, but force recreation
+			// when switching between storage and catalog (or vice versa).
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() == "" {
+				return nil
+			}
+
+			// If both storage and catalog changed, it means we're switching between storage and catalog modes
+			if d.HasChange("storage") && d.HasChange("catalog") {
+				if err := d.ForceNew("catalog"); err != nil {
+					return err
+				}
+				return d.ForceNew("storage")
+			}
+			return nil
 		},
 	}
 }

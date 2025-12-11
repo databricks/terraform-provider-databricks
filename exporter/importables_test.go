@@ -48,9 +48,17 @@ import (
 func importContextForTest() *importContext {
 	p := sdkv2.DatabricksProvider()
 	supportedResources := maps.Keys(resourcesMap)
+
+	// Initialize Plugin Framework provider for tests
+	ctx := context.Background()
+	pfProvider, pfResources, pfSchemas := initializePluginFrameworkProvider(ctx)
+
 	return &importContext{
 		Importables:               resourcesMap,
 		Resources:                 p.ResourcesMap,
+		PluginFrameworkProvider:   pfProvider,
+		PluginFrameworkResources:  pfResources,
+		PluginFrameworkSchemas:    pfSchemas,
 		testEmits:                 map[string]bool{},
 		nameFixes:                 nameFixes,
 		waitGroup:                 &sync.WaitGroup{},
@@ -548,6 +556,7 @@ func TestGroupCacheAndSearchError(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("groups")
 		err := resourcesMap["databricks_group"].List(ic)
 		assert.EqualError(t, err, "nope")
 

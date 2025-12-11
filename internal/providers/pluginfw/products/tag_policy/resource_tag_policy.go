@@ -183,44 +183,6 @@ func (r *TagPolicyResource) Configure(ctx context.Context, req resource.Configur
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var tag_policy tags.TagPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := tags.UpdateTagPolicyRequest{
-		TagPolicy:  tag_policy,
-		TagKey:     plan.TagKey.ValueString(),
-		UpdateMask: "description,values",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.TagPolicies.UpdateTagPolicy(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update tag_policy", err.Error())
-		return
-	}
-
-	var newState TagPolicy
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -310,6 +272,44 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+	var tag_policy tags.TagPolicy
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_policy)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := tags.UpdateTagPolicyRequest{
+		TagPolicy:  tag_policy,
+		TagKey:     plan.TagKey.ValueString(),
+		UpdateMask: "description,values",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.TagPolicies.UpdateTagPolicy(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update tag_policy", err.Error())
+		return
+	}
+
+	var newState TagPolicy
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *TagPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

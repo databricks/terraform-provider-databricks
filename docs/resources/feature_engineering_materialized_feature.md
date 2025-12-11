@@ -12,6 +12,7 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `feature_name` (string, required) - The full name of the feature in Unity Catalog
+* `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
 * `offline_store_config` (OfflineStoreConfig, optional)
 * `online_store_config` (OnlineStoreConfig, optional)
 * `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`

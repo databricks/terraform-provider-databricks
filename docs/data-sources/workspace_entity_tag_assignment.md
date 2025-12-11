@@ -7,17 +7,20 @@ subcategory: "Tags"
 This data source allows you to get information about a tag assignment for a specific workspace scoped entity using the entity type, entity id, and tag key.
 
 ## Example Usage
+```hcl
 data "databricks_workspace_entity_tag_assignment" "dashboard_tag" {
   entity_type = "dashboards"
   entity_id   = "2807324866692453"
-  tag_key     = "sensitivity_level"    
+  tag_key     = "sensitivity_level"
 }
 
 data "databricks_workspace_entity_tag_assignment" "geniespace_tag" {
   entity_type = "geniespaces"
   entity_id   = "2807324866692453"
-  tag_key     = "sensitivity_level"  
+  tag_key     = "sensitivity_level"
 }
+```
+
 
 ## Arguments
 The following arguments are supported:

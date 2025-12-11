@@ -353,44 +353,6 @@ func (r *KafkaConfigResource) Configure(ctx context.Context, req resource.Config
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diags *diag.Diagnostics, state *tfsdk.State) {
-	var kafka_config ml.KafkaConfig
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &kafka_config)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateKafkaConfigRequest{
-		KafkaConfig: kafka_config,
-		Name:        plan.Name.ValueString(),
-		UpdateMask:  *fieldmask.New(strings.Split("auth_config,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureEngineering.UpdateKafkaConfig(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update feature_engineering_kafka_config", err.Error())
-		return
-	}
-
-	var newState KafkaConfig
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *KafkaConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -480,6 +442,44 @@ func (r *KafkaConfigResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diags *diag.Diagnostics, state *tfsdk.State) {
+	var kafka_config ml.KafkaConfig
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &kafka_config)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateKafkaConfigRequest{
+		KafkaConfig: kafka_config,
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  *fieldmask.New(strings.Split("auth_config,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureEngineering.UpdateKafkaConfig(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update feature_engineering_kafka_config", err.Error())
+		return
+	}
+
+	var newState KafkaConfig
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *KafkaConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

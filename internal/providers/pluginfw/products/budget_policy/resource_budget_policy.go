@@ -221,43 +221,6 @@ func (r *BudgetPolicyResource) Configure(ctx context.Context, req resource.Confi
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var budget_policy billing.BudgetPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := billing.UpdateBudgetPolicyRequest{
-		Policy:   budget_policy,
-		PolicyId: plan.PolicyId.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetAccountClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.BudgetPolicy.Update(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update budget_policy", err.Error())
-		return
-	}
-
-	var newState BudgetPolicy
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -347,6 +310,43 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *BudgetPolicyResource) update(ctx context.Context, plan BudgetPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+	var budget_policy billing.BudgetPolicy
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := billing.UpdateBudgetPolicyRequest{
+		Policy:   budget_policy,
+		PolicyId: plan.PolicyId.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.BudgetPolicy.Update(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update budget_policy", err.Error())
+		return
+	}
+
+	var newState BudgetPolicy
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *BudgetPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

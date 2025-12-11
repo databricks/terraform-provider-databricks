@@ -143,44 +143,6 @@ func (r *DatabaseCatalogResource) Configure(ctx context.Context, req resource.Co
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatalog, diags *diag.Diagnostics, state *tfsdk.State) {
-	var database_catalog database.DatabaseCatalog
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_catalog)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := database.UpdateDatabaseCatalogRequest{
-		DatabaseCatalog: database_catalog,
-		Name:            plan.Name.ValueString(),
-		UpdateMask:      "create_database_if_not_exists,database_instance_name,database_name",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Database.UpdateDatabaseCatalog(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update database_database_catalog", err.Error())
-		return
-	}
-
-	var newState DatabaseCatalog
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -270,6 +232,44 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *DatabaseCatalogResource) update(ctx context.Context, plan DatabaseCatalog, diags *diag.Diagnostics, state *tfsdk.State) {
+	var database_catalog database.DatabaseCatalog
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_catalog)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := database.UpdateDatabaseCatalogRequest{
+		DatabaseCatalog: database_catalog,
+		Name:            plan.Name.ValueString(),
+		UpdateMask:      "create_database_if_not_exists,database_instance_name,database_name",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Database.UpdateDatabaseCatalog(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update database_database_catalog", err.Error())
+		return
+	}
+
+	var newState DatabaseCatalog
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *DatabaseCatalogResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

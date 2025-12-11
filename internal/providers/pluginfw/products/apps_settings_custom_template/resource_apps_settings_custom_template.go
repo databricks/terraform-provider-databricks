@@ -191,43 +191,6 @@ func (r *CustomTemplateResource) Configure(ctx context.Context, req resource.Con
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate, diags *diag.Diagnostics, state *tfsdk.State) {
-	var custom_template apps.CustomTemplate
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &custom_template)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := apps.UpdateCustomTemplateRequest{
-		Template: custom_template,
-		Name:     plan.Name.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.AppsSettings.UpdateCustomTemplate(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update apps_settings_custom_template", err.Error())
-		return
-	}
-
-	var newState CustomTemplate
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *CustomTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -317,6 +280,43 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate, diags *diag.Diagnostics, state *tfsdk.State) {
+	var custom_template apps.CustomTemplate
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &custom_template)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := apps.UpdateCustomTemplateRequest{
+		Template: custom_template,
+		Name:     plan.Name.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.AppsSettings.UpdateCustomTemplate(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update apps_settings_custom_template", err.Error())
+		return
+	}
+
+	var newState CustomTemplate
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *CustomTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

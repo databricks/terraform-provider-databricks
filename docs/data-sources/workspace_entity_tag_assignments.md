@@ -7,15 +7,18 @@ subcategory: "Tags"
 This data source allows you to retrieve tag assignments that have been applied to a particular workspace scoped entity.
 
 ## Example Usage
+```hcl
 data "databricks_workspace_entity_tag_assignments" "dashboard_tags" {
   entity_type = "dashboards"
   entity_id   = "2807324866692453"
 }
 
-data "databricks_workspace_entity_tag_assignment" "geniespace_tags" {
+data "databricks_workspace_entity_tag_assignments" "geniespace_tags" {
   entity_type = "geniespaces"
   entity_id   = "2807324866692453"
 }
+```
+
 
 ## Arguments
 The following arguments are supported:

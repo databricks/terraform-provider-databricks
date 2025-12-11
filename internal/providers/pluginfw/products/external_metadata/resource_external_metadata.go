@@ -250,44 +250,6 @@ func (r *ExternalMetadataResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *ExternalMetadataResource) update(ctx context.Context, plan ExternalMetadata, diags *diag.Diagnostics, state *tfsdk.State) {
-	var external_metadata catalog.ExternalMetadata
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &external_metadata)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := catalog.UpdateExternalMetadataRequest{
-		ExternalMetadata: external_metadata,
-		Name:             plan.Name.ValueString(),
-		UpdateMask:       "columns,description,entity_type,owner,properties,system_type,url",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.ExternalMetadata.UpdateExternalMetadata(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update external_metadata", err.Error())
-		return
-	}
-
-	var newState ExternalMetadata
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -377,6 +339,44 @@ func (r *ExternalMetadataResource) Read(ctx context.Context, req resource.ReadRe
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *ExternalMetadataResource) update(ctx context.Context, plan ExternalMetadata, diags *diag.Diagnostics, state *tfsdk.State) {
+	var external_metadata catalog.ExternalMetadata
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &external_metadata)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := catalog.UpdateExternalMetadataRequest{
+		ExternalMetadata: external_metadata,
+		Name:             plan.Name.ValueString(),
+		UpdateMask:       "columns,description,entity_type,owner,properties,system_type,url",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.ExternalMetadata.UpdateExternalMetadata(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update external_metadata", err.Error())
+		return
+	}
+
+	var newState ExternalMetadata
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *ExternalMetadataResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

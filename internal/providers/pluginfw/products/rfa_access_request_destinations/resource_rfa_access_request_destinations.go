@@ -210,43 +210,6 @@ func (r *AccessRequestDestinationResource) Configure(ctx context.Context, req re
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AccessRequestDestinationResource) update(ctx context.Context, plan AccessRequestDestinations, diags *diag.Diagnostics, state *tfsdk.State) {
-	var access_request_destinations catalog.AccessRequestDestinations
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &access_request_destinations)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := catalog.UpdateAccessRequestDestinationsRequest{
-		AccessRequestDestinations: access_request_destinations,
-		UpdateMask:                "destinations,securable",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Rfa.UpdateAccessRequestDestinations(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update rfa_access_request_destinations", err.Error())
-		return
-	}
-
-	var newState AccessRequestDestinations
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *AccessRequestDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -300,6 +263,43 @@ func (r *AccessRequestDestinationResource) Read(ctx context.Context, req resourc
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *AccessRequestDestinationResource) update(ctx context.Context, plan AccessRequestDestinations, diags *diag.Diagnostics, state *tfsdk.State) {
+	var access_request_destinations catalog.AccessRequestDestinations
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &access_request_destinations)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := catalog.UpdateAccessRequestDestinationsRequest{
+		AccessRequestDestinations: access_request_destinations,
+		UpdateMask:                "destinations,securable",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Rfa.UpdateAccessRequestDestinations(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update rfa_access_request_destinations", err.Error())
+		return
+	}
+
+	var newState AccessRequestDestinations
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *AccessRequestDestinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

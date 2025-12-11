@@ -169,44 +169,6 @@ func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
-	var quality_monitor qualitymonitorv2.QualityMonitor
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := qualitymonitorv2.UpdateQualityMonitorRequest{
-		QualityMonitor: quality_monitor,
-		ObjectId:       plan.ObjectId.ValueString(),
-		ObjectType:     plan.ObjectType.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update quality_monitor_v2", err.Error())
-		return
-	}
-
-	var newState QualityMonitor
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -296,6 +258,44 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
+	var quality_monitor qualitymonitorv2.QualityMonitor
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := qualitymonitorv2.UpdateQualityMonitorRequest{
+		QualityMonitor: quality_monitor,
+		ObjectId:       plan.ObjectId.ValueString(),
+		ObjectType:     plan.ObjectType.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update quality_monitor_v2", err.Error())
+		return
+	}
+
+	var newState QualityMonitor
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

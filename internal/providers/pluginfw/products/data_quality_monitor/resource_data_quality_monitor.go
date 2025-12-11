@@ -233,45 +233,6 @@ func (r *MonitorResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.Diagnostics, state *tfsdk.State) {
-	var monitor dataquality.Monitor
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &monitor)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := dataquality.UpdateMonitorRequest{
-		Monitor:    monitor,
-		ObjectId:   plan.ObjectId.ValueString(),
-		ObjectType: plan.ObjectType.ValueString(),
-		UpdateMask: "anomaly_detection_config,data_profiling_config",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.DataQuality.UpdateMonitor(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update data_quality_monitor", err.Error())
-		return
-	}
-
-	var newState Monitor
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *MonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -361,6 +322,45 @@ func (r *MonitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.Diagnostics, state *tfsdk.State) {
+	var monitor dataquality.Monitor
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &monitor)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := dataquality.UpdateMonitorRequest{
+		Monitor:    monitor,
+		ObjectId:   plan.ObjectId.ValueString(),
+		ObjectType: plan.ObjectType.ValueString(),
+		UpdateMask: "anomaly_detection_config,data_profiling_config",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.DataQuality.UpdateMonitor(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update data_quality_monitor", err.Error())
+		return
+	}
+
+	var newState Monitor
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *MonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

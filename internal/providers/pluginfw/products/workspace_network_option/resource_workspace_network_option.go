@@ -123,43 +123,6 @@ func (r *WorkspaceNetworkOptionResource) Configure(ctx context.Context, req reso
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan WorkspaceNetworkOption, diags *diag.Diagnostics, state *tfsdk.State) {
-	var workspace_network_option settings.WorkspaceNetworkOption
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_network_option)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := settings.UpdateWorkspaceNetworkOptionRequest{
-		WorkspaceNetworkOption: workspace_network_option,
-		WorkspaceId:            plan.WorkspaceId.ValueInt64(),
-	}
-
-	client, clientDiags := r.Client.GetAccountClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.WorkspaceNetworkConfiguration.UpdateWorkspaceNetworkOptionRpc(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update workspace_network_option", err.Error())
-		return
-	}
-
-	var newState WorkspaceNetworkOption
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *WorkspaceNetworkOptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -213,6 +176,43 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan WorkspaceNetworkOption, diags *diag.Diagnostics, state *tfsdk.State) {
+	var workspace_network_option settings.WorkspaceNetworkOption
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_network_option)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := settings.UpdateWorkspaceNetworkOptionRequest{
+		WorkspaceNetworkOption: workspace_network_option,
+		WorkspaceId:            plan.WorkspaceId.ValueInt64(),
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.WorkspaceNetworkConfiguration.UpdateWorkspaceNetworkOptionRpc(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update workspace_network_option", err.Error())
+		return
+	}
+
+	var newState WorkspaceNetworkOption
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *WorkspaceNetworkOptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

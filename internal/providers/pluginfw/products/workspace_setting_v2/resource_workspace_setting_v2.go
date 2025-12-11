@@ -909,43 +909,6 @@ func (r *SettingResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.Diagnostics, state *tfsdk.State) {
-	var setting settingsv2.Setting
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &setting)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := settingsv2.PatchPublicWorkspaceSettingRequest{
-		Setting: setting,
-		Name:    plan.Name.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.WorkspaceSettingsV2.PatchPublicWorkspaceSetting(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update workspace_setting_v2", err.Error())
-		return
-	}
-
-	var newState Setting
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *SettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -999,6 +962,43 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *SettingResource) update(ctx context.Context, plan Setting, diags *diag.Diagnostics, state *tfsdk.State) {
+	var setting settingsv2.Setting
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &setting)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := settingsv2.PatchPublicWorkspaceSettingRequest{
+		Setting: setting,
+		Name:    plan.Name.ValueString(),
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.WorkspaceSettingsV2.PatchPublicWorkspaceSetting(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update workspace_setting_v2", err.Error())
+		return
+	}
+
+	var newState Setting
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *SettingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -506,44 +506,6 @@ func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
-	var database_instance database.DatabaseInstance
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := database.UpdateDatabaseInstanceRequest{
-		DatabaseInstance: database_instance,
-		Name:             plan.Name.ValueString(),
-		UpdateMask:       "capacity,custom_tags,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped,usage_policy_id",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update database_instance", err.Error())
-		return
-	}
-
-	var newState DatabaseInstance
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -650,6 +612,44 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
+	var database_instance database.DatabaseInstance
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := database.UpdateDatabaseInstanceRequest{
+		DatabaseInstance: database_instance,
+		Name:             plan.Name.ValueString(),
+		UpdateMask:       "capacity,custom_tags,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped,usage_policy_id",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update database_instance", err.Error())
+		return
+	}
+
+	var newState DatabaseInstance
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

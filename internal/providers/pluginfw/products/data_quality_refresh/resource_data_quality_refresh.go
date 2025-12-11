@@ -167,46 +167,6 @@ func (r *RefreshResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.Diagnostics, state *tfsdk.State) {
-	var refresh dataquality.Refresh
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &refresh)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := dataquality.UpdateRefreshRequest{
-		Refresh:    refresh,
-		ObjectId:   plan.ObjectId.ValueString(),
-		ObjectType: plan.ObjectType.ValueString(),
-		RefreshId:  plan.RefreshId.ValueInt64(),
-		UpdateMask: "",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.DataQuality.UpdateRefresh(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update data_quality_refresh", err.Error())
-		return
-	}
-
-	var newState Refresh
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -298,6 +258,46 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.Diagnostics, state *tfsdk.State) {
+	var refresh dataquality.Refresh
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &refresh)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := dataquality.UpdateRefreshRequest{
+		Refresh:    refresh,
+		ObjectId:   plan.ObjectId.ValueString(),
+		ObjectType: plan.ObjectType.ValueString(),
+		RefreshId:  plan.RefreshId.ValueInt64(),
+		UpdateMask: "",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.DataQuality.UpdateRefresh(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update data_quality_refresh", err.Error())
+		return
+	}
+
+	var newState Refresh
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *RefreshResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

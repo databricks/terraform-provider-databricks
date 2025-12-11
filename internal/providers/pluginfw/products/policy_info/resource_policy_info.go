@@ -412,46 +412,6 @@ func (r *PolicyInfoResource) Configure(ctx context.Context, req resource.Configu
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags *diag.Diagnostics, state *tfsdk.State) {
-	var policy_info catalog.PolicyInfo
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &policy_info)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := catalog.UpdatePolicyRequest{
-		PolicyInfo:          policy_info,
-		Name:                plan.Name.ValueString(),
-		OnSecurableFullname: plan.OnSecurableFullname.ValueString(),
-		OnSecurableType:     plan.OnSecurableType.ValueString(),
-		UpdateMask:          "column_mask,comment,except_principals,for_securable_type,match_columns,policy_type,row_filter,to_principals,when_condition",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Policies.UpdatePolicy(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update policy_info", err.Error())
-		return
-	}
-
-	var newState PolicyInfo
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -541,6 +501,46 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags *diag.Diagnostics, state *tfsdk.State) {
+	var policy_info catalog.PolicyInfo
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &policy_info)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := catalog.UpdatePolicyRequest{
+		PolicyInfo:          policy_info,
+		Name:                plan.Name.ValueString(),
+		OnSecurableFullname: plan.OnSecurableFullname.ValueString(),
+		OnSecurableType:     plan.OnSecurableType.ValueString(),
+		UpdateMask:          "column_mask,comment,except_principals,for_securable_type,match_columns,policy_type,row_filter,to_principals,when_condition",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Policies.UpdatePolicy(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update policy_info", err.Error())
+		return
+	}
+
+	var newState PolicyInfo
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *PolicyInfoResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

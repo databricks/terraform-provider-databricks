@@ -5716,6 +5716,8 @@ type TableInternalAttributes struct {
 	// Storage locations of all table dependencies for shared views. Used on the
 	// recipient side for SEG (Secure Egress Gateway) whitelisting.
 	DependencyStorageLocations types.List `tfsdk:"dependency_storage_locations"`
+	// Whether the table has uniform enabled.
+	HasDeltaUniformIceberg types.Bool `tfsdk:"has_delta_uniform_iceberg"`
 	// Will be populated in the reconciliation response for VIEW and
 	// FOREIGN_TABLE, with the value of the parent UC entity's storage_location,
 	// following the same logic as getManagedEntityPath in
@@ -5755,6 +5757,7 @@ func (to *TableInternalAttributes) SyncFieldsDuringRead(ctx context.Context, fro
 func (m TableInternalAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auxiliary_managed_location"] = attrs["auxiliary_managed_location"].SetOptional()
 	attrs["dependency_storage_locations"] = attrs["dependency_storage_locations"].SetOptional()
+	attrs["has_delta_uniform_iceberg"] = attrs["has_delta_uniform_iceberg"].SetOptional()
 	attrs["parent_storage_location"] = attrs["parent_storage_location"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
@@ -5785,6 +5788,7 @@ func (m TableInternalAttributes) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"auxiliary_managed_location":   m.AuxiliaryManagedLocation,
 			"dependency_storage_locations": m.DependencyStorageLocations,
+			"has_delta_uniform_iceberg":    m.HasDeltaUniformIceberg,
 			"parent_storage_location":      m.ParentStorageLocation,
 			"storage_location":             m.StorageLocation,
 			"type":                         m.Type_,
@@ -5800,10 +5804,11 @@ func (m TableInternalAttributes) Type(ctx context.Context) attr.Type {
 			"dependency_storage_locations": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"parent_storage_location": types.StringType,
-			"storage_location":        types.StringType,
-			"type":                    types.StringType,
-			"view_definition":         types.StringType,
+			"has_delta_uniform_iceberg": types.BoolType,
+			"parent_storage_location":   types.StringType,
+			"storage_location":          types.StringType,
+			"type":                      types.StringType,
+			"view_definition":           types.StringType,
 		},
 	}
 }

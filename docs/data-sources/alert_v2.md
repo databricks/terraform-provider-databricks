@@ -2,7 +2,7 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 The SQL Alert v2 data source allows you to retrieve detailed information about a specific alert in Databricks SQL. This data source provides access to all alert properties, including its configuration, evaluation criteria, notification settings, and schedule.
 
@@ -65,7 +65,9 @@ The following attributes are exported:
 
 ### AlertV2Notification
 * `notify_on_ok` (boolean) - Whether to notify alert subscribers when alert returns back to normal
-* `retrigger_seconds` (integer) - Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again
+* `retrigger_seconds` (integer) - Number of seconds an alert waits after being triggered before it is allowed to send another notification.
+  If set to 0 or omitted, the alert will not send any further notifications after the first trigger
+  Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes
 * `subscriptions` (list of AlertV2Subscription)
 
 ### AlertV2Operand
@@ -73,7 +75,7 @@ The following attributes are exported:
 * `value` (AlertV2OperandValue)
 
 ### AlertV2OperandColumn
-* `aggregation` (string) - Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string) - If not set, the behavior is equivalent to using `First row` in the UI. Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string)
 * `name` (string)
 

@@ -320,7 +320,7 @@ type AwsAttributes_SdkV2 struct {
 	// availability zone must be in the same region as the Databricks
 	// deployment. For example, "us-west-2a" is not a valid zone id if the
 	// Databricks deployment resides in the "us-east-1" region. This is an
-	// optional field at cluster creation, and if not specified, a default zone
+	// optional field at cluster creation, and if not specified, the zone "auto"
 	// will be used. If the zone specified is "auto", will try to place cluster
 	// in a zone with high availability, and will retry placement in a different
 	// AZ if there is not enough capacity.
@@ -1137,8 +1137,7 @@ type ClusterAttributes_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -1986,8 +1985,7 @@ type ClusterDetails_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -4630,8 +4628,7 @@ type ClusterSpec_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -5803,8 +5800,7 @@ type CreateCluster_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -8490,8 +8486,7 @@ type EditCluster_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -20270,8 +20265,7 @@ type UpdateClusterResource_SdkV2 struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`

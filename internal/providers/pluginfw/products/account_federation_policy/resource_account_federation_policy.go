@@ -211,44 +211,6 @@ func (r *FederationPolicyResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FederationPolicyResource) update(ctx context.Context, plan FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var federation_policy oauth2.FederationPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := oauth2.UpdateAccountFederationPolicyRequest{
-		Policy:     federation_policy,
-		PolicyId:   plan.PolicyId.ValueString(),
-		UpdateMask: "description,oidc_policy",
-	}
-
-	client, clientDiags := r.Client.GetAccountClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FederationPolicy.Update(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update account_federation_policy", err.Error())
-		return
-	}
-
-	var newState FederationPolicy
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *FederationPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -339,6 +301,44 @@ func (r *FederationPolicyResource) Read(ctx context.Context, req resource.ReadRe
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *FederationPolicyResource) update(ctx context.Context, plan FederationPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+	var federation_policy oauth2.FederationPolicy
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &federation_policy)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := oauth2.UpdateAccountFederationPolicyRequest{
+		Policy:     federation_policy,
+		PolicyId:   plan.PolicyId.ValueString(),
+		UpdateMask: "description,oidc_policy",
+	}
+
+	client, clientDiags := r.Client.GetAccountClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FederationPolicy.Update(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update account_federation_policy", err.Error())
+		return
+	}
+
+	var newState FederationPolicy
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *FederationPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

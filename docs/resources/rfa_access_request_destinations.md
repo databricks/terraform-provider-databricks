@@ -44,8 +44,8 @@ resource "databricks_rfa_access_request_destinations" "customer_data_table" {
 
 ## Arguments
 The following arguments are supported:
-* `destinations` (list of NotificationDestination, required) - The access request destinations for the securable
 * `securable` (Securable, required) - The securable for which the access request destinations are being retrieved
+* `destinations` (list of NotificationDestination, optional) - The access request destinations for the securable
 
 ### NotificationDestination
 * `destination_id` (string, optional) - The identifier for the destination. This is the email address for EMAIL destinations, the URL for URL destinations,

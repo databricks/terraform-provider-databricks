@@ -17,6 +17,7 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `materialized_features`. It is a list of resources, each with the following attributes:
+* `cron_schedule` (string) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
 * `feature_name` (string) - The full name of the feature in Unity Catalog
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null

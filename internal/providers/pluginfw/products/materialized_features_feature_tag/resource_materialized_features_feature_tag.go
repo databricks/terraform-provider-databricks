@@ -117,44 +117,6 @@ func (r *FeatureTagResource) Configure(ctx context.Context, req resource.Configu
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FeatureTagResource) update(ctx context.Context, plan FeatureTag, diags *diag.Diagnostics, state *tfsdk.State) {
-	var feature_tag ml.FeatureTag
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature_tag)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateFeatureTagRequest{
-		FeatureTag: feature_tag,
-		Key:        plan.Key.ValueString(),
-		UpdateMask: "value",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.MaterializedFeatures.UpdateFeatureTag(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update materialized_features_feature_tag", err.Error())
-		return
-	}
-
-	var newState FeatureTag
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -244,6 +206,44 @@ func (r *FeatureTagResource) Read(ctx context.Context, req resource.ReadRequest,
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *FeatureTagResource) update(ctx context.Context, plan FeatureTag, diags *diag.Diagnostics, state *tfsdk.State) {
+	var feature_tag ml.FeatureTag
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature_tag)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateFeatureTagRequest{
+		FeatureTag: feature_tag,
+		Key:        plan.Key.ValueString(),
+		UpdateMask: "value",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.MaterializedFeatures.UpdateFeatureTag(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update materialized_features_feature_tag", err.Error())
+		return
+	}
+
+	var newState FeatureTag
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *FeatureTagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

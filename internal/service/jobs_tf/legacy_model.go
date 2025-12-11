@@ -1976,7 +1976,8 @@ type CreateJob_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// The performance mode on a serverless job. This field determines the level
-	// of compute performance or cost-efficiency for the run.
+	// of compute performance or cost-efficiency for the run. The performance
+	// target does not apply to tasks that run on Serverless GPU compute.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -7541,7 +7542,8 @@ type JobSettings_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// The performance mode on a serverless job. This field determines the level
-	// of compute performance or cost-efficiency for the run.
+	// of compute performance or cost-efficiency for the run. The performance
+	// target does not apply to tasks that run on Serverless GPU compute.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times

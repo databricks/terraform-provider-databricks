@@ -7,6 +7,7 @@ subcategory: "Tags"
 This resource allows you to create, update, list, and delete tag assignments for workspace scoped entities.
 
 ## Example Usage
+```hcl
 resource "databricks_workspace_entity_tag_assignment" "dashboard_tag" {
   entity_type = "dashboards"
   entity_id   = "2807324866692453"
@@ -20,6 +21,7 @@ resource "databricks_workspace_entity_tag_assignment" "geniespace_tag" {
   tag_key     = "sensitivity_level"
   tag_value   = "high"
 }
+```
 
 
 ## Arguments

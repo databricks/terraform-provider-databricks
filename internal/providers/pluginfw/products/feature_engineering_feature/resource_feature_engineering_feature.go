@@ -214,7 +214,7 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["time_window"] = attrs["time_window"].SetRequired()
+	attrs["time_window"] = attrs["time_window"].SetOptional()
 	attrs["time_window"] = attrs["time_window"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -364,44 +364,6 @@ func (r *FeatureResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.Diagnostics, state *tfsdk.State) {
-	var feature ml.Feature
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateFeatureRequest{
-		Feature:    feature,
-		FullName:   plan.FullName.ValueString(),
-		UpdateMask: "description,filter_condition,lineage_context",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureEngineering.UpdateFeature(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update feature_engineering_feature", err.Error())
-		return
-	}
-
-	var newState Feature
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *FeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -491,6 +453,44 @@ func (r *FeatureResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.Diagnostics, state *tfsdk.State) {
+	var feature ml.Feature
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateFeatureRequest{
+		Feature:    feature,
+		FullName:   plan.FullName.ValueString(),
+		UpdateMask: "description,filter_condition,lineage_context",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureEngineering.UpdateFeature(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update feature_engineering_feature", err.Error())
+		return
+	}
+
+	var newState Feature
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *FeatureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

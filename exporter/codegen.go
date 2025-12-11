@@ -399,6 +399,14 @@ func (ic *importContext) extractFieldsForGeneration(imp importable, path []strin
 			shouldSkip = false
 		}
 
+		// For Plugin Framework, also check for zero values in primitives
+		if !shouldSkip && wrapper.IsPluginFramework() && nonZero && fieldSchema.IsOptional() {
+			rv := reflect.ValueOf(raw)
+			if rv.IsValid() && rv.IsZero() {
+				shouldSkip = true
+			}
+		}
+
 		// Check if ShouldGenerateField forces generation
 		if shouldSkip {
 			forceGenerate := false
@@ -762,7 +770,9 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 					}
 
 					if nestedData, ok := item.(map[string]interface{}); ok {
-						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res)
+						// Include the index in the path for proper reference resolution
+						nestedPath := append(path, fieldName, strconv.Itoa(i))
+						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, nestedPath, nestedSchema, nestedData, res)
 						listTokens = append(listTokens, objTokens...)
 					}
 				}

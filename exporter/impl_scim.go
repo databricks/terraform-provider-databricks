@@ -251,7 +251,7 @@ func searchServicePrincipal(ic *importContext, r *resource) error {
 
 func importServicePrincipal(ic *importContext, r *resource) error {
 	applicationID := r.Data.Get("application_id").(string)
-	if ic.currentMetastore != nil {
+	if ic.currentMetastore != nil && ic.targetCloud == "" {
 		// Users are maintained on account level and are referenced via data sources
 		setDataForDataScimBlock(r)
 		r.Data.Set("display_name", "")
@@ -276,6 +276,12 @@ func importServicePrincipal(ic *importContext, r *resource) error {
 			ID: fmt.Sprintf("accounts/%s/servicePrincipals/%s/ruleSets/default",
 				ic.Client.Config.AccountID, applicationID),
 		})
+	}
+	if ic.accountLevel {
+		err = emitServicePrincipalFederationPolicies(ic, u.ID)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

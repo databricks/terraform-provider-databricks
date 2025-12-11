@@ -1,24 +1,27 @@
 # NEXT CHANGELOG
 
-## Release v1.98.0
+## Release v1.100.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
 
-* Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
-* Improve `databricks_service_principals` data source ([#5164](https://github.com/databricks/terraform-provider-databricks/pull/5164))
+* Handle new fields in `databricks_pipeline` resource ([#5249](https://github.com/databricks/terraform-provider-databricks/pull/5249))
+* Recreate `databricks_credential` on the `name` change ([#5248](https://github.com/databricks/terraform-provider-databricks/pull/5248)).
+* Allow to specify default catalog and schema for `databricks_dashboard` ([#5259](https://github.com/databricks/terraform-provider-databricks/pull/5259)).
 
 ### Bug Fixes
 
 * Fix permanent drift in `databricks_model_serving` when using `*_plaintext` credential fields for external models ([#5125](https://github.com/databricks/terraform-provider-databricks/pull/5125))
+* Fix retrieving of latest DBR versions in `databricks_spark_version` ([#5255](https://github.com/databricks/terraform-provider-databricks/pull/5255))
+* Reset PO flag for non-managed UC Catalogs ([#5260](https://github.com/databricks/terraform-provider-databricks/pull/5260)).
 
 ### Documentation
 
+* Add missing GCP IAM permission `topics.detachSubscription` for Databricks file events ([#5269](https://github.com/databricks/terraform-provider-databricks/pull/5269))
+
 ### Exporter
 
-* Added support for `databricks_data_quality_monitor` resource ([#5193](https://github.com/databricks/terraform-provider-databricks/pull/5193)).
-* Fix typo in the name of environment variable ([#5158](https://github.com/databricks/terraform-provider-databricks/pull/5158)).
-* Export permission assignments on workspace level ([#5169](https://github.com/databricks/terraform-provider-databricks/pull/5169)).
+* Added `-targetCloud` and `-nodeTypeMappingFile` flags for cross-cloud attribute and node-type conversion ([#5236](https://github.com/databricks/terraform-provider-databricks/issues/5236)).
 
 ### Internal Changes

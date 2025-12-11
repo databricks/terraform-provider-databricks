@@ -23,6 +23,97 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type CreateTagAssignmentRequest struct {
+	TagAssignment types.Object `tfsdk:"tag_assignment"`
+}
+
+func (to *CreateTagAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateTagAssignmentRequest) {
+	if !from.TagAssignment.IsNull() && !from.TagAssignment.IsUnknown() {
+		if toTagAssignment, ok := to.GetTagAssignment(ctx); ok {
+			if fromTagAssignment, ok := from.GetTagAssignment(ctx); ok {
+				// Recursively sync the fields of TagAssignment
+				toTagAssignment.SyncFieldsDuringCreateOrUpdate(ctx, fromTagAssignment)
+				to.SetTagAssignment(ctx, toTagAssignment)
+			}
+		}
+	}
+}
+
+func (to *CreateTagAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from CreateTagAssignmentRequest) {
+	if !from.TagAssignment.IsNull() && !from.TagAssignment.IsUnknown() {
+		if toTagAssignment, ok := to.GetTagAssignment(ctx); ok {
+			if fromTagAssignment, ok := from.GetTagAssignment(ctx); ok {
+				toTagAssignment.SyncFieldsDuringRead(ctx, fromTagAssignment)
+				to.SetTagAssignment(ctx, toTagAssignment)
+			}
+		}
+	}
+}
+
+func (m CreateTagAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_assignment"] = attrs["tag_assignment"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTagAssignmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_assignment": reflect.TypeOf(TagAssignment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateTagAssignmentRequest
+// only implements ToObjectValue() and Type().
+func (m CreateTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_assignment": m.TagAssignment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateTagAssignmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_assignment": TagAssignment{}.Type(ctx),
+		},
+	}
+}
+
+// GetTagAssignment returns the value of the TagAssignment field in CreateTagAssignmentRequest as
+// a TagAssignment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateTagAssignmentRequest) GetTagAssignment(ctx context.Context) (TagAssignment, bool) {
+	var e TagAssignment
+	if m.TagAssignment.IsNull() || m.TagAssignment.IsUnknown() {
+		return e, false
+	}
+	var v TagAssignment
+	d := m.TagAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTagAssignment sets the value of the TagAssignment field in CreateTagAssignmentRequest.
+func (m *CreateTagAssignmentRequest) SetTagAssignment(ctx context.Context, v TagAssignment) {
+	vs := v.ToObjectValue(ctx)
+	m.TagAssignment = vs
+}
+
 type CreateTagPolicyRequest struct {
 	TagPolicy types.Object `tfsdk:"tag_policy"`
 }
@@ -114,6 +205,66 @@ func (m *CreateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) 
 	m.TagPolicy = vs
 }
 
+type DeleteTagAssignmentRequest struct {
+	// The identifier of the entity to which the tag is assigned
+	EntityId types.String `tfsdk:"-"`
+	// The type of entity to which the tag is assigned. Allowed values are
+	// dashboards, geniespaces
+	EntityType types.String `tfsdk:"-"`
+	// The key of the tag. The characters , . : / - = and leading/trailing
+	// spaces are not allowed
+	TagKey types.String `tfsdk:"-"`
+}
+
+func (to *DeleteTagAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteTagAssignmentRequest) {
+}
+
+func (to *DeleteTagAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteTagAssignmentRequest) {
+}
+
+func (m DeleteTagAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_id"] = attrs["entity_id"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTagAssignmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteTagAssignmentRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_id":   m.EntityId,
+			"entity_type": m.EntityType,
+			"tag_key":     m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteTagAssignmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_id":   types.StringType,
+			"entity_type": types.StringType,
+			"tag_key":     types.StringType,
+		},
+	}
+}
+
 type DeleteTagPolicyRequest struct {
 	TagKey types.String `tfsdk:"-"`
 }
@@ -157,6 +308,66 @@ func (m DeleteTagPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tag_key": types.StringType,
+		},
+	}
+}
+
+type GetTagAssignmentRequest struct {
+	// The identifier of the entity to which the tag is assigned
+	EntityId types.String `tfsdk:"-"`
+	// The type of entity to which the tag is assigned. Allowed values are
+	// dashboards, geniespaces
+	EntityType types.String `tfsdk:"-"`
+	// The key of the tag. The characters , . : / - = and leading/trailing
+	// spaces are not allowed
+	TagKey types.String `tfsdk:"-"`
+}
+
+func (to *GetTagAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetTagAssignmentRequest) {
+}
+
+func (to *GetTagAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from GetTagAssignmentRequest) {
+}
+
+func (m GetTagAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_id"] = attrs["entity_id"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTagAssignmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetTagAssignmentRequest
+// only implements ToObjectValue() and Type().
+func (m GetTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_id":   m.EntityId,
+			"entity_type": m.EntityType,
+			"tag_key":     m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetTagAssignmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_id":   types.StringType,
+			"entity_type": types.StringType,
+			"tag_key":     types.StringType,
 		},
 	}
 }
@@ -206,6 +417,166 @@ func (m GetTagPolicyRequest) Type(ctx context.Context) attr.Type {
 			"tag_key": types.StringType,
 		},
 	}
+}
+
+type ListTagAssignmentsRequest struct {
+	// The identifier of the entity to which the tag is assigned
+	EntityId types.String `tfsdk:"-"`
+	// The type of entity to which the tag is assigned. Allowed values are
+	// dashboards, geniespaces
+	EntityType types.String `tfsdk:"-"`
+	// Optional. Maximum number of tag assignments to return in a single page
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of tag assignments. Requests
+	// first page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListTagAssignmentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTagAssignmentsRequest) {
+}
+
+func (to *ListTagAssignmentsRequest) SyncFieldsDuringRead(ctx context.Context, from ListTagAssignmentsRequest) {
+}
+
+func (m ListTagAssignmentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_id"] = attrs["entity_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTagAssignmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListTagAssignmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListTagAssignmentsRequest
+// only implements ToObjectValue() and Type().
+func (m ListTagAssignmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_id":   m.EntityId,
+			"entity_type": m.EntityType,
+			"page_size":   m.PageSize,
+			"page_token":  m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListTagAssignmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_id":   types.StringType,
+			"entity_type": types.StringType,
+			"page_size":   types.Int64Type,
+			"page_token":  types.StringType,
+		},
+	}
+}
+
+type ListTagAssignmentsResponse struct {
+	// Pagination token to request the next page of tag assignments
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	TagAssignments types.List `tfsdk:"tag_assignments"`
+}
+
+func (to *ListTagAssignmentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTagAssignmentsResponse) {
+	if !from.TagAssignments.IsNull() && !from.TagAssignments.IsUnknown() && to.TagAssignments.IsNull() && len(from.TagAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagAssignments = from.TagAssignments
+	}
+}
+
+func (to *ListTagAssignmentsResponse) SyncFieldsDuringRead(ctx context.Context, from ListTagAssignmentsResponse) {
+	if !from.TagAssignments.IsNull() && !from.TagAssignments.IsUnknown() && to.TagAssignments.IsNull() && len(from.TagAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagAssignments = from.TagAssignments
+	}
+}
+
+func (m ListTagAssignmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["tag_assignments"] = attrs["tag_assignments"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTagAssignmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListTagAssignmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_assignments": reflect.TypeOf(TagAssignment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListTagAssignmentsResponse
+// only implements ToObjectValue() and Type().
+func (m ListTagAssignmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"tag_assignments": m.TagAssignments,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListTagAssignmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"tag_assignments": basetypes.ListType{
+				ElemType: TagAssignment{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTagAssignments returns the value of the TagAssignments field in ListTagAssignmentsResponse as
+// a slice of TagAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListTagAssignmentsResponse) GetTagAssignments(ctx context.Context) ([]TagAssignment, bool) {
+	if m.TagAssignments.IsNull() || m.TagAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []TagAssignment
+	d := m.TagAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTagAssignments sets the value of the TagAssignments field in ListTagAssignmentsResponse.
+func (m *ListTagAssignmentsResponse) SetTagAssignments(ctx context.Context, v []TagAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TagAssignments = types.ListValueMust(t, vs)
 }
 
 type ListTagPoliciesRequest struct {
@@ -358,6 +729,74 @@ func (m *ListTagPoliciesResponse) SetTagPolicies(ctx context.Context, v []TagPol
 	m.TagPolicies = types.ListValueMust(t, vs)
 }
 
+type TagAssignment struct {
+	// The identifier of the entity to which the tag is assigned
+	EntityId types.String `tfsdk:"entity_id"`
+	// The type of entity to which the tag is assigned. Allowed values are
+	// dashboards, geniespaces
+	EntityType types.String `tfsdk:"entity_type"`
+	// The key of the tag. The characters , . : / - = and leading/trailing
+	// spaces are not allowed
+	TagKey types.String `tfsdk:"tag_key"`
+	// The value of the tag
+	TagValue types.String `tfsdk:"tag_value"`
+}
+
+func (to *TagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagAssignment) {
+}
+
+func (to *TagAssignment) SyncFieldsDuringRead(ctx context.Context, from TagAssignment) {
+}
+
+func (m TagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_id"] = attrs["entity_id"].SetRequired()
+	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagAssignment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagAssignment
+// only implements ToObjectValue() and Type().
+func (m TagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_id":   m.EntityId,
+			"entity_type": m.EntityType,
+			"tag_key":     m.TagKey,
+			"tag_value":   m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagAssignment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_id":   types.StringType,
+			"entity_type": types.StringType,
+			"tag_key":     types.StringType,
+			"tag_value":   types.StringType,
+		},
+	}
+}
+
 type TagPolicy struct {
 	// Timestamp when the tag policy was created
 	CreateTime types.String `tfsdk:"create_time"`
@@ -370,7 +809,7 @@ type TagPolicy struct {
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
 
-	Values types.List `tfsdk:"values"`
+	Values types.Set `tfsdk:"values"`
 }
 
 func (to *TagPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagPolicy) {
@@ -441,7 +880,7 @@ func (m TagPolicy) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
 			"update_time": types.StringType,
-			"values": basetypes.ListType{
+			"values": basetypes.SetType{
 				ElemType: Value{}.Type(ctx),
 			},
 		},
@@ -471,7 +910,134 @@ func (m *TagPolicy) SetValues(ctx context.Context, v []Value) {
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Values = types.ListValueMust(t, vs)
+	m.Values = types.SetValueMust(t, vs)
+}
+
+type UpdateTagAssignmentRequest struct {
+	// The identifier of the entity to which the tag is assigned
+	EntityId types.String `tfsdk:"-"`
+	// The type of entity to which the tag is assigned. Allowed values are
+	// dashboards, geniespaces
+	EntityType types.String `tfsdk:"-"`
+
+	TagAssignment types.Object `tfsdk:"tag_assignment"`
+	// The key of the tag. The characters , . : / - = and leading/trailing
+	// spaces are not allowed
+	TagKey types.String `tfsdk:"-"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateTagAssignmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateTagAssignmentRequest) {
+	if !from.TagAssignment.IsNull() && !from.TagAssignment.IsUnknown() {
+		if toTagAssignment, ok := to.GetTagAssignment(ctx); ok {
+			if fromTagAssignment, ok := from.GetTagAssignment(ctx); ok {
+				// Recursively sync the fields of TagAssignment
+				toTagAssignment.SyncFieldsDuringCreateOrUpdate(ctx, fromTagAssignment)
+				to.SetTagAssignment(ctx, toTagAssignment)
+			}
+		}
+	}
+}
+
+func (to *UpdateTagAssignmentRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateTagAssignmentRequest) {
+	if !from.TagAssignment.IsNull() && !from.TagAssignment.IsUnknown() {
+		if toTagAssignment, ok := to.GetTagAssignment(ctx); ok {
+			if fromTagAssignment, ok := from.GetTagAssignment(ctx); ok {
+				toTagAssignment.SyncFieldsDuringRead(ctx, fromTagAssignment)
+				to.SetTagAssignment(ctx, toTagAssignment)
+			}
+		}
+	}
+}
+
+func (m UpdateTagAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_assignment"] = attrs["tag_assignment"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["entity_id"] = attrs["entity_id"].SetRequired()
+	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTagAssignmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateTagAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_assignment": reflect.TypeOf(TagAssignment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateTagAssignmentRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateTagAssignmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_id":      m.EntityId,
+			"entity_type":    m.EntityType,
+			"tag_assignment": m.TagAssignment,
+			"tag_key":        m.TagKey,
+			"update_mask":    m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateTagAssignmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_id":      types.StringType,
+			"entity_type":    types.StringType,
+			"tag_assignment": TagAssignment{}.Type(ctx),
+			"tag_key":        types.StringType,
+			"update_mask":    types.StringType,
+		},
+	}
+}
+
+// GetTagAssignment returns the value of the TagAssignment field in UpdateTagAssignmentRequest as
+// a TagAssignment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateTagAssignmentRequest) GetTagAssignment(ctx context.Context) (TagAssignment, bool) {
+	var e TagAssignment
+	if m.TagAssignment.IsNull() || m.TagAssignment.IsUnknown() {
+		return e, false
+	}
+	var v TagAssignment
+	d := m.TagAssignment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTagAssignment sets the value of the TagAssignment field in UpdateTagAssignmentRequest.
+func (m *UpdateTagAssignmentRequest) SetTagAssignment(ctx context.Context, v TagAssignment) {
+	vs := v.ToObjectValue(ctx)
+	m.TagAssignment = vs
 }
 
 type UpdateTagPolicyRequest struct {

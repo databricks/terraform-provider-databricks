@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add support for `default_workspace_id` provider-level configuration ([#5284](https://github.com/databricks/terraform-provider-databricks/pull/5284)).
+
 ### Bug Fixes
 
 ### Documentation

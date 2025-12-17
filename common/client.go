@@ -78,6 +78,11 @@ type DatabricksClient struct {
 	// configured for the provider
 	cachedAccountClient *databricks.AccountClient
 
+	// defaultWorkspaceID is the default workspace ID to use when workspace_id is not
+	// specified in provider_config at the resource level. This is set from the provider
+	// configuration and serves as a fallback for unified provider resources.
+	defaultWorkspaceID string
+
 	// mu synchronizes access to all cached clients.
 	mu sync.Mutex
 
@@ -123,11 +128,14 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
+	// If workspace_id is not provided in provider_config, use the default_workspace_id
+	// from provider configuration as fallback
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+		if c.defaultWorkspaceID != "" {
+			workspaceID = c.defaultWorkspaceID
+		} else {
+			return nil, fmt.Errorf("workspace_id is not set in provider_config and default_workspace_id is not configured at provider level")
+		}
 	}
 
 	// Parse the workspace ID to int.
@@ -184,6 +192,13 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 
 	}
 	return workspaceIDInt, nil
+}
+
+// SetDefaultWorkspaceID sets the default workspace ID in the DatabricksClient.
+// This is used as a fallback when workspace_id is not specified in provider_config
+// at the resource level for unified provider resources.
+func (c *DatabricksClient) SetDefaultWorkspaceID(workspaceID string) {
+	c.defaultWorkspaceID = workspaceID
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the

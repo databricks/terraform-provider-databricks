@@ -44,6 +44,7 @@ func HTTPFixturesApplyAccount(t *testing.T, fixtures []qa.HTTPFixture, testFunc 
 		client.Config.AccountID = testAccountID
 		// Set Host to accounts.cloud.databricks.com to enable AWS detection via IsAws()
 		client.Config.Host = "https://accounts.cloud.databricks.com"
+		client.Config.WithTesting()
 		testFunc(ctx, client)
 	})
 }

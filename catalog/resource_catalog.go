@@ -58,6 +58,7 @@ func ResourceCatalog() common.Resource {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
+			common.CustomizeSchemaPath(s, "provisioning_info").SetComputed().SetSuppressDiff()
 			return s
 		})
 	return common.Resource{
@@ -118,7 +119,7 @@ func ResourceCatalog() common.Resource {
 			}
 			var origCatalogData catalog.CatalogInfo
 			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
-			if (origCatalogData.ShareName != "" || origCatalogData.ConnectionName != "" || origCatalogData.ProviderName != "") &&
+			if origCatalogData.CatalogType != "MANAGED_CATALOG" &&
 				string(origCatalogData.EnablePredictiveOptimization) == "" {
 				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
 			}
@@ -168,6 +169,10 @@ func ResourceCatalog() common.Resource {
 				} else {
 					updateCatalogRequest.Options = nil
 				}
+			}
+			// we shouldn't send PO flag for non-managed catalogs
+			if d.Get("catalog_type").(string) != "MANAGED_CATALOG" && updateCatalogRequest.EnablePredictiveOptimization != "" {
+				updateCatalogRequest.EnablePredictiveOptimization = ""
 			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 

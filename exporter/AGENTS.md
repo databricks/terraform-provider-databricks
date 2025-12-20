@@ -1,6 +1,6 @@
 # Terraform Exporter
 
-The exporter (`exporter/` directory) generates Terraform configuration (`.tf` files) and import scripts from existing Databricks resources.
+You're experienced senior engineer working on  the exporter utility (`exporter/` directory) that generates Terraform configuration (`.tf` files) and import scripts from existing Databricks resources.
 
 ## How it works under the hood
 
@@ -33,7 +33,7 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 
 1. Define a new `importable` instance in the `importables.go`.
 2. Specify if it's account-level or workspace-level resource, or both.
-3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).
+3. Specify a service to which resource belongs to. Either use one of the existing, if it fits, or define a new one (ask user for confirmation).  Put new functions to `impl_<service>.go` and tests into `impl_<service>_test.go`.
 4. Implement the `List` function that will be discover and emit instances of the specific resource.  When implementing it, prefer to use `List` method of Go SDK instead of `ListAll`.
 5. (Optional) Implement the `Name` function that will extract TF resource name from an instance of a specific resource.
 6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
@@ -125,3 +125,133 @@ For a resource with `node_count` (input-only) and `effective_node_count` (API-re
 - Generated HCL omits: `enable_readable_secondaries = false` (zero value)
 
 For more details, see `exporter/EFFECTIVE_FIELDS_PATTERN.md`.
+
+## Cloud Attribute Conversion
+
+The exporter supports converting cloud-specific attributes when exporting for a different target cloud using the `-targetCloud` flag.
+
+**Supported Resources:**
+- `databricks_cluster`
+- `databricks_job` (new_cluster in tasks and job_clusters)
+- `databricks_pipeline`
+- `databricks_instance_pool`
+
+**Compatible Attributes:**
+- `availability` - Automatically converted to target cloud format
+- `first_on_demand` - Preserved as-is
+- `zone_id` - Only "auto" value is portable between AWS and GCP
+- `ebs_volume_count` ↔ `local_ssd_count` - Only with GENERAL_PURPOSE_SSD
+- `disk_spec.disk_type` (instance pools only):
+  - AWS `ebs_volume_type` ↔ Azure `azure_disk_volume_type`
+    - `GENERAL_PURPOSE_SSD` ↔ `PREMIUM_LRS`
+    - `THROUGHPUT_OPTIMIZED_HDD` ↔ `STANDARD_LRS`
+  - GCP: `disk_type` not supported (removed when converting to GCP)
+  - `disk_count` is preserved across all clouds
+
+**Incompatible Attributes:**
+Attributes without equivalents in the target cloud (e.g., `instance_profile_arn` on AWS) are omitted from the converted output.
+
+**Implementation:**
+Cloud conversion logic is in `exporter/cloud_utils.go` and integrates into the resource import pipeline before HCL generation.
+
+**Policy for Incompatible Attributes:**
+When converting cloud attributes, source blocks are ALWAYS cleared. If no compatible attributes exist for conversion, the resource will have no cloud attributes block in the generated HCL. Users should review the generated code and manually add cloud-specific attributes as needed.
+
+**Important Limitations:**
+- Only the attributes block is converted; instance types, zones, and other resource-specific configurations must be updated manually
+- Instance profile ARNs and similar cloud-specific identifiers cannot be converted and will be omitted
+- The exporter will log warnings when attributes cannot be converted
+
+## Node Type Mapping
+
+The exporter supports converting `node_type_id` and `driver_node_type_id` fields using an external JSON mapping file specified via the `-nodeTypeMappingFile` flag.
+
+**Usage:**
+```bash
+databricks exporter -targetCloud azure -nodeTypeMappingFile node_mappings.json
+```
+
+**Mapping File Format:**
+```json
+{
+  "version": "1.0",
+  "mappings": [
+    {
+      "azure": "Standard_F4s",
+      "aws": "i3.xlarge",
+      "gcp": "n1-standard-4"
+    }
+  ]
+}
+```
+
+**Features:**
+- Bidirectional mappings: Single file works for all cloud combinations
+- Converts both `node_type_id` and `driver_node_type_id` in clusters, jobs, and pipelines
+- Preserves unmapped node types with warnings
+- Can only be used together with `-targetCloud` flag
+
+**Implementation:**
+- Node type mapping logic is in `exporter/node_type_mapping.go`
+- Integration happens in `cloud_utils.go` alongside cloud attribute conversion
+- Conversion is applied at both top-level and nested cluster configurations
+
+### Generating Node Type Mappings
+
+The `exporter/generate_node_mappings.py` script generates node type mapping files from Databricks API responses.
+
+**Obtaining Node Type Data:**
+
+First, extract node type information from each cloud using the Databricks CLI or API:
+
+```bash
+# AWS workspace
+databricks clusters list-node-types --profile aws-workspace > node-types-aws.json
+
+# Azure workspace
+databricks clusters list-node-types --profile azure-workspace > node-types-azure.json
+
+# GCP workspace
+databricks clusters list-node-types --profile gcp-workspace > node-types-gcp.json
+```
+
+**Running the Generator:**
+
+```bash
+cd exporter
+python3 generate_node_mappings.py \
+  --aws node-types-aws.json \
+  --azure node-types-azure.json \
+  --gcp node-types-gcp.json \
+  --output node_type_mapping.json
+```
+
+**Algorithm:**
+
+The script uses a two-phase approach to maximize mapping coverage:
+
+1. **Exact Matching Phase** (minimum similarity score: 150)
+   - Core count must match exactly (required)
+   - Memory within 90% tolerance (weighted: 50 points)
+   - Category matching: memory/highmem, compute, storage, general (weighted: 30 points)
+   - Disk configuration similarity (weighted: 20 points)
+
+2. **Approximate Matching Phase**
+   - For mappings missing one or two clouds, finds approximate matches
+   - Uses existing cloud mapping characteristics as reference
+   - Requires same core count, accepts lower similarity scores
+   - Results in ~99.5% complete three-way mappings (AWS + Azure + GCP)
+
+**Output:**
+
+The script generates a bidirectional JSON mapping file with statistics:
+- Total mappings: typically 800-850
+- Complete three-way mappings: ~99.5%
+- Incomplete mappings: ~0.5% (usually high-core instances without cross-cloud equivalents)
+
+**Filters Applied:**
+
+The script automatically filters out:
+- Deprecated node types (`is_deprecated: true`)
+- Hidden node types (`is_hidden: true`)
+- GPU-enabled instances (handled separately)

@@ -41,6 +41,9 @@ type MaterializedFeatureResource struct {
 
 // MaterializedFeature extends the main model with additional fields.
 type MaterializedFeature struct {
+	// The quartz cron expression that defines the schedule of the
+	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// The timestamp when the pipeline last ran and updated the materialized
@@ -82,7 +85,8 @@ func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"feature_name": m.FeatureName,
+		map[string]attr.Value{"cron_schedule": m.CronSchedule,
+			"feature_name":              m.FeatureName,
 			"last_materialization_time": m.LastMaterializationTime,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
@@ -97,7 +101,8 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 // and contains additional fields.
 func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"feature_name": types.StringType,
+		AttrTypes: map[string]attr.Type{"cron_schedule": types.StringType,
+			"feature_name":              types.StringType,
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
@@ -155,6 +160,7 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 }
 
 func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
@@ -232,44 +238,6 @@ func (r *MaterializedFeatureResource) Schema(ctx context.Context, req resource.S
 
 func (r *MaterializedFeatureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
-}
-
-func (r *MaterializedFeatureResource) update(ctx context.Context, plan MaterializedFeature, diags *diag.Diagnostics, state *tfsdk.State) {
-	var materialized_feature ml.MaterializedFeature
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &materialized_feature)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateMaterializedFeatureRequest{
-		MaterializedFeature:   materialized_feature,
-		MaterializedFeatureId: plan.MaterializedFeatureId.ValueString(),
-		UpdateMask:            "feature_name,offline_store_config,online_store_config,pipeline_schedule_state",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureEngineering.UpdateMaterializedFeature(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update feature_engineering_materialized_feature", err.Error())
-		return
-	}
-
-	var newState MaterializedFeature
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *MaterializedFeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -361,6 +329,44 @@ func (r *MaterializedFeatureResource) Read(ctx context.Context, req resource.Rea
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *MaterializedFeatureResource) update(ctx context.Context, plan MaterializedFeature, diags *diag.Diagnostics, state *tfsdk.State) {
+	var materialized_feature ml.MaterializedFeature
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &materialized_feature)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateMaterializedFeatureRequest{
+		MaterializedFeature:   materialized_feature,
+		MaterializedFeatureId: plan.MaterializedFeatureId.ValueString(),
+		UpdateMask:            "cron_schedule,feature_name,offline_store_config,online_store_config,pipeline_schedule_state",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureEngineering.UpdateMaterializedFeature(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update feature_engineering_materialized_feature", err.Error())
+		return
+	}
+
+	var newState MaterializedFeature
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *MaterializedFeatureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

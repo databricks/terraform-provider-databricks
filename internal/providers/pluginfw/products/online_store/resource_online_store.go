@@ -140,44 +140,6 @@ func (r *OnlineStoreResource) Configure(ctx context.Context, req resource.Config
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
-	var online_store ml.OnlineStore
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateOnlineStoreRequest{
-		OnlineStore: online_store,
-		Name:        plan.Name.ValueString(),
-		UpdateMask:  "capacity,read_replica_count",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update online_store", err.Error())
-		return
-	}
-
-	var newState OnlineStore
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -267,6 +229,44 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
+	var online_store ml.OnlineStore
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateOnlineStoreRequest{
+		OnlineStore: online_store,
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  "capacity,read_replica_count",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update online_store", err.Error())
+		return
+	}
+
+	var newState OnlineStore
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *OnlineStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

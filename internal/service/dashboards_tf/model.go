@@ -185,6 +185,16 @@ func (m AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
 
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *CreateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDashboardRequest) {
@@ -212,6 +222,8 @@ func (to *CreateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m CreateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -236,7 +248,9 @@ func (m CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard": m.Dashboard,
+			"dashboard":       m.Dashboard,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -244,7 +258,9 @@ func (m CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m CreateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": Dashboard{}.Type(ctx),
+			"dashboard":       Dashboard{}.Type(ctx),
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }
@@ -5366,6 +5382,16 @@ type UpdateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *UpdateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDashboardRequest) {
@@ -5394,6 +5420,8 @@ func (to *UpdateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from
 func (m UpdateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -5418,8 +5446,10 @@ func (m UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard":    m.Dashboard,
-			"dashboard_id": m.DashboardId,
+			"dashboard":       m.Dashboard,
+			"dashboard_id":    m.DashboardId,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -5427,8 +5457,10 @@ func (m UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m UpdateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard":    Dashboard{}.Type(ctx),
-			"dashboard_id": types.StringType,
+			"dashboard":       Dashboard{}.Type(ctx),
+			"dashboard_id":    types.StringType,
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }

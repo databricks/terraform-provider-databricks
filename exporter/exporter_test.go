@@ -2293,7 +2293,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2Finit.sh",
+				Resource: "/api/2.0/workspace/export?direct_download=true&format=AUTO&path=%2Finit.sh",
 				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
@@ -2545,7 +2545,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
+				Resource: "/api/2.0/workspace/export?direct_download=true&format=AUTO&path=%2FFile",
 				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
@@ -2647,7 +2647,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
+				Resource: "/api/2.0/workspace/export?direct_download=true&format=AUTO&path=%2FFile",
 				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},

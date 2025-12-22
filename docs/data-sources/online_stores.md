@@ -22,3 +22,4 @@ This data source exports a single attribute, `online_stores`. It is a list of re
 * `name` (string) - The name of the online store. This is the unique identifier for the online store
 * `read_replica_count` (integer) - The number of read replicas for the online store. Defaults to 0
 * `state` (string) - The current state of the online store. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
+* `usage_policy_id` (string) - The usage policy applied to the online store to track billing

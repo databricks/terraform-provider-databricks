@@ -2695,8 +2695,7 @@ func (m MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
-	// The budget policy id to be applied (hima-sheth) TODO: remove this once
-	// we've migrated to usage policies
+	// The budget policy id to be applied
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`

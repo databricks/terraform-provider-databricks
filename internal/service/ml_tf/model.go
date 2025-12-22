@@ -14561,6 +14561,8 @@ type OnlineStore struct {
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
 	// The current state of the online store.
 	State types.String `tfsdk:"state"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
@@ -14576,6 +14578,7 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -14604,6 +14607,7 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":               m.Name,
 			"read_replica_count": m.ReadReplicaCount,
 			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
 		})
 }
 
@@ -14617,6 +14621,7 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 			"name":               types.StringType,
 			"read_replica_count": types.Int64Type,
 			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
 		},
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -27,6 +28,7 @@ import (
 const (
 	resourceName       = "app"
 	resourceNamePlural = "apps"
+	appDeletionTimeout = 10 * time.Minute
 )
 
 type AppResource struct {
@@ -211,6 +213,31 @@ func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceCli
 	})
 }
 
+func waitForAppDeleted(ctx context.Context, w *databricks.WorkspaceClient, name string) error {
+	retrier := retries.New[struct{}](retries.WithTimeout(appDeletionTimeout), retries.WithRetryFunc(shouldRetry))
+	_, err := retrier.Run(ctx, func(ctx context.Context) (*struct{}, error) {
+		app, err := w.Apps.GetByName(ctx, name)
+		if apierr.IsMissing(err) {
+			return &struct{}{}, nil
+		}
+		if err != nil {
+			return nil, retries.Halt(err)
+		}
+		if app.ComputeStatus == nil {
+			return nil, retries.Continues("waiting for compute status")
+		}
+		switch app.ComputeStatus.State {
+		case apps.ComputeStateDeleting:
+			return nil, retries.Continues("app is deleting")
+		case apps.ComputeStateActive, apps.ComputeStateStopped, apps.ComputeStateError:
+			return nil, retries.Halt(fmt.Errorf("app %s was not deleted, current state: %s", name, app.ComputeStatus.State))
+		default:
+			return nil, retries.Continues(fmt.Sprintf("app is in %s state", app.ComputeStatus.State))
+		}
+	})
+	return err
+}
+
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -324,6 +351,11 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 	_, err := w.Apps.DeleteByName(ctx, app.Name.ValueString())
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete app", err.Error())
+		return
+	}
+
+	if err := waitForAppDeleted(ctx, w, app.Name.ValueString()); err != nil {
+		resp.Diagnostics.AddError("failed to wait for app deletion", err.Error())
 		return
 	}
 }

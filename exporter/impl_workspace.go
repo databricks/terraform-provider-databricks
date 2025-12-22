@@ -35,7 +35,7 @@ func ImportNotebook(ic *importContext, r *resource) error {
 	objectId := r.Data.Get("object_id").(int)
 	name := fileNameNormalizationRegex.ReplaceAllString(r.ID[1:], "_") + "_" + strconv.Itoa(objectId) + fileExtension
 	content, _ := base64.StdEncoding.DecodeString(resp.Content)
-	fileName, err := ic.saveFileIn("notebooks", name, []byte(content))
+	fileName, err := ic.saveContentIn("notebooks", name, []byte(content))
 	if err != nil {
 		return err
 	}
@@ -146,16 +146,17 @@ func importRepo(ic *importContext, r *resource) error {
 
 func importWorkspaceFile(ic *importContext, r *resource) error {
 	ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
-	resp, err := ic.workspaceClient.Workspace.Export(ic.Context, sdk_workspace.ExportRequest{
-		Path:   r.ID,
-		Format: sdk_workspace.ExportFormatAuto,
-	})
+	reader, err := ic.workspaceClient.Workspace.Download(ic.Context, r.ID,
+		func(q map[string]any) {
+			q["format"] = "AUTO"
+		})
 	if err != nil {
 		if apierr.IsMissing(err) {
 			ic.addIgnoredResource(fmt.Sprintf("databricks_workspace_file. path=%s", r.ID))
 		}
 		return err
 	}
+	defer reader.Close()
 	objectId := r.Data.Get("object_id").(int)
 	parts := strings.Split(r.ID, "/")
 	plen := len(parts)
@@ -165,8 +166,7 @@ func importWorkspaceFile(ic *importContext, r *resource) error {
 		parts[plen-1] = parts[plen-1] + "_" + strconv.Itoa(objectId)
 	}
 	name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
-	content, _ := base64.StdEncoding.DecodeString(resp.Content)
-	fileName, err := ic.saveFileIn("workspace_files", name, []byte(content))
+	fileName, err := ic.saveReaderIn("workspace_files", name, reader)
 	if err != nil {
 		return err
 	}

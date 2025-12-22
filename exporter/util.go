@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -300,13 +301,26 @@ func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error
 	return local, relativeName, nil
 }
 
-func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) saveContentIn(dir, name string, content []byte) (string, error) {
 	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
 	defer local.Close()
 	_, err = local.Write(content)
+	if err != nil {
+		return "", err
+	}
+	return relativeName, nil
+}
+
+func (ic *importContext) saveReaderIn(dir, name string, reader io.Reader) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
+	if err != nil {
+		return "", err
+	}
+	defer local.Close()
+	_, err = io.Copy(local, reader)
 	if err != nil {
 		return "", err
 	}

@@ -21,7 +21,7 @@ type AzureBlobMount struct {
 // Source ...
 func (m AzureBlobMount) Source(client *common.DatabricksClient) string {
 	return fmt.Sprintf("wasbs://%[1]s@%[2]s.blob.%[3]s%[4]s",
-		m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
+		m.ContainerName, m.StorageAccountName, azureDomain(client.Config), m.Directory)
 }
 
 func (m AzureBlobMount) Name() string {

@@ -812,3 +812,79 @@ func TestUcAccShareVolume(t *testing.T) {
 		Template: shareVolumeTemplate,
 	})
 }
+
+// TestUcAccUpdateShareCommentWithSharedAs tests updating a comment on an object with shared_as
+func TestUcAccUpdateShareCommentWithSharedAs(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Original comment"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Updated comment"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	})
+}
+
+// TestUcAccUpdateShareMultipleObjectsWithSharedAs tests updating multiple objects with shared_as
+func TestUcAccUpdateShareMultipleObjectsWithSharedAs(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Table 1 original"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+			object {
+				name = databricks_sql_table.mytable_2.id
+				comment = "Table 2 original"
+				data_object_type = "TABLE"
+				shared_as = "things.bar_2"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Table 1 updated"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+			object {
+				name = databricks_sql_table.mytable_2.id
+				comment = "Table 2 updated"
+				data_object_type = "TABLE"
+				shared_as = "things.bar_2"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	})
+}

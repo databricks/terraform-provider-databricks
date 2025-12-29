@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -28,7 +29,7 @@ import (
 const (
 	resourceName       = "app"
 	resourceNamePlural = "apps"
-	appDeletionTimeout = 10 * time.Minute
+	appCreateTimeout   = 1 * time.Minute
 )
 
 type AppResource struct {
@@ -129,15 +130,26 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Create the app
 	var forceSendFields []string
 	if !app.NoCompute.IsNull() {
 		forceSendFields = append(forceSendFields, "NoCompute")
 	}
-	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{
+	createReq := apps.CreateAppRequest{
 		App:             appGoSdk,
 		NoCompute:       app.NoCompute.ValueBool(),
 		ForceSendFields: forceSendFields,
+	}
+
+	retrier := retries.New[apps.App](retries.WithTimeout(appCreateTimeout), retries.WithRetryFunc(shouldRetry))
+	createdApp, err := retrier.Run(ctx, func(ctx context.Context) (*apps.App, error) {
+		waiter, err := w.Apps.Create(ctx, createReq)
+		if err != nil {
+			if errors.Is(err, apierr.ErrResourceAlreadyExists) {
+				return nil, retries.Continues("app already exists, retrying")
+			}
+			return nil, retries.Halt(err)
+		}
+		return waiter.Response, nil
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create app", err.Error())
@@ -146,7 +158,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Store the initial version of the app in state
 	var newApp AppResource
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waiter.Response, &newApp)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, createdApp, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -211,31 +223,6 @@ func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceCli
 			return nil, retries.Continues(statusMessage)
 		}
 	})
-}
-
-func waitForAppDeleted(ctx context.Context, w *databricks.WorkspaceClient, name string) error {
-	retrier := retries.New[struct{}](retries.WithTimeout(appDeletionTimeout), retries.WithRetryFunc(shouldRetry))
-	_, err := retrier.Run(ctx, func(ctx context.Context) (*struct{}, error) {
-		app, err := w.Apps.GetByName(ctx, name)
-		if apierr.IsMissing(err) {
-			return &struct{}{}, nil
-		}
-		if err != nil {
-			return nil, retries.Halt(err)
-		}
-		if app.ComputeStatus == nil {
-			return nil, retries.Continues("waiting for compute status")
-		}
-		switch app.ComputeStatus.State {
-		case apps.ComputeStateDeleting:
-			return nil, retries.Continues("app is deleting")
-		case apps.ComputeStateActive, apps.ComputeStateStopped, apps.ComputeStateError:
-			return nil, retries.Halt(fmt.Errorf("app %s was not deleted, current state: %s", name, app.ComputeStatus.State))
-		default:
-			return nil, retries.Continues(fmt.Sprintf("app is in %s state", app.ComputeStatus.State))
-		}
-	})
-	return err
 }
 
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -351,11 +338,6 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 	_, err := w.Apps.DeleteByName(ctx, app.Name.ValueString())
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete app", err.Error())
-		return
-	}
-
-	if err := waitForAppDeleted(ctx, w, app.Name.ValueString()); err != nil {
-		resp.Diagnostics.AddError("failed to wait for app deletion", err.Error())
 		return
 	}
 }

@@ -4467,6 +4467,9 @@ func (m *CreateAccessRequestResponse_SdkV2) SetRequestDestinations(ctx context.C
 }
 
 type CreateAccountsMetastore_SdkV2 struct {
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled"`
 	// The user-specified name of the metastore.
 	Name types.String `tfsdk:"name"`
 	// Cloud region which the metastore serves (e.g., `us-west-2`, `westus`).
@@ -4482,6 +4485,7 @@ func (to *CreateAccountsMetastore_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m CreateAccountsMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_access_enabled"] = attrs["external_access_enabled"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
@@ -4507,9 +4511,10 @@ func (m CreateAccountsMetastore_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":         m.Name,
-			"region":       m.Region,
-			"storage_root": m.StorageRoot,
+			"external_access_enabled": m.ExternalAccessEnabled,
+			"name":                    m.Name,
+			"region":                  m.Region,
+			"storage_root":            m.StorageRoot,
 		})
 }
 
@@ -4517,9 +4522,10 @@ func (m CreateAccountsMetastore_SdkV2) ToObjectValue(ctx context.Context) basety
 func (m CreateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":         types.StringType,
-			"region":       types.StringType,
-			"storage_root": types.StringType,
+			"external_access_enabled": types.BoolType,
+			"name":                    types.StringType,
+			"region":                  types.StringType,
+			"storage_root":            types.StringType,
 		},
 	}
 }
@@ -6270,6 +6276,9 @@ func (m *CreateFunctionRequest_SdkV2) SetFunctionInfo(ctx context.Context, v Cre
 }
 
 type CreateMetastore_SdkV2 struct {
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled"`
 	// The user-specified name of the metastore.
 	Name types.String `tfsdk:"name"`
 	// Cloud region which the metastore serves (e.g., `us-west-2`, `westus`).
@@ -6285,6 +6294,7 @@ func (to *CreateMetastore_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m CreateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_access_enabled"] = attrs["external_access_enabled"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
@@ -6310,9 +6320,10 @@ func (m CreateMetastore_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":         m.Name,
-			"region":       m.Region,
-			"storage_root": m.StorageRoot,
+			"external_access_enabled": m.ExternalAccessEnabled,
+			"name":                    m.Name,
+			"region":                  m.Region,
+			"storage_root":            m.StorageRoot,
 		})
 }
 
@@ -6320,9 +6331,10 @@ func (m CreateMetastore_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m CreateMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":         types.StringType,
-			"region":       types.StringType,
-			"storage_root": types.StringType,
+			"external_access_enabled": types.BoolType,
+			"name":                    types.StringType,
+			"region":                  types.StringType,
+			"storage_root":            types.StringType,
 		},
 	}
 }
@@ -29082,6 +29094,9 @@ type UpdateAccountsMetastore_SdkV2 struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled"`
 	// The owner of the metastore.
 	Owner types.String `tfsdk:"owner"`
 	// Privilege model version of the metastore, of the form `major.minor`
@@ -29101,6 +29116,7 @@ func (m UpdateAccountsMetastore_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["delta_sharing_organization_name"] = attrs["delta_sharing_organization_name"].SetOptional()
 	attrs["delta_sharing_recipient_token_lifetime_in_seconds"] = attrs["delta_sharing_recipient_token_lifetime_in_seconds"].SetOptional()
 	attrs["delta_sharing_scope"] = attrs["delta_sharing_scope"].SetOptional()
+	attrs["external_access_enabled"] = attrs["external_access_enabled"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["privilege_model_version"] = attrs["privilege_model_version"].SetOptional()
 	attrs["storage_root_credential_id"] = attrs["storage_root_credential_id"].SetOptional()
@@ -29129,6 +29145,7 @@ func (m UpdateAccountsMetastore_SdkV2) ToObjectValue(ctx context.Context) basety
 			"delta_sharing_organization_name":                   m.DeltaSharingOrganizationName,
 			"delta_sharing_recipient_token_lifetime_in_seconds": m.DeltaSharingRecipientTokenLifetimeInSeconds,
 			"delta_sharing_scope":                               m.DeltaSharingScope,
+			"external_access_enabled":                           m.ExternalAccessEnabled,
 			"owner":                                             m.Owner,
 			"privilege_model_version":                           m.PrivilegeModelVersion,
 			"storage_root_credential_id":                        m.StorageRootCredentialId,
@@ -29142,6 +29159,7 @@ func (m UpdateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 			"delta_sharing_organization_name":                   types.StringType,
 			"delta_sharing_recipient_token_lifetime_in_seconds": types.Int64Type,
 			"delta_sharing_scope":                               types.StringType,
+			"external_access_enabled":                           types.BoolType,
 			"owner":                                             types.StringType,
 			"privilege_model_version":                           types.StringType,
 			"storage_root_credential_id":                        types.StringType,
@@ -30770,6 +30788,9 @@ type UpdateMetastore_SdkV2 struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled"`
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-"`
 	// New name for the metastore.
@@ -30793,6 +30814,7 @@ func (m UpdateMetastore_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["delta_sharing_organization_name"] = attrs["delta_sharing_organization_name"].SetOptional()
 	attrs["delta_sharing_recipient_token_lifetime_in_seconds"] = attrs["delta_sharing_recipient_token_lifetime_in_seconds"].SetOptional()
 	attrs["delta_sharing_scope"] = attrs["delta_sharing_scope"].SetOptional()
+	attrs["external_access_enabled"] = attrs["external_access_enabled"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["privilege_model_version"] = attrs["privilege_model_version"].SetOptional()
@@ -30823,6 +30845,7 @@ func (m UpdateMetastore_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"delta_sharing_organization_name":                   m.DeltaSharingOrganizationName,
 			"delta_sharing_recipient_token_lifetime_in_seconds": m.DeltaSharingRecipientTokenLifetimeInSeconds,
 			"delta_sharing_scope":                               m.DeltaSharingScope,
+			"external_access_enabled":                           m.ExternalAccessEnabled,
 			"id":                                                m.Id,
 			"new_name":                                          m.NewName,
 			"owner":                                             m.Owner,
@@ -30838,6 +30861,7 @@ func (m UpdateMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 			"delta_sharing_organization_name":                   types.StringType,
 			"delta_sharing_recipient_token_lifetime_in_seconds": types.Int64Type,
 			"delta_sharing_scope":                               types.StringType,
+			"external_access_enabled":                           types.BoolType,
 			"id":                                                types.StringType,
 			"new_name":                                          types.StringType,
 			"owner":                                             types.StringType,

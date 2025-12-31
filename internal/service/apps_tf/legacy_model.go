@@ -47,6 +47,8 @@ type App_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
 	// The unique identifier of the app.
@@ -75,6 +77,8 @@ type App_SdkV2 struct {
 	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url"`
+
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
@@ -203,6 +207,7 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -217,6 +222,7 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
 
 	return attrs
@@ -258,6 +264,7 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"default_source_code_path":    m.DefaultSourceCodePath,
 			"description":                 m.Description,
 			"effective_budget_policy_id":  m.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":   m.EffectiveUsagePolicyId,
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
 			"id":                          m.Id,
 			"name":                        m.Name,
@@ -271,6 +278,7 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"update_time":                 m.UpdateTime,
 			"updater":                     m.Updater,
 			"url":                         m.Url,
+			"usage_policy_id":             m.UsagePolicyId,
 			"user_api_scopes":             m.UserApiScopes,
 		})
 }
@@ -295,6 +303,7 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -314,6 +323,7 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time":                 types.StringType,
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
+			"usage_policy_id":             types.StringType,
 			"user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},

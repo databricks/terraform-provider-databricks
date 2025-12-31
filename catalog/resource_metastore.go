@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -12,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/slices"
 )
+
+const maxDeltaSharingRecipientTokenLifetimeInSeconds = int64(365 * 24 * time.Hour / time.Second) // 1 year
 
 // This and the next function should be updated together to keep them in sync.
 func updateForceSendFieldsWorkspaceLevel(req *catalog.UpdateMetastore) {
@@ -31,14 +34,14 @@ func updateForceSendFieldsAccountLevel(req *catalog.UpdateAccountsMetastore) {
 func setDefaultDeltaSharingRecipientTokenLifetimeInSecondsWorkspaceLevel(req *catalog.UpdateMetastore) {
 	if req.DeltaSharingRecipientTokenLifetimeInSeconds == 0 {
 		log.Printf("[DEBUG] Setting delta sharing recipient token lifetime to 1 year")
-		req.DeltaSharingRecipientTokenLifetimeInSeconds = 31536000
+		req.DeltaSharingRecipientTokenLifetimeInSeconds = maxDeltaSharingRecipientTokenLifetimeInSeconds
 	}
 }
 
 func setDefaultDeltaSharingRecipientTokenLifetimeInSecondsAccountLevel(req *catalog.UpdateAccountsMetastore) {
 	if req.DeltaSharingRecipientTokenLifetimeInSeconds == 0 {
 		log.Printf("[DEBUG] Setting delta sharing recipient token lifetime to 1 year")
-		req.DeltaSharingRecipientTokenLifetimeInSeconds = 31536000
+		req.DeltaSharingRecipientTokenLifetimeInSeconds = maxDeltaSharingRecipientTokenLifetimeInSeconds
 	}
 }
 

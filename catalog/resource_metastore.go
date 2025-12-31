@@ -70,6 +70,7 @@ func ResourceMetastore() common.Resource {
 			// Field dependencies and validation
 			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
 			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
+			m["delta_sharing_recipient_token_lifetime_in_seconds"].Default = 31536000 // 1 year
 			common.CustomizeSchemaPath(m, "delta_sharing_scope").SetValidateFunc(
 				validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false),
 			)

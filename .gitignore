@@ -349,3 +349,5 @@ common/testdata/.azure
 
 # Claude local memory
 CLAUDE.local.md
+*.orig
+*.rej

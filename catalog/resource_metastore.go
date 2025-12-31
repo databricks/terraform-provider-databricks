@@ -27,6 +27,21 @@ func updateForceSendFieldsAccountLevel(req *catalog.UpdateAccountsMetastore) {
 	}
 }
 
+// Cannot set lifetime to 0 (unlimited), so set to 1 year (maximum allowed)
+func setDefaultDeltaSharingRecipientTokenLifetimeInSecondsWorkspaceLevel(req *catalog.UpdateMetastore) {
+	if req.DeltaSharingRecipientTokenLifetimeInSeconds == 0 {
+		log.Printf("[DEBUG] Setting delta sharing recipient token lifetime to 1 year")
+		req.DeltaSharingRecipientTokenLifetimeInSeconds = 31536000
+	}
+}
+
+func setDefaultDeltaSharingRecipientTokenLifetimeInSecondsAccountLevel(req *catalog.UpdateAccountsMetastore) {
+	if req.DeltaSharingRecipientTokenLifetimeInSeconds == 0 {
+		log.Printf("[DEBUG] Setting delta sharing recipient token lifetime to 1 year")
+		req.DeltaSharingRecipientTokenLifetimeInSeconds = 31536000
+	}
+}
+
 func ResourceMetastore() common.Resource {
 	s := common.StructToSchema(catalog.MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -70,7 +85,6 @@ func ResourceMetastore() common.Resource {
 			// Field dependencies and validation
 			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
 			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
-			m["delta_sharing_recipient_token_lifetime_in_seconds"].Default = 31536000 // 1 year
 			common.CustomizeSchemaPath(m, "delta_sharing_scope").SetValidateFunc(
 				validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false),
 			)
@@ -157,6 +171,7 @@ func ResourceMetastore() common.Resource {
 				var update catalog.UpdateAccountsMetastore
 				common.DataToStructPointer(d, s, &update)
 				updateForceSendFieldsAccountLevel(&update)
+				setDefaultDeltaSharingRecipientTokenLifetimeInSecondsAccountLevel(&update)
 				if d.HasChange("owner") {
 					ownerUpdate := catalog.UpdateAccountsMetastore{
 						Owner: update.Owner,
@@ -202,6 +217,7 @@ func ResourceMetastore() common.Resource {
 				common.DataToStructPointer(d, s, &update)
 				update.Id = d.Id()
 				updateForceSendFieldsWorkspaceLevel(&update)
+				setDefaultDeltaSharingRecipientTokenLifetimeInSecondsWorkspaceLevel(&update)
 				if d.HasChange("owner") {
 					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 						Id:    update.Id,

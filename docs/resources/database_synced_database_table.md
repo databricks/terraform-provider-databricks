@@ -180,6 +180,7 @@ The following arguments are supported:
 * `spec` (SyncedTableSpec, optional)
 
 ### NewPipelineSpec
+* `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).

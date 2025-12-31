@@ -4,9 +4,10 @@ subcategory: "Tags"
 # databricks_tag_policy Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-Define tag policies to manage governed tags in your account.
+Define tag policies to manage governed tags in your account. Manage tag policy permissions using the `databricks_access_control_rule_set` resource.
 
 -> **Note** This resource can only be used with a workspace-level provider!
+
 
 ## Example Usage
 ```hcl

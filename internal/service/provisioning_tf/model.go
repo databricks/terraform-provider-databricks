@@ -919,18 +919,39 @@ func (m *CreateCustomerManagedKeyRequest) SetUseCases(ctx context.Context, v []t
 }
 
 type CreateGcpKeyInfo struct {
+	// Globally unique service account email that has access to the KMS key. The
+	// service account exists within the Databricks CP project.
+	GcpServiceAccount types.Object `tfsdk:"gcp_service_account"`
 	// Globally unique kms key resource id of the form
 	// projects/testProjectId/locations/us-east4/keyRings/gcpCmkKeyRing/cryptoKeys/cmk-eastus4
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
 func (to *CreateGcpKeyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGcpKeyInfo) {
+	if !from.GcpServiceAccount.IsNull() && !from.GcpServiceAccount.IsUnknown() {
+		if toGcpServiceAccount, ok := to.GetGcpServiceAccount(ctx); ok {
+			if fromGcpServiceAccount, ok := from.GetGcpServiceAccount(ctx); ok {
+				// Recursively sync the fields of GcpServiceAccount
+				toGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpServiceAccount)
+				to.SetGcpServiceAccount(ctx, toGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (to *CreateGcpKeyInfo) SyncFieldsDuringRead(ctx context.Context, from CreateGcpKeyInfo) {
+	if !from.GcpServiceAccount.IsNull() && !from.GcpServiceAccount.IsUnknown() {
+		if toGcpServiceAccount, ok := to.GetGcpServiceAccount(ctx); ok {
+			if fromGcpServiceAccount, ok := from.GetGcpServiceAccount(ctx); ok {
+				toGcpServiceAccount.SyncFieldsDuringRead(ctx, fromGcpServiceAccount)
+				to.SetGcpServiceAccount(ctx, toGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (m CreateGcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gcp_service_account"] = attrs["gcp_service_account"].SetOptional()
 	attrs["kms_key_id"] = attrs["kms_key_id"].SetRequired()
 
 	return attrs
@@ -944,7 +965,9 @@ func (m CreateGcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateGcpKeyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"gcp_service_account": reflect.TypeOf(GcpServiceAccount{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -954,7 +977,8 @@ func (m CreateGcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"kms_key_id": m.KmsKeyId,
+			"gcp_service_account": m.GcpServiceAccount,
+			"kms_key_id":          m.KmsKeyId,
 		})
 }
 
@@ -962,9 +986,35 @@ func (m CreateGcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m CreateGcpKeyInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"kms_key_id": types.StringType,
+			"gcp_service_account": GcpServiceAccount{}.Type(ctx),
+			"kms_key_id":          types.StringType,
 		},
 	}
+}
+
+// GetGcpServiceAccount returns the value of the GcpServiceAccount field in CreateGcpKeyInfo as
+// a GcpServiceAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateGcpKeyInfo) GetGcpServiceAccount(ctx context.Context) (GcpServiceAccount, bool) {
+	var e GcpServiceAccount
+	if m.GcpServiceAccount.IsNull() || m.GcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v GcpServiceAccount
+	d := m.GcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGcpServiceAccount sets the value of the GcpServiceAccount field in CreateGcpKeyInfo.
+func (m *CreateGcpKeyInfo) SetGcpServiceAccount(ctx context.Context, v GcpServiceAccount) {
+	vs := v.ToObjectValue(ctx)
+	m.GcpServiceAccount = vs
 }
 
 type CreateNetworkRequest struct {
@@ -2703,18 +2753,39 @@ func (m GcpCommonNetworkConfig) Type(ctx context.Context) attr.Type {
 }
 
 type GcpKeyInfo struct {
+	// Globally unique service account email that has access to the KMS key. The
+	// service account exists within the Databricks CP project.
+	GcpServiceAccount types.Object `tfsdk:"gcp_service_account"`
 	// Globally unique kms key resource id of the form
 	// projects/testProjectId/locations/us-east4/keyRings/gcpCmkKeyRing/cryptoKeys/cmk-eastus4
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
 }
 
 func (to *GcpKeyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpKeyInfo) {
+	if !from.GcpServiceAccount.IsNull() && !from.GcpServiceAccount.IsUnknown() {
+		if toGcpServiceAccount, ok := to.GetGcpServiceAccount(ctx); ok {
+			if fromGcpServiceAccount, ok := from.GetGcpServiceAccount(ctx); ok {
+				// Recursively sync the fields of GcpServiceAccount
+				toGcpServiceAccount.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpServiceAccount)
+				to.SetGcpServiceAccount(ctx, toGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (to *GcpKeyInfo) SyncFieldsDuringRead(ctx context.Context, from GcpKeyInfo) {
+	if !from.GcpServiceAccount.IsNull() && !from.GcpServiceAccount.IsUnknown() {
+		if toGcpServiceAccount, ok := to.GetGcpServiceAccount(ctx); ok {
+			if fromGcpServiceAccount, ok := from.GetGcpServiceAccount(ctx); ok {
+				toGcpServiceAccount.SyncFieldsDuringRead(ctx, fromGcpServiceAccount)
+				to.SetGcpServiceAccount(ctx, toGcpServiceAccount)
+			}
+		}
+	}
 }
 
 func (m GcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gcp_service_account"] = attrs["gcp_service_account"].SetOptional()
 	attrs["kms_key_id"] = attrs["kms_key_id"].SetRequired()
 
 	return attrs
@@ -2728,7 +2799,9 @@ func (m GcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GcpKeyInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"gcp_service_account": reflect.TypeOf(GcpServiceAccount{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2738,7 +2811,8 @@ func (m GcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"kms_key_id": m.KmsKeyId,
+			"gcp_service_account": m.GcpServiceAccount,
+			"kms_key_id":          m.KmsKeyId,
 		})
 }
 
@@ -2746,9 +2820,35 @@ func (m GcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m GcpKeyInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"kms_key_id": types.StringType,
+			"gcp_service_account": GcpServiceAccount{}.Type(ctx),
+			"kms_key_id":          types.StringType,
 		},
 	}
+}
+
+// GetGcpServiceAccount returns the value of the GcpServiceAccount field in GcpKeyInfo as
+// a GcpServiceAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GcpKeyInfo) GetGcpServiceAccount(ctx context.Context) (GcpServiceAccount, bool) {
+	var e GcpServiceAccount
+	if m.GcpServiceAccount.IsNull() || m.GcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v GcpServiceAccount
+	d := m.GcpServiceAccount.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGcpServiceAccount sets the value of the GcpServiceAccount field in GcpKeyInfo.
+func (m *GcpKeyInfo) SetGcpServiceAccount(ctx context.Context, v GcpServiceAccount) {
+	vs := v.ToObjectValue(ctx)
+	m.GcpServiceAccount = vs
 }
 
 // The network configuration for the workspace.
@@ -2885,6 +2985,53 @@ func (m GcpNetworkInfo) Type(ctx context.Context) attr.Type {
 			"subnet_id":             types.StringType,
 			"subnet_region":         types.StringType,
 			"vpc_id":                types.StringType,
+		},
+	}
+}
+
+type GcpServiceAccount struct {
+	ServiceAccountEmail types.String `tfsdk:"service_account_email"`
+}
+
+func (to *GcpServiceAccount) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpServiceAccount) {
+}
+
+func (to *GcpServiceAccount) SyncFieldsDuringRead(ctx context.Context, from GcpServiceAccount) {
+}
+
+func (m GcpServiceAccount) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["service_account_email"] = attrs["service_account_email"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpServiceAccount.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GcpServiceAccount) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GcpServiceAccount
+// only implements ToObjectValue() and Type().
+func (m GcpServiceAccount) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"service_account_email": m.ServiceAccountEmail,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GcpServiceAccount) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"service_account_email": types.StringType,
 		},
 	}
 }

@@ -18,6 +18,8 @@ type Dashboard struct {
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
 	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
+	DatasetCatalog          string `json:"dataset_catalog,omitempty"`
+	DatasetSchema           string `json:"dataset_schema,omitempty"`
 }
 
 func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) bool {
@@ -78,7 +80,11 @@ func ResourceDashboard() common.Resource {
 			}
 			d.Set("md5", md5Hash)
 			dashboard.SerializedDashboard = content
-			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: dashboard})
+			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{
+				Dashboard:      dashboard,
+				DatasetCatalog: d.Get("dataset_catalog").(string),
+				DatasetSchema:  d.Get("dataset_schema").(string),
+			})
 			if err != nil && isParentDoesntExistError(err) {
 				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
 				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
@@ -144,16 +150,18 @@ func ResourceDashboard() common.Resource {
 			}
 			var dashboard dashboards.Dashboard
 			common.DataToStructPointer(d, dashboardSchema, &dashboard)
-			dashboard.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
+			dashboard.DashboardId = d.Id()
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
 			dashboard.SerializedDashboard = content
 			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
-				DashboardId: dashboard.DashboardId,
-				Dashboard:   dashboard,
+				DashboardId:    dashboard.DashboardId,
+				Dashboard:      dashboard,
+				DatasetCatalog: d.Get("dataset_catalog").(string),
+				DatasetSchema:  d.Get("dataset_schema").(string),
 			})
 			if err != nil {
 				return err

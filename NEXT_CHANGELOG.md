@@ -12,6 +12,8 @@
 
 ### Exporter
 
+* Rewrite cloud-specific attributes and node types in cluster policy definitions when using `-targetCloud` flag ([#5297](https://github.com/databricks/terraform-provider-databricks/issues/5297)).
+
 ### Internal Changes
 
 * Switch to use Go SDK struct in `databricks_metastore` resource ([#5088](https://github.com/databricks/terraform-provider-databricks/pull/5088))

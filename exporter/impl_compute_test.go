@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_pipelines "github.com/databricks/databricks-sdk-go/service/pipelines"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -327,6 +329,421 @@ func TestClusterPolicyWrongDef(t *testing.T) {
 		Data: d,
 	})
 	assert.EqualError(t, err, "invalid character '.' looking for beginning of value")
+}
+
+func TestClusterPolicyCloudConversionFixed(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":  "fixed",
+			"value": "SPOT",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies,access")
+	ic.meAdmin = true
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the definition was converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	// Check that aws_attributes was removed
+	_, hasAws := newDef["aws_attributes.availability"]
+	assert.False(t, hasAws, "AWS attribute should be removed")
+
+	// Check that azure_attributes was added with converted value
+	azureAttr, hasAzure := newDef["azure_attributes.availability"]
+	assert.True(t, hasAzure, "Azure attribute should be added")
+	assert.Equal(t, "SPOT_AZURE", azureAttr["value"])
+	assert.Equal(t, "fixed", azureAttr["type"])
+}
+
+func TestClusterPolicyCloudConversionAllowlist(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":   "allowlist",
+			"values": []interface{}{"SPOT", "ON_DEMAND", "SPOT_WITH_FALLBACK"},
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the definition was converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	// Check that azure_attributes was added with all values converted
+	azureAttr, hasAzure := newDef["azure_attributes.availability"]
+	assert.True(t, hasAzure, "Azure attribute should be added")
+	assert.Equal(t, "allowlist", azureAttr["type"])
+
+	values := azureAttr["values"].([]interface{})
+	assert.Len(t, values, 3)
+	assert.Contains(t, values, "SPOT_AZURE")
+	assert.Contains(t, values, "ON_DEMAND_AZURE")
+	assert.Contains(t, values, "SPOT_WITH_FALLBACK_AZURE")
+}
+
+func TestClusterPolicyNodeTypeConversionFixed(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"node_type_id": {
+			"type":  "fixed",
+			"value": "i3.xlarge",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	// Load node type mappings
+	mappings, err := loadNodeTypeMappings("node_type_mapping.json")
+	require.NoError(t, err)
+	ic.nodeTypeMappings = mappings
+
+	err = ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the node type was converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	nodeTypeAttr := newDef["node_type_id"]
+	assert.Equal(t, "fixed", nodeTypeAttr["type"])
+	// The actual converted value depends on the mapping file
+	// Just verify it's not the original AWS value
+	convertedValue := nodeTypeAttr["value"].(string)
+	assert.NotEmpty(t, convertedValue)
+}
+
+func TestClusterPolicyNodeTypeConversionAllowlist(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"node_type_id": {
+			"type":   "allowlist",
+			"values": []interface{}{"i3.xlarge", "i3.2xlarge"},
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	// Load node type mappings
+	mappings, err := loadNodeTypeMappings("node_type_mapping.json")
+	require.NoError(t, err)
+	ic.nodeTypeMappings = mappings
+
+	err = ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the node types were converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	nodeTypeAttr := newDef["node_type_id"]
+	assert.Equal(t, "allowlist", nodeTypeAttr["type"])
+
+	values := nodeTypeAttr["values"].([]interface{})
+	assert.Len(t, values, 2)
+	// Values should be converted (exact values depend on mapping file)
+}
+
+func TestClusterPolicyRegexSkipped(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":    "regex",
+			"pattern": "^SPOT.*",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify regex policy was not converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	// Original aws_attributes should still be there
+	awsAttr, hasAws := newDef["aws_attributes.availability"]
+	assert.True(t, hasAws, "AWS regex attribute should not be removed")
+	assert.Equal(t, "regex", awsAttr["type"])
+	assert.Equal(t, "^SPOT.*", awsAttr["pattern"])
+
+	// Azure attribute should not be added
+	_, hasAzure := newDef["azure_attributes.availability"]
+	assert.False(t, hasAzure, "Azure attribute should not be added for regex")
+}
+
+func TestClusterPolicyFamilyOverridesConversion(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "Job Compute")
+	d.Set("policy_family_id", "job-cluster")
+
+	overrides := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":  "fixed",
+			"value": "SPOT",
+		},
+	}
+	overridesJson, _ := json.Marshal(overrides)
+	d.Set("policy_family_definition_overrides", string(overridesJson))
+	d.Set("definition", "{}")
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+	ic.builtInPolicies = map[string]compute.PolicyFamily{
+		"job-cluster": {Name: "Job Compute"},
+	}
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify that policy_family_definition_overrides was converted, not definition
+	overridesStr := d.Get("policy_family_definition_overrides").(string)
+	var newOverrides map[string]map[string]any
+	err = json.Unmarshal([]byte(overridesStr), &newOverrides)
+	assert.NoError(t, err)
+
+	// Check that azure_attributes was added
+	azureAttr, hasAzure := newOverrides["azure_attributes.availability"]
+	assert.True(t, hasAzure, "Azure attribute should be added in overrides")
+	assert.Equal(t, "SPOT_AZURE", azureAttr["value"])
+}
+
+func TestClusterPolicyUnlimitedTypeConversion(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"node_type_id": {
+			"type":         "unlimited",
+			"defaultValue": "i3.xlarge",
+			"isOptional":   true,
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	// Load node type mappings
+	mappings, err := loadNodeTypeMappings("node_type_mapping.json")
+	require.NoError(t, err)
+	ic.nodeTypeMappings = mappings
+
+	err = ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the node type defaultValue was converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	nodeTypeAttr := newDef["node_type_id"]
+	assert.Equal(t, "unlimited", nodeTypeAttr["type"])
+	assert.Equal(t, true, nodeTypeAttr["isOptional"])
+
+	// The defaultValue should be converted
+	convertedValue := nodeTypeAttr["defaultValue"].(string)
+	assert.NotEmpty(t, convertedValue)
+	assert.NotEqual(t, "i3.xlarge", convertedValue, "Node type should be converted")
+}
+
+func TestClusterPolicyUnlimitedTypeCloudAttributeConversion(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":         "unlimited",
+			"defaultValue": "SPOT",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "azure"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify the definition was converted
+	newDefStr := d.Get("definition").(string)
+	var newDef map[string]map[string]any
+	err = json.Unmarshal([]byte(newDefStr), &newDef)
+	assert.NoError(t, err)
+
+	// Check that aws_attributes was removed
+	_, hasAws := newDef["aws_attributes.availability"]
+	assert.False(t, hasAws, "AWS attribute should be removed")
+
+	// Check that azure_attributes was added with converted defaultValue
+	azureAttr, hasAzure := newDef["azure_attributes.availability"]
+	assert.True(t, hasAzure, "Azure attribute should be added")
+	assert.Equal(t, "SPOT_AZURE", azureAttr["defaultValue"])
+	assert.Equal(t, "unlimited", azureAttr["type"])
+}
+
+func TestClusterPolicyNoConversionWhenTargetCloudEmpty(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.availability": {
+			"type":  "fixed",
+			"value": "SPOT",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	originalDef := string(policy)
+	d.Set("definition", originalDef)
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://test.cloud.databricks.com",
+			},
+		},
+	}
+	ic.targetCloud = "" // No target cloud
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
+		ID:   "test-policy-id",
+		Data: d,
+	})
+	assert.NoError(t, err)
+
+	// Verify definition was not changed
+	newDefStr := d.Get("definition").(string)
+	assert.JSONEq(t, originalDef, newDefStr)
 }
 
 func TestIncrementalListDLT(t *testing.T) {

@@ -687,3 +687,206 @@ func (ic *importContext) convertInstancePoolDiskSpec(wrapper ResourceDataWrapper
 
 	return converted
 }
+
+// convertClusterPolicyDefinition converts cloud-specific attributes in a cluster policy definition
+// Returns true if any conversions were performed
+func (ic *importContext) convertClusterPolicyDefinition(definition map[string]map[string]any, sourceCloud, targetCloud string) bool {
+	if sourceCloud == targetCloud || sourceCloud == "" || targetCloud == "" {
+		return false
+	}
+
+	converted := false
+	keysToRemove := []string{}
+	keysToAdd := map[string]map[string]any{}
+
+	for key, policyAttrs := range definition {
+		policyType, hasType := policyAttrs["type"].(string)
+		if !hasType {
+			continue
+		}
+
+		// Skip regex types - cannot be reliably converted
+		if policyType == "regex" {
+			log.Printf("[WARN] Skipping regex policy for key '%s' - regex patterns cannot be automatically converted", key)
+			continue
+		}
+
+		// Skip range, forbidden - these are typically numeric/boolean and cloud-agnostic
+		// Note: unlimited is NOT skipped because it can have defaultValue that needs conversion
+		if policyType == "range" || policyType == "forbidden" {
+			continue
+		}
+
+		// Handle cloud-specific attributes (e.g., "aws_attributes.availability")
+		if strings.Contains(key, "_attributes.") {
+			parts := strings.SplitN(key, ".", 2)
+			if len(parts) != 2 {
+				continue
+			}
+
+			cloudPrefix := parts[0] // e.g., "aws_attributes"
+			attrName := parts[1]    // e.g., "availability"
+			cloudFromPrefix := strings.TrimSuffix(cloudPrefix, "_attributes")
+
+			// Only process if this is the source cloud
+			if cloudFromPrefix != sourceCloud {
+				continue
+			}
+
+			// Check if this attribute is compatible
+			valueForCheck := policyAttrs["value"]
+			if valueForCheck == nil {
+				valueForCheck = policyAttrs["defaultValue"]
+			}
+			if !isCompatibleAttribute(attrName, valueForCheck, sourceCloud, targetCloud, map[string]interface{}{}) {
+				log.Printf("[DEBUG] Attribute '%s' is not compatible between %s and %s, removing from policy", key, sourceCloud, targetCloud)
+				keysToRemove = append(keysToRemove, key)
+				converted = true
+				continue
+			}
+
+			// Convert based on policy type
+			newPolicyAttrs := make(map[string]any)
+			for k, v := range policyAttrs {
+				newPolicyAttrs[k] = v
+			}
+
+			attributeConverted := false
+
+			switch policyType {
+			case "fixed", "unlimited":
+				// Convert the value field (for fixed type)
+				if value, ok := policyAttrs["value"].(string); ok {
+					if attrName == "availability" {
+						newValue := convertAvailability(value, sourceCloud, targetCloud)
+						if newValue != value {
+							newPolicyAttrs["value"] = newValue
+							attributeConverted = true
+						}
+					}
+				}
+				// Also check defaultValue (for both fixed and unlimited types)
+				if defaultValue, ok := policyAttrs["defaultValue"].(string); ok {
+					if attrName == "availability" {
+						newValue := convertAvailability(defaultValue, sourceCloud, targetCloud)
+						if newValue != defaultValue {
+							newPolicyAttrs["defaultValue"] = newValue
+							attributeConverted = true
+						}
+					}
+				}
+
+			case "allowlist", "blocklist":
+				// Convert the values array
+				if values, ok := policyAttrs["values"].([]interface{}); ok {
+					newValues := make([]interface{}, 0, len(values))
+					valuesChanged := false
+					for _, val := range values {
+						if strVal, ok := val.(string); ok {
+							if attrName == "availability" {
+								newVal := convertAvailability(strVal, sourceCloud, targetCloud)
+								newValues = append(newValues, newVal)
+								if newVal != strVal {
+									valuesChanged = true
+								}
+							} else {
+								newValues = append(newValues, val)
+							}
+						} else {
+							newValues = append(newValues, val)
+						}
+					}
+					if valuesChanged {
+						newPolicyAttrs["values"] = newValues
+						attributeConverted = true
+					}
+				}
+			}
+
+			if attributeConverted {
+				// Create new key with target cloud prefix
+				targetCloudPrefix := targetCloud + "_attributes"
+				newKey := targetCloudPrefix + "." + attrName
+				keysToAdd[newKey] = newPolicyAttrs
+				keysToRemove = append(keysToRemove, key)
+				converted = true
+				log.Printf("[DEBUG] Converted policy attribute: %s -> %s", key, newKey)
+			}
+		}
+
+		// Handle node type attributes
+		if key == "node_type_id" || key == "driver_node_type_id" {
+			if ic.nodeTypeMappings == nil {
+				continue
+			}
+
+			newPolicyAttrs := make(map[string]any)
+			for k, v := range policyAttrs {
+				newPolicyAttrs[k] = v
+			}
+
+			attributeConverted := false
+
+			switch policyType {
+			case "fixed", "unlimited":
+				// Convert the value field (for fixed type)
+				if value, ok := policyAttrs["value"].(string); ok {
+					newValue := convertNodeType(value, sourceCloud, targetCloud, ic.nodeTypeMappings)
+					if newValue != value {
+						newPolicyAttrs["value"] = newValue
+						attributeConverted = true
+					}
+				}
+				// Also check defaultValue (for both fixed and unlimited types)
+				if defaultValue, ok := policyAttrs["defaultValue"].(string); ok {
+					newValue := convertNodeType(defaultValue, sourceCloud, targetCloud, ic.nodeTypeMappings)
+					if newValue != defaultValue {
+						newPolicyAttrs["defaultValue"] = newValue
+						attributeConverted = true
+					}
+				}
+
+			case "allowlist":
+				// Convert the values array
+				if values, ok := policyAttrs["values"].([]interface{}); ok {
+					newValues := make([]interface{}, 0, len(values))
+					valuesChanged := false
+					for _, val := range values {
+						if strVal, ok := val.(string); ok {
+							newVal := convertNodeType(strVal, sourceCloud, targetCloud, ic.nodeTypeMappings)
+							newValues = append(newValues, newVal)
+							if newVal != strVal {
+								valuesChanged = true
+							}
+						} else {
+							newValues = append(newValues, val)
+						}
+					}
+					if valuesChanged {
+						newPolicyAttrs["values"] = newValues
+						attributeConverted = true
+					}
+				}
+			}
+
+			if attributeConverted {
+				keysToAdd[key] = newPolicyAttrs
+				keysToRemove = append(keysToRemove, key)
+				converted = true
+				log.Printf("[DEBUG] Converted node type in policy attribute: %s", key)
+			}
+		}
+	}
+
+	// Remove old keys
+	for _, key := range keysToRemove {
+		delete(definition, key)
+	}
+
+	// Add new keys
+	for key, attrs := range keysToAdd {
+		definition[key] = attrs
+	}
+
+	return converted
+}

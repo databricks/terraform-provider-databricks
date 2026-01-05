@@ -33,6 +33,35 @@ resource "databricks_share" "some" {
 }
 ```
 
+Creating a Delta Sharing share with mixed object types (tables and volumes)
+
+```hcl
+resource "databricks_share" "mixed" {
+  name = "mixed_share"
+
+  # Table - uses shared_as
+  object {
+    name             = "my_catalog.my_schema.sales_table"
+    data_object_type = "TABLE"
+    shared_as        = "my_schema.sales_table"
+  }
+
+  # Materialized View - uses shared_as
+  object {
+    name             = "my_catalog.my_schema.sales_mv"
+    data_object_type = "MATERIALIZED_VIEW"
+    shared_as        = "my_schema.sales_mv"
+  }
+
+  # Volume - uses string_shared_as
+  object {
+    name             = "my_catalog.my_schema.training_data"
+    data_object_type = "VOLUME"
+    string_shared_as = "my_schema.training_data"
+  }
+}
+```
+
 Creating a Delta Sharing share and add a schema to it(including all current and future tables).
 
 ```hcl
@@ -95,7 +124,8 @@ The following arguments are required:
 * `comment` - (Optional) Description about the object.
 * `content` - (Optional) The content of the notebook file when the data object type is NOTEBOOK_FILE. This should be base64 encoded. Required for adding a NOTEBOOK_FILE, optional for updating, ignored for other types.
 * `partition` - (Optional) Array of partitions for the shared data.
-* `shared_as` - (Optional) A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
+* `shared_as` - (Optional) A user-provided alias name for **table-like data objects** within the share. Use this field for: `TABLE`, `VIEW`, `MATERIALIZED_VIEW`, `STREAMING_TABLE`, `FOREIGN_TABLE`. **Do not use this field for volumes, models, notebooks, or functions** (use `string_shared_as` instead). If not provided, the object's original name will be used. Must be a 2-part name `<schema>.<table>` containing only alphanumeric characters and underscores. The `shared_as` name must be unique within a share. Change forces creation of a new resource.
+* `string_shared_as` - (Optional) A user-provided alias name for **non-table data objects** within the share. Use this field for: `VOLUME`, `MODEL`, `NOTEBOOK_FILE`, `FUNCTION`. **Do not use this field for tables, views, or streaming tables** (use `shared_as` instead). Format varies by type: For volumes, models, and functions use `<schema>.<name>` (2-part name); for notebooks use the file name. Names must contain only alphanumeric characters and underscores. The `string_shared_as` name must be unique for objects of the same type within a share. Change forces creation of a new resource.
 * `cdf_enabled` - (Optional) Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
 * `start_version` - (Optional) The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.
 * `history_data_sharing_status` - (Optional) Whether to enable history sharing, one of: `ENABLED`, `DISABLED`. When a table has history sharing enabled, recipients can query table data by version, starting from the current table version. If not specified, clients can only query starting from the version of the object at the time it was added to the share. *NOTE*: The start_version should be less than or equal the current version of the object. When this field is set, field `cdf_enabled` can not be set.

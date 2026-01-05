@@ -23,20 +23,20 @@ resource "databricks_workspace_setting_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional)
-* `aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional)
-* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional)
-* `boolean_val` (BooleanMessage, optional)
-* `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional)
-* `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional)
-* `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional)
-* `effective_personal_compute` (PersonalComputeMessage, optional)
-* `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
-* `integer_val` (IntegerMessage, optional)
+* `aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional) - Setting value for aibi_dashboard_embedding_access_policy setting. This is the setting value set by consumers, check effective_aibi_dashboard_embedding_access_policy for final setting value
+* `aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional) - Setting value for aibi_dashboard_embedding_approved_domains setting. This is the setting value set by consumers, check effective_aibi_dashboard_embedding_approved_domains for final setting value
+* `automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - Setting value for automatic_cluster_update_workspace setting. This is the setting value set by consumers, check effective_automatic_cluster_update_workspace for final setting value
+* `boolean_val` (BooleanMessage, optional) - Setting value for boolean type setting. This is the setting value set by consumers, check effective_boolean_val for final setting value
+* `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional) - Effective setting value for aibi_dashboard_embedding_access_policy setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_access_policy
+* `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional) - Effective setting value for aibi_dashboard_embedding_approved_domains setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_approved_domains
+* `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - Effective setting value for automatic_cluster_update_workspace setting. This is the final effective value of setting. To set a value use automatic_cluster_update_workspace
+* `effective_personal_compute` (PersonalComputeMessage, optional) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
+* `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
+* `integer_val` (IntegerMessage, optional) - Setting value for integer type setting. This is the setting value set by consumers, check effective_integer_val for final setting value
 * `name` (string, optional) - Name of the setting
-* `personal_compute` (PersonalComputeMessage, optional)
-* `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional)
-* `string_val` (StringMessage, optional)
+* `personal_compute` (PersonalComputeMessage, optional) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
+* `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
+* `string_val` (StringMessage, optional) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
@@ -85,9 +85,9 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `effective_boolean_val` (BooleanMessage)
-* `effective_integer_val` (IntegerMessage)
-* `effective_string_val` (StringMessage)
+* `effective_boolean_val` (BooleanMessage) - Effective setting value for boolean type setting. This is the final effective value of setting. To set a value use boolean_val
+* `effective_integer_val` (IntegerMessage) - Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val
+* `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

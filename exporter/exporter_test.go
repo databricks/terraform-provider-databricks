@@ -14,18 +14,22 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/apps"
+	"github.com/databricks/databricks-sdk-go/service/billing"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
-	sdk_dataquality "github.com/databricks/databricks-sdk-go/service/dataquality"
+	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 
@@ -34,7 +38,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/workspace_tf"
-	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -311,6 +314,13 @@ var emptyConnections = qa.HTTPFixture{
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
+var emptyTagPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/tag-policies?",
+	Response:     tags.ListTagPoliciesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -377,6 +387,34 @@ var emptyDataQualityMonitors = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/data-quality/v1/monitors?",
 	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyQualityMonitorsV2 = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/quality-monitors?",
+	Response: qualitymonitorv2.ListQualityMonitorResponse{
+		QualityMonitors: []qualitymonitorv2.QualityMonitor{},
+	},
+	ReuseRequest: true,
+}
+
+var emptyDatabaseInstances = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/database/instances?",
+	Response: database.ListDatabaseInstancesResponse{
+		DatabaseInstances: []database.DatabaseInstance{},
+	},
+	ReuseRequest: true,
+}
+
+var emptyBudgetPolicies = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/accounts/[^/]+/budget/policies?",
+	Response: billing.ListBudgetPoliciesResponse{
+		Policies:      []billing.BudgetPolicy{},
+		NextPageToken: "",
+	},
 	ReuseRequest: true,
 }
 
@@ -503,6 +541,13 @@ var emptyDestinationNotficationsList = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWorkspaceSettingsMetadataList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/settings-metadata?",
+	Response:     settingsv2.ListWorkspaceSettingsMetadataResponse{},
+	ReuseRequest: true,
+}
+
 var emptyUsersList = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
@@ -546,16 +591,21 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			emptyDestinationNotficationsList,
+			emptyWorkspaceSettingsMetadataList,
 			noCurrentMetastoreAttached,
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyLakeviewList,
 			emptyMetastoreList,
 			meAdminFixture,
 			emptyRepos,
 			emptyShares,
 			emptyDataQualityMonitors,
+			emptyQualityMonitorsV2,
+			emptyDatabaseInstances,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyGitCredentials,
 			emptyWorkspace,
@@ -822,12 +872,16 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			emptyApps,
 			emptyAppsSettingsCustomTemplates,
+			emptyBudgetPolicies,
 			emptyDataQualityMonitors,
+			emptyQualityMonitorsV2,
+			emptyDatabaseInstances,
 			emptyUsersList,
 			emptySpnsList,
 			noCurrentMetastoreAttached,
 			emptyLakeviewList,
 			emptyDestinationNotficationsList,
+			emptyWorkspaceSettingsMetadataList,
 			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
@@ -835,6 +889,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyUcCredentials,
 			emptyShares,
 			emptyConnections,
+			emptyTagPolicies,
 			emptyRecipients,
 			emptyModelServing,
 			emptyMlflowWebhooks,
@@ -1583,6 +1638,8 @@ func TestImportingSecrets(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
+			emptyWorkspaceSettingsMetadataList,
+			emptyDestinationNotficationsList,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1668,6 +1725,8 @@ func TestImportingGlobalInitScriptsAndWorkspaceConf(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
+			emptyWorkspaceSettingsMetadataList,
+			emptyDestinationNotficationsList,
 			emptyWorkspaceConf,
 			emptyGlobalSQLConfig,
 			{
@@ -3103,6 +3162,7 @@ func TestNotificationDestinationExport(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		meAdminFixture,
 		noCurrentMetastoreAttached,
+		emptyWorkspaceSettingsMetadataList,
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/notification-destinations?",
@@ -3357,269 +3417,5 @@ func TestAlertsV2Export(t *testing.T) {
 		// assert.True(t, strings.Contains(contentStr, `notification = {`))
 		// assert.True(t, strings.Contains(contentStr, `subscriptions = [{`))
 		// assert.True(t, strings.Contains(contentStr, `query_text  = "SELECT 42 as column1"`))
-	})
-}
-
-func TestDataQualityMonitorsExport(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		meAdminFixture,
-		noCurrentMetastoreAttached,
-		{
-			Method:   "GET",
-			Resource: "/api/data-quality/v1/monitors?",
-			Response: sdk_dataquality.ListMonitorResponse{
-				Monitors: []sdk_dataquality.Monitor{
-					{
-						ObjectId:   "123",
-						ObjectType: "table",
-					},
-				},
-			},
-			ReuseRequest: true,
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/data-quality/v1/monitors/table/123?",
-			Response: sdk_dataquality.Monitor{
-				ObjectId:               "123",
-				ObjectType:             "table",
-				AnomalyDetectionConfig: &sdk_dataquality.AnomalyDetectionConfig{},
-			},
-			ReuseRequest: true,
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		defer os.RemoveAll(tmpDir)
-
-		ic := newImportContext(client)
-		ic.noFormat = true
-		ic.Directory = tmpDir
-		ic.enableListing("dq")
-		ic.enableServices("dq")
-
-		err := ic.Run()
-		assert.NoError(t, err)
-
-		content, err := os.ReadFile(tmpDir + "/dq.tf")
-		assert.NoError(t, err)
-		contentStr := string(content)
-		assert.True(t, strings.Contains(contentStr, `resource "databricks_data_quality_monitor" "table_123" {
-  object_type              = "table"
-  object_id                = "123"
-  anomaly_detection_config = {}
-}`))
-	})
-}
-
-func TestAppExport(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		meAdminFixture,
-		noCurrentMetastoreAttached,
-		emptyAppsSettingsCustomTemplates,
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/apps?",
-			Response: apps.ListAppsResponse{
-				Apps: []apps.App{
-					{
-						Name:        "test-app",
-						Description: "Test app",
-						Resources: []apps.AppResource{
-							{
-								Name: "sql-warehouse",
-								SqlWarehouse: &apps.AppResourceSqlWarehouse{
-									Id:         "warehouse-123",
-									Permission: "CAN_MANAGE",
-								},
-							},
-							{
-								Name: "serving-endpoint",
-								ServingEndpoint: &apps.AppResourceServingEndpoint{
-									Name:       "endpoint-abc",
-									Permission: "CAN_QUERY",
-								},
-							},
-							{
-								Name: "job",
-								Job: &apps.AppResourceJob{
-									Id:         "job-456",
-									Permission: "CAN_VIEW",
-								},
-							},
-							{
-								Name: "secret",
-								Secret: &apps.AppResourceSecret{
-									Scope:      "my-scope",
-									Key:        "my-key",
-									Permission: "READ",
-								},
-							},
-							{
-								Name: "uc-volume",
-								UcSecurable: &apps.AppResourceUcSecurable{
-									SecurableType:     "VOLUME",
-									SecurableFullName: "catalog.schema.my_volume",
-									Permission:        "READ_VOLUME",
-								},
-							},
-						},
-						BudgetPolicyId: "budget-789",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/apps/test-app?",
-			Response: apps.App{
-				Name:        "test-app",
-				Description: "Test app",
-				Resources: []apps.AppResource{
-					{
-						Name: "sql-warehouse",
-						SqlWarehouse: &apps.AppResourceSqlWarehouse{
-							Id:         "warehouse-123",
-							Permission: "CAN_MANAGE",
-						},
-					},
-					{
-						Name: "serving-endpoint",
-						ServingEndpoint: &apps.AppResourceServingEndpoint{
-							Name:       "endpoint-abc",
-							Permission: "CAN_QUERY",
-						},
-					},
-					{
-						Name: "job",
-						Job: &apps.AppResourceJob{
-							Id:         "job-456",
-							Permission: "CAN_VIEW",
-						},
-					},
-					{
-						Name: "secret",
-						Secret: &apps.AppResourceSecret{
-							Scope:      "my-scope",
-							Key:        "my-key",
-							Permission: "READ",
-						},
-					},
-					{
-						Name: "uc-volume",
-						UcSecurable: &apps.AppResourceUcSecurable{
-							SecurableType:     "VOLUME",
-							SecurableFullName: "catalog.schema.my_volume",
-							Permission:        "READ_VOLUME",
-						},
-					},
-				},
-				BudgetPolicyId: "budget-789",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/permissions/apps/test-app",
-			Response: entity.PermissionsEntity{
-				ObjectType:        "apps",
-				AccessControlList: []iam.AccessControlRequest{},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		defer os.RemoveAll(tmpDir)
-
-		ic := newImportContext(client)
-		ic.enableServices("apps")
-		ic.enableListing("apps")
-		ic.Directory = tmpDir
-		ic.noFormat = true
-
-		err := ic.Run()
-		assert.NoError(t, err)
-
-		// Verify that the app and its dependencies were generated in the Terraform code
-		content, err := os.ReadFile(tmpDir + "/apps.tf")
-		assert.NoError(t, err)
-		contentStr := normalizeWhitespace(string(content))
-
-		// Check that the app resource is generated
-		assert.Contains(t, contentStr, `resource "databricks_app" "test_app"`)
-		assert.Contains(t, contentStr, `name = "test-app"`)
-		assert.Contains(t, contentStr, `description = "Test app"`)
-	})
-}
-
-func TestAppsSettingsCustomTemplateExport(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		meAdminFixture,
-		noCurrentMetastoreAttached,
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/apps?",
-			Response: apps.ListAppsResponse{
-				Apps: []apps.App{},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/apps-settings/templates?",
-			Response: apps.ListCustomTemplatesResponse{
-				Templates: []apps.CustomTemplate{
-					{
-						Name:        "my-custom-template",
-						Description: "Test template",
-						GitRepo:     "https://github.com/example/repo.git",
-						GitProvider: "github",
-						Path:        "templates/app",
-						Creator:     "user@example.com",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/apps-settings/templates/my-custom-template?",
-			Response: apps.CustomTemplate{
-				Name:        "my-custom-template",
-				Description: "Test template",
-				GitRepo:     "https://github.com/example/repo.git",
-				GitProvider: "github",
-				Path:        "templates/app",
-				Creator:     "user@example.com",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/permissions/apps/templates/my-custom-template",
-			Response: entity.PermissionsEntity{
-				ObjectType:        "apps/templates",
-				AccessControlList: []iam.AccessControlRequest{},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		defer os.RemoveAll(tmpDir)
-
-		ic := newImportContext(client)
-		ic.enableServices("apps")
-		ic.enableListing("apps")
-		ic.Directory = tmpDir
-		ic.noFormat = true
-
-		err := ic.Run()
-		assert.NoError(t, err)
-
-		// Verify that the custom template was generated in the Terraform code
-		content, err := os.ReadFile(tmpDir + "/apps.tf")
-		assert.NoError(t, err)
-		contentStr := normalizeWhitespace(string(content))
-
-		// Check that the custom template resource is generated
-		assert.Contains(t, contentStr, `resource "databricks_apps_settings_custom_template" "my_custom_template"`)
-		assert.Contains(t, contentStr, `name = "my-custom-template"`)
-		assert.Contains(t, contentStr, `description = "Test template"`)
-		assert.Contains(t, contentStr, `git_repo = "https://github.com/example/repo.git"`)
-		assert.Contains(t, contentStr, `git_provider = "github"`)
-		assert.Contains(t, contentStr, `path = "templates/app"`)
 	})
 }

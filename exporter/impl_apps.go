@@ -96,6 +96,21 @@ func importApp(ic *importContext, r *resource) error {
 				ID:       res.UcSecurable.SecurableFullName,
 			})
 		}
+		// Database Instance (Lakebase)
+		if res.Database != nil && res.Database.InstanceName != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_database_instance",
+				ID:       res.Database.InstanceName,
+			})
+		}
+	}
+
+	// Budget Policy
+	if app.BudgetPolicyId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_budget_policy",
+			ID:       app.BudgetPolicyId,
+		})
 	}
 
 	// Emit permissions

@@ -780,3 +780,111 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 		},
 	})
 }
+
+const shareVolumeTemplate = preTestTemplate + `
+resource "databricks_volume" "this" {
+	name         = "share_volume_test{var.STICKY_RANDOM}"
+	catalog_name = databricks_catalog.sandbox.name
+	schema_name  = databricks_schema.things.name
+	volume_type  = "MANAGED"
+}
+resource "databricks_share" "myshare" {
+	name  = "{var.STICKY_RANDOM}-terraform-share-with-volume"
+	object {
+		name = databricks_volume.this.id
+		data_object_type = "VOLUME"
+	}
+}
+`
+
+func TestUcAccShareVolume(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		// Step 1: Create share with volume using SDKv2 implementation
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"databricks": func() (tfprotov6.ProviderServer, error) {
+				sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
+				return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+			},
+		},
+		Template: shareVolumeTemplate,
+	}, acceptance.Step{
+		// Step 2: Apply using plugin framework implementation (default)
+		Template: shareVolumeTemplate,
+	})
+}
+
+// TestUcAccUpdateShareCommentWithSharedAs tests updating a comment on an object with shared_as
+func TestUcAccUpdateShareCommentWithSharedAs(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Original comment"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Updated comment"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	})
+}
+
+// TestUcAccUpdateShareMultipleObjectsWithSharedAs tests updating multiple objects with shared_as
+func TestUcAccUpdateShareMultipleObjectsWithSharedAs(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Table 1 original"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+			object {
+				name = databricks_sql_table.mytable_2.id
+				comment = "Table 2 original"
+				data_object_type = "TABLE"
+				shared_as = "things.bar_2"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_sql_table.mytable.id
+				comment = "Table 1 updated"
+				data_object_type = "TABLE"
+				shared_as = "things.bar"
+				history_data_sharing_status = "ENABLED"
+			}
+			object {
+				name = databricks_sql_table.mytable_2.id
+				comment = "Table 2 updated"
+				data_object_type = "TABLE"
+				shared_as = "things.bar_2"
+				history_data_sharing_status = "ENABLED"
+			}
+		}`,
+	})
+}

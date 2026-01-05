@@ -278,44 +278,6 @@ func (r *SyncedDatabaseTableResource) Configure(ctx context.Context, req resourc
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDatabaseTable, diags *diag.Diagnostics, state *tfsdk.State) {
-	var synced_database_table database.SyncedDatabaseTable
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &synced_database_table)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := database.UpdateSyncedDatabaseTableRequest{
-		SyncedTable: synced_database_table,
-		Name:        plan.Name.ValueString(),
-		UpdateMask:  "database_instance_name,logical_database_name,spec",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Database.UpdateSyncedDatabaseTable(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update database_synced_database_table", err.Error())
-		return
-	}
-
-	var newState SyncedDatabaseTable
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *SyncedDatabaseTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -405,6 +367,44 @@ func (r *SyncedDatabaseTableResource) Read(ctx context.Context, req resource.Rea
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *SyncedDatabaseTableResource) update(ctx context.Context, plan SyncedDatabaseTable, diags *diag.Diagnostics, state *tfsdk.State) {
+	var synced_database_table database.SyncedDatabaseTable
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &synced_database_table)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := database.UpdateSyncedDatabaseTableRequest{
+		SyncedTable: synced_database_table,
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  "database_instance_name,logical_database_name,spec",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Database.UpdateSyncedDatabaseTable(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update database_synced_database_table", err.Error())
+		return
+	}
+
+	var newState SyncedDatabaseTable
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *SyncedDatabaseTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -9,9 +9,10 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
+	"github.com/databricks/databricks-sdk-go/service/tags"
+	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	data_quality_monitor "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/data_quality_monitor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"golang.org/x/exp/slices"
@@ -674,6 +675,29 @@ func listArtifactAllowLists(ic *importContext) error {
 	return nil
 }
 
+func listTagPolicies(ic *importContext) error {
+	tagPolicies, err := ic.workspaceClient.TagPolicies.ListTagPoliciesAll(ic.Context, tags.ListTagPoliciesRequest{})
+	if err != nil {
+		return err
+	}
+	i := 0
+	for _, tagPolicy := range tagPolicies {
+		i++
+		if !ic.MatchesName(tagPolicy.TagKey) {
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_tag_policy",
+			ID:       tagPolicy.TagKey,
+		})
+		if i%50 == 0 {
+			log.Printf("[INFO] Imported %d Tag Policies", i)
+		}
+	}
+	log.Printf("[INFO] Listed %d Tag Policies", i)
+	return nil
+}
+
 func importSqlTable(ic *importContext, r *resource) error {
 	tableFullName := r.ID
 	ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
@@ -700,59 +724,90 @@ func listDataQualityMonitors(ic *importContext) error {
 	return nil
 }
 
-func importDataQualityMonitor(ic *importContext, r *resource) error {
-	log.Printf("[DEBUG] Importing data quality monitor: %s", r.ID)
-	// Convert Plugin Framework state to Go SDK struct
-	var monitor dataquality.Monitor
-	if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper,
-		data_quality_monitor.Monitor{}, &monitor); err != nil {
+func listVectorSearchEndpoints(ic *importContext) error {
+	endpoints, err := ic.workspaceClient.VectorSearchEndpoints.ListEndpointsAll(ic.Context, vectorsearch.ListEndpointsRequest{})
+	if err != nil {
+		log.Printf("[ERROR] listing vector search endpoints: %s", err.Error())
 		return err
 	}
+	for _, ep := range endpoints {
+		ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
+			Resource: "databricks_vector_search_endpoint",
+			ID:       ep.Name,
+		}, ep.Name, ep.LastUpdatedTimestamp, fmt.Sprintf("vector search endpoint '%s'", ep.Name))
+	}
+	return nil
+}
 
-	// TODO: Figure out how to emit the monitored schema/table directly by object_id (UUID)
-	// Currently relying on Depends references (object_id -> table_id/schema_id) and
-	// full name fields (monitored_table_name). Could be more robust if we could lookup
-	// table/schema by UUID and emit them directly here.
-	// Challenges: SDK's Tables.Get() and Schemas.Get() only accept full names, not UUIDs
+func importVectorSearchEndpoint(ic *importContext, r *resource) error {
+	indexes, err := ic.workspaceClient.VectorSearchIndexes.ListIndexesAll(ic.Context, vectorsearch.ListIndexesRequest{
+		EndpointName: r.ID,
+	})
+	if err != nil {
+		log.Printf("[ERROR] listing vector search indexes for endpoint %s: %s", r.ID, err.Error())
+		return err
+	}
+	for _, idx := range indexes {
+		ic.Emit(&resource{
+			Resource: "databricks_vector_search_index",
+			ID:       idx.Name,
+		})
+	}
+	return nil
+}
 
-	// Emit dependencies based on monitor type
-	if monitor.ObjectType == "table" && monitor.DataProfilingConfig != nil {
-		config := monitor.DataProfilingConfig
-
-		// Emit the monitored table - table's import will emit schema and catalog
-		if config.MonitoredTableName != "" {
+func importVectorSearchIndex(ic *importContext, r *resource) error {
+	ic.emitUCGrantsWithOwner("table/"+r.ID, r)
+	s := ic.Resources["databricks_vector_search_index"].Schema
+	var vsi vectorsearch.VectorIndex
+	common.DataToStructPointer(r.Data, s, &vsi)
+	if vsi.EndpointName != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_vector_search_endpoint",
+			ID:       vsi.EndpointName,
+		})
+	}
+	if vsi.DeltaSyncIndexSpec != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_sql_table",
+			ID:       vsi.DeltaSyncIndexSpec.SourceTable,
+		})
+		if vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable != "" {
 			ic.Emit(&resource{
 				Resource: "databricks_sql_table",
-				ID:       config.MonitoredTableName,
+				ID:       vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable,
 			})
 		}
-
-		// Warehouse for running monitor queries
-		if config.WarehouseId != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_sql_endpoint",
-				ID:       config.WarehouseId,
-			})
-		}
-
-		// Baseline table for drift analysis - table's import will emit its schema/catalog
-		if config.BaselineTableName != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_sql_table",
-				ID:       config.BaselineTableName,
-			})
-		}
-
-		// Notification emails
-		if config.NotificationSettings != nil &&
-			config.NotificationSettings.OnFailure != nil {
-			for _, email := range config.NotificationSettings.OnFailure.EmailAddresses {
-				ic.emitUserOrServicePrincipal(email)
+		for _, col := range vsi.DeltaSyncIndexSpec.EmbeddingSourceColumns {
+			if col.EmbeddingModelEndpointName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       col.EmbeddingModelEndpointName,
+				})
+			}
+			if col.ModelEndpointNameForQuery != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       col.ModelEndpointNameForQuery,
+				})
 			}
 		}
 	}
-	// Note: For schema monitors (object_type == "schema"), the schema dependency is already
-	// handled via the Depends reference: object_id -> schema_id. No need to emit it here.
-
+	if vsi.DirectAccessIndexSpec != nil {
+		for _, col := range vsi.DirectAccessIndexSpec.EmbeddingSourceColumns {
+			if col.EmbeddingModelEndpointName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       col.EmbeddingModelEndpointName,
+				})
+			}
+			if col.ModelEndpointNameForQuery != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       col.ModelEndpointNameForQuery,
+				})
+			}
+		}
+	}
 	return nil
 }

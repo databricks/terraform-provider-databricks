@@ -405,3 +405,155 @@ func TestShareChanges(t *testing.T) {
 		assert.Equal(t, sharing.SharedDataObjectUpdateActionRemove, update.Action)
 	}
 }
+
+// TestDiffUpdateObjectComment tests updating an object's comment field
+func TestDiffUpdateObjectComment(t *testing.T) {
+	before := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table",
+				Comment:        "original comment",
+			},
+		},
+	}
+
+	after := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table",
+				Comment:        "updated comment",
+			},
+		},
+	}
+
+	changes := diff(before, after)
+	assert.Len(t, changes, 1, "Should generate UPDATE for comment change")
+	assert.Equal(t, sharing.SharedDataObjectUpdateActionUpdate, changes[0].Action)
+	assert.Equal(t, "updated comment", changes[0].DataObject.Comment)
+
+	// SharedAs must be preserved in UPDATE operations
+	assert.Equal(t, "schema.table", changes[0].DataObject.SharedAs,
+		"SharedAs must be preserved in UPDATE operations")
+}
+
+// TestDiffAddAndUpdate tests a combination of ADD and UPDATE operations
+func TestDiffAddAndUpdate(t *testing.T) {
+	before := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table1",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table1",
+				Comment:        "comment1",
+			},
+		},
+	}
+
+	after := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table1",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table1",
+				Comment:        "updated comment1",
+			},
+			{
+				Name:           "catalog.schema.table2",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table2",
+				Comment:        "comment2",
+			},
+		},
+	}
+
+	changes := diff(before, after)
+	assert.Len(t, changes, 2, "Should generate both UPDATE and ADD")
+
+	var hasUpdate, hasAdd bool
+	for _, change := range changes {
+		if change.Action == sharing.SharedDataObjectUpdateActionUpdate {
+			hasUpdate = true
+			assert.Equal(t, "catalog.schema.table1", change.DataObject.Name)
+			// SharedAs must be preserved in UPDATE operations
+			assert.Equal(t, "schema.table1", change.DataObject.SharedAs,
+				"SharedAs must be preserved in UPDATE operations")
+		} else if change.Action == sharing.SharedDataObjectUpdateActionAdd {
+			hasAdd = true
+			assert.Equal(t, "catalog.schema.table2", change.DataObject.Name)
+			assert.Equal(t, "schema.table2", change.DataObject.SharedAs)
+		}
+	}
+	assert.True(t, hasUpdate, "Should have UPDATE action")
+	assert.True(t, hasAdd, "Should have ADD action")
+}
+
+// TestDiffAddUpdateRemove tests all three operations together
+func TestDiffAddUpdateRemove(t *testing.T) {
+	before := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table1",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table1",
+				Comment:        "comment1",
+			},
+			{
+				Name:           "catalog.schema.table2",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table2",
+				Comment:        "comment2",
+			},
+		},
+	}
+
+	after := sharing.ShareInfo{
+		Name: "test-share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:           "catalog.schema.table1",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table1",
+				Comment:        "updated comment1",
+			},
+			{
+				Name:           "catalog.schema.table3",
+				DataObjectType: "TABLE",
+				SharedAs:       "schema.table3",
+				Comment:        "comment3",
+			},
+		},
+	}
+
+	changes := diff(before, after)
+	assert.Len(t, changes, 3, "Should generate REMOVE, UPDATE, and ADD")
+
+	var hasUpdate, hasAdd, hasRemove bool
+	for _, change := range changes {
+		switch change.Action {
+		case sharing.SharedDataObjectUpdateActionUpdate:
+			hasUpdate = true
+			assert.Equal(t, "catalog.schema.table1", change.DataObject.Name)
+			// SharedAs must be preserved in UPDATE operations
+			assert.Equal(t, "schema.table1", change.DataObject.SharedAs,
+				"SharedAs must be preserved in UPDATE operations")
+		case sharing.SharedDataObjectUpdateActionAdd:
+			hasAdd = true
+			assert.Equal(t, "catalog.schema.table3", change.DataObject.Name)
+		case sharing.SharedDataObjectUpdateActionRemove:
+			hasRemove = true
+			assert.Equal(t, "catalog.schema.table2", change.DataObject.Name)
+		}
+	}
+	assert.True(t, hasUpdate, "Should have UPDATE action")
+	assert.True(t, hasAdd, "Should have ADD action")
+	assert.True(t, hasRemove, "Should have REMOVE action")
+}

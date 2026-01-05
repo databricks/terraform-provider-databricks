@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -12,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/slices"
 )
+
+const maxDeltaSharingRecipientTokenLifetimeInSeconds = int64(365 * 24 * time.Hour / time.Second) // 1 year
 
 // This and the next function should be updated together to keep them in sync.
 func updateForceSendFieldsWorkspaceLevel(req *catalog.UpdateMetastore) {
@@ -57,6 +60,9 @@ func ResourceMetastore() common.Resource {
 			common.CustomizeSchemaPath(m, "delta_sharing_scope").SetSuppressDiff()
 
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
+			// Set default values
+			common.CustomizeSchemaPath(m, "delta_sharing_recipient_token_lifetime_in_seconds").SetDefault(maxDeltaSharingRecipientTokenLifetimeInSeconds)
 
 			// Custom storage_root diff suppression
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {

@@ -4,7 +4,14 @@ subcategory: "Tags"
 # databricks_tag_policy Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-Define tag policies to manage governed tags in your account. Manage tag policy permissions using the `databricks_access_control_rule_set` resource.
+Define tag policies to manage governed tags in your account.
+
+The following resources are often used in the same context:
+
+* [databricks_entity_tag_assignment](entity_tag_assignment.md) for assigning tags to supported Unity Catalog entities.
+* [databricks_workspace_entity_tag_assignment](workspace_entity_tag_assignment.md) for assigning tags to supported workspace entities.
+* [databricks_policy_info](policy_info.md) for defining ABAC policies using governed tags.
+* [databricks_access_control_rule_set](access_control_rule_set.md) for managing account-level and individual tag policy permissions.
 
 -> **Note** This resource can only be used with a workspace-level provider!
 

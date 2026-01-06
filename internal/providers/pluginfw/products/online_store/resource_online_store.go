@@ -53,6 +53,8 @@ type OnlineStore struct {
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
 	// The current state of the online store.
 	State types.String `tfsdk:"state"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -81,6 +83,7 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":               m.Name,
 			"read_replica_count": m.ReadReplicaCount,
 			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
 		},
 	)
 }
@@ -95,6 +98,7 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 			"name":               types.StringType,
 			"read_replica_count": types.Int64Type,
 			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
 		},
 	}
 }
@@ -118,6 +122,7 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
@@ -242,7 +247,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 	updateRequest := ml.UpdateOnlineStoreRequest{
 		OnlineStore: online_store,
 		Name:        plan.Name.ValueString(),
-		UpdateMask:  "capacity,read_replica_count",
+		UpdateMask:  "capacity,read_replica_count,usage_policy_id",
 	}
 
 	client, clientDiags := r.Client.GetWorkspaceClient()

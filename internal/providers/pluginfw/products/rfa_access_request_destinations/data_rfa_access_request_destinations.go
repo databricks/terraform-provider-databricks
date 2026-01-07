@@ -38,11 +38,21 @@ type AccessRequestDestinationsData struct {
 	// lack of permissions. This value is true if the caller does not have
 	// permission to see all destinations.
 	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
+	// The source securable from which the destinations are inherited. Either
+	// the same value as securable (if destination is set directly on the
+	// securable) or the nearest parent securable with destinations set.
+	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
 	Destinations types.List `tfsdk:"destinations"`
+	// The full name of the securable. Redundant with the name in the securable
+	// object, but necessary for Terraform integration
+	FullName types.String `tfsdk:"full_name"`
 	// The securable for which the access request destinations are being
-	// retrieved.
+	// modified or read.
 	Securable types.Object `tfsdk:"securable"`
+	// The type of the securable. Redundant with the type in the securable
+	// object, but necessary for Terraform integration
+	SecurableType types.String `tfsdk:"securable_type"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -54,8 +64,9 @@ type AccessRequestDestinationsData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"destinations": reflect.TypeOf(catalog_tf.NotificationDestination{}),
-		"securable":    reflect.TypeOf(catalog_tf.Securable{}),
+		"destination_source_securable": reflect.TypeOf(catalog_tf.Securable{}),
+		"destinations":                 reflect.TypeOf(catalog_tf.NotificationDestination{}),
+		"securable":                    reflect.TypeOf(catalog_tf.Securable{}),
 	}
 }
 
@@ -69,9 +80,12 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"are_any_destinations_hidden": m.AreAnyDestinationsHidden,
-			"destinations":                m.Destinations,
-			"securable":                   m.Securable,
+			"are_any_destinations_hidden":  m.AreAnyDestinationsHidden,
+			"destination_source_securable": m.DestinationSourceSecurable,
+			"destinations":                 m.Destinations,
+			"full_name":                    m.FullName,
+			"securable":                    m.Securable,
+			"securable_type":               m.SecurableType,
 		},
 	)
 }
@@ -81,19 +95,25 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"are_any_destinations_hidden": types.BoolType,
+			"are_any_destinations_hidden":  types.BoolType,
+			"destination_source_securable": catalog_tf.Securable{}.Type(ctx),
 			"destinations": basetypes.ListType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
-			"securable": catalog_tf.Securable{}.Type(ctx),
+			"full_name":      types.StringType,
+			"securable":      catalog_tf.Securable{}.Type(ctx),
+			"securable_type": types.StringType,
 		},
 	}
 }
 
 func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
+	attrs["destination_source_securable"] = attrs["destination_source_securable"].SetComputed()
 	attrs["destinations"] = attrs["destinations"].SetComputed()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["securable"] = attrs["securable"].SetComputed()
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
 	return attrs
 }

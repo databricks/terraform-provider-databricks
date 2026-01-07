@@ -3153,6 +3153,8 @@ type CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2 struct 
 	// The full target AWS endpoint service name that connects to the
 	// destination resources of the private endpoint.
 	EndpointService types.String `tfsdk:"endpoint_service"`
+
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// The ID of a network connectivity configuration, which is the parent
 	// resource of this private endpoint rule object.
 	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
@@ -3211,6 +3213,7 @@ func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) App
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
 	attrs["enabled"] = attrs["enabled"].SetOptional()
 	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
 	attrs["resource_names"] = attrs["resource_names"].SetOptional()
 	attrs["rule_id"] = attrs["rule_id"].SetOptional()
@@ -3249,6 +3252,7 @@ func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) ToO
 			"domain_names":                   m.DomainNames,
 			"enabled":                        m.Enabled,
 			"endpoint_service":               m.EndpointService,
+			"error_message":                  m.ErrorMessage,
 			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
 			"resource_names":                 m.ResourceNames,
 			"rule_id":                        m.RuleId,
@@ -3271,6 +3275,7 @@ func (m CustomerFacingNetworkConnectivityConfigAwsPrivateEndpointRule_SdkV2) Typ
 			},
 			"enabled":                        types.BoolType,
 			"endpoint_service":               types.StringType,
+			"error_message":                  types.StringType,
 			"network_connectivity_config_id": types.StringType,
 			"resource_names": basetypes.ListType{
 				ElemType: types.StringType,
@@ -11950,6 +11955,8 @@ type NccAzurePrivateEndpointRule_SdkV2 struct {
 	DomainNames types.List `tfsdk:"domain_names"`
 	// The name of the Azure private endpoint resource.
 	EndpointName types.String `tfsdk:"endpoint_name"`
+
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// Only used by private endpoints to Azure first-party services.
 	//
 	// The sub-resource type (group ID) of the target resource. Note that to
@@ -11992,6 +11999,7 @@ func (m NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[s
 	attrs["deactivated_at"] = attrs["deactivated_at"].SetOptional()
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetOptional()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
@@ -12027,6 +12035,7 @@ func (m NccAzurePrivateEndpointRule_SdkV2) ToObjectValue(ctx context.Context) ba
 			"deactivated_at":                 m.DeactivatedAt,
 			"domain_names":                   m.DomainNames,
 			"endpoint_name":                  m.EndpointName,
+			"error_message":                  m.ErrorMessage,
 			"group_id":                       m.GroupId,
 			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
 			"resource_id":                    m.ResourceId,
@@ -12047,6 +12056,7 @@ func (m NccAzurePrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"endpoint_name":                  types.StringType,
+			"error_message":                  types.StringType,
 			"group_id":                       types.StringType,
 			"network_connectivity_config_id": types.StringType,
 			"resource_id":                    types.StringType,

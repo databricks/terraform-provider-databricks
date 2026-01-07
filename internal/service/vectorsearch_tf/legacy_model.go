@@ -2695,8 +2695,7 @@ func (m MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchEndpointBudgetPolicyRequest_SdkV2 struct {
-	// The budget policy id to be applied (hima-sheth) TODO: remove this once
-	// we've migrated to usage policies
+	// The budget policy id to be applied
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Name of the vector search endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -2882,7 +2881,13 @@ type QueryVectorIndexRequest_SdkV2 struct {
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
-
+	// If set, the top 50 results are reranked with the Databricks Reranker
+	// model before returning the `num_results` results to the user. The setting
+	// `columns_to_rerank` selects which columns are used for reranking. For
+	// each datapoint, the columns selected are concatenated before being sent
+	// to the reranking model. See
+	// https://docs.databricks.com/aws/en/vector-search/query-vector-search#rerank
+	// for more information.
 	Reranker types.List `tfsdk:"reranker"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`

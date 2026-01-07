@@ -20,13 +20,19 @@ data "databricks_rfa_access_request_destinations" "customer_data_schema" {
 
 ## Arguments
 The following arguments are supported:
+* `full_name` (string, required) - The full name of the securable. Redundant with the name in the securable object, but necessary for Terraform integration
+* `securable_type` (string, required) - The type of the securable. Redundant with the type in the securable object, but necessary for Terraform integration
 
 ## Attributes
 The following attributes are exported:
 * `are_any_destinations_hidden` (boolean) - Indicates whether any destinations are hidden from the caller due to a lack of permissions.
   This value is true if the caller does not have permission to see all destinations
+* `destination_source_securable` (Securable) - The source securable from which the destinations are inherited. Either the same value as securable (if destination
+  is set directly on the securable) or the nearest parent securable with destinations set
 * `destinations` (list of NotificationDestination) - The access request destinations for the securable
-* `securable` (Securable) - The securable for which the access request destinations are being retrieved
+* `full_name` (string) - The full name of the securable. Redundant with the name in the securable object, but necessary for Terraform integration
+* `securable` (Securable) - The securable for which the access request destinations are being modified or read
+* `securable_type` (string) - The type of the securable. Redundant with the type in the securable object, but necessary for Terraform integration
 
 ### NotificationDestination
 * `destination_id` (string) - The identifier for the destination. This is the email address for EMAIL destinations, the URL for URL destinations,

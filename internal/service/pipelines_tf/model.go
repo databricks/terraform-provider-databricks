@@ -10046,6 +10046,10 @@ type TableSpecificConfig struct {
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
 
 	QueryBasedConnectorConfig types.Object `tfsdk:"query_based_connector_config"`
+	// (Optional, Immutable) The row filter condition to be applied to the
+	// table. It must not contain the WHERE keyword, only the actual filter
+	// condition. It must be in DBSQL format.
+	RowFilter types.String `tfsdk:"row_filter"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -10152,6 +10156,7 @@ func (m TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
 	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].SetOptional()
+	attrs["row_filter"] = attrs["row_filter"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
@@ -10189,6 +10194,7 @@ func (m TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"include_columns":                   m.IncludeColumns,
 			"primary_keys":                      m.PrimaryKeys,
 			"query_based_connector_config":      m.QueryBasedConnectorConfig,
+			"row_filter":                        m.RowFilter,
 			"salesforce_include_formula_fields": m.SalesforceIncludeFormulaFields,
 			"scd_type":                          m.ScdType,
 			"sequence_by":                       m.SequenceBy,
@@ -10210,6 +10216,7 @@ func (m TableSpecificConfig) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"query_based_connector_config":      IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}.Type(ctx),
+			"row_filter":                        types.StringType,
 			"salesforce_include_formula_fields": types.BoolType,
 			"scd_type":                          types.StringType,
 			"sequence_by": basetypes.ListType{

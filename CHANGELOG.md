@@ -1,5 +1,21 @@
 # Version changelog
 
+## Release v1.102.0 (2026-01-07)
+
+### New Features and Improvements
+* Added resources and data sources for `databricks_postgres_project`, `databricks_postgres_endpoint` and `databricks_postgres_branch` ([#5305](https://github.com/databricks/terraform-provider-databricks/pull/5305)).
+
+
+## Release v1.101.0 (2026-01-06)
+
+### Bug Fixes
+* [Fix] Allow Updating Share Objects With shared_as Defined ([#5287](https://github.com/databricks/terraform-provider-databricks/pull/5287))
+
+### Internal Changes
+
+* Switch to use Go SDK struct in `databricks_metastore` resource ([#5088](https://github.com/databricks/terraform-provider-databricks/pull/5088))
+
+
 ## Release v1.100.0 (2025-12-11)
 
 ### New Features and Improvements

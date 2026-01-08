@@ -28,6 +28,9 @@ The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
 
+### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection
+
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `anomaly_detection_config` (AnomalyDetectionConfig)

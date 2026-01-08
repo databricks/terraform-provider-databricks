@@ -2,14 +2,17 @@ package serving
 
 import (
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestModelServingCornerCases(t *testing.T) {
@@ -701,4 +704,307 @@ func TestModelServingDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
+}
+
+func TestModelServingReadWithSensitivePlaintextFields(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockServingEndpointsAPI().EXPECT().
+				GetByName(mock.Anything, "test-endpoint").
+				Return(&serving.ServingEndpointDetailed{
+					Id:   "test-endpoint",
+					Name: "test-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+					EndpointUrl: "https://example.com/endpoint",
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name: "gpt-4o-mini",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4o-mini",
+									Provider: serving.ExternalModelProviderOpenai,
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										// API doesn't return plaintext fields
+										OpenaiApiBase: "https://api.openai.com/v1",
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedEntityName:  "gpt-4o-mini",
+									TrafficPercentage: 100,
+								},
+							},
+						},
+					},
+				}, nil)
+		},
+		Resource: ResourceModelServing(),
+		Read:     true,
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name": "test-endpoint",
+			"config.0.served_entities.0.external_model.0.openai_config.0.openai_api_key_plaintext": "sk-test-key-12345",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"serving_endpoint_id": "test-endpoint",
+		"endpoint_url":        "https://example.com/endpoint",
+		// Verify the plaintext field is preserved from state
+		"config.0.served_entities.0.external_model.0.openai_config.0.openai_api_key_plaintext": "sk-test-key-12345",
+	})
+}
+
+func TestModelServingReadWithMultipleSensitiveFields(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockServingEndpointsAPI().EXPECT().
+				GetByName(mock.Anything, "test-endpoint").
+				Return(&serving.ServingEndpointDetailed{
+					Id:   "test-endpoint",
+					Name: "test-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+					EndpointUrl: "https://example.com/endpoint",
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name: "gpt-4o-mini",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4o-mini",
+									Provider: serving.ExternalModelProviderOpenai,
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										// API doesn't return plaintext fields
+										OpenaiApiBase:          "https://api.openai.com/v1",
+										OpenaiApiType:          "azuread",
+										MicrosoftEntraClientId: "client-id-123",
+										MicrosoftEntraTenantId: "tenant-id-456",
+									},
+								},
+							},
+							{
+								Name: "vertex-ai-model",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "vertex-ai-model",
+									Provider: serving.ExternalModelProviderGoogleCloudVertexAi,
+									Task:     "llm/v1/chat",
+									GoogleCloudVertexAiConfig: &serving.GoogleCloudVertexAiConfig{
+										// API doesn't return plaintext fields
+										ProjectId: "my-gcp-project",
+										Region:    "us-central1",
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedEntityName:  "gpt-4o-mini",
+									TrafficPercentage: 50,
+								},
+								{
+									ServedEntityName:  "vertex-ai-model",
+									TrafficPercentage: 50,
+								},
+							},
+						},
+					},
+				}, nil)
+		},
+		Resource: ResourceModelServing(),
+		Read:     true,
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name": "test-endpoint",
+			"config.0.served_entities.0.external_model.0.openai_config.0.openai_api_key_plaintext":                "sk-test-key-12345",
+			"config.0.served_entities.0.external_model.0.openai_config.0.microsoft_entra_client_secret_plaintext": "client-secret-xyz",
+			"config.0.served_entities.1.external_model.0.google_cloud_vertex_ai_config.0.private_key_plaintext":   "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----", // gitleaks:allow
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"serving_endpoint_id":        "test-endpoint",
+		"endpoint_url":               "https://example.com/endpoint",
+		"config.0.served_entities.#": 2,
+		// Verify all plaintext fields are preserved from state
+		"config.0.served_entities.0.external_model.0.openai_config.0.openai_api_key_plaintext":                "sk-test-key-12345",
+		"config.0.served_entities.0.external_model.0.openai_config.0.microsoft_entra_client_secret_plaintext": "client-secret-xyz",
+		"config.0.served_entities.1.external_model.0.google_cloud_vertex_ai_config.0.private_key_plaintext":   "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----",
+	})
+}
+
+// TestCopySensitiveFields tests the reflection-based sensitive field copying logic
+func TestCopySensitiveFields(t *testing.T) {
+	// Test case 1: Simple plaintext field copy
+	t.Run("SimpleOpenAIPlaintextCopy", func(t *testing.T) {
+		src := &serving.ServingEndpointDetailed{
+			Name: "test-endpoint",
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						Name: "gpt-4o-mini",
+						ExternalModel: &serving.ExternalModel{
+							Name:     "gpt-4o-mini",
+							Provider: serving.ExternalModelProviderOpenai,
+							Task:     "llm/v1/chat",
+							OpenaiConfig: &serving.OpenAiConfig{
+								OpenaiApiKeyPlaintext: "sk-test-key-12345",
+								OpenaiApiBase:         "https://api.openai.com/v1",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		dst := &serving.ServingEndpointDetailed{
+			Name: "test-endpoint",
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						Name: "gpt-4o-mini",
+						ExternalModel: &serving.ExternalModel{
+							Name:     "gpt-4o-mini",
+							Provider: serving.ExternalModelProviderOpenai,
+							Task:     "llm/v1/chat",
+							OpenaiConfig: &serving.OpenAiConfig{
+								// API doesn't return plaintext field
+								OpenaiApiBase: "https://api.openai.com/v1",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		copySensitiveExternalModelFields(src, dst)
+
+		assert.Equal(t, "sk-test-key-12345", dst.Config.ServedEntities[0].ExternalModel.OpenaiConfig.OpenaiApiKeyPlaintext,
+			"OpenAI plaintext API key should be copied from source")
+	})
+
+	// Test case 2: Multiple plaintext fields
+	t.Run("MultipleProviderPlaintextCopy", func(t *testing.T) {
+		src := &serving.ServingEndpointDetailed{
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						ExternalModel: &serving.ExternalModel{
+							OpenaiConfig: &serving.OpenAiConfig{
+								OpenaiApiKeyPlaintext:               "sk-test-key",
+								MicrosoftEntraClientSecretPlaintext: "client-secret",
+							},
+						},
+					},
+					{
+						ExternalModel: &serving.ExternalModel{
+							GoogleCloudVertexAiConfig: &serving.GoogleCloudVertexAiConfig{
+								PrivateKeyPlaintext: "private-key-content",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		dst := &serving.ServingEndpointDetailed{
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						ExternalModel: &serving.ExternalModel{
+							OpenaiConfig: &serving.OpenAiConfig{},
+						},
+					},
+					{
+						ExternalModel: &serving.ExternalModel{
+							GoogleCloudVertexAiConfig: &serving.GoogleCloudVertexAiConfig{},
+						},
+					},
+				},
+			},
+		}
+
+		copySensitiveExternalModelFields(src, dst)
+
+		assert.Equal(t, "sk-test-key", dst.Config.ServedEntities[0].ExternalModel.OpenaiConfig.OpenaiApiKeyPlaintext)
+		assert.Equal(t, "client-secret", dst.Config.ServedEntities[0].ExternalModel.OpenaiConfig.MicrosoftEntraClientSecretPlaintext)
+		assert.Equal(t, "private-key-content", dst.Config.ServedEntities[1].ExternalModel.GoogleCloudVertexAiConfig.PrivateKeyPlaintext)
+	})
+
+	// Test case 3: Nil safety
+	t.Run("NilSafety", func(t *testing.T) {
+		// Should not panic
+		copySensitiveExternalModelFields(nil, nil)
+
+		src := &serving.ServingEndpointDetailed{}
+		copySensitiveExternalModelFields(src, nil)
+		copySensitiveExternalModelFields(nil, src)
+
+		dst := &serving.ServingEndpointDetailed{}
+		copySensitiveExternalModelFields(src, dst) // Both empty, should not panic
+	})
+
+	// Test case 4: Don't overwrite existing values
+	t.Run("DontOverwriteExisting", func(t *testing.T) {
+		src := &serving.ServingEndpointDetailed{
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						ExternalModel: &serving.ExternalModel{
+							OpenaiConfig: &serving.OpenAiConfig{
+								OpenaiApiKeyPlaintext: "src-key",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		dst := &serving.ServingEndpointDetailed{
+			Config: &serving.EndpointCoreConfigOutput{
+				ServedEntities: []serving.ServedEntityOutput{
+					{
+						ExternalModel: &serving.ExternalModel{
+							OpenaiConfig: &serving.OpenAiConfig{
+								OpenaiApiKeyPlaintext: "dst-key-already-set",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		copySensitiveExternalModelFields(src, dst)
+
+		// Should not overwrite existing value
+		assert.Equal(t, "dst-key-already-set", dst.Config.ServedEntities[0].ExternalModel.OpenaiConfig.OpenaiApiKeyPlaintext)
+	})
+
+	// Test case 5: Test with reflection directly
+	t.Run("ReflectionBasedCopy", func(t *testing.T) {
+		type TestStruct struct {
+			RegularField       string
+			SensitivePlaintext string
+		}
+
+		src := TestStruct{
+			RegularField:       "regular",
+			SensitivePlaintext: "sensitive-value",
+		}
+
+		dst := TestStruct{
+			RegularField: "regular",
+		}
+
+		srcVal := reflect.ValueOf(&src)
+		dstVal := reflect.ValueOf(&dst)
+
+		copySensitiveFields(srcVal, dstVal)
+
+		assert.Equal(t, "sensitive-value", dst.SensitivePlaintext)
+	})
 }

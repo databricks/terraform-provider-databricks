@@ -22,11 +22,16 @@ type Dashboard struct {
 	DatasetSchema           string `json:"dataset_schema,omitempty"`
 }
 
-func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) bool {
-	_, newHash, err := common.ReadSerializedJsonContent(new, d.Get("file_path").(string))
+func customDiffDashboardContent(k, old, new string, d *schema.ResourceData) bool {
+	// Read both serialized_dashboard and file_path from the new config
+	serializedDashboard := d.Get("serialized_dashboard").(string)
+	filePath := d.Get("file_path").(string)
+
+	_, newHash, err := common.ReadSerializedJsonContent(serializedDashboard, filePath)
 	if err != nil {
-		return false
+		return false // Show diff on error
 	}
+	// Suppress diff if: stored MD5 matches new hash AND no external changes detected
 	return d.Get("md5").(string) == newHash && !d.Get("dashboard_change_detected").(bool)
 }
 
@@ -55,8 +60,11 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Default values
 	s.SchemaPath("embed_credentials").SetDefault(true)
 
-	// DiffSuppressFunc
-	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
+	// DiffSuppressFunc - Custom diff logic for serialized_dashboard
+	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffDashboardContent)
+
+	// Apply same custom diff to file_path to enable content change detection
+	s.SchemaPath("file_path").SetCustomSuppressDiff(customDiffDashboardContent)
 
 	return s
 }

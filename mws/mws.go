@@ -45,6 +45,7 @@ type StorageConfiguration struct {
 	StorageConfigurationID   string          `json:"storage_configuration_id,omitempty"`
 	StorageConfigurationName string          `json:"storage_configuration_name,omitempty"`
 	RootBucketInfo           *RootBucketInfo `json:"root_bucket_info,omitempty"`
+	RoleArn                  string          `json:"role_arn,omitempty"`
 	AccountID                string          `json:"account_id,omitempty"`
 	CreationTime             int64           `json:"creation_time,omitempty"`
 }

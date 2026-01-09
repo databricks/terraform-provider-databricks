@@ -187,11 +187,49 @@ func importClusterPolicy(ic *importContext, r *resource) error {
 	s := ic.Resources["databricks_cluster_policy"].Schema
 	common.DataToStructPointer(r.Data, s, &clusterPolicy)
 
-	var definition map[string]map[string]any
-	err := json.Unmarshal([]byte(clusterPolicy.Definition), &definition)
-	if err != nil {
-		return err
+	// Determine which field to parse and convert
+	var policyDefStr string
+	var isOverride bool
+	if clusterPolicy.PolicyFamilyId != "" && clusterPolicy.PolicyFamilyDefinitionOverrides != "" {
+		policyDefStr = clusterPolicy.PolicyFamilyDefinitionOverrides
+		isOverride = true
+	} else if clusterPolicy.Definition != "" {
+		policyDefStr = clusterPolicy.Definition
+		isOverride = false
 	}
+
+	var definition map[string]map[string]any
+	if policyDefStr != "" {
+		err := json.Unmarshal([]byte(policyDefStr), &definition)
+		if err != nil {
+			return err
+		}
+	} else {
+		// No definition to process
+		definition = make(map[string]map[string]any)
+	}
+
+	// Convert cloud-specific attributes if targetCloud is set
+	if ic.targetCloud != "" && len(definition) > 0 {
+		sourceCloud := ic.getSourceCloud()
+		if ic.convertClusterPolicyDefinition(definition, sourceCloud, ic.targetCloud) {
+			// Re-encode the modified definition
+			modifiedDef, err := json.Marshal(definition)
+			if err != nil {
+				return err
+			}
+			policyDefStr = string(modifiedDef)
+
+			// Update the appropriate field in the resource data
+			if isOverride {
+				r.Data.Set("policy_family_definition_overrides", policyDefStr)
+			} else {
+				r.Data.Set("definition", policyDefStr)
+			}
+			log.Printf("[INFO] Converted cluster policy '%s' for target cloud '%s'", clusterPolicy.Name, ic.targetCloud)
+		}
+	}
+
 	for k, policy := range definition {
 		value, vok := policy["value"]
 		defaultValue, dok := policy["defaultValue"]

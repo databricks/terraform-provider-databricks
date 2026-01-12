@@ -108,8 +108,6 @@ func diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	for _, afterSdo := range afterSi.Objects {
 		if beforeSdo, ok := beforeMap[afterSdo.Name]; ok {
 			if !equal(beforeSdo, afterSdo) {
-				// do not send SharedAs
-				afterSdo.SharedAs = ""
 				changes = append(changes, sharing.SharedDataObjectUpdate{
 					Action:     sharing.SharedDataObjectUpdateActionUpdate,
 					DataObject: &afterSdo,

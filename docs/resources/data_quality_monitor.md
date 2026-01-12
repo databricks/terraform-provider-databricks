@@ -47,6 +47,9 @@ The following arguments are supported:
 * `data_profiling_config` (DataProfilingConfig, optional) - Data Profiling Configuration, applicable to `table` object types. Exactly one `Analysis Configuration`
   must be present
 
+### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection
+
 ### CronSchedule
 * `quartz_cron_expression` (string, required) - The expression that determines when to run the monitor. See [examples](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
 * `timezone_id` (string, required) - A Java timezone id. The schedule for a job will be resolved with respect to this timezone.

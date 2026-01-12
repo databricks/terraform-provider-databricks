@@ -5232,10 +5232,30 @@ type SharedDataObject_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Array of partitions for the shared data.
 	Partitions types.List `tfsdk:"partition"`
-	// A user-provided new name for the data object within the share. If this
-	// new name is not provided, the object's original name will be used as the
-	// `shared_as` name. The `shared_as` name must be unique within a share. For
-	// tables, the new name must follow the format of `<schema>.<table>`.
+	// A user-provided alias name for table-like data objects within the share.
+	//
+	// Use this field for table-like objects (for example: TABLE, VIEW,
+	// MATERIALIZED_VIEW, STREAMING_TABLE, FOREIGN_TABLE). For non-table objects
+	// (for example: VOLUME, MODEL, NOTEBOOK_FILE, FUNCTION), use
+	// `string_shared_as` instead.
+	//
+	// Important: For non-table objects, this field must be omitted entirely.
+	//
+	// Format: Must be a 2-part name `<schema_name>.<table_name>` (e.g.,
+	// "sales_schema.orders_table") - Both schema and table names must contain
+	// only alphanumeric characters and underscores - No periods, spaces,
+	// forward slashes, or control characters are allowed within each part - Do
+	// not include the catalog name (use 2 parts, not 3)
+	//
+	// Behavior: - If not provided, the service automatically generates the
+	// alias as `<schema>.<table>` from the object's original name - If you
+	// don't want to specify this field, omit it entirely from the request (do
+	// not pass an empty string) - The `shared_as` name must be unique within
+	// the share
+	//
+	// Examples: - Valid: "analytics_schema.customer_view" - Invalid:
+	// "catalog.analytics_schema.customer_view" (3 parts not allowed) - Invalid:
+	// "analytics-schema.customer-view" (hyphens not allowed)
 	SharedAs          types.String `tfsdk:"shared_as"`
 	EffectiveSharedAs types.String `tfsdk:"effective_shared_as"`
 	// The start version associated with the object. This allows data providers
@@ -5249,11 +5269,34 @@ type SharedDataObject_SdkV2 struct {
 	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
 	Status types.String `tfsdk:"status"`
-	// A user-provided new name for the shared object within the share. If this
-	// new name is not not provided, the object's original name will be used as
-	// the `string_shared_as` name. The `string_shared_as` name must be unique
-	// for objects of the same type within a Share. For notebooks, the new name
-	// should be the new notebook file name.
+	// A user-provided alias name for non-table data objects within the share.
+	//
+	// Use this field for non-table objects (for example: VOLUME, MODEL,
+	// NOTEBOOK_FILE, FUNCTION). For table-like objects (for example: TABLE,
+	// VIEW, MATERIALIZED_VIEW, STREAMING_TABLE, FOREIGN_TABLE), use `shared_as`
+	// instead.
+	//
+	// Important: For table-like objects, this field must be omitted entirely.
+	//
+	// Format: - For VOLUME: Must be a 2-part name `<schema_name>.<volume_name>`
+	// (e.g., "data_schema.ml_models") - For FUNCTION: Must be a 2-part name
+	// `<schema_name>.<function_name>` (e.g., "udf_schema.calculate_tax") - For
+	// MODEL: Must be a 2-part name `<schema_name>.<model_name>` (e.g.,
+	// "models.prediction_model") - For NOTEBOOK_FILE: Should be the notebook
+	// file name (e.g., "analysis_notebook.py") - All names must contain only
+	// alphanumeric characters and underscores - No periods, spaces, forward
+	// slashes, or control characters are allowed within each part
+	//
+	// Behavior: - If not provided, the service automatically generates the
+	// alias from the object's original name - If you don't want to specify this
+	// field, omit it entirely from the request (do not pass an empty string) -
+	// The `string_shared_as` name must be unique for objects of the same type
+	// within the share
+	//
+	// Examples: - Valid for VOLUME: "data_schema.training_data" - Valid for
+	// FUNCTION: "analytics.calculate_revenue" - Invalid:
+	// "catalog.data_schema.training_data" (3 parts not allowed for volumes) -
+	// Invalid: "data-schema.training-data" (hyphens not allowed)
 	StringSharedAs          types.String `tfsdk:"string_shared_as"`
 	EffectiveStringSharedAs types.String `tfsdk:"effective_string_shared_as"`
 }

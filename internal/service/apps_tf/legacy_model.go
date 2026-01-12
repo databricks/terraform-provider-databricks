@@ -47,8 +47,14 @@ type App_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
+	// Git repository configuration for app deployments. When specified,
+	// deployments can reference code from this repository by providing only the
+	// git reference (branch, tag, or commit).
+	GitRepository types.List `tfsdk:"git_repository"`
 	// The unique identifier of the app.
 	Id types.String `tfsdk:"id"`
 	// The name of the app. The name must contain only lowercase alphanumeric
@@ -75,6 +81,8 @@ type App_SdkV2 struct {
 	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url"`
+
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
@@ -112,6 +120,15 @@ func (to *App_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Ap
 		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
+	}
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				// Recursively sync the fields of GitRepository
+				toGitRepository.SyncFieldsDuringCreateOrUpdate(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
 	}
 	if !from.PendingDeployment.IsNull() && !from.PendingDeployment.IsUnknown() {
 		if toPendingDeployment, ok := to.GetPendingDeployment(ctx); ok {
@@ -167,6 +184,14 @@ func (to *App_SdkV2) SyncFieldsDuringRead(ctx context.Context, from App_SdkV2) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
 	}
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				toGitRepository.SyncFieldsDuringRead(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
+	}
 	if !from.PendingDeployment.IsNull() && !from.PendingDeployment.IsUnknown() {
 		if toPendingDeployment, ok := to.GetPendingDeployment(ctx); ok {
 			if fromPendingDeployment, ok := from.GetPendingDeployment(ctx); ok {
@@ -203,7 +228,10 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
+	attrs["git_repository"] = attrs["git_repository"].SetOptional()
+	attrs["git_repository"] = attrs["git_repository"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
@@ -217,6 +245,7 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
 
 	return attrs
@@ -235,6 +264,7 @@ func (m App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 		"app_status":                reflect.TypeOf(ApplicationStatus_SdkV2{}),
 		"compute_status":            reflect.TypeOf(ComputeStatus_SdkV2{}),
 		"effective_user_api_scopes": reflect.TypeOf(types.String{}),
+		"git_repository":            reflect.TypeOf(GitRepository_SdkV2{}),
 		"pending_deployment":        reflect.TypeOf(AppDeployment_SdkV2{}),
 		"resources":                 reflect.TypeOf(AppResource_SdkV2{}),
 		"user_api_scopes":           reflect.TypeOf(types.String{}),
@@ -258,7 +288,9 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"default_source_code_path":    m.DefaultSourceCodePath,
 			"description":                 m.Description,
 			"effective_budget_policy_id":  m.EffectiveBudgetPolicyId,
+			"effective_usage_policy_id":   m.EffectiveUsagePolicyId,
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
+			"git_repository":              m.GitRepository,
 			"id":                          m.Id,
 			"name":                        m.Name,
 			"oauth2_app_client_id":        m.Oauth2AppClientId,
@@ -271,6 +303,7 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"update_time":                 m.UpdateTime,
 			"updater":                     m.Updater,
 			"url":                         m.Url,
+			"usage_policy_id":             m.UsagePolicyId,
 			"user_api_scopes":             m.UserApiScopes,
 		})
 }
@@ -295,8 +328,12 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_usage_policy_id":  types.StringType,
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
+			},
+			"git_repository": basetypes.ListType{
+				ElemType: GitRepository_SdkV2{}.Type(ctx),
 			},
 			"id":                        types.StringType,
 			"name":                      types.StringType,
@@ -314,6 +351,7 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time":                 types.StringType,
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
+			"usage_policy_id":             types.StringType,
 			"user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -423,6 +461,32 @@ func (m *App_SdkV2) SetEffectiveUserApiScopes(ctx context.Context, v []types.Str
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+}
+
+// GetGitRepository returns the value of the GitRepository field in App_SdkV2 as
+// a GitRepository_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *App_SdkV2) GetGitRepository(ctx context.Context) (GitRepository_SdkV2, bool) {
+	var e GitRepository_SdkV2
+	if m.GitRepository.IsNull() || m.GitRepository.IsUnknown() {
+		return e, false
+	}
+	var v []GitRepository_SdkV2
+	d := m.GitRepository.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitRepository sets the value of the GitRepository field in App_SdkV2.
+func (m *App_SdkV2) SetGitRepository(ctx context.Context, v GitRepository_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_repository"]
+	m.GitRepository = types.ListValueMust(t, vs)
 }
 
 // GetPendingDeployment returns the value of the PendingDeployment field in App_SdkV2 as
@@ -677,6 +741,9 @@ func (m *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, 
 }
 
 type AppDeployment_SdkV2 struct {
+	// The command with which to run the app. This will override the command
+	// specified in the app.yaml file.
+	Command types.List `tfsdk:"command"`
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time"`
 	// The email of the user creates the deployment.
@@ -685,6 +752,11 @@ type AppDeployment_SdkV2 struct {
 	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id"`
+	// The environment variables to set in the app runtime environment. This
+	// will override the environment variables specified in the app.yaml file.
+	EnvVars types.List `tfsdk:"env_vars"`
+	// Git repository to use as the source for the app deployment.
+	GitSource types.List `tfsdk:"git_source"`
 	// The mode of which the deployment will manage the source code.
 	Mode types.String `tfsdk:"mode"`
 	// The workspace file system path of the source code used to create the app
@@ -702,12 +774,33 @@ type AppDeployment_SdkV2 struct {
 }
 
 func (to *AppDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppDeployment_SdkV2) {
+	if !from.Command.IsNull() && !from.Command.IsUnknown() && to.Command.IsNull() && len(from.Command.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Command, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Command = from.Command
+	}
 	if !from.DeploymentArtifacts.IsNull() && !from.DeploymentArtifacts.IsUnknown() {
 		if toDeploymentArtifacts, ok := to.GetDeploymentArtifacts(ctx); ok {
 			if fromDeploymentArtifacts, ok := from.GetDeploymentArtifacts(ctx); ok {
 				// Recursively sync the fields of DeploymentArtifacts
 				toDeploymentArtifacts.SyncFieldsDuringCreateOrUpdate(ctx, fromDeploymentArtifacts)
 				to.SetDeploymentArtifacts(ctx, toDeploymentArtifacts)
+			}
+		}
+	}
+	if !from.EnvVars.IsNull() && !from.EnvVars.IsUnknown() && to.EnvVars.IsNull() && len(from.EnvVars.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvVars = from.EnvVars
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				// Recursively sync the fields of GitSource
+				toGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
@@ -723,11 +816,31 @@ func (to *AppDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 }
 
 func (to *AppDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppDeployment_SdkV2) {
+	if !from.Command.IsNull() && !from.Command.IsUnknown() && to.Command.IsNull() && len(from.Command.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Command, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Command = from.Command
+	}
 	if !from.DeploymentArtifacts.IsNull() && !from.DeploymentArtifacts.IsUnknown() {
 		if toDeploymentArtifacts, ok := to.GetDeploymentArtifacts(ctx); ok {
 			if fromDeploymentArtifacts, ok := from.GetDeploymentArtifacts(ctx); ok {
 				toDeploymentArtifacts.SyncFieldsDuringRead(ctx, fromDeploymentArtifacts)
 				to.SetDeploymentArtifacts(ctx, toDeploymentArtifacts)
+			}
+		}
+	}
+	if !from.EnvVars.IsNull() && !from.EnvVars.IsUnknown() && to.EnvVars.IsNull() && len(from.EnvVars.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvVars = from.EnvVars
+	}
+	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
+		if toGitSource, ok := to.GetGitSource(ctx); ok {
+			if fromGitSource, ok := from.GetGitSource(ctx); ok {
+				toGitSource.SyncFieldsDuringRead(ctx, fromGitSource)
+				to.SetGitSource(ctx, toGitSource)
 			}
 		}
 	}
@@ -742,11 +855,15 @@ func (to *AppDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ap
 }
 
 func (m AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["command"] = attrs["command"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].SetComputed()
 	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
+	attrs["env_vars"] = attrs["env_vars"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["mode"] = attrs["mode"].SetOptional()
 	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -765,7 +882,10 @@ func (m AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m AppDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"command":              reflect.TypeOf(types.String{}),
 		"deployment_artifacts": reflect.TypeOf(AppDeploymentArtifacts_SdkV2{}),
+		"env_vars":             reflect.TypeOf(EnvVar_SdkV2{}),
+		"git_source":           reflect.TypeOf(GitSource_SdkV2{}),
 		"status":               reflect.TypeOf(AppDeploymentStatus_SdkV2{}),
 	}
 }
@@ -777,10 +897,13 @@ func (m AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"command":              m.Command,
 			"create_time":          m.CreateTime,
 			"creator":              m.Creator,
 			"deployment_artifacts": m.DeploymentArtifacts,
 			"deployment_id":        m.DeploymentId,
+			"env_vars":             m.EnvVars,
+			"git_source":           m.GitSource,
 			"mode":                 m.Mode,
 			"source_code_path":     m.SourceCodePath,
 			"status":               m.Status,
@@ -792,12 +915,21 @@ func (m AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"command": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"create_time": types.StringType,
 			"creator":     types.StringType,
 			"deployment_artifacts": basetypes.ListType{
 				ElemType: AppDeploymentArtifacts_SdkV2{}.Type(ctx),
 			},
-			"deployment_id":    types.StringType,
+			"deployment_id": types.StringType,
+			"env_vars": basetypes.ListType{
+				ElemType: EnvVar_SdkV2{}.Type(ctx),
+			},
+			"git_source": basetypes.ListType{
+				ElemType: GitSource_SdkV2{}.Type(ctx),
+			},
 			"mode":             types.StringType,
 			"source_code_path": types.StringType,
 			"status": basetypes.ListType{
@@ -806,6 +938,32 @@ func (m AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time": types.StringType,
 		},
 	}
+}
+
+// GetCommand returns the value of the Command field in AppDeployment_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppDeployment_SdkV2) GetCommand(ctx context.Context) ([]types.String, bool) {
+	if m.Command.IsNull() || m.Command.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Command.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCommand sets the value of the Command field in AppDeployment_SdkV2.
+func (m *AppDeployment_SdkV2) SetCommand(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["command"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Command = types.ListValueMust(t, vs)
 }
 
 // GetDeploymentArtifacts returns the value of the DeploymentArtifacts field in AppDeployment_SdkV2 as
@@ -832,6 +990,58 @@ func (m *AppDeployment_SdkV2) SetDeploymentArtifacts(ctx context.Context, v AppD
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment_artifacts"]
 	m.DeploymentArtifacts = types.ListValueMust(t, vs)
+}
+
+// GetEnvVars returns the value of the EnvVars field in AppDeployment_SdkV2 as
+// a slice of EnvVar_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppDeployment_SdkV2) GetEnvVars(ctx context.Context) ([]EnvVar_SdkV2, bool) {
+	if m.EnvVars.IsNull() || m.EnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v []EnvVar_SdkV2
+	d := m.EnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvVars sets the value of the EnvVars field in AppDeployment_SdkV2.
+func (m *AppDeployment_SdkV2) SetEnvVars(ctx context.Context, v []EnvVar_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvVars = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in AppDeployment_SdkV2 as
+// a GitSource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppDeployment_SdkV2) GetGitSource(ctx context.Context) (GitSource_SdkV2, bool) {
+	var e GitSource_SdkV2
+	if m.GitSource.IsNull() || m.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource_SdkV2
+	d := m.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in AppDeployment_SdkV2.
+func (m *AppDeployment_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	m.GitSource = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in AppDeployment_SdkV2 as
@@ -1068,6 +1278,53 @@ func (m *AppManifest_SdkV2) SetResourceSpecs(ctx context.Context, v []AppManifes
 	m.ResourceSpecs = types.ListValueMust(t, vs)
 }
 
+type AppManifestAppResourceExperimentSpec_SdkV2 struct {
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (to *AppManifestAppResourceExperimentSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppManifestAppResourceExperimentSpec_SdkV2) {
+}
+
+func (to *AppManifestAppResourceExperimentSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceExperimentSpec_SdkV2) {
+}
+
+func (m AppManifestAppResourceExperimentSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppManifestAppResourceExperimentSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppManifestAppResourceExperimentSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppManifestAppResourceExperimentSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppManifestAppResourceExperimentSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": m.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppManifestAppResourceExperimentSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
 type AppManifestAppResourceJobSpec_SdkV2 struct {
 	// Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE",
 	// "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW".
@@ -1221,6 +1478,8 @@ type AppManifestAppResourceSpec_SdkV2 struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
 
+	ExperimentSpec types.List `tfsdk:"experiment_spec"`
+
 	JobSpec types.List `tfsdk:"job_spec"`
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name"`
@@ -1235,6 +1494,15 @@ type AppManifestAppResourceSpec_SdkV2 struct {
 }
 
 func (to *AppManifestAppResourceSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppManifestAppResourceSpec_SdkV2) {
+	if !from.ExperimentSpec.IsNull() && !from.ExperimentSpec.IsUnknown() {
+		if toExperimentSpec, ok := to.GetExperimentSpec(ctx); ok {
+			if fromExperimentSpec, ok := from.GetExperimentSpec(ctx); ok {
+				// Recursively sync the fields of ExperimentSpec
+				toExperimentSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromExperimentSpec)
+				to.SetExperimentSpec(ctx, toExperimentSpec)
+			}
+		}
+	}
 	if !from.JobSpec.IsNull() && !from.JobSpec.IsUnknown() {
 		if toJobSpec, ok := to.GetJobSpec(ctx); ok {
 			if fromJobSpec, ok := from.GetJobSpec(ctx); ok {
@@ -1283,6 +1551,14 @@ func (to *AppManifestAppResourceSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 }
 
 func (to *AppManifestAppResourceSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppManifestAppResourceSpec_SdkV2) {
+	if !from.ExperimentSpec.IsNull() && !from.ExperimentSpec.IsUnknown() {
+		if toExperimentSpec, ok := to.GetExperimentSpec(ctx); ok {
+			if fromExperimentSpec, ok := from.GetExperimentSpec(ctx); ok {
+				toExperimentSpec.SyncFieldsDuringRead(ctx, fromExperimentSpec)
+				to.SetExperimentSpec(ctx, toExperimentSpec)
+			}
+		}
+	}
 	if !from.JobSpec.IsNull() && !from.JobSpec.IsUnknown() {
 		if toJobSpec, ok := to.GetJobSpec(ctx); ok {
 			if fromJobSpec, ok := from.GetJobSpec(ctx); ok {
@@ -1327,6 +1603,8 @@ func (to *AppManifestAppResourceSpec_SdkV2) SyncFieldsDuringRead(ctx context.Con
 
 func (m AppManifestAppResourceSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["experiment_spec"] = attrs["experiment_spec"].SetOptional()
+	attrs["experiment_spec"] = attrs["experiment_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["job_spec"] = attrs["job_spec"].SetOptional()
 	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -1351,6 +1629,7 @@ func (m AppManifestAppResourceSpec_SdkV2) ApplySchemaCustomizations(attrs map[st
 // SDK values.
 func (m AppManifestAppResourceSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"experiment_spec":       reflect.TypeOf(AppManifestAppResourceExperimentSpec_SdkV2{}),
 		"job_spec":              reflect.TypeOf(AppManifestAppResourceJobSpec_SdkV2{}),
 		"secret_spec":           reflect.TypeOf(AppManifestAppResourceSecretSpec_SdkV2{}),
 		"serving_endpoint_spec": reflect.TypeOf(AppManifestAppResourceServingEndpointSpec_SdkV2{}),
@@ -1367,6 +1646,7 @@ func (m AppManifestAppResourceSpec_SdkV2) ToObjectValue(ctx context.Context) bas
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"description":           m.Description,
+			"experiment_spec":       m.ExperimentSpec,
 			"job_spec":              m.JobSpec,
 			"name":                  m.Name,
 			"secret_spec":           m.SecretSpec,
@@ -1381,6 +1661,9 @@ func (m AppManifestAppResourceSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description": types.StringType,
+			"experiment_spec": basetypes.ListType{
+				ElemType: AppManifestAppResourceExperimentSpec_SdkV2{}.Type(ctx),
+			},
 			"job_spec": basetypes.ListType{
 				ElemType: AppManifestAppResourceJobSpec_SdkV2{}.Type(ctx),
 			},
@@ -1399,6 +1682,32 @@ func (m AppManifestAppResourceSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExperimentSpec returns the value of the ExperimentSpec field in AppManifestAppResourceSpec_SdkV2 as
+// a AppManifestAppResourceExperimentSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppManifestAppResourceSpec_SdkV2) GetExperimentSpec(ctx context.Context) (AppManifestAppResourceExperimentSpec_SdkV2, bool) {
+	var e AppManifestAppResourceExperimentSpec_SdkV2
+	if m.ExperimentSpec.IsNull() || m.ExperimentSpec.IsUnknown() {
+		return e, false
+	}
+	var v []AppManifestAppResourceExperimentSpec_SdkV2
+	d := m.ExperimentSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExperimentSpec sets the value of the ExperimentSpec field in AppManifestAppResourceSpec_SdkV2.
+func (m *AppManifestAppResourceSpec_SdkV2) SetExperimentSpec(ctx context.Context, v AppManifestAppResourceExperimentSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment_spec"]
+	m.ExperimentSpec = types.ListValueMust(t, vs)
 }
 
 // GetJobSpec returns the value of the JobSpec field in AppManifestAppResourceSpec_SdkV2 as
@@ -1981,6 +2290,8 @@ type AppResource_SdkV2 struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
 
+	Experiment types.List `tfsdk:"experiment"`
+
 	GenieSpace types.List `tfsdk:"genie_space"`
 
 	Job types.List `tfsdk:"job"`
@@ -2003,6 +2314,15 @@ func (to *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of Database
 				toDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabase)
 				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+	if !from.Experiment.IsNull() && !from.Experiment.IsUnknown() {
+		if toExperiment, ok := to.GetExperiment(ctx); ok {
+			if fromExperiment, ok := from.GetExperiment(ctx); ok {
+				// Recursively sync the fields of Experiment
+				toExperiment.SyncFieldsDuringCreateOrUpdate(ctx, fromExperiment)
+				to.SetExperiment(ctx, toExperiment)
 			}
 		}
 	}
@@ -2071,6 +2391,14 @@ func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppR
 			}
 		}
 	}
+	if !from.Experiment.IsNull() && !from.Experiment.IsUnknown() {
+		if toExperiment, ok := to.GetExperiment(ctx); ok {
+			if fromExperiment, ok := from.GetExperiment(ctx); ok {
+				toExperiment.SyncFieldsDuringRead(ctx, fromExperiment)
+				to.SetExperiment(ctx, toExperiment)
+			}
+		}
+	}
 	if !from.GenieSpace.IsNull() && !from.GenieSpace.IsUnknown() {
 		if toGenieSpace, ok := to.GetGenieSpace(ctx); ok {
 			if fromGenieSpace, ok := from.GetGenieSpace(ctx); ok {
@@ -2125,6 +2453,8 @@ func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["database"] = attrs["database"].SetOptional()
 	attrs["database"] = attrs["database"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["experiment"] = attrs["experiment"].SetOptional()
+	attrs["experiment"] = attrs["experiment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["genie_space"] = attrs["genie_space"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["job"] = attrs["job"].SetOptional()
@@ -2152,6 +2482,7 @@ func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 func (m AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database":         reflect.TypeOf(AppResourceDatabase_SdkV2{}),
+		"experiment":       reflect.TypeOf(AppResourceExperiment_SdkV2{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace_SdkV2{}),
 		"job":              reflect.TypeOf(AppResourceJob_SdkV2{}),
 		"secret":           reflect.TypeOf(AppResourceSecret_SdkV2{}),
@@ -2170,6 +2501,7 @@ func (m AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		map[string]attr.Value{
 			"database":         m.Database,
 			"description":      m.Description,
+			"experiment":       m.Experiment,
 			"genie_space":      m.GenieSpace,
 			"job":              m.Job,
 			"name":             m.Name,
@@ -2188,6 +2520,9 @@ func (m AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: AppResourceDatabase_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
+			"experiment": basetypes.ListType{
+				ElemType: AppResourceExperiment_SdkV2{}.Type(ctx),
+			},
 			"genie_space": basetypes.ListType{
 				ElemType: AppResourceGenieSpace_SdkV2{}.Type(ctx),
 			},
@@ -2235,6 +2570,32 @@ func (m *AppResource_SdkV2) SetDatabase(ctx context.Context, v AppResourceDataba
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["database"]
 	m.Database = types.ListValueMust(t, vs)
+}
+
+// GetExperiment returns the value of the Experiment field in AppResource_SdkV2 as
+// a AppResourceExperiment_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource_SdkV2) GetExperiment(ctx context.Context) (AppResourceExperiment_SdkV2, bool) {
+	var e AppResourceExperiment_SdkV2
+	if m.Experiment.IsNull() || m.Experiment.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceExperiment_SdkV2
+	d := m.Experiment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExperiment sets the value of the Experiment field in AppResource_SdkV2.
+func (m *AppResource_SdkV2) SetExperiment(ctx context.Context, v AppResourceExperiment_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment"]
+	m.Experiment = types.ListValueMust(t, vs)
 }
 
 // GetGenieSpace returns the value of the GenieSpace field in AppResource_SdkV2 as
@@ -2445,6 +2806,58 @@ func (m AppResourceDatabase_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"database_name": types.StringType,
 			"instance_name": types.StringType,
+			"permission":    types.StringType,
+		},
+	}
+}
+
+type AppResourceExperiment_SdkV2 struct {
+	ExperimentId types.String `tfsdk:"experiment_id"`
+
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (to *AppResourceExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceExperiment_SdkV2) {
+}
+
+func (to *AppResourceExperiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceExperiment_SdkV2) {
+}
+
+func (m AppResourceExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceExperiment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourceExperiment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceExperiment_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppResourceExperiment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment_id": m.ExperimentId,
+			"permission":    m.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourceExperiment_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment_id": types.StringType,
 			"permission":    types.StringType,
 		},
 	}
@@ -2792,6 +3205,8 @@ type AppUpdate_SdkV2 struct {
 
 	Description types.String `tfsdk:"description"`
 
+	GitRepository types.List `tfsdk:"git_repository"`
+
 	Resources types.List `tfsdk:"resources"`
 
 	Status types.List `tfsdk:"status"`
@@ -2802,6 +3217,15 @@ type AppUpdate_SdkV2 struct {
 }
 
 func (to *AppUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppUpdate_SdkV2) {
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				// Recursively sync the fields of GitRepository
+				toGitRepository.SyncFieldsDuringCreateOrUpdate(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
+	}
 	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
@@ -2826,6 +3250,14 @@ func (to *AppUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 }
 
 func (to *AppUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppUpdate_SdkV2) {
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				toGitRepository.SyncFieldsDuringRead(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
+	}
 	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
@@ -2852,6 +3284,8 @@ func (m AppUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["compute_size"] = attrs["compute_size"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["git_repository"] = attrs["git_repository"].SetOptional()
+	attrs["git_repository"] = attrs["git_repository"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2870,6 +3304,7 @@ func (m AppUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m AppUpdate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"git_repository":  reflect.TypeOf(GitRepository_SdkV2{}),
 		"resources":       reflect.TypeOf(AppResource_SdkV2{}),
 		"status":          reflect.TypeOf(AppUpdateUpdateStatus_SdkV2{}),
 		"user_api_scopes": reflect.TypeOf(types.String{}),
@@ -2886,6 +3321,7 @@ func (m AppUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"budget_policy_id": m.BudgetPolicyId,
 			"compute_size":     m.ComputeSize,
 			"description":      m.Description,
+			"git_repository":   m.GitRepository,
 			"resources":        m.Resources,
 			"status":           m.Status,
 			"usage_policy_id":  m.UsagePolicyId,
@@ -2900,6 +3336,9 @@ func (m AppUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 			"budget_policy_id": types.StringType,
 			"compute_size":     types.StringType,
 			"description":      types.StringType,
+			"git_repository": basetypes.ListType{
+				ElemType: GitRepository_SdkV2{}.Type(ctx),
+			},
 			"resources": basetypes.ListType{
 				ElemType: AppResource_SdkV2{}.Type(ctx),
 			},
@@ -2912,6 +3351,32 @@ func (m AppUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetGitRepository returns the value of the GitRepository field in AppUpdate_SdkV2 as
+// a GitRepository_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppUpdate_SdkV2) GetGitRepository(ctx context.Context) (GitRepository_SdkV2, bool) {
+	var e GitRepository_SdkV2
+	if m.GitRepository.IsNull() || m.GitRepository.IsUnknown() {
+		return e, false
+	}
+	var v []GitRepository_SdkV2
+	d := m.GitRepository.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitRepository sets the value of the GitRepository field in AppUpdate_SdkV2.
+func (m *AppUpdate_SdkV2) SetGitRepository(ctx context.Context, v GitRepository_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_repository"]
+	m.GitRepository = types.ListValueMust(t, vs)
 }
 
 // GetResources returns the value of the Resources field in AppUpdate_SdkV2 as
@@ -3785,6 +4250,65 @@ func (m DeleteCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type EnvVar_SdkV2 struct {
+	// The name of the environment variable.
+	Name types.String `tfsdk:"name"`
+	// The value for the environment variable.
+	Value types.String `tfsdk:"value"`
+	// The name of an external Databricks resource that contains the value, such
+	// as a secret or a database table.
+	ValueFrom types.String `tfsdk:"value_from"`
+}
+
+func (to *EnvVar_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnvVar_SdkV2) {
+}
+
+func (to *EnvVar_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EnvVar_SdkV2) {
+}
+
+func (m EnvVar_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+	attrs["value_from"] = attrs["value_from"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnvVar.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EnvVar_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnvVar_SdkV2
+// only implements ToObjectValue() and Type().
+func (m EnvVar_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":       m.Name,
+			"value":      m.Value,
+			"value_from": m.ValueFrom,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EnvVar_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":       types.StringType,
+			"value":      types.StringType,
+			"value_from": types.StringType,
+		},
+	}
+}
+
 type GetAppDeploymentRequest_SdkV2 struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
@@ -4166,6 +4690,191 @@ func (m GetCustomTemplateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+// Git repository configuration specifying the location of the repository.
+type GitRepository_SdkV2 struct {
+	// Git provider. Case insensitive. Supported values: gitHub,
+	// gitHubEnterprise, bitbucketCloud, bitbucketServer, azureDevOpsServices,
+	// gitLab, gitLabEnterpriseEdition, awsCodeCommit.
+	Provider types.String `tfsdk:"provider"`
+	// URL of the Git repository.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *GitRepository_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GitRepository_SdkV2) {
+}
+
+func (to *GitRepository_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GitRepository_SdkV2) {
+}
+
+func (m GitRepository_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["url"] = attrs["url"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GitRepository.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GitRepository_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GitRepository_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GitRepository_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"provider": m.Provider,
+			"url":      m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GitRepository_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"provider": types.StringType,
+			"url":      types.StringType,
+		},
+	}
+}
+
+// Complete git source specification including repository location and
+// reference.
+type GitSource_SdkV2 struct {
+	// Git branch to checkout.
+	Branch types.String `tfsdk:"branch"`
+	// Git commit SHA to checkout.
+	Commit types.String `tfsdk:"commit"`
+	// Git repository configuration. Populated from the app's git_repository
+	// configuration.
+	GitRepository types.List `tfsdk:"git_repository"`
+	// The resolved commit SHA that was actually used for the deployment. This
+	// is populated by the system after resolving the reference (branch, tag, or
+	// commit). If commit is specified directly, this will match commit. If a
+	// branch or tag is specified, this contains the commit SHA that the branch
+	// or tag pointed to at deployment time.
+	ResolvedCommit types.String `tfsdk:"resolved_commit"`
+	// Relative path to the app source code within the Git repository. If not
+	// specified, the root of the repository is used.
+	SourceCodePath types.String `tfsdk:"source_code_path"`
+	// Git tag to checkout.
+	Tag types.String `tfsdk:"tag"`
+}
+
+func (to *GitSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GitSource_SdkV2) {
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				// Recursively sync the fields of GitRepository
+				toGitRepository.SyncFieldsDuringCreateOrUpdate(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
+	}
+}
+
+func (to *GitSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GitSource_SdkV2) {
+	if !from.GitRepository.IsNull() && !from.GitRepository.IsUnknown() {
+		if toGitRepository, ok := to.GetGitRepository(ctx); ok {
+			if fromGitRepository, ok := from.GetGitRepository(ctx); ok {
+				toGitRepository.SyncFieldsDuringRead(ctx, fromGitRepository)
+				to.SetGitRepository(ctx, toGitRepository)
+			}
+		}
+	}
+}
+
+func (m GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["commit"] = attrs["commit"].SetOptional()
+	attrs["git_repository"] = attrs["git_repository"].SetComputed()
+	attrs["git_repository"] = attrs["git_repository"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["resolved_commit"] = attrs["resolved_commit"].SetComputed()
+	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
+	attrs["tag"] = attrs["tag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GitSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GitSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"git_repository": reflect.TypeOf(GitRepository_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GitSource_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GitSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":           m.Branch,
+			"commit":           m.Commit,
+			"git_repository":   m.GitRepository,
+			"resolved_commit":  m.ResolvedCommit,
+			"source_code_path": m.SourceCodePath,
+			"tag":              m.Tag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GitSource_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch": types.StringType,
+			"commit": types.StringType,
+			"git_repository": basetypes.ListType{
+				ElemType: GitRepository_SdkV2{}.Type(ctx),
+			},
+			"resolved_commit":  types.StringType,
+			"source_code_path": types.StringType,
+			"tag":              types.StringType,
+		},
+	}
+}
+
+// GetGitRepository returns the value of the GitRepository field in GitSource_SdkV2 as
+// a GitRepository_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GitSource_SdkV2) GetGitRepository(ctx context.Context) (GitRepository_SdkV2, bool) {
+	var e GitRepository_SdkV2
+	if m.GitRepository.IsNull() || m.GitRepository.IsUnknown() {
+		return e, false
+	}
+	var v []GitRepository_SdkV2
+	d := m.GitRepository.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitRepository sets the value of the GitRepository field in GitSource_SdkV2.
+func (m *GitSource_SdkV2) SetGitRepository(ctx context.Context, v GitRepository_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_repository"]
+	m.GitRepository = types.ListValueMust(t, vs)
 }
 
 type ListAppDeploymentsRequest_SdkV2 struct {

@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add support for unified host
 
 ### Bug Fixes
 

@@ -302,7 +302,7 @@ func azureOpenAiConfigSchema() *schema.Schema {
 }
 
 func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData) error {
-	if e.Config == nil {
+	if e.Config == nil || e.Config.ServedEntities == nil {
 		return nil
 	}
 	// Iterate through served entities to find azure_openai configuration
@@ -337,8 +337,12 @@ func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData)
 		}
 
 		// Override the provider to "openai" for the SDK/API
-		if i >= len(e.Config.ServedEntities) || e.Config.ServedEntities[i].ExternalModel == nil {
-			continue
+		if i >= len(e.Config.ServedEntities) {
+			return fmt.Errorf("internal error: served_entities index mismatch at position %d", i)
+		}
+
+		if e.Config.ServedEntities[i].ExternalModel == nil {
+			return fmt.Errorf("internal error: external_model is nil at position %d for azure-openai provider", i)
 		}
 
 		e.Config.ServedEntities[i].ExternalModel.Provider = "openai"
@@ -508,31 +512,39 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 					oa := sdkEntity.ExternalModel.OpenaiConfig
 					// Check if it's Azure OpenAI
 					if oa.OpenaiApiType == "azure" || oa.OpenaiApiType == "azuread" {
-						updated = true
+						// Only transform if azure_openai_config exists in the original state
+						// This prevents corrupting state for users who manually configured openai_config with Azure settings
+						if existingAzureConfig, hasAzureConfig := externalModelMap["azure_openai_config"]; hasAzureConfig {
+							// Check if it's actually set (not just an empty list)
+							if azureConfigList, ok := existingAzureConfig.([]interface{}); ok && len(azureConfigList) > 0 {
+								updated = true
 
-						// Switch provider to azure-openai
-						externalModelMap["provider"] = "azure-openai"
+								// Switch provider to azure-openai
+								externalModelMap["provider"] = "azure-openai"
 
-						// Populate azure_openai_config
-						azureConfig := map[string]interface{}{
-							"openai_api_base":        oa.OpenaiApiBase,
-							"openai_api_version":     oa.OpenaiApiVersion,
-							"openai_deployment_name": oa.OpenaiDeploymentName,
+								// Populate azure_openai_config
+								azureConfig := map[string]interface{}{
+									"openai_api_base":        oa.OpenaiApiBase,
+									"openai_api_version":     oa.OpenaiApiVersion,
+									"openai_deployment_name": oa.OpenaiDeploymentName,
+								}
+
+								if oa.OpenaiApiType == "azure" {
+									azureConfig["openai_api_key"] = oa.OpenaiApiKey
+									// Plaintext is usually not returned by API
+								} else if oa.OpenaiApiType == "azuread" {
+									azureConfig["microsoft_entra_client_id"] = oa.MicrosoftEntraClientId
+									azureConfig["microsoft_entra_tenant_id"] = oa.MicrosoftEntraTenantId
+									azureConfig["microsoft_entra_client_secret"] = oa.MicrosoftEntraClientSecret
+								}
+
+								externalModelMap["azure_openai_config"] = []interface{}{azureConfig}
+
+								// Only clear openai_config if we successfully populated azure_openai_config
+								// This maintains backwards compatibility for existing users
+								externalModelMap["openai_config"] = []interface{}{}
+							}
 						}
-
-						if oa.OpenaiApiType == "azure" {
-							azureConfig["openai_api_key"] = oa.OpenaiApiKey
-							// Plaintext is usually not returned by API
-						} else if oa.OpenaiApiType == "azuread" {
-							azureConfig["microsoft_entra_client_id"] = oa.MicrosoftEntraClientId
-							azureConfig["microsoft_entra_tenant_id"] = oa.MicrosoftEntraTenantId
-							azureConfig["microsoft_entra_client_secret"] = oa.MicrosoftEntraClientSecret
-						}
-
-						externalModelMap["azure_openai_config"] = []interface{}{azureConfig}
-
-						// Clear openai_config to avoid confusion/duplication in state
-						externalModelMap["openai_config"] = []interface{}{}
 					}
 				}
 			}

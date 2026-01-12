@@ -10,6 +10,9 @@
 
 ### Bug Fixes
 
+* Correctly transform Azure OpenAI endpoints during import in `databricks_model_serving` to prevent immediate drift ([#5310](https://github.com/databricks/terraform-provider-databricks/pull/5310)).
+* Added deprecation warning when using legacy `openai_config` with Azure OpenAI settings in `databricks_model_serving` ([#5310](https://github.com/databricks/terraform-provider-databricks/pull/5310)).
+
 ### Documentation
 
 ### Exporter

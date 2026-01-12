@@ -25,7 +25,7 @@ data "databricks_table" "this" {
 }
 data "databricks_data_quality_refresh" "this" {
   object_type = "table"
-  object_id   = data.databricks_table.this.id
+  object_id = data.databricks_table.this.id
 }
 ```
 

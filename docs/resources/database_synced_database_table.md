@@ -23,13 +23,13 @@ resource "databricks_database_synced_database_table" "this" {
   # If specified, it must match the catalog's database.
   logical_database_name = "databricks_postgres"
   spec = {
-    scheduling_policy                  = "SNAPSHOT"
-    source_table_full_name             = "source_delta.tpch.customer"
-    primary_key_columns                = ["c_custkey"]
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.tpch.customer"
+    primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     new_pipeline_spec = {
       storage_catalog = "source_delta"
-      storage_schema  = "tpch"
+      storage_schema = "tpch"
     }
   }
 }
@@ -49,13 +49,13 @@ resource "databricks_database_synced_database_table" "this" {
   # standard catalogs.
   database_instance_name = "my-database-instance"
   spec = {
-    scheduling_policy                  = "SNAPSHOT"
-    source_table_full_name             = "source_delta.tpch.customer"
-    primary_key_columns                = ["c_custkey"]
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.tpch.customer"
+    primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     new_pipeline_spec = {
       storage_catalog = "source_delta"
-      storage_schema  = "tpch"
+      storage_schema = "tpch"
     }
   }
 }
@@ -68,7 +68,7 @@ which generates a new pipeline. The second one utilizes the pipeline ID of the f
 
 ```hcl
 resource "databricks_database_instance" "instance" {
-  name     = "my-database-instance"
+  name = "my-database-instance"
   capacity = "CU_1"
 }
 
@@ -82,13 +82,13 @@ resource "databricks_database_synced_database_table" "synced_table_1" {
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
-    scheduling_policy                  = "SNAPSHOT"
-    source_table_full_name             = "source_delta.tpch.customer"
-    primary_key_columns                = ["c_custkey"]
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.tpch.customer"
+    primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     new_pipeline_spec = {
       storage_catalog = "source_delta"
-      storage_schema  = "tpch"
+      storage_schema = "tpch"
     }
   }
 }
@@ -102,11 +102,11 @@ resource "databricks_database_synced_database_table" "synced_table_2" {
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
-    scheduling_policy                  = "SNAPSHOT"
-    source_table_full_name             = "source_delta.tpch.customer"
-    primary_key_columns                = ["c_custkey"]
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.tpch.customer"
+    primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
-    existing_pipeline_id               = databricks_database_synced_database_table.synced_table_1.data_synchronization_status.pipeline_id
+    existing_pipeline_id = databricks_database_synced_database_table.synced_table_1.data_synchronization_status.pipeline_id
   }
 }
 ```
@@ -130,13 +130,13 @@ resource "databricks_database_synced_database_table" "synced_table" {
   # standard catalogs.
   database_instance_name = "my-database-instance"
   spec = {
-    scheduling_policy                  = "SNAPSHOT"
-    source_table_full_name             = "source_delta.schema.customer"
-    primary_key_columns                = ["c_custkey"]
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.schema.customer"
+    primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     new_pipeline_spec = {
       storage_catalog = "source_delta"
-      storage_schema  = "schema"
+      storage_schema = "schema"
     }
   }
 }

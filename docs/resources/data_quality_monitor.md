@@ -21,11 +21,11 @@ For the `table` `object_type`, you must either:
 ```hcl
 resource "databricks_schema" "this" {
   catalog_name = "my_catalog"
-  name         = "my_schema"
+  name = "my_schema"
 }
 resource "databricks_data_quality_monitor" "this" {
-  object_type              = "schema"
-  object_id                = databricks_schema.this.schema_id
+  object_type = "schema"
+  object_id = databricks_schema.this.schema_id
   anomaly_detection_config = {}
 }
 ```

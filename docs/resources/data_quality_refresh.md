@@ -46,14 +46,14 @@ resource "databricks_sql_table" "myTestTable" {
 }
 resource "databricks_data_quality_monitor" "this" {
   object_type = "table"
-  object_id   = databricks_sql_table.myTestTable.id
+  object_id = databricks_sql_table.myTestTable.id
   data_profiling_config = {
     output_schema = databricks_schema.myTestSchema.schema_id
   }
 }
 resource "databricks_data_quality_refresh" "this" {
   object_type = "table"
-  object_id   = databricks_sql_table.myTestTable.id
+  object_id = databricks_sql_table.myTestTable.id
 }
 ```
 

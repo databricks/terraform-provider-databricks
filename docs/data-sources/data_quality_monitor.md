@@ -26,7 +26,7 @@ data "databricks_schema" "this" {
 }
 data "databricks_data_quality_monitor" "this" {
   object_type = "schema"
-  object_id   = data.databricks_schema.this.schema_info.schema_id
+  object_id = data.databricks_schema.this.schema_info.schema_id
 }
 ```
 

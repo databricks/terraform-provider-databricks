@@ -139,7 +139,7 @@ The following arguments are supported:
 
 * `name` - The name of a served entity. It must be unique across an endpoint. A served entity name can consist of alphanumeric characters, dashes, and underscores. If not specified for an external model, this field defaults to `external_model.name`, with '.' and ':' replaced with '-', and if not specified for other entities, it defaults to -.
 * `external_model` - The external model to be served. NOTE: Only one of `external_model` and (`entity_name`, `entity_version`, `workload_size`, `workload_type`, and `scale_to_zero_enabled`) can be specified with the latter set being used for custom model serving for a Databricks registered model. When an `external_model` is present, the served entities list can only have one `served_entity` object. An existing endpoint with `external_model` can not be updated to an endpoint without `external_model`. If the endpoint is created without `external_model`, users cannot update it to add `external_model` later.
-  * `provider` - (Required) The name of the provider for the external model. Currently, the supported providers are `ai21labs`, `anthropic`, `amazon-bedrock`, `cohere`, `databricks-model-serving`, `google-cloud-vertex-ai`, `openai`, and `palm`.
+  * `provider` - (Required) The name of the provider for the external model. Currently, the supported providers are `ai21labs`, `anthropic`, `amazon-bedrock`, `cohere`, `databricks-model-serving`, `google-cloud-vertex-ai`, `openai`, `azure-openai`, and `palm`.
   * `name` - The name of the external model.
   * `task` - The task type of the external model.
   * `config` - The config for the external model, which must match the provider. *Note that API keys could be provided either as a reference to the Databricks Secret (parameters without `_plaintext` suffix) or in plain text (parameters with `_plaintext` suffix)!*
@@ -190,6 +190,16 @@ The following arguments are supported:
       * `openai_api_version` - This is an optional field to specify the OpenAI API version. For Azure OpenAI, this field is required and is the version of the Azure OpenAI service to utilize, specified by a date.
       * `openai_organization` - This is an optional field to specify the organization in OpenAI or Azure OpenAI.
       * `openai_deployment_name` - This field is only required for Azure OpenAI and is the name of the deployment resource for the Azure OpenAI service.
+    * `azure_openai_config` - Azure OpenAI Config
+      * `openai_api_base` - (Required) The base URL for the Azure OpenAI API service provided by Azure.
+      * `openai_api_version` - (Required) The version of the Azure OpenAI service to utilize, specified by a date.
+      * `openai_deployment_name` - (Required) The name of the deployment resource for the Azure OpenAI service.
+      * `openai_api_key` - (Optional) The Databricks secret key reference for an Azure OpenAI API key.
+      * `openai_api_key_plaintext` - (Optional) The Azure OpenAI API key provided as a plaintext string.
+      * `microsoft_entra_client_id` - (Optional) The Microsoft Entra Client ID. Only required for Azure AD authentication.
+      * `microsoft_entra_client_secret` - (Optional) The Databricks secret key reference for a client secret used for Microsoft Entra ID authentication.
+      * `microsoft_entra_client_secret_plaintext` - (Optional) The client secret used for Microsoft Entra ID authentication provided as a plaintext string.
+      * `microsoft_entra_tenant_id` - (Optional) The Microsoft Entra Tenant ID. Only required for Azure AD authentication.
     * `palm_config` - PaLM Config
       * `palm_api_key` - The Databricks secret key reference for a PaLM API key.
       * `palm_api_key_plaintext` - The PaLM API key provided as a plaintext string.

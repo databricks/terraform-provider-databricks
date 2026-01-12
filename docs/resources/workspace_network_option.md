@@ -18,9 +18,9 @@ This resource has the following characteristics:
 
 ## Example Usage
 ```hcl
-resource "databricks_workspace_network_option" "example_workspace_network_option" {
-  workspace_id      = "9999999999999999"
-  network_policy_id = "default-policy"
+resource "databricks_workspace_network_option"    "example_workspace_network_option" {
+  workspace_id         = "9999999999999999"
+  network_policy_id    = "default-policy"
 }
 ```
 

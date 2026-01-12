@@ -87,8 +87,8 @@ In workspace context, adding account-level service principal to a workspace:
 ```hcl
 resource "databricks_permission_assignment" "add_admin_spn" {
   service_principal_name = "00000000-0000-0000-0000-000000000000"
-  permissions            = ["ADMIN"]
-  provider               = databricks.workspace
+  permissions  = ["ADMIN"]
+  provider     = databricks.workspace
 }
 ```
 

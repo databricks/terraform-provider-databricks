@@ -11,10 +11,10 @@ Referring to a setting by id
 
 ```hcl
 data "databricks_account_setting_v2" "this" {
-  name = "llm_proxy_partner_powered"
-  boolean_val = {
-    value = false
-  }
+    name="llm_proxy_partner_powered"
+    boolean_val={
+        value=false
+    }
 }
 ```
 

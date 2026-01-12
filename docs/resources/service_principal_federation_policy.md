@@ -15,11 +15,11 @@ A service principal federation policy is associated with a service principal in 
 ```hcl
 resource "databricks_service_principal_federation_policy" "this" {
   service_principal_id = 1234
-  policy_id            = "my-policy"
+  policy_id = "my-policy"
   oidc_policy = {
-    issuer        = "https://myidp.example.com"
+    issuer = "https://myidp.example.com"
     subject_claim = "sub"
-    subject       = "subject-in-token-from-myidp"
+    subject = "subject-in-token-from-myidp"
   }
 }
 ```

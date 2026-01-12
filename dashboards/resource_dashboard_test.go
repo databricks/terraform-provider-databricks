@@ -392,3 +392,61 @@ func TestDashboardDeleteAlreadyTrashed(t *testing.T) {
 	// Expect this to succeed.
 	assert.NoError(t, err)
 }
+
+func TestCustomDiffDashboardContent(t *testing.T) {
+	// Create two temporary files with different content.
+	tmpFile1, err := os.CreateTemp("", "dashboard1-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile1.Name())
+	_, err = tmpFile1.WriteString(`{"content": "original"}`)
+	assert.NoError(t, err)
+	tmpFile1.Close()
+
+	tmpFile2, err := os.CreateTemp("", "dashboard2-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile2.Name())
+	_, err = tmpFile2.WriteString(`{"content": "updated"}`)
+	assert.NoError(t, err)
+	tmpFile2.Close()
+
+	resource := ResourceDashboard().ToResource()
+
+	t.Run("detects file_path content change", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		d.Set("md5", "old-hash-that-wont-match")
+
+		// When file_path changes, the function should use the new value and detect the change.
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile2.Name(), d)
+		assert.False(t, suppress, "should NOT suppress diff when file content changes")
+	})
+
+	t.Run("suppresses diff when content unchanged", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		// Set md5 to the actual hash of the file content.
+		d.Set("md5", "a43d816a0b927ab1c48ccea5946cebfb")
+
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile1.Name(), d)
+		assert.True(t, suppress, "should suppress diff when content is unchanged")
+	})
+
+	t.Run("detects serialized_dashboard content change", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("serialized_dashboard", `{"old": "content"}`)
+		d.Set("md5", "old-hash")
+
+		suppress := customDiffDashboardContent("serialized_dashboard", `{"old": "content"}`, `{"new": "content"}`, d)
+		assert.False(t, suppress, "should NOT suppress diff when serialized_dashboard changes")
+	})
+
+	t.Run("shows diff when dashboard_change_detected is true", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		d.Set("md5", "a43d816a0b927ab1c48ccea5946cebfb")
+		d.Set("dashboard_change_detected", true)
+
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile1.Name(), d)
+		assert.False(t, suppress, "should NOT suppress diff when dashboard_change_detected is true")
+	})
+}

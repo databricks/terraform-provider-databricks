@@ -23,9 +23,17 @@ type Dashboard struct {
 }
 
 func customDiffDashboardContent(k, old, new string, d *schema.ResourceData) bool {
-	// Read both serialized_dashboard and file_path from the new config
+	// Use the new value for the attribute being diffed.
 	serializedDashboard := d.Get("serialized_dashboard").(string)
 	filePath := d.Get("file_path").(string)
+
+	// If the diff is for serialized_dashboard or file_path, use the new value.
+	if k == "serialized_dashboard" {
+		serializedDashboard = new
+	}
+	if k == "file_path" {
+		filePath = new
+	}
 
 	_, newHash, err := common.ReadSerializedJsonContent(serializedDashboard, filePath)
 	if err != nil {

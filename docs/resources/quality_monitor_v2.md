@@ -14,11 +14,11 @@ Users with MANAGE Schema can use quality monitor v2 to set up data quality monit
 ```hcl
 resource "databricks_schema" "this" {
   catalog_name = "my_catalog"
-  name = "my_schema"
+  name         = "my_schema"
 }
 resource "databricks_quality_monitor_v2" "this" {
   object_type = "schema"
-  object_id = databricks_schema.this.schema_id
+  object_id   = databricks_schema.this.schema_id
 }
 ```
 

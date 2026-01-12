@@ -31,9 +31,9 @@ resource "databricks_apps_settings_custom_template" "this" {
   git_repo     = "https://github.com/example/repo.git"
   path         = "path-to-template"
   git_provider = "github"
-  manifest     = {
-    version    = 1
-    name       = "my-custom-app"
+  manifest = {
+    version = 1
+    name    = "my-custom-app"
   }
 }
 ```

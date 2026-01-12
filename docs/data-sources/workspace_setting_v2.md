@@ -10,10 +10,10 @@ This data source can be used to get a single account setting.
 Referring to a setting by id
 ```hcl
 data "databricks_workspace_setting_v2" "this" {
-    name="llm_proxy_partner_powered"
-    boolean_val={
-        value=false
-    }
+  name = "llm_proxy_partner_powered"
+  boolean_val = {
+    value = false
+  }
 }
 ```
 

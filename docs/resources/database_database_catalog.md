@@ -20,18 +20,18 @@ Users with CAN_USE permission on a Database Instance can create Database Catalog
 This example creates a Database Catalog based on an existing database in the Database Instance
 ```hcl
 resource "databricks_database_database_catalog" "this" {
-  name = "my_registered_catalog"
+  name                   = "my_registered_catalog"
   database_instance_name = "my-database-instance"
-  database_name = "databricks_postgres"
+  database_name          = "databricks_postgres"
 }
 ```
 
 This example creates a Database Catalog along with a new database inside an existing Database Instance
 ```hcl
 resource "databricks_database_database_catalog" "this" {
-  name = "my_registered_catalog"
-  database_instance_name = "my-database-instance"
-  database_name = "new_registered_catalog_database"
+  name                          = "my_registered_catalog"
+  database_instance_name        = "my-database-instance"
+  database_name                 = "new_registered_catalog_database"
   create_database_if_not_exists = true
 }
 ```
@@ -39,14 +39,14 @@ resource "databricks_database_database_catalog" "this" {
 This example creates a DatabaseInstance and then a Database Catalog inside it
 ```hcl
 resource "databricks_database_instance" "instance" {
-  name = "my-database-instance"
+  name     = "my-database-instance"
   capacity = "CU_1"
 }
 
 resource "databricks_database_database_catalog" "catalog" {
-  name = "my_registered_catalog"
-  database_instance_name = databricks_database_instance.instance.name
-  database_name = "new_registered_catalog_database"
+  name                          = "my_registered_catalog"
+  database_instance_name        = databricks_database_instance.instance.name
+  database_name                 = "new_registered_catalog_database"
   create_database_if_not_exists = true
 }
 ```

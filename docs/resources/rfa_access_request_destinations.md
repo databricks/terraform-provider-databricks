@@ -14,28 +14,28 @@ When a user requests access to a securable object, notifications can be sent to 
 resource "databricks_rfa_access_request_destinations" "customer_data_table" {
   destinations = [
     {
-      destination_id = "john.doe@databricks.com"
+      destination_id   = "john.doe@databricks.com"
       destination_type = "EMAIL"
     },
     {
-      destination_id = "https://www.databricks.com/"
+      destination_id   = "https://www.databricks.com/"
       destination_type = "URL"
     },
     {
-      destination_id = "456e7890-e89b-12d3-a456-426614174001"
+      destination_id   = "456e7890-e89b-12d3-a456-426614174001"
       destination_type = "SLACK"
     },
     {
-      destination_id = "789e0123-e89b-12d3-a456-426614174002"
+      destination_id   = "789e0123-e89b-12d3-a456-426614174002"
       destination_type = "MICROSOFT_TEAMS"
     },
     {
-      destination_id = "012e3456-e89b-12d3-a456-426614174003"
+      destination_id   = "012e3456-e89b-12d3-a456-426614174003"
       destination_type = "GENERIC_WEBHOOK"
     }
-  ] 
+  ]
   securable = {
-    type = "SCHEMA"
+    type      = "SCHEMA"
     full_name = "main.customer_data"
   }
   are_any_destinations_hidden = false

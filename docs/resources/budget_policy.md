@@ -17,7 +17,7 @@ The tags are logged in your billing records, allowing you to attribute serverles
 resource "databricks_budget_policy" "this" {
   policy_name = "my-budget-policy"
   custom_tags = [{
-    key = "mykey"
+    key   = "mykey"
     value = "myvalue"
   }]
 }

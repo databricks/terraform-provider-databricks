@@ -37,7 +37,7 @@ This example creates a simple Database Instance with the specified name and capa
 
 ```hcl
 resource "databricks_database_instance" "this" {
-  name = "my-database-instance"
+  name     = "my-database-instance"
   capacity = "CU_2"
 }
 ```
@@ -48,9 +48,9 @@ This example creates a Database Instance with readable secondaries (and HA) enab
 
 ```hcl
 resource "databricks_database_instance" "this" {
-  name = "my-database-instance"
-  capacity = "CU_2"
-  node_count = 2
+  name                        = "my-database-instance"
+  capacity                    = "CU_2"
+  node_count                  = 2
   enable_readable_secondaries = true
 }
 ```
@@ -61,7 +61,7 @@ This example creates a child Database Instance from a specified parent Database 
 
 ```hcl
 resource "databricks_database_instance" "child" {
-  name = "my-database-instance"
+  name     = "my-database-instance"
   capacity = "CU_2"
   parent_instance_ref = {
     name = "my-parent-instance"
@@ -75,16 +75,16 @@ This example creates a Database Instance with an associated usage policy and cus
 
 ```hcl
 resource "databricks_database_instance" "this" {
-  name = "my-database-instance"
-  capacity = "CU_8"
+  name            = "my-database-instance"
+  capacity        = "CU_8"
   usage_policy_id = "948192fa-a98b-498f-a09b-ecee79d8b983"
   custom_tags = [
     {
-      key = "custom_tag_key1"
+      key   = "custom_tag_key1"
       value = "custom_tag_value1"
     },
     {
-      key = "custom_tag_key2"
+      key   = "custom_tag_key2"
       value = "custom_tag_value2"
     }
   ]

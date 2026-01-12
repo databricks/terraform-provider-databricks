@@ -14,11 +14,11 @@ Referring to a service principal federation policy by id:
 ```hcl
 data "databricks_service_principal_federation_policy" "my_policy" {
   service_principal_id = 1234
-  policy_id = "my-policy"
+  policy_id            = "my-policy"
   oidc_policy = {
-    issuer = "https://myidp.example.com"
+    issuer        = "https://myidp.example.com"
     subject_claim = "sub"
-    subject = "subject-in-token-from-myidp"
+    subject       = "subject-in-token-from-myidp"
   }
 }
 ```

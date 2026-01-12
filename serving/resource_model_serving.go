@@ -314,8 +314,8 @@ func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData)
 				if externalModelList, ok := entityMap["external_model"].([]interface{}); ok && len(externalModelList) > 0 {
 					externalModelMap := externalModelList[0].(map[string]interface{})
 
-					// Check if provider is explicitly set to "azure_openai"
-					if provider, ok := externalModelMap["provider"].(string); ok && provider == "azure_openai" {
+					// Check if provider is explicitly set to "azure-openai"
+					if provider, ok := externalModelMap["provider"].(string); ok && provider == "azure-openai" {
 						// Override the provider to "openai" for the SDK/API
 						if i < len(e.Config.ServedEntities) && e.Config.ServedEntities[i].ExternalModel != nil {
 							e.Config.ServedEntities[i].ExternalModel.Provider = "openai"
@@ -369,16 +369,8 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		return nil
 	}
 
-	// We need to modify the data in d to reflect "azure_openai" provider
+	// We need to modify the data in d to reflect "azure-openai" provider
 	// and populate azure_openai_config if it was originally set or if it looks like Azure OpenAI.
-	// Since we can't easily modify the nested structure of d directly without rebuilding it,
-	// and common.StructToData has already run, we are somewhat limited.
-	// However, StructToData overwrites everything based on the struct.
-	// Since the struct doesn't have azure_openai_config, that field in d is currently null or unchanged?
-	// StructToData clears fields not in struct if they are computed?
-	// Actually, StructToData iterates schema. If field is in schema but not in struct, it ignores it?
-
-	// Better approach: Re-read the config from d, modify it, and set it back.
 
 	configList := d.Get("config").([]interface{})
 	if len(configList) == 0 {
@@ -406,8 +398,8 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 					if oa.OpenaiApiType == "azure" || oa.OpenaiApiType == "azuread" {
 						updated = true
 
-						// Switch provider to azure_openai
-						externalModelMap["provider"] = "azure_openai"
+						// Switch provider to azure-openai
+						externalModelMap["provider"] = "azure-openai"
 
 						// Populate azure_openai_config
 						azureConfig := map[string]interface{}{
@@ -499,18 +491,12 @@ func ResourceModelServing() common.Resource {
 				Type:     schema.TypeString,
 			}
 
-			// Inject azure_openai_config into external_model schema
-			if configSchema, ok := m["config"]; ok {
-				if servedEntitiesSchema, ok := configSchema.Elem.(*schema.Resource).Schema["served_entities"]; ok {
-					if externalModelSchema, ok := servedEntitiesSchema.Elem.(*schema.Resource).Schema["external_model"]; ok {
-						externalModelSchema.Elem.(*schema.Resource).Schema["azure_openai_config"] = azureOpenAiConfigSchema()
-					}
-				}
-			}
+			// Inject azure_openai_config into external_model schema using AddNewField
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model").
+				AddNewField("azure_openai_config", azureOpenAiConfigSchema())
 
 			return m
 		})
-
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

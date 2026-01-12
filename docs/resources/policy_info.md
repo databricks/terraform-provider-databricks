@@ -32,14 +32,14 @@ resource "databricks_policy_info" "pii_row_filter" {
   on_securable_type     = "catalog"
   on_securable_fullname = "main"
   name                  = "pii_data_policy"
-  
-  policy_type           = "POLICY_TYPE_ROW_FILTER"
-  for_securable_type    = "table"
-  to_principals         = ["account users"]
-  
+
+  policy_type        = "POLICY_TYPE_ROW_FILTER"
+  for_securable_type = "table"
+  to_principals      = ["account users"]
+
   # Condition for when the policy applies
   when_condition = "hasTag('pii')"
-  
+
   # Match specific columns
   match_columns = [
     {
@@ -47,7 +47,7 @@ resource "databricks_policy_info" "pii_row_filter" {
       alias     = "pii_col"
     }
   ]
-  
+
   # Row filter function to apply
   row_filter = {
     function_name = "main.filters.mask_pii_rows"
@@ -67,15 +67,15 @@ resource "databricks_policy_info" "sensitive_column_mask" {
   on_securable_type     = "schema"
   on_securable_fullname = "main.finance"
   name                  = "sensitive_data_mask"
-  
-  policy_type           = "POLICY_TYPE_COLUMN_MASK"
-  for_securable_type    = "table"
-  to_principals         = ["account users"]
-  except_principals     = ["finance_admins"]
-  
+
+  policy_type        = "POLICY_TYPE_COLUMN_MASK"
+  for_securable_type = "table"
+  to_principals      = ["account users"]
+  except_principals  = ["finance_admins"]
+
   # Condition for when the policy applies
   when_condition = "hasTag('pii')"
-  
+
   # Match columns to mask
   match_columns = [
     {
@@ -83,7 +83,7 @@ resource "databricks_policy_info" "sensitive_column_mask" {
       alias     = "sensitive_col"
     }
   ]
-  
+
   # Column mask function to apply
   column_mask = {
     function_name = "main.masks.redact_sensitive"

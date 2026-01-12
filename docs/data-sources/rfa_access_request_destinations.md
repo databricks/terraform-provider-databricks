@@ -13,7 +13,7 @@ Referring to RFA access request destinations by securable type and full name:
 ```hcl
 data "databricks_rfa_access_request_destinations" "customer_data_schema" {
   securable_type = "SCHEMA"
-  full_name = "main.customer_data"
+  full_name      = "main.customer_data"
 }
 ```
 

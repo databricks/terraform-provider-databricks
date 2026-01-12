@@ -31,7 +31,7 @@ resource "databricks_alert_v2" "basic_alert" {
   query_text   = "SELECT count(*) as error_count FROM logs WHERE level = 'ERROR' AND timestamp > now() - interval 1 hour"
   warehouse_id = "a7066a8ef796be84"
   parent_path  = "/Users/user@example.com"
-  
+
   evaluation = {
     source = {
       name        = "error_count"
@@ -45,19 +45,19 @@ resource "databricks_alert_v2" "basic_alert" {
       }
     }
     empty_result_state = "OK"
-    
+
     notification = {
       subscriptions = [
-          {
-            user_email = "user@example.com"
-          }
+        {
+          user_email = "user@example.com"
+        }
       ]
       notify_on_ok = true
     }
   }
-  
+
   schedule = {
-    quartz_cron_schedule = "0 0/15 * * * ?"  # Every 15 minutes
+    quartz_cron_schedule = "0 0/15 * * * ?" # Every 15 minutes
     timezone_id          = "America/Los_Angeles"
     pause_status         = "UNPAUSED"
   }

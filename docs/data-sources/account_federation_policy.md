@@ -15,7 +15,7 @@ Referring to an account federation policy by id:
 data "databricks_account_federation_policy" "my_policy" {
   policy_id = "my-policy"
   oidc_policy = {
-    issuer = "https://myidp.example.com"
+    issuer        = "https://myidp.example.com"
     subject_claim = "sub"
   }
 }

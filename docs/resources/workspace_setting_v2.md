@@ -14,10 +14,10 @@ Getting a workspace level setting:
 
 ```hcl
 resource "databricks_workspace_setting_v2" "this" {
-    name="llm_proxy_partner_powered"
-    boolean_val={
-        value=false
-    }
+  name = "llm_proxy_partner_powered"
+  boolean_val = {
+    value = false
+  }
 }
 ```
 

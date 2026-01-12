@@ -19,20 +19,20 @@ The `default-policy` provides a baseline security configuration that ensures all
 ## Example Usage
 ```hcl
 resource "databricks_account_network_policy" "example_network_policy" {
-  network_policy_id    = "example-network-policy"
+  network_policy_id = "example-network-policy"
   egress = {
     network_access = {
       restriction_mode = "RESTRICTED_ACCESS"
       allowed_internet_destinations = [
         {
-            destination = "example.com"
-            internet_destination_type = "DNS_NAME"
+          destination               = "example.com"
+          internet_destination_type = "DNS_NAME"
         }
       ],
       allowed_storage_destinations = [
         {
-          bucket_name = "example-aws-cloud-storage"
-          region = "us-west-1"
+          bucket_name              = "example-aws-cloud-storage"
+          region                   = "us-west-1"
           storage_destination_type = "AWS_S3"
         }
       ]

@@ -17,7 +17,7 @@ An account federation policy specifies:
 resource "databricks_account_federation_policy" "this" {
   policy_id = "my-policy"
   oidc_policy = {
-    issuer = "https://myidp.example.com"
+    issuer        = "https://myidp.example.com"
     subject_claim = "sub"
   }
 }

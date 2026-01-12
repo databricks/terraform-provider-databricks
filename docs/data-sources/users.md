@@ -22,7 +22,7 @@ resource "databricks_group" "data_users_group" {
 }
 
 resource "databricks_group_member" "add_users_to_group" {
-  for_each = { for user in data.databricks_users.company_users.users : user.id => user }
+  for_each  = { for user in data.databricks_users.company_users.users : user.id => user }
   group_id  = databricks_group.data_users_group.id
   member_id = each.value.id
 }

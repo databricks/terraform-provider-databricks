@@ -13,10 +13,10 @@ This is useful when you want to capture where data came from (for example, Sales
 ## Example Usage
 ```hcl
 resource "databricks_external_metadata" "this" {
-  name = "security_events_stream"
+  name        = "security_events_stream"
   system_type = "KAFKA"
   entity_type = "Topic"
-  url = "https://kafka.com/12345"
+  url         = "https://kafka.com/12345"
   description = "A stream of security related events in the critical services."
   columns = [
     "type",
@@ -26,9 +26,9 @@ resource "databricks_external_metadata" "this" {
     "time"
   ]
   properties = {
-    topic: "prod.security.events.raw",
-    compression.enabled: "true",
-    compression.format: "zstd"
+    topic : "prod.security.events.raw",
+    compression.enabled : "true",
+    compression.format : "zstd"
   }
 }
 ```

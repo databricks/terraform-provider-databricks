@@ -138,7 +138,7 @@ func TestAccModelServingAzureOpenAI(t *testing.T) {
 					served_entities {
 						name = "prod_model"
 						external_model {
-							provider = "azure_openai"
+							provider = "azure-openai"
 							name = "gpt-4o"
 							task = "llm/v1/chat"
 							azure_openai_config {

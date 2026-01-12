@@ -472,7 +472,7 @@ func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData)
 	return nil
 }
 
-func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.ResourceData) error {
+func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.ResourceData, originalConfigRaw interface{}) error {
 	if endpoint.Config == nil {
 		return nil
 	}
@@ -500,6 +500,18 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 	if !ok {
 		log.Printf("[WARN] handleAzureOpenAIRead: served_entities is not a list, skipping Azure OpenAI transformation")
 		return nil
+	}
+
+	// Determine if we have original state and extract original entities if so
+	var originalEntities []interface{}
+	hasState := false
+	if rawList, ok := originalConfigRaw.([]interface{}); ok && len(rawList) > 0 {
+		if rawMap, ok := rawList[0].(map[string]interface{}); ok {
+			if rawEntities, ok := rawMap["served_entities"].([]interface{}); ok {
+				originalEntities = rawEntities
+				hasState = true
+			}
+		}
 	}
 
 	// Track entities that need transformation to avoid partial state corruption
@@ -555,16 +567,30 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 			continue
 		}
 
-		// Only transform if azure_openai_config exists in the original state
-		// This prevents corrupting state for users who manually configured openai_config with Azure settings
-		existingAzureConfig, hasAzureConfig := externalModelMap["azure_openai_config"]
-		if !hasAzureConfig {
-			continue
+		// Only transform if azure_openai_config exists in the original state OR if it's a new import/drift
+		shouldTransform := false
+
+		if !hasState {
+			// Import or new resource: Default to transform
+			shouldTransform = true
+		} else if i >= len(originalEntities) {
+			// New entity in drift: Default to transform
+			shouldTransform = true
+		} else {
+			// Existing entity: Check if it had azure_openai_config
+			origEntity, ok := originalEntities[i].(map[string]interface{})
+			if ok {
+				if origExtModelRaw, ok := origEntity["external_model"].([]interface{}); ok && len(origExtModelRaw) > 0 {
+					if origExtModelMap, ok := origExtModelRaw[0].(map[string]interface{}); ok {
+						if azConfRaw, ok := origExtModelMap["azure_openai_config"].([]interface{}); ok && len(azConfRaw) > 0 {
+							shouldTransform = true
+						}
+					}
+				}
+			}
 		}
 
-		// Check if it's actually set (not just an empty list)
-		azureConfigList, ok := existingAzureConfig.([]interface{})
-		if !ok || len(azureConfigList) == 0 {
+		if !shouldTransform {
 			continue
 		}
 
@@ -740,12 +766,16 @@ func ResourceModelServing() common.Resource {
 			cleanWorkloadSize(s, d, endpoint.Config)
 			preserveConfigOrder(s, d, endpoint.Config)
 
+			// Capture original config state before StructToData potentially overwrites it.
+			// This is needed to distinguish between import (no state) and existing resources.
+			originalConfigRaw := d.Get("config")
+
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
 			}
 
-			if err := handleAzureOpenAIRead(endpoint, d); err != nil {
+			if err := handleAzureOpenAIRead(endpoint, d, originalConfigRaw); err != nil {
 				return err
 			}
 

@@ -477,9 +477,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		return nil
 	}
 
-	// We need to modify the data in d to reflect "azure-openai" provider
-	// and populate azure_openai_config if it was originally set or if it looks like Azure OpenAI.
-
 	configList, ok := d.Get("config").([]interface{})
 	if !ok || len(configList) == 0 {
 		return nil
@@ -502,7 +499,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		return nil
 	}
 
-	// Determine if we have original state and extract original entities if so
 	var originalEntities []interface{}
 	hasState := false
 	if rawList, ok := originalConfigRaw.([]interface{}); ok && len(rawList) > 0 {
@@ -514,7 +510,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		}
 	}
 
-	// Track entities that need transformation to avoid partial state corruption
 	type entityTransform struct {
 		index               int
 		externalModelList   []interface{}
@@ -525,7 +520,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 
 	var transforms []entityTransform
 
-	// First pass: identify all entities that need transformation
 	for i, entity := range servedEntities {
 		entityMap, ok := entity.(map[string]interface{})
 		if !ok {
@@ -547,7 +541,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 			continue
 		}
 
-		// Check the actual SDK struct to see what we got back
 		if i >= len(endpoint.Config.ServedEntities) {
 			continue
 		}
@@ -562,22 +555,17 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		}
 
 		oa := sdkEntity.ExternalModel.OpenaiConfig
-		// Check if it's Azure OpenAI
 		if oa.OpenaiApiType != "azure" && oa.OpenaiApiType != "azuread" {
 			continue
 		}
 
-		// Only transform if azure_openai_config exists in the original state OR if it's a new import/drift
 		shouldTransform := false
 
 		if !hasState {
-			// Import or new resource: Default to transform
 			shouldTransform = true
 		} else if i >= len(originalEntities) {
-			// New entity in drift: Default to transform
 			shouldTransform = true
 		} else {
-			// Existing entity: Check if it had azure_openai_config
 			origEntity, ok := originalEntities[i].(map[string]interface{})
 			if ok {
 				if origExtModelRaw, ok := origEntity["external_model"].([]interface{}); ok && len(origExtModelRaw) > 0 {
@@ -594,7 +582,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 			continue
 		}
 
-		// Build the transformed azure_openai_config
 		azureConfig := map[string]interface{}{
 			"openai_api_base":        oa.OpenaiApiBase,
 			"openai_api_version":     oa.OpenaiApiVersion,
@@ -603,7 +590,6 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 
 		if oa.OpenaiApiType == "azure" {
 			azureConfig["openai_api_key"] = oa.OpenaiApiKey
-			// Plaintext is usually not returned by API
 		} else if oa.OpenaiApiType == "azuread" {
 			azureConfig["microsoft_entra_client_id"] = oa.MicrosoftEntraClientId
 			azureConfig["microsoft_entra_tenant_id"] = oa.MicrosoftEntraTenantId
@@ -619,32 +605,21 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 		})
 	}
 
-	// If no entities need transformation, return early
 	if len(transforms) == 0 {
 		return nil
 	}
 
-	// Second pass: apply all transformations atomically
 	for _, transform := range transforms {
-		// Switch provider to azure-openai
 		transform.externalModelMap["provider"] = "azure-openai"
-
-		// Populate azure_openai_config
 		transform.externalModelMap["azure_openai_config"] = []interface{}{transform.azureOpenAIConfig}
-
-		// Clear openai_config to maintain backwards compatibility
 		transform.externalModelMap["openai_config"] = []interface{}{}
-
-		// Update the list with the modified map
 		transform.externalModelList[0] = transform.externalModelMap
 
-		// Update the entity with the modified external model list
 		entityMap := servedEntities[transform.index].(map[string]interface{})
 		entityMap["external_model"] = transform.externalModelList
 		servedEntities[transform.index] = entityMap
 	}
 
-	// Only update state once all transformations are complete
 	configMap["served_entities"] = servedEntities
 	configList[0] = configMap
 	return d.Set("config", configList)
@@ -708,7 +683,6 @@ func ResourceModelServing() common.Resource {
 			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model").
 				AddNewField("azure_openai_config", azureOpenAiConfigSchema())
 
-			// Add deprecation warning for Azure OpenAI fields in openai_config
 			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "openai_api_type").
 				SetValidateFunc(func(v interface{}, k string) (ws []string, errors []error) {
 					val := v.(string)
@@ -776,8 +750,6 @@ func ResourceModelServing() common.Resource {
 			cleanWorkloadSize(s, d, endpoint.Config)
 			preserveConfigOrder(s, d, endpoint.Config)
 
-			// Capture original config state before StructToData potentially overwrites it.
-			// This is needed to distinguish between import (no state) and existing resources.
 			originalConfigRaw := d.Get("config")
 
 			err = common.StructToData(*endpoint, s, d)

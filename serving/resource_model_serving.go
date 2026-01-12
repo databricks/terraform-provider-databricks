@@ -2,6 +2,7 @@ package serving
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -300,68 +301,151 @@ func azureOpenAiConfigSchema() *schema.Schema {
 	}
 }
 
-func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData) {
+func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData) error {
 	if e.Config == nil {
-		return
+		return nil
 	}
 	// Iterate through served entities to find azure_openai configuration
 	// We need to look at the raw ResourceData to find the azure_openai_config
 	// because it is not part of the serving.CreateServingEndpoint struct
 	// and thus not populated by DataToStructPointer.
-	if servedEntities, ok := d.Get("config.0.served_entities").([]interface{}); ok {
-		for i, entity := range servedEntities {
-			if entityMap, ok := entity.(map[string]interface{}); ok {
-				if externalModelList, ok := entityMap["external_model"].([]interface{}); ok && len(externalModelList) > 0 {
-					externalModelMap := externalModelList[0].(map[string]interface{})
-
-					// Check if provider is explicitly set to "azure-openai"
-					if provider, ok := externalModelMap["provider"].(string); ok && provider == "azure-openai" {
-						// Override the provider to "openai" for the SDK/API
-						if i < len(e.Config.ServedEntities) && e.Config.ServedEntities[i].ExternalModel != nil {
-							e.Config.ServedEntities[i].ExternalModel.Provider = "openai"
-
-							// Map azure_openai_config to OpenaiConfig
-							if azureConfigList, ok := externalModelMap["azure_openai_config"].([]interface{}); ok && len(azureConfigList) > 0 {
-								azureConfig := azureConfigList[0].(map[string]interface{})
-
-								openaiConfig := &serving.OpenAiConfig{
-									OpenaiApiBase:        azureConfig["openai_api_base"].(string),
-									OpenaiApiVersion:     azureConfig["openai_api_version"].(string),
-									OpenaiDeploymentName: azureConfig["openai_deployment_name"].(string),
-								}
-
-								// Handle authentication
-								if v, ok := azureConfig["openai_api_key"].(string); ok && v != "" {
-									openaiConfig.OpenaiApiKey = v
-									openaiConfig.OpenaiApiType = "azure"
-								} else if v, ok := azureConfig["openai_api_key_plaintext"].(string); ok && v != "" {
-									openaiConfig.OpenaiApiKeyPlaintext = v
-									openaiConfig.OpenaiApiType = "azure"
-								} else {
-									// Assume Azure AD if no API key is provided or if Entra fields are present
-									openaiConfig.OpenaiApiType = "azuread"
-									if v, ok := azureConfig["microsoft_entra_client_id"].(string); ok {
-										openaiConfig.MicrosoftEntraClientId = v
-									}
-									if v, ok := azureConfig["microsoft_entra_client_secret"].(string); ok {
-										openaiConfig.MicrosoftEntraClientSecret = v
-									}
-									if v, ok := azureConfig["microsoft_entra_client_secret_plaintext"].(string); ok {
-										openaiConfig.MicrosoftEntraClientSecretPlaintext = v
-									}
-									if v, ok := azureConfig["microsoft_entra_tenant_id"].(string); ok {
-										openaiConfig.MicrosoftEntraTenantId = v
-									}
-								}
-
-								e.Config.ServedEntities[i].ExternalModel.OpenaiConfig = openaiConfig
-							}
-						}
-					}
-				}
-			}
-		}
+	servedEntities, ok := d.Get("config.0.served_entities").([]interface{})
+	if !ok {
+		return nil
 	}
+
+	for i, entity := range servedEntities {
+		entityMap, ok := entity.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		externalModelList, ok := entityMap["external_model"].([]interface{})
+		if !ok || len(externalModelList) == 0 {
+			continue
+		}
+
+		externalModelMap, ok := externalModelList[0].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Check if provider is explicitly set to "azure-openai"
+		provider, ok := externalModelMap["provider"].(string)
+		if !ok || provider != "azure-openai" {
+			continue
+		}
+
+		// Override the provider to "openai" for the SDK/API
+		if i >= len(e.Config.ServedEntities) || e.Config.ServedEntities[i].ExternalModel == nil {
+			continue
+		}
+
+		e.Config.ServedEntities[i].ExternalModel.Provider = "openai"
+
+		// Map azure_openai_config to OpenaiConfig
+		azureConfigList, ok := externalModelMap["azure_openai_config"].([]interface{})
+		if !ok || len(azureConfigList) == 0 {
+			return fmt.Errorf("azure_openai_config must be specified when using provider 'azure-openai'")
+		}
+
+		azureConfig, ok := azureConfigList[0].(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("invalid azure_openai_config structure")
+		}
+
+		// Safely extract required fields with type checking
+		apiBase, ok := azureConfig["openai_api_base"].(string)
+		if !ok || apiBase == "" {
+			return fmt.Errorf("openai_api_base is required in azure_openai_config")
+		}
+
+		apiVersion, ok := azureConfig["openai_api_version"].(string)
+		if !ok || apiVersion == "" {
+			return fmt.Errorf("openai_api_version is required in azure_openai_config")
+		}
+
+		deploymentName, ok := azureConfig["openai_deployment_name"].(string)
+		if !ok || deploymentName == "" {
+			return fmt.Errorf("openai_deployment_name is required in azure_openai_config")
+		}
+
+		openaiConfig := &serving.OpenAiConfig{
+			OpenaiApiBase:        apiBase,
+			OpenaiApiVersion:     apiVersion,
+			OpenaiDeploymentName: deploymentName,
+		}
+
+		// Handle authentication - check for conflicts and validate required fields
+		apiKey, hasApiKey := azureConfig["openai_api_key"].(string)
+		hasApiKey = hasApiKey && apiKey != ""
+
+		apiKeyPlaintext, hasApiKeyPlaintext := azureConfig["openai_api_key_plaintext"].(string)
+		hasApiKeyPlaintext = hasApiKeyPlaintext && apiKeyPlaintext != ""
+
+		entraClientId, hasEntraClientId := azureConfig["microsoft_entra_client_id"].(string)
+		hasEntraClientId = hasEntraClientId && entraClientId != ""
+
+		entraClientSecret, hasEntraClientSecret := azureConfig["microsoft_entra_client_secret"].(string)
+		hasEntraClientSecret = hasEntraClientSecret && entraClientSecret != ""
+
+		entraClientSecretPlaintext, hasEntraClientSecretPlaintext := azureConfig["microsoft_entra_client_secret_plaintext"].(string)
+		hasEntraClientSecretPlaintext = hasEntraClientSecretPlaintext && entraClientSecretPlaintext != ""
+
+		entraTenantId, hasEntraTenantId := azureConfig["microsoft_entra_tenant_id"].(string)
+		hasEntraTenantId = hasEntraTenantId && entraTenantId != ""
+
+		// Check for conflicting auth methods
+		if (hasApiKey || hasApiKeyPlaintext) && (hasEntraClientId || hasEntraClientSecret || hasEntraClientSecretPlaintext || hasEntraTenantId) {
+			return fmt.Errorf("cannot specify both API key authentication (openai_api_key/openai_api_key_plaintext) and Microsoft Entra authentication (microsoft_entra_*) fields")
+		}
+
+		if hasApiKey && hasApiKeyPlaintext {
+			return fmt.Errorf("cannot specify both openai_api_key and openai_api_key_plaintext")
+		}
+
+		if hasEntraClientSecret && hasEntraClientSecretPlaintext {
+			return fmt.Errorf("cannot specify both microsoft_entra_client_secret and microsoft_entra_client_secret_plaintext")
+		}
+
+		// Configure authentication based on what's provided
+		if hasApiKey {
+			openaiConfig.OpenaiApiKey = apiKey
+			openaiConfig.OpenaiApiType = "azure"
+		} else if hasApiKeyPlaintext {
+			openaiConfig.OpenaiApiKeyPlaintext = apiKeyPlaintext
+			openaiConfig.OpenaiApiType = "azure"
+		} else if hasEntraClientId || hasEntraClientSecret || hasEntraClientSecretPlaintext || hasEntraTenantId {
+			// Using Microsoft Entra (Azure AD) authentication
+			openaiConfig.OpenaiApiType = "azuread"
+
+			// Validate that all required Entra fields are present
+			if !hasEntraClientId {
+				return fmt.Errorf("microsoft_entra_client_id is required when using Microsoft Entra authentication")
+			}
+			if !hasEntraTenantId {
+				return fmt.Errorf("microsoft_entra_tenant_id is required when using Microsoft Entra authentication")
+			}
+			if !hasEntraClientSecret && !hasEntraClientSecretPlaintext {
+				return fmt.Errorf("either microsoft_entra_client_secret or microsoft_entra_client_secret_plaintext is required when using Microsoft Entra authentication")
+			}
+
+			openaiConfig.MicrosoftEntraClientId = entraClientId
+			openaiConfig.MicrosoftEntraTenantId = entraTenantId
+
+			if hasEntraClientSecret {
+				openaiConfig.MicrosoftEntraClientSecret = entraClientSecret
+			} else {
+				openaiConfig.MicrosoftEntraClientSecretPlaintext = entraClientSecretPlaintext
+			}
+		} else {
+			return fmt.Errorf("azure_openai_config requires either API key authentication (openai_api_key or openai_api_key_plaintext) or Microsoft Entra authentication (microsoft_entra_client_id, microsoft_entra_tenant_id, and microsoft_entra_client_secret/microsoft_entra_client_secret_plaintext)")
+		}
+
+		e.Config.ServedEntities[i].ExternalModel.OpenaiConfig = openaiConfig
+	}
+
+	return nil
 }
 
 func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.ResourceData) error {
@@ -372,21 +456,49 @@ func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.
 	// We need to modify the data in d to reflect "azure-openai" provider
 	// and populate azure_openai_config if it was originally set or if it looks like Azure OpenAI.
 
-	configList := d.Get("config").([]interface{})
-	if len(configList) == 0 {
+	configList, ok := d.Get("config").([]interface{})
+	if !ok || len(configList) == 0 {
 		return nil
 	}
-	configMap := configList[0].(map[string]interface{})
-	servedEntities := configMap["served_entities"].([]interface{})
+
+	configMap, ok := configList[0].(map[string]interface{})
+	if !ok {
+		log.Printf("[WARN] handleAzureOpenAIRead: config is not a map, skipping Azure OpenAI transformation")
+		return nil
+	}
+
+	servedEntitiesRaw, ok := configMap["served_entities"]
+	if !ok {
+		return nil
+	}
+
+	servedEntities, ok := servedEntitiesRaw.([]interface{})
+	if !ok {
+		log.Printf("[WARN] handleAzureOpenAIRead: served_entities is not a list, skipping Azure OpenAI transformation")
+		return nil
+	}
 
 	updated := false
 	for i, entity := range servedEntities {
-		entityMap := entity.(map[string]interface{})
-		externalModelList := entityMap["external_model"].([]interface{})
-		if len(externalModelList) == 0 {
+		entityMap, ok := entity.(map[string]interface{})
+		if !ok {
 			continue
 		}
-		externalModelMap := externalModelList[0].(map[string]interface{})
+
+		externalModelRaw, ok := entityMap["external_model"]
+		if !ok {
+			continue
+		}
+
+		externalModelList, ok := externalModelRaw.([]interface{})
+		if !ok || len(externalModelList) == 0 {
+			continue
+		}
+
+		externalModelMap, ok := externalModelList[0].(map[string]interface{})
+		if !ok {
+			continue
+		}
 
 		// Check the actual SDK struct to see what we got back
 		if i < len(endpoint.Config.ServedEntities) {
@@ -506,7 +618,9 @@ func ResourceModelServing() common.Resource {
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 
-			handleAzureOpenAI(&e, d)
+			if err := handleAzureOpenAI(&e, d); err != nil {
+				return err
+			}
 
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {
@@ -572,7 +686,9 @@ func ResourceModelServing() common.Resource {
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 
-			handleAzureOpenAI(&e, d)
+			if err := handleAzureOpenAI(&e, d); err != nil {
+				return err
+			}
 
 			if d.HasChange("config") {
 				if err := updateConfig(ctx, w, e.Name, e.Config, d); err != nil {

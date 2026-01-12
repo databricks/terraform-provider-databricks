@@ -248,6 +248,203 @@ func preserveConfigOrder(s map[string]*schema.Schema, d *schema.ResourceData, ap
 	}
 }
 
+func azureOpenAiConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"openai_api_base": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"openai_api_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"openai_deployment_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"openai_api_key": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"openai_api_key_plaintext": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"microsoft_entra_client_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"microsoft_entra_client_secret": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"microsoft_entra_client_secret_plaintext": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+				},
+				"microsoft_entra_tenant_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func handleAzureOpenAI(e *serving.CreateServingEndpoint, d *schema.ResourceData) {
+	if e.Config == nil {
+		return
+	}
+	// Iterate through served entities to find azure_openai configuration
+	// We need to look at the raw ResourceData to find the azure_openai_config
+	// because it is not part of the serving.CreateServingEndpoint struct
+	// and thus not populated by DataToStructPointer.
+	if servedEntities, ok := d.Get("config.0.served_entities").([]interface{}); ok {
+		for i, entity := range servedEntities {
+			if entityMap, ok := entity.(map[string]interface{}); ok {
+				if externalModelList, ok := entityMap["external_model"].([]interface{}); ok && len(externalModelList) > 0 {
+					externalModelMap := externalModelList[0].(map[string]interface{})
+
+					// Check if provider is explicitly set to "azure_openai"
+					if provider, ok := externalModelMap["provider"].(string); ok && provider == "azure_openai" {
+						// Override the provider to "openai" for the SDK/API
+						if i < len(e.Config.ServedEntities) && e.Config.ServedEntities[i].ExternalModel != nil {
+							e.Config.ServedEntities[i].ExternalModel.Provider = "openai"
+
+							// Map azure_openai_config to OpenaiConfig
+							if azureConfigList, ok := externalModelMap["azure_openai_config"].([]interface{}); ok && len(azureConfigList) > 0 {
+								azureConfig := azureConfigList[0].(map[string]interface{})
+
+								openaiConfig := &serving.OpenAiConfig{
+									OpenaiApiBase:        azureConfig["openai_api_base"].(string),
+									OpenaiApiVersion:     azureConfig["openai_api_version"].(string),
+									OpenaiDeploymentName: azureConfig["openai_deployment_name"].(string),
+								}
+
+								// Handle authentication
+								if v, ok := azureConfig["openai_api_key"].(string); ok && v != "" {
+									openaiConfig.OpenaiApiKey = v
+									openaiConfig.OpenaiApiType = "azure"
+								} else if v, ok := azureConfig["openai_api_key_plaintext"].(string); ok && v != "" {
+									openaiConfig.OpenaiApiKeyPlaintext = v
+									openaiConfig.OpenaiApiType = "azure"
+								} else {
+									// Assume Azure AD if no API key is provided or if Entra fields are present
+									openaiConfig.OpenaiApiType = "azuread"
+									if v, ok := azureConfig["microsoft_entra_client_id"].(string); ok {
+										openaiConfig.MicrosoftEntraClientId = v
+									}
+									if v, ok := azureConfig["microsoft_entra_client_secret"].(string); ok {
+										openaiConfig.MicrosoftEntraClientSecret = v
+									}
+									if v, ok := azureConfig["microsoft_entra_client_secret_plaintext"].(string); ok {
+										openaiConfig.MicrosoftEntraClientSecretPlaintext = v
+									}
+									if v, ok := azureConfig["microsoft_entra_tenant_id"].(string); ok {
+										openaiConfig.MicrosoftEntraTenantId = v
+									}
+								}
+
+								e.Config.ServedEntities[i].ExternalModel.OpenaiConfig = openaiConfig
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func handleAzureOpenAIRead(endpoint *serving.ServingEndpointDetailed, d *schema.ResourceData) error {
+	if endpoint.Config == nil {
+		return nil
+	}
+
+	// We need to modify the data in d to reflect "azure_openai" provider
+	// and populate azure_openai_config if it was originally set or if it looks like Azure OpenAI.
+	// Since we can't easily modify the nested structure of d directly without rebuilding it,
+	// and common.StructToData has already run, we are somewhat limited.
+	// However, StructToData overwrites everything based on the struct.
+	// Since the struct doesn't have azure_openai_config, that field in d is currently null or unchanged?
+	// StructToData clears fields not in struct if they are computed?
+	// Actually, StructToData iterates schema. If field is in schema but not in struct, it ignores it?
+
+	// Better approach: Re-read the config from d, modify it, and set it back.
+
+	configList := d.Get("config").([]interface{})
+	if len(configList) == 0 {
+		return nil
+	}
+	configMap := configList[0].(map[string]interface{})
+	servedEntities := configMap["served_entities"].([]interface{})
+
+	updated := false
+	for i, entity := range servedEntities {
+		entityMap := entity.(map[string]interface{})
+		externalModelList := entityMap["external_model"].([]interface{})
+		if len(externalModelList) == 0 {
+			continue
+		}
+		externalModelMap := externalModelList[0].(map[string]interface{})
+
+		// Check the actual SDK struct to see what we got back
+		if i < len(endpoint.Config.ServedEntities) {
+			sdkEntity := endpoint.Config.ServedEntities[i]
+			if sdkEntity.ExternalModel != nil && sdkEntity.ExternalModel.Provider == "openai" {
+				if sdkEntity.ExternalModel.OpenaiConfig != nil {
+					oa := sdkEntity.ExternalModel.OpenaiConfig
+					// Check if it's Azure OpenAI
+					if oa.OpenaiApiType == "azure" || oa.OpenaiApiType == "azuread" {
+						updated = true
+
+						// Switch provider to azure_openai
+						externalModelMap["provider"] = "azure_openai"
+
+						// Populate azure_openai_config
+						azureConfig := map[string]interface{}{
+							"openai_api_base":        oa.OpenaiApiBase,
+							"openai_api_version":     oa.OpenaiApiVersion,
+							"openai_deployment_name": oa.OpenaiDeploymentName,
+						}
+
+						if oa.OpenaiApiType == "azure" {
+							azureConfig["openai_api_key"] = oa.OpenaiApiKey
+							// Plaintext is usually not returned by API
+						} else if oa.OpenaiApiType == "azuread" {
+							azureConfig["microsoft_entra_client_id"] = oa.MicrosoftEntraClientId
+							azureConfig["microsoft_entra_tenant_id"] = oa.MicrosoftEntraTenantId
+							azureConfig["microsoft_entra_client_secret"] = oa.MicrosoftEntraClientSecret
+						}
+
+						externalModelMap["azure_openai_config"] = []interface{}{azureConfig}
+
+						// Clear openai_config to avoid confusion/duplication in state
+						externalModelMap["openai_config"] = []interface{}{}
+					}
+				}
+			}
+		}
+		externalModelList[0] = externalModelMap
+		servedEntities[i] = entityMap
+	}
+
+	if updated {
+		configMap["served_entities"] = servedEntities
+		configList[0] = configMap
+		return d.Set("config", configList)
+	}
+	return nil
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -301,6 +498,16 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+
+			// Inject azure_openai_config into external_model schema
+			if configSchema, ok := m["config"]; ok {
+				if servedEntitiesSchema, ok := configSchema.Elem.(*schema.Resource).Schema["served_entities"]; ok {
+					if externalModelSchema, ok := servedEntitiesSchema.Elem.(*schema.Resource).Schema["external_model"]; ok {
+						externalModelSchema.Elem.(*schema.Resource).Schema["azure_openai_config"] = azureOpenAiConfigSchema()
+					}
+				}
+			}
+
 			return m
 		})
 
@@ -312,6 +519,9 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+
+			handleAzureOpenAI(&e, d)
+
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {
 				return err
@@ -359,6 +569,11 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
+
+			if err := handleAzureOpenAIRead(endpoint, d); err != nil {
+				return err
+			}
+
 			d.Set("serving_endpoint_id", endpoint.Id)
 			d.Set("endpoint_url", endpoint.EndpointUrl)
 			return nil
@@ -370,6 +585,9 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+
+			handleAzureOpenAI(&e, d)
+
 			if d.HasChange("config") {
 				if err := updateConfig(ctx, w, e.Name, e.Config, d); err != nil {
 					return err

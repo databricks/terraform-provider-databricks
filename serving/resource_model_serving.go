@@ -708,6 +708,16 @@ func ResourceModelServing() common.Resource {
 			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model").
 				AddNewField("azure_openai_config", azureOpenAiConfigSchema())
 
+			// Add deprecation warning for Azure OpenAI fields in openai_config
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "openai_api_type").
+				SetValidateFunc(func(v interface{}, k string) (ws []string, errors []error) {
+					val := v.(string)
+					if val == "azure" || val == "azuread" {
+						ws = append(ws, "Using 'openai_config' with Azure OpenAI is deprecated. Please migrate to the 'azure_openai_config' block and set provider to 'azure-openai'.")
+					}
+					return
+				})
+
 			return m
 		})
 	return common.Resource{

@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Fixed `databricks_dashboard` resource to detect content changes when using the `file_path` attribute. Previously, only changes to the path string itself triggered updates, not changes to the file content.
 
 ### Documentation
 

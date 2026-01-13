@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -69,7 +70,7 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 	ic := importContextForTest()
 	ic.Client = client
 	ic.Context = ctx
-	if client.Config.IsAccountClient() {
+	if client.Config.HostType() == config.AccountHost {
 		ic.accountClient, _ = client.AccountClient()
 	} else {
 		ic.workspaceClient, _ = client.WorkspaceClient()

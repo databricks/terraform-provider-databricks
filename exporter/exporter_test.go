@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/databricks-sdk-go/service/billing"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
@@ -74,7 +75,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()

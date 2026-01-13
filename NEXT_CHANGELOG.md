@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+* Return empty string for `data_source_id` in `databricks_sql_warehouse` and `databricks_sql_endpoint` if data source API call fails ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))
+
 ### New Features and Improvements
 * Added resources and data sources for `databricks_account_user_setting_v2` and `databricks_default_warehouse_override` ([#5329](https://github.com/databricks/terraform-provider-databricks/pull/5329)).
 
@@ -14,6 +16,8 @@
 * Fix `databricks_dashboard` resource to include `dataset_catalog` and `dataset_schema` when retrying creation after parent folder creation ([#5327](https://github.com/databricks/terraform-provider-databricks/pull/5327))
 
 ### Documentation
+
+* Mark `data_source_id` as deprecated in `databricks_sql_warehouse` and `databricks_sql_endpoint` ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))
 
 ### Exporter
 

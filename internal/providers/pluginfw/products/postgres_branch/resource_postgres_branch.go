@@ -185,8 +185,7 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["branch_id"] = attrs["branch_id"].SetComputed()
-	attrs["branch_id"] = attrs["branch_id"].SetOptional()
+	attrs["branch_id"] = attrs["branch_id"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -437,9 +436,15 @@ func (r *BranchResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	err := client.Postgres.DeleteBranch(ctx, deleteRequest)
-	if err != nil && !apierr.IsMissing(err) {
+	response, err := client.Postgres.DeleteBranch(ctx, deleteRequest)
+	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_branch", err.Error())
+		return
+	}
+
+	err = response.Wait(ctx)
+	if err != nil && !apierr.IsMissing(err) {
+		resp.Diagnostics.AddError("error waiting for postgres_branch delete", err.Error())
 		return
 	}
 

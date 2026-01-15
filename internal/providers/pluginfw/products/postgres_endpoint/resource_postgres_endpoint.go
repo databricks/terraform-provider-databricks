@@ -186,8 +186,7 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
-	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -438,9 +437,15 @@ func (r *EndpointResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	err := client.Postgres.DeleteEndpoint(ctx, deleteRequest)
-	if err != nil && !apierr.IsMissing(err) {
+	response, err := client.Postgres.DeleteEndpoint(ctx, deleteRequest)
+	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_endpoint", err.Error())
+		return
+	}
+
+	err = response.Wait(ctx)
+	if err != nil && !apierr.IsMissing(err) {
+		resp.Diagnostics.AddError("error waiting for postgres_endpoint delete", err.Error())
 		return
 	}
 

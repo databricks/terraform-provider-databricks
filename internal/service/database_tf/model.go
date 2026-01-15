@@ -691,24 +691,46 @@ type DatabaseInstance struct {
 	// create and update responses.
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Deprecated. The sku of the instance; this field will always match the
-	// value of capacity.
+	// value of capacity. This is an output only field that contains the value
+	// computed from the input field combined with server side defaults. Use the
+	// field without the effective_ prefix to set the value.
 	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
-	// The recorded custom tags associated with the instance.
+	// The recorded custom tags associated with the instance. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveCustomTags types.List `tfsdk:"effective_custom_tags"`
-	// Whether the instance has PG native password login enabled.
+	// Whether the instance has PG native password login enabled. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
 	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// Whether secondaries serving read-only traffic are enabled. Defaults to
-	// false.
+	// false. This is an output only field that contains the value computed from
+	// the input field combined with server side defaults. Use the field without
+	// the effective_ prefix to set the value.
 	EffectiveEnableReadableSecondaries types.Bool `tfsdk:"effective_enable_readable_secondaries"`
 	// The number of nodes in the instance, composed of 1 primary and 0 or more
-	// secondaries. Defaults to 1 primary and 0 secondaries.
+	// secondaries. Defaults to 1 primary and 0 secondaries. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveNodeCount types.Int64 `tfsdk:"effective_node_count"`
 	// The retention window for the instance. This is the time window in days
-	// for which the historical data is retained.
+	// for which the historical data is retained. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveRetentionWindowInDays types.Int64 `tfsdk:"effective_retention_window_in_days"`
-	// Whether the instance is stopped.
+	// Whether the instance is stopped. This is an output only field that
+	// contains the value computed from the input field combined with server
+	// side defaults. Use the field without the effective_ prefix to set the
+	// value.
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
-	// The policy that is applied to the instance.
+	// The policy that is applied to the instance. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Whether to enable PG native password login on the instance. Defaults to
 	// false.
@@ -1122,7 +1144,10 @@ type DatabaseInstanceRef struct {
 	BranchTime types.String `tfsdk:"branch_time"`
 	// For a parent ref instance, this is the LSN on the parent instance from
 	// which the instance was created. For a child ref instance, this is the LSN
-	// on the instance from which the child instance was created.
+	// on the instance from which the child instance was created. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
 	EffectiveLsn types.String `tfsdk:"effective_lsn"`
 	// User-specified WAL LSN of the ref database instance.
 	//
@@ -1205,7 +1230,10 @@ type DatabaseInstanceRole struct {
 	// The desired API-exposed Postgres role attribute to associate with the
 	// role. Optional.
 	Attributes types.Object `tfsdk:"attributes"`
-	// The attributes that are applied to the role.
+	// The attributes that are applied to the role. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveAttributes types.Object `tfsdk:"effective_attributes"`
 	// The type of the role.
 	IdentityType types.String `tfsdk:"identity_type"`
@@ -3101,9 +3129,15 @@ type SyncedDatabaseTable struct {
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// The name of the database instance that this table is registered to. This
 	// field is always returned, and for tables inside database catalogs is
-	// inferred database instance associated with the catalog.
+	// inferred database instance associated with the catalog. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
-	// The name of the logical database that this table is registered to.
+	// The name of the logical database that this table is registered to. This
+	// is an output only field that contains the value computed from the input
+	// field combined with server side defaults. Use the field without the
+	// effective_ prefix to set the value.
 	EffectiveLogicalDatabaseName types.String `tfsdk:"effective_logical_database_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//

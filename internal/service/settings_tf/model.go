@@ -2407,6 +2407,8 @@ type CreatePrivateEndpointRule struct {
 	// The full target AWS endpoint service name that connects to the
 	// destination resources of the private endpoint.
 	EndpointService types.String `tfsdk:"endpoint_service"`
+
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// Not used by customer-managed private endpoint services.
 	//
 	// The sub-resource type (group ID) of the target resource. Note that to
@@ -2457,6 +2459,7 @@ func (to *CreatePrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, f
 func (m CreatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
 	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
 	attrs["resource_names"] = attrs["resource_names"].SetOptional()
@@ -2487,6 +2490,7 @@ func (m CreatePrivateEndpointRule) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"domain_names":     m.DomainNames,
 			"endpoint_service": m.EndpointService,
+			"error_message":    m.ErrorMessage,
 			"group_id":         m.GroupId,
 			"resource_id":      m.ResourceId,
 			"resource_names":   m.ResourceNames,
@@ -2501,6 +2505,7 @@ func (m CreatePrivateEndpointRule) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"endpoint_service": types.StringType,
+			"error_message":    types.StringType,
 			"group_id":         types.StringType,
 			"resource_id":      types.StringType,
 			"resource_names": basetypes.ListType{
@@ -12498,7 +12503,10 @@ type NccPrivateEndpointRule struct {
 	// DISCONNECTED: Connection was removed by the private link resource owner,
 	// the private endpoint becomes informative and should be deleted for
 	// clean-up. - EXPIRED: If the endpoint was created but not approved in 14
-	// days, it will be EXPIRED.
+	// days, it will be EXPIRED. - CREATING: The endpoint creation is in
+	// progress. Once successfully created, the state will transition to
+	// PENDING. - CREATE_FAILED: The endpoint creation failed. You can check the
+	// error_message field for more details.
 	ConnectionState types.String `tfsdk:"connection_state"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
@@ -12522,6 +12530,8 @@ type NccPrivateEndpointRule struct {
 	// The full target AWS endpoint service name that connects to the
 	// destination resources of the private endpoint.
 	EndpointService types.String `tfsdk:"endpoint_service"`
+
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// Not used by customer-managed private endpoint services.
 	//
 	// The sub-resource type (group ID) of the target resource. Note that to
@@ -12589,6 +12599,7 @@ func (m NccPrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["enabled"] = attrs["enabled"].SetOptional()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
 	attrs["endpoint_service"] = attrs["endpoint_service"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetOptional()
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
@@ -12630,6 +12641,7 @@ func (m NccPrivateEndpointRule) ToObjectValue(ctx context.Context) basetypes.Obj
 			"enabled":                        m.Enabled,
 			"endpoint_name":                  m.EndpointName,
 			"endpoint_service":               m.EndpointService,
+			"error_message":                  m.ErrorMessage,
 			"group_id":                       m.GroupId,
 			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
 			"resource_id":                    m.ResourceId,
@@ -12655,6 +12667,7 @@ func (m NccPrivateEndpointRule) Type(ctx context.Context) attr.Type {
 			"enabled":                        types.BoolType,
 			"endpoint_name":                  types.StringType,
 			"endpoint_service":               types.StringType,
+			"error_message":                  types.StringType,
 			"group_id":                       types.StringType,
 			"network_connectivity_config_id": types.StringType,
 			"resource_id":                    types.StringType,
@@ -17420,6 +17433,8 @@ type UpdatePrivateEndpointRule struct {
 	// Update this field to activate/deactivate this private endpoint to allow
 	// egress access from serverless compute resources.
 	Enabled types.Bool `tfsdk:"enabled"`
+
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// Only used by private endpoints towards AWS S3 service.
 	//
 	// The globally unique S3 bucket names that will be accessed via the VPC
@@ -17462,6 +17477,7 @@ func (to *UpdatePrivateEndpointRule) SyncFieldsDuringRead(ctx context.Context, f
 func (m UpdatePrivateEndpointRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["domain_names"] = attrs["domain_names"].SetOptional()
 	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["resource_names"] = attrs["resource_names"].SetOptional()
 
 	return attrs
@@ -17490,6 +17506,7 @@ func (m UpdatePrivateEndpointRule) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"domain_names":   m.DomainNames,
 			"enabled":        m.Enabled,
+			"error_message":  m.ErrorMessage,
 			"resource_names": m.ResourceNames,
 		})
 }
@@ -17501,7 +17518,8 @@ func (m UpdatePrivateEndpointRule) Type(ctx context.Context) attr.Type {
 			"domain_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"enabled": types.BoolType,
+			"enabled":       types.BoolType,
+			"error_message": types.StringType,
 			"resource_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},

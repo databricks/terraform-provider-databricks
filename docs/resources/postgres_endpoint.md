@@ -11,17 +11,16 @@ subcategory: "Postgres"
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The branch containing this endpoint.
-  Format: projects/{project_id}/branches/{branch_id}
-* `endpoint_id` (string, optional) - The ID to use for the Endpoint, which will become the final component of
+* `endpoint_id` (string, required) - The ID to use for the Endpoint, which will become the final component of
   the endpoint's resource name.
   
   This value should be 4-63 characters, and valid characters are /[a-z][0-9]-/
+* `parent` (string, required) - The branch containing this endpoint.
+  Format: projects/{project_id}/branches/{branch_id}
 * `spec` (EndpointSpec, optional) - The desired state of an Endpoint
 
 ### EndpointSettings
 * `pg_settings` (object, optional) - A raw representation of Postgres settings
-* `pgbouncer_settings` (object, optional) - A raw representation of PgBouncer settings
 
 ### EndpointSpec
 * `endpoint_type` (string, required) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `READ_ONLY`, `READ_WRITE`
@@ -31,7 +30,6 @@ The following arguments are supported:
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
-* `pooler_mode` (string, optional) - Possible values are: `TRANSACTION`
 * `settings` (EndpointSettings, optional)
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended
 
@@ -56,7 +54,6 @@ In addition to the above arguments, the following attributes are exported:
 * `host` (string) - The hostname of the compute endpoint. This is the hostname specified when connecting to a database
 * `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `IDLE`, `INIT`
-* `pooler_mode` (string) - Possible values are: `TRANSACTION`
 * `settings` (EndpointSettings)
 * `start_time` (string) - A timestamp indicating when the compute endpoint was last started
 * `suspend_time` (string) - A timestamp indicating when the compute endpoint was last suspended

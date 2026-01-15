@@ -11,7 +11,7 @@ subcategory: "Postgres"
 
 ## Arguments
 The following arguments are supported:
-* `project_id` (string, optional) - The ID to use for the Project, which will become the final component of
+* `project_id` (string, required) - The ID to use for the Project, which will become the final component of
   the project's resource name.
   
   This value should be 4-63 characters, and valid characters are /[a-z][0-9]-/
@@ -21,7 +21,6 @@ The following arguments are supported:
 * `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units
 * `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units
 * `pg_settings` (object, optional) - A raw representation of Postgres settings
-* `pgbouncer_settings` (object, optional) - A raw representation of PgBouncer settings
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended
 
 ### ProjectSettings
@@ -51,6 +50,7 @@ In addition to the above arguments, the following attributes are exported:
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings
 * `display_name` (string) - The effective human-readable project name
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
+* `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
 * `settings` (ProjectSettings) - The effective project settings
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage

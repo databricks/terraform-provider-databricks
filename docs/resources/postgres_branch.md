@@ -11,12 +11,12 @@ subcategory: "Postgres"
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The project containing this branch.
-  Format: projects/{project_id}
-* `branch_id` (string, optional) - The ID to use for the Branch, which will become the final component of
+* `branch_id` (string, required) - The ID to use for the Branch, which will become the final component of
   the branch's resource name.
   
   This value should be 4-63 characters, and valid characters are /[a-z][0-9]-/
+* `parent` (string, required) - The project containing this branch.
+  Format: projects/{project_id}
 * `spec` (BranchSpec, optional) - The desired state of a Branch
 
 ### BranchSpec

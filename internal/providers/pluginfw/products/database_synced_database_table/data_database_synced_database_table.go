@@ -45,9 +45,15 @@ type SyncedDatabaseTableData struct {
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// The name of the database instance that this table is registered to. This
 	// field is always returned, and for tables inside database catalogs is
-	// inferred database instance associated with the catalog.
+	// inferred database instance associated with the catalog. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
-	// The name of the logical database that this table is registered to.
+	// The name of the logical database that this table is registered to. This
+	// is an output only field that contains the value computed from the input
+	// field combined with server side defaults. Use the field without the
+	// effective_ prefix to set the value.
 	EffectiveLogicalDatabaseName types.String `tfsdk:"effective_logical_database_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//

@@ -238,3 +238,100 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "error")
 	assert.Equal(t, "ncc_id/rule_id", d.Id())
 }
+
+func TestResourceNccPrivateEndpointRuleCreate_CreatingThenPending(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(&settings.NccPrivateEndpointRule{
+				RuleId:                      "rule_id",
+				NetworkConnectivityConfigId: "ncc_id",
+				ConnectionState:             "CREATING",
+			}, nil)
+			// First poll returns CREATING
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
+				&settings.NccPrivateEndpointRule{
+					RuleId:                      "rule_id",
+					NetworkConnectivityConfigId: "ncc_id",
+					ResourceId:                  "resource_id",
+					GroupId:                     "group_id",
+					ConnectionState:             "CREATING",
+				}, nil).Once()
+			// Second poll returns PENDING, then Read is called after Create
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
+				&settings.NccPrivateEndpointRule{
+					RuleId:                      "rule_id",
+					NetworkConnectivityConfigId: "ncc_id",
+					ResourceId:                  "resource_id",
+					GroupId:                     "group_id",
+					EndpointName:                "endpoint_name",
+					ConnectionState:             "PENDING",
+				}, nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "ncc_id/rule_id",
+		"connection_state": "PENDING",
+	})
+}
+
+func TestResourceNccPrivateEndpointRuleCreate_CreatingThenCreateFailed(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(&settings.NccPrivateEndpointRule{
+				RuleId:                      "rule_id",
+				NetworkConnectivityConfigId: "ncc_id",
+				ConnectionState:             "CREATING",
+			}, nil)
+			// First poll returns CREATING
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
+				&settings.NccPrivateEndpointRule{
+					RuleId:                      "rule_id",
+					NetworkConnectivityConfigId: "ncc_id",
+					ResourceId:                  "resource_id",
+					GroupId:                     "group_id",
+					ConnectionState:             "CREATING",
+				}, nil).Once()
+			// Second poll returns CREATE_FAILED with error message
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
+				&settings.NccPrivateEndpointRule{
+					RuleId:                      "rule_id",
+					NetworkConnectivityConfigId: "ncc_id",
+					ResourceId:                  "resource_id",
+					GroupId:                     "group_id",
+					ConnectionState:             "CREATE_FAILED",
+					ErrorMessage:                "Resource not found or access denied",
+				}, nil).Once()
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "private endpoint rule creation failed: Resource not found or access denied")
+	assert.Equal(t, "ncc_id/rule_id", d.Id())
+}

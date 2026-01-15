@@ -28,6 +28,8 @@ resource "databricks_cluster" "my_cluster" {
 Data source allows you to pick instance pool by the following attribute
 
 - `name` - Name of the instance pool. The instance pool must exist before this resource can be planned.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

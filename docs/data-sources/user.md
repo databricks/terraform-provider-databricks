@@ -33,6 +33,8 @@ Data source allows you to pick groups by the following attributes
 
 - `user_name` - (Optional) User name of the user. The user must exist before this resource can be planned.
 - `user_id` - (Optional) ID of the user.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

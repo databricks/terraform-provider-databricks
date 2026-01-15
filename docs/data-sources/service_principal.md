@@ -34,6 +34,8 @@ Data source allows you to pick service principals by one of the following attrib
 - `application_id` - (Required if neither `display_name` nor `scim_id` is used) Application ID of the service principal. The service principal must exist before this resource can be retrieved.
 - `display_name` - (Required if neither `application_id` nor `scim_id` is  used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
 - `scim_id` - (Required if neither `application_id` nor `display_name` is used) Unique SCIM ID for a service principal in the Databricks workspace. The service principal must exist before this resource can be retrieved.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -48,17 +48,58 @@ func TestWarehouseData_Error(t *testing.T) {
 	}.ExpectError(t, "i'm a teapot")
 }
 
-func TestWarehouseDataByName_ListError(t *testing.T) {
-	qa.ResourceFixture{
+func TestWarehouseDataById_DataSourceListError(t *testing.T) {
+	// When DataSources.List fails with ID lookup, we still get the warehouse but without data_source_id
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, qa.ErrImATeapot)
+			w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&sql.GetWarehouseResponse{
+				Name:        "foo",
+				ClusterSize: "Small",
+				Id:          "abc",
+				State:       "RUNNING",
+			}, nil)
+		},
+		Resource:    DataSourceWarehouse(),
+		Read:        true,
+		NonWritable: true,
+		HCL:         `id = "abc"`,
+		ID:          "abc",
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "foo", d.Get("name"))
+	assert.Equal(t, "RUNNING", d.Get("state"))
+	assert.Equal(t, "", d.Get("data_source_id"))
+}
+
+func TestWarehouseDataByName_DataSourceListError(t *testing.T) {
+	// When DataSources.List fails, we fall back to Warehouses.ListAll and don't populate data_source_id
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, qa.ErrImATeapot)
+			w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{
+				{
+					Id:   "abc",
+					Name: "abc",
+				},
+			}, nil)
+			w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&sql.GetWarehouseResponse{
+				Name:        "abc",
+				ClusterSize: "Small",
+				Id:          "abc",
+				State:       "RUNNING",
+			}, nil)
 		},
 		Resource:    DataSourceWarehouse(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `name = "abc"`,
 		ID:          "_",
-	}.ExpectError(t, "i'm a teapot")
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "RUNNING", d.Get("state"))
+	assert.Equal(t, "", d.Get("data_source_id"))
 }
 
 func TestWarehouseDataByName_NotFoundError(t *testing.T) {

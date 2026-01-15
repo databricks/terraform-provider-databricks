@@ -54,7 +54,7 @@ This data source exports the following attributes:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
-* `data_source_id` - ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
+* `data_source_id` - (Deprecated, will be removed) ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
 * `creator_name` - The username of the user who created the endpoint.
 * `num_active_sessions` - The current number of clusters used by the endpoint.
 * `num_clusters` - The current number of clusters used by the endpoint.

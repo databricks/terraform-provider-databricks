@@ -400,8 +400,9 @@ func TestResolveDataSourceIDError(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)
-		_, err = resolveDataSourceID(ctx, w, "any")
-		require.Error(t, err)
+		dataSourceId, err := resolveDataSourceID(ctx, w, "any")
+		require.NoError(t, err)
+		assert.Equal(t, "", dataSourceId)
 	})
 }
 

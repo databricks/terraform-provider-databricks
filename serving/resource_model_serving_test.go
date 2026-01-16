@@ -274,6 +274,379 @@ func TestModelServingCreateGPU(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestModelServingCreateAzureOpenAI(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/serving-endpoints",
+				ExpectedRequest: serving.CreateServingEndpoint{
+					Name: "test-azure-endpoint",
+					Config: &serving.EndpointCoreConfigInput{
+						ServedEntities: []serving.ServedEntityInput{
+							{
+								Name: "azure-model",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4",
+									Provider: "openai",
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										OpenaiApiBase:        "https://example.openai.azure.com",
+										OpenaiApiVersion:     "2023-05-15",
+										OpenaiDeploymentName: "deployment-name",
+										OpenaiApiKey:         "secret-key",
+										OpenaiApiType:        "azure",
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "azure-model",
+									TrafficPercentage: 100,
+								},
+							},
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-azure-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-azure-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-azure-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-azure-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Id:   "test-azure-endpoint",
+					Name: "test-azure-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name: "azure-model",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4",
+									Provider: "openai",
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										OpenaiApiBase:        "https://example.openai.azure.com",
+										OpenaiApiVersion:     "2023-05-15",
+										OpenaiDeploymentName: "deployment-name",
+										OpenaiApiType:        "azure",
+										// API typically doesn't return the key
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "azure-model",
+									TrafficPercentage: 100,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+						azure_openai_config {
+							openai_api_base = "https://example.openai.azure.com"
+							openai_api_version = "2023-05-15"
+							openai_deployment_name = "deployment-name"
+							openai_api_key = "secret-key"
+						}
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestModelServingCreateAzureOpenAI_MissingConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "azure_openai_config must be specified when using provider 'azure-openai'")
+}
+
+func TestModelServingCreateAzureOpenAI_MissingAuthentication(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+						azure_openai_config {
+							openai_api_base = "https://example.openai.azure.com"
+							openai_api_version = "2023-05-15"
+							openai_deployment_name = "deployment-name"
+						}
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "azure_openai_config requires either API key authentication (openai_api_key or openai_api_key_plaintext) or Microsoft Entra authentication (microsoft_entra_client_id, microsoft_entra_tenant_id, and microsoft_entra_client_secret/microsoft_entra_client_secret_plaintext)")
+}
+
+func TestModelServingCreateAzureOpenAI_ConflictingAuthMethods(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+						azure_openai_config {
+							openai_api_base = "https://example.openai.azure.com"
+							openai_api_version = "2023-05-15"
+							openai_deployment_name = "deployment-name"
+							openai_api_key = "secret-key"
+							microsoft_entra_client_id = "client-id"
+							microsoft_entra_tenant_id = "tenant-id"
+							microsoft_entra_client_secret = "client-secret"
+						}
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "cannot specify both API key authentication (openai_api_key/openai_api_key_plaintext) and Microsoft Entra authentication (microsoft_entra_*) fields")
+}
+
+func TestModelServingCreateAzureOpenAI_EntraAuth(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/serving-endpoints",
+				ExpectedRequest: serving.CreateServingEndpoint{
+					Name: "test-azure-endpoint",
+					Config: &serving.EndpointCoreConfigInput{
+						ServedEntities: []serving.ServedEntityInput{
+							{
+								Name: "azure-model",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4",
+									Provider: "openai",
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										OpenaiApiBase:              "https://example.openai.azure.com",
+										OpenaiApiVersion:           "2023-05-15",
+										OpenaiDeploymentName:       "deployment-name",
+										OpenaiApiType:              "azuread",
+										MicrosoftEntraClientId:     "client-id",
+										MicrosoftEntraTenantId:     "tenant-id",
+										MicrosoftEntraClientSecret: "{{secrets/scope/client-secret}}",
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "azure-model",
+									TrafficPercentage: 100,
+								},
+							},
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-azure-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-azure-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-azure-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-azure-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Id:   "test-azure-endpoint",
+					Name: "test-azure-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name: "azure-model",
+								ExternalModel: &serving.ExternalModel{
+									Name:     "gpt-4",
+									Provider: "openai",
+									Task:     "llm/v1/chat",
+									OpenaiConfig: &serving.OpenAiConfig{
+										OpenaiApiBase:              "https://example.openai.azure.com",
+										OpenaiApiVersion:           "2023-05-15",
+										OpenaiDeploymentName:       "deployment-name",
+										OpenaiApiType:              "azuread",
+										MicrosoftEntraClientId:     "client-id",
+										MicrosoftEntraTenantId:     "tenant-id",
+										MicrosoftEntraClientSecret: "{{secrets/scope/client-secret}}",
+									},
+								},
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "azure-model",
+									TrafficPercentage: 100,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+						azure_openai_config {
+							openai_api_base = "https://example.openai.azure.com"
+							openai_api_version = "2023-05-15"
+							openai_deployment_name = "deployment-name"
+							microsoft_entra_client_id = "client-id"
+							microsoft_entra_tenant_id = "tenant-id"
+							microsoft_entra_client_secret = "{{secrets/scope/client-secret}}"
+						}
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestModelServingCreateAzureOpenAI_EntraMissingClientId(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-azure-endpoint"
+			config {
+				served_entities {
+					name = "azure-model"
+					external_model {
+						name = "gpt-4"
+						provider = "azure-openai"
+						task = "llm/v1/chat"
+						azure_openai_config {
+							openai_api_base = "https://example.openai.azure.com"
+							openai_api_version = "2023-05-15"
+							openai_deployment_name = "deployment-name"
+							microsoft_entra_tenant_id = "tenant-id"
+							microsoft_entra_client_secret = "client-secret"
+						}
+					}
+				}
+				traffic_config {
+					routes {
+						served_model_name = "azure-model"
+						traffic_percentage = 100
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "microsoft_entra_client_id is required when using Microsoft Entra authentication")
+}
+
 func TestModelServingCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

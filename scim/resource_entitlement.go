@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,7 +29,7 @@ func ResourceEntitlements() common.Resource {
 	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.Config.IsAccountClient() {
+			if c.Config.HostType() == config.AccountHost {
 				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
 			}
 			err := patchEntitlements(ctx, d, c, "replace")

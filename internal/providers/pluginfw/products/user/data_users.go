@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -83,7 +84,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var users []iam.User
 	var err error
 
-	if d.Client.Config.IsAccountClient() {
+	if d.Client.Config.HostType() == config.AccountHost {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {

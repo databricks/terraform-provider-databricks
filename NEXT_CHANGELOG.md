@@ -6,6 +6,7 @@
 
 ### New Features and Improvements
 
+
 ### Bug Fixes
 
 ### Documentation
@@ -13,3 +14,4 @@
 ### Exporter
 
 ### Internal Changes
+* Add support for unified host, migrate IsAccountClient to HostType

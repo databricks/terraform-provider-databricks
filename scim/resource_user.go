@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -125,7 +126,7 @@ func ResourceUser() common.Resource {
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
 			var err error = nil
-			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
+			isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

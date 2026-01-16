@@ -3,6 +3,7 @@ package mws
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
@@ -18,7 +19,7 @@ func DataSourceCurrentConfiguration() common.Resource {
 	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*currentConfig)
 		data.IsAccount = false
-		if c.Config.IsAccountClient() {
+		if c.Config.HostType() == config.AccountHost {
 			data.AccountId = c.Config.AccountID
 			data.IsAccount = true
 		}

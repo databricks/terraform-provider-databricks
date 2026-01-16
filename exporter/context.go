@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -455,7 +456,7 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 
-	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		// TODO: check if we can get the current user from the account client

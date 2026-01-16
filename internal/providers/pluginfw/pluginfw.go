@@ -69,8 +69,6 @@ func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req p
 	resp.ResourceData = client
 }
 
-// Function returns a schema.Schema based on config attributes where each attribute is mapped to the appropriate
-// schema type (BoolAttribute, StringAttribute, Int64Attribute).
 func providerSchemaPluginFramework() schema.Schema {
 	ps := map[string]schema.Attribute{}
 	for _, attr := range config.ConfigAttributes {
@@ -90,6 +88,12 @@ func providerSchemaPluginFramework() schema.Schema {
 				Optional:  true,
 				Sensitive: attr.Sensitive,
 			}
+		case reflect.Slice:
+			ps[attr.Name] = schema.ListAttribute{
+				Optional:    true,
+				Sensitive:   attr.Sensitive,
+				ElementType: types.StringType,
+			}
 		}
 	}
 	return schema.Schema{
@@ -97,8 +101,7 @@ func providerSchemaPluginFramework() schema.Schema {
 	}
 }
 
-// setAttribute sets the attribute value in the SDK config corresponding to the attribute name in the provider configuration.
-// It returns true if the attribute was set, false if it was not set (because it was unknown or null), and a diag.Diagnostics object in case of error.
+// setAttribute returns true if the attribute was set, false if null/unknown.
 func (p *DatabricksProviderPluginFramework) setAttribute(
 	ctx context.Context,
 	providerConfig tfsdk.Config,
@@ -145,6 +148,29 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 			return false, diags
 		}
 		err := attr.Set(cfg, attrValue.ValueString())
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("Failed to set attribute: %s", attr.Name), err.Error()))
+			return false, diags
+		}
+	case reflect.Slice:
+		var attrValue types.List
+		diags.Append(providerConfig.GetAttribute(ctx, path.Root(attr.Name), &attrValue)...)
+		if diags.HasError() {
+			return false, diags
+		}
+		if attrValue.IsNull() || attrValue.IsUnknown() {
+			return false, diags
+		}
+		elements := attrValue.Elements()
+		// Treat empty lists as unset for consistency with SDKv2's GetOk behavior.
+		if len(elements) == 0 {
+			return false, diags
+		}
+		strSlice := make([]string, len(elements))
+		for i, elem := range elements {
+			strSlice[i] = elem.(types.String).ValueString()
+		}
+		err := attr.Set(cfg, strSlice)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("Failed to set attribute: %s", attr.Name), err.Error()))
 			return false, diags

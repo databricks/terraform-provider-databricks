@@ -24,7 +24,9 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 		}
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
-		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
+
+		// `enabled` can only be set for AWS S3 private endpoint services, identified by `resource_names`
+		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed().SetConflictsWith([]string{"domain_names", "group_id"})
 
 		// only one of `domain_names`, `resource_names`, `group_id` can be specified, as they are applicable
 		// to different type of endpoints
@@ -87,11 +89,13 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			// only enabled, domain names & resource names are updatable
 			// they do require update_mask to be set
 			// resource_names are not applicable to Azure, so we exclude them from the update
-			updateMask := []string{"enabled"}
-			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{
-				Enabled: d.Get("enabled").(bool),
-			}
+			updateMask := []string{}
+			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 
+			if d.HasChange("enabled") {
+				updateMask = append(updateMask, "enabled")
+				updatePrivateEndpointRule.Enabled = d.Get("enabled").(bool)
+			}
 			if d.HasChange("domain_names") {
 				updateMask = append(updateMask, "domain_names")
 				newDomainNames := []string{}

@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fix importing of the `databricks_share` ([#5311](https://github.com/databricks/terraform-provider-databricks/pull/5311))
+
 ### Documentation
 
 ### Exporter

@@ -314,8 +314,13 @@ func providerSchema() map[string]*schema.Schema {
 	}
 	ps := map[string]*schema.Schema{}
 	for _, attr := range config.ConfigAttributes {
+		schemaType, ok := kindMap[attr.Kind]
+		if !ok {
+			// Skip attributes with unsupported types
+			continue
+		}
 		fieldSchema := &schema.Schema{
-			Type:      kindMap[attr.Kind],
+			Type:      schemaType,
 			Optional:  true,
 			Sensitive: attr.Sensitive,
 		}

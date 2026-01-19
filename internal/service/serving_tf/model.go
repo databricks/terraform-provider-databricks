@@ -6181,6 +6181,11 @@ func (m *PtEndpointCoreConfig) SetTrafficConfig(ctx context.Context, v TrafficCo
 }
 
 type PtServedModel struct {
+	// Whether burst scaling is enabled. When enabled (default), the endpoint
+	// can automatically scale up beyond provisioned capacity to handle traffic
+	// spikes. When disabled, the endpoint maintains fixed capacity at
+	// provisioned_model_units.
+	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
 	// The name of the entity to be served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
@@ -6206,6 +6211,7 @@ func (to *PtServedModel) SyncFieldsDuringRead(ctx context.Context, from PtServed
 }
 
 func (m PtServedModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
 	attrs["entity_version"] = attrs["entity_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -6232,6 +6238,7 @@ func (m PtServedModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"burst_scaling_enabled":   m.BurstScalingEnabled,
 			"entity_name":             m.EntityName,
 			"entity_version":          m.EntityVersion,
 			"name":                    m.Name,
@@ -6243,6 +6250,7 @@ func (m PtServedModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m PtServedModel) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"burst_scaling_enabled":   types.BoolType,
 			"entity_name":             types.StringType,
 			"entity_version":          types.StringType,
 			"name":                    types.StringType,

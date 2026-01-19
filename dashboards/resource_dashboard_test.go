@@ -2,6 +2,7 @@ package dashboards
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -60,6 +61,68 @@ func TestDashboardCreate(t *testing.T) {
 			parent_path = "/path"
 			serialized_dashboard = "serialized_json"
 		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           "xyz",
+		"display_name": "Dashboard name",
+	})
+}
+
+func TestDashboardCreateWithFilePath(t *testing.T) {
+	// Create a temporary file with dashboard JSON content
+	tmpFile, err := os.CreateTemp("", "dashboard-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+
+	_, err = tmpFile.WriteString("serialized_json")
+	assert.NoError(t, err)
+	tmpFile.Close()
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockLakeviewAPI().EXPECT()
+			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
+				Dashboard: dashboards.Dashboard{
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					ParentPath:          "/path",
+					SerializedDashboard: "serialized_json",
+				},
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+			e.Publish(mock.Anything, dashboards.PublishRequest{
+				EmbedCredentials: true,
+				WarehouseId:      "abc",
+				DashboardId:      "xyz",
+				ForceSendFields:  []string{"EmbedCredentials"},
+			}).Return(&dashboards.PublishedDashboard{
+				EmbedCredentials:   true,
+				WarehouseId:        "abc",
+				DisplayName:        "Dashboard name",
+				RevisionCreateTime: "823828",
+			}, nil)
+			e.Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+		},
+		Resource: ResourceDashboard(),
+		Create:   true,
+		HCL: fmt.Sprintf(`
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			file_path = "%s"
+		`, tmpFile.Name()),
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
 		"display_name": "Dashboard name",
@@ -328,4 +391,62 @@ func TestDashboardDeleteAlreadyTrashed(t *testing.T) {
 
 	// Expect this to succeed.
 	assert.NoError(t, err)
+}
+
+func TestCustomDiffDashboardContent(t *testing.T) {
+	// Create two temporary files with different content.
+	tmpFile1, err := os.CreateTemp("", "dashboard1-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile1.Name())
+	_, err = tmpFile1.WriteString(`{"content": "original"}`)
+	assert.NoError(t, err)
+	tmpFile1.Close()
+
+	tmpFile2, err := os.CreateTemp("", "dashboard2-*.json")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile2.Name())
+	_, err = tmpFile2.WriteString(`{"content": "updated"}`)
+	assert.NoError(t, err)
+	tmpFile2.Close()
+
+	resource := ResourceDashboard().ToResource()
+
+	t.Run("detects file_path content change", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		d.Set("md5", "old-hash-that-wont-match")
+
+		// When file_path changes, the function should use the new value and detect the change.
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile2.Name(), d)
+		assert.False(t, suppress, "should NOT suppress diff when file content changes")
+	})
+
+	t.Run("suppresses diff when content unchanged", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		// Set md5 to the actual hash of the file content.
+		d.Set("md5", "a43d816a0b927ab1c48ccea5946cebfb")
+
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile1.Name(), d)
+		assert.True(t, suppress, "should suppress diff when content is unchanged")
+	})
+
+	t.Run("detects serialized_dashboard content change", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("serialized_dashboard", `{"old": "content"}`)
+		d.Set("md5", "old-hash")
+
+		suppress := customDiffDashboardContent("serialized_dashboard", `{"old": "content"}`, `{"new": "content"}`, d)
+		assert.False(t, suppress, "should NOT suppress diff when serialized_dashboard changes")
+	})
+
+	t.Run("shows diff when dashboard_change_detected is true", func(t *testing.T) {
+		d := resource.TestResourceData()
+		d.Set("file_path", tmpFile1.Name())
+		d.Set("md5", "a43d816a0b927ab1c48ccea5946cebfb")
+		d.Set("dashboard_change_detected", true)
+
+		suppress := customDiffDashboardContent("file_path", tmpFile1.Name(), tmpFile1.Name(), d)
+		assert.False(t, suppress, "should NOT suppress diff when dashboard_change_detected is true")
+	})
 }

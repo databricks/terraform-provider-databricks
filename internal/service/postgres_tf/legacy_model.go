@@ -459,7 +459,7 @@ func (m CreateBranchRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["branch"] = attrs["branch"].SetRequired()
 	attrs["branch"] = attrs["branch"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["branch_id"] = attrs["branch_id"].SetOptional()
+	attrs["branch_id"] = attrs["branch_id"].SetRequired()
 
 	return attrs
 }
@@ -570,7 +570,7 @@ func (m CreateEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["endpoint"] = attrs["endpoint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
 
 	return attrs
 }
@@ -677,7 +677,7 @@ func (to *CreateProjectRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 func (m CreateProjectRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["project"] = attrs["project"].SetRequired()
 	attrs["project"] = attrs["project"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["project_id"] = attrs["project_id"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetRequired()
 
 	return attrs
 }
@@ -858,7 +858,6 @@ func (m *CreateRoleRequest_SdkV2) SetRole(ctx context.Context, v Role_SdkV2) {
 
 // Databricks Error that is returned by all Databricks APIs.
 type DatabricksServiceExceptionWithDetailsProto_SdkV2 struct {
-	// @pbjson-skip
 	Details types.List `tfsdk:"details"`
 
 	ErrorCode types.String `tfsdk:"error_code"`
@@ -1399,8 +1398,6 @@ func (m EndpointOperationMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 type EndpointSettings_SdkV2 struct {
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
-	// A raw representation of PgBouncer settings.
-	PgbouncerSettings types.Map `tfsdk:"pgbouncer_settings"`
 }
 
 func (to *EndpointSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointSettings_SdkV2) {
@@ -1411,7 +1408,6 @@ func (to *EndpointSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m EndpointSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pg_settings"] = attrs["pg_settings"].SetOptional()
-	attrs["pgbouncer_settings"] = attrs["pgbouncer_settings"].SetOptional()
 
 	return attrs
 }
@@ -1425,8 +1421,7 @@ func (m EndpointSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (m EndpointSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"pg_settings":        reflect.TypeOf(types.String{}),
-		"pgbouncer_settings": reflect.TypeOf(types.String{}),
+		"pg_settings": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1437,8 +1432,7 @@ func (m EndpointSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pg_settings":        m.PgSettings,
-			"pgbouncer_settings": m.PgbouncerSettings,
+			"pg_settings": m.PgSettings,
 		})
 }
 
@@ -1447,9 +1441,6 @@ func (m EndpointSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pg_settings": basetypes.MapType{
-				ElemType: types.StringType,
-			},
-			"pgbouncer_settings": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1482,32 +1473,6 @@ func (m *EndpointSettings_SdkV2) SetPgSettings(ctx context.Context, v map[string
 	m.PgSettings = types.MapValueMust(t, vs)
 }
 
-// GetPgbouncerSettings returns the value of the PgbouncerSettings field in EndpointSettings_SdkV2 as
-// a map of string to types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *EndpointSettings_SdkV2) GetPgbouncerSettings(ctx context.Context) (map[string]types.String, bool) {
-	if m.PgbouncerSettings.IsNull() || m.PgbouncerSettings.IsUnknown() {
-		return nil, false
-	}
-	var v map[string]types.String
-	d := m.PgbouncerSettings.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetPgbouncerSettings sets the value of the PgbouncerSettings field in EndpointSettings_SdkV2.
-func (m *EndpointSettings_SdkV2) SetPgbouncerSettings(ctx context.Context, v map[string]types.String) {
-	vs := make(map[string]attr.Value, len(v))
-	for k, e := range v {
-		vs[k] = e
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pgbouncer_settings"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.PgbouncerSettings = types.MapValueMust(t, vs)
-}
-
 type EndpointSpec_SdkV2 struct {
 	// The maximum number of Compute Units.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
@@ -1519,8 +1484,6 @@ type EndpointSpec_SdkV2 struct {
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-
-	PoolerMode types.String `tfsdk:"pooler_mode"`
 
 	Settings types.List `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
@@ -1557,7 +1520,6 @@ func (m EndpointSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
 	attrs["endpoint_type"] = attrs["endpoint_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["pooler_mode"] = attrs["pooler_mode"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetOptional()
@@ -1589,7 +1551,6 @@ func (m EndpointSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"disabled":                 m.Disabled,
 			"endpoint_type":            m.EndpointType,
-			"pooler_mode":              m.PoolerMode,
 			"settings":                 m.Settings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
 		})
@@ -1603,7 +1564,6 @@ func (m EndpointSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"disabled":                 types.BoolType,
 			"endpoint_type":            types.StringType,
-			"pooler_mode":              types.StringType,
 			"settings": basetypes.ListType{
 				ElemType: EndpointSettings_SdkV2{}.Type(ctx),
 			},
@@ -1659,8 +1619,6 @@ type EndpointStatus_SdkV2 struct {
 
 	PendingState types.String `tfsdk:"pending_state"`
 
-	PoolerMode types.String `tfsdk:"pooler_mode"`
-
 	Settings types.List `tfsdk:"settings"`
 	// A timestamp indicating when the compute endpoint was last started.
 	StartTime timetypes.RFC3339 `tfsdk:"start_time"`
@@ -1703,7 +1661,6 @@ func (m EndpointStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["host"] = attrs["host"].SetComputed()
 	attrs["last_active_time"] = attrs["last_active_time"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
-	attrs["pooler_mode"] = attrs["pooler_mode"].SetComputed()
 	attrs["settings"] = attrs["settings"].SetComputed()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["start_time"] = attrs["start_time"].SetComputed()
@@ -1741,7 +1698,6 @@ func (m EndpointStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"host":                     m.Host,
 			"last_active_time":         m.LastActiveTime,
 			"pending_state":            m.PendingState,
-			"pooler_mode":              m.PoolerMode,
 			"settings":                 m.Settings,
 			"start_time":               m.StartTime,
 			"suspend_time":             m.SuspendTime,
@@ -1761,7 +1717,6 @@ func (m EndpointStatus_SdkV2) Type(ctx context.Context) attr.Type {
 			"host":                     types.StringType,
 			"last_active_time":         timetypes.RFC3339{}.Type(ctx),
 			"pending_state":            types.StringType,
-			"pooler_mode":              types.StringType,
 			"settings": basetypes.ListType{
 				ElemType: EndpointSettings_SdkV2{}.Type(ctx),
 			},
@@ -2965,8 +2920,6 @@ type ProjectDefaultEndpointSettings_SdkV2 struct {
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
-	// A raw representation of PgBouncer settings.
-	PgbouncerSettings types.Map `tfsdk:"pgbouncer_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
@@ -2982,7 +2935,6 @@ func (m ProjectDefaultEndpointSettings_SdkV2) ApplySchemaCustomizations(attrs ma
 	attrs["autoscaling_limit_max_cu"] = attrs["autoscaling_limit_max_cu"].SetOptional()
 	attrs["autoscaling_limit_min_cu"] = attrs["autoscaling_limit_min_cu"].SetOptional()
 	attrs["pg_settings"] = attrs["pg_settings"].SetOptional()
-	attrs["pgbouncer_settings"] = attrs["pgbouncer_settings"].SetOptional()
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetOptional()
 
 	return attrs
@@ -2997,8 +2949,7 @@ func (m ProjectDefaultEndpointSettings_SdkV2) ApplySchemaCustomizations(attrs ma
 // SDK values.
 func (m ProjectDefaultEndpointSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"pg_settings":        reflect.TypeOf(types.String{}),
-		"pgbouncer_settings": reflect.TypeOf(types.String{}),
+		"pg_settings": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3012,7 +2963,6 @@ func (m ProjectDefaultEndpointSettings_SdkV2) ToObjectValue(ctx context.Context)
 			"autoscaling_limit_max_cu": m.AutoscalingLimitMaxCu,
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"pg_settings":              m.PgSettings,
-			"pgbouncer_settings":       m.PgbouncerSettings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
 		})
 }
@@ -3024,9 +2974,6 @@ func (m ProjectDefaultEndpointSettings_SdkV2) Type(ctx context.Context) attr.Typ
 			"autoscaling_limit_max_cu": types.Float64Type,
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"pg_settings": basetypes.MapType{
-				ElemType: types.StringType,
-			},
-			"pgbouncer_settings": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"suspend_timeout_duration": timetypes.GoDuration{}.Type(ctx),
@@ -3058,32 +3005,6 @@ func (m *ProjectDefaultEndpointSettings_SdkV2) SetPgSettings(ctx context.Context
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pg_settings"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.PgSettings = types.MapValueMust(t, vs)
-}
-
-// GetPgbouncerSettings returns the value of the PgbouncerSettings field in ProjectDefaultEndpointSettings_SdkV2 as
-// a map of string to types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *ProjectDefaultEndpointSettings_SdkV2) GetPgbouncerSettings(ctx context.Context) (map[string]types.String, bool) {
-	if m.PgbouncerSettings.IsNull() || m.PgbouncerSettings.IsUnknown() {
-		return nil, false
-	}
-	var v map[string]types.String
-	d := m.PgbouncerSettings.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetPgbouncerSettings sets the value of the PgbouncerSettings field in ProjectDefaultEndpointSettings_SdkV2.
-func (m *ProjectDefaultEndpointSettings_SdkV2) SetPgbouncerSettings(ctx context.Context, v map[string]types.String) {
-	vs := make(map[string]attr.Value, len(v))
-	for k, e := range v {
-		vs[k] = e
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pgbouncer_settings"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.PgbouncerSettings = types.MapValueMust(t, vs)
 }
 
 type ProjectOperationMetadata_SdkV2 struct {
@@ -3353,6 +3274,8 @@ type ProjectStatus_SdkV2 struct {
 	// The effective number of seconds to retain the shared history for point in
 	// time recovery.
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
+	// The email of the project owner.
+	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
 	// The effective project settings.
@@ -3408,6 +3331,7 @@ func (m ProjectStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
+	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
 	attrs["settings"] = attrs["settings"].SetComputed()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -3442,6 +3366,7 @@ func (m ProjectStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"default_endpoint_settings":       m.DefaultEndpointSettings,
 			"display_name":                    m.DisplayName,
 			"history_retention_duration":      m.HistoryRetentionDuration,
+			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
 			"settings":                        m.Settings,
 			"synthetic_storage_size_bytes":    m.SyntheticStorageSizeBytes,
@@ -3459,6 +3384,7 @@ func (m ProjectStatus_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"display_name":               types.StringType,
 			"history_retention_duration": timetypes.GoDuration{}.Type(ctx),
+			"owner":                      types.StringType,
 			"pg_version":                 types.Int64Type,
 			"settings": basetypes.ListType{
 				ElemType: ProjectSettings_SdkV2{}.Type(ctx),
@@ -3750,7 +3676,11 @@ type RoleRoleSpec_SdkV2 struct {
 	// NOTE: this is ignored for the Databricks identity type GROUP, and
 	// NO_LOGIN is implicitly assumed instead for the GROUP identity type.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of the role.
+	// The type of the role. When specifying a managed-identity, the chosen
+	// role_id must be a valid:
+	//
+	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
+	// for GROUP
 	IdentityType types.String `tfsdk:"identity_type"`
 }
 

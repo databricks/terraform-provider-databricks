@@ -30,7 +30,6 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 
 ### EndpointSettings
 * `pg_settings` (object) - A raw representation of Postgres settings
-* `pgbouncer_settings` (object) - A raw representation of PgBouncer settings
 
 ### EndpointSpec
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
@@ -40,7 +39,6 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
   A disabled compute endpoint cannot be enabled by a connection or
   console action
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `READ_ONLY`, `READ_WRITE`
-* `pooler_mode` (string) - Possible values are: `TRANSACTION`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended
 
@@ -56,7 +54,6 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 * `host` (string) - The hostname of the compute endpoint. This is the hostname specified when connecting to a database
 * `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `IDLE`, `INIT`
-* `pooler_mode` (string) - Possible values are: `TRANSACTION`
 * `settings` (EndpointSettings)
 * `start_time` (string) - A timestamp indicating when the compute endpoint was last started
 * `suspend_time` (string) - A timestamp indicating when the compute endpoint was last suspended

@@ -178,8 +178,7 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetRequired()
 	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -429,9 +428,15 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	err := client.Postgres.DeleteProject(ctx, deleteRequest)
-	if err != nil && !apierr.IsMissing(err) {
+	response, err := client.Postgres.DeleteProject(ctx, deleteRequest)
+	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_project", err.Error())
+		return
+	}
+
+	err = response.Wait(ctx)
+	if err != nil && !apierr.IsMissing(err) {
+		resp.Diagnostics.AddError("error waiting for postgres_project delete", err.Error())
 		return
 	}
 

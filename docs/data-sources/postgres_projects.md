@@ -28,7 +28,6 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
 * `pg_settings` (object) - A raw representation of Postgres settings
-* `pgbouncer_settings` (object) - A raw representation of PgBouncer settings
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended
 
 ### ProjectSettings
@@ -49,6 +48,7 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings
 * `display_name` (string) - The effective human-readable project name
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
+* `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
 * `settings` (ProjectSettings) - The effective project settings
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage

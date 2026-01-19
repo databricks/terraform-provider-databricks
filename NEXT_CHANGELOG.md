@@ -14,4 +14,6 @@
 
 ### Exporter
 
+* Rewrite exporting of `databricks_share` to plugin framework ([#5328](https://github.com/databricks/terraform-provider-databricks/pull/5328))
+
 ### Internal Changes

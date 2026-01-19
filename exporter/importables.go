@@ -1841,6 +1841,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_share": {
 		WorkspaceLevel:  true,
+		PluginFramework: true,
 		Service:         "uc-shares",
 		List:            listUcShares,
 		Import:          importUcShare,

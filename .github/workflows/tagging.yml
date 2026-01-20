@@ -21,7 +21,7 @@ jobs:
     # Only run the tag job if the trigger is manual (workflow_dispatch) or
     # the repository has been approved for automated releases.
     #
-    # To disable release for a repository, simply exclude it from the if 
+    # To disable release for a repository, simply exclude it from the if
     # condition.
     if: >-
       github.event_name == 'workflow_dispatch' ||

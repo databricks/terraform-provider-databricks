@@ -512,15 +512,25 @@ func appendEndingSlashToDirName(dir string) string {
 	return dir + "/"
 }
 
+// getResourceAttribute retrieves an attribute value from either DataWrapper or Data
+func getResourceAttribute(res *resource, path string) (interface{}, bool) {
+	if res.DataWrapper != nil {
+		return res.DataWrapper.GetOk(path)
+	} else if res.Data != nil {
+		return res.Data.GetOk(path)
+	}
+	return nil, false
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	shareName, ok := res.Data.GetOk("share")
+	shareName, ok := getResourceAttribute(res, "share")
 	return ok && shareName.(string) != ""
 }
 
 func isMatchignShareObject(obj string) isValidAproximationFunc {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
-		objType, ok := res.Data.GetOk(objPath)
+		objType, ok := getResourceAttribute(res, objPath)
 		return ok && objType.(string) == obj
 	}
 }

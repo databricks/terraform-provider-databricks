@@ -560,6 +560,15 @@ func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceDat
 	}
 }
 
+func makeNamePlusIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok && name != "" {
+			return name.(string) + "_" + wrapper.Id()
+		}
+		return wrapper.Id()
+	}
+}
+
 func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
 	return func(ic *importContext, d *schema.ResourceData) string {
 		name := d.Get(nm).(string)
@@ -567,6 +576,18 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 			return d.Id()
 		}
 		return name
+	}
+}
+
+func makeNameOrIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok {
+			strVal, isStr := name.(string)
+			if isStr && strVal != "" {
+				return strVal
+			}
+		}
+		return wrapper.Id()
 	}
 }
 

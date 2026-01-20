@@ -13,7 +13,8 @@ Let's look at how it works:
 The logic of importing the individual resource type is isolated from the generation of the HCL (HashiCorp configuration language) code that is used by Terraform.  Each resource type is defined as an instance of the `importable` structure that is related to a specific Databricks Terraform resource. This structure consists of the following fields (usually we need to define only what is strictly required for each of the resource types - for most of the resources these are: `Service`, `List`, `Name`, `Import`, `WorkspaceLevel`/`AccountLevel`, and `Depends`):
 
 - `Service` defines to which service this resource belongs (`compute`, `notebooks`, `access`, etc.). These values could be used with the `-services` command-line option to select only specific service types to export.
-- `Name` is a function that generates a Terraform resource name for a specific instance of the resource.
+- `Name` is a function that generates a Terraform resource name for a specific instance of the resource (SDKv2 signature - deprecated for Plugin Framework resources).
+- `NameUnified` is a unified function that generates a Terraform resource name for both SDKv2 and Plugin Framework resources. It uses `ResourceDataWrapper` interface which abstracts the underlying implementation.
 - `List` is a function responsible for listing the objects of a given resource type.  This function just emits the object ID, and the actual import happens later.
 - `Search` is a function that is used to find the actual ID of the object referred to by some attribute. For example, if the user is referred to by its display name.
 - `Import` is a function that may emit additional objects after the object's state is read (read happens automatically).  Most often it's used to emit references to permissions, or, for example, to generate files on the disk for init scripts, etc.
@@ -38,7 +39,7 @@ When adding a new resource to Terraform Exporter we need to perform next steps:
 6. (Recommended) Implement the `Import` function that is responsible for emitting of dependencies for this resource - permissions/grants, etc.
 7. (Optional) Implement the `ShouldOmitField` if some fields should be conditionally omitted.
 8. (Recommended) Add `Depends` that describes relationships between fields of the current resource and its dependencies.
-9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.
+9. (Recommended) Add unit test that will validate the generated code, similar to `TestImportingLakeviewDashboards` or `TestNotificationDestinationExport` tests in `exporter_test.go` file.  For resources that use Go SDK, use `qa.MockAccountsApply` or `qa.MockWorkspaceApply` from Databricks Go SDK instead of `qa.HTTPFixturesApply`.
 10. Update support matrix in `docs/guides/experimental-exporter.md` to indicate support for the new resource.  Keep list of supported resources sorted.
 11. If new service name was introduced, add it to the corresponding section of the documentation. Keep it sorted alphabetically.
 
@@ -53,7 +54,7 @@ Recommendations:
 **When Adding Exporter Support for resource implemented with Terraform plugin framework**:
 
 1. Define resource in `exporter/importables.go` with `PluginFramework: true` for Plugin Framework resources
-2. Use `convertPluginFrameworkToGoSdk` helper for Plugin Framework
+2. Use `NameUnified` instead of `Name` for name generation (uses `ResourceDataWrapper` abstraction)
 3. Use unified callbacks (`ShouldOmitFieldUnified`, `ShouldGenerateFieldUnified`) for custom field logic
 
 

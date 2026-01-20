@@ -28,7 +28,7 @@ func DataSourceBranches() datasource.DataSource {
 // BranchesData extends the main model with additional fields.
 type BranchesData struct {
 	Postgres types.List `tfsdk:"branches"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// The Project that owns this collection of branches. Format:
 	// projects/{project_id}

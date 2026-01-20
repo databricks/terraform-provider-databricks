@@ -111,7 +111,7 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.IsAccountClient() {
+	if c.Config.HostType() == config.AccountHost {
 		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
@@ -373,7 +373,7 @@ func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.Resource
 }
 
 func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	if c.Config.IsAccountClient() {
+	if c.Config.HostType() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return err
@@ -446,7 +446,7 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+	if c.Config.HostType() == config.AccountHost && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
 		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",

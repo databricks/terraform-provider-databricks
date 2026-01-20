@@ -29,16 +29,22 @@ import (
 type Branch struct {
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the branch. Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The resource name of the branch. This field is output-only and
+	// constructed by the system. Format:
+	// `projects/{project_id}/branches/{branch_id}`
 	Name types.String `tfsdk:"name"`
-	// The project containing this branch. Format: projects/{project_id}
+	// The project containing this branch (API resource hierarchy). Format:
+	// projects/{project_id}
+	//
+	// Note: This field indicates where the branch exists in the resource
+	// hierarchy. For point-in-time branching from another branch, see
+	// `spec.source_branch`.
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of a Branch.
+	// The spec contains the branch configuration.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the branch.
+	// System-generated unique ID for the branch.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the branch was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -244,11 +250,20 @@ func (m BranchOperationMetadata) Type(ctx context.Context) attr.Type {
 }
 
 type BranchSpec struct {
-	// Whether the branch is the project's default branch.
-	Default types.Bool `tfsdk:"default"`
-	// Whether the branch is protected.
+	// Absolute expiration timestamp. When set, the branch will expire at this
+	// time.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+	// When set to true, protects the branch from deletion and reset. Associated
+	// compute endpoints and the project cannot be deleted while the branch is
+	// protected.
 	IsProtected types.Bool `tfsdk:"is_protected"`
-	// The name of the source branch from which this branch was created. Format:
+	// Explicitly disable expiration. When set to true, the branch will not
+	// expire. If set to false, the request is invalid; provide either ttl or
+	// expire_time instead.
+	NoExpiry types.Bool `tfsdk:"no_expiry"`
+	// The name of the source branch from which this branch was created (data
+	// lineage for point-in-time recovery). If not specified, defaults to the
+	// project's default branch. Format:
 	// projects/{project_id}/branches/{branch_id}
 	SourceBranch types.String `tfsdk:"source_branch"`
 	// The Log Sequence Number (LSN) on the source branch from which this branch
@@ -257,6 +272,9 @@ type BranchSpec struct {
 	// The point in time on the source branch from which this branch was
 	// created.
 	SourceBranchTime timetypes.RFC3339 `tfsdk:"source_branch_time"`
+	// Relative time-to-live duration. When set, the branch will expire at
+	// creation_time + ttl.
+	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
 func (to *BranchSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BranchSpec) {
@@ -266,14 +284,16 @@ func (to *BranchSpec) SyncFieldsDuringRead(ctx context.Context, from BranchSpec)
 }
 
 func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default"] = attrs["default"].SetOptional()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["is_protected"] = attrs["is_protected"].SetOptional()
+	attrs["no_expiry"] = attrs["no_expiry"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetOptional()
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["source_branch_time"] = attrs["source_branch_time"].SetOptional()
 	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["ttl"] = attrs["ttl"].SetOptional()
 
 	return attrs
 }
@@ -296,11 +316,13 @@ func (m BranchSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"default":            m.Default,
+			"expire_time":        m.ExpireTime,
 			"is_protected":       m.IsProtected,
+			"no_expiry":          m.NoExpiry,
 			"source_branch":      m.SourceBranch,
 			"source_branch_lsn":  m.SourceBranchLsn,
 			"source_branch_time": m.SourceBranchTime,
+			"ttl":                m.Ttl,
 		})
 }
 
@@ -308,11 +330,13 @@ func (m BranchSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m BranchSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"default":            types.BoolType,
+			"expire_time":        timetypes.RFC3339{}.Type(ctx),
 			"is_protected":       types.BoolType,
+			"no_expiry":          types.BoolType,
 			"source_branch":      types.StringType,
 			"source_branch_lsn":  types.StringType,
 			"source_branch_time": timetypes.RFC3339{}.Type(ctx),
+			"ttl":                timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -323,6 +347,8 @@ type BranchStatus struct {
 	CurrentState types.String `tfsdk:"current_state"`
 	// Whether the branch is the project's default branch.
 	Default types.Bool `tfsdk:"default"`
+	// Absolute expiration time for the branch. Empty if expiration is disabled.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
 	// Whether the branch is protected.
 	IsProtected types.Bool `tfsdk:"is_protected"`
 	// The logical size of the branch.
@@ -351,6 +377,7 @@ func (to *BranchStatus) SyncFieldsDuringRead(ctx context.Context, from BranchSta
 func (m BranchStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["default"] = attrs["default"].SetComputed()
+	attrs["expire_time"] = attrs["expire_time"].SetComputed()
 	attrs["is_protected"] = attrs["is_protected"].SetComputed()
 	attrs["logical_size_bytes"] = attrs["logical_size_bytes"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
@@ -382,6 +409,7 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"current_state":      m.CurrentState,
 			"default":            m.Default,
+			"expire_time":        m.ExpireTime,
 			"is_protected":       m.IsProtected,
 			"logical_size_bytes": m.LogicalSizeBytes,
 			"pending_state":      m.PendingState,
@@ -398,6 +426,7 @@ func (m BranchStatus) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"current_state":      types.StringType,
 			"default":            types.BoolType,
+			"expire_time":        timetypes.RFC3339{}.Type(ctx),
 			"is_protected":       types.BoolType,
 			"logical_size_bytes": types.Int64Type,
 			"pending_state":      types.StringType,
@@ -412,11 +441,13 @@ func (m BranchStatus) Type(ctx context.Context) attr.Type {
 type CreateBranchRequest struct {
 	// The Branch to create.
 	Branch types.Object `tfsdk:"branch"`
-	// The ID to use for the Branch, which will become the final component of
-	// the branch's resource name.
-	//
-	// This value should be 4-63 characters, and valid characters are
-	// /[a-z][0-9]-/.
+	// The ID to use for the Branch. This becomes the final component of the
+	// branch's resource name. The ID must be 1-63 characters long, start with a
+	// lowercase letter, and contain only lowercase letters, numbers, and
+	// hyphens (RFC 1123). Examples: - With custom ID: `staging` → name
+	// becomes `projects/{project_id}/branches/staging` - Without custom ID:
+	// system generates slug → name becomes
+	// `projects/{project_id}/branches/br-example-name-x1y2z3a4`
 	BranchId types.String `tfsdk:"-"`
 	// The Project where this Branch will be created. Format:
 	// projects/{project_id}
@@ -519,11 +550,13 @@ func (m *CreateBranchRequest) SetBranch(ctx context.Context, v Branch) {
 type CreateEndpointRequest struct {
 	// The Endpoint to create.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// The ID to use for the Endpoint, which will become the final component of
-	// the endpoint's resource name.
-	//
-	// This value should be 4-63 characters, and valid characters are
-	// /[a-z][0-9]-/.
+	// The ID to use for the Endpoint. This becomes the final component of the
+	// endpoint's resource name. The ID must be 1-63 characters long, start with
+	// a lowercase letter, and contain only lowercase letters, numbers, and
+	// hyphens (RFC 1123). Examples: - With custom ID: `primary` → name
+	// becomes `projects/{project_id}/branches/{branch_id}/endpoints/primary` -
+	// Without custom ID: system generates slug → name becomes
+	// `projects/{project_id}/branches/{branch_id}/endpoints/ep-example-name-x1y2z3a4`
 	EndpointId types.String `tfsdk:"-"`
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -626,11 +659,12 @@ func (m *CreateEndpointRequest) SetEndpoint(ctx context.Context, v Endpoint) {
 type CreateProjectRequest struct {
 	// The Project to create.
 	Project types.Object `tfsdk:"project"`
-	// The ID to use for the Project, which will become the final component of
-	// the project's resource name.
-	//
-	// This value should be 4-63 characters, and valid characters are
-	// /[a-z][0-9]-/.
+	// The ID to use for the Project. This becomes the final component of the
+	// project's resource name. The ID must be 1-63 characters long, start with
+	// a lowercase letter, and contain only lowercase letters, numbers, and
+	// hyphens (RFC 1123). Examples: - With custom ID: `production` → name
+	// becomes `projects/production` - Without custom ID: system generates UUID
+	// → name becomes `projects/a7f89b2c-3d4e-5f6g-7h8i-9j0k1l2m3n4o`
 	ProjectId types.String `tfsdk:"-"`
 }
 
@@ -731,10 +765,10 @@ type CreateRoleRequest struct {
 	// The desired specification of a Role.
 	Role types.Object `tfsdk:"role"`
 	// The ID to use for the Role, which will become the final component of the
-	// branch's resource name. This ID becomes the role in postgres.
+	// role's resource name. This ID becomes the role in Postgres.
 	//
-	// This value should be 4-63 characters, and only use characters available
-	// in DNS names, as defined by RFC-1123
+	// This value should be 4-63 characters, and valid characters are lowercase
+	// letters, numbers, and hyphens, as defined by RFC 1123.
 	RoleId types.String `tfsdk:"-"`
 }
 
@@ -829,6 +863,60 @@ func (m *CreateRoleRequest) GetRole(ctx context.Context) (Role, bool) {
 func (m *CreateRoleRequest) SetRole(ctx context.Context, v Role) {
 	vs := v.ToObjectValue(ctx)
 	m.Role = vs
+}
+
+type DatabaseCredential struct {
+	// Timestamp in UTC of when this credential expires.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+	// The OAuth token that can be used as a password when connecting to a
+	// database.
+	Token types.String `tfsdk:"token"`
+}
+
+func (to *DatabaseCredential) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseCredential) {
+}
+
+func (to *DatabaseCredential) SyncFieldsDuringRead(ctx context.Context, from DatabaseCredential) {
+}
+
+func (m DatabaseCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
+	attrs["token"] = attrs["token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseCredential.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseCredential) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseCredential
+// only implements ToObjectValue() and Type().
+func (m DatabaseCredential) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"expire_time": m.ExpireTime,
+			"token":       m.Token,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseCredential) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"expire_time": timetypes.RFC3339{}.Type(ctx),
+			"token":       types.StringType,
+		},
+	}
 }
 
 // Databricks Error that is returned by all Databricks APIs.
@@ -1084,7 +1172,7 @@ func (m DeleteProjectRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteRoleRequest struct {
 	// The resource name of the postgres role. Format:
-	// projects/{project_id}/branch/{branch_id}/roles/{role_id}
+	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"-"`
 	// Reassign objects. If this is set, all objects owned by the role are
 	// reassigned to the role specified in this parameter.
@@ -1146,17 +1234,19 @@ func (m DeleteRoleRequest) Type(ctx context.Context) attr.Type {
 type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the endpoint. Format:
-	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+	// The resource name of the endpoint. This field is output-only and
+	// constructed by the system. Format:
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
 	Name types.String `tfsdk:"name"`
-	// The branch containing this endpoint. Format:
+	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of an Endpoint.
+	// The spec contains the compute endpoint configuration, including
+	// autoscaling limits, suspend timeout, and disabled state.
 	Spec types.Object `tfsdk:"spec"`
-	// The current status of an Endpoint.
+	// Current operational status of the compute endpoint.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the endpoint.
+	// System-generated unique ID for the endpoint.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the compute endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -1320,6 +1410,58 @@ func (m *Endpoint) SetStatus(ctx context.Context, v EndpointStatus) {
 	m.Status = vs
 }
 
+// Encapsulates various hostnames (r/w or r/o, pooled or not) for an endpoint.
+type EndpointHosts struct {
+	// The hostname to connect to this endpoint. For read-write endpoints, this
+	// is a read-write hostname which connects to the primary compute. For
+	// read-only endpoints, this is a read-only hostname which allows read-only
+	// operations.
+	Host types.String `tfsdk:"host"`
+}
+
+func (to *EndpointHosts) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointHosts) {
+}
+
+func (to *EndpointHosts) SyncFieldsDuringRead(ctx context.Context, from EndpointHosts) {
+}
+
+func (m EndpointHosts) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["host"] = attrs["host"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointHosts.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EndpointHosts) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EndpointHosts
+// only implements ToObjectValue() and Type().
+func (m EndpointHosts) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"host": m.Host,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EndpointHosts) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"host": types.StringType,
+		},
+	}
+}
+
 type EndpointOperationMetadata struct {
 }
 
@@ -1441,9 +1583,9 @@ func (m *EndpointSettings) SetPgSettings(ctx context.Context, v map[string]types
 }
 
 type EndpointSpec struct {
-	// The maximum number of Compute Units.
+	// The maximum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
-	// The minimum number of Compute Units.
+	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// Whether to restrict connections to the compute endpoint. Enabling this
 	// option schedules a suspend compute operation. A disabled compute endpoint
@@ -1454,7 +1596,8 @@ type EndpointSpec struct {
 
 	Settings types.Object `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
-	// suspended.
+	// suspended. If specified should be between 60s and 604800s (1 minute to 1
+	// week).
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -1574,25 +1717,27 @@ type EndpointStatus struct {
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// The hostname of the compute endpoint. This is the hostname specified when
-	// connecting to a database.
-	Host types.String `tfsdk:"host"`
-	// A timestamp indicating when the compute endpoint was last active.
-	LastActiveTime timetypes.RFC3339 `tfsdk:"last_active_time"`
+	// Contains host information for connecting to the endpoint.
+	Hosts types.Object `tfsdk:"hosts"`
 
 	PendingState types.String `tfsdk:"pending_state"`
 
 	Settings types.Object `tfsdk:"settings"`
-	// A timestamp indicating when the compute endpoint was last started.
-	StartTime timetypes.RFC3339 `tfsdk:"start_time"`
-	// A timestamp indicating when the compute endpoint was last suspended.
-	SuspendTime timetypes.RFC3339 `tfsdk:"suspend_time"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
 func (to *EndpointStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointStatus) {
+	if !from.Hosts.IsNull() && !from.Hosts.IsUnknown() {
+		if toHosts, ok := to.GetHosts(ctx); ok {
+			if fromHosts, ok := from.GetHosts(ctx); ok {
+				// Recursively sync the fields of Hosts
+				toHosts.SyncFieldsDuringCreateOrUpdate(ctx, fromHosts)
+				to.SetHosts(ctx, toHosts)
+			}
+		}
+	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
 			if fromSettings, ok := from.GetSettings(ctx); ok {
@@ -1605,6 +1750,14 @@ func (to *EndpointStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 }
 
 func (to *EndpointStatus) SyncFieldsDuringRead(ctx context.Context, from EndpointStatus) {
+	if !from.Hosts.IsNull() && !from.Hosts.IsUnknown() {
+		if toHosts, ok := to.GetHosts(ctx); ok {
+			if fromHosts, ok := from.GetHosts(ctx); ok {
+				toHosts.SyncFieldsDuringRead(ctx, fromHosts)
+				to.SetHosts(ctx, toHosts)
+			}
+		}
+	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
 			if fromSettings, ok := from.GetSettings(ctx); ok {
@@ -1621,12 +1774,9 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
-	attrs["host"] = attrs["host"].SetComputed()
-	attrs["last_active_time"] = attrs["last_active_time"].SetComputed()
+	attrs["hosts"] = attrs["hosts"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
 	attrs["settings"] = attrs["settings"].SetComputed()
-	attrs["start_time"] = attrs["start_time"].SetComputed()
-	attrs["suspend_time"] = attrs["suspend_time"].SetComputed()
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetComputed()
 
 	return attrs
@@ -1641,6 +1791,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (m EndpointStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"hosts":    reflect.TypeOf(EndpointHosts{}),
 		"settings": reflect.TypeOf(EndpointSettings{}),
 	}
 }
@@ -1657,12 +1808,9 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"current_state":            m.CurrentState,
 			"disabled":                 m.Disabled,
 			"endpoint_type":            m.EndpointType,
-			"host":                     m.Host,
-			"last_active_time":         m.LastActiveTime,
+			"hosts":                    m.Hosts,
 			"pending_state":            m.PendingState,
 			"settings":                 m.Settings,
-			"start_time":               m.StartTime,
-			"suspend_time":             m.SuspendTime,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
 		})
 }
@@ -1676,15 +1824,37 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"current_state":            types.StringType,
 			"disabled":                 types.BoolType,
 			"endpoint_type":            types.StringType,
-			"host":                     types.StringType,
-			"last_active_time":         timetypes.RFC3339{}.Type(ctx),
+			"hosts":                    EndpointHosts{}.Type(ctx),
 			"pending_state":            types.StringType,
 			"settings":                 EndpointSettings{}.Type(ctx),
-			"start_time":               timetypes.RFC3339{}.Type(ctx),
-			"suspend_time":             timetypes.RFC3339{}.Type(ctx),
 			"suspend_timeout_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
+}
+
+// GetHosts returns the value of the Hosts field in EndpointStatus as
+// a EndpointHosts value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EndpointStatus) GetHosts(ctx context.Context) (EndpointHosts, bool) {
+	var e EndpointHosts
+	if m.Hosts.IsNull() || m.Hosts.IsUnknown() {
+		return e, false
+	}
+	var v EndpointHosts
+	d := m.Hosts.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHosts sets the value of the Hosts field in EndpointStatus.
+func (m *EndpointStatus) SetHosts(ctx context.Context, v EndpointHosts) {
+	vs := v.ToObjectValue(ctx)
+	m.Hosts = vs
 }
 
 // GetSettings returns the value of the Settings field in EndpointStatus as
@@ -1712,9 +1882,107 @@ func (m *EndpointStatus) SetSettings(ctx context.Context, v EndpointSettings) {
 	m.Settings = vs
 }
 
+type GenerateDatabaseCredentialRequest struct {
+	// The returned token will be scoped to UC tables with the specified
+	// permissions.
+	Claims types.List `tfsdk:"claims"`
+	// This field is not yet supported. The endpoint for which this credential
+	// will be generated. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+	Endpoint types.String `tfsdk:"endpoint"`
+}
+
+func (to *GenerateDatabaseCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenerateDatabaseCredentialRequest) {
+	if !from.Claims.IsNull() && !from.Claims.IsUnknown() && to.Claims.IsNull() && len(from.Claims.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Claims, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Claims = from.Claims
+	}
+}
+
+func (to *GenerateDatabaseCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from GenerateDatabaseCredentialRequest) {
+	if !from.Claims.IsNull() && !from.Claims.IsUnknown() && to.Claims.IsNull() && len(from.Claims.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Claims, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Claims = from.Claims
+	}
+}
+
+func (m GenerateDatabaseCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["claims"] = attrs["claims"].SetOptional()
+	attrs["endpoint"] = attrs["endpoint"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateDatabaseCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenerateDatabaseCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"claims": reflect.TypeOf(RequestedClaims{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateDatabaseCredentialRequest
+// only implements ToObjectValue() and Type().
+func (m GenerateDatabaseCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"claims":   m.Claims,
+			"endpoint": m.Endpoint,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenerateDatabaseCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"claims": basetypes.ListType{
+				ElemType: RequestedClaims{}.Type(ctx),
+			},
+			"endpoint": types.StringType,
+		},
+	}
+}
+
+// GetClaims returns the value of the Claims field in GenerateDatabaseCredentialRequest as
+// a slice of RequestedClaims values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateDatabaseCredentialRequest) GetClaims(ctx context.Context) ([]RequestedClaims, bool) {
+	if m.Claims.IsNull() || m.Claims.IsUnknown() {
+		return nil, false
+	}
+	var v []RequestedClaims
+	d := m.Claims.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClaims sets the value of the Claims field in GenerateDatabaseCredentialRequest.
+func (m *GenerateDatabaseCredentialRequest) SetClaims(ctx context.Context, v []RequestedClaims) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["claims"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Claims = types.ListValueMust(t, vs)
+}
+
 type GetBranchRequest struct {
-	// The name of the Branch to retrieve. Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The resource name of the branch to retrieve. Format:
+	// `projects/{project_id}/branches/{branch_id}`
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1762,8 +2030,8 @@ func (m GetBranchRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetEndpointRequest struct {
-	// The name of the Endpoint to retrieve. Format:
-	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+	// The resource name of the endpoint to retrieve. Format:
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1859,7 +2127,8 @@ func (m GetOperationRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetProjectRequest struct {
-	// The name of the Project to retrieve. Format: projects/{project_id}
+	// The resource name of the project to retrieve. Format:
+	// `projects/{project_id}`
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1956,10 +2225,10 @@ func (m GetRoleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListBranchesRequest struct {
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of Branches. Requests first page
-	// if absent.
+	// Page token from a previous response. If not provided, returns the first
+	// page.
 	PageToken types.String `tfsdk:"-"`
 	// The Project that owns this collection of branches. Format:
 	// projects/{project_id}
@@ -2016,9 +2285,9 @@ func (m ListBranchesRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListBranchesResponse struct {
-	// List of branches.
+	// List of database branches in the project.
 	Branches types.List `tfsdk:"branches"`
-	// Pagination token to request the next page of branches.
+	// Token to request the next page of database branches.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -2111,10 +2380,10 @@ func (m *ListBranchesResponse) SetBranches(ctx context.Context, v []Branch) {
 }
 
 type ListEndpointsRequest struct {
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of Endpoints. Requests first page
-	// if absent.
+	// Page token from a previous response. If not provided, returns the first
+	// page.
 	PageToken types.String `tfsdk:"-"`
 	// The Branch that owns this collection of endpoints. Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -2171,9 +2440,9 @@ func (m ListEndpointsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListEndpointsResponse struct {
-	// List of endpoints.
+	// List of compute endpoints in the branch.
 	Endpoints types.List `tfsdk:"endpoints"`
-	// Pagination token to request the next page of endpoints.
+	// Token to request the next page of compute endpoints.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -2266,10 +2535,10 @@ func (m *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []Endpoint) 
 }
 
 type ListProjectsRequest struct {
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of Projects. Requests first page
-	// if absent.
+	// Page token from a previous response. If not provided, returns the first
+	// page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -2320,9 +2589,10 @@ func (m ListProjectsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListProjectsResponse struct {
-	// Pagination token to request the next page of projects.
+	// Token to request the next page of database projects.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// List of projects.
+	// List of all database projects in the workspace that the user has
+	// permission to access.
 	Projects types.List `tfsdk:"projects"`
 }
 
@@ -2415,10 +2685,10 @@ func (m *ListProjectsResponse) SetProjects(ctx context.Context, v []Project) {
 }
 
 type ListRolesRequest struct {
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of Roles. Requests first page if
-	// absent.
+	// Page token from a previous response. If not provided, returns the first
+	// page.
 	PageToken types.String `tfsdk:"-"`
 	// The Branch that owns this collection of roles. Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -2475,9 +2745,9 @@ func (m ListRolesRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListRolesResponse struct {
-	// Pagination token to request the next page of roles.
+	// Token to request the next page of Postgres roles.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// List of roles.
+	// List of Postgres roles in the branch.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -2692,13 +2962,16 @@ func (m *Operation) SetError(ctx context.Context, v DatabricksServiceExceptionWi
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the project. Format: projects/{project_id}
+	// The resource name of the project. This field is output-only and
+	// constructed by the system. Format: `projects/{project_id}`
 	Name types.String `tfsdk:"name"`
-	// The desired state of a Project.
+	// The spec contains the project configuration, including display_name,
+	// pg_version (Postgres version), history_retention_duration, and
+	// default_endpoint_settings.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Project.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the project.
+	// System-generated unique ID for the project.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the project was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -2861,14 +3134,15 @@ func (m *Project) SetStatus(ctx context.Context, v ProjectStatus) {
 
 // A collection of settings for a compute endpoint.
 type ProjectDefaultEndpointSettings struct {
-	// The maximum number of Compute Units.
+	// The maximum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
-	// The minimum number of Compute Units.
+	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
-	// suspended.
+	// suspended. If specified should be between 60s and 604800s (1 minute to 1
+	// week).
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -2995,67 +3269,17 @@ func (m ProjectOperationMetadata) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ProjectSettings struct {
-	// Sets wal_level=logical for all compute endpoints in this project. All
-	// active endpoints will be suspended. Once enabled, logical replication
-	// cannot be disabled.
-	EnableLogicalReplication types.Bool `tfsdk:"enable_logical_replication"`
-}
-
-func (to *ProjectSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ProjectSettings) {
-}
-
-func (to *ProjectSettings) SyncFieldsDuringRead(ctx context.Context, from ProjectSettings) {
-}
-
-func (m ProjectSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["enable_logical_replication"] = attrs["enable_logical_replication"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ProjectSettings.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m ProjectSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ProjectSettings
-// only implements ToObjectValue() and Type().
-func (m ProjectSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"enable_logical_replication": m.EnableLogicalReplication,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m ProjectSettings) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"enable_logical_replication": types.BoolType,
-		},
-	}
-}
-
 type ProjectSpec struct {
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
-	// Human-readable project name.
+	// Human-readable project name. Length should be between 1 and 256
+	// characters.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The number of seconds to retain the shared history for point in time
-	// recovery for all branches in this project.
+	// recovery for all branches in this project. Value should be between 0s and
+	// 2592000s (up to 30 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
-	// The major Postgres version number.
+	// The major Postgres version number. Supported versions are 16 and 17.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-
-	Settings types.Object `tfsdk:"settings"`
 }
 
 func (to *ProjectSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ProjectSpec) {
@@ -3065,15 +3289,6 @@ func (to *ProjectSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of DefaultEndpointSettings
 				toDefaultEndpointSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromDefaultEndpointSettings)
 				to.SetDefaultEndpointSettings(ctx, toDefaultEndpointSettings)
-			}
-		}
-	}
-	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
-		if toSettings, ok := to.GetSettings(ctx); ok {
-			if fromSettings, ok := from.GetSettings(ctx); ok {
-				// Recursively sync the fields of Settings
-				toSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromSettings)
-				to.SetSettings(ctx, toSettings)
 			}
 		}
 	}
@@ -3088,14 +3303,6 @@ func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpe
 			}
 		}
 	}
-	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
-		if toSettings, ok := to.GetSettings(ctx); ok {
-			if fromSettings, ok := from.GetSettings(ctx); ok {
-				toSettings.SyncFieldsDuringRead(ctx, fromSettings)
-				to.SetSettings(ctx, toSettings)
-			}
-		}
-	}
 }
 
 func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3104,7 +3311,6 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["settings"] = attrs["settings"].SetOptional()
 
 	return attrs
 }
@@ -3119,7 +3325,6 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 func (m ProjectSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"default_endpoint_settings": reflect.TypeOf(ProjectDefaultEndpointSettings{}),
-		"settings":                  reflect.TypeOf(ProjectSettings{}),
 	}
 }
 
@@ -3134,7 +3339,6 @@ func (m ProjectSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"display_name":               m.DisplayName,
 			"history_retention_duration": m.HistoryRetentionDuration,
 			"pg_version":                 m.PgVersion,
-			"settings":                   m.Settings,
 		})
 }
 
@@ -3146,7 +3350,6 @@ func (m ProjectSpec) Type(ctx context.Context) attr.Type {
 			"display_name":               types.StringType,
 			"history_retention_duration": timetypes.GoDuration{}.Type(ctx),
 			"pg_version":                 types.Int64Type,
-			"settings":                   ProjectSettings{}.Type(ctx),
 		},
 	}
 }
@@ -3176,36 +3379,9 @@ func (m *ProjectSpec) SetDefaultEndpointSettings(ctx context.Context, v ProjectD
 	m.DefaultEndpointSettings = vs
 }
 
-// GetSettings returns the value of the Settings field in ProjectSpec as
-// a ProjectSettings value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *ProjectSpec) GetSettings(ctx context.Context) (ProjectSettings, bool) {
-	var e ProjectSettings
-	if m.Settings.IsNull() || m.Settings.IsUnknown() {
-		return e, false
-	}
-	var v ProjectSettings
-	d := m.Settings.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetSettings sets the value of the Settings field in ProjectSpec.
-func (m *ProjectSpec) SetSettings(ctx context.Context, v ProjectSettings) {
-	vs := v.ToObjectValue(ctx)
-	m.Settings = vs
-}
-
 type ProjectStatus struct {
 	// The logical size limit for a branch.
 	BranchLogicalSizeLimitBytes types.Int64 `tfsdk:"branch_logical_size_limit_bytes"`
-	// The most recent time when any endpoint of this project was active.
-	ComputeLastActiveTime timetypes.RFC3339 `tfsdk:"compute_last_active_time"`
 	// The effective default endpoint settings.
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
 	// The effective human-readable project name.
@@ -3217,8 +3393,6 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-	// The effective project settings.
-	Settings types.Object `tfsdk:"settings"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
 }
@@ -3233,15 +3407,6 @@ func (to *ProjectStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
-	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
-		if toSettings, ok := to.GetSettings(ctx); ok {
-			if fromSettings, ok := from.GetSettings(ctx); ok {
-				// Recursively sync the fields of Settings
-				toSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromSettings)
-				to.SetSettings(ctx, toSettings)
-			}
-		}
-	}
 }
 
 func (to *ProjectStatus) SyncFieldsDuringRead(ctx context.Context, from ProjectStatus) {
@@ -3253,25 +3418,15 @@ func (to *ProjectStatus) SyncFieldsDuringRead(ctx context.Context, from ProjectS
 			}
 		}
 	}
-	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
-		if toSettings, ok := to.GetSettings(ctx); ok {
-			if fromSettings, ok := from.GetSettings(ctx); ok {
-				toSettings.SyncFieldsDuringRead(ctx, fromSettings)
-				to.SetSettings(ctx, toSettings)
-			}
-		}
-	}
 }
 
 func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch_logical_size_limit_bytes"] = attrs["branch_logical_size_limit_bytes"].SetComputed()
-	attrs["compute_last_active_time"] = attrs["compute_last_active_time"].SetComputed()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
-	attrs["settings"] = attrs["settings"].SetComputed()
 	attrs["synthetic_storage_size_bytes"] = attrs["synthetic_storage_size_bytes"].SetComputed()
 
 	return attrs
@@ -3287,7 +3442,6 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 func (m ProjectStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"default_endpoint_settings": reflect.TypeOf(ProjectDefaultEndpointSettings{}),
-		"settings":                  reflect.TypeOf(ProjectSettings{}),
 	}
 }
 
@@ -3299,13 +3453,11 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch_logical_size_limit_bytes": m.BranchLogicalSizeLimitBytes,
-			"compute_last_active_time":        m.ComputeLastActiveTime,
 			"default_endpoint_settings":       m.DefaultEndpointSettings,
 			"display_name":                    m.DisplayName,
 			"history_retention_duration":      m.HistoryRetentionDuration,
 			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
-			"settings":                        m.Settings,
 			"synthetic_storage_size_bytes":    m.SyntheticStorageSizeBytes,
 		})
 }
@@ -3315,13 +3467,11 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch_logical_size_limit_bytes": types.Int64Type,
-			"compute_last_active_time":        timetypes.RFC3339{}.Type(ctx),
 			"default_endpoint_settings":       ProjectDefaultEndpointSettings{}.Type(ctx),
 			"display_name":                    types.StringType,
 			"history_retention_duration":      timetypes.GoDuration{}.Type(ctx),
 			"owner":                           types.StringType,
 			"pg_version":                      types.Int64Type,
-			"settings":                        ProjectSettings{}.Type(ctx),
 			"synthetic_storage_size_bytes":    types.Int64Type,
 		},
 	}
@@ -3352,43 +3502,166 @@ func (m *ProjectStatus) SetDefaultEndpointSettings(ctx context.Context, v Projec
 	m.DefaultEndpointSettings = vs
 }
 
-// GetSettings returns the value of the Settings field in ProjectStatus as
-// a ProjectSettings value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *ProjectStatus) GetSettings(ctx context.Context) (ProjectSettings, bool) {
-	var e ProjectSettings
-	if m.Settings.IsNull() || m.Settings.IsUnknown() {
-		return e, false
+type RequestedClaims struct {
+	PermissionSet types.String `tfsdk:"permission_set"`
+
+	Resources types.List `tfsdk:"resources"`
+}
+
+func (to *RequestedClaims) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RequestedClaims) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
 	}
-	var v ProjectSettings
-	d := m.Settings.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+}
+
+func (to *RequestedClaims) SyncFieldsDuringRead(ctx context.Context, from RequestedClaims) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+}
+
+func (m RequestedClaims) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_set"] = attrs["permission_set"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RequestedClaims.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RequestedClaims) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"resources": reflect.TypeOf(RequestedResource{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RequestedClaims
+// only implements ToObjectValue() and Type().
+func (m RequestedClaims) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission_set": m.PermissionSet,
+			"resources":      m.Resources,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RequestedClaims) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission_set": types.StringType,
+			"resources": basetypes.ListType{
+				ElemType: RequestedResource{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetResources returns the value of the Resources field in RequestedClaims as
+// a slice of RequestedResource values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RequestedClaims) GetResources(ctx context.Context) ([]RequestedResource, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []RequestedResource
+	d := m.Resources.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
 	return v, true
 }
 
-// SetSettings sets the value of the Settings field in ProjectStatus.
-func (m *ProjectStatus) SetSettings(ctx context.Context, v ProjectSettings) {
-	vs := v.ToObjectValue(ctx)
-	m.Settings = vs
+// SetResources sets the value of the Resources field in RequestedClaims.
+func (m *RequestedClaims) SetResources(ctx context.Context, v []RequestedResource) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Resources = types.ListValueMust(t, vs)
+}
+
+type RequestedResource struct {
+	TableName types.String `tfsdk:"table_name"`
+
+	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
+}
+
+func (to *RequestedResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RequestedResource) {
+}
+
+func (to *RequestedResource) SyncFieldsDuringRead(ctx context.Context, from RequestedResource) {
+}
+
+func (m RequestedResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["table_name"] = attrs["table_name"].SetOptional()
+	attrs["unspecified_resource_name"] = attrs["unspecified_resource_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RequestedResource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RequestedResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RequestedResource
+// only implements ToObjectValue() and Type().
+func (m RequestedResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"table_name":                m.TableName,
+			"unspecified_resource_name": m.UnspecifiedResourceName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RequestedResource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"table_name":                types.StringType,
+			"unspecified_resource_name": types.StringType,
+		},
+	}
 }
 
 // Role represents a Postgres role within a Branch.
 type Role struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The resource name of the role. Format:
-	// projects/{project_id}/branch/{branch_id}/roles/{role_id}
+	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"name"`
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of the Role.
+	// The spec contains the role configuration, including identity type,
+	// authentication method, and role attributes.
 	Spec types.Object `tfsdk:"spec"`
-	// The observed state of the Role.
+	// Current status of the role, including its identity type, authentication
+	// method, and role attributes.
 	Status types.Object `tfsdk:"status"`
 
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -3599,8 +3872,8 @@ type RoleRoleSpec struct {
 	// NOTE: this is ignored for the Databricks identity type GROUP, and
 	// NO_LOGIN is implicitly assumed instead for the GROUP identity type.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of the role. When specifying a managed-identity, the chosen
-	// role_id must be a valid:
+	// The type of role. When specifying a managed-identity, the chosen role_id
+	// must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
@@ -3711,8 +3984,9 @@ type UpdateBranchRequest struct {
 	// The branch's `name` field is used to identify the branch to update.
 	// Format: projects/{project_id}/branches/{branch_id}
 	Branch types.Object `tfsdk:"branch"`
-	// The resource name of the branch. Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The resource name of the branch. This field is output-only and
+	// constructed by the system. Format:
+	// `projects/{project_id}/branches/{branch_id}`
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. If unspecified, all fields will be updated
 	// when possible.
@@ -3819,8 +4093,9 @@ type UpdateEndpointRequest struct {
 	// Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// The resource name of the endpoint. Format:
-	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+	// The resource name of the endpoint. This field is output-only and
+	// constructed by the system. Format:
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. If unspecified, all fields will be updated
 	// when possible.
@@ -3921,7 +4196,8 @@ func (m *UpdateEndpointRequest) SetEndpoint(ctx context.Context, v Endpoint) {
 }
 
 type UpdateProjectRequest struct {
-	// The resource name of the project. Format: projects/{project_id}
+	// The resource name of the project. This field is output-only and
+	// constructed by the system. Format: `projects/{project_id}`
 	Name types.String `tfsdk:"-"`
 	// The Project to update.
 	//

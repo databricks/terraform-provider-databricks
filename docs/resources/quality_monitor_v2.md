@@ -4,6 +4,8 @@ subcategory: "Quality Monitor"
 # databricks_quality_monitor_v2 Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+~> **Deprecated** This resource is deprecated. Please use `databricks_data_quality_monitor` instead.
+
 Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
 
 
@@ -11,6 +13,8 @@ Users with MANAGE Schema can use quality monitor v2 to set up data quality monit
 
 
 ## Example Usage
+~> **Deprecated** This resource is deprecated. Please use `databricks_data_quality_monitor` instead.
+
 ```hcl
 resource "databricks_schema" "this" {
   catalog_name = "my_catalog"

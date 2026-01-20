@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Added resources and data sources for `databricks_account_user_setting_v2` and `databricks_default_warehouse_override` ([#5329](https://github.com/databricks/terraform-provider-databricks/pull/5329)).
 
 ### Bug Fixes
 

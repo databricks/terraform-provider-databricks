@@ -41,6 +41,9 @@ This data source exports a single attribute, `templates`. It is a list of resour
 * `resource_specs` (list of AppManifestAppResourceSpec)
 * `version` (integer) - The manifest schema version, for now only 1 is allowed
 
+### AppManifestAppResourceExperimentSpec
+* `permission` (string) - Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_READ`
+
 ### AppManifestAppResourceJobSpec
 * `permission` (string) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
 
@@ -52,6 +55,7 @@ This data source exports a single attribute, `templates`. It is a list of resour
 
 ### AppManifestAppResourceSpec
 * `description` (string) - Description of the App Resource
+* `experiment_spec` (AppManifestAppResourceExperimentSpec)
 * `job_spec` (AppManifestAppResourceJobSpec)
 * `name` (string) - Name of the App Resource
 * `secret_spec` (AppManifestAppResourceSecretSpec)
@@ -63,5 +67,5 @@ This data source exports a single attribute, `templates`. It is a list of resour
 * `permission` (string) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string) - Possible values are: `MANAGE`, `READ_VOLUME`, `SELECT`, `WRITE_VOLUME`
-* `securable_type` (string) - Possible values are: `TABLE`, `VOLUME`
+* `permission` (string) - Possible values are: `EXECUTE`, `MANAGE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`

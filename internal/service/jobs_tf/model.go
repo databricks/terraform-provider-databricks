@@ -6303,7 +6303,8 @@ func (m *JobCompliance) SetViolations(ctx context.Context, v map[string]types.St
 type JobDeployment struct {
 	// The kind of deployment that manages the job.
 	//
-	// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
+	// * `BUNDLE`: The job is managed by Databricks Asset Bundle. *
+	// `SYSTEM_MANAGED`: The job is managed by Databricks and is read-only.
 	Kind types.String `tfsdk:"kind"`
 	// Path of the file that contains deployment metadata.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
@@ -7269,6 +7270,9 @@ func (m *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []Jo
 // Either `user_name` or `service_principal_name` should be specified. If not,
 // an error is thrown.
 type JobRunAs struct {
+	// Group name of an account group assigned to the workspace. Setting this
+	// field requires being a member of the group.
+	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -7284,6 +7288,7 @@ func (to *JobRunAs) SyncFieldsDuringRead(ctx context.Context, from JobRunAs) {
 }
 
 func (m JobRunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -7308,6 +7313,7 @@ func (m JobRunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"group_name":             m.GroupName,
 			"service_principal_name": m.ServicePrincipalName,
 			"user_name":              m.UserName,
 		})
@@ -7317,6 +7323,7 @@ func (m JobRunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m JobRunAs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
 			"user_name":              types.StringType,
 		},

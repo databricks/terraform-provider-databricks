@@ -39,6 +39,8 @@ type QualityMonitorData struct {
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: schema.
 	ObjectType types.String `tfsdk:"object_type"`
+	// Validity check configurations for anomaly detection.
+	ValidityCheckConfigurations types.List `tfsdk:"validity_check_configurations"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -50,7 +52,8 @@ type QualityMonitorData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m QualityMonitorData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"anomaly_detection_config": reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+		"anomaly_detection_config":      reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+		"validity_check_configurations": reflect.TypeOf(qualitymonitorv2_tf.ValidityCheckConfiguration{}),
 	}
 }
 
@@ -64,9 +67,10 @@ func (m QualityMonitorData) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"anomaly_detection_config": m.AnomalyDetectionConfig,
-			"object_id":                m.ObjectId,
-			"object_type":              m.ObjectType,
+			"anomaly_detection_config":      m.AnomalyDetectionConfig,
+			"object_id":                     m.ObjectId,
+			"object_type":                   m.ObjectType,
+			"validity_check_configurations": m.ValidityCheckConfigurations,
 		},
 	)
 }
@@ -79,6 +83,9 @@ func (m QualityMonitorData) Type(ctx context.Context) attr.Type {
 			"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
 			"object_id":                types.StringType,
 			"object_type":              types.StringType,
+			"validity_check_configurations": basetypes.ListType{
+				ElemType: qualitymonitorv2_tf.ValidityCheckConfiguration{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -87,6 +94,7 @@ func (m QualityMonitorData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["validity_check_configurations"] = attrs["validity_check_configurations"].SetComputed()
 
 	return attrs
 }

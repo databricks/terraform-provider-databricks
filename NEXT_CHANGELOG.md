@@ -7,6 +7,7 @@
 ### New Features and Improvements
 * Added resources and data sources for `databricks_account_user_setting_v2` and `databricks_default_warehouse_override` ([#5329](https://github.com/databricks/terraform-provider-databricks/pull/5329)).
 
+
 ### Bug Fixes
 
 * Fix importing of the `databricks_share` ([#5311](https://github.com/databricks/terraform-provider-databricks/pull/5311))
@@ -21,3 +22,4 @@
 * Rewrite exporting of `databricks_share` to plugin framework ([#5328](https://github.com/databricks/terraform-provider-databricks/pull/5328))
 
 ### Internal Changes
+* Add support for unified host, migrate IsAccountClient to HostType

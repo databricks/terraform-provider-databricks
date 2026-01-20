@@ -50,7 +50,7 @@ func ResourceGitCredential() common.Resource {
 				if !d.Get("force").(bool) || !isOnlyOneGitCredentialForProviderError(err) {
 					return err
 				}
-				creds, err := w.GitCredentials.ListAll(ctx)
+				creds, err := w.GitCredentials.ListAll(ctx, workspace.ListCredentialsRequest{})
 				if err != nil {
 					return err
 				}

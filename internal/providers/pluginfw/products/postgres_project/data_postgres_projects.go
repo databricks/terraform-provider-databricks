@@ -28,7 +28,7 @@ func DataSourceProjects() datasource.DataSource {
 // ProjectsData extends the main model with additional fields.
 type ProjectsData struct {
 	Postgres types.List `tfsdk:"projects"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"page_size"`
 }
 

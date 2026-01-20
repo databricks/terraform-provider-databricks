@@ -37,16 +37,22 @@ type BranchDataSource struct {
 type BranchData struct {
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the branch. Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The resource name of the branch. This field is output-only and
+	// constructed by the system. Format:
+	// `projects/{project_id}/branches/{branch_id}`
 	Name types.String `tfsdk:"name"`
-	// The project containing this branch. Format: projects/{project_id}
+	// The project containing this branch (API resource hierarchy). Format:
+	// projects/{project_id}
+	//
+	// Note: This field indicates where the branch exists in the resource
+	// hierarchy. For point-in-time branching from another branch, see
+	// `spec.source_branch`.
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of a Branch.
+	// The spec contains the branch configuration.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the branch.
+	// System-generated unique ID for the branch.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the branch was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`

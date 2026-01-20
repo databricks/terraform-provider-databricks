@@ -27,7 +27,31 @@ func DataSourceWarehouse() common.Resource {
 		var dataSourceId string
 
 		dataSources, err := w.DataSources.List(ctx)
-		if err == nil {
+		if err != nil {
+			// DataSources.List failed; fall back to finding warehouse without DataSourceId
+			if data.Name != "" {
+				// Find warehouse by name using Warehouses.ListAll
+				list, err := w.Warehouses.ListAll(ctx, sql.ListWarehousesRequest{})
+				if err != nil {
+					return nil, err
+				}
+				var matched []sql.EndpointInfo
+				for _, wh := range list {
+					if wh.Name == data.Name {
+						matched = append(matched, wh)
+					}
+				}
+				if len(matched) == 0 {
+					return nil, fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+				}
+				if len(matched) > 1 {
+					return nil, fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+				}
+				warehouseId = matched[0].Id
+			} else {
+				warehouseId = data.Id
+			}
+		} else {
 			selected := []sql.DataSource{}
 			for _, source := range dataSources {
 				if data.Name != "" && source.Name == data.Name {
@@ -53,30 +77,6 @@ func DataSourceWarehouse() common.Resource {
 			}
 			warehouseId = selected[0].WarehouseId
 			dataSourceId = selected[0].Id
-		} else {
-			// DataSources.List failed; fall back to finding warehouse without DataSourceId
-			if data.Name != "" {
-				// Find warehouse by name using Warehouses.ListAll
-				list, err := w.Warehouses.ListAll(ctx, sql.ListWarehousesRequest{})
-				if err != nil {
-					return nil, err
-				}
-				var matched []sql.EndpointInfo
-				for _, wh := range list {
-					if wh.Name == data.Name {
-						matched = append(matched, wh)
-					}
-				}
-				if len(matched) == 0 {
-					return nil, fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
-				}
-				if len(matched) > 1 {
-					return nil, fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
-				}
-				warehouseId = matched[0].Id
-			} else {
-				warehouseId = data.Id
-			}
 		}
 
 		warehouse, err := getSqlWarehouse(ctx, w, warehouseId)

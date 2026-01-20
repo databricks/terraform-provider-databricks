@@ -10,50 +10,68 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk_sharing "github.com/databricks/databricks-sdk-go/service/sharing"
-	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
 )
 
 func TestImportShare(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
-	d := tf_sharing.ResourceShare().ToResource().TestResourceData()
-	scm := tf_sharing.ResourceShare().Schema
-	share := tf_sharing.ShareInfo{
-		ShareInfo: sdk_sharing.ShareInfo{
-			Name: "stest",
-			Objects: []sdk_sharing.SharedDataObject{
-				{
-					DataObjectType: "TABLE",
-					Name:           "ctest.stest.table1",
-				},
-				{
-					DataObjectType: "MODEL",
-					Name:           "ctest.stest.model1",
-				},
-				{
-					DataObjectType: "VOLUME",
-					Name:           "ctest.stest.vol1",
-				},
-				{
-					DataObjectType: "NOTEBOOK",
-					Name:           "Test",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/shares/test_share?include_shared_data=true",
+			Response: sdk_sharing.ShareInfo{
+				Name: "test_share",
+				Objects: []sdk_sharing.SharedDataObject{
+					{
+						Name:           "catalog.schema.table1",
+						DataObjectType: "TABLE",
+					},
+					{
+						Name:           "catalog.schema.model1",
+						DataObjectType: "MODEL",
+					},
+					{
+						Name:           "catalog.schema.volume1",
+						DataObjectType: "VOLUME",
+					},
+					{
+						Name:           "catalog.schema1",
+						DataObjectType: "SCHEMA",
+					},
+					{
+						Name:           "catalog.schema.notebook1",
+						DataObjectType: "NOTEBOOK_FILE",
+					},
 				},
 			},
 		},
-	}
-	d.MarkNewResource()
-	err := common.StructToData(share, scm, d)
-	require.NoError(t, err)
-	err = resourcesMap["databricks_share"].Import(ic, &resource{
-		ID:   "stest",
-		Data: d,
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-shares,uc-grants,uc-volumes,uc-models,uc-tables,uc-schemas")
+
+		// Read the share resource first
+		r := &resource{
+			Resource: "databricks_share",
+			ID:       "test_share",
+		}
+
+		// Read the resource to populate its data
+		ir := resourcesMap["databricks_share"]
+		wrapper := ic.readPluginFrameworkResource(r, ir)
+		r.DataWrapper = wrapper
+
+		// Now import it
+		err := ir.Import(ic, r)
+		assert.NoError(t, err)
+
+		// Verify the correct dependencies are emitted
+		// Should emit: grants, table, model, volume, schema (5 total)
+		// NOTEBOOK_FILE type should be logged but not emitted as a resource
+		require.Equal(t, 5, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: share/test_share)"])
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: catalog.schema.table1)"])
+		assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: catalog.schema.model1)"])
+		assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: catalog.schema.volume1)"])
+		assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: catalog.schema1)"])
 	})
-	assert.NoError(t, err)
-	require.Equal(t, 4, len(ic.testEmits))
-	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: share/stest)"])
-	assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
-	assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.vol1)"])
-	assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: ctest.stest.table1)"])
 }
 
 func TestListShares(t *testing.T) {

@@ -162,6 +162,9 @@ type CreateCredentialsRequest struct {
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
+	// The ID of the service principal whose credentials will be modified. Only
+	// service principal managers can perform this action.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 }
 
 func (to *CreateCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCredentialsRequest) {
@@ -177,6 +180,7 @@ func (m CreateCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["is_default_for_provider"] = attrs["is_default_for_provider"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 
 	return attrs
 }
@@ -205,6 +209,7 @@ func (m CreateCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.O
 			"is_default_for_provider": m.IsDefaultForProvider,
 			"name":                    m.Name,
 			"personal_access_token":   m.PersonalAccessToken,
+			"principal_id":            m.PrincipalId,
 		})
 }
 
@@ -218,6 +223,7 @@ func (m CreateCredentialsRequest) Type(ctx context.Context) attr.Type {
 			"is_default_for_provider": types.BoolType,
 			"name":                    types.StringType,
 			"personal_access_token":   types.StringType,
+			"principal_id":            types.Int64Type,
 		},
 	}
 }
@@ -843,6 +849,9 @@ func (m DeleteAcl) Type(ctx context.Context) attr.Type {
 type DeleteCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+	// The ID of the service principal whose credentials will be modified. Only
+	// service principal managers can perform this action.
+	PrincipalId types.Int64 `tfsdk:"-"`
 }
 
 func (to *DeleteCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCredentialsRequest) {
@@ -853,6 +862,7 @@ func (to *DeleteCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, fr
 
 func (m DeleteCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 
 	return attrs
 }
@@ -876,6 +886,7 @@ func (m DeleteCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.O
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"credential_id": m.CredentialId,
+			"principal_id":  m.PrincipalId,
 		})
 }
 
@@ -884,6 +895,7 @@ func (m DeleteCredentialsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credential_id": types.Int64Type,
+			"principal_id":  types.Int64Type,
 		},
 	}
 }
@@ -1380,6 +1392,9 @@ func (m GetAclRequest) Type(ctx context.Context) attr.Type {
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+	// The ID of the service principal whose credentials will be modified. Only
+	// service principal managers can perform this action.
+	PrincipalId types.Int64 `tfsdk:"-"`
 }
 
 func (to *GetCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCredentialsRequest) {
@@ -1390,6 +1405,7 @@ func (to *GetCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m GetCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 
 	return attrs
 }
@@ -1413,6 +1429,7 @@ func (m GetCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"credential_id": m.CredentialId,
+			"principal_id":  m.PrincipalId,
 		})
 }
 
@@ -1421,6 +1438,7 @@ func (m GetCredentialsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credential_id": types.Int64Type,
+			"principal_id":  types.Int64Type,
 		},
 	}
 }
@@ -2485,6 +2503,9 @@ func (m *ListAclsResponse) SetItems(ctx context.Context, v []AclItem) {
 }
 
 type ListCredentialsRequest struct {
+	// The ID of the service principal whose credentials will be modified. Only
+	// service principal managers can perform this action.
+	PrincipalId types.Int64 `tfsdk:"-"`
 }
 
 func (to *ListCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCredentialsRequest) {
@@ -2494,6 +2515,7 @@ func (to *ListCredentialsRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ListCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 
 	return attrs
 }
@@ -2515,13 +2537,17 @@ func (m ListCredentialsRequest) GetComplexFieldTypes(ctx context.Context) map[st
 func (m ListCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"principal_id": m.PrincipalId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListCredentialsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"principal_id": types.Int64Type,
+		},
 	}
 }
 
@@ -4502,6 +4528,9 @@ type UpdateCredentialsRequest struct {
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
+	// The ID of the service principal whose credentials will be modified. Only
+	// service principal managers can perform this action.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
 }
 
 func (to *UpdateCredentialsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCredentialsRequest) {
@@ -4517,6 +4546,7 @@ func (m UpdateCredentialsRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["is_default_for_provider"] = attrs["is_default_for_provider"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetOptional()
 	attrs["credential_id"] = attrs["credential_id"].SetRequired()
 
 	return attrs
@@ -4547,6 +4577,7 @@ func (m UpdateCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.O
 			"is_default_for_provider": m.IsDefaultForProvider,
 			"name":                    m.Name,
 			"personal_access_token":   m.PersonalAccessToken,
+			"principal_id":            m.PrincipalId,
 		})
 }
 
@@ -4561,6 +4592,7 @@ func (m UpdateCredentialsRequest) Type(ctx context.Context) attr.Type {
 			"is_default_for_provider": types.BoolType,
 			"name":                    types.StringType,
 			"personal_access_token":   types.StringType,
+			"principal_id":            types.Int64Type,
 		},
 	}
 }

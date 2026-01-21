@@ -30,7 +30,7 @@ func TestConfigure(t *testing.T) {
 				"http_timeout_seconds": tftypes.NewValue(tftypes.Number, 30),
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be overridden when set")
+				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be unset by default")
 			},
 		},
 	}

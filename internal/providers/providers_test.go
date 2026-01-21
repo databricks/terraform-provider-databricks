@@ -387,6 +387,57 @@ func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {
 	}
 }
 
+func TestConfig_Scopes(t *testing.T) {
+	providerFixture{
+		scopes: []string{"all-apis"},
+		env: map[string]string{
+			"DATABRICKS_HOST":  "x",
+			"DATABRICKS_TOKEN": "x",
+		},
+		assertAuth:   "pat",
+		assertHost:   "https://x",
+		assertScopes: []string{"all-apis"},
+	}.apply(t)
+}
+
+func TestConfig_MultipleScopes(t *testing.T) {
+	providerFixture{
+		scopes: []string{"clusters", "jobs"},
+		env: map[string]string{
+			"DATABRICKS_HOST":  "x",
+			"DATABRICKS_TOKEN": "x",
+		},
+		assertAuth:   "pat",
+		assertHost:   "https://x",
+		assertScopes: []string{"clusters", "jobs"},
+	}.apply(t)
+}
+
+func TestConfig_NoScopes(t *testing.T) {
+	providerFixture{
+		env: map[string]string{
+			"DATABRICKS_HOST":  "x",
+			"DATABRICKS_TOKEN": "x",
+		},
+		assertAuth:   "pat",
+		assertHost:   "https://x",
+		assertScopes: nil,
+	}.apply(t)
+}
+
+func TestConfig_EmptyScopes(t *testing.T) {
+	providerFixture{
+		scopes: []string{},
+		env: map[string]string{
+			"DATABRICKS_HOST":  "x",
+			"DATABRICKS_TOKEN": "x",
+		},
+		assertAuth:   "pat",
+		assertHost:   "https://x",
+		assertScopes: nil,
+	}.apply(t)
+}
+
 type parseUserAgentTestCase struct {
 	name string
 	env  string

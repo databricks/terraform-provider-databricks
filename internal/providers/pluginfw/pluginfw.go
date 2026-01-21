@@ -162,10 +162,6 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 			return false, diags
 		}
 		elements := attrValue.Elements()
-		// Treat empty lists as unset for consistency with SDKv2's GetOk behavior.
-		if len(elements) == 0 {
-			return false, diags
-		}
 		strSlice := make([]string, len(elements))
 		for i, elem := range elements {
 			strSlice[i] = elem.(types.String).ValueString()

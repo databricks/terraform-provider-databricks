@@ -30,46 +30,7 @@ func TestConfigure(t *testing.T) {
 				"http_timeout_seconds": tftypes.NewValue(tftypes.Number, 30),
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be unset by default")
-			},
-		},
-		{
-			name:   "Scopes defaults to nil when not set",
-			config: map[string]tftypes.Value{},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Nil(t, dc.Config.Scopes, "Scopes should be nil by default")
-			},
-		},
-		{
-			name: "Scopes can be set in provider config",
-			config: map[string]tftypes.Value{
-				"scopes": tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{
-					tftypes.NewValue(tftypes.String, "clusters"),
-					tftypes.NewValue(tftypes.String, "jobs"),
-				}),
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, []string{"clusters", "jobs"}, dc.Config.Scopes, "Scopes should be set from provider config")
-			},
-		},
-		{
-			name: "Single scope can be set in provider config",
-			config: map[string]tftypes.Value{
-				"scopes": tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{
-					tftypes.NewValue(tftypes.String, "all-apis"),
-				}),
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, []string{"all-apis"}, dc.Config.Scopes, "Single scope should be set from provider config")
-			},
-		},
-		{
-			name: "Empty scopes list is treated as unset",
-			config: map[string]tftypes.Value{
-				"scopes": tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, []tftypes.Value{}),
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Nil(t, dc.Config.Scopes, "Empty scopes list should be treated as unset")
+				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be overridden when set")
 			},
 		},
 	}

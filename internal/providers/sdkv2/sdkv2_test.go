@@ -31,40 +31,6 @@ func TestConfigureDatabricksClient(t *testing.T) {
 				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be overridden when set")
 			},
 		},
-		{
-			name:   "Scopes defaults to nil when not set",
-			config: map[string]interface{}{},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Nil(t, dc.Config.Scopes, "Scopes should be nil by default")
-			},
-		},
-		{
-			name: "Scopes can be set in provider config",
-			config: map[string]interface{}{
-				"scopes": []interface{}{"clusters", "jobs"},
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, []string{"clusters", "jobs"}, dc.Config.Scopes, "Scopes should be set from provider config")
-			},
-		},
-		{
-			name: "Single scope can be set in provider config",
-			config: map[string]interface{}{
-				"scopes": []interface{}{"all-apis"},
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, []string{"all-apis"}, dc.Config.Scopes, "Single scope should be set from provider config")
-			},
-		},
-		{
-			name: "Empty scopes list is treated as unset",
-			config: map[string]interface{}{
-				"scopes": []interface{}{},
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Nil(t, dc.Config.Scopes, "Empty scopes list should be treated as unset")
-			},
-		},
 	}
 
 	for _, tc := range testCases {

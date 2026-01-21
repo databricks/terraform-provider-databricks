@@ -378,13 +378,21 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databrick
 		if err != nil {
 			return err
 		}
-		return accCallback(a)
+		err = accCallback(a)
+		if err != nil {
+			return fmt.Errorf("account: %w", err)
+		}
+		return nil
 	} else {
 		ws, err := c.WorkspaceClient()
 		if err != nil {
 			return err
 		}
-		return wsCallback(ws)
+		err = wsCallback(ws)
+		if err != nil {
+			return fmt.Errorf("workspace: %w", err)
+		}
+		return nil
 	}
 }
 

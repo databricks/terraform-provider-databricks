@@ -279,7 +279,7 @@ func importLakeviewDashboard(ic *importContext, r *resource) error {
 		parts[plen-1] = parts[plen-1] + "_" + r.ID
 	}
 	name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
-	fileName, err := ic.saveFileIn("dashboards", name, []byte(r.Data.Get("serialized_dashboard").(string)))
+	fileName, err := ic.saveContentIn("dashboards", name, []byte(r.Data.Get("serialized_dashboard").(string)))
 	if err != nil {
 		return err
 	}

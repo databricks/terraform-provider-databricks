@@ -8,6 +8,8 @@
 * Added resources and data sources for `databricks_account_user_setting_v2` and `databricks_default_warehouse_override` ([#5329](https://github.com/databricks/terraform-provider-databricks/pull/5329)).
 
 
+* Support for payload bigger than 10Mb in `databricks_workspace_file` ([#5293](https://github.com/databricks/terraform-provider-databricks/pull/5293))
+
 ### Bug Fixes
 
 * Fix importing of the `databricks_share` ([#5311](https://github.com/databricks/terraform-provider-databricks/pull/5311))

@@ -42,7 +42,8 @@ func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id stri
 func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, warehouseId string) (string, error) {
 	list, err := w.DataSources.List(ctx)
 	if err != nil {
-		return "", err
+		// Don't fail if DataSources.List errors
+		return "", nil
 	}
 	for _, ds := range list {
 		if ds.WarehouseId == warehouseId {

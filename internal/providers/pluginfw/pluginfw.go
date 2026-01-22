@@ -167,7 +167,12 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 		elements := attrValue.Elements()
 		strSlice := make([]string, len(elements))
 		for i, elem := range elements {
-			strSlice[i] = elem.(types.String).ValueString()
+			strElem, ok := elem.(types.String)
+			if !ok {
+				diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("unexpected type for attribute %s", attr.Name), fmt.Sprintf("expected types.String, got %T", elem)))
+				return false, diags
+			}
+			strSlice[i] = strElem.ValueString()
 		}
 		err := attr.Set(cfg, strSlice)
 		if err != nil {

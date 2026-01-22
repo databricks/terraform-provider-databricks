@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Add implicit CAN_MANAGE permission for users on their home directories to prevent Terraform from removing Databricks-assigned permissions
+
 ### Documentation
 
 ### Exporter

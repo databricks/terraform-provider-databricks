@@ -26,6 +26,7 @@ import (
 const resourceName = "share"
 
 var _ resource.ResourceWithConfigure = &ShareResource{}
+var _ resource.ResourceWithImportState = &ShareResource{}
 
 func ResourceShare() resource.Resource {
 	return &ShareResource{}
@@ -108,8 +109,6 @@ func diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	for _, afterSdo := range afterSi.Objects {
 		if beforeSdo, ok := beforeMap[afterSdo.Name]; ok {
 			if !equal(beforeSdo, afterSdo) {
-				// do not send SharedAs
-				afterSdo.SharedAs = ""
 				changes = append(changes, sharing.SharedDataObjectUpdate{
 					Action:     sharing.SharedDataObjectUpdateActionUpdate,
 					DataObject: &afterSdo,
@@ -457,6 +456,21 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		resp.Diagnostics.AddError("failed to delete share", err.Error())
 		return
 	}
+}
+
+func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	if req.ID == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			"Expected non-empty share name. Got empty string.",
+		)
+		return
+	}
+
+	// For databricks_share, the import ID is just the share name
+	shareName := req.ID
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), shareName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), shareName)...)
 }
 
 type effectiveFieldsAction interface {

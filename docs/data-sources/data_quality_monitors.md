@@ -47,6 +47,7 @@ This data source exports a single attribute, `monitors`. It is a list of resourc
 * `object_type` (string) - The type of the monitored object. Can be one of the following: `schema` or `table`
 
 ### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string) - List of fully qualified table names to exclude from anomaly detection
 
 ### CronSchedule
 * `pause_status` (string) - Read only field that indicates whether the schedule is paused or not. Possible values are: `CRON_SCHEDULE_PAUSE_STATUS_PAUSED`, `CRON_SCHEDULE_PAUSE_STATUS_UNPAUSED`

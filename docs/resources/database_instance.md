@@ -135,16 +135,32 @@ In addition to the above arguments, the following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
-* `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity
-* `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance
-* `effective_enable_pg_native_login` (boolean) - Whether the instance has PG native password login enabled
-* `effective_enable_readable_secondaries` (boolean) - Whether secondaries serving read-only traffic are enabled. Defaults to false
+* `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_enable_pg_native_login` (boolean) - Whether the instance has PG native password login enabled.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_enable_readable_secondaries` (boolean) - Whether secondaries serving read-only traffic are enabled. Defaults to false.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `effective_node_count` (integer) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
-  1 primary and 0 secondaries
+  1 primary and 0 secondaries.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `effective_retention_window_in_days` (integer) - The retention window for the instance. This is the time window in days
-  for which the historical data is retained
-* `effective_stopped` (boolean) - Whether the instance is stopped
-* `effective_usage_policy_id` (string) - The policy that is applied to the instance
+  for which the historical data is retained.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_stopped` (boolean) - Whether the instance is stopped.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_usage_policy_id` (string) - The policy that is applied to the instance.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `pg_version` (string) - The version of Postgres running on the instance
 * `read_only_dns` (string) - The DNS endpoint to connect to the instance for read only access. This is only available if
   enable_readable_secondaries is true
@@ -156,7 +172,9 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_lsn` (string) - For a parent ref instance, this is the LSN on the parent instance from which the
   instance was created.
   For a child ref instance, this is the LSN on the instance from which the child instance
-  was created
+  was created.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `uid` (string) - Id of the ref database instance
 
 ## Import

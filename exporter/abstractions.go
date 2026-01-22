@@ -291,8 +291,9 @@ func (s *SDKv2FieldSchema) GetSDKv2Schema() *sdkv2schema.Schema {
 
 // PluginFrameworkResourceData wraps tfsdk.State
 type PluginFrameworkResourceData struct {
-	state  *tfsdk.State
-	schema frameworkschema.Schema
+	state      *tfsdk.State
+	schema     frameworkschema.Schema
+	resourceId string // Store the resource ID separately since it may not be in state attributes
 }
 
 func (p *PluginFrameworkResourceData) GetOk(key string) (interface{}, bool) {
@@ -324,6 +325,11 @@ func (p *PluginFrameworkResourceData) Get(key string) interface{} {
 }
 
 func (p *PluginFrameworkResourceData) Id() string {
+	// First try the stored resource ID
+	if p.resourceId != "" {
+		return p.resourceId
+	}
+	// Fallback to checking for "id" attribute in state
 	val, ok := p.GetOk("id")
 	if !ok {
 		return ""
@@ -335,6 +341,7 @@ func (p *PluginFrameworkResourceData) Id() string {
 }
 
 func (p *PluginFrameworkResourceData) SetId(id string) {
+	p.resourceId = id
 	p.state.SetAttribute(context.Background(), path.Root("id"), types.StringValue(id))
 }
 

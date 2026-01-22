@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -58,7 +59,7 @@ func ResourceGroup() common.Resource {
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
 			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
-			if c.Config.IsAccountClient() {
+			if c.Config.HostType() == config.AccountHost {
 				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
 			} else {
 				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))

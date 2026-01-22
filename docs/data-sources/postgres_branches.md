@@ -4,9 +4,21 @@ subcategory: "Postgres"
 # databricks_postgres_branches Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source lists all Postgres branches in a project.
 
 
 ## Example Usage
+### List All Branches in a Project
+
+```hcl
+data "databricks_postgres_branches" "all" {
+  parent = "projects/my-project"
+}
+
+output "branch_names" {
+  value = [for branch in data.databricks_postgres_branches.all.branches : branch.name]
+}
+```
 
 
 ## Arguments

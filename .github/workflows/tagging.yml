@@ -25,7 +25,9 @@ jobs:
     # condition.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.repository == 'databricks/databricks-sdk-go'
+      github.repository == 'databricks/databricks-sdk-go' ||
+      github.repository == 'databricks/databricks-sdk-py' ||
+      github.repository == 'databricks/databricks-sdk-java'
     environment: "release-is"
     runs-on:
       group: databricks-deco-testing-runner-group

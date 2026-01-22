@@ -4,9 +4,21 @@ subcategory: "Postgres"
 # databricks_postgres_branch Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source retrieves a single Postgres branch.
 
 
 ## Example Usage
+### Retrieve Branch by Name
+
+```hcl
+data "databricks_postgres_branch" "this" {
+  name = "projects/my-project/branches/dev-branch"
+}
+
+output "branch_is_protected" {
+  value = data.databricks_postgres_branch.this.status.is_protected
+}
+```
 
 
 ## Arguments

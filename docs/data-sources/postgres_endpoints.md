@@ -4,9 +4,25 @@ subcategory: "Postgres"
 # databricks_postgres_endpoints Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source lists all Postgres endpoints in a branch.
 
 
 ## Example Usage
+### List All Endpoints in a Branch
+
+```hcl
+data "databricks_postgres_endpoints" "all" {
+  parent = "projects/my-project/branches/dev-branch"
+}
+
+output "endpoint_names" {
+  value = [for endpoint in data.databricks_postgres_endpoints.all.endpoints : endpoint.name]
+}
+
+output "endpoint_types" {
+  value = [for endpoint in data.databricks_postgres_endpoints.all.endpoints : endpoint.status.endpoint_type]
+}
+```
 
 
 ## Arguments
@@ -43,6 +59,8 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
   A disabled compute endpoint cannot be enabled by a connection or
   console action
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
+* `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
+  Should be set to true when provided
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
   If specified should be between 60s and 604800s (1 minute to 1 week)

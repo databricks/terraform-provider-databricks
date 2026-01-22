@@ -1626,6 +1626,9 @@ type EndpointSpec_SdkV2 struct {
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
+	// When set to true, explicitly disables automatic suspension (never
+	// suspend). Should be set to true when provided.
+	NoSuspension types.Bool `tfsdk:"no_suspension"`
 
 	Settings types.List `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
@@ -1663,6 +1666,7 @@ func (m EndpointSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
 	attrs["endpoint_type"] = attrs["endpoint_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["no_suspension"] = attrs["no_suspension"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetOptional()
@@ -1694,6 +1698,7 @@ func (m EndpointSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"disabled":                 m.Disabled,
 			"endpoint_type":            m.EndpointType,
+			"no_suspension":            m.NoSuspension,
 			"settings":                 m.Settings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
 		})
@@ -1707,6 +1712,7 @@ func (m EndpointSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"disabled":                 types.BoolType,
 			"endpoint_type":            types.StringType,
+			"no_suspension":            types.BoolType,
 			"settings": basetypes.ListType{
 				ElemType: EndpointSettings_SdkV2{}.Type(ctx),
 			},
@@ -3195,6 +3201,9 @@ type ProjectDefaultEndpointSettings_SdkV2 struct {
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
+	// When set to true, explicitly disables automatic suspension (never
+	// suspend). Should be set to true when provided.
+	NoSuspension types.Bool `tfsdk:"no_suspension"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
@@ -3212,6 +3221,7 @@ func (to *ProjectDefaultEndpointSettings_SdkV2) SyncFieldsDuringRead(ctx context
 func (m ProjectDefaultEndpointSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["autoscaling_limit_max_cu"] = attrs["autoscaling_limit_max_cu"].SetOptional()
 	attrs["autoscaling_limit_min_cu"] = attrs["autoscaling_limit_min_cu"].SetOptional()
+	attrs["no_suspension"] = attrs["no_suspension"].SetOptional()
 	attrs["pg_settings"] = attrs["pg_settings"].SetOptional()
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetOptional()
 
@@ -3240,6 +3250,7 @@ func (m ProjectDefaultEndpointSettings_SdkV2) ToObjectValue(ctx context.Context)
 		map[string]attr.Value{
 			"autoscaling_limit_max_cu": m.AutoscalingLimitMaxCu,
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
+			"no_suspension":            m.NoSuspension,
 			"pg_settings":              m.PgSettings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
 		})
@@ -3251,6 +3262,7 @@ func (m ProjectDefaultEndpointSettings_SdkV2) Type(ctx context.Context) attr.Typ
 		AttrTypes: map[string]attr.Type{
 			"autoscaling_limit_max_cu": types.Float64Type,
 			"autoscaling_limit_min_cu": types.Float64Type,
+			"no_suspension":            types.BoolType,
 			"pg_settings": basetypes.MapType{
 				ElemType: types.StringType,
 			},

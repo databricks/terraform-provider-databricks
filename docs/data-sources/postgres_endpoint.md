@@ -4,9 +4,21 @@ subcategory: "Postgres"
 # databricks_postgres_endpoint Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source retrieves a single Postgres endpoint.
 
 
 ## Example Usage
+### Retrieve Endpoint by Name
+
+```hcl
+data "databricks_postgres_endpoint" "this" {
+  name = "projects/my-project/branches/dev-branch/endpoints/primary"
+}
+
+output "endpoint_type" {
+  value = data.databricks_postgres_endpoint.this.status.endpoint_type
+}
+```
 
 
 ## Arguments
@@ -41,6 +53,8 @@ The following attributes are exported:
   A disabled compute endpoint cannot be enabled by a connection or
   console action
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
+* `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
+  Should be set to true when provided
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
   If specified should be between 60s and 604800s (1 minute to 1 week)

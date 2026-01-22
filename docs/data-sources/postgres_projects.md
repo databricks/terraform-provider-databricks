@@ -4,9 +4,19 @@ subcategory: "Postgres"
 # databricks_postgres_projects Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source lists all Postgres projects in the workspace.
 
 
 ## Example Usage
+### List All Projects
+
+```hcl
+data "databricks_postgres_projects" "all" {}
+
+output "project_names" {
+  value = [for project in data.databricks_postgres_projects.all.projects : project.name]
+}
+```
 
 
 ## Arguments
@@ -27,6 +37,8 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 ### ProjectDefaultEndpointSettings
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. Minimum value is 0.5
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
+* `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
+  Should be set to true when provided
 * `pg_settings` (object) - A raw representation of Postgres settings
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
   If specified should be between 60s and 604800s (1 minute to 1 week)

@@ -12527,6 +12527,9 @@ type QueryInfo_SdkV2 struct {
 	QueryText types.String `tfsdk:"query_text"`
 	// The number of results returned by the query.
 	RowsProduced types.Int64 `tfsdk:"rows_produced"`
+	// The spark session UUID that query ran on. This is either the Spark
+	// Connect, DBSQL, or SDP session ID.
+	SessionId types.String `tfsdk:"session_id"`
 	// URL to the Spark UI query plan.
 	SparkUiUrl types.String `tfsdk:"spark_ui_url"`
 	// Type of statement for this query
@@ -12625,6 +12628,7 @@ func (m QueryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["query_start_time_ms"] = attrs["query_start_time_ms"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["rows_produced"] = attrs["rows_produced"].SetOptional()
+	attrs["session_id"] = attrs["session_id"].SetOptional()
 	attrs["spark_ui_url"] = attrs["spark_ui_url"].SetOptional()
 	attrs["statement_type"] = attrs["statement_type"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -12676,6 +12680,7 @@ func (m QueryInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"query_start_time_ms":   m.QueryStartTimeMs,
 			"query_text":            m.QueryText,
 			"rows_produced":         m.RowsProduced,
+			"session_id":            m.SessionId,
 			"spark_ui_url":          m.SparkUiUrl,
 			"statement_type":        m.StatementType,
 			"status":                m.Status,
@@ -12714,6 +12719,7 @@ func (m QueryInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_start_time_ms": types.Int64Type,
 			"query_text":          types.StringType,
 			"rows_produced":       types.Int64Type,
+			"session_id":          types.StringType,
 			"spark_ui_url":        types.StringType,
 			"statement_type":      types.StringType,
 			"status":              types.StringType,

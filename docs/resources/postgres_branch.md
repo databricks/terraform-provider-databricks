@@ -4,9 +4,74 @@ subcategory: "Postgres"
 # databricks_postgres_branch Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres branch is an independent database environment within a project that shares storage with its parent branch through copy-on-write. Branches allow you to create isolated development and testing environments, test applications against realistic data sets, and perform point-in-time recovery operations.
+
+### Hierarchy Context
+
+Branches exist within the Lakebase Autoscaling resource hierarchy:
+- Each **branch** belongs to a **project**
+- A **branch** can contain multiple **endpoints**, **databases**, and **roles**
+- Branches can be created from other branches for point-in-time recovery
+
+### Use Cases
+
+- **Development environments**: Create isolated branches for feature development without affecting production
+- **Testing**: Spin up temporary branches for testing changes before applying to production
+- **Point-in-time recovery**: Create a branch from a specific point in time on another branch
+- **Data exploration**: Safely query and analyze data without risking production workloads
 
 
 ## Example Usage
+### Basic Branch Creation
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "dev" {
+  branch_id = "dev-branch"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+}
+```
+
+### Protected Branch
+
+```hcl
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    is_protected = true
+    no_expiry = true
+  }
+}
+```
+
+### Branch with Expiration (TTL)
+
+```hcl
+resource "databricks_postgres_branch" "temporary" {
+  branch_id = "temp-feature-test"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    ttl = "604800s"  # 7 days
+  }
+}
+```
 
 
 ## Arguments

@@ -346,13 +346,15 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 		if value, ok := d.GetOk(attr.Name); ok {
 			// SDKv2's GetOk returns []interface{} for lists, but the SDK expects []string.
 			if attr.Kind == reflect.Slice {
-				if rawList, ok := value.([]interface{}); ok {
-					strList := make([]string, len(rawList))
-					for i, v := range rawList {
-						strList[i] = v.(string)
-					}
-					value = strList
+				rawList, ok := value.([]interface{})
+				if !ok {
+					return nil, diag.Errorf("unexpected type for attribute %s: expected []interface{}, got %T", attr.Name, value)
 				}
+				strList := make([]string, len(rawList))
+				for i, v := range rawList {
+					strList[i] = v.(string)
+				}
+				value = strList
 			}
 			err := attr.Set(cfg, value)
 			if err != nil {

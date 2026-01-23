@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Correctly handling tags update in `databricks_sql_endpoint` ([#5060](https://github.com/databricks/terraform-provider-databricks/pull/5060))
+
 ### Documentation
 
 * Mark `data_source_id` as deprecated in `databricks_sql_warehouse` and `databricks_sql_endpoint` ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))

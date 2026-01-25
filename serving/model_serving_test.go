@@ -110,6 +110,57 @@ func TestAccModelServing(t *testing.T) {
 	)
 }
 
+func TestAccModelServingAzureOpenAI(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-azure-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	scope_name := fmt.Sprintf("terraform-test-secret-scope-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: fmt.Sprintf(`
+			resource "databricks_secret_scope" "scope" {
+				name = "%s"
+			}
+
+			resource "databricks_secret" "key" {
+				key          = "api_key"
+				string_value = "fake-secret"
+				scope        = databricks_secret_scope.scope.id
+			}
+
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						external_model {
+							provider = "azure-openai"
+							name = "gpt-4o"
+							task = "llm/v1/chat"
+							azure_openai_config {
+								openai_api_base = "https://test.openai.azure.com/"
+								openai_api_version = "2023-05-15"
+								openai_deployment_name = "test-deployment"
+								openai_api_key = databricks_secret.key.config_reference
+							}
+						}
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, scope_name, name),
+	})
+}
+
 func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if acceptance.IsGcp(t) {

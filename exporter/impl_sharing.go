@@ -35,6 +35,9 @@ func importUcShare(ic *importContext, r *resource) error {
 	// Emit UC grants with owner
 	ic.emitUCGrantsWithOwner("share/"+r.ID, r)
 
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("SHARE", r.ID)
+
 	// Emit dependencies for each object in the share
 	for _, obj := range share.Objects {
 		switch obj.DataObjectType {
@@ -86,5 +89,30 @@ func importUcRecipient(ic *importContext, r *resource) error {
 	if owner != "" {
 		emitUserSpOrGroup(ic, owner)
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("RECIPIENT", r.ID)
+
+	return nil
+}
+
+func listUcProviders(ic *importContext) error {
+	it := ic.workspaceClient.Providers.List(ic.Context, sharing.ListProvidersRequest{})
+	for it.HasNext(ic.Context) {
+		provider, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
+			Resource: "databricks_provider",
+			ID:       provider.Name,
+		}, provider.Name, provider.UpdatedAt, fmt.Sprintf("provider '%s'", provider.Name))
+	}
+	return nil
+}
+
+func importUcProvider(ic *importContext, r *resource) error {
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("PROVIDER", r.ID)
 	return nil
 }

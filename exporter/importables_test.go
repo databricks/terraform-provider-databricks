@@ -12,9 +12,11 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/listing"
+	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
+	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
@@ -25,6 +27,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	frameworkschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
@@ -433,4 +440,227 @@ func sortStringsCopy(s []string) []string {
 	copy(c, s)
 	sort.Strings(c)
 	return c
+}
+
+func TestRfaAccessRequestDestinationsEmit(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/main",
+				Response: sdk_uc.CatalogInfo{
+					Name:          "main",
+					MetastoreId:   "metastore123",
+					CatalogType:   "MANAGED_CATALOG",
+					Owner:         "user@domain.com",
+					FullName:      "main",
+					CreatedAt:     1234567890,
+					CreatedBy:     "user@domain.com",
+					UpdatedAt:     1234567890,
+					UpdatedBy:     "user@domain.com",
+					IsolationMode: "OPEN",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/3.0/rfa/destinations/CATALOG/main?",
+				Response: sdk_uc.AccessRequestDestinations{
+					Destinations: []sdk_uc.NotificationDestination{
+						{
+							DestinationId:   "admin@example.com",
+							DestinationType: "EMAIL",
+						},
+						{
+							DestinationId:   "slack-dest-123",
+							DestinationType: "SLACK",
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := importContextForTestWithClient(ctx, client)
+			ic.enableServices("uc-catalogs,uc-rfa,settings")
+			ic.meAdmin = true
+
+			d := tf_uc.ResourceCatalog().ToResource().TestResourceData()
+			d.SetId("main")
+			d.Set("name", "main")
+			d.Set("metastore_id", "metastore123")
+			d.Set("owner", "user@domain.com")
+
+			r := &resource{
+				ID:   "main",
+				Data: d,
+			}
+
+			err := resourcesMap["databricks_catalog"].Import(ic, r)
+			assert.NoError(t, err)
+
+			// Verify that RFA access request destinations resource was emitted
+			assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: CATALOG,main)"],
+				"RFA access request destinations should be emitted for catalog with configured destinations")
+		})
+}
+
+func TestRfaAccessRequestDestinationsIgnore(t *testing.T) {
+	ctx := context.Background()
+	ic := importContextForTest()
+
+	// Helper function to initialize Plugin Framework state with proper Raw field
+	initializeState := func(pfSchema frameworkschema.Schema) tfsdk.State {
+		attrTypes := make(map[string]attr.Type)
+		for name, schemaAttr := range pfSchema.GetAttributes() {
+			attrTypes[name] = schemaAttr.GetType()
+		}
+		nullObj := basetypes.NewObjectNull(attrTypes)
+		rawValue, err := nullObj.ToTerraformValue(ctx)
+		require.NoError(t, err)
+
+		return tfsdk.State{
+			Schema: pfSchema,
+			Raw:    rawValue,
+		}
+	}
+
+	// Helper function to create Plugin Framework resource data with the specified securable types
+	createResourceData := func(securableType, destinationSourceType string) ResourceDataWrapper {
+		// Create a mock Plugin Framework state with the required structure
+		pfSchema := ic.PluginFrameworkSchemas["databricks_rfa_access_request_destinations"]
+		state := initializeState(pfSchema)
+
+		// Build securable object
+		securableAttrs := map[string]attr.Value{
+			"full_name":      basetypes.NewStringValue("main"),
+			"provider_share": basetypes.NewStringNull(),
+			"type":           basetypes.NewStringValue(securableType),
+		}
+		securableObj, _ := basetypes.NewObjectValue(map[string]attr.Type{
+			"full_name":      basetypes.StringType{},
+			"provider_share": basetypes.StringType{},
+			"type":           basetypes.StringType{},
+		}, securableAttrs)
+
+		// Build destination_source_securable object
+		dssAttrs := map[string]attr.Value{
+			"full_name":      basetypes.NewStringValue("main"),
+			"provider_share": basetypes.NewStringNull(),
+			"type":           basetypes.NewStringValue(destinationSourceType),
+		}
+		dssObj, _ := basetypes.NewObjectValue(map[string]attr.Type{
+			"full_name":      basetypes.StringType{},
+			"provider_share": basetypes.StringType{},
+			"type":           basetypes.StringType{},
+		}, dssAttrs)
+
+		// Set the state attributes
+		state.SetAttribute(ctx, path.Root("securable"), securableObj)
+		state.SetAttribute(ctx, path.Root("destination_source_securable"), dssObj)
+
+		return &PluginFrameworkResourceData{
+			state:      &state,
+			schema:     pfSchema,
+			resourceId: "CATALOG,main",
+		}
+	}
+
+	// Test case 1: matching types - should NOT be ignored
+	t.Run("matching securable types", func(t *testing.T) {
+		wrapper := createResourceData("CATALOG", "CATALOG")
+		r := &resource{
+			ID:          "CATALOG,main",
+			DataWrapper: wrapper,
+		}
+		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
+		assert.False(t, ignore, "Resource should not be ignored when securable types match")
+	})
+
+	// Test case 2: different types - should be ignored
+	t.Run("different securable types", func(t *testing.T) {
+		wrapper := createResourceData("CATALOG", "SCHEMA")
+		r := &resource{
+			ID:          "CATALOG,main",
+			DataWrapper: wrapper,
+		}
+		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
+		assert.True(t, ignore, "Resource should be ignored when securable types differ")
+		assert.Equal(t, 1, len(ic.ignoredResources))
+	})
+
+	// Test case 3: another different types case
+	t.Run("catalog vs storage_credential types", func(t *testing.T) {
+		// Clear ignored resources from previous test
+		ic.ignoredResources = map[string]struct{}{}
+
+		wrapper := createResourceData("CATALOG", "STORAGE_CREDENTIAL")
+		r := &resource{
+			ID:          "CATALOG,main",
+			DataWrapper: wrapper,
+		}
+		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
+		assert.True(t, ignore, "Resource should be ignored when catalog inherits from storage_credential")
+	})
+
+	// Test case 4: missing destination_source_securable - should NOT be ignored
+	t.Run("missing destination_source_securable", func(t *testing.T) {
+		pfSchema := ic.PluginFrameworkSchemas["databricks_rfa_access_request_destinations"]
+		state := initializeState(pfSchema)
+
+		// Only set securable, not destination_source_securable
+		securableAttrs := map[string]attr.Value{
+			"full_name":      basetypes.NewStringValue("main"),
+			"provider_share": basetypes.NewStringNull(),
+			"type":           basetypes.NewStringValue("CATALOG"),
+		}
+		securableObj, _ := basetypes.NewObjectValue(map[string]attr.Type{
+			"full_name":      basetypes.StringType{},
+			"provider_share": basetypes.StringType{},
+			"type":           basetypes.StringType{},
+		}, securableAttrs)
+		state.SetAttribute(ctx, path.Root("securable"), securableObj)
+
+		wrapper := &PluginFrameworkResourceData{
+			state:      &state,
+			schema:     pfSchema,
+			resourceId: "CATALOG,main",
+		}
+		r := &resource{
+			ID:          "CATALOG,main",
+			DataWrapper: wrapper,
+		}
+		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
+		assert.False(t, ignore, "Resource should not be ignored when destination_source_securable is missing")
+	})
+
+	// Test case 5: missing securable - should NOT be ignored
+	t.Run("missing securable", func(t *testing.T) {
+		pfSchema := ic.PluginFrameworkSchemas["databricks_rfa_access_request_destinations"]
+		state := initializeState(pfSchema)
+
+		// Only set destination_source_securable, not securable
+		dssAttrs := map[string]attr.Value{
+			"full_name":      basetypes.NewStringValue("main"),
+			"provider_share": basetypes.NewStringNull(),
+			"type":           basetypes.NewStringValue("CATALOG"),
+		}
+		dssObj, _ := basetypes.NewObjectValue(map[string]attr.Type{
+			"full_name":      basetypes.StringType{},
+			"provider_share": basetypes.StringType{},
+			"type":           basetypes.StringType{},
+		}, dssAttrs)
+		state.SetAttribute(ctx, path.Root("destination_source_securable"), dssObj)
+
+		wrapper := &PluginFrameworkResourceData{
+			state:      &state,
+			schema:     pfSchema,
+			resourceId: "CATALOG,main",
+		}
+		r := &resource{
+			ID:          "CATALOG,main",
+			DataWrapper: wrapper,
+		}
+		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
+		assert.False(t, ignore, "Resource should not be ignored when securable is missing")
+	})
 }

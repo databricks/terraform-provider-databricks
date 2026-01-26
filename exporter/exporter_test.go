@@ -350,6 +350,13 @@ var emptyRecipients = qa.HTTPFixture{
 	Response:     sharing.ListRecipientsResponse{},
 }
 
+var emptyProviders = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/unity-catalog/providers?",
+	Response:     sharing.ListProvidersResponse{},
+}
+
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
@@ -608,6 +615,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
+			emptyProviders,
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -892,6 +900,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
+			emptyProviders,
 			emptyModelServing,
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,

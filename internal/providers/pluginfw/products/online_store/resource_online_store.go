@@ -53,6 +53,8 @@ type OnlineStore struct {
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
 	// The current state of the online store.
 	State types.String `tfsdk:"state"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -81,6 +83,7 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":               m.Name,
 			"read_replica_count": m.ReadReplicaCount,
 			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
 		},
 	)
 }
@@ -95,6 +98,7 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 			"name":               types.StringType,
 			"read_replica_count": types.Int64Type,
 			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
 		},
 	}
 }
@@ -118,6 +122,7 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
@@ -138,44 +143,6 @@ func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaReq
 
 func (r *OnlineStoreResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
-}
-
-func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
-	var online_store ml.OnlineStore
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateOnlineStoreRequest{
-		OnlineStore: online_store,
-		Name:        plan.Name.ValueString(),
-		UpdateMask:  "capacity,read_replica_count",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update online_store", err.Error())
-		return
-	}
-
-	var newState OnlineStore
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -267,6 +234,44 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
+	var online_store ml.OnlineStore
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateOnlineStoreRequest{
+		OnlineStore: online_store,
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  "capacity,read_replica_count,usage_policy_id",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureStore.UpdateOnlineStore(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update online_store", err.Error())
+		return
+	}
+
+	var newState OnlineStore
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *OnlineStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

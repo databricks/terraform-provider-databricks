@@ -377,44 +377,6 @@ func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
-	var alert_v2 sql.AlertV2
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := sql.UpdateAlertV2Request{
-		Alert:      alert_v2,
-		Id:         plan.Id.ValueString(),
-		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update alert_v2", err.Error())
-		return
-	}
-
-	var newState AlertV2
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -504,6 +466,44 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
+	var alert_v2 sql.AlertV2
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := sql.UpdateAlertV2Request{
+		Alert:      alert_v2,
+		Id:         plan.Id.ValueString(),
+		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update alert_v2", err.Error())
+		return
+	}
+
+	var newState AlertV2
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -58,24 +58,46 @@ type DatabaseInstance struct {
 	// create and update responses.
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Deprecated. The sku of the instance; this field will always match the
-	// value of capacity.
+	// value of capacity. This is an output only field that contains the value
+	// computed from the input field combined with server side defaults. Use the
+	// field without the effective_ prefix to set the value.
 	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
-	// The recorded custom tags associated with the instance.
+	// The recorded custom tags associated with the instance. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveCustomTags types.List `tfsdk:"effective_custom_tags"`
-	// Whether the instance has PG native password login enabled.
+	// Whether the instance has PG native password login enabled. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
 	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// Whether secondaries serving read-only traffic are enabled. Defaults to
-	// false.
+	// false. This is an output only field that contains the value computed from
+	// the input field combined with server side defaults. Use the field without
+	// the effective_ prefix to set the value.
 	EffectiveEnableReadableSecondaries types.Bool `tfsdk:"effective_enable_readable_secondaries"`
 	// The number of nodes in the instance, composed of 1 primary and 0 or more
-	// secondaries. Defaults to 1 primary and 0 secondaries.
+	// secondaries. Defaults to 1 primary and 0 secondaries. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveNodeCount types.Int64 `tfsdk:"effective_node_count"`
 	// The retention window for the instance. This is the time window in days
-	// for which the historical data is retained.
+	// for which the historical data is retained. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveRetentionWindowInDays types.Int64 `tfsdk:"effective_retention_window_in_days"`
-	// Whether the instance is stopped.
+	// Whether the instance is stopped. This is an output only field that
+	// contains the value computed from the input field combined with server
+	// side defaults. Use the field without the effective_ prefix to set the
+	// value.
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
-	// The policy that is applied to the instance.
+	// The policy that is applied to the instance. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Whether to enable PG native password login on the instance. Defaults to
 	// false.
@@ -506,44 +528,6 @@ func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.C
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
-	var database_instance database.DatabaseInstance
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := database.UpdateDatabaseInstanceRequest{
-		DatabaseInstance: database_instance,
-		Name:             plan.Name.ValueString(),
-		UpdateMask:       "capacity,custom_tags,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped,usage_policy_id",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update database_instance", err.Error())
-		return
-	}
-
-	var newState DatabaseInstance
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -650,6 +634,44 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
+	var database_instance database.DatabaseInstance
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := database.UpdateDatabaseInstanceRequest{
+		DatabaseInstance: database_instance,
+		Name:             plan.Name.ValueString(),
+		UpdateMask:       "capacity,custom_tags,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped,usage_policy_id",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.Database.UpdateDatabaseInstance(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update database_instance", err.Error())
+		return
+	}
+
+	var newState DatabaseInstance
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

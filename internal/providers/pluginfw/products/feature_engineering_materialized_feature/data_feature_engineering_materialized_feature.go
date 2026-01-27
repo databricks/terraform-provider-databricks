@@ -34,6 +34,9 @@ type MaterializedFeatureDataSource struct {
 
 // MaterializedFeatureData extends the main model with additional fields.
 type MaterializedFeatureData struct {
+	// The quartz cron expression that defines the schedule of the
+	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// The timestamp when the pipeline last ran and updated the materialized
@@ -62,7 +65,7 @@ type MaterializedFeatureData struct {
 func (m MaterializedFeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStore{}),
+		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
 	}
 }
 
@@ -76,6 +79,7 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"cron_schedule":             m.CronSchedule,
 			"feature_name":              m.FeatureName,
 			"last_materialization_time": m.LastMaterializationTime,
 			"materialized_feature_id":   m.MaterializedFeatureId,
@@ -92,11 +96,12 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"cron_schedule":             types.StringType,
 			"feature_name":              types.StringType,
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
-			"online_store_config":       ml_tf.OnlineStore{}.Type(ctx),
+			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
 			"table_name":                types.StringType,
 		},
@@ -104,6 +109,7 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 }
 
 func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()

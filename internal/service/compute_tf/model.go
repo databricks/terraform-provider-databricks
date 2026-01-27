@@ -319,7 +319,7 @@ type AwsAttributes struct {
 	// availability zone must be in the same region as the Databricks
 	// deployment. For example, "us-west-2a" is not a valid zone id if the
 	// Databricks deployment resides in the "us-east-1" region. This is an
-	// optional field at cluster creation, and if not specified, a default zone
+	// optional field at cluster creation, and if not specified, the zone "auto"
 	// will be used. If the zone specified is "auto", will try to place cluster
 	// in a zone with high availability, and will retry placement in a different
 	// AZ if there is not enough capacity.
@@ -1121,6 +1121,8 @@ type ClusterAttributes struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -1132,8 +1134,7 @@ type ClusterAttributes struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -1213,6 +1214,8 @@ type ClusterAttributes struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -1254,6 +1257,15 @@ func (to *ClusterAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -1274,6 +1286,15 @@ func (to *ClusterAttributes) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -1319,6 +1340,14 @@ func (to *ClusterAttributes) SyncFieldsDuringRead(ctx context.Context, from Clus
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -1338,6 +1367,14 @@ func (to *ClusterAttributes) SyncFieldsDuringRead(ctx context.Context, from Clus
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -1359,6 +1396,7 @@ func (m ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -1378,6 +1416,7 @@ func (m ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -1392,17 +1431,19 @@ func (m ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m ClusterAttributes) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
-		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.String{}),
-		"docker_image":     reflect.TypeOf(DockerImage{}),
-		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.String{}),
-		"spark_env_vars":   reflect.TypeOf(types.String{}),
-		"ssh_public_keys":  reflect.TypeOf(types.String{}),
-		"workload_type":    reflect.TypeOf(WorkloadType{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -1422,6 +1463,7 @@ func (m ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"data_security_mode":             m.DataSecurityMode,
 			"docker_image":                   m.DockerImage,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -1441,6 +1483,7 @@ func (m ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"ssh_public_keys":                m.SshPublicKeys,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -1460,6 +1503,7 @@ func (m ClusterAttributes) Type(ctx context.Context) attr.Type {
 			"data_security_mode":           types.StringType,
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -1487,6 +1531,7 @@ func (m ClusterAttributes) Type(ctx context.Context) attr.Type {
 			},
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -1618,6 +1663,31 @@ func (m *ClusterAttributes) SetDockerImage(ctx context.Context, v DockerImage) {
 	m.DockerImage = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in ClusterAttributes as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterAttributes) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in ClusterAttributes.
+func (m *ClusterAttributes) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetGcpAttributes returns the value of the GcpAttributes field in ClusterAttributes as
 // a GcpAttributes value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1745,6 +1815,31 @@ func (m *ClusterAttributes) SetSshPublicKeys(ctx context.Context, v []types.Stri
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in ClusterAttributes as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterAttributes) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in ClusterAttributes.
+func (m *ClusterAttributes) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in ClusterAttributes as
@@ -1946,6 +2041,8 @@ type ClusterDetails struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -1957,8 +2054,7 @@ type ClusterDetails struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -2081,6 +2177,8 @@ type ClusterDetails struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -2149,6 +2247,15 @@ func (to *ClusterDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.Executors.IsNull() && !from.Executors.IsUnknown() && to.Executors.IsNull() && len(from.Executors.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Executors, and the deserialized field value is Null,
@@ -2191,6 +2298,15 @@ func (to *ClusterDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 				// Recursively sync the fields of TerminationReason
 				toTerminationReason.SyncFieldsDuringCreateOrUpdate(ctx, fromTerminationReason)
 				to.SetTerminationReason(ctx, toTerminationReason)
+			}
+		}
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
 			}
 		}
 	}
@@ -2262,6 +2378,14 @@ func (to *ClusterDetails) SyncFieldsDuringRead(ctx context.Context, from Cluster
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.Executors.IsNull() && !from.Executors.IsUnknown() && to.Executors.IsNull() && len(from.Executors.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Executors, and the deserialized field value is Null,
@@ -2304,6 +2428,14 @@ func (to *ClusterDetails) SyncFieldsDuringRead(ctx context.Context, from Cluster
 			}
 		}
 	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
 			if fromWorkloadType, ok := from.GetWorkloadType(ctx); ok {
@@ -2333,6 +2465,7 @@ func (m ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver"] = attrs["driver"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -2364,6 +2497,7 @@ func (m ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["termination_reason"] = attrs["termination_reason"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -2378,24 +2512,26 @@ func (m ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (m ClusterDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"autoscale":          reflect.TypeOf(AutoScale{}),
-		"aws_attributes":     reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes":   reflect.TypeOf(AzureAttributes{}),
-		"cluster_log_conf":   reflect.TypeOf(ClusterLogConf{}),
-		"cluster_log_status": reflect.TypeOf(LogSyncStatus{}),
-		"custom_tags":        reflect.TypeOf(types.String{}),
-		"default_tags":       reflect.TypeOf(types.String{}),
-		"docker_image":       reflect.TypeOf(DockerImage{}),
-		"driver":             reflect.TypeOf(SparkNode{}),
-		"executors":          reflect.TypeOf(SparkNode{}),
-		"gcp_attributes":     reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":       reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":         reflect.TypeOf(types.String{}),
-		"spark_env_vars":     reflect.TypeOf(types.String{}),
-		"spec":               reflect.TypeOf(ClusterSpec{}),
-		"ssh_public_keys":    reflect.TypeOf(types.String{}),
-		"termination_reason": reflect.TypeOf(TerminationReason{}),
-		"workload_type":      reflect.TypeOf(WorkloadType{}),
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"cluster_log_status":           reflect.TypeOf(LogSyncStatus{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"default_tags":                 reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver":                       reflect.TypeOf(SparkNode{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"executors":                    reflect.TypeOf(SparkNode{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"spec":                         reflect.TypeOf(ClusterSpec{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"termination_reason":           reflect.TypeOf(TerminationReason{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -2424,6 +2560,7 @@ func (m ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"docker_image":                   m.DockerImage,
 			"driver":                         m.Driver,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -2455,6 +2592,7 @@ func (m ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"termination_reason":             m.TerminationReason,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -2485,6 +2623,7 @@ func (m ClusterDetails) Type(ctx context.Context) attr.Type {
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver":                       SparkNode{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -2526,6 +2665,7 @@ func (m ClusterDetails) Type(ctx context.Context) attr.Type {
 			"termination_reason":             TerminationReason{}.Type(ctx),
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -2758,6 +2898,31 @@ func (m *ClusterDetails) SetDriver(ctx context.Context, v SparkNode) {
 	m.Driver = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in ClusterDetails as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterDetails) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in ClusterDetails.
+func (m *ClusterDetails) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetExecutors returns the value of the Executors field in ClusterDetails as
 // a slice of SparkNode values.
 // If the field is unknown or null, the boolean return value is false.
@@ -2961,6 +3126,31 @@ func (m *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationR
 func (m *ClusterDetails) SetTerminationReason(ctx context.Context, v TerminationReason) {
 	vs := v.ToObjectValue(ctx)
 	m.TerminationReason = vs
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in ClusterDetails as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterDetails) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in ClusterDetails.
+func (m *ClusterDetails) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in ClusterDetails as
@@ -4522,6 +4712,8 @@ type ClusterSpec struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -4533,8 +4725,7 @@ type ClusterSpec struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -4625,6 +4816,8 @@ type ClusterSpec struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -4675,6 +4868,15 @@ func (to *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -4695,6 +4897,15 @@ func (to *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -4748,6 +4959,14 @@ func (to *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, from ClusterSpe
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -4767,6 +4986,14 @@ func (to *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, from ClusterSpe
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -4790,6 +5017,7 @@ func (m ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -4810,6 +5038,7 @@ func (m ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -4824,18 +5053,20 @@ func (m ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"autoscale":        reflect.TypeOf(AutoScale{}),
-		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
-		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.String{}),
-		"docker_image":     reflect.TypeOf(DockerImage{}),
-		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.String{}),
-		"spark_env_vars":   reflect.TypeOf(types.String{}),
-		"ssh_public_keys":  reflect.TypeOf(types.String{}),
-		"workload_type":    reflect.TypeOf(WorkloadType{}),
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -4857,6 +5088,7 @@ func (m ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"data_security_mode":             m.DataSecurityMode,
 			"docker_image":                   m.DockerImage,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -4877,6 +5109,7 @@ func (m ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"ssh_public_keys":                m.SshPublicKeys,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -4898,6 +5131,7 @@ func (m ClusterSpec) Type(ctx context.Context) attr.Type {
 			"data_security_mode":           types.StringType,
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -4926,6 +5160,7 @@ func (m ClusterSpec) Type(ctx context.Context) attr.Type {
 			},
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -5082,6 +5317,31 @@ func (m *ClusterSpec) SetDockerImage(ctx context.Context, v DockerImage) {
 	m.DockerImage = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in ClusterSpec as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterSpec) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in ClusterSpec.
+func (m *ClusterSpec) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetGcpAttributes returns the value of the GcpAttributes field in ClusterSpec as
 // a GcpAttributes value.
 // If the field is unknown or null, the boolean return value is false.
@@ -5209,6 +5469,31 @@ func (m *ClusterSpec) SetSshPublicKeys(ctx context.Context, v []types.String) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in ClusterSpec as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterSpec) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in ClusterSpec.
+func (m *ClusterSpec) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in ClusterSpec as
@@ -5663,6 +5948,8 @@ type CreateCluster struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -5674,8 +5961,7 @@ type CreateCluster struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -5766,6 +6052,8 @@ type CreateCluster struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -5825,6 +6113,15 @@ func (to *CreateCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -5845,6 +6142,15 @@ func (to *CreateCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -5906,6 +6212,14 @@ func (to *CreateCluster) SyncFieldsDuringRead(ctx context.Context, from CreateCl
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -5925,6 +6239,14 @@ func (to *CreateCluster) SyncFieldsDuringRead(ctx context.Context, from CreateCl
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -5949,6 +6271,7 @@ func (m CreateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -5969,6 +6292,7 @@ func (m CreateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -5983,19 +6307,21 @@ func (m CreateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m CreateCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"autoscale":        reflect.TypeOf(AutoScale{}),
-		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
-		"clone_from":       reflect.TypeOf(CloneCluster{}),
-		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.String{}),
-		"docker_image":     reflect.TypeOf(DockerImage{}),
-		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.String{}),
-		"spark_env_vars":   reflect.TypeOf(types.String{}),
-		"ssh_public_keys":  reflect.TypeOf(types.String{}),
-		"workload_type":    reflect.TypeOf(WorkloadType{}),
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"clone_from":                   reflect.TypeOf(CloneCluster{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -6018,6 +6344,7 @@ func (m CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"data_security_mode":             m.DataSecurityMode,
 			"docker_image":                   m.DockerImage,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -6038,6 +6365,7 @@ func (m CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"ssh_public_keys":                m.SshPublicKeys,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -6060,6 +6388,7 @@ func (m CreateCluster) Type(ctx context.Context) attr.Type {
 			"data_security_mode":           types.StringType,
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -6088,6 +6417,7 @@ func (m CreateCluster) Type(ctx context.Context) attr.Type {
 			},
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -6269,6 +6599,31 @@ func (m *CreateCluster) SetDockerImage(ctx context.Context, v DockerImage) {
 	m.DockerImage = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in CreateCluster as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCluster) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in CreateCluster.
+func (m *CreateCluster) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetGcpAttributes returns the value of the GcpAttributes field in CreateCluster as
 // a GcpAttributes value.
 // If the field is unknown or null, the boolean return value is false.
@@ -6396,6 +6751,31 @@ func (m *CreateCluster) SetSshPublicKeys(ctx context.Context, v []types.String) 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in CreateCluster as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCluster) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in CreateCluster.
+func (m *CreateCluster) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in CreateCluster as
@@ -6565,6 +6945,8 @@ type CreateInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// Flexible node type configuration for the pool.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -6623,6 +7005,15 @@ func (to *CreateInstancePool) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 			}
 		}
 	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of NodeTypeFlexibility
+				toNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.PreloadedDockerImages.IsNull() && !from.PreloadedDockerImages.IsUnknown() && to.PreloadedDockerImages.IsNull() && len(from.PreloadedDockerImages.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for PreloadedDockerImages, and the deserialized field value is Null,
@@ -6670,6 +7061,14 @@ func (to *CreateInstancePool) SyncFieldsDuringRead(ctx context.Context, from Cre
 			}
 		}
 	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				toNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.PreloadedDockerImages.IsNull() && !from.PreloadedDockerImages.IsUnknown() && to.PreloadedDockerImages.IsNull() && len(from.PreloadedDockerImages.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for PreloadedDockerImages, and the deserialized field value is Null,
@@ -6695,6 +7094,7 @@ func (m CreateInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -6718,6 +7118,7 @@ func (m CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -6740,6 +7141,7 @@ func (m CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"instance_pool_name":                    m.InstancePoolName,
 			"max_capacity":                          m.MaxCapacity,
 			"min_idle_instances":                    m.MinIdleInstances,
+			"node_type_flexibility":                 m.NodeTypeFlexibility,
 			"node_type_id":                          m.NodeTypeId,
 			"preloaded_docker_images":               m.PreloadedDockerImages,
 			"preloaded_spark_versions":              m.PreloadedSparkVersions,
@@ -6764,6 +7166,7 @@ func (m CreateInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -6901,6 +7304,31 @@ func (m *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 func (m *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	m.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.NodeTypeFlexibility.IsNull() || m.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool.
+func (m *CreateInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
@@ -8294,6 +8722,8 @@ type EditCluster struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -8305,8 +8735,7 @@ type EditCluster struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -8397,6 +8826,8 @@ type EditCluster struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -8447,6 +8878,15 @@ func (to *EditCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -8467,6 +8907,15 @@ func (to *EditCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -8520,6 +8969,14 @@ func (to *EditCluster) SyncFieldsDuringRead(ctx context.Context, from EditCluste
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -8539,6 +8996,14 @@ func (to *EditCluster) SyncFieldsDuringRead(ctx context.Context, from EditCluste
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -8563,6 +9028,7 @@ func (m EditCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -8583,6 +9049,7 @@ func (m EditCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -8597,18 +9064,20 @@ func (m EditCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m EditCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"autoscale":        reflect.TypeOf(AutoScale{}),
-		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
-		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.String{}),
-		"docker_image":     reflect.TypeOf(DockerImage{}),
-		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.String{}),
-		"spark_env_vars":   reflect.TypeOf(types.String{}),
-		"ssh_public_keys":  reflect.TypeOf(types.String{}),
-		"workload_type":    reflect.TypeOf(WorkloadType{}),
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -8631,6 +9100,7 @@ func (m EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"data_security_mode":             m.DataSecurityMode,
 			"docker_image":                   m.DockerImage,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -8651,6 +9121,7 @@ func (m EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"ssh_public_keys":                m.SshPublicKeys,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -8673,6 +9144,7 @@ func (m EditCluster) Type(ctx context.Context) attr.Type {
 			"data_security_mode":           types.StringType,
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -8701,6 +9173,7 @@ func (m EditCluster) Type(ctx context.Context) attr.Type {
 			},
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -8857,6 +9330,31 @@ func (m *EditCluster) SetDockerImage(ctx context.Context, v DockerImage) {
 	m.DockerImage = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in EditCluster as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EditCluster) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in EditCluster.
+func (m *EditCluster) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetGcpAttributes returns the value of the GcpAttributes field in EditCluster as
 // a GcpAttributes value.
 // If the field is unknown or null, the boolean return value is false.
@@ -8986,6 +9484,31 @@ func (m *EditCluster) SetSshPublicKeys(ctx context.Context, v []types.String) {
 	m.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in EditCluster as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EditCluster) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in EditCluster.
+func (m *EditCluster) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
+}
+
 // GetWorkloadType returns the value of the WorkloadType field in EditCluster as
 // a WorkloadType value.
 // If the field is unknown or null, the boolean return value is false.
@@ -9078,6 +9601,8 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// Flexible node type configuration for the pool.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -9093,9 +9618,26 @@ type EditInstancePool struct {
 }
 
 func (to *EditInstancePool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditInstancePool) {
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of NodeTypeFlexibility
+				toNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 }
 
 func (to *EditInstancePool) SyncFieldsDuringRead(ctx context.Context, from EditInstancePool) {
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				toNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 }
 
 func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9105,6 +9647,7 @@ func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
@@ -9121,7 +9664,8 @@ func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
 	}
 }
 
@@ -9138,6 +9682,7 @@ func (m EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"instance_pool_name":                    m.InstancePoolName,
 			"max_capacity":                          m.MaxCapacity,
 			"min_idle_instances":                    m.MinIdleInstances,
+			"node_type_flexibility":                 m.NodeTypeFlexibility,
 			"node_type_id":                          m.NodeTypeId,
 			"remote_disk_throughput":                m.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        m.TotalInitialRemoteDiskSize,
@@ -9156,6 +9701,7 @@ func (m EditInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"remote_disk_throughput":                types.Int64Type,
 			"total_initial_remote_disk_size":        types.Int64Type,
@@ -9187,6 +9733,31 @@ func (m *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.NodeTypeFlexibility.IsNull() || m.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
+func (m *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.NodeTypeFlexibility = vs
 }
 
 type EditInstancePoolResponse struct {
@@ -11345,6 +11916,8 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// Flexible node type configuration for the pool.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -11406,6 +11979,15 @@ func (to *GetInstancePool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				// Recursively sync the fields of GcpAttributes
 				toGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpAttributes)
 				to.SetGcpAttributes(ctx, toGcpAttributes)
+			}
+		}
+	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of NodeTypeFlexibility
+				toNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
 			}
 		}
 	}
@@ -11474,6 +12056,14 @@ func (to *GetInstancePool) SyncFieldsDuringRead(ctx context.Context, from GetIns
 			}
 		}
 	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				toNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.PreloadedDockerImages.IsNull() && !from.PreloadedDockerImages.IsUnknown() && to.PreloadedDockerImages.IsNull() && len(from.PreloadedDockerImages.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for PreloadedDockerImages, and the deserialized field value is Null,
@@ -11517,6 +12107,7 @@ func (m GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -11544,6 +12135,7 @@ func (m GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -11570,6 +12162,7 @@ func (m GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    m.InstancePoolName,
 			"max_capacity":                          m.MaxCapacity,
 			"min_idle_instances":                    m.MinIdleInstances,
+			"node_type_flexibility":                 m.NodeTypeFlexibility,
 			"node_type_id":                          m.NodeTypeId,
 			"preloaded_docker_images":               m.PreloadedDockerImages,
 			"preloaded_spark_versions":              m.PreloadedSparkVersions,
@@ -11601,6 +12194,7 @@ func (m GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -11767,6 +12361,31 @@ func (m *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 func (m *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	m.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.NodeTypeFlexibility.IsNull() || m.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
+func (m *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -13142,6 +13761,9 @@ type InitScriptInfoAndExecutionDetails struct {
 	S3 types.Object `tfsdk:"s3"`
 	// The current status of the script
 	Status types.String `tfsdk:"status"`
+	// The stderr output from the init script execution. Only populated when
+	// init scripts debug is enabled and script execution fails.
+	Stderr types.String `tfsdk:"stderr"`
 	// destination needs to be provided. e.g. `{ \"volumes\" : { \"destination\"
 	// : \"/Volumes/my-init.sh\" } }`
 	Volumes types.Object `tfsdk:"volumes"`
@@ -13284,6 +13906,7 @@ func (m InitScriptInfoAndExecutionDetails) ApplySchemaCustomizations(attrs map[s
 	attrs["gcs"] = attrs["gcs"].SetOptional()
 	attrs["s3"] = attrs["s3"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["stderr"] = attrs["stderr"].SetOptional()
 	attrs["volumes"] = attrs["volumes"].SetOptional()
 	attrs["workspace"] = attrs["workspace"].SetOptional()
 
@@ -13324,6 +13947,7 @@ func (m InitScriptInfoAndExecutionDetails) ToObjectValue(ctx context.Context) ba
 			"gcs":                        m.Gcs,
 			"s3":                         m.S3,
 			"status":                     m.Status,
+			"stderr":                     m.Stderr,
 			"volumes":                    m.Volumes,
 			"workspace":                  m.Workspace,
 		})
@@ -13341,6 +13965,7 @@ func (m InitScriptInfoAndExecutionDetails) Type(ctx context.Context) attr.Type {
 			"gcs":                        GcsStorageInfo{}.Type(ctx),
 			"s3":                         S3StorageInfo{}.Type(ctx),
 			"status":                     types.StringType,
+			"stderr":                     types.StringType,
 			"volumes":                    VolumesStorageInfo{}.Type(ctx),
 			"workspace":                  WorkspaceStorageInfo{}.Type(ctx),
 		},
@@ -13874,6 +14499,8 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// Flexible node type configuration for the pool.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -13935,6 +14562,15 @@ func (to *InstancePoolAndStats) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				// Recursively sync the fields of GcpAttributes
 				toGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpAttributes)
 				to.SetGcpAttributes(ctx, toGcpAttributes)
+			}
+		}
+	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of NodeTypeFlexibility
+				toNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
 			}
 		}
 	}
@@ -14003,6 +14639,14 @@ func (to *InstancePoolAndStats) SyncFieldsDuringRead(ctx context.Context, from I
 			}
 		}
 	}
+	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
+		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
+			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
+				toNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromNodeTypeFlexibility)
+				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.PreloadedDockerImages.IsNull() && !from.PreloadedDockerImages.IsUnknown() && to.PreloadedDockerImages.IsNull() && len(from.PreloadedDockerImages.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for PreloadedDockerImages, and the deserialized field value is Null,
@@ -14046,6 +14690,7 @@ func (m InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -14073,6 +14718,7 @@ func (m InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -14099,6 +14745,7 @@ func (m InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    m.InstancePoolName,
 			"max_capacity":                          m.MaxCapacity,
 			"min_idle_instances":                    m.MinIdleInstances,
+			"node_type_flexibility":                 m.NodeTypeFlexibility,
 			"node_type_id":                          m.NodeTypeId,
 			"preloaded_docker_images":               m.PreloadedDockerImages,
 			"preloaded_spark_versions":              m.PreloadedSparkVersions,
@@ -14130,6 +14777,7 @@ func (m InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -14296,6 +14944,31 @@ func (m *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 func (m *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	m.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.NodeTypeFlexibility.IsNull() || m.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
+func (m *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -17855,6 +18528,99 @@ func (m *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) 
 	m.NodeInstanceType = vs
 }
 
+// Configuration for flexible node types, allowing fallback to alternate node
+// types during cluster launch and upscale.
+type NodeTypeFlexibility struct {
+	// A list of node type IDs to use as fallbacks when the primary node type is
+	// unavailable.
+	AlternateNodeTypeIds types.List `tfsdk:"alternate_node_type_ids"`
+}
+
+func (to *NodeTypeFlexibility) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NodeTypeFlexibility) {
+	if !from.AlternateNodeTypeIds.IsNull() && !from.AlternateNodeTypeIds.IsUnknown() && to.AlternateNodeTypeIds.IsNull() && len(from.AlternateNodeTypeIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AlternateNodeTypeIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AlternateNodeTypeIds = from.AlternateNodeTypeIds
+	}
+}
+
+func (to *NodeTypeFlexibility) SyncFieldsDuringRead(ctx context.Context, from NodeTypeFlexibility) {
+	if !from.AlternateNodeTypeIds.IsNull() && !from.AlternateNodeTypeIds.IsUnknown() && to.AlternateNodeTypeIds.IsNull() && len(from.AlternateNodeTypeIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AlternateNodeTypeIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AlternateNodeTypeIds = from.AlternateNodeTypeIds
+	}
+}
+
+func (m NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alternate_node_type_ids"] = attrs["alternate_node_type_ids"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"alternate_node_type_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
+// only implements ToObjectValue() and Type().
+func (m NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alternate_node_type_ids": m.AlternateNodeTypeIds,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alternate_node_type_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetAlternateNodeTypeIds returns the value of the AlternateNodeTypeIds field in NodeTypeFlexibility as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *NodeTypeFlexibility) GetAlternateNodeTypeIds(ctx context.Context) ([]types.String, bool) {
+	if m.AlternateNodeTypeIds.IsNull() || m.AlternateNodeTypeIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.AlternateNodeTypeIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlternateNodeTypeIds sets the value of the AlternateNodeTypeIds field in NodeTypeFlexibility.
+func (m *NodeTypeFlexibility) SetAlternateNodeTypeIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alternate_node_type_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AlternateNodeTypeIds = types.ListValueMust(t, vs)
+}
+
 // Error message of a failed pending instances
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id"`
@@ -19870,6 +20636,8 @@ type UpdateClusterResource struct {
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
 	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
@@ -19881,8 +20649,7 @@ type UpdateClusterResource struct {
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
-	// disk space. This feature requires specific AWS permissions to function
-	// correctly - refer to the User Guide for more details.
+	// disk space.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
@@ -19973,6 +20740,8 @@ type UpdateClusterResource struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
 
 	WorkloadType types.Object `tfsdk:"workload_type"`
 }
@@ -20023,6 +20792,15 @@ func (to *UpdateClusterResource) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -20043,6 +20821,15 @@ func (to *UpdateClusterResource) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -20096,6 +20883,14 @@ func (to *UpdateClusterResource) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
 	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
 		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
 			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
@@ -20115,6 +20910,14 @@ func (to *UpdateClusterResource) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
 	}
 	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
 		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
@@ -20137,6 +20940,7 @@ func (m UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
 	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
 	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
 	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
@@ -20157,6 +20961,7 @@ func (m UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
 	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
 	return attrs
@@ -20171,18 +20976,20 @@ func (m UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfsche
 // SDK values.
 func (m UpdateClusterResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"autoscale":        reflect.TypeOf(AutoScale{}),
-		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
-		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.String{}),
-		"docker_image":     reflect.TypeOf(DockerImage{}),
-		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.String{}),
-		"spark_env_vars":   reflect.TypeOf(types.String{}),
-		"ssh_public_keys":  reflect.TypeOf(types.String{}),
-		"workload_type":    reflect.TypeOf(WorkloadType{}),
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
 	}
 }
 
@@ -20203,6 +21010,7 @@ func (m UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"data_security_mode":             m.DataSecurityMode,
 			"docker_image":                   m.DockerImage,
 			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
 			"driver_node_type_id":            m.DriverNodeTypeId,
 			"enable_elastic_disk":            m.EnableElasticDisk,
 			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
@@ -20223,6 +21031,7 @@ func (m UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"ssh_public_keys":                m.SshPublicKeys,
 			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
 			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
 			"workload_type":                  m.WorkloadType,
 		})
 }
@@ -20243,6 +21052,7 @@ func (m UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			"data_security_mode":           types.StringType,
 			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
@@ -20271,6 +21081,7 @@ func (m UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			},
 			"total_initial_remote_disk_size": types.Int64Type,
 			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
 			"workload_type":                  WorkloadType{}.Type(ctx),
 		},
 	}
@@ -20427,6 +21238,31 @@ func (m *UpdateClusterResource) SetDockerImage(ctx context.Context, v DockerImag
 	m.DockerImage = vs
 }
 
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in UpdateClusterResource as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateClusterResource) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in UpdateClusterResource.
+func (m *UpdateClusterResource) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
 // GetGcpAttributes returns the value of the GcpAttributes field in UpdateClusterResource as
 // a GcpAttributes value.
 // If the field is unknown or null, the boolean return value is false.
@@ -20554,6 +21390,31 @@ func (m *UpdateClusterResource) SetSshPublicKeys(ctx context.Context, v []types.
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in UpdateClusterResource as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateClusterResource) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in UpdateClusterResource.
+func (m *UpdateClusterResource) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in UpdateClusterResource as

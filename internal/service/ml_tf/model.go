@@ -308,6 +308,274 @@ func (m *ApproveTransitionRequestResponse) SetActivity(ctx context.Context, v Ac
 	m.Activity = vs
 }
 
+type AuthConfig struct {
+	// Name of the Unity Catalog service credential. This value will be set
+	// under the option databricks.serviceCredential
+	UcServiceCredentialName types.String `tfsdk:"uc_service_credential_name"`
+}
+
+func (to *AuthConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AuthConfig) {
+}
+
+func (to *AuthConfig) SyncFieldsDuringRead(ctx context.Context, from AuthConfig) {
+}
+
+func (m AuthConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["uc_service_credential_name"] = attrs["uc_service_credential_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AuthConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AuthConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AuthConfig
+// only implements ToObjectValue() and Type().
+func (m AuthConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"uc_service_credential_name": m.UcServiceCredentialName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AuthConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"uc_service_credential_name": types.StringType,
+		},
+	}
+}
+
+type BatchCreateMaterializedFeaturesRequest struct {
+	// The requests to create materialized features.
+	Requests types.List `tfsdk:"requests"`
+}
+
+func (to *BatchCreateMaterializedFeaturesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BatchCreateMaterializedFeaturesRequest) {
+}
+
+func (to *BatchCreateMaterializedFeaturesRequest) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesRequest) {
+}
+
+func (m BatchCreateMaterializedFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["requests"] = attrs["requests"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateMaterializedFeaturesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m BatchCreateMaterializedFeaturesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"requests": reflect.TypeOf(CreateMaterializedFeatureRequest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateMaterializedFeaturesRequest
+// only implements ToObjectValue() and Type().
+func (m BatchCreateMaterializedFeaturesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"requests": m.Requests,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m BatchCreateMaterializedFeaturesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"requests": basetypes.ListType{
+				ElemType: CreateMaterializedFeatureRequest{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRequests returns the value of the Requests field in BatchCreateMaterializedFeaturesRequest as
+// a slice of CreateMaterializedFeatureRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BatchCreateMaterializedFeaturesRequest) GetRequests(ctx context.Context) ([]CreateMaterializedFeatureRequest, bool) {
+	if m.Requests.IsNull() || m.Requests.IsUnknown() {
+		return nil, false
+	}
+	var v []CreateMaterializedFeatureRequest
+	d := m.Requests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRequests sets the value of the Requests field in BatchCreateMaterializedFeaturesRequest.
+func (m *BatchCreateMaterializedFeaturesRequest) SetRequests(ctx context.Context, v []CreateMaterializedFeatureRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Requests = types.ListValueMust(t, vs)
+}
+
+type BatchCreateMaterializedFeaturesResponse struct {
+	// The created materialized features with assigned IDs.
+	MaterializedFeatures types.List `tfsdk:"materialized_features"`
+}
+
+func (to *BatchCreateMaterializedFeaturesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BatchCreateMaterializedFeaturesResponse) {
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() && to.MaterializedFeatures.IsNull() && len(from.MaterializedFeatures.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+}
+
+func (to *BatchCreateMaterializedFeaturesResponse) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesResponse) {
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() && to.MaterializedFeatures.IsNull() && len(from.MaterializedFeatures.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+}
+
+func (m BatchCreateMaterializedFeaturesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["materialized_features"] = attrs["materialized_features"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchCreateMaterializedFeaturesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m BatchCreateMaterializedFeaturesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"materialized_features": reflect.TypeOf(MaterializedFeature{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchCreateMaterializedFeaturesResponse
+// only implements ToObjectValue() and Type().
+func (m BatchCreateMaterializedFeaturesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"materialized_features": m.MaterializedFeatures,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m BatchCreateMaterializedFeaturesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"materialized_features": basetypes.ListType{
+				ElemType: MaterializedFeature{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetMaterializedFeatures returns the value of the MaterializedFeatures field in BatchCreateMaterializedFeaturesResponse as
+// a slice of MaterializedFeature values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BatchCreateMaterializedFeaturesResponse) GetMaterializedFeatures(ctx context.Context) ([]MaterializedFeature, bool) {
+	if m.MaterializedFeatures.IsNull() || m.MaterializedFeatures.IsUnknown() {
+		return nil, false
+	}
+	var v []MaterializedFeature
+	d := m.MaterializedFeatures.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMaterializedFeatures sets the value of the MaterializedFeatures field in BatchCreateMaterializedFeaturesResponse.
+func (m *BatchCreateMaterializedFeaturesResponse) SetMaterializedFeatures(ctx context.Context, v []MaterializedFeature) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["materialized_features"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.MaterializedFeatures = types.ListValueMust(t, vs)
+}
+
+type ColumnIdentifier struct {
+	// String representation of the column name or variant expression path. For
+	// nested fields, the leaf value is what will be present in materialized
+	// tables and expected to match at query time. For example, the leaf node of
+	// value:trip_details.location_details.pickup_zip is pickup_zip.
+	VariantExprPath types.String `tfsdk:"variant_expr_path"`
+}
+
+func (to *ColumnIdentifier) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnIdentifier) {
+}
+
+func (to *ColumnIdentifier) SyncFieldsDuringRead(ctx context.Context, from ColumnIdentifier) {
+}
+
+func (m ColumnIdentifier) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["variant_expr_path"] = attrs["variant_expr_path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnIdentifier.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ColumnIdentifier) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnIdentifier
+// only implements ToObjectValue() and Type().
+func (m ColumnIdentifier) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"variant_expr_path": m.VariantExprPath,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ColumnIdentifier) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"variant_expr_path": types.StringType,
+		},
+	}
+}
+
 // For activities, this contains the activity recorded for the action. For
 // comments, this contains the comment details. For transition requests, this
 // contains the transition request details.
@@ -1342,6 +1610,97 @@ func (m CreateForecastingExperimentResponse) Type(ctx context.Context) attr.Type
 			"experiment_id": types.StringType,
 		},
 	}
+}
+
+type CreateKafkaConfigRequest struct {
+	KafkaConfig types.Object `tfsdk:"kafka_config"`
+}
+
+func (to *CreateKafkaConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateKafkaConfigRequest) {
+	if !from.KafkaConfig.IsNull() && !from.KafkaConfig.IsUnknown() {
+		if toKafkaConfig, ok := to.GetKafkaConfig(ctx); ok {
+			if fromKafkaConfig, ok := from.GetKafkaConfig(ctx); ok {
+				// Recursively sync the fields of KafkaConfig
+				toKafkaConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaConfig)
+				to.SetKafkaConfig(ctx, toKafkaConfig)
+			}
+		}
+	}
+}
+
+func (to *CreateKafkaConfigRequest) SyncFieldsDuringRead(ctx context.Context, from CreateKafkaConfigRequest) {
+	if !from.KafkaConfig.IsNull() && !from.KafkaConfig.IsUnknown() {
+		if toKafkaConfig, ok := to.GetKafkaConfig(ctx); ok {
+			if fromKafkaConfig, ok := from.GetKafkaConfig(ctx); ok {
+				toKafkaConfig.SyncFieldsDuringRead(ctx, fromKafkaConfig)
+				to.SetKafkaConfig(ctx, toKafkaConfig)
+			}
+		}
+	}
+}
+
+func (m CreateKafkaConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kafka_config"] = attrs["kafka_config"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateKafkaConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateKafkaConfigRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"kafka_config": reflect.TypeOf(KafkaConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateKafkaConfigRequest
+// only implements ToObjectValue() and Type().
+func (m CreateKafkaConfigRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"kafka_config": m.KafkaConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateKafkaConfigRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"kafka_config": KafkaConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetKafkaConfig returns the value of the KafkaConfig field in CreateKafkaConfigRequest as
+// a KafkaConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateKafkaConfigRequest) GetKafkaConfig(ctx context.Context) (KafkaConfig, bool) {
+	var e KafkaConfig
+	if m.KafkaConfig.IsNull() || m.KafkaConfig.IsUnknown() {
+		return e, false
+	}
+	var v KafkaConfig
+	d := m.KafkaConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetKafkaConfig sets the value of the KafkaConfig field in CreateKafkaConfigRequest.
+func (m *CreateKafkaConfigRequest) SetKafkaConfig(ctx context.Context, v KafkaConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.KafkaConfig = vs
 }
 
 type CreateLoggedModelRequest struct {
@@ -2868,6 +3227,8 @@ func (m *CreateWebhookResponse) SetWebhook(ctx context.Context, v RegistryWebhoo
 
 type DataSource struct {
 	DeltaTableSource types.Object `tfsdk:"delta_table_source"`
+
+	KafkaSource types.Object `tfsdk:"kafka_source"`
 }
 
 func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataSource) {
@@ -2877,6 +3238,15 @@ func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 				// Recursively sync the fields of DeltaTableSource
 				toDeltaTableSource.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTableSource)
 				to.SetDeltaTableSource(ctx, toDeltaTableSource)
+			}
+		}
+	}
+	if !from.KafkaSource.IsNull() && !from.KafkaSource.IsUnknown() {
+		if toKafkaSource, ok := to.GetKafkaSource(ctx); ok {
+			if fromKafkaSource, ok := from.GetKafkaSource(ctx); ok {
+				// Recursively sync the fields of KafkaSource
+				toKafkaSource.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaSource)
+				to.SetKafkaSource(ctx, toKafkaSource)
 			}
 		}
 	}
@@ -2891,10 +3261,19 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 			}
 		}
 	}
+	if !from.KafkaSource.IsNull() && !from.KafkaSource.IsUnknown() {
+		if toKafkaSource, ok := to.GetKafkaSource(ctx); ok {
+			if fromKafkaSource, ok := from.GetKafkaSource(ctx); ok {
+				toKafkaSource.SyncFieldsDuringRead(ctx, fromKafkaSource)
+				to.SetKafkaSource(ctx, toKafkaSource)
+			}
+		}
+	}
 }
 
 func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
+	attrs["kafka_source"] = attrs["kafka_source"].SetOptional()
 
 	return attrs
 }
@@ -2909,6 +3288,7 @@ func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 func (m DataSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"delta_table_source": reflect.TypeOf(DeltaTableSource{}),
+		"kafka_source":       reflect.TypeOf(KafkaSource{}),
 	}
 }
 
@@ -2920,6 +3300,7 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"delta_table_source": m.DeltaTableSource,
+			"kafka_source":       m.KafkaSource,
 		})
 }
 
@@ -2928,6 +3309,7 @@ func (m DataSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"delta_table_source": DeltaTableSource{}.Type(ctx),
+			"kafka_source":       KafkaSource{}.Type(ctx),
 		},
 	}
 }
@@ -2955,6 +3337,31 @@ func (m *DataSource) GetDeltaTableSource(ctx context.Context) (DeltaTableSource,
 func (m *DataSource) SetDeltaTableSource(ctx context.Context, v DeltaTableSource) {
 	vs := v.ToObjectValue(ctx)
 	m.DeltaTableSource = vs
+}
+
+// GetKafkaSource returns the value of the KafkaSource field in DataSource as
+// a KafkaSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource) GetKafkaSource(ctx context.Context) (KafkaSource, bool) {
+	var e KafkaSource
+	if m.KafkaSource.IsNull() || m.KafkaSource.IsUnknown() {
+		return e, false
+	}
+	var v KafkaSource
+	d := m.KafkaSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetKafkaSource sets the value of the KafkaSource field in DataSource.
+func (m *DataSource) SetKafkaSource(ctx context.Context, v KafkaSource) {
+	vs := v.ToObjectValue(ctx)
+	m.KafkaSource = vs
 }
 
 // Dataset. Represents a reference to data used for training, testing, or
@@ -3460,6 +3867,54 @@ func (m DeleteFeatureTagRequest) Type(ctx context.Context) attr.Type {
 			"feature_name": types.StringType,
 			"key":          types.StringType,
 			"table_name":   types.StringType,
+		},
+	}
+}
+
+type DeleteKafkaConfigRequest struct {
+	// Name of the Kafka config to delete.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteKafkaConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteKafkaConfigRequest) {
+}
+
+func (to *DeleteKafkaConfigRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteKafkaConfigRequest) {
+}
+
+func (m DeleteKafkaConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteKafkaConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteKafkaConfigRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteKafkaConfigRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteKafkaConfigRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteKafkaConfigRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -4117,6 +4572,54 @@ func (m DeleteOnlineStoreRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteOnlineTableRequest struct {
+	// The full three-part (catalog, schema, table) name of the online table.
+	OnlineTableName types.String `tfsdk:"-"`
+}
+
+func (to *DeleteOnlineTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteOnlineTableRequest) {
+}
+
+func (to *DeleteOnlineTableRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteOnlineTableRequest) {
+}
+
+func (m DeleteOnlineTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["online_table_name"] = attrs["online_table_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteOnlineTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteOnlineTableRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteOnlineTableRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteOnlineTableRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"online_table_name": m.OnlineTableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteOnlineTableRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"online_table_name": types.StringType,
 		},
 	}
 }
@@ -5464,6 +5967,13 @@ type Feature struct {
 	Function types.Object `tfsdk:"function"`
 	// The input columns from which the feature is computed.
 	Inputs types.List `tfsdk:"inputs"`
+	// WARNING: This field is primarily intended for internal use by Databricks
+	// systems and is automatically populated when features are created through
+	// Databricks notebooks or jobs. Users should not manually set this field as
+	// incorrect values may lead to inaccurate lineage tracking or unexpected
+	// behavior. This field will be set by feature-engineering client and should
+	// be left unset by SDK and terraform users.
+	LineageContext types.Object `tfsdk:"lineage_context"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
 	// The time window in which the feature is computed.
@@ -5477,6 +5987,15 @@ func (to *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Feat
 				// Recursively sync the fields of Function
 				toFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromFunction)
 				to.SetFunction(ctx, toFunction)
+			}
+		}
+	}
+	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
+		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
+			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
+				// Recursively sync the fields of LineageContext
+				toLineageContext.SyncFieldsDuringCreateOrUpdate(ctx, fromLineageContext)
+				to.SetLineageContext(ctx, toLineageContext)
 			}
 		}
 	}
@@ -5509,6 +6028,14 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 			}
 		}
 	}
+	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
+		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
+			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
+				toLineageContext.SyncFieldsDuringRead(ctx, fromLineageContext)
+				to.SetLineageContext(ctx, toLineageContext)
+			}
+		}
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -5536,9 +6063,10 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["function"] = attrs["function"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["inputs"] = attrs["inputs"].SetRequired()
 	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["time_window"] = attrs["time_window"].SetRequired()
+	attrs["time_window"] = attrs["time_window"].SetOptional()
 	attrs["time_window"] = attrs["time_window"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -5553,10 +6081,11 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 // SDK values.
 func (m Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"function":    reflect.TypeOf(Function{}),
-		"inputs":      reflect.TypeOf(types.String{}),
-		"source":      reflect.TypeOf(DataSource{}),
-		"time_window": reflect.TypeOf(TimeWindow{}),
+		"function":        reflect.TypeOf(Function{}),
+		"inputs":          reflect.TypeOf(types.String{}),
+		"lineage_context": reflect.TypeOf(LineageContext{}),
+		"source":          reflect.TypeOf(DataSource{}),
+		"time_window":     reflect.TypeOf(TimeWindow{}),
 	}
 }
 
@@ -5572,6 +6101,7 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"full_name":        m.FullName,
 			"function":         m.Function,
 			"inputs":           m.Inputs,
+			"lineage_context":  m.LineageContext,
 			"source":           m.Source,
 			"time_window":      m.TimeWindow,
 		})
@@ -5588,8 +6118,9 @@ func (m Feature) Type(ctx context.Context) attr.Type {
 			"inputs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"source":      DataSource{}.Type(ctx),
-			"time_window": TimeWindow{}.Type(ctx),
+			"lineage_context": LineageContext{}.Type(ctx),
+			"source":          DataSource{}.Type(ctx),
+			"time_window":     TimeWindow{}.Type(ctx),
 		},
 	}
 }
@@ -5643,6 +6174,31 @@ func (m *Feature) SetInputs(ctx context.Context, v []types.String) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inputs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Inputs = types.ListValueMust(t, vs)
+}
+
+// GetLineageContext returns the value of the LineageContext field in Feature as
+// a LineageContext value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Feature) GetLineageContext(ctx context.Context) (LineageContext, bool) {
+	var e LineageContext
+	if m.LineageContext.IsNull() || m.LineageContext.IsUnknown() {
+		return e, false
+	}
+	var v LineageContext
+	d := m.LineageContext.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLineageContext sets the value of the LineageContext field in Feature.
+func (m *Feature) SetLineageContext(ctx context.Context, v LineageContext) {
+	vs := v.ToObjectValue(ctx)
+	m.LineageContext = vs
 }
 
 // GetSource returns the value of the Source field in Feature as
@@ -7331,6 +7887,54 @@ func (m GetHistoryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetKafkaConfigRequest struct {
+	// Name of the Kafka config to get.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetKafkaConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetKafkaConfigRequest) {
+}
+
+func (to *GetKafkaConfigRequest) SyncFieldsDuringRead(ctx context.Context, from GetKafkaConfigRequest) {
+}
+
+func (m GetKafkaConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetKafkaConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetKafkaConfigRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetKafkaConfigRequest
+// only implements ToObjectValue() and Type().
+func (m GetKafkaConfigRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetKafkaConfigRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetLatestVersionsRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name"`
@@ -8758,6 +9362,59 @@ func (m InputTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type JobContext struct {
+	// The job ID where this API invoked.
+	JobId types.Int64 `tfsdk:"job_id"`
+	// The job run ID where this API was invoked.
+	JobRunId types.Int64 `tfsdk:"job_run_id"`
+}
+
+func (to *JobContext) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobContext) {
+}
+
+func (to *JobContext) SyncFieldsDuringRead(ctx context.Context, from JobContext) {
+}
+
+func (m JobContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["job_run_id"] = attrs["job_run_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobContext.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobContext) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobContext
+// only implements ToObjectValue() and Type().
+func (m JobContext) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"job_id":     m.JobId,
+			"job_run_id": m.JobRunId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobContext) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"job_id":     types.Int64Type,
+			"job_run_id": types.Int64Type,
+		},
+	}
+}
+
 type JobSpec struct {
 	// The personal access token used to authorize webhook's job runs.
 	AccessToken types.String `tfsdk:"access_token"`
@@ -8871,6 +9528,523 @@ func (m JobSpecWithoutSecret) Type(ctx context.Context) attr.Type {
 			"workspace_url": types.StringType,
 		},
 	}
+}
+
+type KafkaConfig struct {
+	// Authentication configuration for connection to topics.
+	AuthConfig types.Object `tfsdk:"auth_config"`
+	// A comma-separated list of host/port pairs pointing to Kafka cluster.
+	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
+	// Catch-all for miscellaneous options. Keys should be source options or
+	// Kafka consumer options (kafka.*)
+	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Schema configuration for extracting message keys from topics. At least
+	// one of key_schema and value_schema must be provided.
+	KeySchema types.Object `tfsdk:"key_schema"`
+	// Name that uniquely identifies this Kafka config within the metastore.
+	// This will be the identifier used from the Feature object to reference
+	// these configs for a feature. Can be distinct from topic name.
+	Name types.String `tfsdk:"name"`
+	// Options to configure which Kafka topics to pull data from.
+	SubscriptionMode types.Object `tfsdk:"subscription_mode"`
+	// Schema configuration for extracting message values from topics. At least
+	// one of key_schema and value_schema must be provided.
+	ValueSchema types.Object `tfsdk:"value_schema"`
+}
+
+func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KafkaConfig) {
+	if !from.AuthConfig.IsNull() && !from.AuthConfig.IsUnknown() {
+		if toAuthConfig, ok := to.GetAuthConfig(ctx); ok {
+			if fromAuthConfig, ok := from.GetAuthConfig(ctx); ok {
+				// Recursively sync the fields of AuthConfig
+				toAuthConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAuthConfig)
+				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
+		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
+			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
+				// Recursively sync the fields of KeySchema
+				toKeySchema.SyncFieldsDuringCreateOrUpdate(ctx, fromKeySchema)
+				to.SetKeySchema(ctx, toKeySchema)
+			}
+		}
+	}
+	if !from.SubscriptionMode.IsNull() && !from.SubscriptionMode.IsUnknown() {
+		if toSubscriptionMode, ok := to.GetSubscriptionMode(ctx); ok {
+			if fromSubscriptionMode, ok := from.GetSubscriptionMode(ctx); ok {
+				// Recursively sync the fields of SubscriptionMode
+				toSubscriptionMode.SyncFieldsDuringCreateOrUpdate(ctx, fromSubscriptionMode)
+				to.SetSubscriptionMode(ctx, toSubscriptionMode)
+			}
+		}
+	}
+	if !from.ValueSchema.IsNull() && !from.ValueSchema.IsUnknown() {
+		if toValueSchema, ok := to.GetValueSchema(ctx); ok {
+			if fromValueSchema, ok := from.GetValueSchema(ctx); ok {
+				// Recursively sync the fields of ValueSchema
+				toValueSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromValueSchema)
+				to.SetValueSchema(ctx, toValueSchema)
+			}
+		}
+	}
+}
+
+func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfig) {
+	if !from.AuthConfig.IsNull() && !from.AuthConfig.IsUnknown() {
+		if toAuthConfig, ok := to.GetAuthConfig(ctx); ok {
+			if fromAuthConfig, ok := from.GetAuthConfig(ctx); ok {
+				toAuthConfig.SyncFieldsDuringRead(ctx, fromAuthConfig)
+				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
+		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
+			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
+				toKeySchema.SyncFieldsDuringRead(ctx, fromKeySchema)
+				to.SetKeySchema(ctx, toKeySchema)
+			}
+		}
+	}
+	if !from.SubscriptionMode.IsNull() && !from.SubscriptionMode.IsUnknown() {
+		if toSubscriptionMode, ok := to.GetSubscriptionMode(ctx); ok {
+			if fromSubscriptionMode, ok := from.GetSubscriptionMode(ctx); ok {
+				toSubscriptionMode.SyncFieldsDuringRead(ctx, fromSubscriptionMode)
+				to.SetSubscriptionMode(ctx, toSubscriptionMode)
+			}
+		}
+	}
+	if !from.ValueSchema.IsNull() && !from.ValueSchema.IsUnknown() {
+		if toValueSchema, ok := to.GetValueSchema(ctx); ok {
+			if fromValueSchema, ok := from.GetValueSchema(ctx); ok {
+				toValueSchema.SyncFieldsDuringRead(ctx, fromValueSchema)
+				to.SetValueSchema(ctx, toValueSchema)
+			}
+		}
+	}
+}
+
+func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auth_config"] = attrs["auth_config"].SetRequired()
+	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
+	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["key_schema"] = attrs["key_schema"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["subscription_mode"] = attrs["subscription_mode"].SetRequired()
+	attrs["value_schema"] = attrs["value_schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KafkaConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"auth_config":       reflect.TypeOf(AuthConfig{}),
+		"extra_options":     reflect.TypeOf(types.String{}),
+		"key_schema":        reflect.TypeOf(SchemaConfig{}),
+		"subscription_mode": reflect.TypeOf(SubscriptionMode{}),
+		"value_schema":      reflect.TypeOf(SchemaConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KafkaConfig
+// only implements ToObjectValue() and Type().
+func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"auth_config":       m.AuthConfig,
+			"bootstrap_servers": m.BootstrapServers,
+			"extra_options":     m.ExtraOptions,
+			"key_schema":        m.KeySchema,
+			"name":              m.Name,
+			"subscription_mode": m.SubscriptionMode,
+			"value_schema":      m.ValueSchema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KafkaConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auth_config":       AuthConfig{}.Type(ctx),
+			"bootstrap_servers": types.StringType,
+			"extra_options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"key_schema":        SchemaConfig{}.Type(ctx),
+			"name":              types.StringType,
+			"subscription_mode": SubscriptionMode{}.Type(ctx),
+			"value_schema":      SchemaConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetAuthConfig returns the value of the AuthConfig field in KafkaConfig as
+// a AuthConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetAuthConfig(ctx context.Context) (AuthConfig, bool) {
+	var e AuthConfig
+	if m.AuthConfig.IsNull() || m.AuthConfig.IsUnknown() {
+		return e, false
+	}
+	var v AuthConfig
+	d := m.AuthConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAuthConfig sets the value of the AuthConfig field in KafkaConfig.
+func (m *KafkaConfig) SetAuthConfig(ctx context.Context, v AuthConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.AuthConfig = vs
+}
+
+// GetExtraOptions returns the value of the ExtraOptions field in KafkaConfig as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetExtraOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.ExtraOptions.IsNull() || m.ExtraOptions.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.ExtraOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraOptions sets the value of the ExtraOptions field in KafkaConfig.
+func (m *KafkaConfig) SetExtraOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetKeySchema returns the value of the KeySchema field in KafkaConfig as
+// a SchemaConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetKeySchema(ctx context.Context) (SchemaConfig, bool) {
+	var e SchemaConfig
+	if m.KeySchema.IsNull() || m.KeySchema.IsUnknown() {
+		return e, false
+	}
+	var v SchemaConfig
+	d := m.KeySchema.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetKeySchema sets the value of the KeySchema field in KafkaConfig.
+func (m *KafkaConfig) SetKeySchema(ctx context.Context, v SchemaConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.KeySchema = vs
+}
+
+// GetSubscriptionMode returns the value of the SubscriptionMode field in KafkaConfig as
+// a SubscriptionMode value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetSubscriptionMode(ctx context.Context) (SubscriptionMode, bool) {
+	var e SubscriptionMode
+	if m.SubscriptionMode.IsNull() || m.SubscriptionMode.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionMode
+	d := m.SubscriptionMode.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptionMode sets the value of the SubscriptionMode field in KafkaConfig.
+func (m *KafkaConfig) SetSubscriptionMode(ctx context.Context, v SubscriptionMode) {
+	vs := v.ToObjectValue(ctx)
+	m.SubscriptionMode = vs
+}
+
+// GetValueSchema returns the value of the ValueSchema field in KafkaConfig as
+// a SchemaConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetValueSchema(ctx context.Context) (SchemaConfig, bool) {
+	var e SchemaConfig
+	if m.ValueSchema.IsNull() || m.ValueSchema.IsUnknown() {
+		return e, false
+	}
+	var v SchemaConfig
+	d := m.ValueSchema.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValueSchema sets the value of the ValueSchema field in KafkaConfig.
+func (m *KafkaConfig) SetValueSchema(ctx context.Context, v SchemaConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.ValueSchema = vs
+}
+
+type KafkaSource struct {
+	// The entity column identifiers of the Kafka source.
+	EntityColumnIdentifiers types.List `tfsdk:"entity_column_identifiers"`
+	// Name of the Kafka source, used to identify it. This is used to look up
+	// the corresponding KafkaConfig object. Can be distinct from topic name.
+	Name types.String `tfsdk:"name"`
+	// The timeseries column identifier of the Kafka source.
+	TimeseriesColumnIdentifier types.Object `tfsdk:"timeseries_column_identifier"`
+}
+
+func (to *KafkaSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KafkaSource) {
+	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
+		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
+			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
+				// Recursively sync the fields of TimeseriesColumnIdentifier
+				toTimeseriesColumnIdentifier.SyncFieldsDuringCreateOrUpdate(ctx, fromTimeseriesColumnIdentifier)
+				to.SetTimeseriesColumnIdentifier(ctx, toTimeseriesColumnIdentifier)
+			}
+		}
+	}
+}
+
+func (to *KafkaSource) SyncFieldsDuringRead(ctx context.Context, from KafkaSource) {
+	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
+		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
+			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
+				toTimeseriesColumnIdentifier.SyncFieldsDuringRead(ctx, fromTimeseriesColumnIdentifier)
+				to.SetTimeseriesColumnIdentifier(ctx, toTimeseriesColumnIdentifier)
+			}
+		}
+	}
+}
+
+func (m KafkaSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_column_identifiers"] = attrs["entity_column_identifiers"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["timeseries_column_identifier"] = attrs["timeseries_column_identifier"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KafkaSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KafkaSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"entity_column_identifiers":    reflect.TypeOf(ColumnIdentifier{}),
+		"timeseries_column_identifier": reflect.TypeOf(ColumnIdentifier{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KafkaSource
+// only implements ToObjectValue() and Type().
+func (m KafkaSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_column_identifiers":    m.EntityColumnIdentifiers,
+			"name":                         m.Name,
+			"timeseries_column_identifier": m.TimeseriesColumnIdentifier,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KafkaSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_column_identifiers": basetypes.ListType{
+				ElemType: ColumnIdentifier{}.Type(ctx),
+			},
+			"name":                         types.StringType,
+			"timeseries_column_identifier": ColumnIdentifier{}.Type(ctx),
+		},
+	}
+}
+
+// GetEntityColumnIdentifiers returns the value of the EntityColumnIdentifiers field in KafkaSource as
+// a slice of ColumnIdentifier values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaSource) GetEntityColumnIdentifiers(ctx context.Context) ([]ColumnIdentifier, bool) {
+	if m.EntityColumnIdentifiers.IsNull() || m.EntityColumnIdentifiers.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnIdentifier
+	d := m.EntityColumnIdentifiers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntityColumnIdentifiers sets the value of the EntityColumnIdentifiers field in KafkaSource.
+func (m *KafkaSource) SetEntityColumnIdentifiers(ctx context.Context, v []ColumnIdentifier) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_column_identifiers"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EntityColumnIdentifiers = types.ListValueMust(t, vs)
+}
+
+// GetTimeseriesColumnIdentifier returns the value of the TimeseriesColumnIdentifier field in KafkaSource as
+// a ColumnIdentifier value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaSource) GetTimeseriesColumnIdentifier(ctx context.Context) (ColumnIdentifier, bool) {
+	var e ColumnIdentifier
+	if m.TimeseriesColumnIdentifier.IsNull() || m.TimeseriesColumnIdentifier.IsUnknown() {
+		return e, false
+	}
+	var v ColumnIdentifier
+	d := m.TimeseriesColumnIdentifier.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTimeseriesColumnIdentifier sets the value of the TimeseriesColumnIdentifier field in KafkaSource.
+func (m *KafkaSource) SetTimeseriesColumnIdentifier(ctx context.Context, v ColumnIdentifier) {
+	vs := v.ToObjectValue(ctx)
+	m.TimeseriesColumnIdentifier = vs
+}
+
+// Lineage context information for tracking where an API was invoked. This will
+// allow us to track lineage, which currently uses caller entity information for
+// use across the Lineage Client and Observability in Lumberjack.
+type LineageContext struct {
+	// Job context information including job ID and run ID.
+	JobContext types.Object `tfsdk:"job_context"`
+	// The notebook ID where this API was invoked.
+	NotebookId types.Int64 `tfsdk:"notebook_id"`
+}
+
+func (to *LineageContext) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LineageContext) {
+	if !from.JobContext.IsNull() && !from.JobContext.IsUnknown() {
+		if toJobContext, ok := to.GetJobContext(ctx); ok {
+			if fromJobContext, ok := from.GetJobContext(ctx); ok {
+				// Recursively sync the fields of JobContext
+				toJobContext.SyncFieldsDuringCreateOrUpdate(ctx, fromJobContext)
+				to.SetJobContext(ctx, toJobContext)
+			}
+		}
+	}
+}
+
+func (to *LineageContext) SyncFieldsDuringRead(ctx context.Context, from LineageContext) {
+	if !from.JobContext.IsNull() && !from.JobContext.IsUnknown() {
+		if toJobContext, ok := to.GetJobContext(ctx); ok {
+			if fromJobContext, ok := from.GetJobContext(ctx); ok {
+				toJobContext.SyncFieldsDuringRead(ctx, fromJobContext)
+				to.SetJobContext(ctx, toJobContext)
+			}
+		}
+	}
+}
+
+func (m LineageContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_context"] = attrs["job_context"].SetOptional()
+	attrs["notebook_id"] = attrs["notebook_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LineageContext.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LineageContext) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"job_context": reflect.TypeOf(JobContext{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LineageContext
+// only implements ToObjectValue() and Type().
+func (m LineageContext) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"job_context": m.JobContext,
+			"notebook_id": m.NotebookId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LineageContext) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"job_context": JobContext{}.Type(ctx),
+			"notebook_id": types.Int64Type,
+		},
+	}
+}
+
+// GetJobContext returns the value of the JobContext field in LineageContext as
+// a JobContext value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LineageContext) GetJobContext(ctx context.Context) (JobContext, bool) {
+	var e JobContext
+	if m.JobContext.IsNull() || m.JobContext.IsUnknown() {
+		return e, false
+	}
+	var v JobContext
+	d := m.JobContext.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobContext sets the value of the JobContext field in LineageContext.
+func (m *LineageContext) SetJobContext(ctx context.Context, v JobContext) {
+	vs := v.ToObjectValue(ctx)
+	m.JobContext = vs
 }
 
 // Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
@@ -9565,6 +10739,142 @@ func (m *ListFeaturesResponse) SetFeatures(ctx context.Context, v []Feature) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["features"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Features = types.ListValueMust(t, vs)
+}
+
+type ListKafkaConfigsRequest struct {
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page based on a previous query.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListKafkaConfigsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListKafkaConfigsRequest) {
+}
+
+func (to *ListKafkaConfigsRequest) SyncFieldsDuringRead(ctx context.Context, from ListKafkaConfigsRequest) {
+}
+
+func (m ListKafkaConfigsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListKafkaConfigsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListKafkaConfigsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListKafkaConfigsRequest
+// only implements ToObjectValue() and Type().
+func (m ListKafkaConfigsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListKafkaConfigsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListKafkaConfigsResponse struct {
+	// List of Kafka configs. Schemas are not included in the response.
+	KafkaConfigs types.List `tfsdk:"kafka_configs"`
+	// Pagination token to request the next page of results for this query.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListKafkaConfigsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListKafkaConfigsResponse) {
+}
+
+func (to *ListKafkaConfigsResponse) SyncFieldsDuringRead(ctx context.Context, from ListKafkaConfigsResponse) {
+}
+
+func (m ListKafkaConfigsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kafka_configs"] = attrs["kafka_configs"].SetRequired()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListKafkaConfigsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListKafkaConfigsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"kafka_configs": reflect.TypeOf(KafkaConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListKafkaConfigsResponse
+// only implements ToObjectValue() and Type().
+func (m ListKafkaConfigsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"kafka_configs":   m.KafkaConfigs,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListKafkaConfigsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"kafka_configs": basetypes.ListType{
+				ElemType: KafkaConfig{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetKafkaConfigs returns the value of the KafkaConfigs field in ListKafkaConfigsResponse as
+// a slice of KafkaConfig values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListKafkaConfigsResponse) GetKafkaConfigs(ctx context.Context) ([]KafkaConfig, bool) {
+	if m.KafkaConfigs.IsNull() || m.KafkaConfigs.IsUnknown() {
+		return nil, false
+	}
+	var v []KafkaConfig
+	d := m.KafkaConfigs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetKafkaConfigs sets the value of the KafkaConfigs field in ListKafkaConfigsResponse.
+func (m *ListKafkaConfigsResponse) SetKafkaConfigs(ctx context.Context, v []KafkaConfig) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kafka_configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.KafkaConfigs = types.ListValueMust(t, vs)
 }
 
 type ListMaterializedFeaturesRequest struct {
@@ -11955,6 +13265,9 @@ func (m LoggedModelTag) Type(ctx context.Context) attr.Type {
 // A materialized feature represents a feature that is continuously computed and
 // stored.
 type MaterializedFeature struct {
+	// The quartz cron expression that defines the schedule of the
+	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// The timestamp when the pipeline last ran and updated the materialized
@@ -12014,6 +13327,7 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 }
 
 func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
@@ -12035,7 +13349,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"offline_store_config": reflect.TypeOf(OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(OnlineStore{}),
+		"online_store_config":  reflect.TypeOf(OnlineStoreConfig{}),
 	}
 }
 
@@ -12046,6 +13360,7 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"cron_schedule":             m.CronSchedule,
 			"feature_name":              m.FeatureName,
 			"last_materialization_time": m.LastMaterializationTime,
 			"materialized_feature_id":   m.MaterializedFeatureId,
@@ -12060,11 +13375,12 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"cron_schedule":             types.StringType,
 			"feature_name":              types.StringType,
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      OfflineStoreConfig{}.Type(ctx),
-			"online_store_config":       OnlineStore{}.Type(ctx),
+			"online_store_config":       OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
 			"table_name":                types.StringType,
 		},
@@ -12097,14 +13413,14 @@ func (m *MaterializedFeature) SetOfflineStoreConfig(ctx context.Context, v Offli
 }
 
 // GetOnlineStoreConfig returns the value of the OnlineStoreConfig field in MaterializedFeature as
-// a OnlineStore value.
+// a OnlineStoreConfig value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (OnlineStore, bool) {
-	var e OnlineStore
+func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (OnlineStoreConfig, bool) {
+	var e OnlineStoreConfig
 	if m.OnlineStoreConfig.IsNull() || m.OnlineStoreConfig.IsUnknown() {
 		return e, false
 	}
-	var v OnlineStore
+	var v OnlineStoreConfig
 	d := m.OnlineStoreConfig.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -12116,7 +13432,7 @@ func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (OnlineS
 }
 
 // SetOnlineStoreConfig sets the value of the OnlineStoreConfig field in MaterializedFeature.
-func (m *MaterializedFeature) SetOnlineStoreConfig(ctx context.Context, v OnlineStore) {
+func (m *MaterializedFeature) SetOnlineStoreConfig(ctx context.Context, v OnlineStoreConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.OnlineStoreConfig = vs
 }
@@ -13245,6 +14561,8 @@ type OnlineStore struct {
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
 	// The current state of the online store.
 	State types.String `tfsdk:"state"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
@@ -13260,6 +14578,7 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -13288,6 +14607,7 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":               m.Name,
 			"read_replica_count": m.ReadReplicaCount,
 			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
 		})
 }
 
@@ -13301,6 +14621,73 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 			"name":               types.StringType,
 			"read_replica_count": types.Int64Type,
 			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
+		},
+	}
+}
+
+// Configuration for online store destination.
+type OnlineStoreConfig struct {
+	// The Unity Catalog catalog name. This name is also used as the Lakebase
+	// logical database name.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// The name of the target online store.
+	OnlineStoreName types.String `tfsdk:"online_store_name"`
+	// The Unity Catalog schema name.
+	SchemaName types.String `tfsdk:"schema_name"`
+	// Prefix for Unity Catalog table name. The materialized feature will be
+	// stored in a Lakebase table with this prefix and a generated postfix.
+	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
+}
+
+func (to *OnlineStoreConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStoreConfig) {
+}
+
+func (to *OnlineStoreConfig) SyncFieldsDuringRead(ctx context.Context, from OnlineStoreConfig) {
+}
+
+func (m OnlineStoreConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["online_store_name"] = attrs["online_store_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
+	attrs["table_name_prefix"] = attrs["table_name_prefix"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OnlineStoreConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m OnlineStoreConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OnlineStoreConfig
+// only implements ToObjectValue() and Type().
+func (m OnlineStoreConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name":      m.CatalogName,
+			"online_store_name": m.OnlineStoreName,
+			"schema_name":       m.SchemaName,
+			"table_name_prefix": m.TableNamePrefix,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m OnlineStoreConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name":      types.StringType,
+			"online_store_name": types.StringType,
+			"schema_name":       types.StringType,
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -15592,6 +16979,55 @@ func (m RunTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SchemaConfig struct {
+	// Schema of the JSON object in standard IETF JSON schema format
+	// (https://json-schema.org/)
+	JsonSchema types.String `tfsdk:"json_schema"`
+}
+
+func (to *SchemaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaConfig) {
+}
+
+func (to *SchemaConfig) SyncFieldsDuringRead(ctx context.Context, from SchemaConfig) {
+}
+
+func (m SchemaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["json_schema"] = attrs["json_schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SchemaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SchemaConfig
+// only implements ToObjectValue() and Type().
+func (m SchemaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"json_schema": m.JsonSchema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SchemaConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"json_schema": types.StringType,
+		},
+	}
+}
+
 type SearchExperiments struct {
 	// String representing a SQL filter condition (e.g. "name ILIKE
 	// 'my-experiment%'")
@@ -17513,6 +18949,68 @@ func (m SlidingWindow) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SubscriptionMode struct {
+	// A JSON string that contains the specific topic-partitions to consume
+	// from. For example, for '{"topicA":[0,1],"topicB":[2,4]}', topicA's 0'th
+	// and 1st partitions will be consumed from.
+	Assign types.String `tfsdk:"assign"`
+	// A comma-separated list of Kafka topics to read from. For example,
+	// 'topicA,topicB,topicC'.
+	Subscribe types.String `tfsdk:"subscribe"`
+	// A regular expression matching topics to subscribe to. For example,
+	// 'topic.*' will subscribe to all topics starting with 'topic'.
+	SubscribePattern types.String `tfsdk:"subscribe_pattern"`
+}
+
+func (to *SubscriptionMode) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionMode) {
+}
+
+func (to *SubscriptionMode) SyncFieldsDuringRead(ctx context.Context, from SubscriptionMode) {
+}
+
+func (m SubscriptionMode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assign"] = attrs["assign"].SetOptional()
+	attrs["subscribe"] = attrs["subscribe"].SetOptional()
+	attrs["subscribe_pattern"] = attrs["subscribe_pattern"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionMode.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionMode) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionMode
+// only implements ToObjectValue() and Type().
+func (m SubscriptionMode) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assign":            m.Assign,
+			"subscribe":         m.Subscribe,
+			"subscribe_pattern": m.SubscribePattern,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionMode) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assign":            types.StringType,
+			"subscribe":         types.StringType,
+			"subscribe_pattern": types.StringType,
+		},
+	}
+}
+
 // Details required to test a registry webhook.
 type TestRegistryWebhookRequest struct {
 	// If `event` is specified, the test trigger uses the specified event. If
@@ -18604,6 +20102,110 @@ func (m *UpdateFeatureTagRequest) GetFeatureTag(ctx context.Context) (FeatureTag
 func (m *UpdateFeatureTagRequest) SetFeatureTag(ctx context.Context, v FeatureTag) {
 	vs := v.ToObjectValue(ctx)
 	m.FeatureTag = vs
+}
+
+type UpdateKafkaConfigRequest struct {
+	// The Kafka config to update.
+	KafkaConfig types.Object `tfsdk:"kafka_config"`
+	// Name that uniquely identifies this Kafka config within the metastore.
+	// This will be the identifier used from the Feature object to reference
+	// these configs for a feature. Can be distinct from topic name.
+	Name types.String `tfsdk:"-"`
+	// The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateKafkaConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateKafkaConfigRequest) {
+	if !from.KafkaConfig.IsNull() && !from.KafkaConfig.IsUnknown() {
+		if toKafkaConfig, ok := to.GetKafkaConfig(ctx); ok {
+			if fromKafkaConfig, ok := from.GetKafkaConfig(ctx); ok {
+				// Recursively sync the fields of KafkaConfig
+				toKafkaConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaConfig)
+				to.SetKafkaConfig(ctx, toKafkaConfig)
+			}
+		}
+	}
+}
+
+func (to *UpdateKafkaConfigRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateKafkaConfigRequest) {
+	if !from.KafkaConfig.IsNull() && !from.KafkaConfig.IsUnknown() {
+		if toKafkaConfig, ok := to.GetKafkaConfig(ctx); ok {
+			if fromKafkaConfig, ok := from.GetKafkaConfig(ctx); ok {
+				toKafkaConfig.SyncFieldsDuringRead(ctx, fromKafkaConfig)
+				to.SetKafkaConfig(ctx, toKafkaConfig)
+			}
+		}
+	}
+}
+
+func (m UpdateKafkaConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kafka_config"] = attrs["kafka_config"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateKafkaConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateKafkaConfigRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"kafka_config": reflect.TypeOf(KafkaConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateKafkaConfigRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateKafkaConfigRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"kafka_config": m.KafkaConfig,
+			"name":         m.Name,
+			"update_mask":  m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateKafkaConfigRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"kafka_config": KafkaConfig{}.Type(ctx),
+			"name":         types.StringType,
+			"update_mask":  types.StringType,
+		},
+	}
+}
+
+// GetKafkaConfig returns the value of the KafkaConfig field in UpdateKafkaConfigRequest as
+// a KafkaConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateKafkaConfigRequest) GetKafkaConfig(ctx context.Context) (KafkaConfig, bool) {
+	var e KafkaConfig
+	if m.KafkaConfig.IsNull() || m.KafkaConfig.IsUnknown() {
+		return e, false
+	}
+	var v KafkaConfig
+	d := m.KafkaConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetKafkaConfig sets the value of the KafkaConfig field in UpdateKafkaConfigRequest.
+func (m *UpdateKafkaConfigRequest) SetKafkaConfig(ctx context.Context, v KafkaConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.KafkaConfig = vs
 }
 
 type UpdateMaterializedFeatureRequest struct {

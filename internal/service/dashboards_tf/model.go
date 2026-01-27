@@ -185,6 +185,16 @@ func (m AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
 
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *CreateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDashboardRequest) {
@@ -212,6 +222,8 @@ func (to *CreateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m CreateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -236,7 +248,9 @@ func (m CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard": m.Dashboard,
+			"dashboard":       m.Dashboard,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -244,7 +258,9 @@ func (m CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m CreateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": Dashboard{}.Type(ctx),
+			"dashboard":       Dashboard{}.Type(ctx),
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }
@@ -1149,6 +1165,78 @@ func (m GenieCreateConversationMessageRequest) Type(ctx context.Context) attr.Ty
 	}
 }
 
+type GenieCreateSpaceRequest struct {
+	// Optional description
+	Description types.String `tfsdk:"description"`
+	// Parent folder path where the space will be registered
+	ParentPath types.String `tfsdk:"parent_path"`
+	// The contents of the Genie Space in serialized string form. Use the [Get
+	// Genie Space](:method:genie/getspace) API to retrieve an example response,
+	// which includes the `serialized_space` field. This field provides the
+	// structure of the JSON string that represents the space's layout and
+	// components.
+	SerializedSpace types.String `tfsdk:"serialized_space"`
+	// Optional title override
+	Title types.String `tfsdk:"title"`
+	// Warehouse to associate with the new space
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *GenieCreateSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieCreateSpaceRequest) {
+}
+
+func (to *GenieCreateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from GenieCreateSpaceRequest) {
+}
+
+func (m GenieCreateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["serialized_space"] = attrs["serialized_space"].SetRequired()
+	attrs["title"] = attrs["title"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieCreateSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieCreateSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m GenieCreateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":      m.Description,
+			"parent_path":      m.ParentPath,
+			"serialized_space": m.SerializedSpace,
+			"title":            m.Title,
+			"warehouse_id":     m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieCreateSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":      types.StringType,
+			"parent_path":      types.StringType,
+			"serialized_space": types.StringType,
+			"title":            types.StringType,
+			"warehouse_id":     types.StringType,
+		},
+	}
+}
+
 type GenieDeleteConversationMessageRequest struct {
 	// The ID associated with the conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1768,6 +1856,9 @@ func (m GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.T
 }
 
 type GenieGetSpaceRequest struct {
+	// Whether to include the serialized space export in the response. Requires
+	// at least CAN EDIT permission on the space.
+	IncludeSerializedSpace types.Bool `tfsdk:"-"`
 	// The ID associated with the Genie space
 	SpaceId types.String `tfsdk:"-"`
 }
@@ -1780,6 +1871,7 @@ func (to *GenieGetSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from G
 
 func (m GenieGetSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["include_serialized_space"] = attrs["include_serialized_space"].SetOptional()
 
 	return attrs
 }
@@ -1802,7 +1894,8 @@ func (m GenieGetSpaceRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"space_id": m.SpaceId,
+			"include_serialized_space": m.IncludeSerializedSpace,
+			"space_id":                 m.SpaceId,
 		})
 }
 
@@ -1810,7 +1903,8 @@ func (m GenieGetSpaceRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"space_id": types.StringType,
+			"include_serialized_space": types.BoolType,
+			"space_id":                 types.StringType,
 		},
 	}
 }
@@ -2850,6 +2944,12 @@ func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 type GenieSpace struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
+	// The contents of the Genie Space in serialized string form. This field is
+	// excluded in List Genie spaces responses. Use the [Get Genie
+	// Space](:method:genie/getspace) API to retrieve an example response, which
+	// includes the `serialized_space` field. This field provides the structure
+	// of the JSON string that represents the space's layout and components.
+	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
 	// Title of the Genie Space
@@ -2866,6 +2966,7 @@ func (to *GenieSpace) SyncFieldsDuringRead(ctx context.Context, from GenieSpace)
 
 func (m GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["title"] = attrs["title"].SetRequired()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -2891,10 +2992,11 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":  m.Description,
-			"space_id":     m.SpaceId,
-			"title":        m.Title,
-			"warehouse_id": m.WarehouseId,
+			"description":      m.Description,
+			"serialized_space": m.SerializedSpace,
+			"space_id":         m.SpaceId,
+			"title":            m.Title,
+			"warehouse_id":     m.WarehouseId,
 		})
 }
 
@@ -2902,10 +3004,11 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m GenieSpace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description":  types.StringType,
-			"space_id":     types.StringType,
-			"title":        types.StringType,
-			"warehouse_id": types.StringType,
+			"description":      types.StringType,
+			"serialized_space": types.StringType,
+			"space_id":         types.StringType,
+			"title":            types.StringType,
+			"warehouse_id":     types.StringType,
 		},
 	}
 }
@@ -3248,6 +3351,78 @@ func (m GenieTrashSpaceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"space_id": types.StringType,
+		},
+	}
+}
+
+type GenieUpdateSpaceRequest struct {
+	// Optional description
+	Description types.String `tfsdk:"description"`
+	// The contents of the Genie Space in serialized string form (full
+	// replacement). Use the [Get Genie Space](:method:genie/getspace) API to
+	// retrieve an example response, which includes the `serialized_space`
+	// field. This field provides the structure of the JSON string that
+	// represents the space's layout and components.
+	SerializedSpace types.String `tfsdk:"serialized_space"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+	// Optional title override
+	Title types.String `tfsdk:"title"`
+	// Optional warehouse override
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *GenieUpdateSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieUpdateSpaceRequest) {
+}
+
+func (to *GenieUpdateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from GenieUpdateSpaceRequest) {
+}
+
+func (m GenieUpdateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieUpdateSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieUpdateSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieUpdateSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m GenieUpdateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":      m.Description,
+			"serialized_space": m.SerializedSpace,
+			"space_id":         m.SpaceId,
+			"title":            m.Title,
+			"warehouse_id":     m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieUpdateSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":      types.StringType,
+			"serialized_space": types.StringType,
+			"space_id":         types.StringType,
+			"title":            types.StringType,
+			"warehouse_id":     types.StringType,
 		},
 	}
 }
@@ -4972,6 +5147,8 @@ type TextAttachment struct {
 	Content types.String `tfsdk:"content"`
 
 	Id types.String `tfsdk:"id"`
+	// Purpose/intent of this text attachment
+	Purpose types.String `tfsdk:"purpose"`
 }
 
 func (to *TextAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TextAttachment) {
@@ -4983,6 +5160,7 @@ func (to *TextAttachment) SyncFieldsDuringRead(ctx context.Context, from TextAtt
 func (m TextAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
+	attrs["purpose"] = attrs["purpose"].SetOptional()
 
 	return attrs
 }
@@ -5007,6 +5185,7 @@ func (m TextAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		map[string]attr.Value{
 			"content": m.Content,
 			"id":      m.Id,
+			"purpose": m.Purpose,
 		})
 }
 
@@ -5016,6 +5195,7 @@ func (m TextAttachment) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"content": types.StringType,
 			"id":      types.StringType,
+			"purpose": types.StringType,
 		},
 	}
 }
@@ -5202,6 +5382,16 @@ type UpdateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
+	// Sets the default catalog for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified catalog names (ex:
+	// samples.nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetCatalog types.String `tfsdk:"-"`
+	// Sets the default schema for all datasets in this dashboard. Does not
+	// impact table references that use fully qualified schema names (ex:
+	// nyctaxi.trips). Leave blank to keep each dataset’s existing
+	// configuration.
+	DatasetSchema types.String `tfsdk:"-"`
 }
 
 func (to *UpdateDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDashboardRequest) {
@@ -5230,6 +5420,8 @@ func (to *UpdateDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from
 func (m UpdateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard"] = attrs["dashboard"].SetRequired()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["dataset_catalog"] = attrs["dataset_catalog"].SetOptional()
+	attrs["dataset_schema"] = attrs["dataset_schema"].SetOptional()
 
 	return attrs
 }
@@ -5254,8 +5446,10 @@ func (m UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dashboard":    m.Dashboard,
-			"dashboard_id": m.DashboardId,
+			"dashboard":       m.Dashboard,
+			"dashboard_id":    m.DashboardId,
+			"dataset_catalog": m.DatasetCatalog,
+			"dataset_schema":  m.DatasetSchema,
 		})
 }
 
@@ -5263,8 +5457,10 @@ func (m UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m UpdateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard":    Dashboard{}.Type(ctx),
-			"dashboard_id": types.StringType,
+			"dashboard":       Dashboard{}.Type(ctx),
+			"dashboard_id":    types.StringType,
+			"dataset_catalog": types.StringType,
+			"dataset_schema":  types.StringType,
 		},
 	}
 }

@@ -691,24 +691,46 @@ type DatabaseInstance struct {
 	// create and update responses.
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// Deprecated. The sku of the instance; this field will always match the
-	// value of capacity.
+	// value of capacity. This is an output only field that contains the value
+	// computed from the input field combined with server side defaults. Use the
+	// field without the effective_ prefix to set the value.
 	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
-	// The recorded custom tags associated with the instance.
+	// The recorded custom tags associated with the instance. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveCustomTags types.List `tfsdk:"effective_custom_tags"`
-	// Whether the instance has PG native password login enabled.
+	// Whether the instance has PG native password login enabled. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
 	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
 	// Whether secondaries serving read-only traffic are enabled. Defaults to
-	// false.
+	// false. This is an output only field that contains the value computed from
+	// the input field combined with server side defaults. Use the field without
+	// the effective_ prefix to set the value.
 	EffectiveEnableReadableSecondaries types.Bool `tfsdk:"effective_enable_readable_secondaries"`
 	// The number of nodes in the instance, composed of 1 primary and 0 or more
-	// secondaries. Defaults to 1 primary and 0 secondaries.
+	// secondaries. Defaults to 1 primary and 0 secondaries. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveNodeCount types.Int64 `tfsdk:"effective_node_count"`
 	// The retention window for the instance. This is the time window in days
-	// for which the historical data is retained.
+	// for which the historical data is retained. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveRetentionWindowInDays types.Int64 `tfsdk:"effective_retention_window_in_days"`
-	// Whether the instance is stopped.
+	// Whether the instance is stopped. This is an output only field that
+	// contains the value computed from the input field combined with server
+	// side defaults. Use the field without the effective_ prefix to set the
+	// value.
 	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
-	// The policy that is applied to the instance.
+	// The policy that is applied to the instance. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// Whether to enable PG native password login on the instance. Defaults to
 	// false.
@@ -1122,7 +1144,10 @@ type DatabaseInstanceRef struct {
 	BranchTime types.String `tfsdk:"branch_time"`
 	// For a parent ref instance, this is the LSN on the parent instance from
 	// which the instance was created. For a child ref instance, this is the LSN
-	// on the instance from which the child instance was created.
+	// on the instance from which the child instance was created. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
 	EffectiveLsn types.String `tfsdk:"effective_lsn"`
 	// User-specified WAL LSN of the ref database instance.
 	//
@@ -1205,7 +1230,10 @@ type DatabaseInstanceRole struct {
 	// The desired API-exposed Postgres role attribute to associate with the
 	// role. Optional.
 	Attributes types.Object `tfsdk:"attributes"`
-	// The attributes that are applied to the role.
+	// The attributes that are applied to the role. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveAttributes types.Object `tfsdk:"effective_attributes"`
 	// The type of the role.
 	IdentityType types.String `tfsdk:"identity_type"`
@@ -1723,6 +1751,9 @@ func (m DeleteDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteSyncedDatabaseTableRequest struct {
 	Name types.String `tfsdk:"-"`
+	// Optional. When set to true, the actual PostgreSQL table will be dropped
+	// from the database.
+	PurgeData types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSyncedDatabaseTableRequest) {
@@ -1733,6 +1764,7 @@ func (to *DeleteSyncedDatabaseTableRequest) SyncFieldsDuringRead(ctx context.Con
 
 func (m DeleteSyncedDatabaseTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge_data"] = attrs["purge_data"].SetOptional()
 
 	return attrs
 }
@@ -1755,7 +1787,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":       m.Name,
+			"purge_data": m.PurgeData,
 		})
 }
 
@@ -1763,7 +1796,8 @@ func (m DeleteSyncedDatabaseTableRequest) ToObjectValue(ctx context.Context) bas
 func (m DeleteSyncedDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":       types.StringType,
+			"purge_data": types.BoolType,
 		},
 	}
 }
@@ -2869,6 +2903,8 @@ func (m *ListSyncedDatabaseTablesResponse) SetSyncedTables(ctx context.Context, 
 // SyncedDatabaseTable. Note that other fields of pipeline are still inferred by
 // table def internally
 type NewPipelineSpec struct {
+	// Budget policy to set on the newly created pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// This field needs to be specified if the destination catalog is a managed
 	// postgres catalog.
 	//
@@ -2892,6 +2928,7 @@ func (to *NewPipelineSpec) SyncFieldsDuringRead(ctx context.Context, from NewPip
 }
 
 func (m NewPipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -2916,8 +2953,9 @@ func (m NewPipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"storage_catalog": m.StorageCatalog,
-			"storage_schema":  m.StorageSchema,
+			"budget_policy_id": m.BudgetPolicyId,
+			"storage_catalog":  m.StorageCatalog,
+			"storage_schema":   m.StorageSchema,
 		})
 }
 
@@ -2925,8 +2963,9 @@ func (m NewPipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m NewPipelineSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"storage_catalog": types.StringType,
-			"storage_schema":  types.StringType,
+			"budget_policy_id": types.StringType,
+			"storage_catalog":  types.StringType,
+			"storage_schema":   types.StringType,
 		},
 	}
 }
@@ -3090,9 +3129,15 @@ type SyncedDatabaseTable struct {
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// The name of the database instance that this table is registered to. This
 	// field is always returned, and for tables inside database catalogs is
-	// inferred database instance associated with the catalog.
+	// inferred database instance associated with the catalog. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
 	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
-	// The name of the logical database that this table is registered to.
+	// The name of the logical database that this table is registered to. This
+	// is an output only field that contains the value computed from the input
+	// field combined with server side defaults. Use the field without the
+	// effective_ prefix to set the value.
 	EffectiveLogicalDatabaseName types.String `tfsdk:"effective_logical_database_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//

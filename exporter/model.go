@@ -135,8 +135,10 @@ type importable struct {
 	Service string
 	// Indicates this resource uses Terraform Plugin Framework instead of SDKv2
 	PluginFramework bool
-	// Semantic resource block name
+	// Semantic resource block name (SDKv2 signature - deprecated for Plugin Framework resources)
 	Name func(ic *importContext, d *schema.ResourceData) string
+	// Unified semantic resource block name (works with both SDKv2 and Plugin Framework)
+	NameUnified func(ic *importContext, wrapper ResourceDataWrapper) string
 	// Method to perform depth-first search and emit resources
 	List func(ic *importContext) error
 	// Search resource by non-ID attribute
@@ -367,6 +369,10 @@ func (r *resource) ImportResource(ic *importContext) {
 				return
 			}
 		}
+	}
+	// Convert cloud attributes if target cloud is specified
+	if r.DataWrapper != nil {
+		ic.convertResourceDataCloudAttributes(r.DataWrapper, r.Resource)
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {

@@ -132,12 +132,12 @@ func ResourceMetastoreDataAccess() common.Resource {
 					return err
 				}
 				if d.Get("is_default").(bool) {
-					updateReq := catalog.UpdateMetastore{
+					updateReq := catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: dac.CredentialInfo.Id,
 					}
 					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 						MetastoreId:   metastoreId,
-						MetastoreInfo: toUpdateAccountsMetastore(&updateReq),
+						MetastoreInfo: &updateReq,
 					})
 					if err != nil {
 						return err

@@ -52,7 +52,7 @@ type TagPolicy struct {
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
 
-	Values types.List `tfsdk:"values"`
+	Values types.Set `tfsdk:"values"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -96,7 +96,7 @@ func (m TagPolicy) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"tag_key":     types.StringType,
 			"update_time": types.StringType,
-			"values": basetypes.ListType{
+			"values": basetypes.SetType{
 				ElemType: tags_tf.Value{}.Type(ctx),
 			},
 		},
@@ -163,7 +163,7 @@ func (m *TagPolicy) SetValues(ctx context.Context, v []tags_tf.Value) {
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Values = types.ListValueMust(t, vs)
+	m.Values = types.SetValueMust(t, vs)
 }
 
 func (r *TagPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -181,44 +181,6 @@ func (r *TagPolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 
 func (r *TagPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
-}
-
-func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	var tag_policy tags.TagPolicy
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_policy)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := tags.UpdateTagPolicyRequest{
-		TagPolicy:  tag_policy,
-		TagKey:     plan.TagKey.ValueString(),
-		UpdateMask: "description,values",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.TagPolicies.UpdateTagPolicy(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update tag_policy", err.Error())
-		return
-	}
-
-	var newState TagPolicy
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *TagPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -310,6 +272,44 @@ func (r *TagPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *TagPolicyResource) update(ctx context.Context, plan TagPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
+	var tag_policy tags.TagPolicy
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_policy)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := tags.UpdateTagPolicyRequest{
+		TagPolicy:  tag_policy,
+		TagKey:     plan.TagKey.ValueString(),
+		UpdateMask: "description,values",
+	}
+
+	client, clientDiags := r.Client.GetWorkspaceClient()
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.TagPolicies.UpdateTagPolicy(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update tag_policy", err.Error())
+		return
+	}
+
+	var newState TagPolicy
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *TagPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

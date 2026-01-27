@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,7 +51,7 @@ func DataSourceGroup() common.Resource {
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, newClient)
 			groupAttributes := "displayName,members,roles,entitlements,externalId,groups"
-			if newClient.DatabricksClient.Config.IsAccountClient() {
+			if newClient.DatabricksClient.Config.HostType() == config.AccountHost {
 				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")
 				if err != nil {
 					return err

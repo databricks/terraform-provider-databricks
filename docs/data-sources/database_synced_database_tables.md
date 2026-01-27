@@ -23,8 +23,12 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   when creating synced database tables in registered catalogs, the database instance name MUST
   match that of the registered catalog (or the request will be rejected)
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog
-* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+  tables inside database catalogs is inferred database instance associated with the catalog.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `logical_database_name` (string) - Target Postgres database object (logical database) name for this table.
   
   When creating a synced table in a registered Postgres catalog, the
@@ -47,6 +51,7 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
 * `delta_commit_version` (integer) - The Delta Lake commit version that was last successfully synced
 
 ### NewPipelineSpec
+* `budget_policy_id` (string) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).

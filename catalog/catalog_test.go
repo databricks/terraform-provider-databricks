@@ -230,20 +230,20 @@ func TestUcAccCatalogHmsConnectionUpdate(t *testing.T) {
 	})
 }
 
-func catalogProviderConfigTemplate(providerConfig string) string {
+func catalogProviderConfigTemplate(catalogName string, providerConfig string) string {
 	return fmt.Sprintf(`
 	resource "databricks_catalog" "this" {
-		name = "test_catalog_{var.RANDOM}"
+		name = "%s"
 		comment = "test catalog"
 		force_destroy = true
 		%s
 	}
-`, providerConfig)
+`, catalogName, providerConfig)
 }
 
 func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(`
+		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
 				workspace_id = "invalid"
 			}
@@ -255,7 +255,7 @@ func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 
 func TestAccCatalog_ProviderConfig_Required(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(`
+		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
 			}
 		`),
@@ -266,7 +266,7 @@ func TestAccCatalog_ProviderConfig_Required(t *testing.T) {
 
 func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(`
+		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
 				workspace_id = ""
 			}
@@ -278,7 +278,7 @@ func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 
 func TestAccCatalog_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(`
+		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
 				workspace_id = "123"
 			}
@@ -294,17 +294,18 @@ func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
 	workspaceID, err := w.CurrentWorkspaceID(ctx)
 	require.NoError(t, err)
 	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	catalogName := "test_catalog_{var.STICKY_RANDOM}"
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(""),
+		Template: catalogProviderConfigTemplate(catalogName, ""),
 	}, acceptance.Step{
-		Template: catalogProviderConfigTemplate(fmt.Sprintf(`
+		Template: catalogProviderConfigTemplate(catalogName, fmt.Sprintf(`
 			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
@@ -317,23 +318,24 @@ func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 	workspaceID, err := w.CurrentWorkspaceID(ctx)
 	require.NoError(t, err)
 	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	catalogName := "test_catalog_{var.STICKY_RANDOM}"
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(""),
+		Template: catalogProviderConfigTemplate(catalogName, ""),
 	}, acceptance.Step{
-		Template: catalogProviderConfigTemplate(fmt.Sprintf(`
+		Template: catalogProviderConfigTemplate(catalogName, fmt.Sprintf(`
 			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
-		Template: catalogProviderConfigTemplate(`
+		Template: catalogProviderConfigTemplate(catalogName, `
 			provider_config {
 				workspace_id = "123"
 			}
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
 			},
 		},
 		PlanOnly:           true,
@@ -348,19 +350,20 @@ func TestAccCatalog_ProviderConfig_Remove(t *testing.T) {
 	workspaceID, err := w.CurrentWorkspaceID(ctx)
 	require.NoError(t, err)
 	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	catalogName := "test_catalog_{var.STICKY_RANDOM}"
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate(""),
+		Template: catalogProviderConfigTemplate(catalogName, ""),
 	}, acceptance.Step{
-		Template: catalogProviderConfigTemplate(fmt.Sprintf(`
+		Template: catalogProviderConfigTemplate(catalogName, fmt.Sprintf(`
 			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
-		Template: catalogProviderConfigTemplate(""),
+		Template: catalogProviderConfigTemplate(catalogName, ""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

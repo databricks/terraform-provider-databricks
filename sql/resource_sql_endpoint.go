@@ -26,6 +26,7 @@ type SqlWarehouse struct {
 	// We manually resolve it by retrieving the list of data sources
 	// and matching this entity's endpoint ID.
 	DataSourceId string `json:"data_source_id,omitempty" tf:"computed"`
+	common.Namespace
 }
 
 func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id string) (*SqlWarehouse, error) {
@@ -99,10 +100,9 @@ func ResourceSqlEndpoint() common.Resource {
 			},
 		}
 
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

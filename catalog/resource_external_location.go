@@ -13,6 +13,7 @@ import (
 type ExternalLocationInfo struct {
 	catalog.ExternalLocationInfo
 	SkipValidation bool `json:"skip_validation,omitempty"`
+	common.Namespace
 }
 
 func ResourceExternalLocation() common.Resource {
@@ -57,10 +58,9 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "subscription_id").SetRequired()
 			common.CustomizeSchemaPath(m, "file_event_queue").SetMaxItems(1)
 
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

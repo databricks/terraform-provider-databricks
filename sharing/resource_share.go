@@ -12,6 +12,7 @@ import (
 
 type ShareInfo struct {
 	sharing.ShareInfo
+	common.Namespace
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -38,6 +39,7 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("object", "partition", "value", "op").SetRequired()
 	s.SchemaPath("object", "partition", "value", "name").SetRequired()
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -152,8 +154,6 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []sharing.SharedDataObjectUpda
 
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, nil)
-	common.AddNamespaceInSchema(shareSchema)
-	common.NamespaceCustomizeSchemaMap(shareSchema)
 	return common.Resource{
 		Schema: shareSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
@@ -198,7 +198,7 @@ func ResourceShare() common.Resource {
 				Name:              d.Id(),
 				IncludeSharedData: true,
 			})
-			si := ShareInfo{*shareInfo}
+			si := ShareInfo{ShareInfo: *shareInfo}
 			si.sortSharesByName()
 			si.suppressCDFEnabledDiff()
 			if err != nil {
@@ -221,7 +221,7 @@ func ResourceShare() common.Resource {
 				return err
 			}
 
-			beforeSi := ShareInfo{*si}
+			beforeSi := ShareInfo{ShareInfo: *si}
 			beforeSi.sortSharesByName()
 			beforeSi.suppressCDFEnabledDiff()
 			var afterSi ShareInfo

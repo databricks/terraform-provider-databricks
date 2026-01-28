@@ -21,8 +21,13 @@ func recepientPropertiesSuppressDiff(k, old, new string, d *schema.ResourceData)
 	return false
 }
 
+type RecipientSchemaStruct struct {
+	sharing.RecipientInfo
+	common.Namespace
+}
+
 func ResourceRecipient() common.Resource {
-	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	recipientSchema := common.StructToSchema(RecipientSchemaStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(
 			validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
 		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
@@ -43,10 +48,9 @@ func ResourceRecipient() common.Resource {
 			common.CustomizeSchemaPath(s, "tokens", path).SetReadOnly()
 		}
 
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
-	common.AddNamespaceInSchema(recipientSchema)
-	common.NamespaceCustomizeSchemaMap(recipientSchema)
 	return common.Resource{
 		Schema: recipientSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

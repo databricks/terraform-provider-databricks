@@ -248,9 +248,14 @@ func preserveConfigOrder(s map[string]*schema.Schema, d *schema.ResourceData, ap
 	}
 }
 
+type ModelServingSchemaStruct struct {
+	serving.CreateServingEndpoint
+	common.Namespace
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		ModelServingSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			// Use the newer CustomizeSchemaPath approach for better maintainability
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
@@ -301,10 +306,9 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

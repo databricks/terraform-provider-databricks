@@ -64,16 +64,11 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() common.Resource {
 	s := common.StructToSchema(SecretScope{}, nil)
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -91,7 +86,7 @@ func ResourceSecretScope() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -102,7 +97,7 @@ func ResourceSecretScope() common.Resource {
 			return common.StructToData(scope, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

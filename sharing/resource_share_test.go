@@ -350,7 +350,7 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name:    "abc",
 						Owner:   "admin",
 						Comment: "cba",
@@ -408,7 +408,7 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -486,7 +486,7 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name:    "abc",
 						Comment: "cba",
 						Objects: []sharing.SharedDataObject{
@@ -546,7 +546,7 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -566,7 +566,7 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -607,7 +607,7 @@ func TestCreateShare_ThrowError(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "a",
 					},
 				},
@@ -645,12 +645,12 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "a",
 					},
 				},
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "a",
 					},
 				},
@@ -717,7 +717,7 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{
@@ -752,7 +752,7 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					sharing.ShareInfo{
+					ShareInfo: sharing.ShareInfo{
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{

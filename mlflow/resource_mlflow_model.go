@@ -8,19 +8,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type MlflowModelSchemaStruct struct {
+	ml.CreateModelRequest
+	common.Namespace
+}
+
 func ResourceMlflowModel() common.Resource {
 	s := common.StructToSchema(
-		ml.CreateModelRequest{},
+		MlflowModelSchemaStruct{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["name"].ForceNew = true
 			s["registered_model_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

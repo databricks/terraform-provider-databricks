@@ -15,6 +15,7 @@ type ipAccessListUpdateRequest struct {
 	ListType    settings.ListType `json:"list_type"`
 	IpAddresses []string          `json:"ip_addresses"`
 	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
+	common.Namespace
 }
 
 // ResourceIPAccessList manages IP access lists
@@ -26,10 +27,9 @@ func ResourceIPAccessList() common.Resource {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
 		}
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

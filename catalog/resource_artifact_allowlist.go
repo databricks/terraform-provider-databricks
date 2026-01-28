@@ -19,12 +19,16 @@ type ArtifactAllowlistInfo struct {
 	CreatedBy string `json:"created_by,omitempty" tf:"computed"`
 	// Unique identifier of parent metastore.
 	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
+	common.Namespace
+}
+
+func (ArtifactAllowlistInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
+	return s
 }
 
 func ResourceArtifactAllowlist() common.Resource {
-	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, common.NoCustomize)
-	common.AddNamespaceInSchema(allowlistSchema)
-	common.NamespaceCustomizeSchemaMap(allowlistSchema)
+	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, nil)
 	p := common.NewPairID("metastore_id", "artifact_type")
 
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

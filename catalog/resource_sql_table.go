@@ -65,6 +65,7 @@ type SqlTableInfo struct {
 	WarehouseID         string            `json:"warehouse_id,omitempty"`
 	Owner               string            `json:"owner,omitempty" tf:"computed"`
 	TableID             string            `json:"table_id" tf:"computed"`
+	common.Namespace
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -92,6 +93,7 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -609,8 +611,6 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 
 func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{}, nil)
-	common.AddNamespaceInSchema(tableSchema)
-	common.NamespaceCustomizeSchemaMap(tableSchema)
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

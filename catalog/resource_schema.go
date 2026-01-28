@@ -20,6 +20,7 @@ type SchemaInfo struct {
 	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
 	FullName                     string            `json:"full_name,omitempty" tf:"computed"`
 	SchemaID                     string            `json:"schema_id" tf:"computed"`
+	common.Namespace
 }
 
 func ResourceSchema() common.Resource {
@@ -38,10 +39,9 @@ func ResourceSchema() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

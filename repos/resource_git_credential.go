@@ -19,8 +19,13 @@ func isOnlyOneGitCredentialForProviderError(err error) bool {
 		(strings.Contains(errStr, "Only one Git credential is supported ") && strings.Contains(errStr, " at this time"))
 }
 
+type GitCredentialSchemaStruct struct {
+	workspace.CreateCredentialsRequest
+	common.Namespace
+}
+
 func ResourceGitCredential() common.Resource {
-	s := common.StructToSchema(workspace.CreateCredentialsRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(GitCredentialSchemaStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -30,10 +35,9 @@ func ResourceGitCredential() common.Resource {
 			"GITLAB_TOKEN",               // https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs
 			"AZDO_PERSONAL_ACCESS_TOKEN", // https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs
 		}, nil)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		Schema:        s,

@@ -27,9 +27,14 @@ func readWebHook(w *databricks.WorkspaceClient, ctx context.Context, ID string) 
 	return ml.RegistryWebhook{}, fmt.Errorf("webhook with ID %s isn't found", ID)
 }
 
+type MlflowWebhookSchemaStruct struct {
+	ml.CreateRegistryWebhook
+	common.Namespace
+}
+
 func ResourceMlflowWebhook() common.Resource {
 	s := common.StructToSchema(
-		ml.CreateRegistryWebhook{},
+		MlflowWebhookSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["status"].ValidateFunc = validation.StringInSlice([]string{"ACTIVE", "TEST_MODE", "DISABLED"}, true)
 			if p, err := common.SchemaPath(m, "http_url_spec", "url"); err == nil {
@@ -40,11 +45,9 @@ func ResourceMlflowWebhook() common.Resource {
 			common.MustSchemaPath(m, "http_url_spec", "enable_ssl_verification").Default = true
 			common.MustSchemaPath(m, "http_url_spec", "secret").Sensitive = true
 			common.MustSchemaPath(m, "job_spec", "access_token").Sensitive = true
-
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

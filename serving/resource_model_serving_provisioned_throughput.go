@@ -36,9 +36,14 @@ func preserveConfigOrderPt(s map[string]*schema.Schema, d *schema.ResourceData, 
 	}
 }
 
+type ModelServingProvisionedThroughputSchemaStruct struct {
+	serving.CreatePtEndpointRequest
+	common.Namespace
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -59,10 +64,9 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

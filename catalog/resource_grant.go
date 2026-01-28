@@ -131,8 +131,13 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
+type GrantSchemaStruct struct {
+	permissions.UnityCatalogPrivilegeAssignment
+	common.Namespace
+}
+
 func ResourceGrant() common.Resource {
-	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
+	s := common.StructToSchema(GrantSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
@@ -155,10 +160,9 @@ func ResourceGrant() common.Resource {
 					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		Schema: s,

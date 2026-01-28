@@ -20,6 +20,7 @@ type Dashboard struct {
 	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
 	DatasetCatalog          string `json:"dataset_catalog,omitempty"`
 	DatasetSchema           string `json:"dataset_schema,omitempty"`
+	common.Namespace
 }
 
 func customDiffDashboardContent(k, old, new string, d *schema.ResourceData) bool {
@@ -74,14 +75,13 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Apply same custom diff to file_path to enable content change detection
 	s.SchemaPath("file_path").SetCustomSuppressDiff(customDiffDashboardContent)
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
 // ResourceDashboard manages dashboards
 func ResourceDashboard() common.Resource {
 	dashboardSchema := common.StructToSchema(Dashboard{}, nil)
-	common.AddNamespaceInSchema(dashboardSchema)
-	common.NamespaceCustomizeSchemaMap(dashboardSchema)
 	return common.Resource{
 		Schema: dashboardSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

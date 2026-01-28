@@ -12,8 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type SystemSchemaSchemaStruct struct {
+	catalog.SystemSchemaInfo
+	common.Namespace
+}
+
 func ResourceSystemSchema() common.Resource {
-	systemSchema := common.StructToSchema(catalog.SystemSchemaInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	systemSchema := common.StructToSchema(SystemSchemaSchemaStruct{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["metastore_id"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -30,14 +35,13 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	pi := common.NewPairID("metastore_id", "schema").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return systemSchema
 		})
-	common.AddNamespaceInSchema(systemSchema)
-	common.NamespaceCustomizeSchemaMap(systemSchema)
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		o, n := d.GetChange("schema")
 		old, okOld := o.(string)

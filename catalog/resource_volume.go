@@ -29,6 +29,7 @@ type VolumeInfo struct {
 	// The storage location on the cloud
 	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
 	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
+	common.Namespace
 }
 
 func getNameFromId(id string) (string, error) {
@@ -58,10 +59,9 @@ func ResourceVolume() common.Resource {
 			// If server side validation is added in the future, this validation function
 			// can be removed.
 			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

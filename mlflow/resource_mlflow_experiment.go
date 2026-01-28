@@ -19,9 +19,14 @@ func experimentNameSuppressDiff(k, old, new string, d *schema.ResourceData) bool
 	return false
 }
 
+type MlflowExperimentSchemaStruct struct {
+	ml.Experiment
+	common.Namespace
+}
+
 func ResourceMlflowExperiment() common.Resource {
 	s := common.StructToSchema(
-		ml.Experiment{},
+		MlflowExperimentSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			for _, p := range []string{"creation_time", "experiment_id", "last_update_time", "lifecycle_stage", "tags"} {
 				common.CustomizeSchemaPath(m, p).SetComputed()
@@ -34,10 +39,9 @@ func ResourceMlflowExperiment() common.Resource {
 				Type:       schema.TypeString,
 				Deprecated: "Remove the description attribute as it no longer is used and will be removed in a future version.",
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

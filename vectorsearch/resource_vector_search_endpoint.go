@@ -14,9 +14,14 @@ import (
 const defaultEndpointProvisionTimeout = 75 * time.Minute
 const deleteCallTimeout = 10 * time.Second
 
+type VectorSearchEndpointSchemaStruct struct {
+	vectorsearch.EndpointInfo
+	common.Namespace
+}
+
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.EndpointInfo{},
+		VectorSearchEndpointSchemaStruct{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
@@ -36,10 +41,9 @@ func ResourceVectorSearchEndpoint() common.Resource {
 				Computed: true,
 			})
 
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {

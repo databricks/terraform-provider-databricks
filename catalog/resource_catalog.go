@@ -28,8 +28,13 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 	return false
 }
 
+type CatalogSchemaStruct struct {
+	catalog.CatalogInfo
+	common.Namespace
+}
+
 func ResourceCatalog() common.Resource {
-	catalogSchema := common.StructToSchema(catalog.CatalogInfo{},
+	catalogSchema := common.StructToSchema(CatalogSchemaStruct{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -59,10 +64,9 @@ func ResourceCatalog() common.Resource {
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
 			common.CustomizeSchemaPath(s, "provisioning_info").SetComputed().SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
-	common.AddNamespaceInSchema(catalogSchema)
-	common.NamespaceCustomizeSchemaMap(catalogSchema)
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

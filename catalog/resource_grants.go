@@ -24,6 +24,7 @@ type PrivilegeAssignment struct {
 // privilege_assignments column renamed to `grant` block for simplicity
 type PermissionsList struct {
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
+	common.Namespace
 }
 
 // diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
@@ -160,10 +161,9 @@ func ResourceGrants() common.Resource {
 			for field := range permissions.Mappings {
 				s[field].AtLeastOneOf = alof
 			}
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

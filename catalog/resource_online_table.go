@@ -29,8 +29,13 @@ func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Conte
 	})
 }
 
+type OnlineTableSchemaStruct struct {
+	catalog.OnlineTable
+	common.Namespace
+}
+
 func ResourceOnlineTable() common.Resource {
-	s := common.StructToSchema(catalog.OnlineTable{},
+	s := common.StructToSchema(OnlineTableSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -43,10 +48,9 @@ func ResourceOnlineTable() common.Resource {
 			runTypes := []string{"spec.0.run_triggered", "spec.0.run_continuously"}
 			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf(runTypes).SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf(runTypes).SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	common.AddNamespaceInSchema(s)
-	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

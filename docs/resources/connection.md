@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_connection (Resource)
 
--> This resource can only be used with a workspace-level provider!
-
 Lakehouse Federation is the query federation platform for Databricks. Databricks uses Unity Catalog to manage query federation. To make a dataset available for read-only querying using Lakehouse Federation, you create the following:
 
 - A connection, a securable object in Unity Catalog that specifies a path and credentials for accessing an external database system.
@@ -134,6 +132,8 @@ The following arguments are supported:
 - `properties` -  (Optional) Free-form connection properties. Change forces creation of a new resource.
 - `comment` - (Optional) Free-form text. Change forces creation of a new resource.
 - `read_only` - (Optional) Indicates whether the connection is read-only. Change forces creation of a new resource.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -7,8 +7,6 @@ In Databricks Runtime 13.3 and above, you can add libraries and init scripts to 
 
 ~> It is required to define all allowlist for an artifact type in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
--> This resource can only be used with a workspace-level provider!
-
 ## Example Usage
 
 ```hcl
@@ -31,6 +29,8 @@ One or more `artifact_matcher` blocks with the following arguments:
 
 * `artifact` - The artifact path or maven coordinate.
 * `match_type` - The pattern matching type of the artifact. Only `PREFIX_MATCH` is supported.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

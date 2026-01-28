@@ -5,8 +5,6 @@ subcategory: "Security"
 
 Security-conscious enterprises that use cloud SaaS applications need to restrict access to their own employees. Authentication helps to prove user identity, but that does not enforce network location of the users. Accessing a cloud service from an unsecured network can pose security risks to an enterprise, especially when the user may have authorized access to sensitive or personal data. Enterprise network perimeters apply security policies and limit access to external services (for example, firewalls, proxies, DLP, and logging), so access beyond these controls are assumed to be untrusted. Please see [IP Access List](https://docs.databricks.com/security/network/ip-access-list.html) for full feature documentation.
 
--> This resource can only be used with a workspace-level provider!
-
 -> The total number of IP addresses and CIDR scopes provided across all ACL Lists in a workspace can not exceed 1000.  Refer to the docs above for specifics.
 
 ## Example Usage
@@ -38,6 +36,8 @@ The following arguments are supported:
 * `ip_addresses` - A string list of IP addresses and CIDR ranges.
 * `label` -  This is the display name for the given IP ACL List.
 * `enabled` - (Optional) Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

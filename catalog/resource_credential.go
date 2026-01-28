@@ -9,62 +9,61 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
+	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
+			"databricks_gcp_service_account"}
+		for _, cred := range alofServiceCreds {
+			common.CustomizeSchemaPath(m, cred).SetExactlyOneOf(alofServiceCreds)
+		}
+
+		for _, required := range []string{"name", "purpose"} {
+			common.CustomizeSchemaPath(m, required).SetRequired()
+		}
+
+		for _, computed := range []string{"id", "created_at", "created_by", "full_name", "isolation_mode",
+			"metastore_id", "owner", "updated_at", "updated_by", "used_for_managed_storage"} {
+			common.CustomizeSchemaPath(m, computed).SetComputed()
+		}
+
+		common.CustomizeSchemaPath(m, "name").SetForceNew()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "email").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "credential_id").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "private_key_id").SetComputed()
+		common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
+		common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
+		common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+		common.MustSchemaPath(m, "azure_service_principal", "client_secret").Sensitive = true
+
+		m["force_destroy"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+		}
+		m["force_update"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+		}
+		m["skip_validation"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				return old == "false" && new == "true"
+			},
+		}
+		m["credential_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
+		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		return m
+	})
+
 func ResourceCredential() common.Resource {
-	credentialSchema := common.StructToSchema(catalog.CredentialInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
-				"databricks_gcp_service_account"}
-			for _, cred := range alofServiceCreds {
-				common.CustomizeSchemaPath(m, cred).SetExactlyOneOf(alofServiceCreds)
-			}
-
-			for _, required := range []string{"name", "purpose"} {
-				common.CustomizeSchemaPath(m, required).SetRequired()
-			}
-
-			for _, computed := range []string{"id", "created_at", "created_by", "full_name", "isolation_mode",
-				"metastore_id", "owner", "updated_at", "updated_by", "used_for_managed_storage"} {
-				common.CustomizeSchemaPath(m, computed).SetComputed()
-			}
-
-			common.CustomizeSchemaPath(m, "name").SetForceNew()
-			common.CustomizeSchemaPath(m, "databricks_gcp_service_account").SetComputed()
-			common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "email").SetComputed()
-			common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "credential_id").SetComputed()
-			common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "private_key_id").SetComputed()
-			common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
-			common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
-			common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
-			common.MustSchemaPath(m, "azure_service_principal", "client_secret").Sensitive = true
-
-			m["force_destroy"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["force_update"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["skip_validation"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "false" && new == "true"
-				},
-			}
-			m["credential_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-			return m
-		})
-	common.AddNamespaceInSchema(credentialSchema)
-	common.NamespaceCustomizeSchemaMap(credentialSchema)
 	return common.Resource{
 		Schema: credentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -96,7 +95,7 @@ func ResourceCredential() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, bindings.BindingsSecurableTypeCredential)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -117,7 +116,7 @@ func ResourceCredential() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_update").(bool)
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -175,7 +174,7 @@ func ResourceCredential() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}

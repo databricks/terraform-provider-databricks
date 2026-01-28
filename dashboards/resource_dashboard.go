@@ -77,14 +77,18 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	return s
 }
 
-var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
-
 // ResourceDashboard manages dashboards
 func ResourceDashboard() common.Resource {
+	dashboardSchema := common.StructToSchema(Dashboard{}, nil)
+	common.AddNamespaceInSchema(dashboardSchema)
+	common.NamespaceCustomizeSchemaMap(dashboardSchema)
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -141,7 +145,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -164,7 +168,7 @@ func ResourceDashboard() common.Resource {
 			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -209,7 +213,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

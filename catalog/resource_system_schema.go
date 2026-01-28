@@ -36,6 +36,8 @@ func ResourceSystemSchema() common.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return systemSchema
 		})
+	common.AddNamespaceInSchema(systemSchema)
+	common.NamespaceCustomizeSchemaMap(systemSchema)
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		o, n := d.GetChange("schema")
 		old, okOld := o.(string)
@@ -44,7 +46,7 @@ func ResourceSystemSchema() common.Resource {
 			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old system schema: %s, new: %s", old, new)
-		w, err := c.WorkspaceClient()
+		w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 		if err != nil {
 			return err
 		}
@@ -88,7 +90,7 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -133,7 +135,7 @@ func ResourceSystemSchema() common.Resource {
 				log.Printf("[WARN] %s is auto enabled, ignoring it", schemaName)
 				return nil
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

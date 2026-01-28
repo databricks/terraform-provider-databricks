@@ -17,6 +17,8 @@ Every `databricks_grant` resource must have exactly one securable identifier and
 
 - `principal` - User name, group name or service principal application ID.
 - `privileges` - One or more privileges that are specific to a securable type.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 For the latest list of privilege types that apply to each securable object in Unity Catalog, please refer to the [official documentation](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog)
 

@@ -42,6 +42,8 @@ The following arguments are required:
 * `properties` - (Optional) Extensible Schema properties.
 * `enable_predictive_optimization` - (Optional) Whether predictive optimization should be enabled for this object and objects under it. Can be `ENABLE`, `DISABLE` or `INHERIT`
 * `force_destroy` - (Optional) Delete schema regardless of its contents.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

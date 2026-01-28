@@ -52,7 +52,7 @@ func getContentReader(data *schema.ResourceData) (*hashReadCloser, error) {
 }
 
 func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -92,8 +92,13 @@ func ResourceFile() common.Resource {
 			Optional: true,
 		},
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			path := data.Get("path").(string)
 			err := upload(ctx, data, c, path)
@@ -104,7 +109,7 @@ func ResourceFile() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}
@@ -127,7 +132,7 @@ func ResourceFile() common.Resource {
 			return upload(ctx, data, c, path)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, data)
 			if err != nil {
 				return err
 			}

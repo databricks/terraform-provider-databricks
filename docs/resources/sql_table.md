@@ -187,6 +187,8 @@ The following arguments are supported:
 * `comment` - (Optional) User-supplied free-form text. Changing the comment is not currently supported on the `VIEW` table type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) A map of table properties.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### `column` configuration block
 

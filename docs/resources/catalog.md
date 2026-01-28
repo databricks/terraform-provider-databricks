@@ -37,6 +37,8 @@ The following arguments are required:
 * `properties` - (Optional) Extensible Catalog properties.
 * `options` - (Optional) For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.
 * `force_destroy` - (Optional) Delete catalog regardless of its contents.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

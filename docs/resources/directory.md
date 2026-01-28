@@ -24,6 +24,8 @@ The following arguments are supported:
 
 - `path` - (Required) The absolute path of the directory, beginning with "/", e.g. "/Demo".
 - `delete_recursive` - Whether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform. Defaults to `false`
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

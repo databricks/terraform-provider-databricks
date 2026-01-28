@@ -42,6 +42,8 @@ The following arguments are supported:
 * `is_default_for_provider` - (Optional) boolean flag specifying if the credential is the default for the given provider type.
 * `name` - (Optional) the name of the git credential, used for identification and ease of lookup.
 * `force` - (Optional) specify if settings need to be enforced (i.e., to overwrite previously set credential for service principals).
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

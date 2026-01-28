@@ -21,8 +21,13 @@ func recepientPropertiesSuppressDiff(k, old, new string, d *schema.ResourceData)
 	return false
 }
 
+type RecipientSchemaStruct struct {
+	sharing.RecipientInfo
+	common.Namespace
+}
+
 func ResourceRecipient() common.Resource {
-	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	recipientSchema := common.StructToSchema(RecipientSchemaStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(
 			validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
 		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
@@ -43,12 +48,16 @@ func ResourceRecipient() common.Resource {
 			common.CustomizeSchemaPath(s, "tokens", path).SetReadOnly()
 		}
 
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: recipientSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -62,7 +71,7 @@ func ResourceRecipient() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -81,7 +90,7 @@ func ResourceRecipient() common.Resource {
 			return common.StructToData(ri, recipientSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -122,7 +131,7 @@ func ResourceRecipient() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

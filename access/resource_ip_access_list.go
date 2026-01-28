@@ -15,6 +15,7 @@ type ipAccessListUpdateRequest struct {
 	ListType    settings.ListType `json:"list_type"`
 	IpAddresses []string          `json:"ip_addresses"`
 	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
+	common.Namespace
 }
 
 // ResourceIPAccessList manages IP access lists
@@ -26,12 +27,16 @@ func ResourceIPAccessList() common.Resource {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
 		}
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -45,7 +50,7 @@ func ResourceIPAccessList() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -57,7 +62,7 @@ func ResourceIPAccessList() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -67,7 +72,7 @@ func ResourceIPAccessList() common.Resource {
 			return w.IpAccessLists.Update(ctx, iacl)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -70,6 +70,8 @@ The following arguments are available:
       * `prefix` - (Optional, String) Character that prefixes each selected parameter value.
       * `separator` - (Optional, String) Character that separates each selected parameter value. Defaults to a comma.
       * `suffix` - (Optional, String) Character that suffixes each selected parameter value.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

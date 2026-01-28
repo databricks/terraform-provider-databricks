@@ -85,6 +85,8 @@ The following arguments are supported:
 * `owner` - (Optional) Name of the volume owner.
 * `storage_location` - (Optional) URL for the volume (should be inside of an existing [External Location](external_location.md)). Only used for `EXTERNAL` Volumes.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). Change forces creation of a new resource.
 * `comment` - (Optional) Free-form text.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -77,6 +77,8 @@ The following arguments are required:
 * `ip_access_list` - (Optional) Recipient IP access list.
 * `properties_kvpairs` - (Optional) Recipient properties - object consisting of following fields:
   * `properties` (Required) a map of string key-value pairs with recipient's properties.  Properties with name starting with `databricks.` are reserved.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### Ip Access List Argument
 

@@ -52,8 +52,13 @@ var getSecurableName = func(d *schema.ResourceData) string {
 	return securableName.(string)
 }
 
+type WorkspaceBindingSchemaStruct struct {
+	catalog.WorkspaceBinding
+	common.Namespace
+}
+
 func ResourceWorkspaceBinding() common.Resource {
-	workspaceBindingSchema := common.StructToSchema(catalog.WorkspaceBinding{},
+	workspaceBindingSchema := common.StructToSchema(WorkspaceBindingSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["catalog_name"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -80,6 +85,7 @@ func ResourceWorkspaceBinding() common.Resource {
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite),
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
 				}, false))
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		},
 	)
@@ -94,7 +100,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -111,7 +117,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -146,7 +152,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

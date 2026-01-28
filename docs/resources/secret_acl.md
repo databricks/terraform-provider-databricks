@@ -44,6 +44,8 @@ The following arguments are required:
   * `display_name` attribute of [databricks_group](group.md).  Use `users` to allow access for all workspace users.
   * `application_id` attribute of [databricks_service_principal](service_principal.md).
 * `permission` - (Required) `READ`, `WRITE` or `MANAGE`.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

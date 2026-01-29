@@ -10,6 +10,7 @@
 
 ### Bug Fixes
 
+* Ensure `rfa_access_request_destinations` are cleared on delete
 ### Documentation
 
 * Mark `data_source_id` as deprecated in `databricks_sql_warehouse` and `databricks_sql_endpoint` ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))

@@ -381,7 +381,18 @@ func (r *AccessRequestDestinationResource) Update(ctx context.Context, req resou
 }
 
 func (r *AccessRequestDestinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+    ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+
+	var plan AccessRequestDestinations
+	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.SetDestinations(ctx, nil)
+
+	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
+
 
 var _ resource.ResourceWithImportState = &AccessRequestDestinationResource{}
 

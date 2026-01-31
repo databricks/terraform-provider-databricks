@@ -6,8 +6,10 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
@@ -188,6 +190,65 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 			assert.Equal(t, "STOPPED", computeStatus)
 			return nil
 		},
+	})
+}
+
+var deletedOutsideTemplate = `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "deleted outside terraform test"
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+`
+
+func TestAccAppResource_DeletedOutsideTerraform(t *testing.T) {
+	var appName string
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: deletedOutsideTemplate,
+		Check: func(s *terraform.State) error {
+			appName = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["name"]
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			_, err := w.Apps.DeleteByName(context.Background(), appName)
+			require.NoError(t, err)
+			// Wait for the app to be fully deleted before proceeding,
+			// otherwise recreating it will conflict with the DELETING state.
+			for {
+				_, err := w.Apps.GetByName(context.Background(), appName)
+				if apierr.IsMissing(err) {
+					break
+				}
+				require.NoError(t, err)
+				time.Sleep(30 * time.Second)
+			}
+		},
+		Template: deletedOutsideTemplate,
 	})
 }
 

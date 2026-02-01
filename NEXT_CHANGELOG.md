@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fixed `databricks_users` data source incorrectly quoting `extra_attributes` value, causing single-attribute inputs to be silently ignored at account level. Also fixed `extra_attributes` not being forwarded to the SCIM API at workspace level.
+
 ### Documentation
 
 ### Exporter

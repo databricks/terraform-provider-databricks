@@ -78,7 +78,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if !(usersInfo.ExtraAttributes.IsNull()) {
 		attributes += ","
-		attributes += usersInfo.ExtraAttributes.String()
+		attributes += usersInfo.ExtraAttributes.ValueString()
 	}
 
 	var users []iam.User

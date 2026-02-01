@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fixed `databricks_users` data source incorrectly quoting `extra_attributes` value, causing single-attribute inputs to be silently ignored at account level. Also fixed `extra_attributes` not being forwarded to the SCIM API at workspace level.
+
 ### Documentation
 
 * Mark `data_source_id` as deprecated in `databricks_sql_warehouse` and `databricks_sql_endpoint` ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))

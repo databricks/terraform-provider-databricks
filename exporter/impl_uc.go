@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	rfa_access_request_destinations "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/rfa_access_request_destinations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"golang.org/x/exp/slices"
@@ -88,6 +89,10 @@ func importUcCatalog(ic *importContext, r *resource) error {
 	if cat.IsolationMode == "ISOLATED" {
 		ic.emitWorkspaceBindings("catalog", cat.Name)
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("CATALOG", cat.Name)
+
 	return nil
 }
 
@@ -190,6 +195,10 @@ func importUcSchema(ic *importContext, r *resource) error {
 			}
 		}
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("SCHEMA", schemaFullName)
+
 	return nil
 }
 
@@ -202,6 +211,10 @@ func importUcVolume(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("VOLUME", volumeFullName)
+
 	return nil
 }
 
@@ -267,6 +280,9 @@ func importUcStorageCredential(ic *importContext, r *resource) error {
 			ic.emitWorkspaceBindings("storage_credential", r.ID)
 		}
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("STORAGE_CREDENTIAL", r.ID)
 	return nil
 }
 
@@ -299,6 +315,10 @@ func importUcCredential(ic *importContext, r *resource) error {
 			}
 		}
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("CREDENTIAL", r.ID)
+
 	return nil
 }
 
@@ -508,6 +528,10 @@ func importUcExternalLocation(ic *importContext, r *resource) error {
 		Resource: "databricks_storage_credential",
 		ID:       credentialName,
 	})
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("EXTERNAL_LOCATION", r.ID)
+
 	if r.Data != nil {
 		isolationMode := r.Data.Get("isolation_mode").(string)
 		if isolationMode == "ISOLATION_MODE_ISOLATED" {
@@ -567,6 +591,10 @@ func listUcMetastores(ic *importContext) error {
 
 func importUcMetastores(ic *importContext, r *resource) error {
 	ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("METASTORE", r.ID)
+
 	if ic.accountLevel {
 		// emit metastore assignments
 		assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
@@ -706,7 +734,103 @@ func importSqlTable(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("TABLE", tableFullName)
+
 	return nil
+}
+
+// emitRfaAccessRequestDestinations emits databricks_rfa_access_request_destinations resource
+// for a given securable if it has access request destinations configured.
+// This is a reusable function that can be called from Import functions of various UC resources.
+func (ic *importContext) emitRfaAccessRequestDestinations(securableType, fullName string) {
+	if !ic.isServiceEnabled("uc-rfa") {
+		return
+	}
+
+	// Try to get access request destinations for this securable
+	destinations, err := ic.workspaceClient.Rfa.GetAccessRequestDestinations(ic.Context, catalog.GetAccessRequestDestinationsRequest{
+		SecurableType: securableType,
+		FullName:      fullName,
+	})
+
+	if err != nil {
+		// Don't log error - most securables won't have destinations configured
+		log.Printf("[DEBUG] No access request destinations for %s %s: %v", securableType, fullName, err)
+		return
+	}
+
+	// Only emit if there are actual destinations configured
+	if destinations != nil && len(destinations.Destinations) > 0 {
+		log.Printf("[DEBUG] Emitting RFA access request destinations for %s %s", securableType, fullName)
+		ic.Emit(&resource{
+			Resource: "databricks_rfa_access_request_destinations",
+			ID:       fmt.Sprintf("%s,%s", securableType, fullName),
+		})
+	}
+}
+
+func importRfaAccessRequestDestinations(ic *importContext, r *resource) error {
+	// The resource is a Plugin Framework resource, so we need to convert its state
+	var accessRequestDests catalog.AccessRequestDestinations
+	if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper,
+		rfa_access_request_destinations.AccessRequestDestinations{}, &accessRequestDests); err != nil {
+		return err
+	}
+
+	// Emit dependencies based on destination types
+	for _, dest := range accessRequestDests.Destinations {
+		switch dest.DestinationType {
+		case "EMAIL":
+			// For EMAIL destinations, emit user or service principal
+			if dest.DestinationId != "" {
+				ic.emitUserOrServicePrincipal(dest.DestinationId)
+			}
+		case "SLACK", "MICROSOFT_TEAMS", "GENERIC_WEBHOOK":
+			// These reference notification destinations
+			if dest.DestinationId != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_notification_destination",
+					ID:       dest.DestinationId,
+				})
+			}
+		}
+	}
+
+	return nil
+}
+
+// createIsMatchingSecurableType creates an IsValidApproximation function that checks if the
+// securable.type field matches the expected securable type for a given resource type.
+// This is used to disambiguate when there are objects with the same name but different types
+// (e.g., a catalog and a credential with the same name).
+func createIsMatchingSecurableType(expectedSecurableType string) func(ic *importContext, res *resource,
+	ra *resourceApproximation, origPath string) bool {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		// Get the securable.type from the RFA resource using DataWrapper (Plugin Framework)
+		if res.DataWrapper == nil {
+			log.Printf("[DEBUG] DataWrapper is nil for resource %s", res.Resource)
+			return false
+		}
+
+		securableTypeValue := res.DataWrapper.Get("securable.type")
+		if securableTypeValue == nil {
+			log.Printf("[DEBUG] securable.type is nil for resource %s", res.Resource)
+			return false
+		}
+
+		securableType, ok := securableTypeValue.(string)
+		if !ok {
+			log.Printf("[DEBUG] securable.type is not a string for resource %s: %T", res.Resource, securableTypeValue)
+			return false
+		}
+
+		match := securableType == expectedSecurableType
+		log.Printf("[DEBUG] Matching securable type for %s: expected=%s, actual=%s, match=%v",
+			res.Resource, expectedSecurableType, securableType, match)
+		return match
+	}
 }
 
 func listDataQualityMonitors(ic *importContext) error {

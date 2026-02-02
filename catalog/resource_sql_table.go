@@ -23,6 +23,7 @@ import (
 )
 
 var MaxSqlExecWaitTimeout = 50
+var sqlExecPollInterval = 5 * time.Second
 var optionPrefixes = []string{"option.", "spark.sql.dataSourceOptions."}
 
 type SqlColumnInfo struct {
@@ -482,13 +483,13 @@ func (ti *SqlTableInfo) formatViewDefinition() {
 	ti.ViewDefinition = strings.ReplaceAll(ti.ViewDefinition, "\t", "    ")
 }
 
-func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
+func (ti *SqlTableInfo) updateTable(ctx context.Context, oldti *SqlTableInfo) error {
 	statements, err := ti.diff(oldti)
 	if err != nil {
 		return err
 	}
 	for _, statement := range statements {
-		err = ti.applySql(statement)
+		err = ti.applySql(ctx, statement)
 		if err != nil {
 			return err
 		}
@@ -496,29 +497,39 @@ func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
 	return nil
 }
 
-func (ti *SqlTableInfo) createTable() error {
-	return ti.applySql(ti.buildTableCreateStatement())
+func (ti *SqlTableInfo) createTable(ctx context.Context) error {
+	return ti.applySql(ctx, ti.buildTableCreateStatement())
 }
 
-func (ti *SqlTableInfo) deleteTable() error {
-	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.SQLFullName()))
+func (ti *SqlTableInfo) deleteTable(ctx context.Context) error {
+	return ti.applySql(ctx, fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.SQLFullName()))
 }
 
-func (ti *SqlTableInfo) applySql(sqlQuery string) error {
+func (ti *SqlTableInfo) applySql(ctx context.Context, sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	if ti.WarehouseID != "" {
-		execCtx, cancel := context.WithTimeout(context.Background(), time.Duration(MaxSqlExecWaitTimeout)*time.Second)
-		defer cancel()
-		sqlRes, err := ti.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
+		sqlRes, err := ti.sqlExec.ExecuteStatement(ctx, sql.ExecuteStatementRequest{
 			Statement:     sqlQuery,
-			WaitTimeout:   fmt.Sprintf("%ds", MaxSqlExecWaitTimeout), //max allowed by sql exec
+			WaitTimeout:   fmt.Sprintf("%ds", MaxSqlExecWaitTimeout),
 			WarehouseId:   ti.WarehouseID,
-			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutContinue,
 		})
 		if err != nil {
 			return err
 		}
-		if sqlRes.Status.State != "SUCCEEDED" {
+		// If the statement is still running after the initial wait, poll until completion.
+		for sqlRes.Status.State == sql.StatementStatePending || sqlRes.Status.State == sql.StatementStateRunning {
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("timed out waiting for statement execution: %s", ctx.Err())
+			case <-time.After(sqlExecPollInterval):
+			}
+			sqlRes, err = ti.sqlExec.GetStatementByStatementId(ctx, sqlRes.StatementId)
+			if err != nil {
+				return err
+			}
+		}
+		if sqlRes.Status.State != sql.StatementStateSucceeded {
 			return fmt.Errorf("statement failed to execute: %s", sqlRes.Status.State)
 		}
 		return nil
@@ -671,7 +682,7 @@ func ResourceSqlTable() common.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			if err := ti.createTable(); err != nil {
+			if err := ti.createTable(ctx); err != nil {
 				return err
 			}
 			if ti.Owner != "" {
@@ -742,7 +753,7 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = newti.updateTable(&oldti)
+			err = newti.updateTable(ctx, &oldti)
 			if err != nil {
 				return err
 			}
@@ -768,7 +779,7 @@ func ResourceSqlTable() common.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			return ti.deleteTable()
+			return ti.deleteTable(ctx)
 		},
 	}
 }

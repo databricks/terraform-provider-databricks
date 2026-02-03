@@ -8,6 +8,9 @@
 
 ### New Features and Improvements
 
+* Allow the `cluster_size` argument to be specified as "5X-Large" in `databricks_sql_warehouse`
+* Update the maximum allowed value for `max_num_clusters` argument in `databricks_sql_warehouse` to 40
+
 ### Bug Fixes
 
 ### Documentation

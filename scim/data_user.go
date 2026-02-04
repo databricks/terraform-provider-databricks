@@ -27,53 +27,60 @@ func getUser(usersAPI UsersAPI, id, name string) (user User, err error) {
 
 // DataSourceUser returns information about user specified by user name
 func DataSourceUser() common.Resource {
-	return common.Resource{
-		Schema: map[string]*schema.Schema{
-			"user_name": {
-				Type:         schema.TypeString,
-				ExactlyOneOf: []string{"user_name", "user_id"},
-				Optional:     true,
-			},
-			"user_id": {
-				Type:         schema.TypeString,
-				ExactlyOneOf: []string{"user_name", "user_id"},
-				Optional:     true,
-			},
-			"home": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repos": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"alphanumeric": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"external_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"application_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"acl_principal_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"active": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+	s := map[string]*schema.Schema{
+		"user_name": {
+			Type:         schema.TypeString,
+			ExactlyOneOf: []string{"user_name", "user_id"},
+			Optional:     true,
 		},
+		"user_id": {
+			Type:         schema.TypeString,
+			ExactlyOneOf: []string{"user_name", "user_id"},
+			Optional:     true,
+		},
+		"home": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"repos": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"display_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"alphanumeric": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"external_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"application_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"acl_principal_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"active": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
+	return common.Resource{
+		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			usersAPI := NewUsersAPI(ctx, m)
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			usersAPI := NewUsersAPI(ctx, newClient)
 			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
 				return err

@@ -83,6 +83,39 @@ var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
 func ResourceDashboard() common.Resource {
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			// Detect file content changes when using file_path.
+			// This is a defense-in-depth mechanism that complements the DiffSuppressFunc.
+			// DiffSuppressFunc is only called when there's an attribute diff to suppress.
+			// In some edge cases (e.g., serialized_dashboard removed from state),
+			// there may be no diff, so DiffSuppressFunc is never called.
+			// CustomizeDiff is called on every plan, so we can reliably detect changes here.
+			filePath := d.Get("file_path").(string)
+			if filePath == "" {
+				return nil
+			}
+
+			// Read the current file content and compute its hash.
+			_, newHash, err := common.ReadSerializedJsonContent("", filePath)
+			if err != nil {
+				return err
+			}
+
+			// Get the stored md5 from state.
+			oldMd5 := d.Get("md5").(string)
+			dashboardChangeDetected := d.Get("dashboard_change_detected").(bool)
+
+			// If file content hash changed or external changes detected, force an update.
+			if oldMd5 != newHash || dashboardChangeDetected {
+				// Mark md5 as needing recomputation during apply.
+				// This triggers an update because md5 will show as changing.
+				if err := d.SetNewComputed("md5"); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {

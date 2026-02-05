@@ -93,10 +93,8 @@ resource "databricks_postgres_branch" "dev" {
 ## Arguments
 The following arguments are supported:
 * `project_id` (string, required) - The ID to use for the Project. This becomes the final component of the project's resource name.
-  The ID must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens (RFC 1123).
-  Examples:
-  - With custom ID: `production` → name becomes `projects/production`
-  - Without custom ID: system generates UUID → name becomes `projects/a7f89b2c-3d4e-5f6g-7h8i-9j0k1l2m3n4o`
+  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
+  For example, `my-app` becomes `projects/my-app`
 * `spec` (ProjectSpec, optional) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 
 ### ProjectDefaultEndpointSettings
@@ -117,8 +115,8 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the project was created
-* `name` (string) - The resource name of the project. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}`
+* `name` (string) - Output only. The full resource path of the project.
+  Format: projects/{project_id}
 * `status` (ProjectStatus) - The current status of a Project
 * `uid` (string) - System-generated unique ID for the project
 * `update_time` (string) - A timestamp indicating when the project was last updated

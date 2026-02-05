@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -35,7 +34,7 @@ type TagAssignmentDataSource struct {
 type TagAssignmentData struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"entity_type"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
@@ -137,11 +136,6 @@ func (r *TagAssignmentDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	response, err := client.WorkspaceEntityTagAssignments.GetTagAssignment(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get workspace_entity_tag_assignment", err.Error())
 		return
 	}

@@ -21,3 +21,5 @@
 * Add exporting for RFA destinations and Delta Sharing providers ([#5337](https://github.com/databricks/terraform-provider-databricks/pull/5337))
 
 ### Internal Changes
+
+* Update Go SDK to v0.104.0.

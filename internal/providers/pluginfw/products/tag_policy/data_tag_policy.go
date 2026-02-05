@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -150,11 +149,6 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	response, err := client.TagPolicies.GetTagPolicy(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get tag_policy", err.Error())
 		return
 	}

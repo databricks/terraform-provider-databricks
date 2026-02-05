@@ -75,6 +75,7 @@ The following arguments are supported:
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
+* `purge_on_delete` (boolean, optional) - Purge the resource on delete
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
   This field allows you to configure alerts to run as a specific user or service principal.
   - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.

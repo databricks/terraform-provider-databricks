@@ -14,12 +14,24 @@ The following arguments are supported:
 * `auth_config` (AuthConfig, required) - Authentication configuration for connection to topics
 * `bootstrap_servers` (string, required) - A comma-separated list of host/port pairs pointing to Kafka cluster
 * `subscription_mode` (SubscriptionMode, required) - Options to configure which Kafka topics to pull data from
+* `backfill_source` (BackfillSource, optional) - A user-provided and managed source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Kafka config.
+  In the future, a separate table will be maintained by Databricks for forward filling data.
+  The schema for this source must match exactly that of the key and value schemas specified for this Kafka config
 * `extra_options` (object, optional) - Catch-all for miscellaneous options. Keys should be source options or Kafka consumer options (kafka.*)
 * `key_schema` (SchemaConfig, optional) - Schema configuration for extracting message keys from topics. At least one of key_schema and value_schema must be provided
 * `value_schema` (SchemaConfig, optional) - Schema configuration for extracting message values from topics. At least one of key_schema and value_schema must be provided
 
 ### AuthConfig
 * `uc_service_credential_name` (string, optional) - Name of the Unity Catalog service credential. This value will be set under the option databricks.serviceCredential
+
+### BackfillSource
+* `delta_table_source` (DeltaTableSource, optional) - The Delta table source containing the historic data to backfill.
+  Only the delta table name is used for backfill, the entity columns and timeseries column are ignored as they are defined by the associated KafkaSource
+
+### DeltaTableSource
+* `entity_columns` (list of string, required) - The entity columns of the Delta table
+* `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
+* `timeseries_column` (string, required) - The timeseries column of the Delta table
 
 ### SchemaConfig
 * `json_schema` (string, optional) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)

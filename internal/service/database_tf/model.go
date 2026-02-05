@@ -1466,15 +1466,12 @@ type DatabaseTable struct {
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// Target Postgres database object (logical database) name for this table.
 	//
-	// When creating a table in a registered Postgres catalog, the target
-	// Postgres database name is inferred to be that of the registered catalog.
-	// If this field is specified in this scenario, the Postgres database name
-	// MUST match that of the registered catalog (or the request will be
-	// rejected).
-	//
 	// When creating a table in a standard catalog, this field is required. In
 	// this scenario, specifying this field will allow targeting an arbitrary
 	// postgres database.
+	//
+	// Registration of database tables via /database/tables is currently only
+	// supported in standard catalogs.
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`

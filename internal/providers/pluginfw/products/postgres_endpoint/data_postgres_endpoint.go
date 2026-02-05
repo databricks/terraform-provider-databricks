@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -37,9 +36,8 @@ type EndpointDataSource struct {
 type EndpointData struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the endpoint. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// Output only. The full resource path of the endpoint. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
 	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -159,11 +157,6 @@ func (r *EndpointDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	response, err := client.Postgres.GetEndpoint(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get postgres_endpoint", err.Error())
 		return
 	}

@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -155,11 +154,6 @@ func (r *CustomTemplateDataSource) Read(ctx context.Context, req datasource.Read
 
 	response, err := client.AppsSettings.GetCustomTemplate(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get apps_settings_custom_template", err.Error())
 		return
 	}

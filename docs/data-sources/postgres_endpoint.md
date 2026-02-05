@@ -23,14 +23,14 @@ output "endpoint_type" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the endpoint. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+* `name` (string, required) - Output only. The full resource path of the endpoint.
+  Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
-* `name` (string) - The resource name of the endpoint. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+* `name` (string) - Output only. The full resource path of the endpoint.
+  Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `parent` (string) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
 * `spec` (EndpointSpec) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state

@@ -30,16 +30,15 @@ import (
 type Branch_SdkV2 struct {
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the branch. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}`
+	// Output only. The full resource path of the branch. Format:
+	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"name"`
 	// The project containing this branch (API resource hierarchy). Format:
 	// projects/{project_id}
 	//
 	// Note: This field indicates where the branch exists in the resource
 	// hierarchy. For point-in-time branching from another branch, see
-	// `spec.source_branch`.
+	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
 	// The spec contains the branch configuration.
 	Spec types.List `tfsdk:"spec"`
@@ -451,12 +450,10 @@ type CreateBranchRequest_SdkV2 struct {
 	// The Branch to create.
 	Branch types.List `tfsdk:"branch"`
 	// The ID to use for the Branch. This becomes the final component of the
-	// branch's resource name. The ID must be 1-63 characters long, start with a
-	// lowercase letter, and contain only lowercase letters, numbers, and
-	// hyphens (RFC 1123). Examples: - With custom ID: `staging` → name
-	// becomes `projects/{project_id}/branches/staging` - Without custom ID:
-	// system generates slug → name becomes
-	// `projects/{project_id}/branches/br-example-name-x1y2z3a4`
+	// branch's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `development` becomes
+	// `projects/my-app/branches/development`.
 	BranchId types.String `tfsdk:"-"`
 	// The Project where this Branch will be created. Format:
 	// projects/{project_id}
@@ -564,12 +561,10 @@ type CreateEndpointRequest_SdkV2 struct {
 	// The Endpoint to create.
 	Endpoint types.List `tfsdk:"endpoint"`
 	// The ID to use for the Endpoint. This becomes the final component of the
-	// endpoint's resource name. The ID must be 1-63 characters long, start with
-	// a lowercase letter, and contain only lowercase letters, numbers, and
-	// hyphens (RFC 1123). Examples: - With custom ID: `primary` → name
-	// becomes `projects/{project_id}/branches/{branch_id}/endpoints/primary` -
-	// Without custom ID: system generates slug → name becomes
-	// `projects/{project_id}/branches/{branch_id}/endpoints/ep-example-name-x1y2z3a4`
+	// endpoint's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `primary` becomes
+	// `projects/my-app/branches/development/endpoints/primary`.
 	EndpointId types.String `tfsdk:"-"`
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -677,11 +672,9 @@ type CreateProjectRequest_SdkV2 struct {
 	// The Project to create.
 	Project types.List `tfsdk:"project"`
 	// The ID to use for the Project. This becomes the final component of the
-	// project's resource name. The ID must be 1-63 characters long, start with
-	// a lowercase letter, and contain only lowercase letters, numbers, and
-	// hyphens (RFC 1123). Examples: - With custom ID: `production` → name
-	// becomes `projects/production` - Without custom ID: system generates UUID
-	// → name becomes `projects/a7f89b2c-3d4e-5f6g-7h8i-9j0k1l2m3n4o`
+	// project's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
 	ProjectId types.String `tfsdk:"-"`
 }
 
@@ -790,6 +783,9 @@ type CreateRoleRequest_SdkV2 struct {
 	//
 	// This value should be 4-63 characters, and valid characters are lowercase
 	// letters, numbers, and hyphens, as defined by RFC 1123.
+	//
+	// If role_id is not specified in the request, it is generated
+	// automatically.
 	RoleId types.String `tfsdk:"-"`
 }
 
@@ -820,7 +816,7 @@ func (m CreateRoleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["role"] = attrs["role"].SetRequired()
 	attrs["role"] = attrs["role"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["role_id"] = attrs["role_id"].SetRequired()
+	attrs["role_id"] = attrs["role_id"].SetOptional()
 
 	return attrs
 }
@@ -1050,7 +1046,7 @@ func (m *DatabricksServiceExceptionWithDetailsProto_SdkV2) SetDetails(ctx contex
 }
 
 type DeleteBranchRequest_SdkV2 struct {
-	// The name of the Branch to delete. Format:
+	// The full resource path of the branch to delete. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"-"`
 }
@@ -1099,7 +1095,7 @@ func (m DeleteBranchRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteEndpointRequest_SdkV2 struct {
-	// The name of the Endpoint to delete. Format:
+	// The full resource path of the endpoint to delete. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"-"`
 }
@@ -1148,7 +1144,8 @@ func (m DeleteEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteProjectRequest_SdkV2 struct {
-	// The name of the Project to delete. Format: projects/{project_id}
+	// The full resource path of the project to delete. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1196,7 +1193,7 @@ func (m DeleteProjectRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteRoleRequest_SdkV2 struct {
-	// The resource name of the postgres role. Format:
+	// The full resource path of the role to delete. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"-"`
 	// Reassign objects. If this is set, all objects owned by the role are
@@ -1259,9 +1256,8 @@ func (m DeleteRoleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type Endpoint_SdkV2 struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the endpoint. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// Output only. The full resource path of the endpoint. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
 	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -2032,8 +2028,8 @@ func (m *GenerateDatabaseCredentialRequest_SdkV2) SetClaims(ctx context.Context,
 }
 
 type GetBranchRequest_SdkV2 struct {
-	// The resource name of the branch to retrieve. Format:
-	// `projects/{project_id}/branches/{branch_id}`
+	// The full resource path of the branch to retrieve. Format:
+	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2081,8 +2077,8 @@ func (m GetBranchRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetEndpointRequest_SdkV2 struct {
-	// The resource name of the endpoint to retrieve. Format:
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// The full resource path of the endpoint to retrieve. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2178,8 +2174,8 @@ func (m GetOperationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetProjectRequest_SdkV2 struct {
-	// The resource name of the project to retrieve. Format:
-	// `projects/{project_id}`
+	// The full resource path of the project to retrieve. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2227,7 +2223,7 @@ func (m GetProjectRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetRoleRequest_SdkV2 struct {
-	// The name of the Role to retrieve. Format:
+	// The full resource path of the role to retrieve. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"-"`
 }
@@ -2336,9 +2332,9 @@ func (m ListBranchesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListBranchesResponse_SdkV2 struct {
-	// List of database branches in the project.
+	// List of branches in the project.
 	Branches types.List `tfsdk:"branches"`
-	// Token to request the next page of database branches.
+	// Token to request the next page of branches.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -2640,10 +2636,10 @@ func (m ListProjectsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListProjectsResponse_SdkV2 struct {
-	// Token to request the next page of database projects.
+	// Token to request the next page of projects.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// List of all database projects in the workspace that the user has
-	// permission to access.
+	// List of all projects in the workspace that the user has permission to
+	// access.
 	Projects types.List `tfsdk:"projects"`
 }
 
@@ -3017,8 +3013,8 @@ func (m *Operation_SdkV2) SetError(ctx context.Context, v DatabricksServiceExcep
 type Project_SdkV2 struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the project. This field is output-only and
-	// constructed by the system. Format: `projects/{project_id}`
+	// Output only. The full resource path of the project. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
@@ -3728,7 +3724,7 @@ func (m RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 // Role represents a Postgres role within a Branch.
 type Role_SdkV2 struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the role. Format:
+	// Output only. The full resource path of the role. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"name"`
 	// The Branch where this Role exists. Format:
@@ -3963,6 +3959,13 @@ type RoleRoleSpec_SdkV2 struct {
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
 	IdentityType types.String `tfsdk:"identity_type"`
+	// The name of the Postgres role.
+	//
+	// This expects a valid Postgres identifier as specified in the link below.
+	// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+	//
+	// Required when creating the Role.
+	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
 func (to *RoleRoleSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RoleRoleSpec_SdkV2) {
@@ -3974,6 +3977,7 @@ func (to *RoleRoleSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Rol
 func (m RoleRoleSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_method"] = attrs["auth_method"].SetOptional()
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
 
 	return attrs
 }
@@ -3998,6 +4002,7 @@ func (m RoleRoleSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 		map[string]attr.Value{
 			"auth_method":   m.AuthMethod,
 			"identity_type": m.IdentityType,
+			"postgres_role": m.PostgresRole,
 		})
 }
 
@@ -4007,6 +4012,7 @@ func (m RoleRoleSpec_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auth_method":   types.StringType,
 			"identity_type": types.StringType,
+			"postgres_role": types.StringType,
 		},
 	}
 }
@@ -4015,6 +4021,8 @@ type RoleRoleStatus_SdkV2 struct {
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of the role.
 	IdentityType types.String `tfsdk:"identity_type"`
+	// The name of the Postgres role.
+	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
 func (to *RoleRoleStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RoleRoleStatus_SdkV2) {
@@ -4026,6 +4034,7 @@ func (to *RoleRoleStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from R
 func (m RoleRoleStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_method"] = attrs["auth_method"].SetOptional()
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
 
 	return attrs
 }
@@ -4050,6 +4059,7 @@ func (m RoleRoleStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"auth_method":   m.AuthMethod,
 			"identity_type": m.IdentityType,
+			"postgres_role": m.PostgresRole,
 		})
 }
 
@@ -4059,6 +4069,7 @@ func (m RoleRoleStatus_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auth_method":   types.StringType,
 			"identity_type": types.StringType,
+			"postgres_role": types.StringType,
 		},
 	}
 }
@@ -4069,9 +4080,8 @@ type UpdateBranchRequest_SdkV2 struct {
 	// The branch's `name` field is used to identify the branch to update.
 	// Format: projects/{project_id}/branches/{branch_id}
 	Branch types.List `tfsdk:"branch"`
-	// The resource name of the branch. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}`
+	// Output only. The full resource path of the branch. Format:
+	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. If unspecified, all fields will be updated
 	// when possible.
@@ -4182,9 +4192,8 @@ type UpdateEndpointRequest_SdkV2 struct {
 	// Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Endpoint types.List `tfsdk:"endpoint"`
-	// The resource name of the endpoint. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// Output only. The full resource path of the endpoint. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. If unspecified, all fields will be updated
 	// when possible.
@@ -4289,8 +4298,8 @@ func (m *UpdateEndpointRequest_SdkV2) SetEndpoint(ctx context.Context, v Endpoin
 }
 
 type UpdateProjectRequest_SdkV2 struct {
-	// The resource name of the project. This field is output-only and
-	// constructed by the system. Format: `projects/{project_id}`
+	// Output only. The full resource path of the project. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
 	// The Project to update.
 	//

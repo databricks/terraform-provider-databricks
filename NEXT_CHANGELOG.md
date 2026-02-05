@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 * Dashboard File Content Change Detection When Using `file_path` ([#5359])(https://github.com/databricks/terraform-provider-databricks/pull/5359)
+* Fix permanent drift in `databricks_model_serving` when using `*_plaintext` credential fields for external models ([#5125](https://github.com/databricks/terraform-provider-databricks/pull/5125))
 
 ### Documentation
 

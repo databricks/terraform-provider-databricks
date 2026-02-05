@@ -29,11 +29,17 @@ func DataSourceInstancePool() common.Resource {
 		Attributes *InstancePoolAndStats `json:"pool_info,omitempty" tf:"computed"`
 	}
 	s := common.StructToSchema(poolDetails{}, nil)
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			name := d.Get("name").(string)
-			poolsAPI := NewInstancePoolsAPI(ctx, m)
+			poolsAPI := NewInstancePoolsAPI(ctx, newClient)
 			pool, err := getPool(poolsAPI, name)
 			if err != nil {
 				return err

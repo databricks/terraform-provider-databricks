@@ -306,25 +306,35 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 }
 
 func providerSchema() map[string]*schema.Schema {
-	kindMap := map[reflect.Kind]schema.ValueType{
-		reflect.String: schema.TypeString,
-		reflect.Bool:   schema.TypeBool,
-		reflect.Int:    schema.TypeInt,
-		// other values will immediately fail unit tests
-	}
 	ps := map[string]*schema.Schema{}
 	for _, attr := range config.ConfigAttributes {
-		schemaType, ok := kindMap[attr.Kind]
-		if !ok {
-			// Skip attributes with unsupported types
-			continue
+		switch attr.Kind {
+		case reflect.String:
+			ps[attr.Name] = &schema.Schema{
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		case reflect.Bool:
+			ps[attr.Name] = &schema.Schema{
+				Type:      schema.TypeBool,
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		case reflect.Int:
+			ps[attr.Name] = &schema.Schema{
+				Type:      schema.TypeInt,
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		case reflect.Slice:
+			ps[attr.Name] = &schema.Schema{
+				Type:      schema.TypeList,
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+			}
 		}
-		fieldSchema := &schema.Schema{
-			Type:      schemaType,
-			Optional:  true,
-			Sensitive: attr.Sensitive,
-		}
-		ps[attr.Name] = fieldSchema
 	}
 	return ps
 }
@@ -334,6 +344,18 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 	attrsUsed := []string{}
 	for _, attr := range config.ConfigAttributes {
 		if value, ok := d.GetOk(attr.Name); ok {
+			// SDKv2's GetOk returns []interface{} for lists, but the SDK expects []string.
+			if attr.Kind == reflect.Slice {
+				rawList, ok := value.([]interface{})
+				if !ok {
+					return nil, diag.Errorf("unexpected type for attribute %s: expected []interface{}, got %T", attr.Name, value)
+				}
+				strList := make([]string, len(rawList))
+				for i, v := range rawList {
+					strList[i] = v.(string)
+				}
+				value = strList
+			}
 			err := attr.Set(cfg, value)
 			if err != nil {
 				return nil, diag.FromErr(err)

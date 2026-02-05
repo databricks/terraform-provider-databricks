@@ -24,6 +24,10 @@ The following arguments are supported:
   The maximum value is 1000; values above 1000 will be coerced to 1000
 * `sort_spec` (SortSpec, optional) - The sort specification
 
+### SortSpec
+* `descending` (boolean, optional) - Whether to sort in descending order
+* `field` (string, optional) - The filed to sort by. Possible values are: `POLICY_NAME`
+
 ### Filter
 * `creator_user_id` (integer, optional, deprecated) - The policy creator user id to be filtered on.
   If unspecified, all policies will be returned
@@ -31,10 +35,6 @@ The following arguments are supported:
   If unspecified, all policies will be returned
 * `policy_name` (string, optional) - The partial name of policies to be filtered on.
   If unspecified, all policies will be returned
-
-### SortSpec
-* `descending` (boolean, optional) - Whether to sort in descending order
-* `field` (string, optional) - The filed to sort by. Possible values are: `POLICY_NAME`
 
 
 ## Attributes

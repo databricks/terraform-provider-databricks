@@ -44,6 +44,13 @@ type KafkaConfigResource struct {
 type KafkaConfig struct {
 	// Authentication configuration for connection to topics.
 	AuthConfig types.Object `tfsdk:"auth_config"`
+	// A user-provided and managed source for backfilling data. Historical data
+	// is used when creating a training set from streaming features linked to
+	// this Kafka config. In the future, a separate table will be maintained by
+	// Databricks for forward filling data. The schema for this source must
+	// match exactly that of the key and value schemas specified for this Kafka
+	// config.
+	BackfillSource types.Object `tfsdk:"backfill_source"`
 	// A comma-separated list of host/port pairs pointing to Kafka cluster.
 	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
 	// Catch-all for miscellaneous options. Keys should be source options or
@@ -73,6 +80,7 @@ type KafkaConfig struct {
 func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
+		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
@@ -90,6 +98,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"auth_config": m.AuthConfig,
+			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
 			"key_schema":        m.KeySchema,
@@ -105,6 +114,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"auth_config": ml_tf.AuthConfig{}.Type(ctx),
+			"backfill_source":   ml_tf.BackfillSource{}.Type(ctx),
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
@@ -127,6 +137,15 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of AuthConfig
 				toAuthConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAuthConfig)
 				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				// Recursively sync the fields of BackfillSource
+				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
 			}
 		}
 	}
@@ -171,6 +190,14 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			}
 		}
 	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				toBackfillSource.SyncFieldsDuringRead(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -199,6 +226,7 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 
 func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_config"] = attrs["auth_config"].SetRequired()
+	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
@@ -233,6 +261,31 @@ func (m *KafkaConfig) GetAuthConfig(ctx context.Context) (ml_tf.AuthConfig, bool
 func (m *KafkaConfig) SetAuthConfig(ctx context.Context, v ml_tf.AuthConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.AuthConfig = vs
+}
+
+// GetBackfillSource returns the value of the BackfillSource field in KafkaConfig as
+// a ml_tf.BackfillSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetBackfillSource(ctx context.Context) (ml_tf.BackfillSource, bool) {
+	var e ml_tf.BackfillSource
+	if m.BackfillSource.IsNull() || m.BackfillSource.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.BackfillSource
+	d := m.BackfillSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBackfillSource sets the value of the BackfillSource field in KafkaConfig.
+func (m *KafkaConfig) SetBackfillSource(ctx context.Context, v ml_tf.BackfillSource) {
+	vs := v.ToObjectValue(ctx)
+	m.BackfillSource = vs
 }
 
 // GetExtraOptions returns the value of the ExtraOptions field in KafkaConfig as
@@ -455,7 +508,7 @@ func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diag
 	updateRequest := ml.UpdateKafkaConfigRequest{
 		KafkaConfig: kafka_config,
 		Name:        plan.Name.ValueString(),
-		UpdateMask:  *fieldmask.New(strings.Split("auth_config,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
+		UpdateMask:  *fieldmask.New(strings.Split("auth_config,backfill_source,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
 	}
 
 	client, clientDiags := r.Client.GetWorkspaceClient()

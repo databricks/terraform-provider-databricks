@@ -32,7 +32,7 @@ resource "databricks_sql_endpoint" "this" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the SQL warehouse. Must be unique.
-* `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large".
+* `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop.

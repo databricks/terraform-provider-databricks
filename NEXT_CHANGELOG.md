@@ -8,6 +8,9 @@
 
 ### New Features and Improvements
 
+* Allow the `cluster_size` argument to be specified as "5X-Large" in `databricks_sql_warehouse`
+* Update the maximum allowed value for `max_num_clusters` argument in `databricks_sql_warehouse` to 40 (see [API docs](https://docs.databricks.com/api/workspace/warehouses/create#max_num_clusters) for details).
+
 ### Bug Fixes
 
 * Dashboard File Content Change Detection When Using `file_path` ([#5359])(https://github.com/databricks/terraform-provider-databricks/pull/5359)

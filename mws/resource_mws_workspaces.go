@@ -158,9 +158,6 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 // Create deploys the workspace and waits till it's properly running.
 // In case of error, it removes the failed deployment and returns the message
 func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
-	if a.client.IsGcp() {
-		ws.Cloud = "gcp"
-	}
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces", ws.AccountID)
 	err := a.client.Post(a.context, workspacesAPIPath, ws, &ws)
 	if err != nil {

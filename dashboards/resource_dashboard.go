@@ -52,7 +52,6 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Computed fields
 	s.SchemaPath("create_time").SetComputed()
 	s.SchemaPath("dashboard_id").SetComputed()
-	s.SchemaPath("etag").SetComputed()
 	s.SchemaPath("lifecycle_state").SetComputed()
 	s.SchemaPath("path").SetComputed()
 	s.SchemaPath("update_time").SetComputed()
@@ -73,6 +72,11 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 
 	// Apply same custom diff to file_path to enable content change detection
 	s.SchemaPath("file_path").SetCustomSuppressDiff(customDiffDashboardContent)
+
+	// etag is intentionally NOT Computed - it's Optional so that a diff is created
+	// between state (has etag from API) and config (no etag). This guarantees
+	// DiffSuppressFunc is called on every plan, enabling file content change detection.
+	s.SchemaPath("etag").SetCustomSuppressDiff(customDiffDashboardContent)
 
 	return s
 }

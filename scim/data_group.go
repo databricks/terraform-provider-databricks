@@ -22,6 +22,7 @@ func DataSourceGroup() common.Resource {
 		ServicePrincipals []string `json:"service_principals,omitempty" tf:"slice_set,computed"`
 		ChildGroups       []string `json:"child_groups,omitempty" tf:"slice_set,computed"`
 		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
+		Roles             []string `json:"roles,omitempty" tf:"slice_set,computed"`
 		InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
 		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
@@ -33,6 +34,7 @@ func DataSourceGroup() common.Resource {
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
+		s["instance_profiles"].Deprecated = "Please use `roles` instead"
 		addEntitlementsToSchema(s)
 		return s
 	})
@@ -83,6 +85,7 @@ func DataSourceGroup() common.Resource {
 					}
 				}
 				for _, x := range current.Roles {
+					this.Roles = append(this.Roles, x.Value)
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
 				current.Entitlements.readIntoData(d)
@@ -104,6 +107,7 @@ func DataSourceGroup() common.Resource {
 			sort.Strings(this.Users)
 			sort.Strings(this.ChildGroups)
 			sort.Strings(this.ServicePrincipals)
+			sort.Strings(this.Roles)
 			sort.Strings(this.InstanceProfiles)
 			err = common.StructToData(this, s, d)
 			if err != nil {

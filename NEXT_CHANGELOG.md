@@ -19,3 +19,5 @@
 * Add exporting for RFA destinations and Delta Sharing providers ([#5337](https://github.com/databricks/terraform-provider-databricks/pull/5337))
 
 ### Internal Changes
+
+* Deprecate `instance_profiles` attribute, and replace it with `roles` in `databricks_group` data source ([#5086](https://github.com/databricks/terraform-provider-databricks/pull/5086))

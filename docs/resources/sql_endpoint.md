@@ -32,7 +32,7 @@ resource "databricks_sql_endpoint" "this" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the SQL warehouse. Must be unique.
-* `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large".
+* `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop.
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - the unique ID of the SQL warehouse.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
-* `data_source_id` - (Deprecated) ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
+* `data_source_id` - (Deprecated, will be removed) ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
 * `creator_name` - The username of the user who created the endpoint.
 * `num_active_sessions` - The current number of clusters used by the endpoint.
 * `num_clusters` - The current number of clusters used by the endpoint.

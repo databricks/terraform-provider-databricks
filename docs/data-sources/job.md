@@ -22,6 +22,11 @@ output "job_num_workers" {
 }
 ```
 
+## Argument Reference
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 This data source exports the following attributes:

@@ -41,7 +41,7 @@ type TagAssignmentResource struct {
 type TagAssignment struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"entity_type"`
 	// The key of the tag. The characters , . : / - = and leading/trailing

@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	tf_settings "github.com/databricks/terraform-provider-databricks/settings"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -338,4 +339,84 @@ func TestWorkspaceSettingV2ExportWithAutomaticClusterUpdate(t *testing.T) {
 		assert.Contains(t, contentStr, `minutes = 30`)
 		assert.Contains(t, contentStr, `day_of_week = "SUNDAY"`)
 	})
+}
+
+func TestNotificationDestinationImport(t *testing.T) {
+	d := tf_settings.ResourceNotificationDestination().ToResource().TestResourceData()
+	d.SetId("test-notification")
+	d.Set("display_name", "Test Notification")
+	d.Set("destination_type", "EMAIL")
+
+	// Set email config
+	emailConfig := map[string]any{
+		"addresses": []string{"user@example.com"},
+	}
+
+	config := map[string]any{
+		"email": []map[string]any{emailConfig},
+	}
+	d.Set("config", []map[string]any{config})
+
+	ic := importContextForTest()
+	r := &resource{
+		Resource: "databricks_notification_destination",
+		ID:       "test-notification",
+		Data:     d,
+	}
+
+	err := resourcesMap["databricks_notification_destination"].Import(ic, r)
+	assert.NoError(t, err)
+}
+
+func TestNotificationDestinationShouldOmitField(t *testing.T) {
+	d := tf_settings.ResourceNotificationDestination().ToResource().TestResourceData()
+	d.SetId("test-notification")
+
+	// Test webhook configuration
+	d.Set("destination_type", "WEBHOOK")
+
+	// Set webhook config with URL not set
+	webhookConfig := map[string]any{
+		"url":          "https://example.com/webhook",
+		"url_set":      false,
+		"username":     "webhook-user",
+		"username_set": true,
+	}
+
+	config := map[string]any{
+		"generic_webhook": []map[string]any{webhookConfig},
+	}
+	d.Set("config", []map[string]any{config})
+
+	ic := importContextForTest()
+	schema := tf_settings.ResourceNotificationDestination().Schema
+	r := &resource{
+		Attribute: "databricks_notification_destination",
+		Value:     "test-notification",
+		Data:      d,
+	}
+
+	// URL should be omitted because url_set is false
+	assert.True(t, resourcesMap["databricks_notification_destination"].ShouldOmitField(
+		ic, "config.0.generic_webhook.0.url", schema["config"], d, r))
+
+	// Username should not be omitted because username_set is true
+	assert.False(t, resourcesMap["databricks_notification_destination"].ShouldOmitField(
+		ic, "config.0.generic_webhook.0.username", schema["config"], d, r))
+}
+
+func TestNotificationDestinationName(t *testing.T) {
+	ic := importContextForTest()
+	d := tf_settings.ResourceNotificationDestination().ToResource().TestResourceData()
+
+	// Test with display name
+	d.SetId("abcdef1234567890")
+	d.Set("display_name", "Test Notification")
+	name := resourcesMap["databricks_notification_destination"].Name(ic, d)
+	assert.Equal(t, "Test_Notification__abcdef12", name)
+
+	// Test without display name
+	d.Set("display_name", "")
+	name = resourcesMap["databricks_notification_destination"].Name(ic, d)
+	assert.Equal(t, "_abcdef12", name)
 }

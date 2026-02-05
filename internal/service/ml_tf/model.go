@@ -357,6 +357,100 @@ func (m AuthConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type BackfillSource struct {
+	// The Delta table source containing the historic data to backfill. Only the
+	// delta table name is used for backfill, the entity columns and timeseries
+	// column are ignored as they are defined by the associated KafkaSource.
+	DeltaTableSource types.Object `tfsdk:"delta_table_source"`
+}
+
+func (to *BackfillSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BackfillSource) {
+	if !from.DeltaTableSource.IsNull() && !from.DeltaTableSource.IsUnknown() {
+		if toDeltaTableSource, ok := to.GetDeltaTableSource(ctx); ok {
+			if fromDeltaTableSource, ok := from.GetDeltaTableSource(ctx); ok {
+				// Recursively sync the fields of DeltaTableSource
+				toDeltaTableSource.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTableSource)
+				to.SetDeltaTableSource(ctx, toDeltaTableSource)
+			}
+		}
+	}
+}
+
+func (to *BackfillSource) SyncFieldsDuringRead(ctx context.Context, from BackfillSource) {
+	if !from.DeltaTableSource.IsNull() && !from.DeltaTableSource.IsUnknown() {
+		if toDeltaTableSource, ok := to.GetDeltaTableSource(ctx); ok {
+			if fromDeltaTableSource, ok := from.GetDeltaTableSource(ctx); ok {
+				toDeltaTableSource.SyncFieldsDuringRead(ctx, fromDeltaTableSource)
+				to.SetDeltaTableSource(ctx, toDeltaTableSource)
+			}
+		}
+	}
+}
+
+func (m BackfillSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BackfillSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m BackfillSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"delta_table_source": reflect.TypeOf(DeltaTableSource{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BackfillSource
+// only implements ToObjectValue() and Type().
+func (m BackfillSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delta_table_source": m.DeltaTableSource,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m BackfillSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delta_table_source": DeltaTableSource{}.Type(ctx),
+		},
+	}
+}
+
+// GetDeltaTableSource returns the value of the DeltaTableSource field in BackfillSource as
+// a DeltaTableSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BackfillSource) GetDeltaTableSource(ctx context.Context) (DeltaTableSource, bool) {
+	var e DeltaTableSource
+	if m.DeltaTableSource.IsNull() || m.DeltaTableSource.IsUnknown() {
+		return e, false
+	}
+	var v DeltaTableSource
+	d := m.DeltaTableSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaTableSource sets the value of the DeltaTableSource field in BackfillSource.
+func (m *BackfillSource) SetDeltaTableSource(ctx context.Context, v DeltaTableSource) {
+	vs := v.ToObjectValue(ctx)
+	m.DeltaTableSource = vs
+}
+
 type BatchCreateMaterializedFeaturesRequest struct {
 	// The requests to create materialized features.
 	Requests types.List `tfsdk:"requests"`
@@ -9533,6 +9627,13 @@ func (m JobSpecWithoutSecret) Type(ctx context.Context) attr.Type {
 type KafkaConfig struct {
 	// Authentication configuration for connection to topics.
 	AuthConfig types.Object `tfsdk:"auth_config"`
+	// A user-provided and managed source for backfilling data. Historical data
+	// is used when creating a training set from streaming features linked to
+	// this Kafka config. In the future, a separate table will be maintained by
+	// Databricks for forward filling data. The schema for this source must
+	// match exactly that of the key and value schemas specified for this Kafka
+	// config.
+	BackfillSource types.Object `tfsdk:"backfill_source"`
 	// A comma-separated list of host/port pairs pointing to Kafka cluster.
 	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
 	// Catch-all for miscellaneous options. Keys should be source options or
@@ -9559,6 +9660,15 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of AuthConfig
 				toAuthConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAuthConfig)
 				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				// Recursively sync the fields of BackfillSource
+				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
 			}
 		}
 	}
@@ -9600,6 +9710,14 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			}
 		}
 	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				toBackfillSource.SyncFieldsDuringRead(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -9628,6 +9746,7 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 
 func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_config"] = attrs["auth_config"].SetRequired()
+	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
@@ -9648,6 +9767,7 @@ func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auth_config":       reflect.TypeOf(AuthConfig{}),
+		"backfill_source":   reflect.TypeOf(BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
 		"key_schema":        reflect.TypeOf(SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(SubscriptionMode{}),
@@ -9663,6 +9783,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auth_config":       m.AuthConfig,
+			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
 			"key_schema":        m.KeySchema,
@@ -9677,6 +9798,7 @@ func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auth_config":       AuthConfig{}.Type(ctx),
+			"backfill_source":   BackfillSource{}.Type(ctx),
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
@@ -9712,6 +9834,31 @@ func (m *KafkaConfig) GetAuthConfig(ctx context.Context) (AuthConfig, bool) {
 func (m *KafkaConfig) SetAuthConfig(ctx context.Context, v AuthConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.AuthConfig = vs
+}
+
+// GetBackfillSource returns the value of the BackfillSource field in KafkaConfig as
+// a BackfillSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetBackfillSource(ctx context.Context) (BackfillSource, bool) {
+	var e BackfillSource
+	if m.BackfillSource.IsNull() || m.BackfillSource.IsUnknown() {
+		return e, false
+	}
+	var v BackfillSource
+	d := m.BackfillSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBackfillSource sets the value of the BackfillSource field in KafkaConfig.
+func (m *KafkaConfig) SetBackfillSource(ctx context.Context, v BackfillSource) {
+	vs := v.ToObjectValue(ctx)
+	m.BackfillSource = vs
 }
 
 // GetExtraOptions returns the value of the ExtraOptions field in KafkaConfig as
@@ -14561,6 +14708,8 @@ type OnlineStore struct {
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
 	// The current state of the online store.
 	State types.String `tfsdk:"state"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
@@ -14576,6 +14725,7 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -14604,6 +14754,7 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":               m.Name,
 			"read_replica_count": m.ReadReplicaCount,
 			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
 		})
 }
 
@@ -14617,6 +14768,7 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 			"name":               types.StringType,
 			"read_replica_count": types.Int64Type,
 			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
 		},
 	}
 }

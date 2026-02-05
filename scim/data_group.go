@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,17 +36,22 @@ func DataSourceGroup() common.Resource {
 		addEntitlementsToSchema(s)
 		return s
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var this entity
 			var group Group
-			var err error
 			common.DataToStructPointer(d, s, &this)
-			groupsAPI := NewGroupsAPI(ctx, m)
+			groupsAPI := NewGroupsAPI(ctx, newClient)
 			groupAttributes := "displayName,members,roles,entitlements,externalId,groups"
-			if m.DatabricksClient.Config.IsAccountClient() {
+			if newClient.DatabricksClient.Config.HostType() == config.AccountHost {
 				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")
 				if err != nil {
 					return err

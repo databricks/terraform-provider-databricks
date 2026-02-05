@@ -14,39 +14,42 @@ var nonAlphanumeric = regexp.MustCompile(`\W`)
 
 // DataSourceCurrentUser returns information about caller identity
 func DataSourceCurrentUser() common.Resource {
-	return common.Resource{
-		Schema: map[string]*schema.Schema{
-			"user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"home": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repos": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"alphanumeric": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"external_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"acl_principal_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+	s := map[string]*schema.Schema{
+		"user_name": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
+		"home": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"repos": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"alphanumeric": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"external_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"workspace_url": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"acl_principal_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
+	return common.Resource{
+		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

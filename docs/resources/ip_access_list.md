@@ -38,6 +38,8 @@ The following arguments are supported:
 * `ip_addresses` - A string list of IP addresses and CIDR ranges.
 * `label` -  This is the display name for the given IP ACL List.
 * `enabled` - (Optional) Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

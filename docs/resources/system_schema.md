@@ -24,6 +24,8 @@ resource "databricks_system_schema" "this" {
 The following arguments are available:
 
 * `schema` - (Required) name of the system schema.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

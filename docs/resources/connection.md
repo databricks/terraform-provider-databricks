@@ -134,6 +134,8 @@ The following arguments are supported:
 - `properties` -  (Optional) Free-form connection properties. Change forces creation of a new resource.
 - `comment` - (Optional) Free-form text. Change forces creation of a new resource.
 - `read_only` - (Optional) Indicates whether the connection is read-only. Change forces creation of a new resource.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

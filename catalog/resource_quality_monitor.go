@@ -33,9 +33,14 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 	})
 }
 
+type QualityMonitorSchemaStruct struct {
+	catalog.MonitorInfo
+	common.Namespace
+}
+
 func ResourceQualityMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
-		catalog.MonitorInfo{},
+		QualityMonitorSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "assets_dir").SetRequired()
 			common.CustomizeSchemaPath(m, "output_schema_name").SetRequired()
@@ -56,13 +61,14 @@ func ResourceQualityMonitor() common.Resource {
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
 			common.CustomizeSchemaPath(m, "schedule", "pause_status").SetReadOnly()
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		},
 	)
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -83,7 +89,7 @@ func ResourceQualityMonitor() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -108,7 +114,7 @@ func ResourceQualityMonitor() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -125,7 +131,7 @@ func ResourceQualityMonitor() common.Resource {
 			return WaitForMonitor(w, ctx, update.TableName)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

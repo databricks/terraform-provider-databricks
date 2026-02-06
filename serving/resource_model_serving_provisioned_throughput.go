@@ -106,6 +106,8 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Copy sensitive plaintext fields from state to API response to prevent drift
+			copySensitiveExternalModelFields(&sOrig, endpoint)
 			preserveConfigOrderPt(s, d, endpoint.Config)
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {

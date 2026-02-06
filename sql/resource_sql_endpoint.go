@@ -14,8 +14,8 @@ import (
 
 // ClusterSizes for SQL endpoints
 var (
-	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
-	MaxNumClusters  = 30
+	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large"}
+	MaxNumClusters  = 40
 	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 

@@ -3809,7 +3809,7 @@ func (m ConnectionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 23
+// Next ID: 24
 type ConnectionInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -25670,7 +25670,7 @@ func (m RunRefreshRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 44
+// Next ID: 45
 type SchemaInfo struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -32713,7 +32713,7 @@ func (m *UpdateWorkspaceBindingsResponse) SetBindings(ctx context.Context, v []W
 	m.Bindings = types.ListValueMust(t, vs)
 }
 
-// Next ID: 17
+// Next ID: 18
 type ValidateCredentialRequest struct {
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
 

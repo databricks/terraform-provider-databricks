@@ -31,14 +31,14 @@ output "project_history_retention" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the project. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}`
+* `name` (string, required) - Output only. The full resource path of the project.
+  Format: projects/{project_id}
 
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the project was created
-* `name` (string) - The resource name of the project. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}`
+* `name` (string) - Output only. The full resource path of the project.
+  Format: projects/{project_id}
 * `spec` (ProjectSpec) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 * `status` (ProjectStatus) - The current status of a Project
 * `uid` (string) - System-generated unique ID for the project

@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -36,6 +35,13 @@ type KafkaConfigDataSource struct {
 type KafkaConfigData struct {
 	// Authentication configuration for connection to topics.
 	AuthConfig types.Object `tfsdk:"auth_config"`
+	// A user-provided and managed source for backfilling data. Historical data
+	// is used when creating a training set from streaming features linked to
+	// this Kafka config. In the future, a separate table will be maintained by
+	// Databricks for forward filling data. The schema for this source must
+	// match exactly that of the key and value schemas specified for this Kafka
+	// config.
+	BackfillSource types.Object `tfsdk:"backfill_source"`
 	// A comma-separated list of host/port pairs pointing to Kafka cluster.
 	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
 	// Catch-all for miscellaneous options. Keys should be source options or
@@ -65,6 +71,7 @@ type KafkaConfigData struct {
 func (m KafkaConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
+		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
@@ -83,6 +90,7 @@ func (m KafkaConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auth_config":       m.AuthConfig,
+			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
 			"key_schema":        m.KeySchema,
@@ -99,6 +107,7 @@ func (m KafkaConfigData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auth_config":       ml_tf.AuthConfig{}.Type(ctx),
+			"backfill_source":   ml_tf.BackfillSource{}.Type(ctx),
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
@@ -113,6 +122,7 @@ func (m KafkaConfigData) Type(ctx context.Context) attr.Type {
 
 func (m KafkaConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_config"] = attrs["auth_config"].SetComputed()
+	attrs["backfill_source"] = attrs["backfill_source"].SetComputed()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetComputed()
 	attrs["extra_options"] = attrs["extra_options"].SetComputed()
 	attrs["key_schema"] = attrs["key_schema"].SetComputed()
@@ -164,11 +174,6 @@ func (r *KafkaConfigDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	response, err := client.FeatureEngineering.GetKafkaConfig(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get feature_engineering_kafka_config", err.Error())
 		return
 	}

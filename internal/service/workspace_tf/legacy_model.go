@@ -2520,7 +2520,7 @@ func (m *ListAclsResponse_SdkV2) SetItems(ctx context.Context, v []AclItem_SdkV2
 }
 
 type ListCredentialsRequest_SdkV2 struct {
-	// The ID of the service principal whose credentials will be modified. Only
+	// The ID of the service principal whose credentials will be listed. Only
 	// service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"-"`
 }

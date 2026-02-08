@@ -234,6 +234,10 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	appGoSdk, err := w.Apps.GetByName(ctx, app.Name.ValueString())
 	if err != nil {
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("failed to read app", err.Error())
 		return
 	}

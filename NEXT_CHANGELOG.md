@@ -10,7 +10,7 @@
 
 ### Bug Fixes
 
-* Fix `databricks_app` resource fails to recreate resource when deleted outside of Terraform ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX))
+* [Fix] `databricks_app` resource fail to read app when deleted outside terraform ([#5365](https://github.com/databricks/terraform-provider-databricks/pull/5365))
 
 ### Documentation
 

@@ -10,7 +10,7 @@
 
 ### Bug Fixes
 
-* Fixed `databricks_users` data source incorrectly quoting `extra_attributes` value, causing single-attribute inputs to be silently ignored at account level. Also fixed `extra_attributes` not being forwarded to the SCIM API at workspace level.
+* Fixed `databricks_users` data source `extra_attributes` parameter issues ([#5308](https://github.com/databricks/terraform-provider-databricks/issues/5308)): (1) Single-attribute inputs (e.g., `extra_attributes = "active"`) were silently ignored at account level due to incorrect value quoting. (2) Complex multi-valued attributes like `emails` and `roles` returned null at account level even when explicitly requested in `extra_attributes`. (3) `extra_attributes` were not forwarded to the SCIM API at workspace level.
 
 ### Documentation
 

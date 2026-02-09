@@ -24,9 +24,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 		}
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
-
-		// `enabled` can only be set for AWS S3 private endpoint services, identified by `resource_names`
-		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed().SetConflictsWith([]string{"domain_names", "group_id"})
+		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
 
 		// only one of `domain_names`, `resource_names`, `group_id` can be specified, as they are applicable
 		// to different type of endpoints

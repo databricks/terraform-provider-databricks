@@ -61,6 +61,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Required(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
 	})
 }
 
@@ -72,6 +73,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_EmptyID(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
 	})
 }
 

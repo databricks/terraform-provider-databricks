@@ -149,10 +149,15 @@ func ResourceCatalog() common.Resource {
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
 
+			if d.HasChange("name") {
+				updateCatalogRequest.NewName = d.Get("name").(string)
+			}
+
 			if d.HasChange("owner") {
 				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
-					Name:  updateCatalogRequest.Name,
-					Owner: updateCatalogRequest.Owner,
+					Name:    updateCatalogRequest.Name,
+					NewName: updateCatalogRequest.NewName,
+					Owner:   updateCatalogRequest.Owner,
 				})
 				if err != nil {
 					return err
@@ -181,7 +186,6 @@ func ResourceCatalog() common.Resource {
 				updateCatalogRequest.EnablePredictiveOptimization = ""
 			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback

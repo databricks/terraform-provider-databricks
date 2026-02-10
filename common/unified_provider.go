@@ -97,8 +97,6 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 	}
 
 	// Validate workspace_id matches the provider's workspace during plan phase.
-	// This only applies to workspace-level providers; account-level providers
-	// create a new workspace client for the specified workspace_id.
 	newWSID, ok := newWorkspaceID.(string)
 	if !ok || newWSID == "" {
 		return nil

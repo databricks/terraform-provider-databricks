@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Prevent users from locking themselves out of managing a secret scope in `databricks_secret_acl` ([#5373](https://github.com/databricks/terraform-provider-databricks/pull/5373)).
+
 ### Documentation
 
 ### Exporter

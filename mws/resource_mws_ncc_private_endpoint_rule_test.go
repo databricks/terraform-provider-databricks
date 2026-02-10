@@ -120,7 +120,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateDomainName(t *te
 				PrivateEndpointRule: settings.UpdatePrivateEndpointRule{
 					DomainNames: []string{"my-new-example.exampledomain.com", "my-new-example2.exampledomain.com"},
 				},
-				UpdateMask: "enabled,domain_names",
+				UpdateMask: "domain_names",
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
 				&settings.NccPrivateEndpointRule{
@@ -167,7 +167,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 				PrivateEndpointRule: settings.UpdatePrivateEndpointRule{
 					ResourceNames: []string{"bucket1", "bucket2"},
 				},
-				UpdateMask: "enabled,resource_names",
+				UpdateMask: "resource_names",
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
 				&settings.NccPrivateEndpointRule{
@@ -201,6 +201,53 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 		"resource_names.#": 2,
 		"resource_names.0": "bucket1",
 		"resource_names.1": "bucket2",
+	})
+}
+
+func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateEnabled(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.UpdatePrivateEndpointRule(mock.Anything, settings.UpdateNccPrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRuleId:       "rule_id",
+				PrivateEndpointRule:         settings.UpdatePrivateEndpointRule{Enabled: false},
+				UpdateMask:                  "enabled",
+			}).Return(getTestNccRule(), nil)
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
+				&settings.NccPrivateEndpointRule{
+					GroupId:                     "group_id",
+					ResourceId:                  "resource_id",
+					RuleId:                      "rule_id",
+					NetworkConnectivityConfigId: "ncc_id",
+					EndpointName:                "endpoint_name",
+					ConnectionState:             "PENDING",
+					ResourceNames:               []string{"bucket1"},
+				}, nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		ID:        "ncc_id/rule_id",
+		InstanceState: map[string]string{
+			"network_connectivity_config_id": "ncc_id",
+			"resource_id":                    "resource_id",
+			"rule_id":                        "rule_id",
+			"resource_names.#":               "1",
+			"resource_names.0":               "bucket1",
+			"enabled":                        "true",
+		},
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		resource_names = ["bucket1"]
+		enabled = false
+		`,
+		Update: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "ncc_id/rule_id",
+		"resource_names.#": 1,
+		"resource_names.0": "bucket1",
+		"enabled":          false,
 	})
 }
 

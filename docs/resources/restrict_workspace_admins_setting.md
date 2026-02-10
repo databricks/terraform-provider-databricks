@@ -38,6 +38,8 @@ The resource supports the following arguments:
 
 * `restrict_workspace_admins` - (Required) The configuration details.
 * `status` - (Required) The restrict workspace admins status for the workspace.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

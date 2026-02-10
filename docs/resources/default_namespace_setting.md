@@ -30,6 +30,8 @@ The resource supports the following arguments:
 
 * `namespace` - (Required) The configuration details.
 * `value` - (Required) The value for the setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

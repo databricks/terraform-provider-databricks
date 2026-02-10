@@ -15,12 +15,18 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m
 	})
+	AddNamespaceInSchema(s)
+	NamespaceCustomizeSchemaMap(s)
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, s, ptr.Elem())
-			err = read(ctx, ptr.Interface(), m)
+			err = read(ctx, ptr.Interface(), newClient)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 			}

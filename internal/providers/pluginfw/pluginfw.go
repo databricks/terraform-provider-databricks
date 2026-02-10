@@ -70,7 +70,7 @@ func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req p
 }
 
 // Function returns a schema.Schema based on config attributes where each attribute is mapped to the appropriate
-// schema type (BoolAttribute, StringAttribute, Int64Attribute).
+// schema type (BoolAttribute, StringAttribute, Int64Attribute, ListAttribute).
 func providerSchemaPluginFramework() schema.Schema {
 	ps := map[string]schema.Attribute{}
 	for _, attr := range config.ConfigAttributes {
@@ -89,6 +89,12 @@ func providerSchemaPluginFramework() schema.Schema {
 			ps[attr.Name] = schema.Int64Attribute{
 				Optional:  true,
 				Sensitive: attr.Sensitive,
+			}
+		case reflect.Slice:
+			ps[attr.Name] = schema.ListAttribute{
+				Optional:    true,
+				Sensitive:   attr.Sensitive,
+				ElementType: types.StringType,
 			}
 		}
 	}
@@ -145,6 +151,30 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 			return false, diags
 		}
 		err := attr.Set(cfg, attrValue.ValueString())
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("Failed to set attribute: %s", attr.Name), err.Error()))
+			return false, diags
+		}
+	case reflect.Slice:
+		var attrValue types.List
+		diags.Append(providerConfig.GetAttribute(ctx, path.Root(attr.Name), &attrValue)...)
+		if diags.HasError() {
+			return false, diags
+		}
+		if attrValue.IsNull() || attrValue.IsUnknown() {
+			return false, diags
+		}
+		elements := attrValue.Elements()
+		strSlice := make([]string, len(elements))
+		for i, elem := range elements {
+			strElem, ok := elem.(types.String)
+			if !ok {
+				diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("unexpected type for attribute %s", attr.Name), fmt.Sprintf("expected types.String, got %T", elem)))
+				return false, diags
+			}
+			strSlice[i] = strElem.ValueString()
+		}
+		err := attr.Set(cfg, strSlice)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(fmt.Sprintf("Failed to set attribute: %s", attr.Name), err.Error()))
 			return false, diags

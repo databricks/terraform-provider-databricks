@@ -28,7 +28,7 @@ func DataSourceEndpoints() datasource.DataSource {
 // EndpointsData extends the main model with additional fields.
 type EndpointsData struct {
 	Postgres types.List `tfsdk:"endpoints"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. Cannot be negative.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// The Branch that owns this collection of endpoints. Format:
 	// projects/{project_id}/branches/{branch_id}

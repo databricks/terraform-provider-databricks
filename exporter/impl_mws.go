@@ -275,5 +275,11 @@ func importMwsWorkspaces(ic *importContext, r *resource) error {
 				workspace.WorkspaceID, err.Error())
 		}
 	}
+	if ic.isServiceEnabled("seg") {
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_network_option",
+			ID:       strconv.FormatInt(workspace.WorkspaceID, 10),
+		})
+	}
 	return nil
 }

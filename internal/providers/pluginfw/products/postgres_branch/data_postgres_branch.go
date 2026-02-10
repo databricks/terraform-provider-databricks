@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -37,16 +36,21 @@ type BranchDataSource struct {
 type BranchData struct {
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the branch. Format:
+	// Output only. The full resource path of the branch. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"name"`
-	// The project containing this branch. Format: projects/{project_id}
+	// The project containing this branch (API resource hierarchy). Format:
+	// projects/{project_id}
+	//
+	// Note: This field indicates where the branch exists in the resource
+	// hierarchy. For point-in-time branching from another branch, see
+	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of a Branch.
+	// The spec contains the branch configuration.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the branch.
+	// System-generated unique ID for the branch.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the branch was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -156,11 +160,6 @@ func (r *BranchDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	response, err := client.Postgres.GetBranch(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get postgres_branch", err.Error())
 		return
 	}

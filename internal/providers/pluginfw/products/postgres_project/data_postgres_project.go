@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -37,13 +36,16 @@ type ProjectDataSource struct {
 type ProjectData struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the project. Format: projects/{project_id}
+	// Output only. The full resource path of the project. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// The desired state of a Project.
+	// The spec contains the project configuration, including display_name,
+	// pg_version (Postgres version), history_retention_duration, and
+	// default_endpoint_settings.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Project.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the project.
+	// System-generated unique ID for the project.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the project was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -150,11 +152,6 @@ func (r *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	response, err := client.Postgres.GetProject(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get postgres_project", err.Error())
 		return
 	}

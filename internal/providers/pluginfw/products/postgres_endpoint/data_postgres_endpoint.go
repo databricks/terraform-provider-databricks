@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -37,17 +36,18 @@ type EndpointDataSource struct {
 type EndpointData struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the endpoint. Format:
+	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
-	// The branch containing this endpoint. Format:
+	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of an Endpoint.
+	// The spec contains the compute endpoint configuration, including
+	// autoscaling limits, suspend timeout, and disabled state.
 	Spec types.Object `tfsdk:"spec"`
-	// The current status of an Endpoint.
+	// Current operational status of the compute endpoint.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the endpoint.
+	// System-generated unique ID for the endpoint.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the compute endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -157,11 +157,6 @@ func (r *EndpointDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	response, err := client.Postgres.GetEndpoint(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get postgres_endpoint", err.Error())
 		return
 	}

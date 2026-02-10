@@ -46,23 +46,24 @@ type EndpointResource struct {
 type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The ID to use for the Endpoint, which will become the final component of
-	// the endpoint's resource name.
-	//
-	// This value should be 4-63 characters, and valid characters are
-	// /[a-z][0-9]-/.
+	// The ID to use for the Endpoint. This becomes the final component of the
+	// endpoint's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `primary` becomes
+	// `projects/my-app/branches/development/endpoints/primary`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// The resource name of the endpoint. Format:
+	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
-	// The branch containing this endpoint. Format:
+	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The desired state of an Endpoint.
+	// The spec contains the compute endpoint configuration, including
+	// autoscaling limits, suspend timeout, and disabled state.
 	Spec types.Object `tfsdk:"spec"`
-	// The current status of an Endpoint.
+	// Current operational status of the compute endpoint.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the endpoint.
+	// System-generated unique ID for the endpoint.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the compute endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -188,6 +189,7 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs

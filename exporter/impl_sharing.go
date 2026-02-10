@@ -5,8 +5,7 @@ import (
 	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/terraform-provider-databricks/common"
-	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
+	pluginfw_sharing "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
 )
 
 func listUcShares(ic *importContext) error {
@@ -25,45 +24,21 @@ func listUcShares(ic *importContext) error {
 }
 
 func importUcShare(ic *importContext, r *resource) error {
-	resourceInfo := ic.Resources["databricks_share"]
-	if resourceInfo == nil {
-		// Fallback to direct data access if schema is not available
-		objectsList := r.Data.Get("object").([]any)
-		ic.emitUCGrantsWithOwner("share/"+r.ID, r)
-		for _, objRaw := range objectsList {
-			obj := objRaw.(map[string]any)
-			dataObjectType := obj["data_object_type"].(string)
-			name := obj["name"].(string)
-
-			switch dataObjectType {
-			case "TABLE":
-				ic.Emit(&resource{
-					Resource: "databricks_sql_table",
-					ID:       name,
-				})
-			case "VOLUME":
-				ic.Emit(&resource{
-					Resource: "databricks_volume",
-					ID:       name,
-				})
-			case "MODEL":
-				ic.Emit(&resource{
-					Resource: "databricks_registered_model",
-					ID:       name,
-				})
-			default:
-				log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'",
-					dataObjectType, name, r.ID)
-			}
-		}
-		return nil
+	log.Printf("[DEBUG] Importing share: %s", r.ID)
+	// Convert Plugin Framework state to Go SDK struct
+	var share sharing.ShareInfo
+	if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper,
+		pluginfw_sharing.ShareInfoExtended{}, &share); err != nil {
+		return err
 	}
 
-	var share tf_sharing.ShareInfo
-	s := resourceInfo.Schema
-	common.DataToStructPointer(r.Data, s, &share)
-	// TODO: how to link recipients to share?
+	// Emit UC grants with owner
 	ic.emitUCGrantsWithOwner("share/"+r.ID, r)
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("SHARE", r.ID)
+
+	// Emit dependencies for each object in the share
 	for _, obj := range share.Objects {
 		switch obj.DataObjectType {
 		case "TABLE":
@@ -79,6 +54,11 @@ func importUcShare(ic *importContext, r *resource) error {
 		case "MODEL":
 			ic.Emit(&resource{
 				Resource: "databricks_registered_model",
+				ID:       obj.Name,
+			})
+		case "SCHEMA":
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
 				ID:       obj.Name,
 			})
 		default:
@@ -109,5 +89,30 @@ func importUcRecipient(ic *importContext, r *resource) error {
 	if owner != "" {
 		emitUserSpOrGroup(ic, owner)
 	}
+
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("RECIPIENT", r.ID)
+
+	return nil
+}
+
+func listUcProviders(ic *importContext) error {
+	it := ic.workspaceClient.Providers.List(ic.Context, sharing.ListProvidersRequest{})
+	for it.HasNext(ic.Context) {
+		provider, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
+			Resource: "databricks_provider",
+			ID:       provider.Name,
+		}, provider.Name, provider.UpdatedAt, fmt.Sprintf("provider '%s'", provider.Name))
+	}
+	return nil
+}
+
+func importUcProvider(ic *importContext, r *resource) error {
+	// Emit RFA access request destinations if configured
+	ic.emitRfaAccessRequestDestinations("PROVIDER", r.ID)
 	return nil
 }

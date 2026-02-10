@@ -46,19 +46,21 @@ type ProjectResource struct {
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the project. Format: projects/{project_id}
+	// Output only. The full resource path of the project. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// The ID to use for the Project, which will become the final component of
-	// the project's resource name.
-	//
-	// This value should be 4-63 characters, and valid characters are
-	// /[a-z][0-9]-/.
+	// The ID to use for the Project. This becomes the final component of the
+	// project's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
 	ProjectId types.String `tfsdk:"project_id"`
-	// The desired state of a Project.
+	// The spec contains the project configuration, including display_name,
+	// pg_version (Postgres version), history_retention_duration, and
+	// default_endpoint_settings.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Project.
 	Status types.Object `tfsdk:"status"`
-	// System generated unique ID for the project.
+	// System-generated unique ID for the project.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the project was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -180,6 +182,7 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["project_id"] = attrs["project_id"].SetRequired()
 	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs

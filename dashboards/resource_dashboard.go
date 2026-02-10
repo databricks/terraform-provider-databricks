@@ -20,6 +20,7 @@ type Dashboard struct {
 	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
 	DatasetCatalog          string `json:"dataset_catalog,omitempty"`
 	DatasetSchema           string `json:"dataset_schema,omitempty"`
+	common.Namespace
 }
 
 func customDiffDashboardContent(k, old, new string, d *schema.ResourceData) bool {
@@ -52,7 +53,6 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Computed fields
 	s.SchemaPath("create_time").SetComputed()
 	s.SchemaPath("dashboard_id").SetComputed()
-	s.SchemaPath("etag").SetComputed()
 	s.SchemaPath("lifecycle_state").SetComputed()
 	s.SchemaPath("path").SetComputed()
 	s.SchemaPath("update_time").SetComputed()
@@ -74,17 +74,25 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Apply same custom diff to file_path to enable content change detection
 	s.SchemaPath("file_path").SetCustomSuppressDiff(customDiffDashboardContent)
 
+	common.NamespaceCustomizeSchema(s)
+	// etag is intentionally NOT Computed - it's Optional so that a diff is created
+	// between state (has etag from API) and config (no etag). This guarantees
+	// DiffSuppressFunc is called on every plan, enabling file content change detection.
+	s.SchemaPath("etag").SetCustomSuppressDiff(customDiffDashboardContent)
+
 	return s
 }
 
-var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
-
 // ResourceDashboard manages dashboards
 func ResourceDashboard() common.Resource {
+	dashboardSchema := common.StructToSchema(Dashboard{}, nil)
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -141,7 +149,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -164,7 +172,7 @@ func ResourceDashboard() common.Resource {
 			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -209,7 +217,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

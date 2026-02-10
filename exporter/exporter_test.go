@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/databricks-sdk-go/service/billing"
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
@@ -74,7 +75,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()
@@ -349,6 +350,13 @@ var emptyRecipients = qa.HTTPFixture{
 	Response:     sharing.ListRecipientsResponse{},
 }
 
+var emptyProviders = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/unity-catalog/providers?",
+	Response:     sharing.ListProvidersResponse{},
+}
+
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
@@ -607,6 +615,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
+			emptyProviders,
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -891,6 +900,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
+			emptyProviders,
 			emptyModelServing,
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,

@@ -14,8 +14,8 @@ import (
 
 // ClusterSizes for SQL endpoints
 var (
-	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
-	MaxNumClusters  = 30
+	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large"}
+	MaxNumClusters  = 40
 	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 
@@ -26,6 +26,7 @@ type SqlWarehouse struct {
 	// We manually resolve it by retrieving the list of data sources
 	// and matching this entity's endpoint ID.
 	DataSourceId string `json:"data_source_id,omitempty" tf:"computed"`
+	common.Namespace
 }
 
 func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id string) (*SqlWarehouse, error) {
@@ -42,7 +43,8 @@ func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id stri
 func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, warehouseId string) (string, error) {
 	list, err := w.DataSources.List(ctx)
 	if err != nil {
-		return "", err
+		// Don't fail if DataSources.List errors
+		return "", nil
 	}
 	for _, ds := range list {
 		if ds.WarehouseId == warehouseId {
@@ -98,6 +100,7 @@ func ResourceSqlEndpoint() common.Resource {
 			},
 		}
 
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 	return common.Resource{
@@ -105,7 +108,7 @@ func ResourceSqlEndpoint() common.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -138,7 +141,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -153,7 +156,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return common.StructToData(warehouse, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -168,7 +171,7 @@ func ResourceSqlEndpoint() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -176,6 +179,9 @@ func ResourceSqlEndpoint() common.Resource {
 		},
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
+				return err
+			}
 			return d.Clear("health")
 		},
 	}

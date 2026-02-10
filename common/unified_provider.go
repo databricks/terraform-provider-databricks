@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -95,6 +96,28 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 		}
 	}
 
+	// Validate workspace_id matches the provider's workspace during plan phase.
+	// This only applies to workspace-level providers; account-level providers
+	// create a new workspace client for the specified workspace_id.
+	newWSID, ok := newWorkspaceID.(string)
+	if !ok || newWSID == "" {
+		return nil
+	}
+	if c.Config.HostType() == config.AccountHost {
+		return nil
+	}
+	workspaceIDInt, err := parseWorkspaceID(newWSID)
+	if err != nil {
+		return err
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	if err != nil {
+		return fmt.Errorf("failed to validate workspace_id: %w", err)
+	}
 	return nil
 }
 

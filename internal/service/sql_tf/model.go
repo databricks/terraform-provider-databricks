@@ -15996,6 +15996,9 @@ func (m TrashAlertRequest) Type(ctx context.Context) attr.Type {
 
 type TrashAlertV2Request struct {
 	Id types.String `tfsdk:"-"`
+	// Whether to permanently delete the alert. If not set, the alert will only
+	// be soft deleted.
+	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *TrashAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TrashAlertV2Request) {
@@ -16006,6 +16009,7 @@ func (to *TrashAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from Tr
 
 func (m TrashAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
+	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -16028,7 +16032,8 @@ func (m TrashAlertV2Request) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
+			"id":    m.Id,
+			"purge": m.Purge,
 		})
 }
 
@@ -16036,7 +16041,8 @@ func (m TrashAlertV2Request) ToObjectValue(ctx context.Context) basetypes.Object
 func (m TrashAlertV2Request) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
+			"id":    types.StringType,
+			"purge": types.BoolType,
 		},
 	}
 }

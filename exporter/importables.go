@@ -1324,7 +1324,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			if res := servedEntityFieldExtractionRegex.FindStringSubmatch(pathString); res != nil {
 				field := res[2]
-				log.Printf("[DEBUG] ShouldOmitField: extracted field from %s: '%s'", pathString, field)
+				// log.Printf("[DEBUG] ShouldOmitField: extracted field from %s: '%s'", pathString, field)
 				switch field {
 				case "scale_to_zero_enabled", "name":
 					return false
@@ -1629,7 +1629,6 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import:         importSqlTable,
 		Ignore:         generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_table", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
-			log.Printf("[INFO] ShouldOmitField: %s", pathString)
 			switch pathString {
 			case "storage_location":
 				return d.Get("table_type").(string) == "MANAGED"
@@ -1752,6 +1751,84 @@ var resourcesMap map[string]importable = map[string]importable{
 			//	{Path: "", Resource: ""},
 		},
 	},
+	"databricks_rfa_access_request_destinations": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-rfa",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			// ID format is "TYPE,FULL_NAME" - create a readable name from it
+			parts := strings.Split(d.Id(), ",")
+			if len(parts) == 2 {
+				securableType := strings.ToLower(parts[0])
+				fullName := parts[1]
+				// Replace dots and special chars with underscores for valid TF resource name
+				safeName := nameNormalizationRegex.ReplaceAllString(fullName, "_")
+				return fmt.Sprintf("rfa_%s_%s", securableType, safeName)
+			}
+			return "rfa_" + d.Id()
+		},
+		Import: importRfaAccessRequestDestinations,
+		// No List function - this resource is emitted as a dependency from Import functions
+		// of catalog, schema, table, and other UC resources
+		Ignore: func(ic *importContext, r *resource) bool {
+			// Skip this resource if destination_source_securable.type != securable.type
+			dssType, dssOk := r.DataWrapper.GetOk("destination_source_securable.type")
+			securableType, stOk := r.DataWrapper.GetOk("securable.type")
+			shouldIgnore := dssOk && stOk && dssType != securableType
+			if shouldIgnore {
+				log.Printf("[DEBUG] Ignoring RFA access request destinations with ID %s: destination source securable type (%v) differs from securable type (%v)", r.ID, dssType, securableType)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_rfa_access_request_destinations. id=%s", r.ID))
+			}
+			return shouldIgnore
+		},
+		Depends: []reference{
+			// The securable.full_name field should reference the appropriate UC resource
+			// based on securable.type. We use IsValidApproximation to ensure we match the
+			// correct resource type when there are name collisions (e.g., a catalog and
+			// credential with the same name).
+
+			// Unity Catalog securables - matched by full_name
+			{Path: "securable.full_name", Resource: "databricks_catalog", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("CATALOG")},
+			{Path: "securable.full_name", Resource: "databricks_schema", Match: "id",
+				IsValidApproximation: createIsMatchingSecurableType("SCHEMA")},
+			{Path: "securable.full_name", Resource: "databricks_sql_table", Match: "id",
+				IsValidApproximation: createIsMatchingSecurableType("TABLE")},
+			{Path: "securable.full_name", Resource: "databricks_volume", Match: "id",
+				IsValidApproximation: createIsMatchingSecurableType("VOLUME")},
+			// This is not supported yet
+			// {Path: "securable.full_name", Resource: "databricks_registered_model", Match: "id",
+			// 	IsValidApproximation: createIsMatchingSecurableType("REGISTERED_MODEL")},
+
+			// Storage and connection securables - matched by name
+			{Path: "securable.full_name", Resource: "databricks_storage_credential", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("STORAGE_CREDENTIAL")},
+			{Path: "securable.full_name", Resource: "databricks_credential", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("CREDENTIAL")},
+			{Path: "securable.full_name", Resource: "databricks_external_location", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("EXTERNAL_LOCATION")},
+			{Path: "securable.full_name", Resource: "databricks_connection", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("CONNECTION")},
+
+			// Sharing securables - matched by name
+			{Path: "securable.full_name", Resource: "databricks_share", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("SHARE")},
+			{Path: "securable.full_name", Resource: "databricks_recipient", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("RECIPIENT")},
+			{Path: "securable.full_name", Resource: "databricks_provider", Match: "name",
+				IsValidApproximation: createIsMatchingSecurableType("PROVIDER")},
+
+			// Metastore - matched by ID
+			{Path: "securable.full_name", Resource: "databricks_metastore", Match: "metastore_id",
+				IsValidApproximation: createIsMatchingSecurableType("METASTORE")},
+
+			// Non-EMAIL destinations reference notification destinations
+			{Path: "destinations.destination_id", Resource: "databricks_notification_destination", Match: "id"},
+			// Notification destination IDs - EMAIL destinations may reference users' emails
+			{Path: "destinations.destination_id", Resource: "databricks_user", Match: "user_name",
+				MatchType: MatchCaseInsensitive},
+		},
+	},
 	"databricks_storage_credential": {
 		WorkspaceLevel:  true,
 		Service:         "uc-storage-credentials",
@@ -1819,6 +1896,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			connectionName := r.Data.Get("name").(string)
 			ic.emitUCGrantsWithOwner("foreign_connection/"+connectionName, r)
+			// Emit RFA access request destinations if configured
+			ic.emitRfaAccessRequestDestinations("CONNECTION", connectionName)
 			return nil
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
@@ -1867,6 +1946,21 @@ var resourcesMap map[string]importable = map[string]importable{
 		// TODO: emit variable for sharing_code ...
 		// TODO: add depends for sharing_code?
 	},
+	"databricks_provider": {
+		WorkspaceLevel: true,
+		Service:        "uc-shares",
+		List:           listUcProviders,
+		Import:         importUcProvider,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
+			if pathString == "recipient_profile_str" {
+				return d.Get(pathString).(string) == ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			return r.Data.Get("authentication_type").(string) == "DATABRICKS"
+		},
+	},
 	"databricks_registered_model": {
 		WorkspaceLevel: true,
 		Service:        "uc-models",
@@ -1893,6 +1987,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_schema",
 				ID:       schemaFullName,
 			})
+			// // Emit RFA access request destinations if configured
+			// ic.emitRfaAccessRequestDestinations("REGISTERED_MODEL", r.ID)
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {

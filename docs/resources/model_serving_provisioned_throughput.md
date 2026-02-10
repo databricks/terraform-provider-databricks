@@ -42,6 +42,8 @@ The following arguments are supported:
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 * `email_notifications` - (Optional) A block with Email notification setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### served_entities Configuration Block
 

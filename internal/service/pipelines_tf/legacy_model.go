@@ -95,6 +95,8 @@ type ClonePipelineRequest_SdkV2 struct {
 	Catalog types.String `tfsdk:"catalog"`
 	// DLT Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
+	// The type of clone to perform. Currently, only deep copies are supported
+	CloneMode types.String `tfsdk:"clone_mode"`
 	// Cluster settings for this pipeline deployment.
 	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
@@ -344,6 +346,7 @@ func (m ClonePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clone_mode"] = attrs["clone_mode"].SetOptional()
 	attrs["clusters"] = attrs["clusters"].SetOptional()
 	attrs["configuration"] = attrs["configuration"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].SetOptional()
@@ -419,6 +422,7 @@ func (m ClonePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"budget_policy_id":       m.BudgetPolicyId,
 			"catalog":                m.Catalog,
 			"channel":                m.Channel,
+			"clone_mode":             m.CloneMode,
 			"clusters":               m.Clusters,
 			"configuration":          m.Configuration,
 			"continuous":             m.Continuous,
@@ -457,6 +461,7 @@ func (m ClonePipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"budget_policy_id":      types.StringType,
 			"catalog":               types.StringType,
 			"channel":               types.StringType,
+			"clone_mode":            types.StringType,
 			"clusters": basetypes.ListType{
 				ElemType: PipelineCluster_SdkV2{}.Type(ctx),
 			},
@@ -1975,6 +1980,10 @@ func (m DataPlaneId_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeletePipelineRequest_SdkV2 struct {
+	// If true, deletion will proceed even if resource cleanup fails. By
+	// default, deletion will fail if resources cleanup is required but fails.
+	Force types.Bool `tfsdk:"-"`
+
 	PipelineId types.String `tfsdk:"-"`
 }
 
@@ -1986,6 +1995,7 @@ func (to *DeletePipelineRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 
 func (m DeletePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["force"] = attrs["force"].SetOptional()
 
 	return attrs
 }
@@ -2008,6 +2018,7 @@ func (m DeletePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"force":       m.Force,
 			"pipeline_id": m.PipelineId,
 		})
 }
@@ -2016,6 +2027,7 @@ func (m DeletePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetype
 func (m DeletePipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"force":       types.BoolType,
 			"pipeline_id": types.StringType,
 		},
 	}
@@ -4226,9 +4238,16 @@ func (m *IngestionGatewayPipelineDefinition_SdkV2) SetConnectionParameters(ctx c
 }
 
 type IngestionPipelineDefinition_SdkV2 struct {
-	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
-	// to communicate with the source. This is used with connectors for
-	// applications like Salesforce, Workday, and so on.
+	// The Unity Catalog connection that this ingestion pipeline uses to
+	// communicate with the source. This is used with both connectors for
+	// applications like Salesforce, Workday, and so on, and also database
+	// connectors like Oracle, (connector_type = QUERY_BASED OR connector_type =
+	// CDC). If connection name corresponds to database connectors like Oracle,
+	// and connector_type is not provided then connector_type defaults to
+	// QUERY_BASED. If connector_type is passed as CDC we use Combined Cdc
+	// Managed Ingestion pipeline. Under certain conditions, this can be
+	// replaced with ingestion_gateway_id to change the connector to Cdc Managed
+	// Ingestion Pipeline with Gateway pipeline.
 	ConnectionName types.String `tfsdk:"connection_name"`
 	// (Optional) A window that specifies a set of time ranges for snapshot
 	// queries in CDC.
@@ -4239,9 +4258,11 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// IngestionConfig are interpreted as the UC foreign catalogs to ingest
 	// from.
 	IngestFromUcForeignCatalog types.Bool `tfsdk:"ingest_from_uc_foreign_catalog"`
-	// Immutable. Identifier for the gateway that is used by this ingestion
-	// pipeline to communicate with the source database. This is used with
-	// connectors to databases like SQL Server.
+	// Identifier for the gateway that is used by this ingestion pipeline to
+	// communicate with the source database. This is used with CDC connectors to
+	// databases like SQL Server using a gateway pipeline (connector_type =
+	// CDC). Under certain conditions, this can be replaced with connection_name
+	// to change the connector to Combined Cdc Managed Ingestion Pipeline.
 	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id"`
 	// Netsuite only configuration. When the field is set for a netsuite
 	// connector, the jar stored in the field will be validated and added to the

@@ -3577,6 +3577,10 @@ func (m *AsyncUpdateAppRequest) SetApp(ctx context.Context, v App) {
 }
 
 type ComputeStatus struct {
+	// The number of compute instances currently serving requests for this
+	// application. An instance is considered active if it is reachable and
+	// ready to handle requests.
+	ActiveInstances types.Int64 `tfsdk:"active_instances"`
 	// Compute status message
 	Message types.String `tfsdk:"message"`
 	// State of the app compute.
@@ -3590,6 +3594,7 @@ func (to *ComputeStatus) SyncFieldsDuringRead(ctx context.Context, from ComputeS
 }
 
 func (m ComputeStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active_instances"] = attrs["active_instances"].SetComputed()
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
@@ -3614,8 +3619,9 @@ func (m ComputeStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": m.Message,
-			"state":   m.State,
+			"active_instances": m.ActiveInstances,
+			"message":          m.Message,
+			"state":            m.State,
 		})
 }
 
@@ -3623,8 +3629,9 @@ func (m ComputeStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m ComputeStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"message": types.StringType,
-			"state":   types.StringType,
+			"active_instances": types.Int64Type,
+			"message":          types.StringType,
+			"state":            types.StringType,
 		},
 	}
 }

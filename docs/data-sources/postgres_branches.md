@@ -31,13 +31,13 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `branches`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the branch was created
-* `name` (string) - The resource name of the branch. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}`
+* `name` (string) - Output only. The full resource path of the branch.
+  Format: projects/{project_id}/branches/{branch_id}
 * `parent` (string) - The project containing this branch (API resource hierarchy).
   Format: projects/{project_id}
   
   Note: This field indicates where the branch exists in the resource hierarchy.
-  For point-in-time branching from another branch, see `spec.source_branch`
+  For point-in-time branching from another branch, see `status.source_branch`
 * `spec` (BranchSpec) - The spec contains the branch configuration
 * `status` (BranchStatus) - The current status of a Branch
 * `uid` (string) - System-generated unique ID for the branch

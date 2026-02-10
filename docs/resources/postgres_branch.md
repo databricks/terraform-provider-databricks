@@ -77,15 +77,13 @@ resource "databricks_postgres_branch" "temporary" {
 ## Arguments
 The following arguments are supported:
 * `branch_id` (string, required) - The ID to use for the Branch. This becomes the final component of the branch's resource name.
-  The ID must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens (RFC 1123).
-  Examples:
-  - With custom ID: `staging` → name becomes `projects/{project_id}/branches/staging`
-  - Without custom ID: system generates slug → name becomes `projects/{project_id}/branches/br-example-name-x1y2z3a4`
+  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
+  For example, `development` becomes `projects/my-app/branches/development`
 * `parent` (string, required) - The project containing this branch (API resource hierarchy).
   Format: projects/{project_id}
   
   Note: This field indicates where the branch exists in the resource hierarchy.
-  For point-in-time branching from another branch, see `spec.source_branch`
+  For point-in-time branching from another branch, see `status.source_branch`
 * `spec` (BranchSpec, optional) - The spec contains the branch configuration
 
 ### BranchSpec
@@ -103,8 +101,8 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the branch was created
-* `name` (string) - The resource name of the branch. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}`
+* `name` (string) - Output only. The full resource path of the branch.
+  Format: projects/{project_id}/branches/{branch_id}
 * `status` (BranchStatus) - The current status of a Branch
 * `uid` (string) - System-generated unique ID for the branch
 * `update_time` (string) - A timestamp indicating when the branch was last updated

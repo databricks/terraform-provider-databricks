@@ -40,7 +40,7 @@ This data source exports the following attributes:
 
 * `id` - The ID of the SQL warehouse.
 * `name` - Name of the SQL warehouse.
-* `cluster_size` - The size of the clusters allocated to the warehouse: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large".
+* `cluster_size` - The size of the clusters allocated to the warehouse: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.

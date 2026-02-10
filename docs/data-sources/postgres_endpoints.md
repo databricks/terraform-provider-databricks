@@ -35,8 +35,8 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `endpoints`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
-* `name` (string) - The resource name of the endpoint. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+* `name` (string) - Output only. The full resource path of the endpoint.
+  Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `parent` (string) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
 * `spec` (EndpointSpec) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state

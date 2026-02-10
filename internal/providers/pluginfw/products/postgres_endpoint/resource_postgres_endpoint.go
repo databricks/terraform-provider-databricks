@@ -47,16 +47,13 @@ type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The ID to use for the Endpoint. This becomes the final component of the
-	// endpoint's resource name. The ID must be 1-63 characters long, start with
-	// a lowercase letter, and contain only lowercase letters, numbers, and
-	// hyphens (RFC 1123). Examples: - With custom ID: `primary` → name
-	// becomes `projects/{project_id}/branches/{branch_id}/endpoints/primary` -
-	// Without custom ID: system generates slug → name becomes
-	// `projects/{project_id}/branches/{branch_id}/endpoints/ep-example-name-x1y2z3a4`
+	// endpoint's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `primary` becomes
+	// `projects/my-app/branches/development/endpoints/primary`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// The resource name of the endpoint. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// Output only. The full resource path of the endpoint. Format:
+	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
 	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
@@ -192,6 +189,7 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs

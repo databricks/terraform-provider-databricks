@@ -7875,6 +7875,11 @@ func (m Route) Type(ctx context.Context) attr.Type {
 }
 
 type ServedEntityInput struct {
+	// Whether burst scaling is enabled. When enabled (default), the endpoint
+	// can automatically scale up beyond provisioned capacity to handle traffic
+	// spikes. When disabled, the endpoint maintains fixed capacity at
+	// provisioned_model_units.
+	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
 	// The name of the entity to be served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
@@ -7968,6 +7973,7 @@ func (to *ServedEntityInput) SyncFieldsDuringRead(ctx context.Context, from Serv
 }
 
 func (m ServedEntityInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
 	attrs["entity_name"] = attrs["entity_name"].SetOptional()
 	attrs["entity_version"] = attrs["entity_version"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
@@ -8007,6 +8013,7 @@ func (m ServedEntityInput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"burst_scaling_enabled":       m.BurstScalingEnabled,
 			"entity_name":                 m.EntityName,
 			"entity_version":              m.EntityVersion,
 			"environment_vars":            m.EnvironmentVars,
@@ -8028,8 +8035,9 @@ func (m ServedEntityInput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m ServedEntityInput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entity_name":    types.StringType,
-			"entity_version": types.StringType,
+			"burst_scaling_enabled": types.BoolType,
+			"entity_name":           types.StringType,
+			"entity_version":        types.StringType,
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -8100,6 +8108,12 @@ func (m *ServedEntityInput) SetExternalModel(ctx context.Context, v ExternalMode
 }
 
 type ServedEntityOutput struct {
+	// Whether burst scaling is enabled. When enabled (default), the endpoint
+	// can automatically scale up beyond provisioned capacity to handle traffic
+	// spikes. When disabled, the endpoint maintains fixed capacity at
+	// provisioned_model_units.
+	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
+
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 
 	Creator types.String `tfsdk:"creator"`
@@ -8234,6 +8248,7 @@ func (to *ServedEntityOutput) SyncFieldsDuringRead(ctx context.Context, from Ser
 }
 
 func (m ServedEntityOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["entity_name"] = attrs["entity_name"].SetOptional()
@@ -8279,6 +8294,7 @@ func (m ServedEntityOutput) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"burst_scaling_enabled":       m.BurstScalingEnabled,
 			"creation_timestamp":          m.CreationTimestamp,
 			"creator":                     m.Creator,
 			"entity_name":                 m.EntityName,
@@ -8304,10 +8320,11 @@ func (m ServedEntityOutput) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m ServedEntityOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"creation_timestamp": types.Int64Type,
-			"creator":            types.StringType,
-			"entity_name":        types.StringType,
-			"entity_version":     types.StringType,
+			"burst_scaling_enabled": types.BoolType,
+			"creation_timestamp":    types.Int64Type,
+			"creator":               types.StringType,
+			"entity_name":           types.StringType,
+			"entity_version":        types.StringType,
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -8584,6 +8601,11 @@ func (m *ServedEntitySpec) SetFoundationModel(ctx context.Context, v FoundationM
 }
 
 type ServedModelInput struct {
+	// Whether burst scaling is enabled. When enabled (default), the endpoint
+	// can automatically scale up beyond provisioned capacity to handle traffic
+	// spikes. When disabled, the endpoint maintains fixed capacity at
+	// provisioned_model_units.
+	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
 	// experimental feature and subject to change. Example entity environment
@@ -8647,6 +8669,7 @@ func (to *ServedModelInput) SyncFieldsDuringRead(ctx context.Context, from Serve
 }
 
 func (m ServedModelInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
@@ -8684,6 +8707,7 @@ func (m ServedModelInput) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"burst_scaling_enabled":       m.BurstScalingEnabled,
 			"environment_vars":            m.EnvironmentVars,
 			"instance_profile_arn":        m.InstanceProfileArn,
 			"max_provisioned_concurrency": m.MaxProvisionedConcurrency,
@@ -8704,6 +8728,7 @@ func (m ServedModelInput) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ServedModelInput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"burst_scaling_enabled": types.BoolType,
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -8750,6 +8775,12 @@ func (m *ServedModelInput) SetEnvironmentVars(ctx context.Context, v map[string]
 }
 
 type ServedModelOutput struct {
+	// Whether burst scaling is enabled. When enabled (default), the endpoint
+	// can automatically scale up beyond provisioned capacity to handle traffic
+	// spikes. When disabled, the endpoint maintains fixed capacity at
+	// provisioned_model_units.
+	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
+
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 
 	Creator types.String `tfsdk:"creator"`
@@ -8831,6 +8862,7 @@ func (to *ServedModelOutput) SyncFieldsDuringRead(ctx context.Context, from Serv
 }
 
 func (m ServedModelOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
@@ -8870,6 +8902,7 @@ func (m ServedModelOutput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"burst_scaling_enabled":       m.BurstScalingEnabled,
 			"creation_timestamp":          m.CreationTimestamp,
 			"creator":                     m.Creator,
 			"environment_vars":            m.EnvironmentVars,
@@ -8891,8 +8924,9 @@ func (m ServedModelOutput) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m ServedModelOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"creation_timestamp": types.Int64Type,
-			"creator":            types.StringType,
+			"burst_scaling_enabled": types.BoolType,
+			"creation_timestamp":    types.Int64Type,
+			"creator":               types.StringType,
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},

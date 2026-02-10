@@ -164,10 +164,8 @@ resource "databricks_postgres_endpoint" "read_replica" {
 ## Arguments
 The following arguments are supported:
 * `endpoint_id` (string, required) - The ID to use for the Endpoint. This becomes the final component of the endpoint's resource name.
-  The ID must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens (RFC 1123).
-  Examples:
-  - With custom ID: `primary` → name becomes `projects/{project_id}/branches/{branch_id}/endpoints/primary`
-  - Without custom ID: system generates slug → name becomes `projects/{project_id}/branches/{branch_id}/endpoints/ep-example-name-x1y2z3a4`
+  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
+  For example, `primary` becomes `projects/my-app/branches/development/endpoints/primary`
 * `parent` (string, required) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
 * `spec` (EndpointSpec, optional) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state
@@ -192,8 +190,8 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
-* `name` (string) - The resource name of the endpoint. This field is output-only and constructed by the system.
-  Format: `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+* `name` (string) - Output only. The full resource path of the endpoint.
+  Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `status` (EndpointStatus) - Current operational status of the compute endpoint
 * `uid` (string) - System-generated unique ID for the endpoint
 * `update_time` (string) - A timestamp indicating when the compute endpoint was last updated

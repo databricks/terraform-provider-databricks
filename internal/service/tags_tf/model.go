@@ -208,7 +208,7 @@ func (m *CreateTagPolicyRequest) SetTagPolicy(ctx context.Context, v TagPolicy) 
 type DeleteTagAssignmentRequest struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"-"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"-"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
@@ -315,7 +315,7 @@ func (m DeleteTagPolicyRequest) Type(ctx context.Context) attr.Type {
 type GetTagAssignmentRequest struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"-"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"-"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
@@ -422,7 +422,7 @@ func (m GetTagPolicyRequest) Type(ctx context.Context) attr.Type {
 type ListTagAssignmentsRequest struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"-"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"-"`
 	// Optional. Maximum number of tag assignments to return in a single page
@@ -732,7 +732,7 @@ func (m *ListTagPoliciesResponse) SetTagPolicies(ctx context.Context, v []TagPol
 type TagAssignment struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"entity_type"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
@@ -916,7 +916,7 @@ func (m *TagPolicy) SetValues(ctx context.Context, v []Value) {
 type UpdateTagAssignmentRequest struct {
 	// The identifier of the entity to which the tag is assigned
 	EntityId types.String `tfsdk:"-"`
-	// The type of entity to which the tag is assigned. Allowed values are
+	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
 	EntityType types.String `tfsdk:"-"`
 

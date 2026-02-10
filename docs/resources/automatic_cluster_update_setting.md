@@ -45,6 +45,8 @@ The resource supports the following arguments:
       - `window_start_time` block that defines the time of your maintenance window. The default timezone is UTC and cannot be changed.
         - `hours` - hour to perform update: 0-23
         - `minutes` - minute to perform update: 0-59
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

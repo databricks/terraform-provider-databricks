@@ -65,6 +65,8 @@ The following arguments are supported (change of any parameter leads to recreati
 * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
   * `name` - The name of the column.
   * `embedding_dimension` - Dimension of the embedding vector.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -45,25 +45,22 @@ type BranchResource struct {
 // Branch extends the main model with additional fields.
 type Branch struct {
 	// The ID to use for the Branch. This becomes the final component of the
-	// branch's resource name. The ID must be 1-63 characters long, start with a
-	// lowercase letter, and contain only lowercase letters, numbers, and
-	// hyphens (RFC 1123). Examples: - With custom ID: `staging` → name
-	// becomes `projects/{project_id}/branches/staging` - Without custom ID:
-	// system generates slug → name becomes
-	// `projects/{project_id}/branches/br-example-name-x1y2z3a4`
+	// branch's resource name. The ID is required and must be 1-63 characters
+	// long, start with a lowercase letter, and contain only lowercase letters,
+	// numbers, and hyphens. For example, `development` becomes
+	// `projects/my-app/branches/development`.
 	BranchId types.String `tfsdk:"branch_id"`
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The resource name of the branch. This field is output-only and
-	// constructed by the system. Format:
-	// `projects/{project_id}/branches/{branch_id}`
+	// Output only. The full resource path of the branch. Format:
+	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"name"`
 	// The project containing this branch (API resource hierarchy). Format:
 	// projects/{project_id}
 	//
 	// Note: This field indicates where the branch exists in the resource
 	// hierarchy. For point-in-time branching from another branch, see
-	// `spec.source_branch`.
+	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
 	// The spec contains the branch configuration.
 	Spec types.Object `tfsdk:"spec"`
@@ -195,6 +192,7 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs

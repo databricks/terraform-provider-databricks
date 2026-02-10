@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "quality_monitors_v2"
@@ -29,12 +30,14 @@ func DataSourceQualityMonitors() datasource.DataSource {
 type QualityMonitorsData struct {
 	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
 
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitors": reflect.TypeOf(QualityMonitorData{}),
+		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		quality_monitor.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, quality_monitor.ToObjectValue(ctx))
 	}
 

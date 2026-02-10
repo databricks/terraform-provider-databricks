@@ -799,7 +799,8 @@ type GenieAttachment_SdkV2 struct {
 	Query types.List `tfsdk:"query"`
 	// Follow-up questions suggested by Genie
 	SuggestedQuestions types.List `tfsdk:"suggested_questions"`
-	// Text Attachment if Genie responds with text
+	// Text Attachment if Genie responds with text. This also contains the final
+	// summary when available.
 	Text types.List `tfsdk:"text"`
 }
 
@@ -3284,12 +3285,6 @@ type GenieSpace_SdkV2 struct {
 	// Space](:method:genie/getspace) API to retrieve an example response, which
 	// includes the `serialized_space` field. This field provides the structure
 	// of the JSON string that represents the space's layout and components.
-	// NOTE: Keep example in sync with: -
-	// docs/web/docs/genie/conversation-api.md -
-	// data-rooms/data-rooms/test/unit/entities/testdata/documentation_example_serialized_space.json
-	// NOTE: The proto example below is a simplified subset of the full JSON
-	// testdata file. See the testdata file for a comprehensive example with all
-	// fields.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`

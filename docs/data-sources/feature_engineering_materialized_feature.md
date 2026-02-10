@@ -12,6 +12,10 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `materialized_feature_id` (string, required) - Unique identifier for the materialized feature
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

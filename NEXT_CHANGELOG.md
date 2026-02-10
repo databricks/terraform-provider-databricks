@@ -15,6 +15,8 @@
 
 ### Documentation
 
+* Add `run_as` configuration block documentation to `databricks_pipeline` resource ([#5342](https://github.com/databricks/terraform-provider-databricks/pull/5342))
+
 ### Exporter
 
 ### Internal Changes

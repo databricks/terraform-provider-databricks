@@ -42,6 +42,11 @@ resource "databricks_permissions" "d1" {
 }
 ```
 
+## Argument Reference
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

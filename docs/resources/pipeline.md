@@ -181,22 +181,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier of the Lakeflow Declarative Pipeline.
 * `url` - URL of the Lakeflow Declarative Pipeline on the given workspace.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_pipeline" "this" {
-  name    = "Pipeline Name"
-  catalog = "main"
-  schema  = "my_schema"
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The resource job can be imported using the id of the pipeline

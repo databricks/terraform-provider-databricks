@@ -71,20 +71,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The id for the secret scope object.
 * `backend_type` - Either `DATABRICKS` or `AZURE_KEYVAULT`
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_secret_scope" "this" {
-  name = "my-secret-scope"
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The secret resource scope can be imported using the scope name. `initial_manage_principal` state won't be imported, because the underlying API doesn't include it in the response.

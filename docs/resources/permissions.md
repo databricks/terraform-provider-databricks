@@ -1044,25 +1044,6 @@ In addition to all arguments above, the following attributes are exported:
 - `id` - Canonical unique identifier for the permissions in form of `/<object type>/<object id>`.
 - `object_type` - type of permissions.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_permissions" "this" {
-  cluster_id = "your-cluster-id"
-
-  access_control {
-    group_name       = "users"
-    permission_level = "CAN_ATTACH_TO"
-  }
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The resource permissions can be imported using the object id:

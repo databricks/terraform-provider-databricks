@@ -46,21 +46,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this provider - same as the `name`.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_provider" "this" {
-  name                = "my-provider"
-  authentication_type = "TOKEN"
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Related Resources
 
 The following resources are used in the same context:

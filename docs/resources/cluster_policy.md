@@ -164,27 +164,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Canonical unique identifier for the cluster policy. This is equal to `policy_id`.
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_cluster_policy" "this" {
-  name = "My Cluster Policy"
-  definition = jsonencode({
-    "autotermination_minutes" : {
-      "type" : "fixed",
-      "value" : 20,
-      "hidden" : true
-    }
-  })
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The resource cluster policy can be imported using the policy id:

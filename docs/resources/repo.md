@@ -56,20 +56,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * [databricks_permissions](permissions.md#Repos-usage) can control which groups or individual users can access repos.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_repo" "this" {
-  url = "https://github.com/user/demo.git"
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The resource can be imported using the Git folder ID (obtained via UI or using API)

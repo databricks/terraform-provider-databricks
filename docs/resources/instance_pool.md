@@ -144,24 +144,6 @@ In addition to all arguments above, the following attributes are exported:
 * [databricks_group](group.md#allow_instance_pool_create) and [databricks_user](user.md#allow_instance_pool_create) can control which groups or individual users can create instance pools.
 * [databricks_permissions](permissions.md#Instance-Pool-usage) can control which groups or individual users can *Manage* or *Attach to* individual instance pools.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_instance_pool" "this" {
-  instance_pool_name                    = "My Instance Pool"
-  min_idle_instances                    = 0
-  max_capacity                          = 10
-  node_type_id                          = "i3.xlarge"
-  idle_instance_autotermination_minutes = 10
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 The resource instance pool can be imported using its id:

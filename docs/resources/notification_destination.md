@@ -110,25 +110,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique ID of the Notification Destination.
 * `destination_type` - the type of Notification Destination.
 
-## provider_config block
-
-You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
-
-```hcl
-resource "databricks_notification_destination" "this" {
-  display_name = "Notification Destination"
-  config {
-    email {
-      addresses = ["abc@gmail.com"]
-    }
-  }
-
-  provider_config {
-    workspace_id = "123456789"
-  }
-}
-```
-
 ## Import
 
 This resource can be imported by notification ID:

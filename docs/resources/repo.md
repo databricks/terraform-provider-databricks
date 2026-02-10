@@ -41,6 +41,9 @@ Optional `sparse_checkout` configuration block contains attributes related to [s
 Addition or removal of the `sparse_checkout` configuration block will lead to recreation of the Git folder.
 
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -52,6 +55,20 @@ In addition to all arguments above, the following attributes are exported:
 ## Access Control
 
 * [databricks_permissions](permissions.md#Repos-usage) can control which groups or individual users can access repos.
+
+## provider_config block
+
+You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
+
+```hcl
+resource "databricks_repo" "this" {
+  url = "https://github.com/user/demo.git"
+
+  provider_config {
+    workspace_id = "123456789"
+  }
+}
+```
 
 ## Import
 

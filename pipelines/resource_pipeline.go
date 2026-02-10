@@ -160,6 +160,7 @@ func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema)
 
 type Pipeline struct {
 	pipelines.PipelineSpec
+	common.Namespace
 	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
 	Cause                string                              `json:"cause,omitempty"`
 	ClusterId            string                              `json:"cluster_id,omitempty"`
@@ -277,6 +278,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// RequiredWith fields
 	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -286,14 +288,14 @@ func ResourcePipeline() common.Resource {
 	return common.Resource{
 		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			return Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -321,7 +323,7 @@ func ResourcePipeline() common.Resource {
 			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -329,7 +331,7 @@ func ResourcePipeline() common.Resource {
 
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -340,6 +342,9 @@ func ResourcePipeline() common.Resource {
 			Default: schema.DefaultTimeout(DefaultTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
+				return err
+			}
 			// Allow changing catalog value in existing pipelines, but force recreation
 			// when switching between storage and catalog (or vice versa).
 			// This should only run on update, thus we skip this check if the ID is not known.

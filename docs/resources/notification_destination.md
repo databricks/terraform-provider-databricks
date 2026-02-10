@@ -98,6 +98,9 @@ The following arguments are supported:
     * `username` - (Optional) The username for basic authentication.
     * `password` - (Optional) The password for basic authentication.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 -> **NOTE** If the type of notification destination is changed, the existing notification destination will be deleted and a new notification destination will be created with the new type.
 
 ## Attribute Reference
@@ -106,6 +109,25 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the Notification Destination.
 * `destination_type` - the type of Notification Destination.
+
+## provider_config block
+
+You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
+
+```hcl
+resource "databricks_notification_destination" "this" {
+  display_name = "Notification Destination"
+  config {
+    email {
+      addresses = ["abc@gmail.com"]
+    }
+  }
+
+  provider_config {
+    workspace_id = "123456789"
+  }
+}
+```
 
 ## Import
 

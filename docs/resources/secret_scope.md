@@ -21,6 +21,8 @@ The following arguments are supported:
 
 * `name` - (Required) Scope name requested by the user. Must be unique within a workspace. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `initial_manage_principal` - (Optional) The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the [databricks_secret_acl](secret_acl.md) with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). This part of the state cannot be imported.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### keyvault_metadata
 
@@ -68,6 +70,20 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id for the secret scope object.
 * `backend_type` - Either `DATABRICKS` or `AZURE_KEYVAULT`
+
+## provider_config block
+
+You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
+
+```hcl
+resource "databricks_secret_scope" "this" {
+  name = "my-secret-scope"
+
+  provider_config {
+    workspace_id = "123456789"
+  }
+}
+```
 
 ## Import
 

@@ -37,12 +37,29 @@ The following arguments are required:
 * `comment` - (Optional) Description about the provider.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN`.
 * `recipient_profile_str` - (Optional) This is the json file that is created from a recipient url.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this provider - same as the `name`.
+
+## provider_config block
+
+You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
+
+```hcl
+resource "databricks_provider" "this" {
+  name                = "my-provider"
+  authentication_type = "TOKEN"
+
+  provider_config {
+    workspace_id = "123456789"
+  }
+}
+```
 
 ## Related Resources
 

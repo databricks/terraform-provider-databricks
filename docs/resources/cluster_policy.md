@@ -154,12 +154,36 @@ The following arguments are supported:
 
 One must specify each library in a separate configuration block, that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the cluster policy. This is equal to `policy_id`.
 * `policy_id` - Canonical unique identifier for the cluster policy.
+
+## provider_config block
+
+You can specify `workspace_id` in the `provider_config` block to create the resource in a specific workspace. This is useful when the provider is configured at the account level. For example:
+
+```hcl
+resource "databricks_cluster_policy" "this" {
+  name = "My Cluster Policy"
+  definition = jsonencode({
+    "autotermination_minutes" : {
+      "type" : "fixed",
+      "value" : 20,
+      "hidden" : true
+    }
+  })
+
+  provider_config {
+    workspace_id = "123456789"
+  }
+}
+```
 
 ## Import
 

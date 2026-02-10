@@ -164,9 +164,15 @@ func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, exist
 	return mapping.prepareResponse(objectID, permissions, existing, me)
 }
 
+// PermissionsSchemaStruct is used to generate schema with provider_config
+type PermissionsSchemaStruct struct {
+	entity.PermissionsEntity
+	common.Namespace
+}
+
 // ResourcePermissions definition
 func ResourcePermissions() common.Resource {
-	s := common.StructToSchema(entity.PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(PermissionsSchemaStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, mapping := range allResourcePermissions() {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
@@ -207,11 +213,15 @@ func ResourcePermissions() common.Resource {
 			hashSchema := &schema.Resource{Schema: acSchema}
 			return schema.HashResource(hashSchema)(normalized)
 		}
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiff(ctx, diff, c); err != nil {
+				return err
+			}
 			mapping, _, err := getResourcePermissionsFromState(diff)
 			if err != nil {
 				// This preserves current behavior but is likely only exercised in tests where
@@ -237,7 +247,11 @@ func ResourcePermissions() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			a := NewPermissionsAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			a := NewPermissionsAPI(ctx, newClient)
 			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
@@ -269,9 +283,13 @@ func ResourcePermissions() common.Resource {
 			return common.StructToData(entity, s, d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			w, err := c.WorkspaceClient()
+			w, err := newClient.WorkspaceClient()
 			if err != nil {
 				return err
 			}
@@ -283,7 +301,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = NewPermissionsAPI(ctx, c).Update(objectID, entity, mapping)
+			err = NewPermissionsAPI(ctx, newClient).Update(objectID, entity, mapping)
 			if err != nil {
 				return err
 			}
@@ -291,20 +309,28 @@ func ResourcePermissions() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
-			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity, mapping)
+			return NewPermissionsAPI(ctx, newClient).Update(d.Id(), entity, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
-			return NewPermissionsAPI(ctx, c).Delete(d.Id(), mapping)
+			return NewPermissionsAPI(ctx, newClient).Delete(d.Id(), mapping)
 		},
 	}
 }

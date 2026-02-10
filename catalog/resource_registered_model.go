@@ -8,9 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type RegisteredModelSchemaStruct struct {
+	catalog.CreateRegisteredModelRequest
+	common.Namespace
+}
+
 func ResourceRegisteredModel() common.Resource {
 	s := common.StructToSchema(
-		catalog.CreateRegisteredModelRequest{},
+		RegisteredModelSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 			for _, field := range caseInsensitiveFields {
@@ -33,13 +38,13 @@ func ResourceRegisteredModel() common.Resource {
 					m[field].Computed = true
 				}
 			}
-
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -65,7 +70,7 @@ func ResourceRegisteredModel() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -76,7 +81,7 @@ func ResourceRegisteredModel() common.Resource {
 			return common.StructToData(*model, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -122,7 +127,7 @@ func ResourceRegisteredModel() common.Resource {
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -43,6 +43,8 @@ The size of a workspace file source code must not exceed a few megabytes. The fo
 * `path` -  (Required) The absolute path of the workspace file, beginning with "/", e.g. "/Demo".
 * `source` - Path to file on local filesystem. Conflicts with `content_base64`.
 * `content_base64` - The base64-encoded file content. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a workspace file with configuration properties for a data pipeline.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

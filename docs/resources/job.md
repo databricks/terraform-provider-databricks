@@ -153,6 +153,7 @@ This block describes individual tasks:
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
+* `compute` - (Optional) Task level compute configuration. This block is [documented below](#compute-configuration-block).
 
 -> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
 
@@ -541,6 +542,14 @@ resource "databricks_job" "this" {
   }
 }
 ```
+
+### compute Configuration Block
+
+This block describes task level compute configuration.
+
+* `hardware_accelerator` - (Optional) Hardware accelerator configuration for Serverless GPU workloads. Supported values are:
+  * `GPU_1xA10`: GPU_1xA10: Single A10 GPU configuration.
+  * `GPU_8xH100`: GPU_8xH100: 8x H100 GPU configuration.
 
 ## Attribute Reference
 

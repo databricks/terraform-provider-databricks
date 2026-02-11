@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -637,4 +638,297 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			}
 		})
 	}
+}
+
+// newTestResourceForCustomizeDiff creates a Resource with provider_config schema
+// and NamespaceCustomizeDiff for testing the customize diff logic.
+func newTestResourceForCustomizeDiff() *schema.Resource {
+	r := Resource{
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
+		CustomizeDiff: NamespaceCustomizeDiff,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+			return nil
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+			return nil
+		},
+	}
+	AddNamespaceInSchema(r.Schema)
+	NamespaceCustomizeSchemaMap(r.Schema)
+	return r.ToResource()
+}
+
+// diffCustomizeDiff runs Diff on the resource with the given state and config,
+// returning the diff and any error from CustomizeDiff.
+func diffCustomizeDiff(
+	t *testing.T,
+	resource *schema.Resource,
+	instanceState map[string]string,
+	rawConfig map[string]interface{},
+	c *DatabricksClient,
+) (*terraform.InstanceDiff, error) {
+	t.Helper()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, ResourceName, "test_resource")
+	var is *terraform.InstanceState
+	if instanceState != nil {
+		is = &terraform.InstanceState{Attributes: instanceState}
+	}
+	rc := terraform.NewResourceConfigRaw(rawConfig)
+	return resource.Diff(ctx, is, rc, c)
+}
+
+func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     123456,
+	}
+	diff, err := diffCustomizeDiff(t, resource, map[string]string{
+		"name":                           "test",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "123456",
+	}, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "123456",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+	assert.Nil(t, diff)
+}
+
+func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     999999,
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "123",
+			},
+		},
+	}, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "workspace_id mismatch")
+	assert.Contains(t, err.Error(), "please check the workspace_id provided in provider_config")
+}
+
+func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://workspace.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+	}
+	// Pre-cache the workspace client so WorkspaceClientForWorkspace returns it
+	c.SetWorkspaceClientForWorkspace(123, mockWS)
+
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "123",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
+func TestNamespaceCustomizeDiff_AccountLevelProvider_InvalidWorkspace(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+	}
+	// No cached workspace client — WorkspaceClientForWorkspace will fail
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "999",
+			},
+		},
+	}, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 999")
+}
+
+func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://workspace.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:                       "https://unified.cloud.databricks.com",
+				Token:                      "test-token",
+				Experimental_IsUnifiedHost: true,
+			},
+		},
+	}
+	c.SetWorkspaceClientForWorkspace(456, mockWS)
+
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "456",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
+func TestNamespaceCustomizeDiff_UnifiedHost_InvalidWorkspace(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:                       "https://unified.cloud.databricks.com",
+				Token:                      "test-token",
+				Experimental_IsUnifiedHost: true,
+			},
+		},
+	}
+	// No cached workspace client — WorkspaceClientForWorkspace will fail
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "999",
+			},
+		},
+	}, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 999")
+}
+
+func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     789,
+	}
+	diff, err := diffCustomizeDiff(t, resource, map[string]string{
+		"name":                           "test",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "789",
+	}, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "789",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+	// No change in workspace_id, so no ForceNew
+	if diff != nil {
+		for _, v := range diff.Attributes {
+			assert.False(t, v.RequiresNew, "should not require new when workspace_id is unchanged")
+		}
+	}
+}
+
+func TestNamespaceCustomizeDiff_ForceNewOnChange(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     789,
+	}
+	diff, err := diffCustomizeDiff(t, resource, map[string]string{
+		"name":                           "test",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "456",
+	}, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "789",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+	require.NotNil(t, diff)
+	wsAttr, ok := diff.Attributes["provider_config.0.workspace_id"]
+	require.True(t, ok, "workspace_id should be in diff attributes")
+	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
 }

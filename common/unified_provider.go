@@ -97,20 +97,26 @@ func namespaceForceNew(d *schema.ResourceDiff) error {
 }
 
 // namespaceValidateWorkspaceID validates that the workspace_id in provider_config
-// matches the provider's configured workspace during the plan phase.
-// This is a no-op when provider_config is not set or the provider is account-level.
+// is reachable during the plan phase.
+// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
+// For account-level providers, it checks that the workspace is accessible from the account.
+// This is a no-op when provider_config is not set.
 func namespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
 	newWSID, ok := newWorkspaceID.(string)
 	if !ok || newWSID == "" {
 		return nil
 	}
-	if c.Config.HostType() == config.AccountHost {
-		return nil
-	}
 	workspaceIDInt, err := parseWorkspaceID(newWSID)
 	if err != nil {
 		return err
+	}
+	if c.Config.HostType() != config.WorkspaceHost {
+		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
+		if err != nil {
+			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
+		}
+		return nil
 	}
 	w, err := c.WorkspaceClient()
 	if err != nil {

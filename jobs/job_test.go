@@ -727,3 +727,65 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 		ExpectNonEmptyPlan: true,
 	})
 }
+
+// https://github.com/databricks/terraform-provider-databricks/issues/4982
+func TestAccJobClusterPolicyAutoscaleDefaults(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+		resource "databricks_cluster_policy" "this" {
+			name = "test-policy-autoscale-{var.RANDOM}"
+			definition = jsonencode({
+				"spark_version": {
+					"type": "fixed",
+					"value": data.databricks_spark_version.latest.id
+				},
+				"autoscale.min_workers": {
+					"type": "range",
+					"defaultValue": 1,
+					"minValue": 1,
+					"maxValue": 10
+				},
+				"autoscale.max_workers": {
+					"type": "range",
+					"defaultValue": 2,
+					"minValue": 1,
+					"maxValue": 10
+				}
+			})
+		}
+		resource "databricks_job" "this" {
+			name = "test-job-autoscale-{var.RANDOM}"
+			job_cluster {
+				job_cluster_key = "test-cluster"
+				new_cluster {
+					node_type_id = data.databricks_node_type.smallest.id
+					policy_id = databricks_cluster_policy.this.id
+					apply_policy_default_values = true
+				}
+			}
+			task {
+				task_key = "test-task"
+				job_cluster_key = "test-cluster"
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+		}
+		`,
+		ExpectNonEmptyPlan: true,
+	})
+}

@@ -78,7 +78,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if !(usersInfo.ExtraAttributes.IsNull()) {
 		attributes += ","
-		attributes += usersInfo.ExtraAttributes.String()
+		attributes += usersInfo.ExtraAttributes.ValueString()
 	}
 
 	var users []iam.User
@@ -102,7 +102,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: usersInfo.Filter.ValueString()})
+		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: usersInfo.Filter.ValueString(), Attributes: attributes})
 		if err != nil {
 			resp.Diagnostics.AddError("Error listing workspace users", err.Error())
 		}

@@ -31,6 +31,8 @@ The resource supports the following arguments:
 
 - `aibi_dashboard_embedding_approved_domains` block with following attributes:
   - `approved_domains` - (Required) the list of approved domains. To allow all subdomains for a given domain, use a wildcard symbol (`*`) before the domain name, i.e., `*.databricks.com` will allow to embed into any site under the `databricks.com`.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

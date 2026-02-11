@@ -779,6 +779,51 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+func TestNamespaceCustomizeDiff_AccountLevelProvider_ForceNewOnChange(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS123 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-123.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	mockWS456 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-456.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+	}
+	c.SetWorkspaceClientForWorkspace(123, mockWS123)
+	c.SetWorkspaceClientForWorkspace(456, mockWS456)
+
+	diff, err := diffCustomizeDiff(t, resource, map[string]string{
+		"name":                           "test",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "123",
+	}, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "456",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+	require.NotNil(t, diff)
+	wsAttr, ok := diff.Attributes[workspaceIDSchemaKey]
+	require.True(t, ok, "workspace_id should be in diff attributes")
+	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
+}
+
 func TestNamespaceCustomizeDiff_AccountLevelProvider_InvalidWorkspace(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	c := &DatabricksClient{
@@ -831,6 +876,51 @@ func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 		},
 	}, c)
 	assert.NoError(t, err)
+}
+
+func TestNamespaceCustomizeDiff_UnifiedHost_ForceNewOnChange(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS123 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-123.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	mockWS456 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-456.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:                       "https://unified.cloud.databricks.com",
+				Token:                      "test-token",
+				Experimental_IsUnifiedHost: true,
+			},
+		},
+	}
+	c.SetWorkspaceClientForWorkspace(123, mockWS123)
+	c.SetWorkspaceClientForWorkspace(456, mockWS456)
+
+	diff, err := diffCustomizeDiff(t, resource, map[string]string{
+		"name":                           "test",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "123",
+	}, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "456",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+	require.NotNil(t, diff)
+	wsAttr, ok := diff.Attributes[workspaceIDSchemaKey]
+	require.True(t, ok, "workspace_id should be in diff attributes")
+	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
 }
 
 func TestNamespaceCustomizeDiff_UnifiedHost_InvalidWorkspace(t *testing.T) {
@@ -928,7 +1018,7 @@ func TestNamespaceCustomizeDiff_ForceNewOnChange(t *testing.T) {
 	}, c)
 	assert.NoError(t, err)
 	require.NotNil(t, diff)
-	wsAttr, ok := diff.Attributes["provider_config.0.workspace_id"]
+	wsAttr, ok := diff.Attributes[workspaceIDSchemaKey]
 	require.True(t, ok, "workspace_id should be in diff attributes")
 	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
 }

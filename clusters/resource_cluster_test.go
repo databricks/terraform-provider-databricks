@@ -1707,6 +1707,63 @@ func TestResourceClusterCreate_NumWorkersIsZero(t *testing.T) {
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
 
+func TestResourceClusterCreate_ApplyPolicyDefaultValues_NoNumWorkers(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					ClusterName:             "Policy defaults cluster",
+					SparkVersion:            "7.3.x-scala12",
+					NodeTypeId:              "Standard_F4s",
+					AutoterminationMinutes:  120,
+					PolicyId:                "abc123",
+					ApplyPolicyDefaultValues: true,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					ClusterName:            "Policy defaults cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeId:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					State:                  compute.StateRunning,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes":      120,
+			"cluster_name":                 "Policy defaults cluster",
+			"spark_version":                "7.3.x-scala12",
+			"node_type_id":                 "Standard_F4s",
+			"is_pinned":                    false,
+			"policy_id":                    "abc123",
+			"apply_policy_default_values":  true,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
+}
+
 func TestModifyClusterRequestAws(t *testing.T) {
 	c := compute.CreateCluster{
 		InstancePoolId: "a",

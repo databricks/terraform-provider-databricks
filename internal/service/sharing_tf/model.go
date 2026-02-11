@@ -196,6 +196,8 @@ type CreateRecipient struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Name of Recipient.
@@ -257,6 +259,7 @@ func (m CreateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -291,6 +294,7 @@ func (m CreateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"comment":                            m.Comment,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"name":                               m.Name,
 			"owner":                              m.Owner,
@@ -307,6 +311,7 @@ func (m CreateRecipient) Type(ctx context.Context) attr.Type {
 			"comment":                            types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list":                     IpAccessList{}.Type(ctx),
 			"name":                               types.StringType,
 			"owner":                              types.StringType,
@@ -4109,6 +4114,8 @@ type RecipientInfo struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Unique identifier of recipient's Unity Catalog Metastore. This field is
@@ -4199,6 +4206,7 @@ func (m RecipientInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -4244,6 +4252,7 @@ func (m RecipientInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"created_by":                         m.CreatedBy,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"metastore_id":                       m.MetastoreId,
 			"name":                               m.Name,
@@ -4270,6 +4279,7 @@ func (m RecipientInfo) Type(ctx context.Context) attr.Type {
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list":                     IpAccessList{}.Type(ctx),
 			"metastore_id":                       types.StringType,
 			"name":                               types.StringType,
@@ -5956,6 +5966,8 @@ type UpdateRecipient struct {
 	Comment types.String `tfsdk:"comment"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Name of the recipient.
@@ -6014,6 +6026,7 @@ func (to *UpdateRecipient) SyncFieldsDuringRead(ctx context.Context, from Update
 func (m UpdateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -6046,6 +6059,7 @@ func (m UpdateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		map[string]attr.Value{
 			"comment":            m.Comment,
 			"expiration_time":    m.ExpirationTime,
+			"id":                 m.Id,
 			"ip_access_list":     m.IpAccessList,
 			"name":               m.Name,
 			"new_name":           m.NewName,
@@ -6060,6 +6074,7 @@ func (m UpdateRecipient) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment":            types.StringType,
 			"expiration_time":    types.Int64Type,
+			"id":                 types.StringType,
 			"ip_access_list":     IpAccessList{}.Type(ctx),
 			"name":               types.StringType,
 			"new_name":           types.StringType,

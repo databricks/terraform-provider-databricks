@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "policy_infos"
@@ -38,11 +39,13 @@ type PolicyInfosData struct {
 	MaxResults          types.Int64  `tfsdk:"max_results"`
 	OnSecurableType     types.String `tfsdk:"on_securable_type"`
 	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
+	ProviderConfigData  types.Object `tfsdk:"provider_config"`
 }
 
 func (PolicyInfosData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(PolicyInfoData{}),
+		"policies":        reflect.TypeOf(PolicyInfoData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -53,6 +56,8 @@ func (m PolicyInfosData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["policies"] = attrs["policies"].SetComputed()
 	attrs["on_securable_type"] = attrs["on_securable_type"].SetRequired()
 	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetRequired()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -92,7 +97,15 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -112,6 +125,8 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		policy_info.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, policy_info.ToObjectValue(ctx))
 	}
 

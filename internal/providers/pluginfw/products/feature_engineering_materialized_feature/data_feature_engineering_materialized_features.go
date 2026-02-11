@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "feature_engineering_materialized_features"
@@ -33,12 +34,14 @@ type MaterializedFeaturesData struct {
 	FeatureName types.String `tfsdk:"feature_name"`
 	// The maximum number of results to return. Defaults to 100 if not
 	// specified. Cannot be greater than 1000.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (MaterializedFeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"materialized_features": reflect.TypeOf(MaterializedFeatureData{}),
+		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -47,6 +50,8 @@ func (m MaterializedFeaturesData) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["materialized_features"] = attrs["materialized_features"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -86,7 +91,15 @@ func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -106,6 +119,8 @@ func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasourc
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		materialized_feature.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, materialized_feature.ToObjectValue(ctx))
 	}
 

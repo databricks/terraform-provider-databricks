@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "materialized_features_feature_tags"
@@ -33,12 +34,14 @@ type FeatureTagsData struct {
 	// The maximum number of results to return.
 	PageSize types.Int64 `tfsdk:"page_size"`
 
-	TableName types.String `tfsdk:"table_name"`
+	TableName          types.String `tfsdk:"table_name"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (FeatureTagsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"feature_tags": reflect.TypeOf(FeatureTagData{}),
+		"feature_tags":    reflect.TypeOf(FeatureTagData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -48,6 +51,8 @@ func (m FeatureTagsData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["feature_tags"] = attrs["feature_tags"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -87,7 +92,15 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -107,6 +120,8 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		feature_tag.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, feature_tag.ToObjectValue(ctx))
 	}
 

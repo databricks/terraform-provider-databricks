@@ -3053,6 +3053,17 @@ func (m *DashboardPageSnapshot) SetWidgetErrorDetails(ctx context.Context, v []W
 type DashboardTask struct {
 	// The identifier of the dashboard to refresh.
 	DashboardId types.String `tfsdk:"dashboard_id"`
+	// Dashboard task parameters. Used to apply dashboard filter values during
+	// dashboard task execution. Parameter values get applied to any dashboard
+	// filters that have a matching URL identifier as the parameter key. The
+	// parameter value format is dependent on the filter type: - For text and
+	// single-select filters, provide a single value (e.g. `"value"`) - For date
+	// and datetime filters, provide the value in ISO 8601 format (e.g.
+	// `"2000-01-01T00:00:00"`) - For multi-select filters, provide a JSON array
+	// of values (e.g. `"[\"value1\",\"value2\"]"`) - For range and date range
+	// filters, provide a JSON object with `start` and `end` (e.g.
+	// `"{\"start\":\"1\",\"end\":\"10\"}"`)
+	Filters types.Map `tfsdk:"filters"`
 	// Optional: subscription configuration for sending the dashboard snapshot.
 	Subscription types.Object `tfsdk:"subscription"`
 	// Optional: The warehouse id to execute the dashboard with for the
@@ -3086,6 +3097,7 @@ func (to *DashboardTask) SyncFieldsDuringRead(ctx context.Context, from Dashboar
 
 func (m DashboardTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["subscription"] = attrs["subscription"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
 
@@ -3101,6 +3113,7 @@ func (m DashboardTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m DashboardTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"filters":      reflect.TypeOf(types.String{}),
 		"subscription": reflect.TypeOf(Subscription{}),
 	}
 }
@@ -3113,6 +3126,7 @@ func (m DashboardTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dashboard_id": m.DashboardId,
+			"filters":      m.Filters,
 			"subscription": m.Subscription,
 			"warehouse_id": m.WarehouseId,
 		})
@@ -3123,10 +3137,39 @@ func (m DashboardTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
+			"filters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"subscription": Subscription{}.Type(ctx),
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetFilters returns the value of the Filters field in DashboardTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTask) GetFilters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Filters.IsNull() || m.Filters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFilters sets the value of the Filters field in DashboardTask.
+func (m *DashboardTask) SetFilters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Filters = types.MapValueMust(t, vs)
 }
 
 // GetSubscription returns the value of the Subscription field in DashboardTask as

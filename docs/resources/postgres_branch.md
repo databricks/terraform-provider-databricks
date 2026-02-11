@@ -85,6 +85,10 @@ The following arguments are supported:
   Note: This field indicates where the branch exists in the resource hierarchy.
   For point-in-time branching from another branch, see `status.source_branch`
 * `spec` (BranchSpec, optional) - The spec contains the branch configuration
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### BranchSpec
 * `expire_time` (string, optional) - Absolute expiration timestamp. When set, the branch will expire at this time

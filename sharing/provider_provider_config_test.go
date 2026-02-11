@@ -11,8 +11,9 @@ import (
 func providerProviderConfigTemplate(providerConfig string) string {
 	return fmt.Sprintf(`
 	resource "databricks_provider" "this" {
-		name                = "test-provider"
-		authentication_type = "TOKEN"
+		name                 = "test-provider"
+		authentication_type  = "TOKEN"
+		recipient_profile_str = "{\"shareCredentialsVersion\":1,\"bearerToken\":\"token\",\"endpoint\":\"https://example.com\"}"
 		%s
 	}
 	`, providerConfig)

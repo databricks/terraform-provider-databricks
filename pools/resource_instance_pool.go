@@ -72,6 +72,10 @@ type AwsInstancePoolFleetAttributes struct {
 	FleetLaunchTemplateOverride []AwsFleetLaunchTemplateOverride `json:"launch_template_overrides" tf:"suppress_diff,force_new,slice_set,alias:launch_template_override"`
 }
 
+type NodeTypeFlexibility struct {
+	AlternateNodeTypeIds []string `json:"alternate_node_type_ids" tf:"force_new"`
+}
+
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
 	InstancePoolID                     string                          `json:"instance_pool_id,omitempty" tf:"computed"`
@@ -89,6 +93,7 @@ type InstancePool struct {
 	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
 	PreloadedDockerImages              []clusters.DockerImage          `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
+	NodeTypeFlexibility                *NodeTypeFlexibility            `json:"node_type_flexibility,omitempty" tf:"force_new"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -119,6 +124,7 @@ type InstancePoolAndStats struct {
 	State                              string                           `json:"state,omitempty"`
 	Stats                              *InstancePoolStats               `json:"stats,omitempty"`
 	PreloadedDockerImages              []clusters.DockerImage           `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
+	NodeTypeFlexibility                *NodeTypeFlexibility             `json:"node_type_flexibility,omitempty"`
 }
 
 // InstancePoolList shows list of instance pools

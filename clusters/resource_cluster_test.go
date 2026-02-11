@@ -1715,11 +1715,11 @@ func TestResourceClusterCreate_ApplyPolicyDefaultValues_NoNumWorkers(t *testing.
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
-					ClusterName:             "Policy defaults cluster",
-					SparkVersion:            "7.3.x-scala12",
-					NodeTypeId:              "Standard_F4s",
-					AutoterminationMinutes:  120,
-					PolicyId:                "abc123",
+					ClusterName:              "Policy defaults cluster",
+					SparkVersion:             "7.3.x-scala12",
+					NodeTypeId:               "Standard_F4s",
+					AutoterminationMinutes:   120,
+					PolicyId:                 "abc123",
 					ApplyPolicyDefaultValues: true,
 				},
 				Response: compute.ClusterDetails{
@@ -1751,13 +1751,13 @@ func TestResourceClusterCreate_ApplyPolicyDefaultValues_NoNumWorkers(t *testing.
 		Create:   true,
 		Resource: ResourceCluster(),
 		State: map[string]any{
-			"autotermination_minutes":      120,
-			"cluster_name":                 "Policy defaults cluster",
-			"spark_version":                "7.3.x-scala12",
-			"node_type_id":                 "Standard_F4s",
-			"is_pinned":                    false,
-			"policy_id":                    "abc123",
-			"apply_policy_default_values":  true,
+			"autotermination_minutes":     120,
+			"cluster_name":                "Policy defaults cluster",
+			"spark_version":               "7.3.x-scala12",
+			"node_type_id":                "Standard_F4s",
+			"is_pinned":                   false,
+			"policy_id":                   "abc123",
+			"apply_policy_default_values": true,
 		},
 	}.Apply(t)
 	assert.NoError(t, err)

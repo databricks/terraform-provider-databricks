@@ -14,6 +14,7 @@ func sqlVisualizationProviderConfigTemplate(providerConfig string) string {
 		query_id = "fake-query-id"
 		type = "table"
 		name = "test-viz"
+		options = "{}"
 		%s
 	}
 	`, providerConfig)

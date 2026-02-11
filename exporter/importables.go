@@ -560,7 +560,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			fileName, err := ic.saveFileIn("global_init_scripts", fmt.Sprintf("%s.sh", ic.ResourceName(r)), content)
+			fileName, err := ic.saveContentIn("global_init_scripts", fmt.Sprintf("%s.sh", ic.ResourceName(r)), content)
 			if err != nil {
 				return err
 			}

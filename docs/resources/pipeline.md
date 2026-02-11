@@ -114,6 +114,25 @@ The following arguments are supported:
   * `catalog` - (Optional, default to `catalog` defined on pipeline level) The UC catalog the event log is published under.
   * `schema` - (Optional, default to `schema` defined on pipeline level) The UC schema the event log is published under.
 * `tags` - (Optional, map of strings) A map of tags associated with the pipeline. These are forwarded to the cluster as cluster tags, and are therefore subject to the same limitations. A maximum of 25 tags can be added to the pipeline.
+* `run_as` - (Optional) The user or the service principal the pipeline runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
+
+### run_as Configuration Block
+
+The `run_as` block allows specifying the user or the service principal that the pipeline runs as. If not specified, the pipeline runs as the user or service principal that created the pipeline. Only one of `user_name` or `service_principal_name` can be specified.
+
+* `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
+* `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
+
+Example:
+
+```hcl
+resource "databricks_pipeline" "this" {
+  # ...
+  run_as {
+    service_principal_name = "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
+  }
+}
+```
 
 ### library block
 

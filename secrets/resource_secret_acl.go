@@ -85,6 +85,18 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Skip deleting the ACL if the current user is the principal with MANAGE permission.
+			// This prevents users from accidentally locking themselves out of managing the secret scope.
+			permission := d.Get("permission").(string)
+			if permission == string(workspace.AclPermissionManage) {
+				me, err := w.CurrentUser.Me(ctx)
+				if err != nil {
+					return err
+				}
+				if principal == me.UserName {
+					return nil
+				}
+			}
 			err = w.Secrets.DeleteAcl(ctx, workspace.DeleteAcl{
 				Scope:     scope,
 				Principal: principal,

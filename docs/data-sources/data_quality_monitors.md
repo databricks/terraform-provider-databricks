@@ -28,6 +28,10 @@ data "databricks_data_quality_monitors" "all" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -47,6 +51,7 @@ This data source exports a single attribute, `monitors`. It is a list of resourc
 * `object_type` (string) - The type of the monitored object. Can be one of the following: `schema` or `table`
 
 ### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string) - List of fully qualified table names to exclude from anomaly detection
 
 ### CronSchedule
 * `pause_status` (string) - Read only field that indicates whether the schedule is paused or not. Possible values are: `CRON_SCHEDULE_PAUSE_STATUS_PAUSED`, `CRON_SCHEDULE_PAUSE_STATUS_UNPAUSED`

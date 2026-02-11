@@ -23,6 +23,855 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Policy for auto full refresh.
+type AutoFullRefreshPolicy struct {
+	// (Required, Mutable) Whether to enable auto full refresh or not.
+	Enabled types.Bool `tfsdk:"enabled"`
+	// (Optional, Mutable) Specify the minimum interval in hours between the
+	// timestamp at which a table was last full refreshed and the current
+	// timestamp for triggering auto full If unspecified and autoFullRefresh is
+	// enabled then by default min_interval_hours is 24 hours.
+	MinIntervalHours types.Int64 `tfsdk:"min_interval_hours"`
+}
+
+func (to *AutoFullRefreshPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AutoFullRefreshPolicy) {
+}
+
+func (to *AutoFullRefreshPolicy) SyncFieldsDuringRead(ctx context.Context, from AutoFullRefreshPolicy) {
+}
+
+func (m AutoFullRefreshPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetRequired()
+	attrs["min_interval_hours"] = attrs["min_interval_hours"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoFullRefreshPolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AutoFullRefreshPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AutoFullRefreshPolicy
+// only implements ToObjectValue() and Type().
+func (m AutoFullRefreshPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enabled":            m.Enabled,
+			"min_interval_hours": m.MinIntervalHours,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AutoFullRefreshPolicy) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enabled":            types.BoolType,
+			"min_interval_hours": types.Int64Type,
+		},
+	}
+}
+
+type ClonePipelineRequest struct {
+	// If false, deployment will fail if name conflicts with that of another
+	// pipeline.
+	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// A catalog in Unity Catalog to publish data from this pipeline to. If
+	// `target` is specified, tables in this pipeline are published to a
+	// `target` schema inside `catalog` (for example,
+	// `catalog`.`target`.`table`). If `target` is not specified, no data is
+	// published to Unity Catalog.
+	Catalog types.String `tfsdk:"catalog"`
+	// DLT Release Channel that specifies which version to use.
+	Channel types.String `tfsdk:"channel"`
+	// The type of clone to perform. Currently, only deep copies are supported
+	CloneMode types.String `tfsdk:"clone_mode"`
+	// Cluster settings for this pipeline deployment.
+	Clusters types.List `tfsdk:"clusters"`
+	// String-String configuration for this pipeline execution.
+	Configuration types.Map `tfsdk:"configuration"`
+	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
+	Continuous types.Bool `tfsdk:"continuous"`
+	// Deployment type of this pipeline.
+	Deployment types.Object `tfsdk:"deployment"`
+	// Whether the pipeline is in Development mode. Defaults to false.
+	Development types.Bool `tfsdk:"development"`
+	// Pipeline product edition.
+	Edition types.String `tfsdk:"edition"`
+	// Environment specification for this pipeline used to install dependencies.
+	Environment types.Object `tfsdk:"environment"`
+	// Event log configuration for this pipeline
+	EventLog types.Object `tfsdk:"event_log"`
+	// If present, the last-modified time of the pipeline settings before the
+	// clone. If the settings were modified after that time, then the request
+	// will fail with a conflict.
+	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified"`
+	// Filters on which Pipeline packages to include in the deployed graph.
+	Filters types.Object `tfsdk:"filters"`
+	// The definition of a gateway pipeline to support change data capture.
+	GatewayDefinition types.Object `tfsdk:"gateway_definition"`
+	// Unique identifier for this pipeline.
+	Id types.String `tfsdk:"id"`
+	// The configuration for a managed ingestion pipeline. These settings cannot
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
+	IngestionDefinition types.Object `tfsdk:"ingestion_definition"`
+	// Libraries or code needed by this deployment.
+	Libraries types.List `tfsdk:"libraries"`
+	// Friendly identifier for this pipeline.
+	Name types.String `tfsdk:"name"`
+	// List of notification settings for this pipeline.
+	Notifications types.List `tfsdk:"notifications"`
+	// Whether Photon is enabled for this pipeline.
+	Photon types.Bool `tfsdk:"photon"`
+	// Source pipeline to clone from
+	PipelineId types.String `tfsdk:"-"`
+	// Restart window of this pipeline.
+	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
+	// The default schema (database) where tables are read from or published to.
+	Schema types.String `tfsdk:"schema"`
+	// Whether serverless compute is enabled for this pipeline.
+	Serverless types.Bool `tfsdk:"serverless"`
+	// DBFS root directory for storing checkpoints and tables.
+	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
+	Target types.String `tfsdk:"target"`
+	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
+	Trigger types.Object `tfsdk:"trigger"`
+	// Usage policy of this pipeline.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+}
+
+func (to *ClonePipelineRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClonePipelineRequest) {
+	if !from.Clusters.IsNull() && !from.Clusters.IsUnknown() && to.Clusters.IsNull() && len(from.Clusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Clusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Clusters = from.Clusters
+	}
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				// Recursively sync the fields of Deployment
+				toDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+	if !from.Environment.IsNull() && !from.Environment.IsUnknown() {
+		if toEnvironment, ok := to.GetEnvironment(ctx); ok {
+			if fromEnvironment, ok := from.GetEnvironment(ctx); ok {
+				// Recursively sync the fields of Environment
+				toEnvironment.SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironment)
+				to.SetEnvironment(ctx, toEnvironment)
+			}
+		}
+	}
+	if !from.EventLog.IsNull() && !from.EventLog.IsUnknown() {
+		if toEventLog, ok := to.GetEventLog(ctx); ok {
+			if fromEventLog, ok := from.GetEventLog(ctx); ok {
+				// Recursively sync the fields of EventLog
+				toEventLog.SyncFieldsDuringCreateOrUpdate(ctx, fromEventLog)
+				to.SetEventLog(ctx, toEventLog)
+			}
+		}
+	}
+	if !from.Filters.IsNull() && !from.Filters.IsUnknown() {
+		if toFilters, ok := to.GetFilters(ctx); ok {
+			if fromFilters, ok := from.GetFilters(ctx); ok {
+				// Recursively sync the fields of Filters
+				toFilters.SyncFieldsDuringCreateOrUpdate(ctx, fromFilters)
+				to.SetFilters(ctx, toFilters)
+			}
+		}
+	}
+	if !from.GatewayDefinition.IsNull() && !from.GatewayDefinition.IsUnknown() {
+		if toGatewayDefinition, ok := to.GetGatewayDefinition(ctx); ok {
+			if fromGatewayDefinition, ok := from.GetGatewayDefinition(ctx); ok {
+				// Recursively sync the fields of GatewayDefinition
+				toGatewayDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromGatewayDefinition)
+				to.SetGatewayDefinition(ctx, toGatewayDefinition)
+			}
+		}
+	}
+	if !from.IngestionDefinition.IsNull() && !from.IngestionDefinition.IsUnknown() {
+		if toIngestionDefinition, ok := to.GetIngestionDefinition(ctx); ok {
+			if fromIngestionDefinition, ok := from.GetIngestionDefinition(ctx); ok {
+				// Recursively sync the fields of IngestionDefinition
+				toIngestionDefinition.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionDefinition)
+				to.SetIngestionDefinition(ctx, toIngestionDefinition)
+			}
+		}
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() && to.Notifications.IsNull() && len(from.Notifications.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Notifications, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Notifications = from.Notifications
+	}
+	if !from.RestartWindow.IsNull() && !from.RestartWindow.IsUnknown() {
+		if toRestartWindow, ok := to.GetRestartWindow(ctx); ok {
+			if fromRestartWindow, ok := from.GetRestartWindow(ctx); ok {
+				// Recursively sync the fields of RestartWindow
+				toRestartWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromRestartWindow)
+				to.SetRestartWindow(ctx, toRestartWindow)
+			}
+		}
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				// Recursively sync the fields of Trigger
+				toTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
+			}
+		}
+	}
+}
+
+func (to *ClonePipelineRequest) SyncFieldsDuringRead(ctx context.Context, from ClonePipelineRequest) {
+	if !from.Clusters.IsNull() && !from.Clusters.IsUnknown() && to.Clusters.IsNull() && len(from.Clusters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Clusters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Clusters = from.Clusters
+	}
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				toDeployment.SyncFieldsDuringRead(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+	if !from.Environment.IsNull() && !from.Environment.IsUnknown() {
+		if toEnvironment, ok := to.GetEnvironment(ctx); ok {
+			if fromEnvironment, ok := from.GetEnvironment(ctx); ok {
+				toEnvironment.SyncFieldsDuringRead(ctx, fromEnvironment)
+				to.SetEnvironment(ctx, toEnvironment)
+			}
+		}
+	}
+	if !from.EventLog.IsNull() && !from.EventLog.IsUnknown() {
+		if toEventLog, ok := to.GetEventLog(ctx); ok {
+			if fromEventLog, ok := from.GetEventLog(ctx); ok {
+				toEventLog.SyncFieldsDuringRead(ctx, fromEventLog)
+				to.SetEventLog(ctx, toEventLog)
+			}
+		}
+	}
+	if !from.Filters.IsNull() && !from.Filters.IsUnknown() {
+		if toFilters, ok := to.GetFilters(ctx); ok {
+			if fromFilters, ok := from.GetFilters(ctx); ok {
+				toFilters.SyncFieldsDuringRead(ctx, fromFilters)
+				to.SetFilters(ctx, toFilters)
+			}
+		}
+	}
+	if !from.GatewayDefinition.IsNull() && !from.GatewayDefinition.IsUnknown() {
+		if toGatewayDefinition, ok := to.GetGatewayDefinition(ctx); ok {
+			if fromGatewayDefinition, ok := from.GetGatewayDefinition(ctx); ok {
+				toGatewayDefinition.SyncFieldsDuringRead(ctx, fromGatewayDefinition)
+				to.SetGatewayDefinition(ctx, toGatewayDefinition)
+			}
+		}
+	}
+	if !from.IngestionDefinition.IsNull() && !from.IngestionDefinition.IsUnknown() {
+		if toIngestionDefinition, ok := to.GetIngestionDefinition(ctx); ok {
+			if fromIngestionDefinition, ok := from.GetIngestionDefinition(ctx); ok {
+				toIngestionDefinition.SyncFieldsDuringRead(ctx, fromIngestionDefinition)
+				to.SetIngestionDefinition(ctx, toIngestionDefinition)
+			}
+		}
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() && to.Libraries.IsNull() && len(from.Libraries.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Libraries = from.Libraries
+	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() && to.Notifications.IsNull() && len(from.Notifications.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Notifications, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Notifications = from.Notifications
+	}
+	if !from.RestartWindow.IsNull() && !from.RestartWindow.IsUnknown() {
+		if toRestartWindow, ok := to.GetRestartWindow(ctx); ok {
+			if fromRestartWindow, ok := from.GetRestartWindow(ctx); ok {
+				toRestartWindow.SyncFieldsDuringRead(ctx, fromRestartWindow)
+				to.SetRestartWindow(ctx, toRestartWindow)
+			}
+		}
+	}
+	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
+		if toTrigger, ok := to.GetTrigger(ctx); ok {
+			if fromTrigger, ok := from.GetTrigger(ctx); ok {
+				toTrigger.SyncFieldsDuringRead(ctx, fromTrigger)
+				to.SetTrigger(ctx, toTrigger)
+			}
+		}
+	}
+}
+
+func (m ClonePipelineRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clone_mode"] = attrs["clone_mode"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ClonePipelineRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ClonePipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"clusters":             reflect.TypeOf(PipelineCluster{}),
+		"configuration":        reflect.TypeOf(types.String{}),
+		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"environment":          reflect.TypeOf(PipelinesEnvironment{}),
+		"event_log":            reflect.TypeOf(EventLogSpec{}),
+		"filters":              reflect.TypeOf(Filters{}),
+		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
+		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition{}),
+		"libraries":            reflect.TypeOf(PipelineLibrary{}),
+		"notifications":        reflect.TypeOf(Notifications{}),
+		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"tags":                 reflect.TypeOf(types.String{}),
+		"trigger":              reflect.TypeOf(PipelineTrigger{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ClonePipelineRequest
+// only implements ToObjectValue() and Type().
+func (m ClonePipelineRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_duplicate_names":  m.AllowDuplicateNames,
+			"budget_policy_id":       m.BudgetPolicyId,
+			"catalog":                m.Catalog,
+			"channel":                m.Channel,
+			"clone_mode":             m.CloneMode,
+			"clusters":               m.Clusters,
+			"configuration":          m.Configuration,
+			"continuous":             m.Continuous,
+			"deployment":             m.Deployment,
+			"development":            m.Development,
+			"edition":                m.Edition,
+			"environment":            m.Environment,
+			"event_log":              m.EventLog,
+			"expected_last_modified": m.ExpectedLastModified,
+			"filters":                m.Filters,
+			"gateway_definition":     m.GatewayDefinition,
+			"id":                     m.Id,
+			"ingestion_definition":   m.IngestionDefinition,
+			"libraries":              m.Libraries,
+			"name":                   m.Name,
+			"notifications":          m.Notifications,
+			"photon":                 m.Photon,
+			"pipeline_id":            m.PipelineId,
+			"restart_window":         m.RestartWindow,
+			"root_path":              m.RootPath,
+			"schema":                 m.Schema,
+			"serverless":             m.Serverless,
+			"storage":                m.Storage,
+			"tags":                   m.Tags,
+			"target":                 m.Target,
+			"trigger":                m.Trigger,
+			"usage_policy_id":        m.UsagePolicyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ClonePipelineRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_duplicate_names": types.BoolType,
+			"budget_policy_id":      types.StringType,
+			"catalog":               types.StringType,
+			"channel":               types.StringType,
+			"clone_mode":            types.StringType,
+			"clusters": basetypes.ListType{
+				ElemType: PipelineCluster{}.Type(ctx),
+			},
+			"configuration": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"continuous":             types.BoolType,
+			"deployment":             PipelineDeployment{}.Type(ctx),
+			"development":            types.BoolType,
+			"edition":                types.StringType,
+			"environment":            PipelinesEnvironment{}.Type(ctx),
+			"event_log":              EventLogSpec{}.Type(ctx),
+			"expected_last_modified": types.Int64Type,
+			"filters":                Filters{}.Type(ctx),
+			"gateway_definition":     IngestionGatewayPipelineDefinition{}.Type(ctx),
+			"id":                     types.StringType,
+			"ingestion_definition":   IngestionPipelineDefinition{}.Type(ctx),
+			"libraries": basetypes.ListType{
+				ElemType: PipelineLibrary{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"notifications": basetypes.ListType{
+				ElemType: Notifications{}.Type(ctx),
+			},
+			"photon":         types.BoolType,
+			"pipeline_id":    types.StringType,
+			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
+			"schema":         types.StringType,
+			"serverless":     types.BoolType,
+			"storage":        types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target":          types.StringType,
+			"trigger":         PipelineTrigger{}.Type(ctx),
+			"usage_policy_id": types.StringType,
+		},
+	}
+}
+
+// GetClusters returns the value of the Clusters field in ClonePipelineRequest as
+// a slice of PipelineCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetClusters(ctx context.Context) ([]PipelineCluster, bool) {
+	if m.Clusters.IsNull() || m.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineCluster
+	d := m.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetClusters(ctx context.Context, v []PipelineCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Clusters = types.ListValueMust(t, vs)
+}
+
+// GetConfiguration returns the value of the Configuration field in ClonePipelineRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetConfiguration(ctx context.Context) (map[string]types.String, bool) {
+	if m.Configuration.IsNull() || m.Configuration.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Configuration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfiguration sets the value of the Configuration field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetConfiguration(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Configuration = types.MapValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in ClonePipelineRequest as
+// a PipelineDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetDeployment(ctx context.Context) (PipelineDeployment, bool) {
+	var e PipelineDeployment
+	if m.Deployment.IsNull() || m.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v PipelineDeployment
+	d := m.Deployment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeployment sets the value of the Deployment field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetDeployment(ctx context.Context, v PipelineDeployment) {
+	vs := v.ToObjectValue(ctx)
+	m.Deployment = vs
+}
+
+// GetEnvironment returns the value of the Environment field in ClonePipelineRequest as
+// a PipelinesEnvironment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetEnvironment(ctx context.Context) (PipelinesEnvironment, bool) {
+	var e PipelinesEnvironment
+	if m.Environment.IsNull() || m.Environment.IsUnknown() {
+		return e, false
+	}
+	var v PipelinesEnvironment
+	d := m.Environment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironment sets the value of the Environment field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetEnvironment(ctx context.Context, v PipelinesEnvironment) {
+	vs := v.ToObjectValue(ctx)
+	m.Environment = vs
+}
+
+// GetEventLog returns the value of the EventLog field in ClonePipelineRequest as
+// a EventLogSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetEventLog(ctx context.Context) (EventLogSpec, bool) {
+	var e EventLogSpec
+	if m.EventLog.IsNull() || m.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v EventLogSpec
+	d := m.EventLog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEventLog sets the value of the EventLog field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetEventLog(ctx context.Context, v EventLogSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.EventLog = vs
+}
+
+// GetFilters returns the value of the Filters field in ClonePipelineRequest as
+// a Filters value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetFilters(ctx context.Context) (Filters, bool) {
+	var e Filters
+	if m.Filters.IsNull() || m.Filters.IsUnknown() {
+		return e, false
+	}
+	var v Filters
+	d := m.Filters.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFilters sets the value of the Filters field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetFilters(ctx context.Context, v Filters) {
+	vs := v.ToObjectValue(ctx)
+	m.Filters = vs
+}
+
+// GetGatewayDefinition returns the value of the GatewayDefinition field in ClonePipelineRequest as
+// a IngestionGatewayPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetGatewayDefinition(ctx context.Context) (IngestionGatewayPipelineDefinition, bool) {
+	var e IngestionGatewayPipelineDefinition
+	if m.GatewayDefinition.IsNull() || m.GatewayDefinition.IsUnknown() {
+		return e, false
+	}
+	var v IngestionGatewayPipelineDefinition
+	d := m.GatewayDefinition.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGatewayDefinition sets the value of the GatewayDefinition field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetGatewayDefinition(ctx context.Context, v IngestionGatewayPipelineDefinition) {
+	vs := v.ToObjectValue(ctx)
+	m.GatewayDefinition = vs
+}
+
+// GetIngestionDefinition returns the value of the IngestionDefinition field in ClonePipelineRequest as
+// a IngestionPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetIngestionDefinition(ctx context.Context) (IngestionPipelineDefinition, bool) {
+	var e IngestionPipelineDefinition
+	if m.IngestionDefinition.IsNull() || m.IngestionDefinition.IsUnknown() {
+		return e, false
+	}
+	var v IngestionPipelineDefinition
+	d := m.IngestionDefinition.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIngestionDefinition sets the value of the IngestionDefinition field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetIngestionDefinition(ctx context.Context, v IngestionPipelineDefinition) {
+	vs := v.ToObjectValue(ctx)
+	m.IngestionDefinition = vs
+}
+
+// GetLibraries returns the value of the Libraries field in ClonePipelineRequest as
+// a slice of PipelineLibrary values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetLibraries(ctx context.Context) ([]PipelineLibrary, bool) {
+	if m.Libraries.IsNull() || m.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineLibrary
+	d := m.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetLibraries(ctx context.Context, v []PipelineLibrary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in ClonePipelineRequest as
+// a slice of Notifications values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetNotifications(ctx context.Context) ([]Notifications, bool) {
+	if m.Notifications.IsNull() || m.Notifications.IsUnknown() {
+		return nil, false
+	}
+	var v []Notifications
+	d := m.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotifications sets the value of the Notifications field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetNotifications(ctx context.Context, v []Notifications) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetRestartWindow returns the value of the RestartWindow field in ClonePipelineRequest as
+// a RestartWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetRestartWindow(ctx context.Context) (RestartWindow, bool) {
+	var e RestartWindow
+	if m.RestartWindow.IsNull() || m.RestartWindow.IsUnknown() {
+		return e, false
+	}
+	var v RestartWindow
+	d := m.RestartWindow.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRestartWindow sets the value of the RestartWindow field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetRestartWindow(ctx context.Context, v RestartWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.RestartWindow = vs
+}
+
+// GetTags returns the value of the Tags field in ClonePipelineRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in ClonePipelineRequest as
+// a PipelineTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClonePipelineRequest) GetTrigger(ctx context.Context) (PipelineTrigger, bool) {
+	var e PipelineTrigger
+	if m.Trigger.IsNull() || m.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v PipelineTrigger
+	d := m.Trigger.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTrigger sets the value of the Trigger field in ClonePipelineRequest.
+func (m *ClonePipelineRequest) SetTrigger(ctx context.Context, v PipelineTrigger) {
+	vs := v.ToObjectValue(ctx)
+	m.Trigger = vs
+}
+
+type ClonePipelineResponse struct {
+	// The pipeline id of the cloned pipeline
+	PipelineId types.String `tfsdk:"pipeline_id"`
+}
+
+func (to *ClonePipelineResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClonePipelineResponse) {
+}
+
+func (to *ClonePipelineResponse) SyncFieldsDuringRead(ctx context.Context, from ClonePipelineResponse) {
+}
+
+func (m ClonePipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ClonePipelineResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ClonePipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ClonePipelineResponse
+// only implements ToObjectValue() and Type().
+func (m ClonePipelineResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"pipeline_id": m.PipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ClonePipelineResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"pipeline_id": types.StringType,
+		},
+	}
+}
+
 type ConnectionParameters struct {
 	// Source catalog for initial connection. This is necessary for schema
 	// exploration in some database systems like Oracle, and optional but
@@ -1058,6 +1907,10 @@ func (m DataPlaneId) Type(ctx context.Context) attr.Type {
 }
 
 type DeletePipelineRequest struct {
+	// If true, deletion will proceed even if resource cleanup fails. By
+	// default, deletion will fail if resources cleanup is required but fails.
+	Force types.Bool `tfsdk:"-"`
+
 	PipelineId types.String `tfsdk:"-"`
 }
 
@@ -1069,6 +1922,7 @@ func (to *DeletePipelineRequest) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m DeletePipelineRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["force"] = attrs["force"].SetOptional()
 
 	return attrs
 }
@@ -1091,6 +1945,7 @@ func (m DeletePipelineRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"force":       m.Force,
 			"pipeline_id": m.PipelineId,
 		})
 }
@@ -1099,6 +1954,7 @@ func (m DeletePipelineRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m DeletePipelineRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"force":       types.BoolType,
 			"pipeline_id": types.StringType,
 		},
 	}
@@ -3245,19 +4101,31 @@ func (m *IngestionGatewayPipelineDefinition) SetConnectionParameters(ctx context
 }
 
 type IngestionPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
-	// to communicate with the source. This is used with connectors for
-	// applications like Salesforce, Workday, and so on.
+	// The Unity Catalog connection that this ingestion pipeline uses to
+	// communicate with the source. This is used with both connectors for
+	// applications like Salesforce, Workday, and so on, and also database
+	// connectors like Oracle, (connector_type = QUERY_BASED OR connector_type =
+	// CDC). If connection name corresponds to database connectors like Oracle,
+	// and connector_type is not provided then connector_type defaults to
+	// QUERY_BASED. If connector_type is passed as CDC we use Combined Cdc
+	// Managed Ingestion pipeline. Under certain conditions, this can be
+	// replaced with ingestion_gateway_id to change the connector to Cdc Managed
+	// Ingestion Pipeline with Gateway pipeline.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// (Optional) A window that specifies a set of time ranges for snapshot
+	// queries in CDC.
+	FullRefreshWindow types.Object `tfsdk:"full_refresh_window"`
 	// Immutable. If set to true, the pipeline will ingest tables from the UC
 	// foreign catalogs directly without the need to specify a UC connection or
 	// ingestion gateway. The `source_catalog` fields in objects of
 	// IngestionConfig are interpreted as the UC foreign catalogs to ingest
 	// from.
 	IngestFromUcForeignCatalog types.Bool `tfsdk:"ingest_from_uc_foreign_catalog"`
-	// Immutable. Identifier for the gateway that is used by this ingestion
-	// pipeline to communicate with the source database. This is used with
-	// connectors to databases like SQL Server.
+	// Identifier for the gateway that is used by this ingestion pipeline to
+	// communicate with the source database. This is used with CDC connectors to
+	// databases like SQL Server using a gateway pipeline (connector_type =
+	// CDC). Under certain conditions, this can be replaced with connection_name
+	// to change the connector to Combined Cdc Managed Ingestion Pipeline.
 	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id"`
 	// Netsuite only configuration. When the field is set for a netsuite
 	// connector, the jar stored in the field will be validated and added to the
@@ -3278,6 +4146,15 @@ type IngestionPipelineDefinition struct {
 }
 
 func (to *IngestionPipelineDefinition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionPipelineDefinition) {
+	if !from.FullRefreshWindow.IsNull() && !from.FullRefreshWindow.IsUnknown() {
+		if toFullRefreshWindow, ok := to.GetFullRefreshWindow(ctx); ok {
+			if fromFullRefreshWindow, ok := from.GetFullRefreshWindow(ctx); ok {
+				// Recursively sync the fields of FullRefreshWindow
+				toFullRefreshWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromFullRefreshWindow)
+				to.SetFullRefreshWindow(ctx, toFullRefreshWindow)
+			}
+		}
+	}
 	if !from.Objects.IsNull() && !from.Objects.IsUnknown() && to.Objects.IsNull() && len(from.Objects.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Objects, and the deserialized field value is Null,
@@ -3302,6 +4179,14 @@ func (to *IngestionPipelineDefinition) SyncFieldsDuringCreateOrUpdate(ctx contex
 }
 
 func (to *IngestionPipelineDefinition) SyncFieldsDuringRead(ctx context.Context, from IngestionPipelineDefinition) {
+	if !from.FullRefreshWindow.IsNull() && !from.FullRefreshWindow.IsUnknown() {
+		if toFullRefreshWindow, ok := to.GetFullRefreshWindow(ctx); ok {
+			if fromFullRefreshWindow, ok := from.GetFullRefreshWindow(ctx); ok {
+				toFullRefreshWindow.SyncFieldsDuringRead(ctx, fromFullRefreshWindow)
+				to.SetFullRefreshWindow(ctx, toFullRefreshWindow)
+			}
+		}
+	}
 	if !from.Objects.IsNull() && !from.Objects.IsUnknown() && to.Objects.IsNull() && len(from.Objects.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Objects, and the deserialized field value is Null,
@@ -3326,6 +4211,7 @@ func (to *IngestionPipelineDefinition) SyncFieldsDuringRead(ctx context.Context,
 
 func (m IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["full_refresh_window"] = attrs["full_refresh_window"].SetOptional()
 	attrs["ingest_from_uc_foreign_catalog"] = attrs["ingest_from_uc_foreign_catalog"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["netsuite_jar_path"] = attrs["netsuite_jar_path"].SetOptional()
@@ -3346,6 +4232,7 @@ func (m IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]
 // SDK values.
 func (m IngestionPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"full_refresh_window":   reflect.TypeOf(OperationTimeWindow{}),
 		"objects":               reflect.TypeOf(IngestionConfig{}),
 		"source_configurations": reflect.TypeOf(SourceConfig{}),
 		"table_configuration":   reflect.TypeOf(TableSpecificConfig{}),
@@ -3360,6 +4247,7 @@ func (m IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"connection_name":                m.ConnectionName,
+			"full_refresh_window":            m.FullRefreshWindow,
 			"ingest_from_uc_foreign_catalog": m.IngestFromUcForeignCatalog,
 			"ingestion_gateway_id":           m.IngestionGatewayId,
 			"netsuite_jar_path":              m.NetsuiteJarPath,
@@ -3375,6 +4263,7 @@ func (m IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_name":                types.StringType,
+			"full_refresh_window":            OperationTimeWindow{}.Type(ctx),
 			"ingest_from_uc_foreign_catalog": types.BoolType,
 			"ingestion_gateway_id":           types.StringType,
 			"netsuite_jar_path":              types.StringType,
@@ -3388,6 +4277,31 @@ func (m IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 			"table_configuration": TableSpecificConfig{}.Type(ctx),
 		},
 	}
+}
+
+// GetFullRefreshWindow returns the value of the FullRefreshWindow field in IngestionPipelineDefinition as
+// a OperationTimeWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionPipelineDefinition) GetFullRefreshWindow(ctx context.Context) (OperationTimeWindow, bool) {
+	var e OperationTimeWindow
+	if m.FullRefreshWindow.IsNull() || m.FullRefreshWindow.IsUnknown() {
+		return e, false
+	}
+	var v OperationTimeWindow
+	d := m.FullRefreshWindow.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshWindow sets the value of the FullRefreshWindow field in IngestionPipelineDefinition.
+func (m *IngestionPipelineDefinition) SetFullRefreshWindow(ctx context.Context, v OperationTimeWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.FullRefreshWindow = vs
 }
 
 // GetObjects returns the value of the Objects field in IngestionPipelineDefinition as
@@ -4611,6 +5525,111 @@ func (m *Notifications) SetEmailRecipients(ctx context.Context, v []types.String
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_recipients"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.EmailRecipients = types.ListValueMust(t, vs)
+}
+
+// Proto representing a window
+type OperationTimeWindow struct {
+	// Days of week in which the window is allowed to happen If not specified
+	// all days of the week will be used.
+	DaysOfWeek types.List `tfsdk:"days_of_week"`
+	// An integer between 0 and 23 denoting the start hour for the window in the
+	// 24-hour day.
+	StartHour types.Int64 `tfsdk:"start_hour"`
+	// Time zone id of window. See
+	// https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html
+	// for details. If not specified, UTC will be used.
+	TimeZoneId types.String `tfsdk:"time_zone_id"`
+}
+
+func (to *OperationTimeWindow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OperationTimeWindow) {
+	if !from.DaysOfWeek.IsNull() && !from.DaysOfWeek.IsUnknown() && to.DaysOfWeek.IsNull() && len(from.DaysOfWeek.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DaysOfWeek, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DaysOfWeek = from.DaysOfWeek
+	}
+}
+
+func (to *OperationTimeWindow) SyncFieldsDuringRead(ctx context.Context, from OperationTimeWindow) {
+	if !from.DaysOfWeek.IsNull() && !from.DaysOfWeek.IsUnknown() && to.DaysOfWeek.IsNull() && len(from.DaysOfWeek.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DaysOfWeek, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DaysOfWeek = from.DaysOfWeek
+	}
+}
+
+func (m OperationTimeWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["days_of_week"] = attrs["days_of_week"].SetOptional()
+	attrs["start_hour"] = attrs["start_hour"].SetRequired()
+	attrs["time_zone_id"] = attrs["time_zone_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OperationTimeWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m OperationTimeWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"days_of_week": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OperationTimeWindow
+// only implements ToObjectValue() and Type().
+func (m OperationTimeWindow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"days_of_week": m.DaysOfWeek,
+			"start_hour":   m.StartHour,
+			"time_zone_id": m.TimeZoneId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m OperationTimeWindow) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"days_of_week": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"start_hour":   types.Int64Type,
+			"time_zone_id": types.StringType,
+		},
+	}
+}
+
+// GetDaysOfWeek returns the value of the DaysOfWeek field in OperationTimeWindow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OperationTimeWindow) GetDaysOfWeek(ctx context.Context) ([]types.String, bool) {
+	if m.DaysOfWeek.IsNull() || m.DaysOfWeek.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DaysOfWeek.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDaysOfWeek sets the value of the DaysOfWeek field in OperationTimeWindow.
+func (m *OperationTimeWindow) SetDaysOfWeek(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["days_of_week"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DaysOfWeek = types.ListValueMust(t, vs)
 }
 
 type Origin struct {
@@ -9243,6 +10262,13 @@ func (m *TableSpec) SetTableConfiguration(ctx context.Context, v TableSpecificCo
 }
 
 type TableSpecificConfig struct {
+	// (Optional, Mutable) Policy for auto full refresh, if enabled pipeline
+	// will automatically try to fix issues by doing a full refresh on the table
+	// in the retry run. auto_full_refresh_policy in table configuration will
+	// override the above level auto_full_refresh_policy. For example, {
+	// "auto_full_refresh_policy": { "enabled": true, "min_interval_hours": 23,
+	// } } If unspecified, auto full refresh is disabled.
+	AutoFullRefreshPolicy types.Object `tfsdk:"auto_full_refresh_policy"`
 	// A list of column names to be excluded for the ingestion. When not
 	// specified, include_columns fully controls what columns to be ingested.
 	// When specified, all other columns including future ones will be
@@ -9259,6 +10285,10 @@ type TableSpecificConfig struct {
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
 
 	QueryBasedConnectorConfig types.Object `tfsdk:"query_based_connector_config"`
+	// (Optional, Immutable) The row filter condition to be applied to the
+	// table. It must not contain the WHERE keyword, only the actual filter
+	// condition. It must be in DBSQL format.
+	RowFilter types.String `tfsdk:"row_filter"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -9273,6 +10303,15 @@ type TableSpecificConfig struct {
 }
 
 func (to *TableSpecificConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableSpecificConfig) {
+	if !from.AutoFullRefreshPolicy.IsNull() && !from.AutoFullRefreshPolicy.IsUnknown() {
+		if toAutoFullRefreshPolicy, ok := to.GetAutoFullRefreshPolicy(ctx); ok {
+			if fromAutoFullRefreshPolicy, ok := from.GetAutoFullRefreshPolicy(ctx); ok {
+				// Recursively sync the fields of AutoFullRefreshPolicy
+				toAutoFullRefreshPolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromAutoFullRefreshPolicy)
+				to.SetAutoFullRefreshPolicy(ctx, toAutoFullRefreshPolicy)
+			}
+		}
+	}
 	if !from.ExcludeColumns.IsNull() && !from.ExcludeColumns.IsUnknown() && to.ExcludeColumns.IsNull() && len(from.ExcludeColumns.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExcludeColumns, and the deserialized field value is Null,
@@ -9318,6 +10357,14 @@ func (to *TableSpecificConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 }
 
 func (to *TableSpecificConfig) SyncFieldsDuringRead(ctx context.Context, from TableSpecificConfig) {
+	if !from.AutoFullRefreshPolicy.IsNull() && !from.AutoFullRefreshPolicy.IsUnknown() {
+		if toAutoFullRefreshPolicy, ok := to.GetAutoFullRefreshPolicy(ctx); ok {
+			if fromAutoFullRefreshPolicy, ok := from.GetAutoFullRefreshPolicy(ctx); ok {
+				toAutoFullRefreshPolicy.SyncFieldsDuringRead(ctx, fromAutoFullRefreshPolicy)
+				to.SetAutoFullRefreshPolicy(ctx, toAutoFullRefreshPolicy)
+			}
+		}
+	}
 	if !from.ExcludeColumns.IsNull() && !from.ExcludeColumns.IsUnknown() && to.ExcludeColumns.IsNull() && len(from.ExcludeColumns.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExcludeColumns, and the deserialized field value is Null,
@@ -9361,10 +10408,12 @@ func (to *TableSpecificConfig) SyncFieldsDuringRead(ctx context.Context, from Ta
 }
 
 func (m TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_full_refresh_policy"] = attrs["auto_full_refresh_policy"].SetOptional()
 	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
 	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
 	attrs["query_based_connector_config"] = attrs["query_based_connector_config"].SetOptional()
+	attrs["row_filter"] = attrs["row_filter"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
@@ -9382,6 +10431,7 @@ func (m TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m TableSpecificConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"auto_full_refresh_policy":     reflect.TypeOf(AutoFullRefreshPolicy{}),
 		"exclude_columns":              reflect.TypeOf(types.String{}),
 		"include_columns":              reflect.TypeOf(types.String{}),
 		"primary_keys":                 reflect.TypeOf(types.String{}),
@@ -9398,10 +10448,12 @@ func (m TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"auto_full_refresh_policy":          m.AutoFullRefreshPolicy,
 			"exclude_columns":                   m.ExcludeColumns,
 			"include_columns":                   m.IncludeColumns,
 			"primary_keys":                      m.PrimaryKeys,
 			"query_based_connector_config":      m.QueryBasedConnectorConfig,
+			"row_filter":                        m.RowFilter,
 			"salesforce_include_formula_fields": m.SalesforceIncludeFormulaFields,
 			"scd_type":                          m.ScdType,
 			"sequence_by":                       m.SequenceBy,
@@ -9413,6 +10465,7 @@ func (m TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 func (m TableSpecificConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"auto_full_refresh_policy": AutoFullRefreshPolicy{}.Type(ctx),
 			"exclude_columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -9423,6 +10476,7 @@ func (m TableSpecificConfig) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"query_based_connector_config":      IngestionPipelineDefinitionTableSpecificConfigQueryBasedConnectorConfig{}.Type(ctx),
+			"row_filter":                        types.StringType,
 			"salesforce_include_formula_fields": types.BoolType,
 			"scd_type":                          types.StringType,
 			"sequence_by": basetypes.ListType{
@@ -9431,6 +10485,31 @@ func (m TableSpecificConfig) Type(ctx context.Context) attr.Type {
 			"workday_report_parameters": IngestionPipelineDefinitionWorkdayReportParameters{}.Type(ctx),
 		},
 	}
+}
+
+// GetAutoFullRefreshPolicy returns the value of the AutoFullRefreshPolicy field in TableSpecificConfig as
+// a AutoFullRefreshPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TableSpecificConfig) GetAutoFullRefreshPolicy(ctx context.Context) (AutoFullRefreshPolicy, bool) {
+	var e AutoFullRefreshPolicy
+	if m.AutoFullRefreshPolicy.IsNull() || m.AutoFullRefreshPolicy.IsUnknown() {
+		return e, false
+	}
+	var v AutoFullRefreshPolicy
+	d := m.AutoFullRefreshPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAutoFullRefreshPolicy sets the value of the AutoFullRefreshPolicy field in TableSpecificConfig.
+func (m *TableSpecificConfig) SetAutoFullRefreshPolicy(ctx context.Context, v AutoFullRefreshPolicy) {
+	vs := v.ToObjectValue(ctx)
+	m.AutoFullRefreshPolicy = vs
 }
 
 // GetExcludeColumns returns the value of the ExcludeColumns field in TableSpecificConfig as

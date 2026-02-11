@@ -196,6 +196,8 @@ type CreateRecipient struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Name of Recipient.
@@ -257,6 +259,7 @@ func (m CreateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -291,6 +294,7 @@ func (m CreateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"comment":                            m.Comment,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"name":                               m.Name,
 			"owner":                              m.Owner,
@@ -307,6 +311,7 @@ func (m CreateRecipient) Type(ctx context.Context) attr.Type {
 			"comment":                            types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list":                     IpAccessList{}.Type(ctx),
 			"name":                               types.StringType,
 			"owner":                              types.StringType,
@@ -4109,6 +4114,8 @@ type RecipientInfo struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Unique identifier of recipient's Unity Catalog Metastore. This field is
@@ -4199,6 +4206,7 @@ func (m RecipientInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -4244,6 +4252,7 @@ func (m RecipientInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"created_by":                         m.CreatedBy,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"metastore_id":                       m.MetastoreId,
 			"name":                               m.Name,
@@ -4270,6 +4279,7 @@ func (m RecipientInfo) Type(ctx context.Context) attr.Type {
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list":                     IpAccessList{}.Type(ctx),
 			"metastore_id":                       types.StringType,
 			"name":                               types.StringType,
@@ -5183,10 +5193,30 @@ type SharedDataObject struct {
 	Name types.String `tfsdk:"name"`
 	// Array of partitions for the shared data.
 	Partitions types.List `tfsdk:"partition"`
-	// A user-provided new name for the data object within the share. If this
-	// new name is not provided, the object's original name will be used as the
-	// `shared_as` name. The `shared_as` name must be unique within a share. For
-	// tables, the new name must follow the format of `<schema>.<table>`.
+	// A user-provided alias name for table-like data objects within the share.
+	//
+	// Use this field for table-like objects (for example: TABLE, VIEW,
+	// MATERIALIZED_VIEW, STREAMING_TABLE, FOREIGN_TABLE). For non-table objects
+	// (for example: VOLUME, MODEL, NOTEBOOK_FILE, FUNCTION), use
+	// `string_shared_as` instead.
+	//
+	// Important: For non-table objects, this field must be omitted entirely.
+	//
+	// Format: Must be a 2-part name `<schema_name>.<table_name>` (e.g.,
+	// "sales_schema.orders_table") - Both schema and table names must contain
+	// only alphanumeric characters and underscores - No periods, spaces,
+	// forward slashes, or control characters are allowed within each part - Do
+	// not include the catalog name (use 2 parts, not 3)
+	//
+	// Behavior: - If not provided, the service automatically generates the
+	// alias as `<schema>.<table>` from the object's original name - If you
+	// don't want to specify this field, omit it entirely from the request (do
+	// not pass an empty string) - The `shared_as` name must be unique within
+	// the share
+	//
+	// Examples: - Valid: "analytics_schema.customer_view" - Invalid:
+	// "catalog.analytics_schema.customer_view" (3 parts not allowed) - Invalid:
+	// "analytics-schema.customer-view" (hyphens not allowed)
 	SharedAs          types.String `tfsdk:"shared_as"`
 	EffectiveSharedAs types.String `tfsdk:"effective_shared_as"`
 	// The start version associated with the object. This allows data providers
@@ -5200,11 +5230,34 @@ type SharedDataObject struct {
 	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
 	Status types.String `tfsdk:"status"`
-	// A user-provided new name for the shared object within the share. If this
-	// new name is not not provided, the object's original name will be used as
-	// the `string_shared_as` name. The `string_shared_as` name must be unique
-	// for objects of the same type within a Share. For notebooks, the new name
-	// should be the new notebook file name.
+	// A user-provided alias name for non-table data objects within the share.
+	//
+	// Use this field for non-table objects (for example: VOLUME, MODEL,
+	// NOTEBOOK_FILE, FUNCTION). For table-like objects (for example: TABLE,
+	// VIEW, MATERIALIZED_VIEW, STREAMING_TABLE, FOREIGN_TABLE), use `shared_as`
+	// instead.
+	//
+	// Important: For table-like objects, this field must be omitted entirely.
+	//
+	// Format: - For VOLUME: Must be a 2-part name `<schema_name>.<volume_name>`
+	// (e.g., "data_schema.ml_models") - For FUNCTION: Must be a 2-part name
+	// `<schema_name>.<function_name>` (e.g., "udf_schema.calculate_tax") - For
+	// MODEL: Must be a 2-part name `<schema_name>.<model_name>` (e.g.,
+	// "models.prediction_model") - For NOTEBOOK_FILE: Should be the notebook
+	// file name (e.g., "analysis_notebook.py") - All names must contain only
+	// alphanumeric characters and underscores - No periods, spaces, forward
+	// slashes, or control characters are allowed within each part
+	//
+	// Behavior: - If not provided, the service automatically generates the
+	// alias from the object's original name - If you don't want to specify this
+	// field, omit it entirely from the request (do not pass an empty string) -
+	// The `string_shared_as` name must be unique for objects of the same type
+	// within the share
+	//
+	// Examples: - Valid for VOLUME: "data_schema.training_data" - Valid for
+	// FUNCTION: "analytics.calculate_revenue" - Invalid:
+	// "catalog.data_schema.training_data" (3 parts not allowed for volumes) -
+	// Invalid: "data-schema.training-data" (hyphens not allowed)
 	StringSharedAs          types.String `tfsdk:"string_shared_as"`
 	EffectiveStringSharedAs types.String `tfsdk:"effective_string_shared_as"`
 }
@@ -5716,6 +5769,8 @@ type TableInternalAttributes struct {
 	// Storage locations of all table dependencies for shared views. Used on the
 	// recipient side for SEG (Secure Egress Gateway) whitelisting.
 	DependencyStorageLocations types.List `tfsdk:"dependency_storage_locations"`
+	// Whether the table has uniform enabled.
+	HasDeltaUniformIceberg types.Bool `tfsdk:"has_delta_uniform_iceberg"`
 	// Will be populated in the reconciliation response for VIEW and
 	// FOREIGN_TABLE, with the value of the parent UC entity's storage_location,
 	// following the same logic as getManagedEntityPath in
@@ -5755,6 +5810,7 @@ func (to *TableInternalAttributes) SyncFieldsDuringRead(ctx context.Context, fro
 func (m TableInternalAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auxiliary_managed_location"] = attrs["auxiliary_managed_location"].SetOptional()
 	attrs["dependency_storage_locations"] = attrs["dependency_storage_locations"].SetOptional()
+	attrs["has_delta_uniform_iceberg"] = attrs["has_delta_uniform_iceberg"].SetOptional()
 	attrs["parent_storage_location"] = attrs["parent_storage_location"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
@@ -5785,6 +5841,7 @@ func (m TableInternalAttributes) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"auxiliary_managed_location":   m.AuxiliaryManagedLocation,
 			"dependency_storage_locations": m.DependencyStorageLocations,
+			"has_delta_uniform_iceberg":    m.HasDeltaUniformIceberg,
 			"parent_storage_location":      m.ParentStorageLocation,
 			"storage_location":             m.StorageLocation,
 			"type":                         m.Type_,
@@ -5800,10 +5857,11 @@ func (m TableInternalAttributes) Type(ctx context.Context) attr.Type {
 			"dependency_storage_locations": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"parent_storage_location": types.StringType,
-			"storage_location":        types.StringType,
-			"type":                    types.StringType,
-			"view_definition":         types.StringType,
+			"has_delta_uniform_iceberg": types.BoolType,
+			"parent_storage_location":   types.StringType,
+			"storage_location":          types.StringType,
+			"type":                      types.StringType,
+			"view_definition":           types.StringType,
 		},
 	}
 }
@@ -5908,6 +5966,8 @@ type UpdateRecipient struct {
 	Comment types.String `tfsdk:"comment"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.Object `tfsdk:"ip_access_list"`
 	// Name of the recipient.
@@ -5966,6 +6026,7 @@ func (to *UpdateRecipient) SyncFieldsDuringRead(ctx context.Context, from Update
 func (m UpdateRecipient) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -5998,6 +6059,7 @@ func (m UpdateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		map[string]attr.Value{
 			"comment":            m.Comment,
 			"expiration_time":    m.ExpirationTime,
+			"id":                 m.Id,
 			"ip_access_list":     m.IpAccessList,
 			"name":               m.Name,
 			"new_name":           m.NewName,
@@ -6012,6 +6074,7 @@ func (m UpdateRecipient) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment":            types.StringType,
 			"expiration_time":    types.Int64Type,
+			"id":                 types.StringType,
 			"ip_access_list":     IpAccessList{}.Type(ctx),
 			"name":               types.StringType,
 			"new_name":           types.StringType,

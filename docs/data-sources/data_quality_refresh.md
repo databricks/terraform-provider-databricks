@@ -42,6 +42,10 @@ The following arguments are supported:
   2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema`or `table`
 * `refresh_id` (integer, required) - Unique id of the refresh operation
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

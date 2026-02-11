@@ -31,6 +31,8 @@ One or more `artifact_matcher` blocks with the following arguments:
 
 * `artifact` - The artifact path or maven coordinate.
 * `match_type` - The pattern matching type of the artifact. Only `PREFIX_MATCH` is supported.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

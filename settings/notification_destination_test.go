@@ -154,6 +154,7 @@ func TestAccNDGenericWebhook(t *testing.T) {
 			config {
 				generic_webhook {
 					url = "https://webhook.site/{var.RANDOM}"
+					username = "username"
 					password = "password"
 				}
 			}
@@ -167,6 +168,7 @@ func TestAccNDGenericWebhook(t *testing.T) {
 				generic_webhook {
 					url = "https://webhook.site/{var.RANDOM}"
 					username = "username2"
+					password = "password2"
 				}
 			}
 		}

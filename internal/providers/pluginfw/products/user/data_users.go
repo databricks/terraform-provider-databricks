@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -77,13 +78,13 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if !(usersInfo.ExtraAttributes.IsNull()) {
 		attributes += ","
-		attributes += usersInfo.ExtraAttributes.String()
+		attributes += usersInfo.ExtraAttributes.ValueString()
 	}
 
 	var users []iam.User
 	var err error
 
-	if d.Client.Config.IsAccountClient() {
+	if d.Client.Config.HostType() == config.AccountHost {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
@@ -101,7 +102,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: usersInfo.Filter.ValueString()})
+		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: usersInfo.Filter.ValueString(), Attributes: attributes})
 		if err != nil {
 			resp.Diagnostics.AddError("Error listing workspace users", err.Error())
 		}

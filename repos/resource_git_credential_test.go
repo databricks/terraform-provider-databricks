@@ -235,7 +235,7 @@ func TestResourceGitCredentialCreateWithForceOld(t *testing.T) {
 					GitProvider:  provider,
 					GitUsername:  user,
 				}, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{{
 					CredentialId: credID,
 					GitProvider:  provider,
@@ -291,7 +291,7 @@ func TestResourceGitCredentialCreateWithForceNew(t *testing.T) {
 					GitProvider:  provider,
 					GitUsername:  user,
 				}, apierr.ErrResourceConflict)
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{{
 					CredentialId: credID,
 					GitProvider:  provider,
@@ -336,7 +336,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 				PersonalAccessToken: token,
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return(nil, errors.New("No such endpoint"))
 		},
 		Resource: ResourceGitCredential(),
@@ -365,7 +365,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
 			w.GetMockGitCredentialsAPI().EXPECT().
-				ListAll(mock.Anything).
+				ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{}, nil)
 		},
 		Resource: ResourceGitCredential(),
@@ -398,7 +398,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 				PersonalAccessToken: token,
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{resp}, nil)
 			gmock.Update(mock.Anything, workspace.UpdateCredentialsRequest{
 				CredentialId:        resp.CredentialId,

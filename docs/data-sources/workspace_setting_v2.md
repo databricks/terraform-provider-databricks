@@ -2,7 +2,7 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_setting_v2 Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source can be used to get a single account setting. 
 
@@ -20,6 +20,10 @@ data "databricks_workspace_setting_v2" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - Name of the setting
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

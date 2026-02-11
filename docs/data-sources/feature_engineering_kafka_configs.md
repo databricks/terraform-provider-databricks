@@ -12,11 +12,18 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of results to return
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
 This data source exports a single attribute, `kafka_configs`. It is a list of resources, each with the following attributes:
 * `auth_config` (AuthConfig) - Authentication configuration for connection to topics
+* `backfill_source` (BackfillSource) - A user-provided and managed source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Kafka config.
+  In the future, a separate table will be maintained by Databricks for forward filling data.
+  The schema for this source must match exactly that of the key and value schemas specified for this Kafka config
 * `bootstrap_servers` (string) - A comma-separated list of host/port pairs pointing to Kafka cluster
 * `extra_options` (object) - Catch-all for miscellaneous options. Keys should be source options or Kafka consumer options (kafka.*)
 * `key_schema` (SchemaConfig) - Schema configuration for extracting message keys from topics. At least one of key_schema and value_schema must be provided
@@ -27,6 +34,15 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 
 ### AuthConfig
 * `uc_service_credential_name` (string) - Name of the Unity Catalog service credential. This value will be set under the option databricks.serviceCredential
+
+### BackfillSource
+* `delta_table_source` (DeltaTableSource) - The Delta table source containing the historic data to backfill.
+  Only the delta table name is used for backfill, the entity columns and timeseries column are ignored as they are defined by the associated KafkaSource
+
+### DeltaTableSource
+* `entity_columns` (list of string) - The entity columns of the Delta table
+* `full_name` (string) - The full three-part (catalog, schema, table) name of the Delta table
+* `timeseries_column` (string) - The timeseries column of the Delta table
 
 ### SchemaConfig
 * `json_schema` (string) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)

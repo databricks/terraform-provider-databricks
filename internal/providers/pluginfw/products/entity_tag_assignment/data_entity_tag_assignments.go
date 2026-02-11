@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "entity_tag_assignments"
@@ -29,14 +30,16 @@ func DataSourceEntityTagAssignments() datasource.DataSource {
 type EntityTagAssignmentsData struct {
 	EntityTagAssignments types.List `tfsdk:"tag_assignments"`
 	// Optional. Maximum number of tag assignments to return in a single page
-	MaxResults types.Int64  `tfsdk:"max_results"`
-	EntityType types.String `tfsdk:"entity_type"`
-	EntityName types.String `tfsdk:"entity_name"`
+	MaxResults         types.Int64  `tfsdk:"max_results"`
+	EntityType         types.String `tfsdk:"entity_type"`
+	EntityName         types.String `tfsdk:"entity_name"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_assignments": reflect.TypeOf(EntityTagAssignmentData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -46,6 +49,8 @@ func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["tag_assignments"] = attrs["tag_assignments"].SetComputed()
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -85,7 +90,15 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -105,6 +118,8 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		entity_tag_assignment.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, entity_tag_assignment.ToObjectValue(ctx))
 	}
 

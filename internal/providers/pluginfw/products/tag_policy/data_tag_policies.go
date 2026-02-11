@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "tag_policies"
@@ -32,12 +33,14 @@ type TagPoliciesData struct {
 	// may be returned than requested. If unspecified or set to 0, this defaults
 	// to 1000. The maximum value is 1000; values above 1000 will be coerced
 	// down to 1000.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (TagPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tag_policies": reflect.TypeOf(TagPolicyData{}),
+		"tag_policies":    reflect.TypeOf(TagPolicyData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -45,6 +48,8 @@ func (m TagPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["tag_policies"] = attrs["tag_policies"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -84,7 +89,15 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -104,6 +117,8 @@ func (r *TagPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		tag_policy.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, tag_policy.ToObjectValue(ctx))
 	}
 

@@ -786,7 +786,8 @@ type GenieAttachment struct {
 	Query types.Object `tfsdk:"query"`
 	// Follow-up questions suggested by Genie
 	SuggestedQuestions types.Object `tfsdk:"suggested_questions"`
-	// Text Attachment if Genie responds with text
+	// Text Attachment if Genie responds with text. This also contains the final
+	// summary when available.
 	Text types.Object `tfsdk:"text"`
 }
 
@@ -1518,6 +1519,124 @@ func (m GenieFeedback) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieGenerateDownloadFullQueryResultRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (to *GenieGenerateDownloadFullQueryResultRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieGenerateDownloadFullQueryResultRequest) {
+}
+
+func (to *GenieGenerateDownloadFullQueryResultRequest) SyncFieldsDuringRead(ctx context.Context, from GenieGenerateDownloadFullQueryResultRequest) {
+}
+
+func (m GenieGenerateDownloadFullQueryResultRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieGenerateDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultRequest
+// only implements ToObjectValue() and Type().
+func (m GenieGenerateDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":   m.AttachmentId,
+			"conversation_id": m.ConversationId,
+			"message_id":      m.MessageId,
+			"space_id":        m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieGenerateDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":   types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieGenerateDownloadFullQueryResultResponse struct {
+	// Download ID. Use this ID to track the download request in subsequent
+	// polling calls
+	DownloadId types.String `tfsdk:"download_id"`
+	// JWT signature for the download_id to ensure secure access to query
+	// results
+	DownloadIdSignature types.String `tfsdk:"download_id_signature"`
+}
+
+func (to *GenieGenerateDownloadFullQueryResultResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieGenerateDownloadFullQueryResultResponse) {
+}
+
+func (to *GenieGenerateDownloadFullQueryResultResponse) SyncFieldsDuringRead(ctx context.Context, from GenieGenerateDownloadFullQueryResultResponse) {
+}
+
+func (m GenieGenerateDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["download_id"] = attrs["download_id"].SetOptional()
+	attrs["download_id_signature"] = attrs["download_id_signature"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGenerateDownloadFullQueryResultResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieGenerateDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGenerateDownloadFullQueryResultResponse
+// only implements ToObjectValue() and Type().
+func (m GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"download_id":           m.DownloadId,
+			"download_id_signature": m.DownloadIdSignature,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"download_id":           types.StringType,
+			"download_id_signature": types.StringType,
+		},
+	}
+}
+
 type GenieGetConversationMessageRequest struct {
 	// The ID associated with the target conversation.
 	ConversationId types.String `tfsdk:"-"`
@@ -1576,6 +1695,174 @@ func (m GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 			"space_id":        types.StringType,
 		},
 	}
+}
+
+type GenieGetDownloadFullQueryResultRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Download ID. This ID is provided by the [Generate Download
+	// endpoint](:method:genie/generateDownloadFullQueryResult)
+	DownloadId types.String `tfsdk:"-"`
+	// JWT signature for the download_id to ensure secure access to query
+	// results
+	DownloadIdSignature types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (to *GenieGetDownloadFullQueryResultRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieGetDownloadFullQueryResultRequest) {
+}
+
+func (to *GenieGetDownloadFullQueryResultRequest) SyncFieldsDuringRead(ctx context.Context, from GenieGetDownloadFullQueryResultRequest) {
+}
+
+func (m GenieGetDownloadFullQueryResultRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
+	attrs["download_id"] = attrs["download_id"].SetRequired()
+	attrs["download_id_signature"] = attrs["download_id_signature"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieGetDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultRequest
+// only implements ToObjectValue() and Type().
+func (m GenieGetDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":         m.AttachmentId,
+			"conversation_id":       m.ConversationId,
+			"download_id":           m.DownloadId,
+			"download_id_signature": m.DownloadIdSignature,
+			"message_id":            m.MessageId,
+			"space_id":              m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieGetDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":         types.StringType,
+			"conversation_id":       types.StringType,
+			"download_id":           types.StringType,
+			"download_id_signature": types.StringType,
+			"message_id":            types.StringType,
+			"space_id":              types.StringType,
+		},
+	}
+}
+
+type GenieGetDownloadFullQueryResultResponse struct {
+	// SQL Statement Execution response. See [Get status, manifest, and result
+	// first chunk](:method:statementexecution/getstatement) for more details.
+	StatementResponse types.Object `tfsdk:"statement_response"`
+}
+
+func (to *GenieGetDownloadFullQueryResultResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieGetDownloadFullQueryResultResponse) {
+	if !from.StatementResponse.IsNull() && !from.StatementResponse.IsUnknown() {
+		if toStatementResponse, ok := to.GetStatementResponse(ctx); ok {
+			if fromStatementResponse, ok := from.GetStatementResponse(ctx); ok {
+				// Recursively sync the fields of StatementResponse
+				toStatementResponse.SyncFieldsDuringCreateOrUpdate(ctx, fromStatementResponse)
+				to.SetStatementResponse(ctx, toStatementResponse)
+			}
+		}
+	}
+}
+
+func (to *GenieGetDownloadFullQueryResultResponse) SyncFieldsDuringRead(ctx context.Context, from GenieGetDownloadFullQueryResultResponse) {
+	if !from.StatementResponse.IsNull() && !from.StatementResponse.IsUnknown() {
+		if toStatementResponse, ok := to.GetStatementResponse(ctx); ok {
+			if fromStatementResponse, ok := from.GetStatementResponse(ctx); ok {
+				toStatementResponse.SyncFieldsDuringRead(ctx, fromStatementResponse)
+				to.SetStatementResponse(ctx, toStatementResponse)
+			}
+		}
+	}
+}
+
+func (m GenieGetDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_response"] = attrs["statement_response"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieGetDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultResponse
+// only implements ToObjectValue() and Type().
+func (m GenieGetDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"statement_response": m.StatementResponse,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieGetDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
+		},
+	}
+}
+
+// GetStatementResponse returns the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse as
+// a sql_tf.StatementResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenieGetDownloadFullQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
+	var e sql_tf.StatementResponse
+	if m.StatementResponse.IsNull() || m.StatementResponse.IsUnknown() {
+		return e, false
+	}
+	var v sql_tf.StatementResponse
+	d := m.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatementResponse sets the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse.
+func (m *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
+	vs := v.ToObjectValue(ctx)
+	m.StatementResponse = vs
 }
 
 type GenieGetMessageAttachmentQueryResultRequest struct {

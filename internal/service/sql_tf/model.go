@@ -2824,6 +2824,105 @@ func (m *CreateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
 	m.Alert = vs
 }
 
+type CreateDefaultWarehouseOverrideRequest struct {
+	// Required. The default warehouse override to create.
+	DefaultWarehouseOverride types.Object `tfsdk:"default_warehouse_override"`
+	// Required. The ID to use for the override, which will become the final
+	// component of the override's resource name. Can be a numeric user ID or
+	// the literal string "me" for the current user.
+	DefaultWarehouseOverrideId types.String `tfsdk:"-"`
+}
+
+func (to *CreateDefaultWarehouseOverrideRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDefaultWarehouseOverrideRequest) {
+	if !from.DefaultWarehouseOverride.IsNull() && !from.DefaultWarehouseOverride.IsUnknown() {
+		if toDefaultWarehouseOverride, ok := to.GetDefaultWarehouseOverride(ctx); ok {
+			if fromDefaultWarehouseOverride, ok := from.GetDefaultWarehouseOverride(ctx); ok {
+				// Recursively sync the fields of DefaultWarehouseOverride
+				toDefaultWarehouseOverride.SyncFieldsDuringCreateOrUpdate(ctx, fromDefaultWarehouseOverride)
+				to.SetDefaultWarehouseOverride(ctx, toDefaultWarehouseOverride)
+			}
+		}
+	}
+}
+
+func (to *CreateDefaultWarehouseOverrideRequest) SyncFieldsDuringRead(ctx context.Context, from CreateDefaultWarehouseOverrideRequest) {
+	if !from.DefaultWarehouseOverride.IsNull() && !from.DefaultWarehouseOverride.IsUnknown() {
+		if toDefaultWarehouseOverride, ok := to.GetDefaultWarehouseOverride(ctx); ok {
+			if fromDefaultWarehouseOverride, ok := from.GetDefaultWarehouseOverride(ctx); ok {
+				toDefaultWarehouseOverride.SyncFieldsDuringRead(ctx, fromDefaultWarehouseOverride)
+				to.SetDefaultWarehouseOverride(ctx, toDefaultWarehouseOverride)
+			}
+		}
+	}
+}
+
+func (m CreateDefaultWarehouseOverrideRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_warehouse_override"] = attrs["default_warehouse_override"].SetRequired()
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDefaultWarehouseOverrideRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateDefaultWarehouseOverrideRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_warehouse_override": reflect.TypeOf(DefaultWarehouseOverride{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDefaultWarehouseOverrideRequest
+// only implements ToObjectValue() and Type().
+func (m CreateDefaultWarehouseOverrideRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_warehouse_override":    m.DefaultWarehouseOverride,
+			"default_warehouse_override_id": m.DefaultWarehouseOverrideId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateDefaultWarehouseOverrideRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_warehouse_override":    DefaultWarehouseOverride{}.Type(ctx),
+			"default_warehouse_override_id": types.StringType,
+		},
+	}
+}
+
+// GetDefaultWarehouseOverride returns the value of the DefaultWarehouseOverride field in CreateDefaultWarehouseOverrideRequest as
+// a DefaultWarehouseOverride value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateDefaultWarehouseOverrideRequest) GetDefaultWarehouseOverride(ctx context.Context) (DefaultWarehouseOverride, bool) {
+	var e DefaultWarehouseOverride
+	if m.DefaultWarehouseOverride.IsNull() || m.DefaultWarehouseOverride.IsUnknown() {
+		return e, false
+	}
+	var v DefaultWarehouseOverride
+	d := m.DefaultWarehouseOverride.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultWarehouseOverride sets the value of the DefaultWarehouseOverride field in CreateDefaultWarehouseOverrideRequest.
+func (m *CreateDefaultWarehouseOverrideRequest) SetDefaultWarehouseOverride(ctx context.Context, v DefaultWarehouseOverride) {
+	vs := v.ToObjectValue(ctx)
+	m.DefaultWarehouseOverride = vs
+}
+
 type CreateQueryRequest struct {
 	// If true, automatically resolve query display name conflicts. Otherwise,
 	// fail the request if the query's display name conflicts with an existing
@@ -4577,6 +4676,75 @@ func (m DateValue) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Represents a per-user default warehouse override configuration. This resource
+// allows users or administrators to customize how a user's default warehouse is
+// selected for SQL operations. If no override exists for a user, the workspace
+// default warehouse will be used.
+type DefaultWarehouseOverride struct {
+	// The ID component of the resource name (user ID).
+	DefaultWarehouseOverrideId types.String `tfsdk:"default_warehouse_override_id"`
+	// The resource name of the default warehouse override. Format:
+	// default-warehouse-overrides/{default_warehouse_override_id}
+	Name types.String `tfsdk:"name"`
+	// The type of override behavior.
+	Type_ types.String `tfsdk:"type"`
+	// The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED
+	// type.
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *DefaultWarehouseOverride) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DefaultWarehouseOverride) {
+}
+
+func (to *DefaultWarehouseOverride) SyncFieldsDuringRead(ctx context.Context, from DefaultWarehouseOverride) {
+}
+
+func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["type"] = attrs["type"].SetRequired()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultWarehouseOverride.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DefaultWarehouseOverride) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DefaultWarehouseOverride
+// only implements ToObjectValue() and Type().
+func (m DefaultWarehouseOverride) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_warehouse_override_id": m.DefaultWarehouseOverrideId,
+			"name":                          m.Name,
+			"type":                          m.Type_,
+			"warehouse_id":                  m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DefaultWarehouseOverride) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_warehouse_override_id": types.StringType,
+			"name":                          types.StringType,
+			"type":                          types.StringType,
+			"warehouse_id":                  types.StringType,
+		},
+	}
+}
+
 type DeleteAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -4715,6 +4883,57 @@ func (m DeleteDashboardWidgetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
+		},
+	}
+}
+
+type DeleteDefaultWarehouseOverrideRequest struct {
+	// Required. The resource name of the default warehouse override to delete.
+	// Format: default-warehouse-overrides/{default_warehouse_override_id} The
+	// default_warehouse_override_id can be a numeric user ID or the literal
+	// string "me" for the current user.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteDefaultWarehouseOverrideRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDefaultWarehouseOverrideRequest) {
+}
+
+func (to *DeleteDefaultWarehouseOverrideRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteDefaultWarehouseOverrideRequest) {
+}
+
+func (m DeleteDefaultWarehouseOverrideRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultWarehouseOverrideRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteDefaultWarehouseOverrideRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDefaultWarehouseOverrideRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteDefaultWarehouseOverrideRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteDefaultWarehouseOverrideRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -6343,6 +6562,17 @@ type ExecuteStatementRequest struct {
 	// [Parameter markers]: https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html
 	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
 	Parameters types.List `tfsdk:"parameters"`
+	// An array of query tags to annotate a SQL statement. A query tag consists
+	// of a non-empty key and, optionally, a value. To represent a NULL value,
+	// either omit the `value` field or manually set it to `null` or white
+	// space. Refer to the SQL language reference for the format specification
+	// of query tags. There's no significance to the order of tags. Only one
+	// value per key will be recorded. A sequence in excess of 20 query tags
+	// will be coerced to 20. Example:
+	//
+	// { ..., "query_tags": [ { "key": "team", "value": "eng" }, { "key": "some
+	// key only tag" } ] }
+	QueryTags types.List `tfsdk:"query_tags"`
 	// Applies the given row limit to the statement's result set, but unlike the
 	// `LIMIT` clause in SQL, it also sets the `truncated` field in the response
 	// to indicate whether the result was trimmed due to the limit or not.
@@ -6384,6 +6614,12 @@ func (to *ExecuteStatementRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
 	}
+	if !from.QueryTags.IsNull() && !from.QueryTags.IsUnknown() && to.QueryTags.IsNull() && len(from.QueryTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryTags = from.QueryTags
+	}
 }
 
 func (to *ExecuteStatementRequest) SyncFieldsDuringRead(ctx context.Context, from ExecuteStatementRequest) {
@@ -6392,6 +6628,12 @@ func (to *ExecuteStatementRequest) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.QueryTags.IsNull() && !from.QueryTags.IsUnknown() && to.QueryTags.IsNull() && len(from.QueryTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryTags = from.QueryTags
 	}
 }
 
@@ -6402,6 +6644,7 @@ func (m ExecuteStatementRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["format"] = attrs["format"].SetOptional()
 	attrs["on_wait_timeout"] = attrs["on_wait_timeout"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["query_tags"] = attrs["query_tags"].SetOptional()
 	attrs["row_limit"] = attrs["row_limit"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["statement"] = attrs["statement"].SetRequired()
@@ -6421,6 +6664,7 @@ func (m ExecuteStatementRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 func (m ExecuteStatementRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(StatementParameterListItem{}),
+		"query_tags": reflect.TypeOf(QueryTag{}),
 	}
 }
 
@@ -6437,6 +6681,7 @@ func (m ExecuteStatementRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 			"format":          m.Format,
 			"on_wait_timeout": m.OnWaitTimeout,
 			"parameters":      m.Parameters,
+			"query_tags":      m.QueryTags,
 			"row_limit":       m.RowLimit,
 			"schema":          m.Schema,
 			"statement":       m.Statement,
@@ -6456,6 +6701,9 @@ func (m ExecuteStatementRequest) Type(ctx context.Context) attr.Type {
 			"on_wait_timeout": types.StringType,
 			"parameters": basetypes.ListType{
 				ElemType: StatementParameterListItem{}.Type(ctx),
+			},
+			"query_tags": basetypes.ListType{
+				ElemType: QueryTag{}.Type(ctx),
 			},
 			"row_limit":    types.Int64Type,
 			"schema":       types.StringType,
@@ -6490,6 +6738,32 @@ func (m *ExecuteStatementRequest) SetParameters(ctx context.Context, v []Stateme
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetQueryTags returns the value of the QueryTags field in ExecuteStatementRequest as
+// a slice of QueryTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ExecuteStatementRequest) GetQueryTags(ctx context.Context) ([]QueryTag, bool) {
+	if m.QueryTags.IsNull() || m.QueryTags.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryTag
+	d := m.QueryTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetQueryTags sets the value of the QueryTags field in ExecuteStatementRequest.
+func (m *ExecuteStatementRequest) SetQueryTags(ctx context.Context, v []QueryTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["query_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.QueryTags = types.ListValueMust(t, vs)
 }
 
 type ExternalLink struct {
@@ -7084,6 +7358,58 @@ func (m GetDbsqlPermissionRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
+		},
+	}
+}
+
+type GetDefaultWarehouseOverrideRequest struct {
+	// Required. The resource name of the default warehouse override to
+	// retrieve. Format:
+	// default-warehouse-overrides/{default_warehouse_override_id} The
+	// default_warehouse_override_id can be a numeric user ID or the literal
+	// string "me" for the current user.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetDefaultWarehouseOverrideRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDefaultWarehouseOverrideRequest) {
+}
+
+func (to *GetDefaultWarehouseOverrideRequest) SyncFieldsDuringRead(ctx context.Context, from GetDefaultWarehouseOverrideRequest) {
+}
+
+func (m GetDefaultWarehouseOverrideRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDefaultWarehouseOverrideRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetDefaultWarehouseOverrideRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDefaultWarehouseOverrideRequest
+// only implements ToObjectValue() and Type().
+func (m GetDefaultWarehouseOverrideRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetDefaultWarehouseOverrideRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -9653,6 +9979,163 @@ func (m ListDashboardsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListDefaultWarehouseOverridesRequest struct {
+	// The maximum number of overrides to return. The service may return fewer
+	// than this value. If unspecified, at most 100 overrides will be returned.
+	// The maximum value is 1000; values above 1000 will be coerced to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous `ListDefaultWarehouseOverrides`
+	// call. Provide this to retrieve the subsequent page.
+	//
+	// When paginating, all other parameters provided to
+	// `ListDefaultWarehouseOverrides` must match the call that provided the
+	// page token.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListDefaultWarehouseOverridesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDefaultWarehouseOverridesRequest) {
+}
+
+func (to *ListDefaultWarehouseOverridesRequest) SyncFieldsDuringRead(ctx context.Context, from ListDefaultWarehouseOverridesRequest) {
+}
+
+func (m ListDefaultWarehouseOverridesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultWarehouseOverridesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDefaultWarehouseOverridesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultWarehouseOverridesRequest
+// only implements ToObjectValue() and Type().
+func (m ListDefaultWarehouseOverridesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDefaultWarehouseOverridesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// Response message for ListDefaultWarehouseOverrides.
+type ListDefaultWarehouseOverridesResponse struct {
+	// The default warehouse overrides in the workspace.
+	DefaultWarehouseOverrides types.List `tfsdk:"default_warehouse_overrides"`
+	// A token, which can be sent as `page_token` to retrieve the next page. If
+	// this field is omitted, there are no subsequent pages.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListDefaultWarehouseOverridesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDefaultWarehouseOverridesResponse) {
+	if !from.DefaultWarehouseOverrides.IsNull() && !from.DefaultWarehouseOverrides.IsUnknown() && to.DefaultWarehouseOverrides.IsNull() && len(from.DefaultWarehouseOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DefaultWarehouseOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DefaultWarehouseOverrides = from.DefaultWarehouseOverrides
+	}
+}
+
+func (to *ListDefaultWarehouseOverridesResponse) SyncFieldsDuringRead(ctx context.Context, from ListDefaultWarehouseOverridesResponse) {
+	if !from.DefaultWarehouseOverrides.IsNull() && !from.DefaultWarehouseOverrides.IsUnknown() && to.DefaultWarehouseOverrides.IsNull() && len(from.DefaultWarehouseOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DefaultWarehouseOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DefaultWarehouseOverrides = from.DefaultWarehouseOverrides
+	}
+}
+
+func (m ListDefaultWarehouseOverridesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_warehouse_overrides"] = attrs["default_warehouse_overrides"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDefaultWarehouseOverridesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDefaultWarehouseOverridesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_warehouse_overrides": reflect.TypeOf(DefaultWarehouseOverride{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDefaultWarehouseOverridesResponse
+// only implements ToObjectValue() and Type().
+func (m ListDefaultWarehouseOverridesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_warehouse_overrides": m.DefaultWarehouseOverrides,
+			"next_page_token":             m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDefaultWarehouseOverridesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_warehouse_overrides": basetypes.ListType{
+				ElemType: DefaultWarehouseOverride{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDefaultWarehouseOverrides returns the value of the DefaultWarehouseOverrides field in ListDefaultWarehouseOverridesResponse as
+// a slice of DefaultWarehouseOverride values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListDefaultWarehouseOverridesResponse) GetDefaultWarehouseOverrides(ctx context.Context) ([]DefaultWarehouseOverride, bool) {
+	if m.DefaultWarehouseOverrides.IsNull() || m.DefaultWarehouseOverrides.IsUnknown() {
+		return nil, false
+	}
+	var v []DefaultWarehouseOverride
+	d := m.DefaultWarehouseOverrides.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultWarehouseOverrides sets the value of the DefaultWarehouseOverrides field in ListDefaultWarehouseOverridesResponse.
+func (m *ListDefaultWarehouseOverridesResponse) SetDefaultWarehouseOverrides(ctx context.Context, v []DefaultWarehouseOverride) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["default_warehouse_overrides"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DefaultWarehouseOverrides = types.ListValueMust(t, vs)
+}
+
 type ListQueriesLegacyRequest struct {
 	// Name of query attribute to order by. Default sort order is ascending.
 	// Append a dash (`-`) to order descending instead.
@@ -11862,10 +12345,15 @@ type QueryInfo struct {
 	QuerySource types.Object `tfsdk:"query_source"`
 	// The time the query started.
 	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms"`
+	// A query execution can be optionally annotated with query tags
+	QueryTags types.List `tfsdk:"query_tags"`
 	// The text of the query.
 	QueryText types.String `tfsdk:"query_text"`
 	// The number of results returned by the query.
 	RowsProduced types.Int64 `tfsdk:"rows_produced"`
+	// The spark session UUID that query ran on. This is either the Spark
+	// Connect, DBSQL, or SDP session ID.
+	SessionId types.String `tfsdk:"session_id"`
 	// URL to the Spark UI query plan.
 	SparkUiUrl types.String `tfsdk:"spark_ui_url"`
 	// Type of statement for this query
@@ -11912,6 +12400,12 @@ func (to *QueryInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Qu
 			}
 		}
 	}
+	if !from.QueryTags.IsNull() && !from.QueryTags.IsUnknown() && to.QueryTags.IsNull() && len(from.QueryTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryTags = from.QueryTags
+	}
 }
 
 func (to *QueryInfo) SyncFieldsDuringRead(ctx context.Context, from QueryInfo) {
@@ -11939,6 +12433,12 @@ func (to *QueryInfo) SyncFieldsDuringRead(ctx context.Context, from QueryInfo) {
 			}
 		}
 	}
+	if !from.QueryTags.IsNull() && !from.QueryTags.IsUnknown() && to.QueryTags.IsNull() && len(from.QueryTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for QueryTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.QueryTags = from.QueryTags
+	}
 }
 
 func (m QueryInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11959,8 +12459,10 @@ func (m QueryInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["query_id"] = attrs["query_id"].SetOptional()
 	attrs["query_source"] = attrs["query_source"].SetOptional()
 	attrs["query_start_time_ms"] = attrs["query_start_time_ms"].SetOptional()
+	attrs["query_tags"] = attrs["query_tags"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["rows_produced"] = attrs["rows_produced"].SetOptional()
+	attrs["session_id"] = attrs["session_id"].SetOptional()
 	attrs["spark_ui_url"] = attrs["spark_ui_url"].SetOptional()
 	attrs["statement_type"] = attrs["statement_type"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -11983,6 +12485,7 @@ func (m QueryInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 		"channel_used": reflect.TypeOf(ChannelInfo{}),
 		"metrics":      reflect.TypeOf(QueryMetrics{}),
 		"query_source": reflect.TypeOf(ExternalQuerySource{}),
+		"query_tags":   reflect.TypeOf(QueryTag{}),
 	}
 }
 
@@ -12010,8 +12513,10 @@ func (m QueryInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"query_id":              m.QueryId,
 			"query_source":          m.QuerySource,
 			"query_start_time_ms":   m.QueryStartTimeMs,
+			"query_tags":            m.QueryTags,
 			"query_text":            m.QueryText,
 			"rows_produced":         m.RowsProduced,
+			"session_id":            m.SessionId,
 			"spark_ui_url":          m.SparkUiUrl,
 			"statement_type":        m.StatementType,
 			"status":                m.Status,
@@ -12042,14 +12547,18 @@ func (m QueryInfo) Type(ctx context.Context) attr.Type {
 			"query_id":              types.StringType,
 			"query_source":          ExternalQuerySource{}.Type(ctx),
 			"query_start_time_ms":   types.Int64Type,
-			"query_text":            types.StringType,
-			"rows_produced":         types.Int64Type,
-			"spark_ui_url":          types.StringType,
-			"statement_type":        types.StringType,
-			"status":                types.StringType,
-			"user_id":               types.Int64Type,
-			"user_name":             types.StringType,
-			"warehouse_id":          types.StringType,
+			"query_tags": basetypes.ListType{
+				ElemType: QueryTag{}.Type(ctx),
+			},
+			"query_text":     types.StringType,
+			"rows_produced":  types.Int64Type,
+			"session_id":     types.StringType,
+			"spark_ui_url":   types.StringType,
+			"statement_type": types.StringType,
+			"status":         types.StringType,
+			"user_id":        types.Int64Type,
+			"user_name":      types.StringType,
+			"warehouse_id":   types.StringType,
 		},
 	}
 }
@@ -12127,6 +12636,32 @@ func (m *QueryInfo) GetQuerySource(ctx context.Context) (ExternalQuerySource, bo
 func (m *QueryInfo) SetQuerySource(ctx context.Context, v ExternalQuerySource) {
 	vs := v.ToObjectValue(ctx)
 	m.QuerySource = vs
+}
+
+// GetQueryTags returns the value of the QueryTags field in QueryInfo as
+// a slice of QueryTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *QueryInfo) GetQueryTags(ctx context.Context) ([]QueryTag, bool) {
+	if m.QueryTags.IsNull() || m.QueryTags.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryTag
+	d := m.QueryTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetQueryTags sets the value of the QueryTags field in QueryInfo.
+func (m *QueryInfo) SetQueryTags(ctx context.Context, v []QueryTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["query_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.QueryTags = types.ListValueMust(t, vs)
 }
 
 type QueryList struct {
@@ -13072,6 +13607,61 @@ func (m *QueryPostContent) SetTags(ctx context.Context, v []types.String) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// * A query execution can be annotated with an optional key-value pair to allow
+// users to attribute the executions by key and optional value to filter by.
+// QueryTag is the user-facing representation.
+type QueryTag struct {
+	Key types.String `tfsdk:"key"`
+
+	Value types.String `tfsdk:"value"`
+}
+
+func (to *QueryTag) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QueryTag) {
+}
+
+func (to *QueryTag) SyncFieldsDuringRead(ctx context.Context, from QueryTag) {
+}
+
+func (m QueryTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m QueryTag) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QueryTag
+// only implements ToObjectValue() and Type().
+func (m QueryTag) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   m.Key,
+			"value": m.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m QueryTag) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
 }
 
 type RepeatedEndpointConfPairs struct {
@@ -15562,6 +16152,9 @@ func (m TrashAlertRequest) Type(ctx context.Context) attr.Type {
 
 type TrashAlertV2Request struct {
 	Id types.String `tfsdk:"-"`
+	// Whether to permanently delete the alert. If not set, the alert will only
+	// be soft deleted.
+	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *TrashAlertV2Request) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TrashAlertV2Request) {
@@ -15572,6 +16165,7 @@ func (to *TrashAlertV2Request) SyncFieldsDuringRead(ctx context.Context, from Tr
 
 func (m TrashAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
+	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -15594,7 +16188,8 @@ func (m TrashAlertV2Request) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
+			"id":    m.Id,
+			"purge": m.Purge,
 		})
 }
 
@@ -15602,7 +16197,8 @@ func (m TrashAlertV2Request) ToObjectValue(ctx context.Context) basetypes.Object
 func (m TrashAlertV2Request) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
+			"id":    types.StringType,
+			"purge": types.BoolType,
 		},
 	}
 }
@@ -16018,6 +16614,122 @@ func (m *UpdateAlertV2Request) GetAlert(ctx context.Context) (AlertV2, bool) {
 func (m *UpdateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
 	vs := v.ToObjectValue(ctx)
 	m.Alert = vs
+}
+
+type UpdateDefaultWarehouseOverrideRequest struct {
+	// If set to true, and the override is not found, a new override will be
+	// created. In this situation, `update_mask` is ignored and all fields are
+	// applied. Defaults to false.
+	AllowMissing types.Bool `tfsdk:"-"`
+	// Required. The default warehouse override to update. The name field must
+	// be set in the format:
+	// default-warehouse-overrides/{default_warehouse_override_id} The
+	// default_warehouse_override_id can be a numeric user ID or the literal
+	// string "me" for the current user.
+	DefaultWarehouseOverride types.Object `tfsdk:"default_warehouse_override"`
+	// The resource name of the default warehouse override. Format:
+	// default-warehouse-overrides/{default_warehouse_override_id}
+	Name types.String `tfsdk:"-"`
+	// Required. Field mask specifying which fields to update. Only the fields
+	// specified in the mask will be updated. Use "*" to update all fields. When
+	// allow_missing is true, this field is ignored and all fields are applied.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateDefaultWarehouseOverrideRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDefaultWarehouseOverrideRequest) {
+	if !from.DefaultWarehouseOverride.IsNull() && !from.DefaultWarehouseOverride.IsUnknown() {
+		if toDefaultWarehouseOverride, ok := to.GetDefaultWarehouseOverride(ctx); ok {
+			if fromDefaultWarehouseOverride, ok := from.GetDefaultWarehouseOverride(ctx); ok {
+				// Recursively sync the fields of DefaultWarehouseOverride
+				toDefaultWarehouseOverride.SyncFieldsDuringCreateOrUpdate(ctx, fromDefaultWarehouseOverride)
+				to.SetDefaultWarehouseOverride(ctx, toDefaultWarehouseOverride)
+			}
+		}
+	}
+}
+
+func (to *UpdateDefaultWarehouseOverrideRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateDefaultWarehouseOverrideRequest) {
+	if !from.DefaultWarehouseOverride.IsNull() && !from.DefaultWarehouseOverride.IsUnknown() {
+		if toDefaultWarehouseOverride, ok := to.GetDefaultWarehouseOverride(ctx); ok {
+			if fromDefaultWarehouseOverride, ok := from.GetDefaultWarehouseOverride(ctx); ok {
+				toDefaultWarehouseOverride.SyncFieldsDuringRead(ctx, fromDefaultWarehouseOverride)
+				to.SetDefaultWarehouseOverride(ctx, toDefaultWarehouseOverride)
+			}
+		}
+	}
+}
+
+func (m UpdateDefaultWarehouseOverrideRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_warehouse_override"] = attrs["default_warehouse_override"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["allow_missing"] = attrs["allow_missing"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultWarehouseOverrideRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateDefaultWarehouseOverrideRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"default_warehouse_override": reflect.TypeOf(DefaultWarehouseOverride{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDefaultWarehouseOverrideRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateDefaultWarehouseOverrideRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing":              m.AllowMissing,
+			"default_warehouse_override": m.DefaultWarehouseOverride,
+			"name":                       m.Name,
+			"update_mask":                m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateDefaultWarehouseOverrideRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing":              types.BoolType,
+			"default_warehouse_override": DefaultWarehouseOverride{}.Type(ctx),
+			"name":                       types.StringType,
+			"update_mask":                types.StringType,
+		},
+	}
+}
+
+// GetDefaultWarehouseOverride returns the value of the DefaultWarehouseOverride field in UpdateDefaultWarehouseOverrideRequest as
+// a DefaultWarehouseOverride value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateDefaultWarehouseOverrideRequest) GetDefaultWarehouseOverride(ctx context.Context) (DefaultWarehouseOverride, bool) {
+	var e DefaultWarehouseOverride
+	if m.DefaultWarehouseOverride.IsNull() || m.DefaultWarehouseOverride.IsUnknown() {
+		return e, false
+	}
+	var v DefaultWarehouseOverride
+	d := m.DefaultWarehouseOverride.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultWarehouseOverride sets the value of the DefaultWarehouseOverride field in UpdateDefaultWarehouseOverrideRequest.
+func (m *UpdateDefaultWarehouseOverrideRequest) SetDefaultWarehouseOverride(ctx context.Context, v DefaultWarehouseOverride) {
+	vs := v.ToObjectValue(ctx)
+	m.DefaultWarehouseOverride = vs
 }
 
 type UpdateQueryRequest struct {

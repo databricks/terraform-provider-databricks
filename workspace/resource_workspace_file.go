@@ -1,8 +1,8 @@
 package workspace
 
 import (
+	"bytes"
 	"context"
-	"encoding/base64"
 	"log"
 	"path/filepath"
 
@@ -11,6 +11,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func workspaceFileUploadOptionFunc(i *workspace.Import) {
+	i.Format = "RAW"
+	i.Overwrite = true
+	i.ForceSendFields = []string{"Content"}
+}
 
 // ResourceWorkspaceFile manages files in workspace
 func ResourceWorkspaceFile() common.Resource {
@@ -29,27 +35,25 @@ func ResourceWorkspaceFile() common.Resource {
 			Computed: true,
 		},
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
 			}
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			path := d.Get("path").(string)
-			importReq := workspace.Import{
-				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          workspace.ImportFormatRaw,
-				Path:            path,
-				Overwrite:       true,
-				ForceSendFields: []string{"Content"},
-			}
-			err = client.Workspace.Import(ctx, importReq)
+			err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
 			if err != nil {
 				if isParentDoesntExistError(err) {
 					parent := filepath.ToSlash(filepath.Dir(path))
@@ -58,7 +62,7 @@ func ResourceWorkspaceFile() common.Resource {
 					if err != nil {
 						return err
 					}
-					err = client.Workspace.Import(ctx, importReq)
+					err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
 				}
 				if err != nil {
 					return err
@@ -68,7 +72,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -82,7 +86,7 @@ func ResourceWorkspaceFile() common.Resource {
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -90,16 +94,10 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Import(ctx, workspace.Import{
-				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          workspace.ImportFormatRaw,
-				Overwrite:       true,
-				Path:            d.Id(),
-				ForceSendFields: []string{"Content"},
-			})
+			return client.Workspace.Upload(ctx, d.Id(), bytes.NewReader(content), workspaceFileUploadOptionFunc)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			client, err := c.WorkspaceClient()
+			client, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

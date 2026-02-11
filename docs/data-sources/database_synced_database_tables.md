@@ -13,6 +13,10 @@ subcategory: "Database Instances"
 The following arguments are supported:
 * `instance_name` (string, required) - Name of the instance to get synced tables for
 * `page_size` (integer, optional) - Upper bound for items returned
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -23,8 +27,12 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   when creating synced database tables in registered catalogs, the database instance name MUST
   match that of the registered catalog (or the request will be rejected)
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog
-* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+  tables inside database catalogs is inferred database instance associated with the catalog.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `logical_database_name` (string) - Target Postgres database object (logical database) name for this table.
   
   When creating a synced table in a registered Postgres catalog, the

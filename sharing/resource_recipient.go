@@ -21,8 +21,13 @@ func recepientPropertiesSuppressDiff(k, old, new string, d *schema.ResourceData)
 	return false
 }
 
+type RecipientSchemaStruct struct {
+	sharing.RecipientInfo
+	common.Namespace
+}
+
 func ResourceRecipient() common.Resource {
-	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	recipientSchema := common.StructToSchema(RecipientSchemaStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(
 			validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
 		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
@@ -32,6 +37,7 @@ func ResourceRecipient() common.Resource {
 		common.CustomizeSchemaPath(s, "properties_kvpairs", "properties").SetCustomSuppressDiff(recepientPropertiesSuppressDiff)
 		common.CustomizeSchemaPath(s, "data_recipient_global_metastore_id").SetForceNew().SetConflictsWith([]string{"ip_access_list"})
 		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{"data_recipient_global_metastore_id"})
+		common.CustomizeSchemaPath(s, "id").SetComputed()
 
 		// ReadOnly fields
 		for _, path := range []string{"created_at", "created_by", "updated_at", "updated_by", "metastore_id", "region",
@@ -43,12 +49,16 @@ func ResourceRecipient() common.Resource {
 			common.CustomizeSchemaPath(s, "tokens", path).SetReadOnly()
 		}
 
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: recipientSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -62,7 +72,7 @@ func ResourceRecipient() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -81,13 +91,14 @@ func ResourceRecipient() common.Resource {
 			return common.StructToData(ri, recipientSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			var updateRecipientRequest sharing.UpdateRecipient
 			common.DataToStructPointer(d, recipientSchema, &updateRecipientRequest)
 			updateRecipientRequest.Name = d.Id()
+			updateRecipientRequest.Id = ""
 
 			if d.HasChange("owner") {
 				_, err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
@@ -122,7 +133,7 @@ func ResourceRecipient() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

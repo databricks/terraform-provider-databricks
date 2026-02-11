@@ -46,6 +46,13 @@ The following arguments are supported:
 * `anomaly_detection_config` (AnomalyDetectionConfig, optional) - Anomaly Detection Configuration, applicable to `schema` object types
 * `data_profiling_config` (DataProfilingConfig, optional) - Data Profiling Configuration, applicable to `table` object types. Exactly one `Analysis Configuration`
   must be present
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection
 
 ### CronSchedule
 * `quartz_cron_expression` (string, required) - The expression that determines when to run the monitor. See [examples](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)

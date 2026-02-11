@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -17,11 +18,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,10 +43,82 @@ type KafkaConfigResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ProviderConfig contains the fields to configure the provider.
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
+	return attrs
+}
+
+// ProviderConfigWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
+// only implements ToObjectValue() and Type().
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // KafkaConfig extends the main model with additional fields.
 type KafkaConfig struct {
 	// Authentication configuration for connection to topics.
 	AuthConfig types.Object `tfsdk:"auth_config"`
+	// A user-provided and managed source for backfilling data. Historical data
+	// is used when creating a training set from streaming features linked to
+	// this Kafka config. In the future, a separate table will be maintained by
+	// Databricks for forward filling data. The schema for this source must
+	// match exactly that of the key and value schemas specified for this Kafka
+	// config.
+	BackfillSource types.Object `tfsdk:"backfill_source"`
 	// A comma-separated list of host/port pairs pointing to Kafka cluster.
 	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
 	// Catch-all for miscellaneous options. Keys should be source options or
@@ -60,7 +135,8 @@ type KafkaConfig struct {
 	SubscriptionMode types.Object `tfsdk:"subscription_mode"`
 	// Schema configuration for extracting message values from topics. At least
 	// one of key_schema and value_schema must be provided.
-	ValueSchema types.Object `tfsdk:"value_schema"`
+	ValueSchema    types.Object `tfsdk:"value_schema"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -73,10 +149,12 @@ type KafkaConfig struct {
 func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
+		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
 		"value_schema":      reflect.TypeOf(ml_tf.SchemaConfig{}),
+		"provider_config":   reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -90,12 +168,15 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"auth_config": m.AuthConfig,
+			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
 			"value_schema":      m.ValueSchema,
+
+			"provider_config": m.ProviderConfig,
 		},
 	)
 }
@@ -105,6 +186,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"auth_config": ml_tf.AuthConfig{}.Type(ctx),
+			"backfill_source":   ml_tf.BackfillSource{}.Type(ctx),
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
@@ -113,6 +195,8 @@ func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 			"name":              types.StringType,
 			"subscription_mode": ml_tf.SubscriptionMode{}.Type(ctx),
 			"value_schema":      ml_tf.SchemaConfig{}.Type(ctx),
+
+			"provider_config": ProviderConfig{}.Type(ctx),
 		},
 	}
 }
@@ -127,6 +211,15 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of AuthConfig
 				toAuthConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAuthConfig)
 				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				// Recursively sync the fields of BackfillSource
+				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
 			}
 		}
 	}
@@ -157,6 +250,8 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -168,6 +263,14 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			if fromAuthConfig, ok := from.GetAuthConfig(ctx); ok {
 				toAuthConfig.SyncFieldsDuringRead(ctx, fromAuthConfig)
 				to.SetAuthConfig(ctx, toAuthConfig)
+			}
+		}
+	}
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				toBackfillSource.SyncFieldsDuringRead(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
 			}
 		}
 	}
@@ -195,10 +298,13 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			}
 		}
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auth_config"] = attrs["auth_config"].SetRequired()
+	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
@@ -207,6 +313,8 @@ func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["value_schema"] = attrs["value_schema"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -233,6 +341,31 @@ func (m *KafkaConfig) GetAuthConfig(ctx context.Context) (ml_tf.AuthConfig, bool
 func (m *KafkaConfig) SetAuthConfig(ctx context.Context, v ml_tf.AuthConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.AuthConfig = vs
+}
+
+// GetBackfillSource returns the value of the BackfillSource field in KafkaConfig as
+// a ml_tf.BackfillSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetBackfillSource(ctx context.Context) (ml_tf.BackfillSource, bool) {
+	var e ml_tf.BackfillSource
+	if m.BackfillSource.IsNull() || m.BackfillSource.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.BackfillSource
+	d := m.BackfillSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBackfillSource sets the value of the BackfillSource field in KafkaConfig.
+func (m *KafkaConfig) SetBackfillSource(ctx context.Context, v ml_tf.BackfillSource) {
+	vs := v.ToObjectValue(ctx)
+	m.BackfillSource = vs
 }
 
 // GetExtraOptions returns the value of the ExtraOptions field in KafkaConfig as
@@ -353,44 +486,6 @@ func (r *KafkaConfigResource) Configure(ctx context.Context, req resource.Config
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diags *diag.Diagnostics, state *tfsdk.State) {
-	var kafka_config ml.KafkaConfig
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &kafka_config)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateKafkaConfigRequest{
-		KafkaConfig: kafka_config,
-		Name:        plan.Name.ValueString(),
-		UpdateMask:  *fieldmask.New(strings.Split("auth_config,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureEngineering.UpdateKafkaConfig(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update feature_engineering_kafka_config", err.Error())
-		return
-	}
-
-	var newState KafkaConfig
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *KafkaConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -410,7 +505,15 @@ func (r *KafkaConfigResource) Create(ctx context.Context, req resource.CreateReq
 		KafkaConfig: kafka_config,
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -454,7 +557,15 @@ func (r *KafkaConfigResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -480,6 +591,52 @@ func (r *KafkaConfigResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diags *diag.Diagnostics, state *tfsdk.State) {
+	var kafka_config ml.KafkaConfig
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &kafka_config)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateKafkaConfigRequest{
+		KafkaConfig: kafka_config,
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  *fieldmask.New(strings.Split("auth_config,backfill_source,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
+	}
+
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureEngineering.UpdateKafkaConfig(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update feature_engineering_kafka_config", err.Error())
+		return
+	}
+
+	var newState KafkaConfig
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *KafkaConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -509,7 +666,15 @@ func (r *KafkaConfigResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {

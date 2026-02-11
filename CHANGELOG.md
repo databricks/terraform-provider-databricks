@@ -1,5 +1,102 @@
 # Version changelog
 
+## Release v1.105.0 (2026-02-05)
+
+### Breaking Changes
+
+* Return empty string for `data_source_id` in `databricks_sql_warehouse` and `databricks_sql_endpoint` if data source API call fails ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))
+
+### New Features and Improvements
+
+* Allow the `cluster_size` argument to be specified as "5X-Large" in `databricks_sql_warehouse`
+* Update the maximum allowed value for `max_num_clusters` argument in `databricks_sql_warehouse` to 40 (see [API docs](https://docs.databricks.com/api/workspace/warehouses/create#max_num_clusters) for details).
+
+### Bug Fixes
+
+* Dashboard File Content Change Detection When Using `file_path` ([#5359])(https://github.com/databricks/terraform-provider-databricks/pull/5359)
+* Fix permanent drift in `databricks_model_serving` when using `*_plaintext` credential fields for external models ([#5125](https://github.com/databricks/terraform-provider-databricks/pull/5125))
+
+### Documentation
+
+* Mark `data_source_id` as deprecated in `databricks_sql_warehouse` and `databricks_sql_endpoint` ([#5312](https://github.com/databricks/terraform-provider-databricks/pull/5312))
+
+### Exporter
+
+* Add exporting for RFA destinations and Delta Sharing providers ([#5337](https://github.com/databricks/terraform-provider-databricks/pull/5337))
+
+### Internal Changes
+
+* Update Go SDK to v0.104.0.
+
+
+## Release v1.104.0 (2026-01-22)
+
+### New Features and Improvements
+* Added resources and data sources for `databricks_account_user_setting_v2` and `databricks_default_warehouse_override` ([#5329](https://github.com/databricks/terraform-provider-databricks/pull/5329)).
+
+### Bug Fixes
+
+* Fix importing of the `databricks_share` ([#5311](https://github.com/databricks/terraform-provider-databricks/pull/5311))
+* Fix `databricks_dashboard` resource to include `dataset_catalog` and `dataset_schema` when retrying creation after parent folder creation ([#5327](https://github.com/databricks/terraform-provider-databricks/pull/5327))
+
+### Exporter
+
+* Rewrite cloud-specific attributes and node types in cluster policy definitions when using `-targetCloud` flag ([#5297](https://github.com/databricks/terraform-provider-databricks/issues/5297)).
+* Added support for `databricks_account_network_policy` and `databricks_workspace_network_option` resources ([#5238](https://github.com/databricks/terraform-provider-databricks/pull/5238)).
+* Rewrite exporting of `databricks_share` to plugin framework ([#5328](https://github.com/databricks/terraform-provider-databricks/pull/5328))
+
+### Internal Changes
+* Add support for unified host, migrate IsAccountClient to HostType
+
+
+## Release v1.103.0 (2026-01-15)
+
+### Bug Fixes
+* Fixed `databricks_dashboard` resource to detect content changes when using the `file_path` attribute. Previously, only changes to the path string itself triggered updates, not changes to the file content.
+
+
+## Release v1.102.0 (2026-01-07)
+
+### New Features and Improvements
+* Added resources and data sources for `databricks_postgres_project`, `databricks_postgres_endpoint` and `databricks_postgres_branch` ([#5305](https://github.com/databricks/terraform-provider-databricks/pull/5305)).
+
+
+## Release v1.101.0 (2026-01-06)
+
+### Bug Fixes
+* [Fix] Allow Updating Share Objects With shared_as Defined ([#5287](https://github.com/databricks/terraform-provider-databricks/pull/5287))
+
+### Internal Changes
+
+* Switch to use Go SDK struct in `databricks_metastore` resource ([#5088](https://github.com/databricks/terraform-provider-databricks/pull/5088))
+
+
+## Release v1.100.0 (2025-12-11)
+
+### New Features and Improvements
+
+* Handle new fields in `databricks_pipeline` resource ([#5249](https://github.com/databricks/terraform-provider-databricks/pull/5249))
+* Recreate `databricks_credential` on the `name` change ([#5248](https://github.com/databricks/terraform-provider-databricks/pull/5248)).
+* Allow to specify default catalog and schema for `databricks_dashboard` ([#5259](https://github.com/databricks/terraform-provider-databricks/pull/5259)).
+
+### Bug Fixes
+
+* Fix retrieving of latest DBR versions in `databricks_spark_version` ([#5255](https://github.com/databricks/terraform-provider-databricks/pull/5255))
+* Reset PO flag for non-managed UC Catalogs ([#5260](https://github.com/databricks/terraform-provider-databricks/pull/5260)).
+
+### Documentation
+
+* Add missing GCP IAM permission `topics.detachSubscription` for Databricks file events ([#5269](https://github.com/databricks/terraform-provider-databricks/pull/5269))
+
+### Exporter
+
+* Added `-targetCloud` and `-nodeTypeMappingFile` flags for cross-cloud attribute and node-type conversion ([#5236](https://github.com/databricks/terraform-provider-databricks/issues/5236)).
+
+### Internal Changes
+
+ * Update Go SDK to v0.94.0.
+
+
 ## Release v1.99.0 (2025-12-04)
 
 ### New Features and Improvements

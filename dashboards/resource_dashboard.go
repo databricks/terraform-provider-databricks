@@ -18,13 +18,29 @@ type Dashboard struct {
 	FilePath                string `json:"file_path,omitempty"`
 	Md5                     string `json:"md5,omitempty"`
 	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
+	DatasetCatalog          string `json:"dataset_catalog,omitempty"`
+	DatasetSchema           string `json:"dataset_schema,omitempty"`
+	common.Namespace
 }
 
-func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) bool {
-	_, newHash, err := common.ReadSerializedJsonContent(new, d.Get("file_path").(string))
-	if err != nil {
-		return false
+func customDiffDashboardContent(k, old, new string, d *schema.ResourceData) bool {
+	// Use the new value for the attribute being diffed.
+	serializedDashboard := d.Get("serialized_dashboard").(string)
+	filePath := d.Get("file_path").(string)
+
+	// If the diff is for serialized_dashboard or file_path, use the new value.
+	if k == "serialized_dashboard" {
+		serializedDashboard = new
 	}
+	if k == "file_path" {
+		filePath = new
+	}
+
+	_, newHash, err := common.ReadSerializedJsonContent(serializedDashboard, filePath)
+	if err != nil {
+		return false // Show diff on error
+	}
+	// Suppress diff if: stored MD5 matches new hash AND no external changes detected
 	return d.Get("md5").(string) == newHash && !d.Get("dashboard_change_detected").(bool)
 }
 
@@ -37,7 +53,6 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Computed fields
 	s.SchemaPath("create_time").SetComputed()
 	s.SchemaPath("dashboard_id").SetComputed()
-	s.SchemaPath("etag").SetComputed()
 	s.SchemaPath("lifecycle_state").SetComputed()
 	s.SchemaPath("path").SetComputed()
 	s.SchemaPath("update_time").SetComputed()
@@ -53,20 +68,31 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	// Default values
 	s.SchemaPath("embed_credentials").SetDefault(true)
 
-	// DiffSuppressFunc
-	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
+	// DiffSuppressFunc - Custom diff logic for serialized_dashboard
+	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffDashboardContent)
+
+	// Apply same custom diff to file_path to enable content change detection
+	s.SchemaPath("file_path").SetCustomSuppressDiff(customDiffDashboardContent)
+
+	common.NamespaceCustomizeSchema(s)
+	// etag is intentionally NOT Computed - it's Optional so that a diff is created
+	// between state (has etag from API) and config (no etag). This guarantees
+	// DiffSuppressFunc is called on every plan, enabling file content change detection.
+	s.SchemaPath("etag").SetCustomSuppressDiff(customDiffDashboardContent)
 
 	return s
 }
 
-var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
-
 // ResourceDashboard manages dashboards
 func ResourceDashboard() common.Resource {
+	dashboardSchema := common.StructToSchema(Dashboard{}, nil)
 	return common.Resource{
 		Schema: dashboardSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -78,14 +104,22 @@ func ResourceDashboard() common.Resource {
 			}
 			d.Set("md5", md5Hash)
 			dashboard.SerializedDashboard = content
-			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: dashboard})
+
+			// Define the request once for the initial creation and subsequent retry.
+			createDashboardRequest := dashboards.CreateDashboardRequest{
+				Dashboard:      dashboard,
+				DatasetCatalog: d.Get("dataset_catalog").(string),
+				DatasetSchema:  d.Get("dataset_schema").(string),
+			}
+
+			createdDashboard, err := w.Lakeview.Create(ctx, createDashboardRequest)
 			if err != nil && isParentDoesntExistError(err) {
 				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
 				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
 				if err != nil {
 					return err
 				}
-				createdDashboard, err = w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: dashboard})
+				createdDashboard, err = w.Lakeview.Create(ctx, createDashboardRequest)
 			}
 			if err != nil {
 				return err
@@ -115,7 +149,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -138,22 +172,24 @@ func ResourceDashboard() common.Resource {
 			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
 			var dashboard dashboards.Dashboard
 			common.DataToStructPointer(d, dashboardSchema, &dashboard)
-			dashboard.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
+			dashboard.DashboardId = d.Id()
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
 			dashboard.SerializedDashboard = content
 			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
-				DashboardId: dashboard.DashboardId,
-				Dashboard:   dashboard,
+				DashboardId:    dashboard.DashboardId,
+				Dashboard:      dashboard,
+				DatasetCatalog: d.Get("dataset_catalog").(string),
+				DatasetSchema:  d.Get("dataset_schema").(string),
 			})
 			if err != nil {
 				return err
@@ -181,7 +217,7 @@ func ResourceDashboard() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -16,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,6 +42,71 @@ func ResourceFeature() resource.Resource {
 
 type FeatureResource struct {
 	Client *autogen.DatabricksClient
+}
+
+// ProviderConfig contains the fields to configure the provider.
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
+	return attrs
+}
+
+// ProviderConfigWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
+// only implements ToObjectValue() and Type().
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
 }
 
 // Feature extends the main model with additional fields.
@@ -63,7 +131,8 @@ type Feature struct {
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
 	// The time window in which the feature is computed.
-	TimeWindow types.Object `tfsdk:"time_window"`
+	TimeWindow     types.Object `tfsdk:"time_window"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -80,6 +149,7 @@ func (m Feature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"lineage_context": reflect.TypeOf(ml_tf.LineageContext{}),
 		"source":          reflect.TypeOf(ml_tf.DataSource{}),
 		"time_window":     reflect.TypeOf(ml_tf.TimeWindow{}),
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -100,6 +170,8 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"lineage_context":  m.LineageContext,
 			"source":           m.Source,
 			"time_window":      m.TimeWindow,
+
+			"provider_config": m.ProviderConfig,
 		},
 	)
 }
@@ -118,6 +190,8 @@ func (m Feature) Type(ctx context.Context) attr.Type {
 			"lineage_context": ml_tf.LineageContext{}.Type(ctx),
 			"source":          ml_tf.DataSource{}.Type(ctx),
 			"time_window":     ml_tf.TimeWindow{}.Type(ctx),
+
+			"provider_config": ProviderConfig{}.Type(ctx),
 		},
 	}
 }
@@ -162,6 +236,8 @@ func (to *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Feat
 			}
 		}
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -200,6 +276,8 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 			}
 		}
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -214,10 +292,12 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["time_window"] = attrs["time_window"].SetRequired()
+	attrs["time_window"] = attrs["time_window"].SetOptional()
 	attrs["time_window"] = attrs["time_window"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -364,44 +444,6 @@ func (r *FeatureResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.Diagnostics, state *tfsdk.State) {
-	var feature ml.Feature
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := ml.UpdateFeatureRequest{
-		Feature:    feature,
-		FullName:   plan.FullName.ValueString(),
-		UpdateMask: "description,filter_condition,lineage_context",
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.FeatureEngineering.UpdateFeature(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update feature_engineering_feature", err.Error())
-		return
-	}
-
-	var newState Feature
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
-}
-
 func (r *FeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -421,7 +463,15 @@ func (r *FeatureResource) Create(ctx context.Context, req resource.CreateRequest
 		Feature: feature,
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -465,7 +515,15 @@ func (r *FeatureResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -491,6 +549,52 @@ func (r *FeatureResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.Diagnostics, state *tfsdk.State) {
+	var feature ml.Feature
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &feature)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := ml.UpdateFeatureRequest{
+		Feature:    feature,
+		FullName:   plan.FullName.ValueString(),
+		UpdateMask: "description,filter_condition,lineage_context",
+	}
+
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.FeatureEngineering.UpdateFeature(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update feature_engineering_feature", err.Error())
+		return
+	}
+
+	var newState Feature
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *FeatureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -520,7 +624,15 @@ func (r *FeatureResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {

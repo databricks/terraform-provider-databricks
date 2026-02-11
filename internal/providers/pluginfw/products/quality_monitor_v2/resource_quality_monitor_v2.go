@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -16,11 +17,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,6 +43,71 @@ type QualityMonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ProviderConfig contains the fields to configure the provider.
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
+	return attrs
+}
+
+// ProviderConfigWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
+// only implements ToObjectValue() and Type().
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // QualityMonitor extends the main model with additional fields.
 type QualityMonitor struct {
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
@@ -46,6 +115,9 @@ type QualityMonitor struct {
 	ObjectId types.String `tfsdk:"object_id"`
 	// The type of the monitored object. Can be one of the following: schema.
 	ObjectType types.String `tfsdk:"object_type"`
+	// Validity check configurations for anomaly detection.
+	ValidityCheckConfigurations types.List   `tfsdk:"validity_check_configurations"`
+	ProviderConfig              types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -57,7 +129,9 @@ type QualityMonitor struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m QualityMonitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"anomaly_detection_config": reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+		"anomaly_detection_config":      reflect.TypeOf(qualitymonitorv2_tf.AnomalyDetectionConfig{}),
+		"validity_check_configurations": reflect.TypeOf(qualitymonitorv2_tf.ValidityCheckConfiguration{}),
+		"provider_config":               reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -71,8 +145,11 @@ func (m QualityMonitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"anomaly_detection_config": m.AnomalyDetectionConfig,
-			"object_id":   m.ObjectId,
-			"object_type": m.ObjectType,
+			"object_id":                     m.ObjectId,
+			"object_type":                   m.ObjectType,
+			"validity_check_configurations": m.ValidityCheckConfigurations,
+
+			"provider_config": m.ProviderConfig,
 		},
 	)
 }
@@ -84,6 +161,11 @@ func (m QualityMonitor) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{"anomaly_detection_config": qualitymonitorv2_tf.AnomalyDetectionConfig{}.Type(ctx),
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
+			"validity_check_configurations": basetypes.ListType{
+				ElemType: qualitymonitorv2_tf.ValidityCheckConfiguration{}.Type(ctx),
+			},
+
+			"provider_config": ProviderConfig{}.Type(ctx),
 		},
 	}
 }
@@ -101,6 +183,18 @@ func (to *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.ValidityCheckConfigurations.IsUnknown() && !from.ValidityCheckConfigurations.IsNull() {
+		// ValidityCheckConfigurations is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
+	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() && to.ValidityCheckConfigurations.IsNull() && len(from.ValidityCheckConfigurations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ValidityCheckConfigurations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -115,15 +209,32 @@ func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from Quality
 			}
 		}
 	}
+	if !from.ValidityCheckConfigurations.IsUnknown() && !from.ValidityCheckConfigurations.IsNull() {
+		// ValidityCheckConfigurations is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
+	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() && to.ValidityCheckConfigurations.IsNull() && len(from.ValidityCheckConfigurations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ValidityCheckConfigurations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
+	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 func (m QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
+	attrs["validity_check_configurations"] = attrs["validity_check_configurations"].SetOptional()
+	attrs["validity_check_configurations"] = attrs["validity_check_configurations"].SetComputed()
+	attrs["validity_check_configurations"] = attrs["validity_check_configurations"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -152,6 +263,32 @@ func (m *QualityMonitor) SetAnomalyDetectionConfig(ctx context.Context, v qualit
 	m.AnomalyDetectionConfig = vs
 }
 
+// GetValidityCheckConfigurations returns the value of the ValidityCheckConfigurations field in QualityMonitor as
+// a slice of qualitymonitorv2_tf.ValidityCheckConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *QualityMonitor) GetValidityCheckConfigurations(ctx context.Context) ([]qualitymonitorv2_tf.ValidityCheckConfiguration, bool) {
+	if m.ValidityCheckConfigurations.IsNull() || m.ValidityCheckConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []qualitymonitorv2_tf.ValidityCheckConfiguration
+	d := m.ValidityCheckConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValidityCheckConfigurations sets the value of the ValidityCheckConfigurations field in QualityMonitor.
+func (m *QualityMonitor) SetValidityCheckConfigurations(ctx context.Context, v []qualitymonitorv2_tf.ValidityCheckConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["validity_check_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ValidityCheckConfigurations = types.ListValueMust(t, vs)
+}
+
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
@@ -167,44 +304,6 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 
 func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
-}
-
-func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
-	var quality_monitor qualitymonitorv2.QualityMonitor
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := qualitymonitorv2.UpdateQualityMonitorRequest{
-		QualityMonitor: quality_monitor,
-		ObjectId:       plan.ObjectId.ValueString(),
-		ObjectType:     plan.ObjectType.ValueString(),
-	}
-
-	client, clientDiags := r.Client.GetWorkspaceClient()
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update quality_monitor_v2", err.Error())
-		return
-	}
-
-	var newState QualityMonitor
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -226,7 +325,15 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		QualityMonitor: quality_monitor,
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -270,7 +377,15 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -296,6 +411,52 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+}
+
+func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
+	var quality_monitor qualitymonitorv2.QualityMonitor
+
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &quality_monitor)...)
+	if diags.HasError() {
+		return
+	}
+
+	updateRequest := qualitymonitorv2.UpdateQualityMonitorRequest{
+		QualityMonitor: quality_monitor,
+		ObjectId:       plan.ObjectId.ValueString(),
+		ObjectType:     plan.ObjectType.ValueString(),
+	}
+
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	diags.Append(clientDiags...)
+	if diags.HasError() {
+		return
+	}
+	response, err := client.QualityMonitorV2.UpdateQualityMonitor(ctx, updateRequest)
+	if err != nil {
+		diags.AddError("failed to update quality_monitor_v2", err.Error())
+		return
+	}
+
+	var newState QualityMonitor
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+
+	if diags.HasError() {
+		return
+	}
+
+	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	diags.Append(state.Set(ctx, newState)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -325,7 +486,15 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {

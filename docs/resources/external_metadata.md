@@ -43,6 +43,10 @@ The following arguments are supported:
 * `owner` (string, optional) - Owner of the external metadata object
 * `properties` (object, optional) - A map of key-value properties attached to the external metadata object
 * `url` (string, optional) - URL associated with the external metadata object
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

@@ -134,6 +134,8 @@ The following arguments are supported:
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 * `description` - (Optional) The description of the model serving endpoint.
 * `email_notifications` - (Optional) A block with Email notification setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### served_entities Configuration Block
 

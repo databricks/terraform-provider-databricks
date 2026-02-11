@@ -25,8 +25,13 @@ func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+type ConnectionSchemaStruct struct {
+	catalog.ConnectionInfo
+	common.Namespace
+}
+
 func ResourceConnection() common.Resource {
-	s := common.StructToSchema(catalog.ConnectionInfo{},
+	s := common.StructToSchema(ConnectionSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			for _, v := range []string{"url", "metastore_id", "credential_type", "connection_id",
 				"created_at", "created_by", "full_name", "provisioning_info", "securable_type", "updated_at", "updated_by"} {
@@ -40,7 +45,7 @@ func ResourceConnection() common.Resource {
 			}
 			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -50,7 +55,7 @@ func ResourceConnection() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -79,7 +84,7 @@ func ResourceConnection() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -113,7 +118,7 @@ func ResourceConnection() common.Resource {
 			return common.StructToData(conn, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -161,7 +166,7 @@ func ResourceConnection() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

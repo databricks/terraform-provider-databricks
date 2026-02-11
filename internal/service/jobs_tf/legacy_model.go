@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf" // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1718,6 +1719,54 @@ func (m *ClusterSpec_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.Clus
 	m.NewCluster = types.ListValueMust(t, vs)
 }
 
+type Compute_SdkV2 struct {
+	// Hardware accelerator configuration for Serverless GPU workloads.
+	HardwareAccelerator types.List `tfsdk:"hardware_accelerator"`
+}
+
+func (to *Compute_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Compute_SdkV2) {
+}
+
+func (to *Compute_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Compute_SdkV2) {
+}
+
+func (m Compute_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["hardware_accelerator"] = attrs["hardware_accelerator"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Compute.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Compute_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Compute_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Compute_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"hardware_accelerator": m.HardwareAccelerator,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Compute_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"hardware_accelerator": types.StringType,
+		},
+	}
+}
+
 type ComputeConfig_SdkV2 struct {
 	// IDof the GPU pool to use.
 	GpuNodePoolId types.String `tfsdk:"gpu_node_pool_id"`
@@ -1976,7 +2025,8 @@ type CreateJob_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// The performance mode on a serverless job. This field determines the level
-	// of compute performance or cost-efficiency for the run.
+	// of compute performance or cost-efficiency for the run. The performance
+	// target does not apply to tasks that run on Serverless GPU compute.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -3104,6 +3154,17 @@ func (m *DashboardPageSnapshot_SdkV2) SetWidgetErrorDetails(ctx context.Context,
 type DashboardTask_SdkV2 struct {
 	// The identifier of the dashboard to refresh.
 	DashboardId types.String `tfsdk:"dashboard_id"`
+	// Dashboard task parameters. Used to apply dashboard filter values during
+	// dashboard task execution. Parameter values get applied to any dashboard
+	// filters that have a matching URL identifier as the parameter key. The
+	// parameter value format is dependent on the filter type: - For text and
+	// single-select filters, provide a single value (e.g. `"value"`) - For date
+	// and datetime filters, provide the value in ISO 8601 format (e.g.
+	// `"2000-01-01T00:00:00"`) - For multi-select filters, provide a JSON array
+	// of values (e.g. `"[\"value1\",\"value2\"]"`) - For range and date range
+	// filters, provide a JSON object with `start` and `end` (e.g.
+	// `"{\"start\":\"1\",\"end\":\"10\"}"`)
+	Filters types.Map `tfsdk:"filters"`
 	// Optional: subscription configuration for sending the dashboard snapshot.
 	Subscription types.List `tfsdk:"subscription"`
 	// Optional: The warehouse id to execute the dashboard with for the
@@ -3137,6 +3198,7 @@ func (to *DashboardTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Da
 
 func (m DashboardTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["subscription"] = attrs["subscription"].SetOptional()
 	attrs["subscription"] = attrs["subscription"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
@@ -3153,6 +3215,7 @@ func (m DashboardTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m DashboardTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"filters":      reflect.TypeOf(types.String{}),
 		"subscription": reflect.TypeOf(Subscription_SdkV2{}),
 	}
 }
@@ -3165,6 +3228,7 @@ func (m DashboardTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dashboard_id": m.DashboardId,
+			"filters":      m.Filters,
 			"subscription": m.Subscription,
 			"warehouse_id": m.WarehouseId,
 		})
@@ -3175,12 +3239,41 @@ func (m DashboardTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
+			"filters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"subscription": basetypes.ListType{
 				ElemType: Subscription_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetFilters returns the value of the Filters field in DashboardTask_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTask_SdkV2) GetFilters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Filters.IsNull() || m.Filters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFilters sets the value of the Filters field in DashboardTask_SdkV2.
+func (m *DashboardTask_SdkV2) SetFilters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Filters = types.MapValueMust(t, vs)
 }
 
 // GetSubscription returns the value of the Subscription field in DashboardTask_SdkV2 as
@@ -6443,7 +6536,8 @@ func (m *JobCompliance_SdkV2) SetViolations(ctx context.Context, v map[string]ty
 type JobDeployment_SdkV2 struct {
 	// The kind of deployment that manages the job.
 	//
-	// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
+	// * `BUNDLE`: The job is managed by Databricks Asset Bundle. *
+	// `SYSTEM_MANAGED`: The job is managed by Databricks and is read-only.
 	Kind types.String `tfsdk:"kind"`
 	// Path of the file that contains deployment metadata.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
@@ -7413,6 +7507,9 @@ func (m *JobPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, 
 // Either `user_name` or `service_principal_name` should be specified. If not,
 // an error is thrown.
 type JobRunAs_SdkV2 struct {
+	// Group name of an account group assigned to the workspace. Setting this
+	// field requires being a member of the group.
+	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -7428,6 +7525,7 @@ func (to *JobRunAs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JobRunA
 }
 
 func (m JobRunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -7452,6 +7550,7 @@ func (m JobRunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"group_name":             m.GroupName,
 			"service_principal_name": m.ServicePrincipalName,
 			"user_name":              m.UserName,
 		})
@@ -7461,6 +7560,7 @@ func (m JobRunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m JobRunAs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
 			"user_name":              types.StringType,
 		},
@@ -7541,7 +7641,8 @@ type JobSettings_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// The performance mode on a serverless job. This field determines the level
-	// of compute performance or cost-efficiency for the run.
+	// of compute performance or cost-efficiency for the run. The performance
+	// target does not apply to tasks that run on Serverless GPU compute.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -15986,6 +16087,8 @@ type RunTask_SdkV2 struct {
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
 	ClusterInstance types.List `tfsdk:"cluster_instance"`
+	// Task level compute configuration.
+	Compute types.List `tfsdk:"compute"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -16156,6 +16259,19 @@ func (to *RunTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 				// Recursively sync the fields of ClusterInstance
 				toClusterInstance.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterInstance)
 				to.SetClusterInstance(ctx, toClusterInstance)
+			}
+		}
+	}
+	if !from.Compute.IsUnknown() && !from.Compute.IsNull() {
+		// Compute is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Compute = from.Compute
+	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				// Recursively sync the fields of Compute
+				toCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
 			}
 		}
 	}
@@ -16406,6 +16522,18 @@ func (to *RunTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunTask_
 			}
 		}
 	}
+	if !from.Compute.IsUnknown() && !from.Compute.IsNull() {
+		// Compute is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Compute = from.Compute
+	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				toCompute.SyncFieldsDuringRead(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
+			}
+		}
+	}
 	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
 		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
 			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
@@ -16619,6 +16747,10 @@ func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["cluster_instance"] = attrs["cluster_instance"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["compute"] = attrs["compute"].SetOptional()
+	attrs["compute"] = attrs["compute"].SetComputed()
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
@@ -16700,6 +16832,7 @@ func (m RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"cluster_instance":          reflect.TypeOf(ClusterInstance_SdkV2{}),
+		"compute":                   reflect.TypeOf(Compute_SdkV2{}),
 		"condition_task":            reflect.TypeOf(RunConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
@@ -16740,6 +16873,7 @@ func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
 			"cleanup_duration":             m.CleanupDuration,
 			"cluster_instance":             m.ClusterInstance,
+			"compute":                      m.Compute,
 			"condition_task":               m.ConditionTask,
 			"dashboard_task":               m.DashboardTask,
 			"dbt_cloud_task":               m.DbtCloudTask,
@@ -16796,6 +16930,9 @@ func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"cleanup_duration": types.Int64Type,
 			"cluster_instance": basetypes.ListType{
 				ElemType: ClusterInstance_SdkV2{}.Type(ctx),
+			},
+			"compute": basetypes.ListType{
+				ElemType: Compute_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
 				ElemType: RunConditionTask_SdkV2{}.Type(ctx),
@@ -16945,6 +17082,32 @@ func (m *RunTask_SdkV2) SetClusterInstance(ctx context.Context, v ClusterInstanc
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
 	m.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetCompute returns the value of the Compute field in RunTask_SdkV2 as
+// a Compute_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunTask_SdkV2) GetCompute(ctx context.Context) (Compute_SdkV2, bool) {
+	var e Compute_SdkV2
+	if m.Compute.IsNull() || m.Compute.IsUnknown() {
+		return e, false
+	}
+	var v []Compute_SdkV2
+	d := m.Compute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCompute sets the value of the Compute field in RunTask_SdkV2.
+func (m *RunTask_SdkV2) SetCompute(ctx context.Context, v Compute_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	m.Compute = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in RunTask_SdkV2 as
@@ -20039,6 +20202,8 @@ type SubmitTask_SdkV2 struct {
 	//
 	// [clean rooms]: https://docs.databricks.com/clean-rooms/index.html
 	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task"`
+	// Task level compute configuration.
+	Compute types.List `tfsdk:"compute"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -20142,6 +20307,19 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of CleanRoomsNotebookTask
 				toCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookTask)
 				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !from.Compute.IsUnknown() && !from.Compute.IsNull() {
+		// Compute is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Compute = from.Compute
+	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				// Recursively sync the fields of Compute
+				toCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
 			}
 		}
 	}
@@ -20357,6 +20535,18 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submi
 			}
 		}
 	}
+	if !from.Compute.IsUnknown() && !from.Compute.IsNull() {
+		// Compute is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Compute = from.Compute
+	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				toCompute.SyncFieldsDuringRead(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
+			}
+		}
+	}
 	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
 		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
 			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
@@ -20542,6 +20732,10 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submi
 func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["compute"] = attrs["compute"].SetOptional()
+	attrs["compute"] = attrs["compute"].SetComputed()
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
@@ -20606,6 +20800,7 @@ func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
+		"compute":                   reflect.TypeOf(Compute_SdkV2{}),
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
@@ -20640,6 +20835,7 @@ func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
+			"compute":                   m.Compute,
 			"condition_task":            m.ConditionTask,
 			"dashboard_task":            m.DashboardTask,
 			"dbt_cloud_task":            m.DbtCloudTask,
@@ -20678,6 +20874,9 @@ func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
 				ElemType: CleanRoomsNotebookTask_SdkV2{}.Type(ctx),
+			},
+			"compute": basetypes.ListType{
+				ElemType: Compute_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
 				ElemType: ConditionTask_SdkV2{}.Type(ctx),
@@ -20782,6 +20981,32 @@ func (m *SubmitTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v Clea
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
 	m.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetCompute returns the value of the Compute field in SubmitTask_SdkV2 as
+// a Compute_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubmitTask_SdkV2) GetCompute(ctx context.Context) (Compute_SdkV2, bool) {
+	var e Compute_SdkV2
+	if m.Compute.IsNull() || m.Compute.IsUnknown() {
+		return e, false
+	}
+	var v []Compute_SdkV2
+	d := m.Compute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCompute sets the value of the Compute field in SubmitTask_SdkV2.
+func (m *SubmitTask_SdkV2) SetCompute(ctx context.Context, v Compute_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	m.Compute = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in SubmitTask_SdkV2 as
@@ -21792,6 +22017,8 @@ type Task_SdkV2 struct {
 	//
 	// [clean rooms]: https://docs.databricks.com/clean-rooms/index.html
 	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task"`
+	// Task level compute configuration.
+	Compute types.List `tfsdk:"compute"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -21921,6 +22148,15 @@ func (to *Task_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from T
 				// Recursively sync the fields of CleanRoomsNotebookTask
 				toCleanRoomsNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromCleanRoomsNotebookTask)
 				to.SetCleanRoomsNotebookTask(ctx, toCleanRoomsNotebookTask)
+			}
+		}
+	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				// Recursively sync the fields of Compute
+				toCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
 			}
 		}
 	}
@@ -22136,6 +22372,14 @@ func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2)
 			}
 		}
 	}
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				toCompute.SyncFieldsDuringRead(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
+			}
+		}
+	}
 	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
 		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
 			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
@@ -22321,6 +22565,8 @@ func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2)
 func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["compute"] = attrs["compute"].SetOptional()
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
@@ -22391,6 +22637,7 @@ func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 func (m Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
+		"compute":                   reflect.TypeOf(Compute_SdkV2{}),
 		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
 		"dashboard_task":            reflect.TypeOf(DashboardTask_SdkV2{}),
 		"dbt_cloud_task":            reflect.TypeOf(DbtCloudTask_SdkV2{}),
@@ -22425,6 +22672,7 @@ func (m Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
+			"compute":                   m.Compute,
 			"condition_task":            m.ConditionTask,
 			"dashboard_task":            m.DashboardTask,
 			"dbt_cloud_task":            m.DbtCloudTask,
@@ -22469,6 +22717,9 @@ func (m Task_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
 				ElemType: CleanRoomsNotebookTask_SdkV2{}.Type(ctx),
+			},
+			"compute": basetypes.ListType{
+				ElemType: Compute_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
 				ElemType: ConditionTask_SdkV2{}.Type(ctx),
@@ -22579,6 +22830,32 @@ func (m *Task_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRooms
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
 	m.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetCompute returns the value of the Compute field in Task_SdkV2 as
+// a Compute_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Task_SdkV2) GetCompute(ctx context.Context) (Compute_SdkV2, bool) {
+	var e Compute_SdkV2
+	if m.Compute.IsNull() || m.Compute.IsUnknown() {
+		return e, false
+	}
+	var v []Compute_SdkV2
+	d := m.Compute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCompute sets the value of the Compute field in Task_SdkV2.
+func (m *Task_SdkV2) SetCompute(ctx context.Context, v Compute_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	m.Compute = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in Task_SdkV2 as

@@ -733,6 +733,60 @@ func (m GetPublicAccountSettingRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
+type GetPublicAccountUserPreferenceRequest_SdkV2 struct {
+	// User Setting name.
+	Name types.String `tfsdk:"-"`
+	// User ID of the user whose setting is being retrieved.
+	UserId types.String `tfsdk:"-"`
+}
+
+func (to *GetPublicAccountUserPreferenceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPublicAccountUserPreferenceRequest_SdkV2) {
+}
+
+func (to *GetPublicAccountUserPreferenceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPublicAccountUserPreferenceRequest_SdkV2) {
+}
+
+func (m GetPublicAccountUserPreferenceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublicAccountUserPreferenceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetPublicAccountUserPreferenceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublicAccountUserPreferenceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetPublicAccountUserPreferenceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":    m.Name,
+			"user_id": m.UserId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetPublicAccountUserPreferenceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":    types.StringType,
+			"user_id": types.StringType,
+		},
+	}
+}
+
 type GetPublicWorkspaceSettingRequest_SdkV2 struct {
 	// Name of the setting
 	Name types.String `tfsdk:"-"`
@@ -977,6 +1031,169 @@ func (m *ListAccountSettingsMetadataResponse_SdkV2) GetSettingsMetadata(ctx cont
 
 // SetSettingsMetadata sets the value of the SettingsMetadata field in ListAccountSettingsMetadataResponse_SdkV2.
 func (m *ListAccountSettingsMetadataResponse_SdkV2) SetSettingsMetadata(ctx context.Context, v []SettingsMetadata_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["settings_metadata"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SettingsMetadata = types.ListValueMust(t, vs)
+}
+
+type ListAccountUserPreferencesMetadataRequest_SdkV2 struct {
+	// The maximum number of settings to return. The service may return fewer
+	// than this value. If unspecified, at most 200 settings will be returned.
+	// The maximum value is 1000; values above 1000 will be coerced to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous
+	// `ListAccountUserPreferencesMetadataRequest` call. Provide this to
+	// retrieve the subsequent page.
+	//
+	// When paginating, all other parameters provided to
+	// `ListAccountUserPreferencesMetadataRequest` must match the call that
+	// provided the page token.
+	PageToken types.String `tfsdk:"-"`
+	// User ID of the user whose settings metadata is being retrieved.
+	UserId types.String `tfsdk:"-"`
+}
+
+func (to *ListAccountUserPreferencesMetadataRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAccountUserPreferencesMetadataRequest_SdkV2) {
+}
+
+func (to *ListAccountUserPreferencesMetadataRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountUserPreferencesMetadataRequest_SdkV2) {
+}
+
+func (m ListAccountUserPreferencesMetadataRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountUserPreferencesMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAccountUserPreferencesMetadataRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountUserPreferencesMetadataRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListAccountUserPreferencesMetadataRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"user_id":    m.UserId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAccountUserPreferencesMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"user_id":    types.StringType,
+		},
+	}
+}
+
+type ListAccountUserPreferencesMetadataResponse_SdkV2 struct {
+	// A token that can be sent as `page_token` to retrieve the next page. If
+	// this field is omitted, there are no subsequent pages.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// List of all settings available via public APIs and their metadata
+	SettingsMetadata types.List `tfsdk:"settings_metadata"`
+}
+
+func (to *ListAccountUserPreferencesMetadataResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAccountUserPreferencesMetadataResponse_SdkV2) {
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() && to.SettingsMetadata.IsNull() && len(from.SettingsMetadata.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SettingsMetadata, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SettingsMetadata = from.SettingsMetadata
+	}
+}
+
+func (to *ListAccountUserPreferencesMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountUserPreferencesMetadataResponse_SdkV2) {
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() && to.SettingsMetadata.IsNull() && len(from.SettingsMetadata.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SettingsMetadata, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SettingsMetadata = from.SettingsMetadata
+	}
+}
+
+func (m ListAccountUserPreferencesMetadataResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["settings_metadata"] = attrs["settings_metadata"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountUserPreferencesMetadataResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAccountUserPreferencesMetadataResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"settings_metadata": reflect.TypeOf(SettingsMetadata_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAccountUserPreferencesMetadataResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListAccountUserPreferencesMetadataResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":   m.NextPageToken,
+			"settings_metadata": m.SettingsMetadata,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAccountUserPreferencesMetadataResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"settings_metadata": basetypes.ListType{
+				ElemType: SettingsMetadata_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSettingsMetadata returns the value of the SettingsMetadata field in ListAccountUserPreferencesMetadataResponse_SdkV2 as
+// a slice of SettingsMetadata_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListAccountUserPreferencesMetadataResponse_SdkV2) GetSettingsMetadata(ctx context.Context) ([]SettingsMetadata_SdkV2, bool) {
+	if m.SettingsMetadata.IsNull() || m.SettingsMetadata.IsUnknown() {
+		return nil, false
+	}
+	var v []SettingsMetadata_SdkV2
+	d := m.SettingsMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSettingsMetadata sets the value of the SettingsMetadata field in ListAccountUserPreferencesMetadataResponse_SdkV2.
+func (m *ListAccountUserPreferencesMetadataResponse_SdkV2) SetSettingsMetadata(ctx context.Context, v []SettingsMetadata_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1239,6 +1456,112 @@ func (m *PatchPublicAccountSettingRequest_SdkV2) GetSetting(ctx context.Context)
 
 // SetSetting sets the value of the Setting field in PatchPublicAccountSettingRequest_SdkV2.
 func (m *PatchPublicAccountSettingRequest_SdkV2) SetSetting(ctx context.Context, v Setting_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	m.Setting = types.ListValueMust(t, vs)
+}
+
+type PatchPublicAccountUserPreferenceRequest_SdkV2 struct {
+	Name types.String `tfsdk:"-"`
+
+	Setting types.List `tfsdk:"setting"`
+	// User ID of the user whose setting is being updated.
+	UserId types.String `tfsdk:"-"`
+}
+
+func (to *PatchPublicAccountUserPreferenceRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchPublicAccountUserPreferenceRequest_SdkV2) {
+	if !from.Setting.IsNull() && !from.Setting.IsUnknown() {
+		if toSetting, ok := to.GetSetting(ctx); ok {
+			if fromSetting, ok := from.GetSetting(ctx); ok {
+				// Recursively sync the fields of Setting
+				toSetting.SyncFieldsDuringCreateOrUpdate(ctx, fromSetting)
+				to.SetSetting(ctx, toSetting)
+			}
+		}
+	}
+}
+
+func (to *PatchPublicAccountUserPreferenceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchPublicAccountUserPreferenceRequest_SdkV2) {
+	if !from.Setting.IsNull() && !from.Setting.IsUnknown() {
+		if toSetting, ok := to.GetSetting(ctx); ok {
+			if fromSetting, ok := from.GetSetting(ctx); ok {
+				toSetting.SyncFieldsDuringRead(ctx, fromSetting)
+				to.SetSetting(ctx, toSetting)
+			}
+		}
+	}
+}
+
+func (m PatchPublicAccountUserPreferenceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchPublicAccountUserPreferenceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PatchPublicAccountUserPreferenceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(UserPreference_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchPublicAccountUserPreferenceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PatchPublicAccountUserPreferenceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":    m.Name,
+			"setting": m.Setting,
+			"user_id": m.UserId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PatchPublicAccountUserPreferenceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: UserPreference_SdkV2{}.Type(ctx),
+			},
+			"user_id": types.StringType,
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in PatchPublicAccountUserPreferenceRequest_SdkV2 as
+// a UserPreference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PatchPublicAccountUserPreferenceRequest_SdkV2) GetSetting(ctx context.Context) (UserPreference_SdkV2, bool) {
+	var e UserPreference_SdkV2
+	if m.Setting.IsNull() || m.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []UserPreference_SdkV2
+	d := m.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in PatchPublicAccountUserPreferenceRequest_SdkV2.
+func (m *PatchPublicAccountUserPreferenceRequest_SdkV2) SetSetting(ctx context.Context, v UserPreference_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
 	m.Setting = types.ListValueMust(t, vs)
@@ -2455,4 +2778,269 @@ func (m StringMessage_SdkV2) Type(ctx context.Context) attr.Type {
 			"value": types.StringType,
 		},
 	}
+}
+
+// User Preference represents a user-specific setting scoped to an individual
+// user within an account. Unlike workspace or account settings that apply to
+// all users, user preferences allow personal customization (e.g., UI theme,
+// editor preferences) without affecting other users.
+type UserPreference_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+
+	EffectiveBooleanVal types.List `tfsdk:"effective_boolean_val"`
+
+	EffectiveStringVal types.List `tfsdk:"effective_string_val"`
+	// Name of the setting.
+	Name types.String `tfsdk:"name"`
+
+	StringVal types.List `tfsdk:"string_val"`
+	// User ID of the user.
+	UserId types.String `tfsdk:"user_id"`
+}
+
+func (to *UserPreference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UserPreference_SdkV2) {
+	if !from.BooleanVal.IsNull() && !from.BooleanVal.IsUnknown() {
+		if toBooleanVal, ok := to.GetBooleanVal(ctx); ok {
+			if fromBooleanVal, ok := from.GetBooleanVal(ctx); ok {
+				// Recursively sync the fields of BooleanVal
+				toBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromBooleanVal)
+				to.SetBooleanVal(ctx, toBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveBooleanVal.IsNull() && !from.EffectiveBooleanVal.IsUnknown() {
+		if toEffectiveBooleanVal, ok := to.GetEffectiveBooleanVal(ctx); ok {
+			if fromEffectiveBooleanVal, ok := from.GetEffectiveBooleanVal(ctx); ok {
+				// Recursively sync the fields of EffectiveBooleanVal
+				toEffectiveBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveBooleanVal)
+				to.SetEffectiveBooleanVal(ctx, toEffectiveBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveStringVal.IsNull() && !from.EffectiveStringVal.IsUnknown() {
+		if toEffectiveStringVal, ok := to.GetEffectiveStringVal(ctx); ok {
+			if fromEffectiveStringVal, ok := from.GetEffectiveStringVal(ctx); ok {
+				// Recursively sync the fields of EffectiveStringVal
+				toEffectiveStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveStringVal)
+				to.SetEffectiveStringVal(ctx, toEffectiveStringVal)
+			}
+		}
+	}
+	if !from.StringVal.IsNull() && !from.StringVal.IsUnknown() {
+		if toStringVal, ok := to.GetStringVal(ctx); ok {
+			if fromStringVal, ok := from.GetStringVal(ctx); ok {
+				// Recursively sync the fields of StringVal
+				toStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromStringVal)
+				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+}
+
+func (to *UserPreference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UserPreference_SdkV2) {
+	if !from.BooleanVal.IsNull() && !from.BooleanVal.IsUnknown() {
+		if toBooleanVal, ok := to.GetBooleanVal(ctx); ok {
+			if fromBooleanVal, ok := from.GetBooleanVal(ctx); ok {
+				toBooleanVal.SyncFieldsDuringRead(ctx, fromBooleanVal)
+				to.SetBooleanVal(ctx, toBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveBooleanVal.IsNull() && !from.EffectiveBooleanVal.IsUnknown() {
+		if toEffectiveBooleanVal, ok := to.GetEffectiveBooleanVal(ctx); ok {
+			if fromEffectiveBooleanVal, ok := from.GetEffectiveBooleanVal(ctx); ok {
+				toEffectiveBooleanVal.SyncFieldsDuringRead(ctx, fromEffectiveBooleanVal)
+				to.SetEffectiveBooleanVal(ctx, toEffectiveBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveStringVal.IsNull() && !from.EffectiveStringVal.IsUnknown() {
+		if toEffectiveStringVal, ok := to.GetEffectiveStringVal(ctx); ok {
+			if fromEffectiveStringVal, ok := from.GetEffectiveStringVal(ctx); ok {
+				toEffectiveStringVal.SyncFieldsDuringRead(ctx, fromEffectiveStringVal)
+				to.SetEffectiveStringVal(ctx, toEffectiveStringVal)
+			}
+		}
+	}
+	if !from.StringVal.IsNull() && !from.StringVal.IsUnknown() {
+		if toStringVal, ok := to.GetStringVal(ctx); ok {
+			if fromStringVal, ok := from.GetStringVal(ctx); ok {
+				toStringVal.SyncFieldsDuringRead(ctx, fromStringVal)
+				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+}
+
+func (m UserPreference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
+	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+	attrs["effective_string_val"] = attrs["effective_string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["string_val"] = attrs["string_val"].SetOptional()
+	attrs["string_val"] = attrs["string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UserPreference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UserPreference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val":           reflect.TypeOf(BooleanMessage_SdkV2{}),
+		"effective_boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+		"effective_string_val":  reflect.TypeOf(StringMessage_SdkV2{}),
+		"string_val":            reflect.TypeOf(StringMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UserPreference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UserPreference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":           m.BooleanVal,
+			"effective_boolean_val": m.EffectiveBooleanVal,
+			"effective_string_val":  m.EffectiveStringVal,
+			"name":                  m.Name,
+			"string_val":            m.StringVal,
+			"user_id":               m.UserId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UserPreference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"effective_boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"effective_string_val": basetypes.ListType{
+				ElemType: StringMessage_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"string_val": basetypes.ListType{
+				ElemType: StringMessage_SdkV2{}.Type(ctx),
+			},
+			"user_id": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in UserPreference_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UserPreference_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if m.BooleanVal.IsNull() || m.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := m.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in UserPreference_SdkV2.
+func (m *UserPreference_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	m.BooleanVal = types.ListValueMust(t, vs)
+}
+
+// GetEffectiveBooleanVal returns the value of the EffectiveBooleanVal field in UserPreference_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UserPreference_SdkV2) GetEffectiveBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if m.EffectiveBooleanVal.IsNull() || m.EffectiveBooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := m.EffectiveBooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveBooleanVal sets the value of the EffectiveBooleanVal field in UserPreference_SdkV2.
+func (m *UserPreference_SdkV2) SetEffectiveBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_boolean_val"]
+	m.EffectiveBooleanVal = types.ListValueMust(t, vs)
+}
+
+// GetEffectiveStringVal returns the value of the EffectiveStringVal field in UserPreference_SdkV2 as
+// a StringMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UserPreference_SdkV2) GetEffectiveStringVal(ctx context.Context) (StringMessage_SdkV2, bool) {
+	var e StringMessage_SdkV2
+	if m.EffectiveStringVal.IsNull() || m.EffectiveStringVal.IsUnknown() {
+		return e, false
+	}
+	var v []StringMessage_SdkV2
+	d := m.EffectiveStringVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveStringVal sets the value of the EffectiveStringVal field in UserPreference_SdkV2.
+func (m *UserPreference_SdkV2) SetEffectiveStringVal(ctx context.Context, v StringMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_string_val"]
+	m.EffectiveStringVal = types.ListValueMust(t, vs)
+}
+
+// GetStringVal returns the value of the StringVal field in UserPreference_SdkV2 as
+// a StringMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UserPreference_SdkV2) GetStringVal(ctx context.Context) (StringMessage_SdkV2, bool) {
+	var e StringMessage_SdkV2
+	if m.StringVal.IsNull() || m.StringVal.IsUnknown() {
+		return e, false
+	}
+	var v []StringMessage_SdkV2
+	d := m.StringVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStringVal sets the value of the StringVal field in UserPreference_SdkV2.
+func (m *UserPreference_SdkV2) SetStringVal(ctx context.Context, v StringMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["string_val"]
+	m.StringVal = types.ListValueMust(t, vs)
 }

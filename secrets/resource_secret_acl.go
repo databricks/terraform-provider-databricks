@@ -35,13 +35,18 @@ func ResourceSecretACL() common.Resource {
 			ForceNew: true,
 		},
 	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		CanSkipReadAfterCreateAndUpdate: func(_ *schema.ResourceData) bool {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -58,7 +63,7 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -76,9 +81,21 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
+			}
+			// Skip deleting the ACL if the current user is the principal with MANAGE permission.
+			// This prevents users from accidentally locking themselves out of managing the secret scope.
+			permission := d.Get("permission").(string)
+			if permission == string(workspace.AclPermissionManage) {
+				me, err := w.CurrentUser.Me(ctx)
+				if err != nil {
+					return err
+				}
+				if principal == me.UserName {
+					return nil
+				}
 			}
 			err = w.Secrets.DeleteAcl(ctx, workspace.DeleteAcl{
 				Scope:     scope,

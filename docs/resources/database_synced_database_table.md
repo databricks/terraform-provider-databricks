@@ -178,6 +178,10 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
@@ -219,8 +223,12 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `data_synchronization_status` (SyncedTableStatus) - Synced Table data synchronization status
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog
-* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+  tables inside database catalogs is inferred database instance associated with the catalog.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
   state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
   may be in "PROVISIONING" as it runs asynchronously). Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`

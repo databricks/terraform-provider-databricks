@@ -15,13 +15,17 @@ The following arguments are supported:
 * `function` (Function, required) - The function by which the feature is computed
 * `inputs` (list of string, required) - The input columns from which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
-* `time_window` (TimeWindow, required) - The time window in which the feature is computed
 * `description` (string, optional) - The description of the feature
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
 * `lineage_context` (LineageContext, optional) - WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
+* `time_window` (TimeWindow, optional) - The time window in which the feature is computed
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### ColumnIdentifier
 * `variant_expr_path` (string, required) - String representation of the column name or variant expression path. For nested fields, the leaf value is what will be present in materialized tables

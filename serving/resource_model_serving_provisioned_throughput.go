@@ -36,9 +36,14 @@ func preserveConfigOrderPt(s map[string]*schema.Schema, d *schema.ResourceData, 
 	}
 }
 
+type ModelServingProvisionedThroughputSchemaStruct struct {
+	serving.CreatePtEndpointRequest
+	common.Namespace
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -59,12 +64,16 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -87,7 +96,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			var sOrig serving.ServingEndpointDetailed
 			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
@@ -97,6 +106,8 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Copy sensitive plaintext fields from state to API response to prevent drift
+			copySensitiveExternalModelFields(&sOrig, endpoint)
 			preserveConfigOrderPt(s, d, endpoint.Config)
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
@@ -106,7 +117,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -139,7 +150,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

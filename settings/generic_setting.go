@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -281,7 +282,7 @@ func (aw accountWorkspaceSetting[T]) SettingStruct() T {
 	return aw.settingStruct
 }
 func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.DatabricksClient, etag string) (*T, error) {
-	if c.Config.IsAccountClient() {
+	if c.Config.HostType() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return nil, err
@@ -296,7 +297,7 @@ func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.Databri
 	}
 }
 func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.DatabricksClient, t T) (string, error) {
-	if c.Config.IsAccountClient() {
+	if c.Config.HostType() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err
@@ -311,7 +312,7 @@ func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.Datab
 	}
 }
 func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.DatabricksClient, etag string) (string, error) {
-	if c.Config.IsAccountClient() {
+	if c.Config.HostType() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err
@@ -359,6 +360,8 @@ var _ accountWorkspaceSettingDefinition[struct{}] = accountWorkspaceSetting[stru
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
 		defn.GetCustomizeSchemaFunc())
+	common.AddNamespaceInSchema(resourceSchema)
+	common.NamespaceCustomizeSchemaMap(resourceSchema)
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
@@ -366,7 +369,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		var res string
 		switch defn := defn.(type) {
 		case workspaceSettingDefinition[T]:
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -417,6 +420,9 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 
 	return common.Resource{
 		Schema: resourceSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var setting T
 			return createOrUpdate(ctx, d, c, setting)
@@ -425,7 +431,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			var res *T
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClient()
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -472,7 +478,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			updateETag := func(req *string, newEtag string) { *req = newEtag }
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClient()
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}

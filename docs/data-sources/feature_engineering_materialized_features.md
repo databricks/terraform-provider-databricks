@@ -13,10 +13,15 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `feature_name` (string, optional) - Filter by feature name. If specified, only materialized features materialized from this feature will be returned
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified. Cannot be greater than 1000
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
 This data source exports a single attribute, `materialized_features`. It is a list of resources, each with the following attributes:
+* `cron_schedule` (string) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
 * `feature_name` (string) - The full name of the feature in Unity Catalog
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null

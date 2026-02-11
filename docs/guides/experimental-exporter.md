@@ -77,6 +77,55 @@ All arguments are optional, and they tune what code is being generated.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
 * `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources from multiple workspaces for merging into a single one.
+* `-targetCloud` - Target cloud for generated code (`aws`, `azure`, `gcp`). If different from the source cloud, the exporter will convert cloud-specific attributes (`aws_attributes`, `azure_attributes`, `gcp_attributes`) to the target cloud format. Only compatible attributes are converted:
+  * `availability` - Converted between cloud-specific formats (e.g., `SPOT` → `SPOT_AZURE` → `PREEMPTIBLE_GCP`)
+  * `first_on_demand` - Preserved across all clouds
+  * `zone_id` - Only converted between AWS and GCP when value is `auto`
+  * `ebs_volume_count` (AWS) ↔ `local_ssd_count` (GCP) - Only when `ebs_volume_type` is `GENERAL_PURPOSE_SSD`
+  * `disk_spec.disk_type` (for instance pools):
+    * AWS `ebs_volume_type` (`GENERAL_PURPOSE_SSD`, `THROUGHPUT_OPTIMIZED_HDD`) ↔ Azure `azure_disk_volume_type` (`PREMIUM_LRS`, `STANDARD_LRS`)
+    * When converting to GCP, `disk_type` is removed entirely (GCP only supports `disk_count`)
+    * When converting from GCP, `disk_count` is preserved but `disk_type` cannot be added
+  * Other attributes (e.g., `instance_profile_arn`) are not compatible and will be omitted
+* `-nodeTypeMappingFile` - Path to JSON file containing node type mappings between clouds. Can only be used with `-targetCloud` flag. When specified, the exporter will convert `node_type_id` and `driver_node_type_id` fields to the target cloud's node types. The JSON file should have the following format:
+
+  ```json
+  {
+    "version": "1.0",
+    "mappings": [
+      {
+        "azure": "Standard_F4s",
+        "aws": "i3.xlarge",
+        "gcp": "n1-standard-4"
+      },
+      {
+        "azure": "Standard_F8s",
+        "aws": "i3.2xlarge",
+        "gcp": "n1-standard-8"
+      }
+    ]
+  }
+  ```
+
+  Node types without mappings will be preserved unchanged with a warning logged.
+
+  To generate a mapping file, use the `exporter/generate_node_mappings.py` script:
+
+  ```bash
+  # Extract node types from each cloud workspace
+  databricks api get /api/2.1/clusters/list-node-types --profile aws > node-types-aws.json
+  databricks api get /api/2.1/clusters/list-node-types --profile azure > node-types-azure.json
+  databricks api get /api/2.1/clusters/list-node-types --profile gcp > node-types-gcp.json
+
+  # Generate the mapping file
+  python3 exporter/generate_node_mappings.py \
+    --aws node-types-aws.json \
+    --azure node-types-azure.json \
+    --gcp node-types-gcp.json \
+    --output node_type_mapping.json
+  ```
+
+  The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
@@ -197,6 +246,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `queries` - **listing** [databricks_query](../resources/query.md).
 * `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in arbitrary locations).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
+* `seg` - **listing** [databricks_account_network_policy](../resources/account_network_policy.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md), [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md), and [databricks_account_setting_v2](../resources/account_setting_v2.md) (account-level).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
@@ -210,8 +260,9 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
 * `uc-models` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_registered_model](../resources/registered_model.md)
 * `uc-online-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_online_table](../resources/online_table.md)
+* `uc-rfa` - [databricks_rfa_access_request_destinations](../resources/rfa_access_request_destinations.md) (*emitted as dependencies from Unity Catalog resources when access request destinations are configured*)
 * `uc-schemas` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_schema](../resources/schema.md)
-* `uc-shares` - **listing** [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)
+* `uc-shares` - **listing** [databricks_share](../resources/share.md), [databricks_recipient](../resources/recipient.md) and [databricks_provider](../resources/provider.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-tags` - **listing** exports [databricks_tag_policy](../resources/tag_policy.md) resources.
@@ -244,6 +295,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | --- | --- | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No | No | Yes |
 | [databricks_account_federation_policy](../resources/account_federation_policy.md) | Yes | No | No | Yes |
+| [databricks_account_network_policy](../resources/account_network_policy.md) | Yes | No | No | Yes |
 | [databricks_account_setting_v2](../resources/account_setting_v2.md) | Yes | No | No | Yes |
 | [databricks_alert](../resources/alert.md) | Yes | Yes | Yes | No |
 | [databricks_alert_v2](../resources/alert_v2.md) | Yes | Yes | Yes | No |
@@ -299,11 +351,13 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_permission_assignment](../resources/permission_assignment.md) | Yes | No | Yes | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |
 | [databricks_pipeline](../resources/pipeline.md) | Yes | Yes | Yes | No |
+| [databricks_provider](../resources/provider.md) | Yes | Yes | Yes | No |
 | [databricks_quality_monitor_v2](../resources/quality_monitor_v2.md) | Yes | Yes | Yes | No |
 | [databricks_query](../resources/query.md) | Yes | Yes | Yes | No |
 | [databricks_recipient](../resources/recipient.md) | Yes | Yes | Yes | No |
 | [databricks_registered_model](../resources/registered.md) | Yes | Yes | Yes | No |
 | [databricks_repo](../resources/repo.md) | Yes | No | Yes | No |
+| [databricks_rfa_access_request_destinations](../resources/rfa_access_request_destinations.md) | Yes | Yes | Yes | No |
 | [databricks_schema](../resources/schema.md) | Yes | Yes | Yes | No |
 | [databricks_secret](../resources/secret.md) | Yes | No | Yes | No |
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes | No | Yes | No |
@@ -334,6 +388,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |
+| [databricks_workspace_network_option](../resources/workspace_network_option.md) | Yes | No | No | Yes |
 | [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md) | Yes | No | Yes | No |
 
 Notes:

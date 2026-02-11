@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -300,13 +301,26 @@ func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error
 	return local, relativeName, nil
 }
 
-func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) saveContentIn(dir, name string, content []byte) (string, error) {
 	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
 	defer local.Close()
 	_, err = local.Write(content)
+	if err != nil {
+		return "", err
+	}
+	return relativeName, nil
+}
+
+func (ic *importContext) saveReaderIn(dir, name string, reader io.Reader) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
+	if err != nil {
+		return "", err
+	}
+	defer local.Close()
+	_, err = io.Copy(local, reader)
 	if err != nil {
 		return "", err
 	}
@@ -512,15 +526,25 @@ func appendEndingSlashToDirName(dir string) string {
 	return dir + "/"
 }
 
+// getResourceAttribute retrieves an attribute value from either DataWrapper or Data
+func getResourceAttribute(res *resource, path string) (interface{}, bool) {
+	if res.DataWrapper != nil {
+		return res.DataWrapper.GetOk(path)
+	} else if res.Data != nil {
+		return res.Data.GetOk(path)
+	}
+	return nil, false
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	shareName, ok := res.Data.GetOk("share")
+	shareName, ok := getResourceAttribute(res, "share")
 	return ok && shareName.(string) != ""
 }
 
 func isMatchignShareObject(obj string) isValidAproximationFunc {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
-		objType, ok := res.Data.GetOk(objPath)
+		objType, ok := getResourceAttribute(res, objPath)
 		return ok && objType.(string) == obj
 	}
 }
@@ -560,6 +584,15 @@ func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceDat
 	}
 }
 
+func makeNamePlusIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok && name != "" {
+			return name.(string) + "_" + wrapper.Id()
+		}
+		return wrapper.Id()
+	}
+}
+
 func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
 	return func(ic *importContext, d *schema.ResourceData) string {
 		name := d.Get(nm).(string)
@@ -567,6 +600,18 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 			return d.Id()
 		}
 		return name
+	}
+}
+
+func makeNameOrIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok {
+			strVal, isStr := name.(string)
+			if isStr && strVal != "" {
+				return strVal
+			}
+		}
+		return wrapper.Id()
 	}
 }
 

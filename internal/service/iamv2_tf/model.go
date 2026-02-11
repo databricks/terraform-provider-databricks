@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -905,7 +906,8 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["username"] = attrs["username"].SetRequired()
+	attrs["username"] = attrs["username"].SetOptional()
+	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

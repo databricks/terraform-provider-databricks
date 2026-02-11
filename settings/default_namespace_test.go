@@ -122,13 +122,8 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Recreate(t *testing.T) {
 				workspace_id = "123"
 			}
 		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionDestroyBeforeCreate),
-			},
-		},
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 

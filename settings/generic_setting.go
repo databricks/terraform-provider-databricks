@@ -360,6 +360,8 @@ var _ accountWorkspaceSettingDefinition[struct{}] = accountWorkspaceSetting[stru
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
 		defn.GetCustomizeSchemaFunc())
+	common.AddNamespaceInSchema(resourceSchema)
+	common.NamespaceCustomizeSchemaMap(resourceSchema)
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
@@ -367,7 +369,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		var res string
 		switch defn := defn.(type) {
 		case workspaceSettingDefinition[T]:
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -418,6 +420,9 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 
 	return common.Resource{
 		Schema: resourceSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var setting T
 			return createOrUpdate(ctx, d, c, setting)
@@ -426,7 +431,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			var res *T
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClient()
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}
@@ -473,7 +478,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			updateETag := func(req *string, newEtag string) { *req = newEtag }
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
-				w, err := c.WorkspaceClient()
+				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
 				}

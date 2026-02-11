@@ -20,6 +20,7 @@
 ### Documentation
 
 * Add `run_as` configuration block documentation to `databricks_pipeline` resource ([#5342](https://github.com/databricks/terraform-provider-databricks/pull/5342))
+* Document `driver_node_type_flexibility` and `worker_node_type_flexibility` in `databricks_cluster` ([#5379](https://github.com/databricks/terraform-provider-databricks/pull/5379))
 
 ### Exporter
 

@@ -116,7 +116,7 @@ func importDbfsFile(ic *importContext, r *resource) error {
 		return err
 	}
 	name := ic.Importables["databricks_dbfs_file"].Name(ic, r.Data)
-	fileName, err := ic.saveFileIn("dbfs_files", name, content)
+	fileName, err := ic.saveContentIn("dbfs_files", name, content)
 	log.Printf("Creating %s for %s", fileName, r)
 	if err != nil {
 		return err

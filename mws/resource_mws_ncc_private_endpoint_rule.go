@@ -87,11 +87,13 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			// only enabled, domain names & resource names are updatable
 			// they do require update_mask to be set
 			// resource_names are not applicable to Azure, so we exclude them from the update
-			updateMask := []string{"enabled"}
-			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{
-				Enabled: d.Get("enabled").(bool),
-			}
+			updateMask := []string{}
+			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 
+			if d.HasChange("enabled") {
+				updateMask = append(updateMask, "enabled")
+				updatePrivateEndpointRule.Enabled = d.Get("enabled").(bool)
+			}
 			if d.HasChange("domain_names") {
 				updateMask = append(updateMask, "domain_names")
 				newDomainNames := []string{}

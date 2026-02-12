@@ -244,8 +244,8 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 			}
 			entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
 				GroupName:            accessControl.GroupName,
-				UserName:             accessControl.UserName,
-				ServicePrincipalName: accessControl.ServicePrincipalName,
+				UserName:             strings.ToLower(accessControl.UserName),
+				ServicePrincipalName: strings.ToLower(accessControl.ServicePrincipalName),
 				PermissionLevel:      permission.PermissionLevel,
 			})
 		}

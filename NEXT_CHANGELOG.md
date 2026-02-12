@@ -16,6 +16,9 @@
 * [Fix] `databricks_app` resource fail to read app when deleted outside terraform ([#5365](https://github.com/databricks/terraform-provider-databricks/pull/5365))
 * Fixed `databricks_users` data source `extra_attributes` parameter issues ([#5308](https://github.com/databricks/terraform-provider-databricks/issues/5308)): (1) Single-attribute inputs (e.g., `extra_attributes = "active"`) were silently ignored at account level due to incorrect value quoting. (2) Complex multi-valued attributes like `emails` and `roles` returned null at account level even when explicitly requested in `extra_attributes`. (3) `extra_attributes` were not forwarded to the SCIM API at workspace level.
 * Fix `databricks_app` resource fail to read app when deleted outside terraform ([#5365](https://github.com/databricks/terraform-provider-databricks/pull/5365))
+* Fix `databricks_cluster` resource on GCP to properly send `gcp_attributes.local_ssd_count = 0` during cluster updates.
+
+ When updating a cluster with `gcp_attributes.local_ssd_count = 0`, the value was not being sent to the Databricks API, causing the cluster to fall back to "Default" behavior (at least 1 local SSD). This fix ensures that zero values are explicitly sent during updates, matching the behavior already present for cluster creation.
 
 ### Documentation
 

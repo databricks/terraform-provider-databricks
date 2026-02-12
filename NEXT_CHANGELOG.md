@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Added `database_project_name` to `databricks_permissions` for managing Lakebase database project permissions.
+
 ### Bug Fixes
 
 ### Documentation

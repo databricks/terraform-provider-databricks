@@ -1918,3 +1918,333 @@ func TestAccessControlHashFunction(t *testing.T) {
 	hash5 := acSchema.Set(elem5)
 	assert.Equal(t, hash4, hash5, "Service principal elements with and without empty fields should have the same hash")
 }
+
+// TestPermissionsDrift_UserNameSameCasing verifies no drift when API returns
+// same casing as config for user_name.
+func TestPermissionsDrift_UserNameSameCasing(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, mock.Anything).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/sql/warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName: "Engineers",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "user@example.com",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "admin",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		HCL: `
+		sql_endpoint_id = "abc"
+		access_control {
+			group_name       = "Engineers"
+			permission_level = "CAN_MANAGE"
+		}
+		access_control {
+			user_name        = "user@example.com"
+			permission_level = "CAN_MANAGE"
+		}
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 2, ac.Len(), "expected 2 access_control entries")
+}
+
+// TestPermissionsDrift_UserNameCasingMismatch verifies that when the API returns
+// a different casing for user_name, the hash function still produces the same
+// hash. This is the fix for issue #5183: emails are case-insensitive, so
+// "user@example.com" and "User@Example.com" must hash identically.
+func TestPermissionsDrift_UserNameCasingMismatch(t *testing.T) {
+	r := ResourcePermissions()
+	hashFunc := r.Schema["access_control"].Set
+
+	configHash := hashFunc(map[string]interface{}{
+		"user_name":        "user@example.com",
+		"permission_level": "CAN_MANAGE",
+	})
+
+	apiHash := hashFunc(map[string]interface{}{
+		"user_name":              "User@Example.com",
+		"permission_level":       "CAN_MANAGE",
+		"group_name":             "",
+		"service_principal_name": "",
+	})
+
+	// Emails are case-insensitive (RFC 5321). The hash function must treat
+	// different casings as equal to prevent permanent drift (#5183).
+	assert.Equal(t, configHash, apiHash,
+		"user_name with different casing must hash identically to prevent drift (#5183)")
+}
+
+// TestPermissionsDrift_UserNameNoDriftWithSameCasing simulates an existing resource
+// in state with user_name, then performs a Read where the API returns the same
+// casing. Verifies no drift occurs.
+func TestPermissionsDrift_UserNameNoDriftWithSameCasing(t *testing.T) {
+	r := ResourcePermissions()
+	hashFunc := r.Schema["access_control"].Set
+
+	userHash := hashFunc(map[string]interface{}{
+		"user_name":              "user@example.com",
+		"permission_level":       "CAN_MANAGE",
+		"group_name":             "",
+		"service_principal_name": "",
+	})
+	groupHash := hashFunc(map[string]interface{}{
+		"group_name":             "Engineers",
+		"permission_level":       "CAN_MANAGE",
+		"user_name":              "",
+		"service_principal_name": "",
+	})
+
+	instanceState := map[string]string{
+		"sql_endpoint_id":  "abc",
+		"access_control.#": "2",
+		fmt.Sprintf("access_control.%d.user_name", userHash):                   "user@example.com",
+		fmt.Sprintf("access_control.%d.permission_level", userHash):            "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.group_name", userHash):                  "",
+		fmt.Sprintf("access_control.%d.service_principal_name", userHash):      "",
+		fmt.Sprintf("access_control.%d.group_name", groupHash):                 "Engineers",
+		fmt.Sprintf("access_control.%d.permission_level", groupHash):           "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.user_name", groupHash):                  "",
+		fmt.Sprintf("access_control.%d.service_principal_name", groupHash):     "",
+	}
+
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/sql/warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName: "Engineers",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "user@example.com",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "admin",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource:      ResourcePermissions(),
+		InstanceState: instanceState,
+		Read:          true,
+		ID:            "/sql/warehouses/abc",
+		HCL: `
+		sql_endpoint_id = "abc"
+		access_control {
+			group_name       = "Engineers"
+			permission_level = "CAN_MANAGE"
+		}
+		access_control {
+			user_name        = "user@example.com"
+			permission_level = "CAN_MANAGE"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 2, ac.Len(), "expected 2 access_control entries after read (no drift)")
+}
+
+// TestPermissionsDrift_UserNameCasingMismatchAfterRead simulates the drift from
+// issue #5183: InstanceState has user_name="user@example.com" but the API returns
+// "User@Example.com". The different casing causes the Read to store a value with
+// a different hash than the config, leading to permanent drift.
+func TestPermissionsDrift_UserNameCasingMismatchAfterRead(t *testing.T) {
+	r := ResourcePermissions()
+	hashFunc := r.Schema["access_control"].Set
+
+	userHash := hashFunc(map[string]interface{}{
+		"user_name":              "user@example.com",
+		"permission_level":       "CAN_MANAGE",
+		"group_name":             "",
+		"service_principal_name": "",
+	})
+	groupHash := hashFunc(map[string]interface{}{
+		"group_name":             "Engineers",
+		"permission_level":       "CAN_MANAGE",
+		"user_name":              "",
+		"service_principal_name": "",
+	})
+
+	instanceState := map[string]string{
+		"sql_endpoint_id":  "abc",
+		"access_control.#": "2",
+		fmt.Sprintf("access_control.%d.user_name", userHash):                   "user@example.com",
+		fmt.Sprintf("access_control.%d.permission_level", userHash):            "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.group_name", userHash):                  "",
+		fmt.Sprintf("access_control.%d.service_principal_name", userHash):      "",
+		fmt.Sprintf("access_control.%d.group_name", groupHash):                 "Engineers",
+		fmt.Sprintf("access_control.%d.permission_level", groupHash):           "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.user_name", groupHash):                  "",
+		fmt.Sprintf("access_control.%d.service_principal_name", groupHash):     "",
+	}
+
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/sql/warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName: "Engineers",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						// API returns DIFFERENT casing than config
+						UserName: "User@Example.com",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "admin",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource:      ResourcePermissions(),
+		InstanceState: instanceState,
+		Read:          true,
+		ID:            "/sql/warehouses/abc",
+		HCL: `
+		sql_endpoint_id = "abc"
+		access_control {
+			group_name       = "Engineers"
+			permission_level = "CAN_MANAGE"
+		}
+		access_control {
+			user_name        = "user@example.com"
+			permission_level = "CAN_MANAGE"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+
+	// After the fix, the Read should normalize user_name casing so that the
+	// state matches the config. The set must have exactly 2 elements (not 3),
+	// and the user_name must be lowercase to match the config.
+	require.Equal(t, 2, ac.Len(),
+		"expected 2 access_control entries; 3 means casing mismatch caused drift (#5183)")
+
+	for _, elem := range ac.List() {
+		m := elem.(map[string]interface{})
+		if m["user_name"] != "" {
+			assert.Equal(t, "user@example.com", m["user_name"],
+				"user_name in state must be normalized to match config casing (#5183)")
+		}
+	}
+}
+
+// TestPermissionsDrift_GroupNameNoDrift confirms that group_name does NOT exhibit
+// drift because the API preserves group name casing exactly.
+func TestPermissionsDrift_GroupNameNoDrift(t *testing.T) {
+	r := ResourcePermissions()
+	hashFunc := r.Schema["access_control"].Set
+
+	groupHash := hashFunc(map[string]interface{}{
+		"group_name":             "Engineers",
+		"permission_level":       "CAN_MANAGE",
+		"user_name":              "",
+		"service_principal_name": "",
+	})
+
+	instanceState := map[string]string{
+		"cluster_id":       "abc",
+		"access_control.#": "1",
+		fmt.Sprintf("access_control.%d.group_name", groupHash):             "Engineers",
+		fmt.Sprintf("access_control.%d.permission_level", groupHash):       "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.user_name", groupHash):              "",
+		fmt.Sprintf("access_control.%d.service_principal_name", groupHash): "",
+	}
+
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName: "Engineers",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+					{
+						UserName: "admin",
+						AllPermissions: []iam.Permission{
+							{PermissionLevel: "CAN_MANAGE", Inherited: false},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource:      ResourcePermissions(),
+		InstanceState: instanceState,
+		Read:          true,
+		ID:            "/clusters/abc",
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			group_name       = "Engineers"
+			permission_level = "CAN_MANAGE"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, ac.Len(), "expected 1 access_control entry (no drift)")
+}

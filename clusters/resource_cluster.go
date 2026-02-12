@@ -620,6 +620,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			})
 		} else {
 			SetForceSendFieldsForCluster(&cluster, d)
+			if cluster.GcpAttributes != nil {
+				if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
+					cluster.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+				}
+			}
 
 			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
 				_, err = clusters.Edit(ctx, cluster)

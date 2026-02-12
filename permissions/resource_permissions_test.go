@@ -24,7 +24,7 @@ import (
 var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
-	TestingOwner     = "testOwner"
+	TestingOwner     = "testowner"
 )
 
 func TestResourcePermissionsRead(t *testing.T) {
@@ -2023,14 +2023,14 @@ func TestPermissionsDrift_UserNameNoDriftWithSameCasing(t *testing.T) {
 	instanceState := map[string]string{
 		"sql_endpoint_id":  "abc",
 		"access_control.#": "2",
-		fmt.Sprintf("access_control.%d.user_name", userHash):                   "user@example.com",
-		fmt.Sprintf("access_control.%d.permission_level", userHash):            "CAN_MANAGE",
-		fmt.Sprintf("access_control.%d.group_name", userHash):                  "",
-		fmt.Sprintf("access_control.%d.service_principal_name", userHash):      "",
-		fmt.Sprintf("access_control.%d.group_name", groupHash):                 "Engineers",
-		fmt.Sprintf("access_control.%d.permission_level", groupHash):           "CAN_MANAGE",
-		fmt.Sprintf("access_control.%d.user_name", groupHash):                  "",
-		fmt.Sprintf("access_control.%d.service_principal_name", groupHash):     "",
+		fmt.Sprintf("access_control.%d.user_name", userHash):               "user@example.com",
+		fmt.Sprintf("access_control.%d.permission_level", userHash):        "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.group_name", userHash):              "",
+		fmt.Sprintf("access_control.%d.service_principal_name", userHash):  "",
+		fmt.Sprintf("access_control.%d.group_name", groupHash):             "Engineers",
+		fmt.Sprintf("access_control.%d.permission_level", groupHash):       "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.user_name", groupHash):              "",
+		fmt.Sprintf("access_control.%d.service_principal_name", groupHash): "",
 	}
 
 	d, err := qa.ResourceFixture{
@@ -2109,14 +2109,14 @@ func TestPermissionsDrift_UserNameCasingMismatchAfterRead(t *testing.T) {
 	instanceState := map[string]string{
 		"sql_endpoint_id":  "abc",
 		"access_control.#": "2",
-		fmt.Sprintf("access_control.%d.user_name", userHash):                   "user@example.com",
-		fmt.Sprintf("access_control.%d.permission_level", userHash):            "CAN_MANAGE",
-		fmt.Sprintf("access_control.%d.group_name", userHash):                  "",
-		fmt.Sprintf("access_control.%d.service_principal_name", userHash):      "",
-		fmt.Sprintf("access_control.%d.group_name", groupHash):                 "Engineers",
-		fmt.Sprintf("access_control.%d.permission_level", groupHash):           "CAN_MANAGE",
-		fmt.Sprintf("access_control.%d.user_name", groupHash):                  "",
-		fmt.Sprintf("access_control.%d.service_principal_name", groupHash):     "",
+		fmt.Sprintf("access_control.%d.user_name", userHash):               "user@example.com",
+		fmt.Sprintf("access_control.%d.permission_level", userHash):        "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.group_name", userHash):              "",
+		fmt.Sprintf("access_control.%d.service_principal_name", userHash):  "",
+		fmt.Sprintf("access_control.%d.group_name", groupHash):             "Engineers",
+		fmt.Sprintf("access_control.%d.permission_level", groupHash):       "CAN_MANAGE",
+		fmt.Sprintf("access_control.%d.user_name", groupHash):              "",
+		fmt.Sprintf("access_control.%d.service_principal_name", groupHash): "",
 	}
 
 	d, err := qa.ResourceFixture{

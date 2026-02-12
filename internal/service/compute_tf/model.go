@@ -10183,6 +10183,15 @@ func (m *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 // and serverless pipelines. In this minimal environment spec, only pip
 // dependencies are supported.
 type Environment struct {
+	// The `base_environment` key refers to an `env.yaml` file that specifies an
+	// environment version and a collection of dependencies required for the
+	// environment setup. This `env.yaml` file may itself include a
+	// `base_environment` reference pointing to another `env_1.yaml` file.
+	// However, when used as a base environment, `env_1.yaml` (or further nested
+	// references) will not be processed or included in the final environment,
+	// meaning that the resolution of `base_environment` references is not
+	// recursive.
+	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
 	// List of pip dependencies, as supported by the version of pip in this
@@ -10232,6 +10241,7 @@ func (to *Environment) SyncFieldsDuringRead(ctx context.Context, from Environmen
 }
 
 func (m Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_environment"] = attrs["base_environment"].SetOptional()
 	attrs["client"] = attrs["client"].SetOptional()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
@@ -10261,6 +10271,7 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"base_environment":    m.BaseEnvironment,
 			"client":              m.Client,
 			"dependencies":        m.Dependencies,
 			"environment_version": m.EnvironmentVersion,
@@ -10272,7 +10283,8 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Environment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"client": types.StringType,
+			"base_environment": types.StringType,
+			"client":           types.StringType,
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "alerts_v2"
@@ -29,12 +30,14 @@ func DataSourceAlertsV2() datasource.DataSource {
 type AlertsV2Data struct {
 	AlertsV2 types.List `tfsdk:"alerts"`
 
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"alerts": reflect.TypeOf(AlertV2Data{}),
+		"alerts":          reflect.TypeOf(AlertV2Data{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["alerts"] = attrs["alerts"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		alert_v2.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 

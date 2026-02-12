@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "data_quality_monitors"
@@ -29,12 +30,14 @@ func DataSourceMonitors() datasource.DataSource {
 type MonitorsData struct {
 	DataQuality types.List `tfsdk:"monitors"`
 
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (MonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"monitors": reflect.TypeOf(MonitorData{}),
+		"monitors":        reflect.TypeOf(MonitorData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m MonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["monitors"] = attrs["monitors"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *MonitorsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *MonitorsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		monitor.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, monitor.ToObjectValue(ctx))
 	}
 

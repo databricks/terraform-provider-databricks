@@ -198,6 +198,112 @@ func (m *mockSecretsClient) GetAcl(ctx context.Context, req workspace.GetAclRequ
 	return r.resp, r.err
 }
 
+func TestResourceSecretACLDelete(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/delete",
+				ExpectedRequest: workspace.DeleteAcl{
+					Scope:     "global",
+					Principal: "something",
+				},
+			},
+		},
+		Resource: ResourceSecretACL(),
+		Delete:   true,
+		ID:       "global|||something",
+		State: map[string]any{
+			"scope":      "global",
+			"principal":  "something",
+			"permission": "READ",
+		},
+	}.ApplyNoError(t)
+}
+
+func TestResourceSecretACLDelete_SkipsCurrentUserWithManagePermission(t *testing.T) {
+	// Test that delete is skipped when the principal is the current user with MANAGE permission.
+	// This prevents users from accidentally locking themselves out of managing the secret scope.
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Me",
+				Response: map[string]any{
+					"id":       "123",
+					"userName": "current_user@example.com",
+				},
+			},
+			// No delete call expected since we skip deletion for current user with MANAGE
+		},
+		Resource: ResourceSecretACL(),
+		Delete:   true,
+		ID:       "global|||current_user@example.com",
+		State: map[string]any{
+			"scope":      "global",
+			"principal":  "current_user@example.com",
+			"permission": "MANAGE",
+		},
+	}.ApplyNoError(t)
+}
+
+func TestResourceSecretACLDelete_DoesNotSkipCurrentUserWithReadPermission(t *testing.T) {
+	// Test that delete proceeds when the principal is the current user but has READ permission (not MANAGE).
+	// No Me API call is made since permission is not MANAGE.
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/delete",
+				ExpectedRequest: workspace.DeleteAcl{
+					Scope:     "global",
+					Principal: "current_user@example.com",
+				},
+			},
+		},
+		Resource: ResourceSecretACL(),
+		Delete:   true,
+		ID:       "global|||current_user@example.com",
+		State: map[string]any{
+			"scope":      "global",
+			"principal":  "current_user@example.com",
+			"permission": "READ",
+		},
+	}.ApplyNoError(t)
+}
+
+func TestResourceSecretACLDelete_DeletesOtherUserWithManagePermission(t *testing.T) {
+	// Test that delete proceeds when the principal is a different user, even with MANAGE permission.
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Me",
+				Response: map[string]any{
+					"id":       "123",
+					"userName": "current_user@example.com",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/delete",
+				ExpectedRequest: workspace.DeleteAcl{
+					Scope:     "global",
+					Principal: "other_user@example.com",
+				},
+			},
+		},
+		Resource: ResourceSecretACL(),
+		Delete:   true,
+		ID:       "global|||other_user@example.com",
+		State: map[string]any{
+			"scope":      "global",
+			"principal":  "other_user@example.com",
+			"permission": "MANAGE",
+		},
+	}.ApplyNoError(t)
+}
+
 func TestRobustPutACL(t *testing.T) {
 	testCases := []struct {
 		name          string

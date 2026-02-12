@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	dummyWorkspaceFilePath    = "/foo/path.py"
-	dummyWorkspaceFilePayload = "YWJjCg=="
+	dummyWorkspaceFilePath          = "/foo/path.py"
+	dummyWorkspaceFilePayloadBinary = []byte("abc\n")
+	dummyWorkspaceFilePayloadBase64 = "YWJjCg=="
 )
 
 func TestResourceWorkspaceFileRead(t *testing.T) {
@@ -93,13 +95,9 @@ func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         dummyWorkspaceFilePayload,
-				Path:            dummyWorkspaceFilePath,
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(nil)
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
 				Return(&ws_api.ObjectInfo{
 					ObjectId:   4567,
@@ -109,7 +107,7 @@ func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": dummyWorkspaceFilePayload,
+			"content_base64": dummyWorkspaceFilePayloadBase64,
 			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
@@ -122,21 +120,13 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         dummyWorkspaceFilePayload,
-				Path:            dummyWorkspaceFilePath,
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(errors.New("The parent folder (/foo) does not exist.")).Once()
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(
+				errors.New("The parent folder (/foo) does not exist.")).Once()
 			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").Return(nil)
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         dummyWorkspaceFilePayload,
-				Path:            dummyWorkspaceFilePath,
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(nil)
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath, bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
 				Return(&ws_api.ObjectInfo{
 					ObjectId:   4567,
@@ -146,7 +136,7 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": dummyWorkspaceFilePayload,
+			"content_base64": dummyWorkspaceFilePayloadBase64,
 			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
@@ -159,19 +149,15 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         dummyWorkspaceFilePayload,
-				Path:            dummyWorkspaceFilePath,
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(errors.New("The parent folder (/foo) does not exist."))
+			workspaceAPI.Upload(mock.Anything, "/foo/path.py",
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(errors.New("The parent folder (/foo) does not exist."))
 			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").
 				Return(errors.New("INVALID_REQUEST: Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": dummyWorkspaceFilePayload,
+			"content_base64": dummyWorkspaceFilePayloadBase64,
 			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
@@ -183,15 +169,18 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
-					"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
-					"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
-				Path:            "/Dashboard",
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(nil)
+			workspaceAPI.Upload(mock.Anything, "/Dashboard",
+				bytes.NewReader([]byte(`-- Databricks notebook source
+SELECT 10*20
+
+-- COMMAND ----------
+
+SELECT 20*100
+
+-- COMMAND ----------
+
+
+`)), mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, "/Dashboard").
 				Return(&ws_api.ObjectInfo{
 					ObjectId:   4567,
@@ -216,13 +205,9 @@ func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         "",
-				Path:            "/__init__.py",
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(nil)
+			workspaceAPI.Upload(mock.Anything, "/__init__.py",
+				bytes.NewReader([]byte("")),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, "/__init__.py").
 				Return(&ws_api.ObjectInfo{
 					ObjectId:   4567,
@@ -245,17 +230,13 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockWorkspaceAPI().EXPECT().
-				Import(mock.Anything, ws_api.Import{
-					Content:         dummyWorkspaceFilePayload,
-					Path:            "/path.py",
-					Overwrite:       true,
-					Format:          ws_api.ImportFormatRaw,
-					ForceSendFields: []string{"Content"},
-				}).Return(errors.New("Internal error happened"))
+				Upload(mock.Anything, "/path.py",
+					bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+					mock.AnythingOfType("func(*workspace.Import)")).Return(errors.New("Internal error happened"))
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": dummyWorkspaceFilePayload,
+			"content_base64": dummyWorkspaceFilePayloadBase64,
 			"path":           "/path.py",
 		},
 		Create: true,
@@ -285,13 +266,9 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Import(mock.Anything, ws_api.Import{
-				Content:         dummyWorkspaceFilePayload,
-				Path:            "abc",
-				Overwrite:       true,
-				Format:          ws_api.ImportFormatRaw,
-				ForceSendFields: []string{"Content"},
-			}).Return(nil)
+			workspaceAPI.Upload(mock.Anything, "abc",
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, "abc").
 				Return(&ws_api.ObjectInfo{
 					ObjectId:   4567,
@@ -301,7 +278,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": dummyWorkspaceFilePayload,
+			"content_base64": dummyWorkspaceFilePayloadBase64,
 			"path":           "/path.py",
 		},
 		ID:          "abc",

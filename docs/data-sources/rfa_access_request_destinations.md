@@ -22,6 +22,10 @@ data "databricks_rfa_access_request_destinations" "customer_data_schema" {
 The following arguments are supported:
 * `full_name` (string, required) - The full name of the securable. Redundant with the name in the securable object, but necessary for Terraform integration
 * `securable_type` (string, required) - The type of the securable. Redundant with the type in the securable object, but necessary for Terraform integration
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

@@ -13,6 +13,10 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `feature_name` (string, optional) - Filter by feature name. If specified, only materialized features materialized from this feature will be returned
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified. Cannot be greater than 1000
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

@@ -12,6 +12,10 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

@@ -37,6 +37,10 @@ The following arguments are supported:
 * `entity_type` (string, required) - The type of entity to which the tag is assigned. Allowed values are apps, dashboards, geniespaces
 * `tag_key` (string, required) - The key of the tag. The characters , . : / - = and leading/trailing spaces are not allowed
 * `tag_value` (string, optional) - The value of the tag
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 

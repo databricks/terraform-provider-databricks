@@ -2290,8 +2290,8 @@ type AwsSqsQueue_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format
-	// https://sqs.{region}.amazonaws.com/{account id}/{queue name} Required for
-	// provided_sqs.
+	// https://sqs.{region}.amazonaws.com/{account id}/{queue name}. Only
+	// required for provided_sqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
 
@@ -2591,11 +2591,12 @@ type AzureQueueStorage_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format https://{storage
-	// account}.queue.core.windows.net/{queue name} Required for provided_aqs.
+	// account}.queue.core.windows.net/{queue name} Only required for
+	// provided_aqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
-	// The resource group for the queue, event grid subscription, and external
-	// location storage account. Only required for locations with a service
-	// principal storage credential
+	// Optional resource group for the queue, event grid subscription, and
+	// external location storage account. Only required for locations with a
+	// service principal storage credential
 	ResourceGroup types.String `tfsdk:"resource_group"`
 	// Optional subscription id for the queue, event grid subscription, and
 	// external location storage account. Required for locations with a service
@@ -5669,7 +5670,8 @@ type CreateExternalLocation_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -5677,8 +5679,8 @@ type CreateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -13183,7 +13185,8 @@ type ExternalLocationInfo_SdkV2 struct {
 	CredentialId types.String `tfsdk:"credential_id"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -13191,8 +13194,8 @@ type ExternalLocationInfo_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 
 	IsolationMode types.String `tfsdk:"isolation_mode"`
@@ -14819,7 +14822,7 @@ type GcpPubsub_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The Pub/Sub subscription name in the format
-	// projects/{project}/subscriptions/{subscription name} Required for
+	// projects/{project}/subscriptions/{subscription name}. Only required for
 	// provided_pubsub.
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
@@ -24743,13 +24746,12 @@ type PolicyInfo_SdkV2 struct {
 	// the policy, set `name` to a different value on update.
 	Name types.String `tfsdk:"name"`
 	// Full name of the securable on which the policy is defined. Required on
-	// create and ignored on update.
+	// create.
 	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
 	// Type of the securable on which the policy is defined. Only `CATALOG`,
-	// `SCHEMA` and `TABLE` are supported at this moment. Required on create and
-	// ignored on update.
+	// `SCHEMA` and `TABLE` are supported at this moment. Required on create.
 	OnSecurableType types.String `tfsdk:"on_securable_type"`
-	// Type of the policy. Required on create and ignored on update.
+	// Type of the policy. Required on create.
 	PolicyType types.String `tfsdk:"policy_type"`
 	// Options for row filter policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_ROW_FILTER`. Required on create and optional on update. When
@@ -30470,7 +30472,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -30478,8 +30481,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.

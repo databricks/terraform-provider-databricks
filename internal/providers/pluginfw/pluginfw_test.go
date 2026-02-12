@@ -48,7 +48,7 @@ func TestConfigure(t *testing.T) {
 				"workspace_id": tftypes.NewValue(tftypes.String, "1234567890"),
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.Equal(t, "1234567890", dc.Config.WorkspaceId, "workspace_id should be set when provided")
+				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
 			},
 		},
 		{
@@ -59,7 +59,7 @@ func TestConfigure(t *testing.T) {
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
 				assert.True(t, dc.Config.Experimental_IsUnifiedHost, "experimental_is_unified_host should be true")
-				assert.Equal(t, "9876543210", dc.Config.WorkspaceId, "workspace_id should be set")
+				assert.Equal(t, "9876543210", dc.Config.WorkspaceID, "workspace_id should be set")
 			},
 		},
 	}

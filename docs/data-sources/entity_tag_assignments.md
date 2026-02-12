@@ -41,6 +41,10 @@ The following arguments are supported:
 * `entity_name` (string, required) - The fully qualified name of the entity to which the tag is assigned
 * `entity_type` (string, required) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
 * `max_results` (integer, optional) - Optional. Maximum number of tag assignments to return in a single page
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

@@ -24,6 +24,8 @@ The resource supports the following arguments:
 
 - `aibi_dashboard_embedding_access_policy` block with following attributes:
   - `access_policy_type` - (Required) Configured embedding policy. Possible values are `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

@@ -25,6 +25,10 @@ output "branch_is_protected" {
 The following arguments are supported:
 * `name` (string, required) - Output only. The full resource path of the branch.
   Format: projects/{project_id}/branches/{branch_id}
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

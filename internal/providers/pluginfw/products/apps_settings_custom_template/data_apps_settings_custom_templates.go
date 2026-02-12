@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "apps_settings_custom_templates"
@@ -29,12 +30,14 @@ func DataSourceCustomTemplates() datasource.DataSource {
 type CustomTemplatesData struct {
 	AppsSettings types.List `tfsdk:"templates"`
 	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (CustomTemplatesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"templates": reflect.TypeOf(CustomTemplateData{}),
+		"templates":       reflect.TypeOf(CustomTemplateData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m CustomTemplatesData) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["templates"] = attrs["templates"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *CustomTemplatesDataSource) Read(ctx context.Context, req datasource.Rea
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		custom_template.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, custom_template.ToObjectValue(ctx))
 	}
 

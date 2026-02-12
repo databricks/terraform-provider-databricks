@@ -30,6 +30,10 @@ The following arguments are supported:
 * `parent` (string, required) - The Branch that owns this collection of endpoints.
   Format: projects/{project_id}/branches/{branch_id}
 * `page_size` (integer, optional) - Upper bound for items returned. Cannot be negative
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

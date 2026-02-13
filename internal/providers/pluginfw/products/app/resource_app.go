@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -93,6 +94,12 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 		}
 		cs.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "service_principal_id")
 		cs.AddPlanModifier(uppercasePlanModifier{}, "compute_size")
+		var computeSize apps.ComputeSize
+		computeSizeValues := make([]string, 0)
+		for _, v := range computeSize.Values() {
+			computeSizeValues = append(computeSizeValues, string(v))
+		}
+		cs.AddValidator(stringvalidator.OneOfCaseInsensitive(computeSizeValues...), "compute_size")
 		return cs
 	})
 }

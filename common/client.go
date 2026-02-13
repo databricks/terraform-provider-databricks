@@ -107,39 +107,41 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 // for terraform provider, the provider can be configured at account level or workspace level.
 // This implementation will be used by resources and data sources that are developed
 // over SDKv2.
+// TODO: To be updated to add support for default workspace ID in Config
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
-	ctx context.Context, workspaceID string,
+	ctx context.Context, workspaceIDProviderConfig string,
 ) (*databricks.WorkspaceClient, error) {
-	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() == config.AccountHost {
-		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+	// Account host or Unified host with no workspace_id set in Config
+	if (c.Config.HostType() == config.AccountHost) || (c.Config.HostType() == config.UnifiedHost && c.Config.WorkspaceID == "") {
+		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceIDProviderConfig)
 	}
-	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+	// Workspace host or Unified host with workspace_id set in Config
+	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceIDProviderConfig)
 }
 
 // getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured
 // at account level.
 func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
-	ctx context.Context, workspaceID string,
+	ctx context.Context, workspaceIDProviderConfig string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
+	// workspace_id MUST be set in a workspace level resource if
 	// the provider is configured at account level.
 	// TODO: Link to the documentation once migration guide is published
-	if workspaceID == "" {
+	if workspaceIDProviderConfig == "" {
 		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
 	}
 
 	// Parse the workspace ID to int.
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	workspaceIDProviderConfigInt, err := parseWorkspaceID(workspaceIDProviderConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the workspace client for the workspace ID.
-	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
+	// Get the workspace client for the workspace ID in resource.
+	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDProviderConfigInt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
+		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDProviderConfigInt, err)
 	}
 	return w, nil
 }
@@ -147,27 +149,30 @@ func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
 // getWorkspaceClientForWorkspaceConfiguredProvider gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured at workspace level.
 func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
-	ctx context.Context, workspaceID string,
+	ctx context.Context, workspaceIDProviderConfig string,
 ) (*databricks.WorkspaceClient, error) {
-	// Provider is configured at workspace level and we get the
-	// workspace client from the provider.
-	if workspaceID == "" {
+	// The workspace_id is not set in provider_config of the resource,
+	// we get the workspace client from the config
+	if workspaceIDProviderConfig == "" {
 		return c.WorkspaceClient()
 	}
 
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	// workspace_id is set in the provider_config
+	workspaceIDProviderConfigInt, err := parseWorkspaceID(workspaceIDProviderConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if the workspace ID specified in the resource matches
 	// the workspace ID of the provider configured workspace client.
+	// TODO: This would be updated to support default workspace ID for unified host
+	// For now, workspace_id if set in Config must match the workspace_id in provider_config.
 	w, err := c.WorkspaceClient()
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDProviderConfigInt, w)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate workspace_id: %w", err)
 	}

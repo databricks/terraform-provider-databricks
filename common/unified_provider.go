@@ -106,12 +106,12 @@ func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d
 	if workspaceIDFromSchema == nil {
 		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
 	}
-	var workspaceID string
-	workspaceID, ok := workspaceIDFromSchema.(string)
+	var workspaceIDProviderConfig string
+	workspaceIDProviderConfig, ok := workspaceIDFromSchema.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceIDProviderConfig)
 }
 
 // DatabricksClientForUnifiedProvider returns a new Databricks Client for the workspace ID from the resource data
@@ -125,31 +125,31 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	if workspaceIDFromResourceData == nil {
 		return c, nil
 	}
-	var workspaceID string
-	workspaceID, ok := workspaceIDFromResourceData.(string)
+	var workspaceIDProviderConfig string
+	workspaceIDProviderConfig, ok := workspaceIDFromResourceData.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
 	// If the workspace_id is not passed in the resource configuration, we don't need to create a new client
 	// and can return the current client.
-	if workspaceID == "" {
+	if workspaceIDProviderConfig == "" {
 		return c, nil
 	}
-	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
+	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceIDProviderConfig)
 }
 
 // getDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
-func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceIDProviderConfig string) (*DatabricksClient, error) {
+	workspaceIDProviderConfigInt, err := parseWorkspaceID(workspaceIDProviderConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClients != nil {
-		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
+		if client, ok := c.cachedDatabricksClients[workspaceIDProviderConfigInt]; ok && client != nil {
 			return &DatabricksClient{
 				DatabricksClient: client,
 			}, nil
@@ -158,19 +158,19 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// If the Databricks Client is not cached, we create a client
 	// and cache it.
-	err = c.setCachedDatabricksClient(ctx, workspaceID)
+	err = c.setCachedDatabricksClient(ctx, workspaceIDProviderConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// Return the Databricks Client.
 	return &DatabricksClient{
-		DatabricksClient: c.cachedDatabricksClients[workspaceIDInt],
+		DatabricksClient: c.cachedDatabricksClients[workspaceIDProviderConfigInt],
 	}, nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.
-func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
+func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceIDProviderConfig string) error {
 	// Acquire the lock to avoid race conditions.
 	c.muLegacy.Lock()
 	defer c.muLegacy.Unlock()
@@ -180,18 +180,18 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 		c.cachedDatabricksClients = make(map[int64]*client.DatabricksClient)
 	}
 
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	workspaceIDProviderConfigInt, err := parseWorkspaceID(workspaceIDProviderConfig)
 	if err != nil {
 		return err
 	}
 
 	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && existingClient != nil {
+	if existingClient, ok := c.cachedDatabricksClients[workspaceIDProviderConfigInt]; ok && existingClient != nil {
 		return nil
 	}
 
 	// Get the workspace client for the workspace ID
-	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceIDProviderConfig)
 	if err != nil {
 		return err
 	}
@@ -202,6 +202,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	if err != nil {
 		return err
 	}
-	c.cachedDatabricksClients[workspaceIDInt] = newClient
+	c.cachedDatabricksClients[workspaceIDProviderConfigInt] = newClient
 	return nil
 }

@@ -2,9 +2,11 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -27,6 +29,7 @@ import (
 const (
 	resourceName       = "app"
 	resourceNamePlural = "apps"
+	appCreateTimeout   = 1 * time.Minute
 )
 
 type AppResource struct {
@@ -127,15 +130,26 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Create the app
 	var forceSendFields []string
 	if !app.NoCompute.IsNull() {
 		forceSendFields = append(forceSendFields, "NoCompute")
 	}
-	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{
+	createReq := apps.CreateAppRequest{
 		App:             appGoSdk,
 		NoCompute:       app.NoCompute.ValueBool(),
 		ForceSendFields: forceSendFields,
+	}
+
+	retrier := retries.New[apps.App](retries.WithTimeout(appCreateTimeout), retries.WithRetryFunc(shouldRetry))
+	createdApp, err := retrier.Run(ctx, func(ctx context.Context) (*apps.App, error) {
+		waiter, err := w.Apps.Create(ctx, createReq)
+		if err != nil {
+			if errors.Is(err, apierr.ErrResourceAlreadyExists) {
+				return nil, retries.Continues("app already exists, retrying")
+			}
+			return nil, retries.Halt(err)
+		}
+		return waiter.Response, nil
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create app", err.Error())
@@ -144,7 +158,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Store the initial version of the app in state
 	var newApp AppResource
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waiter.Response, &newApp)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, createdApp, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

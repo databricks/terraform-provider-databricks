@@ -2085,3 +2085,151 @@ func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, d.HasChanges("data_security_mode"))
 }
+
+func TestResourceClusterCreate_GcpLocalSsdCountZero(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockClustersAPI().EXPECT()
+			api.Create(mock.Anything, mock.MatchedBy(func(req compute.CreateCluster) bool {
+				// Verify that GCP attributes has LocalSsdCount = 0
+				// and that ForceSendFields includes "LocalSsdCount"
+				if req.GcpAttributes == nil {
+					return false
+				}
+				if req.GcpAttributes.LocalSsdCount != 0 {
+					return false
+				}
+				// Check that ForceSendFields includes "LocalSsdCount"
+				hasForceSendField := false
+				for _, field := range req.GcpAttributes.ForceSendFields {
+					if field == "LocalSsdCount" {
+						hasForceSendField = true
+						break
+					}
+				}
+				return hasForceSendField
+			})).Return(&compute.CreateClusterResponse{
+				ClusterId: "abc",
+			}, nil)
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             1,
+					ClusterName:            "Test Cluster",
+					SparkVersion:           "13.3.x-scala2.12",
+					NodeTypeId:             "n1-standard-4",
+					AutoterminationMinutes: 60,
+					State:                  compute.StateRunning,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 0,
+					},
+				}, nil,
+			)
+			api.List(mock.Anything, compute.ListClustersRequest{
+				FilterBy: &compute.ListClustersFilterBy{
+					IsPinned: true,
+				},
+				PageSize: 100,
+			}).Return(&listing.SliceIterator[compute.ClusterDetails]{})
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+			cluster_name = "Test Cluster"
+			spark_version = "13.3.x-scala2.12"
+			node_type_id = "n1-standard-4"
+			num_workers = 1
+			autotermination_minutes = 60
+			gcp_attributes {
+				local_ssd_count = 0
+			}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterUpdate_GcpLocalSsdCountZero(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockClustersAPI().EXPECT()
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             1,
+					ClusterName:            "Test Cluster",
+					SparkVersion:           "13.3.x-scala2.12",
+					NodeTypeId:             "n1-standard-4",
+					AutoterminationMinutes: 60,
+					State:                  compute.StateTerminated,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 2,
+					},
+				}, nil,
+			)
+			api.Edit(mock.Anything, mock.MatchedBy(func(req compute.EditCluster) bool {
+				// Verify that GCP attributes has LocalSsdCount = 0
+				// and that ForceSendFields includes "LocalSsdCount"
+				if req.GcpAttributes == nil {
+					return false
+				}
+				if req.GcpAttributes.LocalSsdCount != 0 {
+					return false
+				}
+				// Check that ForceSendFields includes "LocalSsdCount"
+				hasForceSendField := false
+				for _, field := range req.GcpAttributes.ForceSendFields {
+					if field == "LocalSsdCount" {
+						hasForceSendField = true
+						break
+					}
+				}
+				return hasForceSendField
+			})).Return(nil)
+			api.GetByClusterId(mock.Anything, "abc").Return(
+				&compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             2,
+					ClusterName:            "Test Cluster Updated",
+					SparkVersion:           "13.3.x-scala2.12",
+					NodeTypeId:             "n1-standard-4",
+					AutoterminationMinutes: 60,
+					State:                  compute.StateRunning,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 0,
+					},
+				}, nil,
+			)
+			api.List(mock.Anything, compute.ListClustersRequest{
+				FilterBy: &compute.ListClustersFilterBy{
+					IsPinned: true,
+				},
+				PageSize: 100,
+			}).Return(&listing.SliceIterator[compute.ClusterDetails]{})
+		},
+		Update:   true,
+		ID:       "abc",
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"cluster_name":                     "Test Cluster",
+			"spark_version":                    "13.3.x-scala2.12",
+			"node_type_id":                     "n1-standard-4",
+			"num_workers":                      "1",
+			"autotermination_minutes":          "60",
+			"gcp_attributes.#":                 "1",
+			"gcp_attributes.0.local_ssd_count": "2",
+		},
+		HCL: `
+			cluster_name = "Test Cluster Updated"
+			spark_version = "13.3.x-scala2.12"
+			node_type_id = "n1-standard-4"
+			num_workers = 2
+			autotermination_minutes = 60
+			gcp_attributes {
+				local_ssd_count = 0
+			}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}

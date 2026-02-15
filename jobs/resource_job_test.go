@@ -3639,3 +3639,197 @@ func TestJobResource_SparkConfDiffSuppress(t *testing.T) {
 	assert.True(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "0", nil))
 	assert.False(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "1", nil))
 }
+
+func TestResourceJobCreate_JobClusterWithLocalSsdCountZero(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req jobs.CreateJob) bool {
+				// Verify that the job cluster has GCP attributes with LocalSsdCount = 0
+				// and that ForceSendFields includes "LocalSsdCount"
+				if len(req.JobClusters) != 1 {
+					return false
+				}
+				jc := req.JobClusters[0]
+				if jc.NewCluster.GcpAttributes == nil {
+					return false
+				}
+				// Check that LocalSsdCount is 0
+				if jc.NewCluster.GcpAttributes.LocalSsdCount != 0 {
+					return false
+				}
+				// Check that ForceSendFields includes "LocalSsdCount"
+				hasForceSendField := false
+				for _, field := range jc.NewCluster.GcpAttributes.ForceSendFields {
+					if field == "LocalSsdCount" {
+						hasForceSendField = true
+						break
+					}
+				}
+				return hasForceSendField
+			})).Return(&jobs.CreateResponse{
+				JobId: 789,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: int64(789),
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "test_job",
+					JobClusters: []jobs.JobCluster{
+						{
+							JobClusterKey: "test_cluster",
+							NewCluster: compute.ClusterSpec{
+								SparkVersion: "13.3.x-scala2.12",
+								NodeTypeId:   "n1-standard-4",
+								NumWorkers:   1,
+								GcpAttributes: &compute.GcpAttributes{
+									LocalSsdCount: 0,
+								},
+							},
+						},
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey:        "test_task",
+							JobClusterKey:  "test_cluster",
+							NotebookTask:   &jobs.NotebookTask{NotebookPath: "/test"},
+							TimeoutSeconds: 3600,
+						},
+					},
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+			name = "test_job"
+			job_cluster {
+				job_cluster_key = "test_cluster"
+				new_cluster {
+					spark_version = "13.3.x-scala2.12"
+					node_type_id = "n1-standard-4"
+					num_workers = 1
+					gcp_attributes {
+						local_ssd_count = 0
+					}
+				}
+			}
+			task {
+				task_key = "test_task"
+				job_cluster_key = "test_cluster"
+				notebook_task {
+					notebook_path = "/test"
+				}
+				timeout_seconds = 3600
+			}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
+
+func TestResourceJobUpdate_JobClusterWithLocalSsdCountZero(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Update(mock.Anything, mock.MatchedBy(func(req jobs.UpdateJob) bool {
+				// Verify that the job cluster has GCP attributes with LocalSsdCount = 0
+				// and that ForceSendFields includes "LocalSsdCount"
+				if req.NewSettings == nil || len(req.NewSettings.JobClusters) != 1 {
+					return false
+				}
+				jc := req.NewSettings.JobClusters[0]
+				if jc.NewCluster.GcpAttributes == nil {
+					return false
+				}
+				// Check that LocalSsdCount is 0
+				if jc.NewCluster.GcpAttributes.LocalSsdCount != 0 {
+					return false
+				}
+				// Check that ForceSendFields includes "LocalSsdCount"
+				hasForceSendField := false
+				for _, field := range jc.NewCluster.GcpAttributes.ForceSendFields {
+					if field == "LocalSsdCount" {
+						hasForceSendField = true
+						break
+					}
+				}
+				return hasForceSendField
+			})).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: int64(789),
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "test_job_updated",
+					JobClusters: []jobs.JobCluster{
+						{
+							JobClusterKey: "test_cluster",
+							NewCluster: compute.ClusterSpec{
+								SparkVersion: "13.3.x-scala2.12",
+								NodeTypeId:   "n1-standard-4",
+								NumWorkers:   2,
+								GcpAttributes: &compute.GcpAttributes{
+									LocalSsdCount: 0,
+								},
+							},
+						},
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey:        "test_task",
+							JobClusterKey:  "test_cluster",
+							NotebookTask:   &jobs.NotebookTask{NotebookPath: "/test"},
+							TimeoutSeconds: 3600,
+						},
+					},
+				},
+			}, nil)
+		},
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		InstanceState: map[string]string{
+			"name":                                                "test_job",
+			"job_cluster.#":                                       "1",
+			"job_cluster.0.job_cluster_key":                       "test_cluster",
+			"job_cluster.0.new_cluster.#":                         "1",
+			"job_cluster.0.new_cluster.0.spark_version":           "13.3.x-scala2.12",
+			"job_cluster.0.new_cluster.0.node_type_id":            "n1-standard-4",
+			"job_cluster.0.new_cluster.0.num_workers":             "1",
+			"job_cluster.0.new_cluster.0.gcp_attributes.#":        "1",
+			"job_cluster.0.new_cluster.0.gcp_attributes.0.local_ssd_count": "0",
+			"task.#":                        "1",
+			"task.0.task_key":               "test_task",
+			"task.0.job_cluster_key":        "test_cluster",
+			"task.0.notebook_task.#":        "1",
+			"task.0.notebook_task.0.notebook_path": "/test",
+			"task.0.timeout_seconds":        "3600",
+		},
+		HCL: `
+			name = "test_job_updated"
+			job_cluster {
+				job_cluster_key = "test_cluster"
+				new_cluster {
+					spark_version = "13.3.x-scala2.12"
+					node_type_id = "n1-standard-4"
+					num_workers = 2
+					gcp_attributes {
+						local_ssd_count = 0
+					}
+				}
+			}
+			task {
+				task_key = "test_task"
+				job_cluster_key = "test_cluster"
+				notebook_task {
+					notebook_path = "/test"
+				}
+				timeout_seconds = 3600
+			}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}

@@ -209,7 +209,7 @@ func updateJobClusterSpec(d *schema.ResourceData, prefix string, clusterSpec *co
 	if err != nil {
 		return err
 	}
-	err = clusters.SetForceSendFieldsForCluster(clusterSpec, d)
+	err = clusters.SetForceSendFieldsForClusterWithPrefix(clusterSpec, d, prefix)
 	if err != nil {
 		return err
 	}

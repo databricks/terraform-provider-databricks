@@ -239,17 +239,41 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
 }
 
 func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
+	return SetForceSendFieldsForClusterWithPrefix(cluster, d, "")
+}
+
+func SetForceSendFieldsForClusterWithPrefix(cluster any, d *schema.ResourceData, prefix string) error {
+	// Helper function to build the full path for a field
+	buildPath := func(field string) string {
+		if prefix == "" {
+			return field
+		}
+		return prefix + "." + field
+	}
+
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
 		// Used in jobs.
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
+		// Handle local_ssd_count for GCP attributes
+		if c.GcpAttributes != nil {
+			if _, ok := d.GetOkExists(buildPath("gcp_attributes.0.local_ssd_count")); ok {
+				c.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+			}
+		}
 		// Workload type is not relevant in jobs clusters.
 		return nil
 	case *compute.CreateCluster:
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// Handle local_ssd_count for GCP attributes
+		if c.GcpAttributes != nil {
+			if _, ok := d.GetOkExists(buildPath("gcp_attributes.0.local_ssd_count")); ok {
+				c.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+			}
 		}
 		// If workload type is set by the user, the fields within Clients should always be sent.
 		// These default to true if not set.
@@ -260,6 +284,12 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	case *compute.EditCluster:
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// Handle local_ssd_count for GCP attributes
+		if c.GcpAttributes != nil {
+			if _, ok := d.GetOkExists(buildPath("gcp_attributes.0.local_ssd_count")); ok {
+				c.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+			}
 		}
 		// If workload type is set by the user, the fields within Clients should always be sent.
 		// These default to true if not set.

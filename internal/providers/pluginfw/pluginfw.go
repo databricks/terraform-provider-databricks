@@ -98,6 +98,11 @@ func providerSchemaPluginFramework() schema.Schema {
 			}
 		}
 	}
+	// Add default_workspace_id for unified provider support
+	ps["default_workspace_id"] = schema.StringAttribute{
+		Optional:    true,
+		Description: "Default workspace ID to use when workspace_id is not specified in provider_config at the resource level",
+	}
 	return schema.Schema{
 		Attributes: ps,
 	}
@@ -193,6 +198,13 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 			attrsUsed = append(attrsUsed, attr.Name)
 		}
 	}
+	// Check for default_workspace_id before logging
+	var defaultWorkspaceID types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("default_workspace_id"), &defaultWorkspaceID)...)
+	hasDefaultWorkspaceID := !defaultWorkspaceID.IsNull() && !defaultWorkspaceID.IsUnknown()
+	if hasDefaultWorkspaceID {
+		attrsUsed = append(attrsUsed, "default_workspace_id")
+	}
 	if len(attrsUsed) > 0 {
 		sort.Strings(attrsUsed)
 		tflog.Info(ctx, fmt.Sprintf("(plugin framework) Attributes specified in provider configuration: %s", strings.Join(attrsUsed, ", ")))
@@ -203,6 +215,11 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to configure Databricks client", err.Error())
 		return nil
+	}
+	// Store default_workspace_id in the client if provided
+	if hasDefaultWorkspaceID {
+		databricksClient.SetDefaultWorkspaceID(defaultWorkspaceID.ValueString())
+		tflog.Info(ctx, fmt.Sprintf("(plugin framework) default_workspace_id set to: %s", defaultWorkspaceID.ValueString()))
 	}
 	return databricksClient
 }

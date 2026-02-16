@@ -12,6 +12,7 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -103,10 +104,17 @@ type EntityTagAssignmentData struct {
 	// The type of the entity to which the tag is assigned. Allowed values are:
 	// catalogs, schemas, tables, columns, volumes.
 	EntityType types.String `tfsdk:"entity_type"`
+	// The source type of the tag assignment, e.g., user-assigned or
+	// system-assigned
+	SourceType types.String `tfsdk:"source_type"`
 	// The key of the tag
 	TagKey types.String `tfsdk:"tag_key"`
 	// The value of the tag
-	TagValue           types.String `tfsdk:"tag_value"`
+	TagValue types.String `tfsdk:"tag_value"`
+	// The timestamp when the tag assignment was last updated
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// The user or principal who updated the tag assignment
+	UpdatedBy          types.String `tfsdk:"updated_by"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -135,8 +143,11 @@ func (m EntityTagAssignmentData) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"entity_name": m.EntityName,
 			"entity_type": m.EntityType,
+			"source_type": m.SourceType,
 			"tag_key":     m.TagKey,
 			"tag_value":   m.TagValue,
+			"update_time": m.UpdateTime,
+			"updated_by":  m.UpdatedBy,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -150,8 +161,11 @@ func (m EntityTagAssignmentData) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"entity_name": types.StringType,
 			"entity_type": types.StringType,
+			"source_type": types.StringType,
 			"tag_key":     types.StringType,
 			"tag_value":   types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"updated_by":  types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -161,8 +175,11 @@ func (m EntityTagAssignmentData) Type(ctx context.Context) attr.Type {
 func (m EntityTagAssignmentData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["tag_value"] = attrs["tag_value"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

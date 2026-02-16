@@ -5284,6 +5284,10 @@ type Subscription_SdkV2 struct {
 	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"schedule_id"`
+	// Controls whether notifications are sent to the subscriber for scheduled
+	// dashboard refreshes. If not defined, defaults to false in the backend to
+	// match the current behavior (refresh and notify)
+	SkipNotify types.Bool `tfsdk:"skip_notify"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
 	Subscriber types.List `tfsdk:"subscriber"`
@@ -5322,6 +5326,7 @@ func (m Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["skip_notify"] = attrs["skip_notify"].SetOptional()
 	attrs["subscriber"] = attrs["subscriber"].SetRequired()
 	attrs["subscriber"] = attrs["subscriber"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["subscription_id"] = attrs["subscription_id"].SetComputed()
@@ -5355,6 +5360,7 @@ func (m Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"dashboard_id":       m.DashboardId,
 			"etag":               m.Etag,
 			"schedule_id":        m.ScheduleId,
+			"skip_notify":        m.SkipNotify,
 			"subscriber":         m.Subscriber,
 			"subscription_id":    m.SubscriptionId,
 			"update_time":        m.UpdateTime,
@@ -5370,6 +5376,7 @@ func (m Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
+			"skip_notify":        types.BoolType,
 			"subscriber": basetypes.ListType{
 				ElemType: Subscriber_SdkV2{}.Type(ctx),
 			},

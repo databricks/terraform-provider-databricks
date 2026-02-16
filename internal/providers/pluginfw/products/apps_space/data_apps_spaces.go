@@ -1,12 +1,12 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package database_instance
+package apps_space
 
 import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/database"
+	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
@@ -18,69 +18,69 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourcesName = "database_instances"
+const dataSourcesName = "apps_spaces"
 
-var _ datasource.DataSourceWithConfigure = &DatabaseInstancesDataSource{}
+var _ datasource.DataSourceWithConfigure = &SpacesDataSource{}
 
-func DataSourceDatabaseInstances() datasource.DataSource {
-	return &DatabaseInstancesDataSource{}
+func DataSourceSpaces() datasource.DataSource {
+	return &SpacesDataSource{}
 }
 
-// DatabaseInstancesData extends the main model with additional fields.
-type DatabaseInstancesData struct {
-	Database types.List `tfsdk:"database_instances"`
-	// Upper bound for items returned. The maximum value is 100.
+// SpacesData extends the main model with additional fields.
+type SpacesData struct {
+	Apps types.List `tfsdk:"spaces"`
+	// Upper bound for items returned.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
-func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (SpacesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"database_instances": reflect.TypeOf(DatabaseInstanceData{}),
-		"provider_config":    reflect.TypeOf(ProviderConfigData{}),
+		"spaces":          reflect.TypeOf(SpaceData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
-func (m DatabaseInstancesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SpacesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
-	attrs["database_instances"] = attrs["database_instances"].SetComputed()
+	attrs["spaces"] = attrs["spaces"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
-type DatabaseInstancesDataSource struct {
+type SpacesDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *DatabaseInstancesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *SpacesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourcesName)
 }
 
-func (r *DatabaseInstancesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstancesData{}, nil)
+func (r *SpacesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SpacesData{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks DatabaseInstance",
+		Description: "Terraform schema for Databricks Space",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *DatabaseInstancesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *SpacesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *SpacesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	var config DatabaseInstancesData
+	var config SpacesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var listRequest database.ListDatabaseInstancesRequest
+	var listRequest apps.ListSpacesRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -101,24 +101,24 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	response, err := client.Database.ListDatabaseInstancesAll(ctx, listRequest)
+	response, err := client.Apps.ListSpacesAll(ctx, listRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to list database_instances", err.Error())
+		resp.Diagnostics.AddError("failed to list apps_spaces", err.Error())
 		return
 	}
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var database_instance DatabaseInstanceData
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &database_instance)...)
+		var space SpaceData
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &space)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		database_instance.ProviderConfigData = config.ProviderConfigData
+		space.ProviderConfigData = config.ProviderConfigData
 
-		results = append(results, database_instance.ToObjectValue(ctx))
+		results = append(results, space.ToObjectValue(ctx))
 	}
 
-	config.Database = types.ListValueMust(DatabaseInstanceData{}.Type(ctx), results)
+	config.Apps = types.ListValueMust(SpaceData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

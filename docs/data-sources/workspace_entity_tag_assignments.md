@@ -30,6 +30,10 @@ The following arguments are supported:
 * `entity_id` (string, required) - The identifier of the entity to which the tag is assigned
 * `entity_type` (string, required) - The type of entity to which the tag is assigned. Allowed values are apps, dashboards, geniespaces
 * `page_size` (integer, optional) - Optional. Maximum number of tag assignments to return in a single page
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

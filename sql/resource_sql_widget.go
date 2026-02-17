@@ -270,17 +270,26 @@ func ResourceSqlWidget() common.Resource {
 
 			return m
 		})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		DeprecationMessage: "This resource is deprecated and will be removed in future. Please switch to databricks_dashboard to author new AI/BI dashboards using the latest tooling.",
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var w WidgetEntity
 			aw, err := w.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewWidgetAPI(ctx, c).Create(aw)
+			err = NewWidgetAPI(ctx, newClient).Create(aw)
 			if err != nil {
 				return err
 			}
@@ -298,12 +307,16 @@ func ResourceSqlWidget() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			dashboardID, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
 
-			aw, err := NewWidgetAPI(ctx, c).Read(dashboardID, widgetID)
+			aw, err := NewWidgetAPI(ctx, newClient).Read(dashboardID, widgetID)
 			if err != nil {
 				return err
 			}
@@ -312,6 +325,10 @@ func ResourceSqlWidget() common.Resource {
 			return w.fromAPIObject(aw, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			_, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -323,14 +340,18 @@ func ResourceSqlWidget() common.Resource {
 				return err
 			}
 
-			return NewWidgetAPI(ctx, c).Update(widgetID, aw)
+			return NewWidgetAPI(ctx, newClient).Update(widgetID, aw)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			_, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
-			return NewWidgetAPI(ctx, c).Delete(widgetID)
+			return NewWidgetAPI(ctx, newClient).Delete(widgetID)
 		},
 		Schema: s,
 	}

@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -2290,8 +2291,8 @@ type AwsSqsQueue_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format
-	// https://sqs.{region}.amazonaws.com/{account id}/{queue name} Required for
-	// provided_sqs.
+	// https://sqs.{region}.amazonaws.com/{account id}/{queue name}. Only
+	// required for provided_sqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
 
@@ -2591,11 +2592,12 @@ type AzureQueueStorage_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The AQS queue url in the format https://{storage
-	// account}.queue.core.windows.net/{queue name} Required for provided_aqs.
+	// account}.queue.core.windows.net/{queue name} Only required for
+	// provided_aqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
-	// The resource group for the queue, event grid subscription, and external
-	// location storage account. Only required for locations with a service
-	// principal storage credential
+	// Optional resource group for the queue, event grid subscription, and
+	// external location storage account. Only required for locations with a
+	// service principal storage credential
 	ResourceGroup types.String `tfsdk:"resource_group"`
 	// Optional subscription id for the queue, event grid subscription, and
 	// external location storage account. Required for locations with a service
@@ -5669,7 +5671,8 @@ type CreateExternalLocation_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -5677,8 +5680,8 @@ type CreateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -11588,10 +11591,17 @@ type EntityTagAssignment_SdkV2 struct {
 	// The type of the entity to which the tag is assigned. Allowed values are:
 	// catalogs, schemas, tables, columns, volumes.
 	EntityType types.String `tfsdk:"entity_type"`
+	// The source type of the tag assignment, e.g., user-assigned or
+	// system-assigned
+	SourceType types.String `tfsdk:"source_type"`
 	// The key of the tag
 	TagKey types.String `tfsdk:"tag_key"`
 	// The value of the tag
 	TagValue types.String `tfsdk:"tag_value"`
+	// The timestamp when the tag assignment was last updated
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// The user or principal who updated the tag assignment
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (to *EntityTagAssignment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EntityTagAssignment_SdkV2) {
@@ -11605,9 +11615,12 @@ func (m EntityTagAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
 	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	return attrs
 }
@@ -11632,8 +11645,11 @@ func (m EntityTagAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"entity_name": m.EntityName,
 			"entity_type": m.EntityType,
+			"source_type": m.SourceType,
 			"tag_key":     m.TagKey,
 			"tag_value":   m.TagValue,
+			"update_time": m.UpdateTime,
+			"updated_by":  m.UpdatedBy,
 		})
 }
 
@@ -11643,8 +11659,11 @@ func (m EntityTagAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"entity_name": types.StringType,
 			"entity_type": types.StringType,
+			"source_type": types.StringType,
 			"tag_key":     types.StringType,
 			"tag_value":   types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"updated_by":  types.StringType,
 		},
 	}
 }
@@ -13183,7 +13202,8 @@ type ExternalLocationInfo_SdkV2 struct {
 	CredentialId types.String `tfsdk:"credential_id"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -13191,8 +13211,8 @@ type ExternalLocationInfo_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 
 	IsolationMode types.String `tfsdk:"isolation_mode"`
@@ -14819,7 +14839,7 @@ type GcpPubsub_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The Pub/Sub subscription name in the format
-	// projects/{project}/subscriptions/{subscription name} Required for
+	// projects/{project}/subscriptions/{subscription name}. Only required for
 	// provided_pubsub.
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
@@ -24743,13 +24763,12 @@ type PolicyInfo_SdkV2 struct {
 	// the policy, set `name` to a different value on update.
 	Name types.String `tfsdk:"name"`
 	// Full name of the securable on which the policy is defined. Required on
-	// create and ignored on update.
+	// create.
 	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
 	// Type of the securable on which the policy is defined. Only `CATALOG`,
-	// `SCHEMA` and `TABLE` are supported at this moment. Required on create and
-	// ignored on update.
+	// `SCHEMA` and `TABLE` are supported at this moment. Required on create.
 	OnSecurableType types.String `tfsdk:"on_securable_type"`
-	// Type of the policy. Required on create and ignored on update.
+	// Type of the policy. Required on create.
 	PolicyType types.String `tfsdk:"policy_type"`
 	// Options for row filter policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_ROW_FILTER`. Required on create and optional on update. When
@@ -30470,7 +30489,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name"`
-	// Whether to enable file events on this external location.
+	// Whether to enable file events on this external location. Default to
+	// `true`. Set to `false` to disable file events.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -30478,8 +30498,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is `true`, must be
-	// defined and have exactly one of the documented properties.
+	// File event queue settings. If `enable_file_events` is not `false`, must
+	// be defined and have exactly one of the documented properties.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.

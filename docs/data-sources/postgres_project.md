@@ -33,6 +33,10 @@ output "project_history_retention" {
 The following arguments are supported:
 * `name` (string, required) - Output only. The full resource path of the project.
   Format: projects/{project_id}
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -44,6 +48,10 @@ The following attributes are exported:
 * `uid` (string) - System-generated unique ID for the project
 * `update_time` (string) - A timestamp indicating when the project was last updated
 
+### ProjectCustomTag
+* `key` (string) - The key of the custom tag
+* `value` (string) - The value of the custom tag
+
 ### ProjectDefaultEndpointSettings
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. Minimum value is 0.5
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
@@ -54,6 +62,12 @@ The following attributes are exported:
   If specified should be between 60s and 604800s (1 minute to 1 week)
 
 ### ProjectSpec
+* `budget_policy_id` (string) - The desired budget policy to associate with the project.
+  See status.budget_policy_id for the policy that is actually applied to the project
+* `custom_tags` (list of ProjectCustomTag) - Custom tags to associate with the project. Forwarded to LBM for billing and cost tracking.
+  To update tags, provide the new tag list and include "spec.custom_tags" in the update_mask.
+  To clear all tags, provide an empty list and include "spec.custom_tags" in the update_mask.
+  To preserve existing tags, omit this field from the update_mask (or use wildcard "*" which auto-excludes empty tags)
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings)
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
 * `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 0s and 2592000s (up to 30 days)
@@ -61,6 +75,8 @@ The following attributes are exported:
 
 ### ProjectStatus
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch
+* `budget_policy_id` (string) - The budget policy that is applied to the project
+* `custom_tags` (list of ProjectCustomTag) - The effective custom tags associated with the project
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings
 * `display_name` (string) - The effective human-readable project name
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery

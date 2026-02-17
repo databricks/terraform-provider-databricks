@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "warehouses_default_warehouse_overrides"
@@ -31,12 +32,14 @@ type DefaultWarehouseOverridesData struct {
 	// The maximum number of overrides to return. The service may return fewer
 	// than this value. If unspecified, at most 100 overrides will be returned.
 	// The maximum value is 1000; values above 1000 will be coerced to 1000.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (DefaultWarehouseOverridesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"default_warehouse_overrides": reflect.TypeOf(DefaultWarehouseOverrideData{}),
+		"provider_config":             reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -44,6 +47,8 @@ func (m DefaultWarehouseOverridesData) ApplySchemaCustomizations(attrs map[strin
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["default_warehouse_overrides"] = attrs["default_warehouse_overrides"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -83,7 +88,15 @@ func (r *DefaultWarehouseOverridesDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -103,6 +116,8 @@ func (r *DefaultWarehouseOverridesDataSource) Read(ctx context.Context, req data
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		default_warehouse_override.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, default_warehouse_override.ToObjectValue(ctx))
 	}
 

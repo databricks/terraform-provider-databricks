@@ -13,6 +13,10 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `key` (string, required)
 * `value` (string, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 

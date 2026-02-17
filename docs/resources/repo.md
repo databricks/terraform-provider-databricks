@@ -41,6 +41,9 @@ Optional `sparse_checkout` configuration block contains attributes related to [s
 Addition or removal of the `sparse_checkout` configuration block will lead to recreation of the Git folder.
 
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

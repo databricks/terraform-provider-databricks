@@ -786,7 +786,8 @@ type GenieAttachment struct {
 	Query types.Object `tfsdk:"query"`
 	// Follow-up questions suggested by Genie
 	SuggestedQuestions types.Object `tfsdk:"suggested_questions"`
-	// Text Attachment if Genie responds with text
+	// Text Attachment if Genie responds with text. This also contains the final
+	// summary when available.
 	Text types.Object `tfsdk:"text"`
 }
 
@@ -3235,12 +3236,6 @@ type GenieSpace struct {
 	// Space](:method:genie/getspace) API to retrieve an example response, which
 	// includes the `serialized_space` field. This field provides the structure
 	// of the JSON string that represents the space's layout and components.
-	// NOTE: Keep example in sync with: -
-	// docs/web/docs/genie/conversation-api.md -
-	// data-rooms/data-rooms/test/unit/entities/testdata/documentation_example_serialized_space.json
-	// NOTE: The proto example below is a simplified subset of the full JSON
-	// testdata file. See the testdata file for a comprehensive example with all
-	// fields.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
@@ -5220,6 +5215,10 @@ type Subscription struct {
 	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"schedule_id"`
+	// Controls whether notifications are sent to the subscriber for scheduled
+	// dashboard refreshes. If not defined, defaults to false in the backend to
+	// match the current behavior (refresh and notify)
+	SkipNotify types.Bool `tfsdk:"skip_notify"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
 	Subscriber types.Object `tfsdk:"subscriber"`
@@ -5258,6 +5257,7 @@ func (m Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["skip_notify"] = attrs["skip_notify"].SetOptional()
 	attrs["subscriber"] = attrs["subscriber"].SetRequired()
 	attrs["subscription_id"] = attrs["subscription_id"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -5290,6 +5290,7 @@ func (m Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dashboard_id":       m.DashboardId,
 			"etag":               m.Etag,
 			"schedule_id":        m.ScheduleId,
+			"skip_notify":        m.SkipNotify,
 			"subscriber":         m.Subscriber,
 			"subscription_id":    m.SubscriptionId,
 			"update_time":        m.UpdateTime,
@@ -5305,6 +5306,7 @@ func (m Subscription) Type(ctx context.Context) attr.Type {
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
+			"skip_notify":        types.BoolType,
 			"subscriber":         Subscriber{}.Type(ctx),
 			"subscription_id":    types.StringType,
 			"update_time":        types.StringType,

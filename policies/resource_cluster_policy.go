@@ -41,6 +41,8 @@ var rcpSchema = common.StructToSchema(
 		m["policy_family_id"].ConflictsWith = []string{"definition"}
 		m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
 
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -56,8 +58,11 @@ func ResourceClusterPolicy() common.Resource {
 				Upgrade: removeZeroMaxClustersPerUser,
 			},
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -94,7 +99,7 @@ func ResourceClusterPolicy() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -105,7 +110,7 @@ func ResourceClusterPolicy() common.Resource {
 			return common.StructToData(resp, rcpSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -120,7 +125,7 @@ func ResourceClusterPolicy() common.Resource {
 			return w.ClusterPolicies.Edit(ctx, request)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

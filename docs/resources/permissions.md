@@ -1034,6 +1034,9 @@ Exactly one of the below arguments is required:
 - `service_principal_name` - (Optional) Application ID (**not service principal name!**) of the [service_principal](service_principal.md#application_id).
 - `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

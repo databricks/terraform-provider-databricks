@@ -129,6 +129,8 @@ func ResourceSqlGlobalConfig() common.Resource {
 			"and may be removed from the Databricks Terraform provider in the future"
 		return m
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		var gc GlobalConfig
 		common.DataToStructPointer(d, s, &gc)
@@ -139,30 +141,51 @@ func ResourceSqlGlobalConfig() common.Resource {
 		return nil
 	}
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// enable_serverless_compute is an optional boolean parameter which may be specified as `false`.
 			if _, ok := d.GetOkExists("enable_serverless_compute"); !ok {
 				// Read the current global config and use the current value of enable_serverless_compute as
 				// the default value if not specified.
-				gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
+				gc, err := NewSqlGlobalConfigAPI(ctx, newClient).Get()
 				if err != nil {
 					return err
 				}
 				d.Set("enable_serverless_compute", gc.EnableServerlessCompute)
 			}
-			return setGlobalConfig(ctx, d, c)
+			return setGlobalConfig(ctx, d, newClient)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			gc, err := NewSqlGlobalConfigAPI(ctx, newClient).Get()
 			if err != nil {
 				return err
 			}
 			err = common.StructToData(gc, s, d)
 			return err
 		},
-		Update: setGlobalConfig,
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return setGlobalConfig(ctx, d, newClient)
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewSqlGlobalConfigAPI(ctx, newClient).Set(GlobalConfig{
 				SecurityPolicy:          "DATA_ACCESS_CONTROL",
 				EnableServerlessCompute: d.Get("enable_serverless_compute").(bool),
 			}, d)

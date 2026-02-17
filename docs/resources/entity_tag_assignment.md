@@ -57,7 +57,11 @@ The following arguments are supported:
 ### ProviderConfig
 * `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
-
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `source_type` (string) - The source type of the tag assignment, e.g., user-assigned or system-assigned. Possible values are: `TAG_ASSIGNMENT_SOURCE_TYPE_SYSTEM_DATA_CLASSIFICATION`
+* `update_time` (string) - The timestamp when the tag assignment was last updated
+* `updated_by` (string) - The user or principal who updated the tag assignment
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -2626,7 +2626,7 @@ func (m *ListDatabaseInstanceRolesResponse_SdkV2) SetDatabaseInstanceRoles(ctx c
 }
 
 type ListDatabaseInstancesRequest_SdkV2 struct {
-	// Upper bound for items returned.
+	// Upper bound for items returned. The maximum value is 100.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Pagination token to go to the next page of Database Instances. Requests
 	// first page if absent.

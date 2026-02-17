@@ -22,7 +22,7 @@ output "all_database_instances" {
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - Upper bound for items returned
+* `page_size` (integer, optional) - Upper bound for items returned. The maximum value is 100
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

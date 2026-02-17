@@ -5679,6 +5679,8 @@ type GitSource struct {
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
 	JobSource types.Object `tfsdk:"job_source"`
+
+	SparseCheckout types.Object `tfsdk:"sparse_checkout"`
 }
 
 func (to *GitSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GitSource) {
@@ -5697,6 +5699,15 @@ func (to *GitSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Gi
 				// Recursively sync the fields of JobSource
 				toJobSource.SyncFieldsDuringCreateOrUpdate(ctx, fromJobSource)
 				to.SetJobSource(ctx, toJobSource)
+			}
+		}
+	}
+	if !from.SparseCheckout.IsNull() && !from.SparseCheckout.IsUnknown() {
+		if toSparseCheckout, ok := to.GetSparseCheckout(ctx); ok {
+			if fromSparseCheckout, ok := from.GetSparseCheckout(ctx); ok {
+				// Recursively sync the fields of SparseCheckout
+				toSparseCheckout.SyncFieldsDuringCreateOrUpdate(ctx, fromSparseCheckout)
+				to.SetSparseCheckout(ctx, toSparseCheckout)
 			}
 		}
 	}
@@ -5719,6 +5730,14 @@ func (to *GitSource) SyncFieldsDuringRead(ctx context.Context, from GitSource) {
 			}
 		}
 	}
+	if !from.SparseCheckout.IsNull() && !from.SparseCheckout.IsUnknown() {
+		if toSparseCheckout, ok := to.GetSparseCheckout(ctx); ok {
+			if fromSparseCheckout, ok := from.GetSparseCheckout(ctx); ok {
+				toSparseCheckout.SyncFieldsDuringRead(ctx, fromSparseCheckout)
+				to.SetSparseCheckout(ctx, toSparseCheckout)
+			}
+		}
+	}
 }
 
 func (m GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5729,6 +5748,7 @@ func (m GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["tag"] = attrs["tag"].SetOptional()
 	attrs["url"] = attrs["url"].SetRequired()
 	attrs["job_source"] = attrs["job_source"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
 
 	return attrs
 }
@@ -5742,8 +5762,9 @@ func (m GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (m GitSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"git_snapshot": reflect.TypeOf(GitSnapshot{}),
-		"job_source":   reflect.TypeOf(JobSource{}),
+		"git_snapshot":    reflect.TypeOf(GitSnapshot{}),
+		"job_source":      reflect.TypeOf(JobSource{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckout{}),
 	}
 }
 
@@ -5754,13 +5775,14 @@ func (m GitSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch":       m.GitBranch,
-			"commit":       m.GitCommit,
-			"provider":     m.GitProvider,
-			"git_snapshot": m.GitSnapshot,
-			"tag":          m.GitTag,
-			"url":          m.GitUrl,
-			"job_source":   m.JobSource,
+			"branch":          m.GitBranch,
+			"commit":          m.GitCommit,
+			"provider":        m.GitProvider,
+			"git_snapshot":    m.GitSnapshot,
+			"tag":             m.GitTag,
+			"url":             m.GitUrl,
+			"job_source":      m.JobSource,
+			"sparse_checkout": m.SparseCheckout,
 		})
 }
 
@@ -5768,13 +5790,14 @@ func (m GitSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m GitSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":       types.StringType,
-			"commit":       types.StringType,
-			"provider":     types.StringType,
-			"git_snapshot": GitSnapshot{}.Type(ctx),
-			"tag":          types.StringType,
-			"url":          types.StringType,
-			"job_source":   JobSource{}.Type(ctx),
+			"branch":          types.StringType,
+			"commit":          types.StringType,
+			"provider":        types.StringType,
+			"git_snapshot":    GitSnapshot{}.Type(ctx),
+			"tag":             types.StringType,
+			"url":             types.StringType,
+			"job_source":      JobSource{}.Type(ctx),
+			"sparse_checkout": SparseCheckout{}.Type(ctx),
 		},
 	}
 }
@@ -5827,6 +5850,31 @@ func (m *GitSource) GetJobSource(ctx context.Context) (JobSource, bool) {
 func (m *GitSource) SetJobSource(ctx context.Context, v JobSource) {
 	vs := v.ToObjectValue(ctx)
 	m.JobSource = vs
+}
+
+// GetSparseCheckout returns the value of the SparseCheckout field in GitSource as
+// a SparseCheckout value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GitSource) GetSparseCheckout(ctx context.Context) (SparseCheckout, bool) {
+	var e SparseCheckout
+	if m.SparseCheckout.IsNull() || m.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v SparseCheckout
+	d := m.SparseCheckout.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in GitSource.
+func (m *GitSource) SetSparseCheckout(ctx context.Context, v SparseCheckout) {
+	vs := v.ToObjectValue(ctx)
+	m.SparseCheckout = vs
 }
 
 // Job was retrieved successfully.
@@ -15763,6 +15811,8 @@ type RunTask struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
+	// An option to disable auto optimization in serverless
+	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -15815,6 +15865,15 @@ type RunTask struct {
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
 	Libraries types.List `tfsdk:"library"`
+	// An optional maximum number of times to retry an unsuccessful run. A run
+	// is considered to be unsuccessful if it completes with the `FAILED`
+	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means
+	// to retry indefinitely and the value `0` means to never retry.
+	MaxRetries types.Int64 `tfsdk:"max_retries"`
+	// An optional minimal interval in milliseconds between the start of the
+	// failed run and the subsequent retry run. The default behavior is that
+	// unsuccessful runs are immediately retried.
+	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster types.Object `tfsdk:"new_cluster"`
@@ -15837,6 +15896,9 @@ type RunTask struct {
 	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// Parameter values including resolved references
 	ResolvedValues types.Object `tfsdk:"resolved_values"`
+	// An optional policy to specify whether to retry a job when it times out.
+	// The default behavior is to not retry on timeout.
+	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
 	RunDuration types.Int64 `tfsdk:"run_duration"`
@@ -16406,6 +16468,7 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -16417,6 +16480,8 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
 	attrs["library"] = attrs["library"].SetOptional()
+	attrs["max_retries"] = attrs["max_retries"].SetOptional()
+	attrs["min_retry_interval_millis"] = attrs["min_retry_interval_millis"].SetOptional()
 	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
@@ -16425,6 +16490,7 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
 	attrs["resolved_values"] = attrs["resolved_values"].SetOptional()
+	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
 	attrs["run_duration"] = attrs["run_duration"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
@@ -16505,6 +16571,7 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dbt_task":                     m.DbtTask,
 			"depends_on":                   m.DependsOn,
 			"description":                  m.Description,
+			"disable_auto_optimization":    m.DisableAutoOptimization,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"email_notifications":          m.EmailNotifications,
 			"end_time":                     m.EndTime,
@@ -16516,6 +16583,8 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"git_source":                   m.GitSource,
 			"job_cluster_key":              m.JobClusterKey,
 			"library":                      m.Libraries,
+			"max_retries":                  m.MaxRetries,
+			"min_retry_interval_millis":    m.MinRetryIntervalMillis,
 			"new_cluster":                  m.NewCluster,
 			"notebook_task":                m.NotebookTask,
 			"notification_settings":        m.NotificationSettings,
@@ -16524,6 +16593,7 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"python_wheel_task":            m.PythonWheelTask,
 			"queue_duration":               m.QueueDuration,
 			"resolved_values":              m.ResolvedValues,
+			"retry_on_timeout":             m.RetryOnTimeout,
 			"run_duration":                 m.RunDuration,
 			"run_id":                       m.RunId,
 			"run_if":                       m.RunIf,
@@ -16561,6 +16631,7 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 				ElemType: TaskDependency{}.Type(ctx),
 			},
 			"description":                  types.StringType,
+			"disable_auto_optimization":    types.BoolType,
 			"effective_performance_target": types.StringType,
 			"email_notifications":          JobEmailNotifications{}.Type(ctx),
 			"end_time":                     types.Int64Type,
@@ -16574,30 +16645,33 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.Type(ctx),
 			},
-			"new_cluster":           compute_tf.ClusterSpec{}.Type(ctx),
-			"notebook_task":         NotebookTask{}.Type(ctx),
-			"notification_settings": TaskNotificationSettings{}.Type(ctx),
-			"pipeline_task":         PipelineTask{}.Type(ctx),
-			"power_bi_task":         PowerBiTask{}.Type(ctx),
-			"python_wheel_task":     PythonWheelTask{}.Type(ctx),
-			"queue_duration":        types.Int64Type,
-			"resolved_values":       ResolvedValues{}.Type(ctx),
-			"run_duration":          types.Int64Type,
-			"run_id":                types.Int64Type,
-			"run_if":                types.StringType,
-			"run_job_task":          RunJobTask{}.Type(ctx),
-			"run_page_url":          types.StringType,
-			"setup_duration":        types.Int64Type,
-			"spark_jar_task":        SparkJarTask{}.Type(ctx),
-			"spark_python_task":     SparkPythonTask{}.Type(ctx),
-			"spark_submit_task":     SparkSubmitTask{}.Type(ctx),
-			"sql_task":              SqlTask{}.Type(ctx),
-			"start_time":            types.Int64Type,
-			"state":                 RunState{}.Type(ctx),
-			"status":                RunStatus{}.Type(ctx),
-			"task_key":              types.StringType,
-			"timeout_seconds":       types.Int64Type,
-			"webhook_notifications": WebhookNotifications{}.Type(ctx),
+			"max_retries":               types.Int64Type,
+			"min_retry_interval_millis": types.Int64Type,
+			"new_cluster":               compute_tf.ClusterSpec{}.Type(ctx),
+			"notebook_task":             NotebookTask{}.Type(ctx),
+			"notification_settings":     TaskNotificationSettings{}.Type(ctx),
+			"pipeline_task":             PipelineTask{}.Type(ctx),
+			"power_bi_task":             PowerBiTask{}.Type(ctx),
+			"python_wheel_task":         PythonWheelTask{}.Type(ctx),
+			"queue_duration":            types.Int64Type,
+			"resolved_values":           ResolvedValues{}.Type(ctx),
+			"retry_on_timeout":          types.BoolType,
+			"run_duration":              types.Int64Type,
+			"run_id":                    types.Int64Type,
+			"run_if":                    types.StringType,
+			"run_job_task":              RunJobTask{}.Type(ctx),
+			"run_page_url":              types.StringType,
+			"setup_duration":            types.Int64Type,
+			"spark_jar_task":            SparkJarTask{}.Type(ctx),
+			"spark_python_task":         SparkPythonTask{}.Type(ctx),
+			"spark_submit_task":         SparkSubmitTask{}.Type(ctx),
+			"sql_task":                  SqlTask{}.Type(ctx),
+			"start_time":                types.Int64Type,
+			"state":                     RunState{}.Type(ctx),
+			"status":                    RunStatus{}.Type(ctx),
+			"task_key":                  types.StringType,
+			"timeout_seconds":           types.Int64Type,
+			"webhook_notifications":     WebhookNotifications{}.Type(ctx),
 		},
 	}
 }
@@ -17658,6 +17732,96 @@ func (m *SparkSubmitTask) SetParameters(ctx context.Context, v []types.String) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Parameters = types.ListValueMust(t, vs)
+}
+
+type SparseCheckout struct {
+	// List of patterns to include for sparse checkout.
+	Patterns types.List `tfsdk:"patterns"`
+}
+
+func (to *SparseCheckout) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SparseCheckout) {
+	if !from.Patterns.IsNull() && !from.Patterns.IsUnknown() && to.Patterns.IsNull() && len(from.Patterns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Patterns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Patterns = from.Patterns
+	}
+}
+
+func (to *SparseCheckout) SyncFieldsDuringRead(ctx context.Context, from SparseCheckout) {
+	if !from.Patterns.IsNull() && !from.Patterns.IsUnknown() && to.Patterns.IsNull() && len(from.Patterns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Patterns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Patterns = from.Patterns
+	}
+}
+
+func (m SparseCheckout) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["patterns"] = attrs["patterns"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SparseCheckout.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SparseCheckout) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"patterns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparseCheckout
+// only implements ToObjectValue() and Type().
+func (m SparseCheckout) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"patterns": m.Patterns,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SparseCheckout) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"patterns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetPatterns returns the value of the Patterns field in SparseCheckout as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SparseCheckout) GetPatterns(ctx context.Context) ([]types.String, bool) {
+	if m.Patterns.IsNull() || m.Patterns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Patterns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPatterns sets the value of the Patterns field in SparseCheckout.
+func (m *SparseCheckout) SetPatterns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["patterns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Patterns = types.ListValueMust(t, vs)
 }
 
 type SqlAlertOutput struct {
@@ -19710,6 +19874,8 @@ type SubmitTask struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
+	// An option to disable auto optimization in serverless
+	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -19732,6 +19898,15 @@ type SubmitTask struct {
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
 	Libraries types.List `tfsdk:"library"`
+	// An optional maximum number of times to retry an unsuccessful run. A run
+	// is considered to be unsuccessful if it completes with the `FAILED`
+	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means
+	// to retry indefinitely and the value `0` means to never retry.
+	MaxRetries types.Int64 `tfsdk:"max_retries"`
+	// An optional minimal interval in milliseconds between the start of the
+	// failed run and the subsequent retry run. The default behavior is that
+	// unsuccessful runs are immediately retried.
+	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster types.Object `tfsdk:"new_cluster"`
@@ -19750,6 +19925,9 @@ type SubmitTask struct {
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
+	// An optional policy to specify whether to retry a job when it times out.
+	// The default behavior is to not retry on timeout.
+	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout"`
 	// An optional value indicating the condition that determines whether the
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
@@ -20224,6 +20402,7 @@ func (m SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
@@ -20231,12 +20410,15 @@ func (m SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["library"] = attrs["library"].SetOptional()
+	attrs["max_retries"] = attrs["max_retries"].SetOptional()
+	attrs["min_retry_interval_millis"] = attrs["min_retry_interval_millis"].SetOptional()
 	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
 	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
+	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
 	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
@@ -20303,6 +20485,7 @@ func (m SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dbt_task":                  m.DbtTask,
 			"depends_on":                m.DependsOn,
 			"description":               m.Description,
+			"disable_auto_optimization": m.DisableAutoOptimization,
 			"email_notifications":       m.EmailNotifications,
 			"environment_key":           m.EnvironmentKey,
 			"existing_cluster_id":       m.ExistingClusterId,
@@ -20310,12 +20493,15 @@ func (m SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"gen_ai_compute_task":       m.GenAiComputeTask,
 			"health":                    m.Health,
 			"library":                   m.Libraries,
+			"max_retries":               m.MaxRetries,
+			"min_retry_interval_millis": m.MinRetryIntervalMillis,
 			"new_cluster":               m.NewCluster,
 			"notebook_task":             m.NotebookTask,
 			"notification_settings":     m.NotificationSettings,
 			"pipeline_task":             m.PipelineTask,
 			"power_bi_task":             m.PowerBiTask,
 			"python_wheel_task":         m.PythonWheelTask,
+			"retry_on_timeout":          m.RetryOnTimeout,
 			"run_if":                    m.RunIf,
 			"run_job_task":              m.RunJobTask,
 			"spark_jar_task":            m.SparkJarTask,
@@ -20342,31 +20528,35 @@ func (m SubmitTask) Type(ctx context.Context) attr.Type {
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
-			"description":         types.StringType,
-			"email_notifications": JobEmailNotifications{}.Type(ctx),
-			"environment_key":     types.StringType,
-			"existing_cluster_id": types.StringType,
-			"for_each_task":       ForEachTask{}.Type(ctx),
-			"gen_ai_compute_task": GenAiComputeTask{}.Type(ctx),
-			"health":              JobsHealthRules{}.Type(ctx),
+			"description":               types.StringType,
+			"disable_auto_optimization": types.BoolType,
+			"email_notifications":       JobEmailNotifications{}.Type(ctx),
+			"environment_key":           types.StringType,
+			"existing_cluster_id":       types.StringType,
+			"for_each_task":             ForEachTask{}.Type(ctx),
+			"gen_ai_compute_task":       GenAiComputeTask{}.Type(ctx),
+			"health":                    JobsHealthRules{}.Type(ctx),
 			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.Type(ctx),
 			},
-			"new_cluster":           compute_tf.ClusterSpec{}.Type(ctx),
-			"notebook_task":         NotebookTask{}.Type(ctx),
-			"notification_settings": TaskNotificationSettings{}.Type(ctx),
-			"pipeline_task":         PipelineTask{}.Type(ctx),
-			"power_bi_task":         PowerBiTask{}.Type(ctx),
-			"python_wheel_task":     PythonWheelTask{}.Type(ctx),
-			"run_if":                types.StringType,
-			"run_job_task":          RunJobTask{}.Type(ctx),
-			"spark_jar_task":        SparkJarTask{}.Type(ctx),
-			"spark_python_task":     SparkPythonTask{}.Type(ctx),
-			"spark_submit_task":     SparkSubmitTask{}.Type(ctx),
-			"sql_task":              SqlTask{}.Type(ctx),
-			"task_key":              types.StringType,
-			"timeout_seconds":       types.Int64Type,
-			"webhook_notifications": WebhookNotifications{}.Type(ctx),
+			"max_retries":               types.Int64Type,
+			"min_retry_interval_millis": types.Int64Type,
+			"new_cluster":               compute_tf.ClusterSpec{}.Type(ctx),
+			"notebook_task":             NotebookTask{}.Type(ctx),
+			"notification_settings":     TaskNotificationSettings{}.Type(ctx),
+			"pipeline_task":             PipelineTask{}.Type(ctx),
+			"power_bi_task":             PowerBiTask{}.Type(ctx),
+			"python_wheel_task":         PythonWheelTask{}.Type(ctx),
+			"retry_on_timeout":          types.BoolType,
+			"run_if":                    types.StringType,
+			"run_job_task":              RunJobTask{}.Type(ctx),
+			"spark_jar_task":            SparkJarTask{}.Type(ctx),
+			"spark_python_task":         SparkPythonTask{}.Type(ctx),
+			"spark_submit_task":         SparkSubmitTask{}.Type(ctx),
+			"sql_task":                  SqlTask{}.Type(ctx),
+			"task_key":                  types.StringType,
+			"timeout_seconds":           types.Int64Type,
+			"webhook_notifications":     WebhookNotifications{}.Type(ctx),
 		},
 	}
 }

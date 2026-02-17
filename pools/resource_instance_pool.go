@@ -247,14 +247,23 @@ func ResourceInstancePool() common.Resource {
 			v.ForceNew = true
 		}
 
+		common.AddNamespaceInSchema(s)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
-			instancePoolInfo, err := NewInstancePoolsAPI(ctx, c).Create(ip)
+			instancePoolInfo, err := NewInstancePoolsAPI(ctx, newClient).Create(ip)
 			if err != nil {
 				return err
 			}
@@ -262,20 +271,32 @@ func ResourceInstancePool() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ip, err := NewInstancePoolsAPI(ctx, c).Read(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ip, err := NewInstancePoolsAPI(ctx, newClient).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ip, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
 			ip.InstancePoolID = d.Id()
-			return NewInstancePoolsAPI(ctx, c).Update(ip)
+			return NewInstancePoolsAPI(ctx, newClient).Update(ip)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewInstancePoolsAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewInstancePoolsAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

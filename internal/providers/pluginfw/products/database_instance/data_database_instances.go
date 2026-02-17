@@ -29,7 +29,7 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 // DatabaseInstancesData extends the main model with additional fields.
 type DatabaseInstancesData struct {
 	Database types.List `tfsdk:"database_instances"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. The maximum value is 100.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

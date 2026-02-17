@@ -51,6 +51,8 @@ The following arguments are supported:
 * `enable_elastic_disk` - (Optional) (Bool) Autoscaling Local Storage: when enabled, the instances in the pool dynamically acquire additional disk space when they are running low on disk space.
 * `preloaded_spark_versions` - (Optional) (List) A list with at most one runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do not have to wait for the image to download. You can retrieve them via [databricks_spark_version](../data-sources/spark_version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
 * `node_type_flexibility` - (Optional) a block describing the alternative driver node types if `node_type_id` isn't available.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### aws_attributes Configuration Block
 
@@ -136,7 +138,6 @@ resource "databricks_instance_pool" "this" {
 Consist of the following attributes:
 
 * `alternate_node_type_ids` - (Required) list of alternative node types that will be used if main node type isn't available.  Follow the [documentation](https://learn.microsoft.com/en-us/azure/databricks/compute/flexible-node-types#fallback-instance-type-requirements) for requirements on selection of alternative node types.
-
 
 ## Attribute Reference
 

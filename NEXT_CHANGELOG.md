@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.107.0
+## Release v1.108.0
 
 ### Breaking Changes
 
@@ -11,6 +11,8 @@
 ### Bug Fixes
 
 ### Documentation
+
+* Added note to `databricks_mws_ncc_binding` that a workspace can only have one NCC binding at a time.
 
 ### Exporter
 

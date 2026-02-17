@@ -98,6 +98,9 @@ The following arguments are supported:
     * `username` - (Optional) The username for basic authentication.
     * `password` - (Optional) The password for basic authentication.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 -> **NOTE** If the type of notification destination is changed, the existing notification destination will be deleted and a new notification destination will be created with the new type.
 
 ## Attribute Reference

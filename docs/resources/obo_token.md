@@ -72,6 +72,8 @@ The following arguments are required:
 * `application_id` - Application ID of [databricks_service_principal](service_principal.md#application_id) to create a PAT token for.
 * `lifetime_seconds` - (Integer, Optional) The number of seconds before the token expires. Token resource is re-created when it expires. If no lifetime is specified, the token remains valid indefinitely.
 * `comment` - (String, Optional) Comment that describes the purpose of the token.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

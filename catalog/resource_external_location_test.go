@@ -649,6 +649,43 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
+func TestReadExternalLocation_ServerDefaultFileEvents(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockExternalLocationsAPI().EXPECT().GetByName(mock.Anything, "abc").Return(&catalog.ExternalLocationInfo{
+				Name:             "abc",
+				Url:              "s3://foo/bar",
+				CredentialName:   "bcd",
+				Comment:          "def",
+				Owner:            "efg",
+				MetastoreId:      "fgh",
+				EnableFileEvents: true,
+				FileEventQueue: &catalog.FileEventQueue{
+					ManagedSqs: &catalog.AwsSqsQueue{
+						ManagedResourceId: "5c1c8bb9-ed5c-4ad9-a210-bd92d6202b9a",
+						QueueUrl:          "https://sqs.us-east-1.amazonaws.com/123456789/queue",
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourceExternalLocation(),
+		Read:     true,
+		ID:       "abc",
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"enable_file_events":                                   true,
+		"file_event_queue.#":                                   1,
+		"file_event_queue.0.managed_sqs.#":                     1,
+		"file_event_queue.0.managed_sqs.0.managed_resource_id": "5c1c8bb9-ed5c-4ad9-a210-bd92d6202b9a",
+		"file_event_queue.0.managed_sqs.0.queue_url":           "https://sqs.us-east-1.amazonaws.com/123456789/queue",
+	})
+}
+
 func TestUpdateExternalLocationForce(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

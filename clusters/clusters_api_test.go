@@ -181,9 +181,6 @@ func TestGetOrCreateRunningCluster_Aws_NoAwsAttributes(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	// No Azure or GCP config set, so client.IsAws() == true.
-	// After removing the hardcoded SPOT default, the create request should
-	// not include AwsAttributes, letting the API default (SPOT_WITH_FALLBACK) apply.
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
 	require.NoError(t, err)

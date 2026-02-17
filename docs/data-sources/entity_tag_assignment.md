@@ -55,5 +55,8 @@ The following arguments are supported:
 The following attributes are exported:
 * `entity_name` (string) - The fully qualified name of the entity to which the tag is assigned
 * `entity_type` (string) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
+* `source_type` (string) - The source type of the tag assignment, e.g., user-assigned or system-assigned. Possible values are: `TAG_ASSIGNMENT_SOURCE_TYPE_SYSTEM_DATA_CLASSIFICATION`
 * `tag_key` (string) - The key of the tag
 * `tag_value` (string) - The value of the tag
+* `update_time` (string) - The timestamp when the tag assignment was last updated
+* `updated_by` (string) - The user or principal who updated the tag assignment

@@ -3546,7 +3546,7 @@ type CreateWarehouseRequest_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5459,7 +5459,7 @@ type EditWarehouseRequest_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5954,7 +5954,7 @@ type EndpointInfo_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -8111,7 +8111,7 @@ type GetWarehouseResponse_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`

@@ -116,6 +116,80 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 	assert.NotNil(t, clusterInfo)
 }
 
+func TestGetOrCreateRunningCluster_Aws_NoAwsAttributes(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/list",
+			Response: map[string]any{},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.1/clusters/spark-versions",
+			Response: compute.GetSparkVersionsResponse{
+				Versions: []compute.SparkVersion{
+					{
+						Key:  "7.3.x-scala2.12",
+						Name: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+					},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.1/clusters/list-node-types",
+			Response: compute.ListNodeTypesResponse{
+				NodeTypes: []compute.NodeType{
+					{
+						NodeTypeId:     "m5.large",
+						InstanceTypeId: "m5.large",
+						MemoryMb:       8192,
+						NumCores:       2,
+						NodeInstanceType: &compute.NodeInstanceType{
+							LocalDisks:      1,
+							InstanceTypeId:  "m5.large",
+							LocalDiskSizeGb: 16,
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/clusters/create",
+			ExpectedRequest: Cluster{
+				AutoterminationMinutes: 10,
+				ClusterName:            "mount",
+				NodeTypeID:             "m5.large",
+				NumWorkers:             1,
+				SparkVersion:           "7.3.x-scala2.12",
+			},
+			Response: ClusterID{
+				ClusterID: "bcd",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=bcd",
+			Response: ClusterInfo{
+				State: "RUNNING",
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	// No Azure or GCP config set, so client.IsAws() == true.
+	// After removing the hardcoded SPOT default, the create request should
+	// not include AwsAttributes, letting the API default (SPOT_WITH_FALLBACK) apply.
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
+	require.NoError(t, err)
+	assert.NotNil(t, clusterInfo)
+}
+
 func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

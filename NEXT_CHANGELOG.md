@@ -6,6 +6,7 @@
 
 ### New Features and Improvements
 
+* Added `database_project_name` to `databricks_permissions` for managing Lakebase database project permissions.
 * Added `node_type_flexibility` block to `databricks_instance_pool` resource ([#5381](https://github.com/databricks/terraform-provider-databricks/pull/5381)).
 
 ### Bug Fixes

@@ -12,6 +12,7 @@
 ### Bug Fixes
 
 * Handle error during WorkspaceClient() creation in databricks_grant and databricks_grants resources ([#5403](https://github.com/databricks/terraform-provider-databricks/pull/5403))
+* Mark `effective_enable_file_events` as read-only in `databricks_external_location` to prevent Terraform drift.
 
 ### Documentation
 

@@ -619,6 +619,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
+			// Preserve externally-set spark_env_vars (e.g. from cluster policies)
+			// when not configured by the user. The Edit API does a full replacement,
+			// so omitting spark_env_vars would clear them.
+			if len(cluster.SparkEnvVars) == 0 && len(clusterInfo.SparkEnvVars) > 0 {
+				cluster.SparkEnvVars = clusterInfo.SparkEnvVars
+			}
 			SetForceSendFieldsForCluster(&cluster, d)
 
 			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {

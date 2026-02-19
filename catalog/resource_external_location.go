@@ -36,7 +36,7 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "isolation_mode").SetComputed()
 			common.CustomizeSchemaPath(m, "owner").SetComputed()
 			common.CustomizeSchemaPath(m, "metastore_id").SetComputed()
-			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only"} {
+			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events"} {
 				common.CustomizeSchemaPath(m, key).SetReadOnly()
 			}
 			// customize file event queue

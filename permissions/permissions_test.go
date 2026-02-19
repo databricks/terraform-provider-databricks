@@ -1014,6 +1014,30 @@ func TestAccPermissions_App(t *testing.T) {
 	})
 }
 
+func TestUcAccPermissions_DatabaseProject(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	queryTemplate := `
+		resource "databricks_postgres_project" "this" {
+			project_id = "{var.RANDOM}"
+			spec = {
+				pg_version = 17
+			}
+		}`
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id", groupPermissions("CAN_USE")),
+	}, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+	}, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id",
+			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for database-projects, allowed levels: CAN_MANAGE"),
+	})
+}
+
 // Temporary disabled until #4823 is fixed
 // func TestAccPermissions_DatabaseInstance(t *testing.T) {
 // 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")

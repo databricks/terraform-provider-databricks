@@ -12,6 +12,9 @@ import (
 
 func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
+	if !acceptance.IsAws(t) {
+		t.Skip("Skipping test because it requires AWS")
+	}
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
 	require.NoError(t, err)

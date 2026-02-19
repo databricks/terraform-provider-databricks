@@ -20,3 +20,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Update Go SDK to v0.110.

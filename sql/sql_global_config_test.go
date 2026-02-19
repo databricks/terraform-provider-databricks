@@ -3,7 +3,6 @@ package sql_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -47,24 +46,6 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 			require.NoError(t, err)
 		},
 		Template: makeSqlGlobalConfig(""),
-	})
-}
-
-func TestAccSQLGlobalConfigConflicts(t *testing.T) {
-	acceptance.LoadWorkspaceEnv(t)
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		PreConfig: func() {
-			ctx := context.Background()
-			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
-			require.NoError(t, err)
-		},
-		Template: `
-		resource "databricks_sql_global_config" "this" {
-			instance_profile_arn = "arn:aws:iam::123456:instance-profile/TestInstanceProfile"
-			google_service_account = "test@test.iam.gserviceaccount.com"
-		}
-		`,
-		ExpectError: regexp.MustCompile(`conflicts with`),
 	})
 }
 

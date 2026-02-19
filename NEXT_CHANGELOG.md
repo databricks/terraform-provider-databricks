@@ -6,7 +6,7 @@
 
 ### Bug Fixes
 
-* Fixed `databricks_cluster` to preserve externally-set `spark_env_vars` (e.g. from cluster policies) during updates when not configured in Terraform.
+* Fixed `databricks_cluster` to preserve externally-set `spark_env_vars` (e.g. from cluster policies) during updates when not configured in Terraform. This also fixes `lifecycle { ignore_changes = [spark_env_vars] }` which previously failed to prevent deletion of externally-set values.
 
 ### Documentation
 

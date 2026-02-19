@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -83,10 +84,8 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	return m
 }
 
-// NamespaceCustomizeDiff is used to customize the diff for the provider configuration
-// in a resource diff.
-func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	// Force New
+// namespaceForceNew marks the workspace_id field as ForceNew if it changed.
+func namespaceForceNew(d *schema.ResourceDiff) error {
 	workspaceIDKey := workspaceIDSchemaKey
 	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
 	if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
@@ -94,8 +93,49 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 			return err
 		}
 	}
-
 	return nil
+}
+
+// namespaceValidateWorkspaceID validates that the workspace_id in provider_config
+// is reachable during the plan phase.
+// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
+// For account-level providers, it checks that the workspace is accessible from the account.
+// This is a no-op when provider_config is not set.
+func namespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
+	newWSID, ok := newWorkspaceID.(string)
+	if !ok || newWSID == "" {
+		return nil
+	}
+	workspaceIDInt, err := parseWorkspaceID(newWSID)
+	if err != nil {
+		return err
+	}
+	if c.Config.HostType() != config.WorkspaceHost {
+		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
+		if err != nil {
+			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
+		}
+		return nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	if err != nil {
+		return fmt.Errorf("failed to validate workspace_id: %w", err)
+	}
+	return nil
+}
+
+// NamespaceCustomizeDiff is used to customize the diff for the provider configuration
+// in a resource diff.
+func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := namespaceForceNew(d); err != nil {
+		return err
+	}
+	return namespaceValidateWorkspaceID(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data

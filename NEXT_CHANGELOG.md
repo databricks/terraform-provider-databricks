@@ -9,6 +9,7 @@
 * Added `database_project_name` to `databricks_permissions` for managing Lakebase database project permissions.
 * Added `node_type_flexibility` block to `databricks_instance_pool` resource ([#5381](https://github.com/databricks/terraform-provider-databricks/pull/5381)).
 
+
 ### Bug Fixes
 
 * Handle error during WorkspaceClient() creation in databricks_grant and databricks_grants resources ([#5403](https://github.com/databricks/terraform-provider-databricks/pull/5403))
@@ -20,3 +21,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Add support for host agnostic SQL global config resource.

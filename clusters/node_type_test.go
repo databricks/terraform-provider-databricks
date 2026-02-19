@@ -10,6 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAccCluster_ListNodeTypesAWS validates that an AWS workspace's ListNodeTypes
+// response contains the expected AWS default node types (used by defaultSmallestNodeType)
+// and does not contain Azure or GCP node types.
 func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsAws(t) {
@@ -48,6 +51,9 @@ func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	}
 }
 
+// TestAccClusterAPI_ListNodeTypesAzure validates that an Azure workspace's ListNodeTypes
+// response contains the expected Azure default node types (used by defaultSmallestNodeType)
+// and does not contain AWS or GCP node types.
 func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	w := databricks.Must(databricks.NewWorkspaceClient())
@@ -83,6 +89,9 @@ func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	}
 }
 
+// TestAccClusterAPI_ListNodeTypesGcp validates that a GCP workspace's ListNodeTypes
+// response contains the expected GCP default node types (used by defaultSmallestNodeType)
+// and does not contain AWS or Azure node types.
 func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	w := databricks.Must(databricks.NewWorkspaceClient())

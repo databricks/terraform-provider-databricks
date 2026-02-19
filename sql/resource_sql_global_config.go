@@ -118,6 +118,8 @@ func ResourceSqlGlobalConfig() common.Resource {
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
 			"and may be removed from the Databricks Terraform provider in the future"
+		m["instance_profile_arn"].ConflictsWith = []string{"google_service_account"}
+		m["google_service_account"].ConflictsWith = []string{"instance_profile_arn"}
 		return m
 	})
 	common.AddNamespaceInSchema(s)

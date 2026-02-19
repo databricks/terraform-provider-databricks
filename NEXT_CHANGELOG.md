@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Mark `effective_enable_file_events` as read-only in `databricks_external_location` to prevent Terraform drift.
+
 ### Documentation
 
 ### Exporter

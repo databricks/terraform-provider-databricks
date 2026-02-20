@@ -10,6 +10,8 @@
 
 ### Bug Fixes
 
+* Fix num_workers Default With Policy Defaults ([#5380](https://github.com/databricks/terraform-provider-databricks/pull/5380))
+
 ### Documentation
 
 ### Exporter

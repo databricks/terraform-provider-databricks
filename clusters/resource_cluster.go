@@ -242,13 +242,13 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
 		// Used in jobs.
-		if c.Autoscale == nil {
+		if c.Autoscale == nil && !c.ApplyPolicyDefaultValues {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
 		// Workload type is not relevant in jobs clusters.
 		return nil
 	case *compute.CreateCluster:
-		if c.Autoscale == nil {
+		if c.Autoscale == nil && !c.ApplyPolicyDefaultValues {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
 		// If workload type is set by the user, the fields within Clients should always be sent.
@@ -258,7 +258,7 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 		}
 		return nil
 	case *compute.EditCluster:
-		if c.Autoscale == nil {
+		if c.Autoscale == nil && !c.ApplyPolicyDefaultValues {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
 		// If workload type is set by the user, the fields within Clients should always be sent.

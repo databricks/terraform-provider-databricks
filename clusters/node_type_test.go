@@ -56,6 +56,9 @@ func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 // and does not contain AWS or GCP node types.
 func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
+	if !acceptance.IsAzure(t) {
+		t.Skip("Skipping test because it requires Azure")
+	}
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
 	require.NoError(t, err)
@@ -94,6 +97,9 @@ func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 // and does not contain AWS or Azure node types.
 func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
+	if !acceptance.IsGcp(t) {
+		t.Skip("Skipping test because it requires GCP")
+	}
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
 	require.NoError(t, err)

@@ -911,11 +911,6 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}
-	if a.client.IsAws() {
-		r.AwsAttributes = &AwsAttributes{
-			Availability: "SPOT",
-		}
-	}
 	if len(custom) == 1 {
 		r = custom[0]
 	}

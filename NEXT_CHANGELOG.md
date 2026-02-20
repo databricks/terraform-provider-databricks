@@ -15,3 +15,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Add support for host agnostic SQL global config resource.

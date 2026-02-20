@@ -892,11 +892,14 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeType(NodeTypeRequest{
+	smallestNodeType, err := a.GetSmallestNodeType(NodeTypeRequest{
 		NodeTypeRequest: compute.NodeTypeRequest{
 			LocalDisk: true,
 		},
 	})
+	if err != nil {
+		return ClusterInfo{}, err
+	}
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
 		NumWorkers:  1,

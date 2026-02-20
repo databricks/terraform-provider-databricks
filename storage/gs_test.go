@@ -26,10 +26,10 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().ToResource().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "a", "")
-		assert.EqualError(t, err, "cannot re-create mounting cluster: nope")
+		assert.EqualError(t, err, "cannot re-create mounting cluster: cannot determine smallest node type: nope")
 
 		err = createOrValidateClusterForGoogleStorage(ctx, client, d, "", "b")
-		assert.EqualError(t, err, "cannot create mounting cluster: nope")
+		assert.EqualError(t, err, "cannot create mounting cluster: cannot determine smallest node type: nope")
 	})
 }
 

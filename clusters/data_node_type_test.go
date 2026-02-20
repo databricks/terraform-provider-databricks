@@ -331,12 +331,11 @@ func TestNodeTypeEmptyList(t *testing.T) {
 		Read:        true,
 		Resource:    DataSourceNodeType(),
 		NonWritable: true,
-		Azure:       true,
 		State:       map[string]any{},
 		ID:          ".",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "Standard_D4ds_v5", d.Id())
+	assert.Equal(t, "i3.xlarge", d.Id())
 }
 
 func TestNodeTypeFleetEmptyList(t *testing.T) {

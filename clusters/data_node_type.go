@@ -81,7 +81,10 @@ func smallestNodeType(ctx context.Context, request NodeTypeRequest, w *databrick
 }
 
 func (a ClustersAPI) GetSmallestNodeType(request NodeTypeRequest) (string, error) {
-	w, _ := a.client.WorkspaceClient()
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return "", fmt.Errorf("cannot get workspace client: %w", err)
+	}
 	return smallestNodeType(a.context, request, w)
 }
 

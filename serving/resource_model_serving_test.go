@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/serving"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -1007,4 +1008,85 @@ func TestCopySensitiveFields(t *testing.T) {
 
 		assert.Equal(t, "sensitive-value", dst.SensitivePlaintext)
 	})
+}
+
+func TestSetForceSendFieldsForRateLimits_CallsZero(t *testing.T) {
+	s := ResourceModelServing().Schema
+	d := schema.TestResourceDataRaw(t, s, map[string]any{
+		"name": "test-endpoint",
+		"ai_gateway": []any{
+			map[string]any{
+				"rate_limits": []any{
+					map[string]any{
+						"calls":          0,
+						"key":            "endpoint",
+						"renewal_period": "minute",
+					},
+				},
+			},
+		},
+	})
+	rateLimits := []serving.AiGatewayRateLimit{
+		{
+			Calls:         0,
+			Key:           "endpoint",
+			RenewalPeriod: "minute",
+		},
+	}
+	setForceSendFieldsForRateLimits(rateLimits, d)
+	assert.Contains(t, rateLimits[0].ForceSendFields, "Calls")
+}
+
+func TestSetForceSendFieldsForRateLimits_TokensZero(t *testing.T) {
+	s := ResourceModelServing().Schema
+	d := schema.TestResourceDataRaw(t, s, map[string]any{
+		"name": "test-endpoint",
+		"ai_gateway": []any{
+			map[string]any{
+				"rate_limits": []any{
+					map[string]any{
+						"tokens":         0,
+						"key":            "endpoint",
+						"renewal_period": "minute",
+					},
+				},
+			},
+		},
+	})
+	rateLimits := []serving.AiGatewayRateLimit{
+		{
+			Tokens:        0,
+			Key:           "endpoint",
+			RenewalPeriod: "minute",
+		},
+	}
+	setForceSendFieldsForRateLimits(rateLimits, d)
+	assert.Contains(t, rateLimits[0].ForceSendFields, "Tokens")
+}
+
+func TestSetForceSendFieldsForRateLimits_NonZeroNotForced(t *testing.T) {
+	s := ResourceModelServing().Schema
+	d := schema.TestResourceDataRaw(t, s, map[string]any{
+		"name": "test-endpoint",
+		"ai_gateway": []any{
+			map[string]any{
+				"rate_limits": []any{
+					map[string]any{
+						"calls":          100,
+						"key":            "endpoint",
+						"renewal_period": "minute",
+					},
+				},
+			},
+		},
+	})
+	rateLimits := []serving.AiGatewayRateLimit{
+		{
+			Calls:         100,
+			Key:           "endpoint",
+			RenewalPeriod: "minute",
+		},
+	}
+	setForceSendFieldsForRateLimits(rateLimits, d)
+	assert.Empty(t, rateLimits[0].ForceSendFields)
 }

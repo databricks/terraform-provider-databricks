@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,23 +20,9 @@ type AzureADLSGen2Mount struct {
 	InitializeFileSystem bool   `json:"initialize_file_system"`
 }
 
-func getAzureDomain(client *common.DatabricksClient) string {
-	domains := map[string]string{
-		"PUBLIC":       "core.windows.net",
-		"USGOVERNMENT": "core.usgovcloudapi.net",
-		"CHINA":        "core.chinacloudapi.cn",
-	}
-	azureEnvironment := client.Config.Environment().AzureEnvironment.Name
-	domain, ok := domains[strings.ToUpper(azureEnvironment)]
-	if !ok {
-		panic(fmt.Sprintf("Unknown Azure environment: '%s'", azureEnvironment))
-	}
-	return domain
-}
-
 // Source returns ABFSS URI backing the mount
 func (m AzureADLSGen2Mount) Source(client *common.DatabricksClient) string {
-	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, getAzureDomain(client), m.Directory)
+	return fmt.Sprintf("abfss://%s@%s.dfs.%s%s", m.ContainerName, m.StorageAccountName, azureDomain(client.Config), m.Directory)
 }
 
 func (m AzureADLSGen2Mount) Name() string {
@@ -50,7 +35,7 @@ func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, cli
 
 // Config returns mount configurations
 func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+	aadEndpoint := azureActiveDirectoryEndpoint(client.Config)
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

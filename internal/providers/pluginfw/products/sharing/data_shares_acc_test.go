@@ -1,11 +1,13 @@
 package sharing_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
@@ -133,5 +135,32 @@ func TestAccSharesData_ProviderConfig_Mismatched(t *testing.T) {
 				`.*please check the workspace_id provided in ` +
 				`provider_config`,
 		),
+	})
+}
+
+func TestAccSharesData_ProviderConfig_MismatchReapply(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
+			provider_config = {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client.*workspace_id mismatch` +
+				`.*please check the workspace_id provided in ` +
+				`provider_config`,
+		),
+	}, acceptance.Step{
+		Template: preTestTemplateSchema + dataSourceSharesTemplate(fmt.Sprintf(`
+			provider_config = {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
 	})
 }

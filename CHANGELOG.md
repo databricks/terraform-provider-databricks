@@ -1,5 +1,12 @@
 # Version changelog
 
+## Release v1.109.0 (2026-02-19)
+
+### Bug Fixes
+
+* Mark `effective_enable_file_events` as read-only in `databricks_external_location` to prevent Terraform drift.
+
+
 ## Release v1.108.0 (2026-02-19)
 
 ### New Features and Improvements

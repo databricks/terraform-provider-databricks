@@ -2325,6 +2325,9 @@ func TestResourceJobRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
 	}.Apply(t)
 	assert.NoError(t, err)
 
@@ -2369,7 +2372,48 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 		New:      true,
 		Removed:  true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
 	}.ApplyNoError(t)
+}
+
+// TestResourceJobImport verifies that terraform import uses Go SDK (API 2.2)
+// regardless of job format. The legacy API 2.0 cannot handle jobs with >100
+// tasks, so the Importer must always use the Go SDK path.
+func TestResourceJobImport(t *testing.T) {
+	qa.MockWorkspaceApply(t,
+		func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().
+				Get(mock.Anything, jobs.GetJobRequest{JobId: 789}).
+				Return(&jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name:   "ImportedJob",
+						Format: "MULTI_TASK",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "main",
+								NotebookTask: &jobs.NotebookTask{
+									NotebookPath: "/Imported",
+								},
+							},
+						},
+					},
+				}, nil)
+		},
+		func(ctx context.Context, c *common.DatabricksClient) {
+			r := ResourceJob().ToResource()
+			d := r.TestResourceData()
+			d.SetId("789")
+
+			result, err := r.Importer.StateContext(ctx, d, c)
+			require.NoError(t, err)
+			require.Len(t, result, 1)
+			assert.Equal(t, "ImportedJob", result[0].Get("name"))
+			assert.Equal(t, 1, result[0].Get("task.#"))
+		},
+	)
 }
 
 func TestResourceJobReadMultiTask_NotFound(t *testing.T) {
@@ -2420,6 +2464,9 @@ func TestResourceJobRead_Error(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id(), "Id should not be empty for error reads")

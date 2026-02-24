@@ -2,7 +2,6 @@ package sql
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/marshal"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -73,18 +72,10 @@ func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
 		}
 	}
 	if gc.InstanceProfileARN != "" {
-		if a.client.IsAws() {
-			data.InstanceProfileARN = gc.InstanceProfileARN
-		} else {
-			return fmt.Errorf("can't use instance_profile_arn outside of AWS")
-		}
+		data.InstanceProfileARN = gc.InstanceProfileARN
 	}
 	if gc.GoogleServiceAccount != "" {
-		if a.client.IsGcp() {
-			data.GoogleServiceAccount = gc.GoogleServiceAccount
-		} else {
-			return fmt.Errorf("can't use google_service_account outside of GCP")
-		}
+		data.GoogleServiceAccount = gc.GoogleServiceAccount
 	}
 	cfg := make([]confPair, 0, len(gc.DataAccessConfig))
 	for k, v := range gc.DataAccessConfig {

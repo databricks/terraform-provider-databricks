@@ -3015,31 +3015,24 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_Default(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
+				ExpectedRequest: map[string]any{
+					"job_id": 789,
+					"new_settings": map[string]any{
+						"name": "Test Job",
+						"tasks": []map[string]any{
+							{"task_key": "task_1", "job_cluster_key": "job_cluster_1"},
 						},
-						JobClusters: []JobCluster{
+						"job_clusters": []map[string]any{
 							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
+								"job_cluster_key": "job_cluster_1",
+								"new_cluster": map[string]any{
+									"apply_policy_default_values": true,
+									"gcp_attributes":              map[string]any{"local_ssd_count": 2},
 								},
 							},
 						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
+						"max_concurrent_runs": 1,
+						"queue":               map[string]any{"enabled": false},
 					},
 				},
 			},
@@ -3120,31 +3113,24 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_Empty(t *testing.T
 			{
 				Method:   "POST",
 				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
+				ExpectedRequest: map[string]any{
+					"job_id": 789,
+					"new_settings": map[string]any{
+						"name": "Test Job",
+						"tasks": []map[string]any{
+							{"task_key": "task_1", "job_cluster_key": "job_cluster_1"},
 						},
-						JobClusters: []JobCluster{
+						"job_clusters": []map[string]any{
 							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
+								"job_cluster_key": "job_cluster_1",
+								"new_cluster": map[string]any{
+									"apply_policy_default_values": true,
+									"gcp_attributes":              map[string]any{"local_ssd_count": 2},
 								},
 							},
 						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
+						"max_concurrent_runs": 1,
+						"queue":               map[string]any{"enabled": false},
 					},
 				},
 			},
@@ -3221,31 +3207,24 @@ func TestResourceJobUpdate_ApplyPolicyDefaultValues_AllowList_GcpAttributes(t *t
 			{
 				Method:   "POST",
 				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Test Job",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:       "task_1",
-								JobClusterKey: "job_cluster_1",
-							},
+				ExpectedRequest: map[string]any{
+					"job_id": 789,
+					"new_settings": map[string]any{
+						"name": "Test Job",
+						"tasks": []map[string]any{
+							{"task_key": "task_1", "job_cluster_key": "job_cluster_1"},
 						},
-						JobClusters: []JobCluster{
+						"job_clusters": []map[string]any{
 							{
-								JobClusterKey: "job_cluster_1",
-								NewCluster: &clusters.Cluster{
-									ApplyPolicyDefaultValues: true,
-									GcpAttributes: &clusters.GcpAttributes{
-										LocalSsdCount: 2,
-									},
+								"job_cluster_key": "job_cluster_1",
+								"new_cluster": map[string]any{
+									"apply_policy_default_values": true,
+									"gcp_attributes":              map[string]any{"local_ssd_count": 2},
 								},
 							},
 						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
-						},
+						"max_concurrent_runs": 1,
+						"queue":               map[string]any{"enabled": false},
 					},
 				},
 			},

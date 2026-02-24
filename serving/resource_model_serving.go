@@ -392,6 +392,20 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "invalid_keywords").Deprecated = "Please use 'pii' and 'safety' instead."
 			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "valid_topics").Deprecated = "Please use 'pii' and 'safety' instead."
 
+			// Mark all plaintext credential fields as sensitive so they are not displayed in plan/apply output
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "ai21labs_config", "ai21labs_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "amazon_bedrock_config", "aws_access_key_id_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "amazon_bedrock_config", "aws_secret_access_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "anthropic_config", "anthropic_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "cohere_config", "cohere_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "databricks_model_serving_config", "databricks_api_token_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "google_cloud_vertex_ai_config", "private_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "openai_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "microsoft_entra_client_secret_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "palm_config", "palm_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "custom_provider_config", "api_key_auth", "value_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "custom_provider_config", "bearer_token_auth", "token_plaintext").SetSensitive()
+
 			// route_optimized cannot be updated.
 			common.CustomizeSchemaPath(m, "route_optimized").SetForceNew()
 

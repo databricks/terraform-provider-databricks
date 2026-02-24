@@ -138,7 +138,16 @@ func NewMountPoint(executor common.CommandExecutor, name, clusterID string) Moun
 	}
 }
 
-func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string) clusters.Cluster {
+func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string) (clusters.Cluster, error) {
+	nodeType, err := clustersAPI.GetSmallestNodeType(
+		clusters.NodeTypeRequest{
+			NodeTypeRequest: compute.NodeTypeRequest{
+				LocalDisk: true,
+			},
+		})
+	if err != nil {
+		return clusters.Cluster{}, err
+	}
 	return clusters.Cluster{
 		NumWorkers:  0,
 		ClusterName: clusterName,
@@ -146,12 +155,7 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 			Latest:          true,
 			LongTermSupport: true,
 		}),
-		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			clusters.NodeTypeRequest{
-				NodeTypeRequest: compute.NodeTypeRequest{
-					LocalDisk: true,
-				},
-			}),
+		NodeTypeID:             nodeType,
 		AutoterminationMinutes: 10,
 		SparkConf: map[string]string{
 			"spark.master":                     "local[*]",
@@ -161,11 +165,15 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 		CustomTags: map[string]string{
 			"ResourceClass": "SingleNode",
 		},
-	}
+	}, nil
 }
 
 func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error) {
-	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
+	clusterObj, err := getCommonClusterObject(clustersAPI, "terraform-mount")
+	if err != nil {
+		return "", fmt.Errorf("failed to get mounting cluster: %w", err)
+	}
+	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", clusterObj)
 	if err != nil {
 		// Do not treat missing cluster like a missing resource.
 		if apierr.IsMissing(err) {

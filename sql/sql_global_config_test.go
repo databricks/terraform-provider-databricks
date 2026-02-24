@@ -3,6 +3,7 @@ package sql_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -79,5 +80,43 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	}, acceptance.Step{
 		Template: makeSqlGlobalConfig("enable_serverless_compute = false"),
 		Check:    checkServerlessEnabled(false),
+	})
+}
+
+func TestAccSQLGlobalConfig_GoogleServiceAccount_OnAWS(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("Test only runs on AWS")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		PreConfig: func() {
+			ctx := context.Background()
+			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
+			require.NoError(t, err)
+		},
+		Template: `
+		resource "databricks_sql_global_config" "this" {
+			google_service_account = "test@project.iam.gserviceaccount.com"
+		}`,
+		ExpectError: regexp.MustCompile(`Google Service Account is not supported on AWS`),
+	})
+}
+
+func TestAccSQLGlobalConfig_InstanceProfileARN_OnGCP(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if !acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("Test only runs on GCP")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		PreConfig: func() {
+			ctx := context.Background()
+			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
+			require.NoError(t, err)
+		},
+		Template: `
+		resource "databricks_sql_global_config" "this" {
+			instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/fake-profile"
+		}`,
+		ExpectError: regexp.MustCompile(`Instance profiles are not supported on GCP`),
 	})
 }

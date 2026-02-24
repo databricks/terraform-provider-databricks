@@ -18,8 +18,8 @@ type NodeTypeRequest struct {
 	Arm bool `json:"arm,omitempty"`
 }
 
-// isAws detects AWS by checking if any node_type_id contains a "." followed by "large" (e.g. "i3.xlarge").
-func isAws(nodeTypes *compute.ListNodeTypesResponse) bool {
+// IsAws detects AWS by checking if any node_type_id contains a "." followed by "large" (e.g. "i3.xlarge").
+func IsAws(nodeTypes *compute.ListNodeTypesResponse) bool {
 	for _, nt := range nodeTypes.NodeTypes {
 		dotIdx := strings.Index(nt.NodeTypeId, ".")
 		if dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large") {
@@ -29,8 +29,8 @@ func isAws(nodeTypes *compute.ListNodeTypesResponse) bool {
 	return false
 }
 
-// isAzure detects Azure by checking if any node_type_id contains "Standard_" (e.g. "Standard_D4ds_v5").
-func isAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
+// IsAzure detects Azure by checking if any node_type_id contains "Standard_" (e.g. "Standard_D4ds_v5").
+func IsAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
 	for _, nt := range nodeTypes.NodeTypes {
 		if strings.Contains(nt.NodeTypeId, "Standard_") {
 			return true
@@ -39,25 +39,25 @@ func isAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
 	return false
 }
 
-// isGcp detects GCP as a fallback when the node types match neither AWS nor Azure patterns.
-func isGcp(nodeTypes *compute.ListNodeTypesResponse) bool {
-	return !isAws(nodeTypes) && !isAzure(nodeTypes)
+// IsGcp detects GCP as a fallback when the node types match neither AWS nor Azure patterns.
+func IsGcp(nodeTypes *compute.ListNodeTypesResponse) bool {
+	return !IsAws(nodeTypes) && !IsAzure(nodeTypes)
 }
 
 func defaultSmallestNodeType(nodeTypes *compute.ListNodeTypesResponse, request NodeTypeRequest) string {
 	if request.Arm || request.Graviton {
-		if isAws(nodeTypes) {
+		if IsAws(nodeTypes) {
 			if request.Fleet {
 				return "rgd-fleet.xlarge"
 			}
 			return "m6g.xlarge"
-		} else if isAzure(nodeTypes) {
+		} else if IsAzure(nodeTypes) {
 			return "Standard_D4pds_v6"
 		}
 	}
-	if isAzure(nodeTypes) {
+	if IsAzure(nodeTypes) {
 		return "Standard_D4ds_v5"
-	} else if isGcp(nodeTypes) {
+	} else if IsGcp(nodeTypes) {
 		return "n1-standard-4"
 	}
 	if request.Fleet {

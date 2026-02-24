@@ -2,18 +2,17 @@ package clusters_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestAccCluster_ListNodeTypesAWS validates that an AWS workspace's ListNodeTypes
-// response contains node types matching the AWS detection pattern ("." followed by "large")
-// and does not contain node types matching the Azure detection pattern ("Standard_").
+// response is detected as AWS and not Azure or GCP.
 func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsAws(t) {
@@ -24,28 +23,30 @@ func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	// Validate no node types match the Azure pattern
-	for _, nt := range nodeTypes.NodeTypes {
-		assert.False(t, strings.Contains(nt.NodeTypeId, "Standard_"),
-			"node type %s should not match the Azure pattern (Standard_)", nt.NodeTypeId)
-	}
+	assert.True(t, clusters.IsAws(nodeTypes), "expected IsAws to be true for AWS workspace")
+	assert.False(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be false for AWS workspace")
+	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for AWS workspace")
+}
 
-	// Validate at least one node type matches the AWS pattern ("." followed by "large")
-	hasAwsPattern := false
-	for _, nt := range nodeTypes.NodeTypes {
-		dotIdx := strings.Index(nt.NodeTypeId, ".")
-		if dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large") {
-			hasAwsPattern = true
-			break
-		}
+// TestAccCluster_ListNodeTypesAWSUcws validates that an AWS workspace's ListNodeTypes
+// response is detected as AWS and not Azure or GCP.
+func TestAccCluster_ListNodeTypesAWSUcws(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	if !acceptance.IsAws(t) {
+		t.Skip("Skipping test because it requires AWS")
 	}
-	assert.True(t, hasAwsPattern,
-		"expected at least one node type matching the AWS pattern (dot followed by large)")
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, nodeTypes.NodeTypes)
+
+	assert.True(t, clusters.IsAws(nodeTypes), "expected IsAws to be true for AWS workspace")
+	assert.False(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be false for AWS workspace")
+	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for AWS workspace")
 }
 
 // TestAccClusterAPI_ListNodeTypesAzure validates that an Azure workspace's ListNodeTypes
-// response contains node types matching the Azure detection pattern ("Standard_")
-// and does not contain node types matching the AWS detection pattern ("." followed by "large").
+// response is detected as Azure and not AWS or GCP.
 func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsAzure(t) {
@@ -56,28 +57,30 @@ func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	// Validate no node types match the AWS pattern
-	for _, nt := range nodeTypes.NodeTypes {
-		dotIdx := strings.Index(nt.NodeTypeId, ".")
-		assert.False(t, dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large"),
-			"node type %s should not match the AWS pattern (dot followed by large)", nt.NodeTypeId)
-	}
+	assert.False(t, clusters.IsAws(nodeTypes), "expected IsAws to be false for Azure workspace")
+	assert.True(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be true for Azure workspace")
+	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for Azure workspace")
+}
 
-	// Validate at least one node type matches the Azure pattern ("Standard_")
-	hasAzurePattern := false
-	for _, nt := range nodeTypes.NodeTypes {
-		if strings.Contains(nt.NodeTypeId, "Standard_") {
-			hasAzurePattern = true
-			break
-		}
+// TestAccClusterAPI_ListNodeTypesAzureUcws validates that an Azure workspace's ListNodeTypes
+// response is detected as Azure and not AWS or GCP.
+func TestAccClusterAPI_ListNodeTypesAzureUcws(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	if !acceptance.IsAzure(t) {
+		t.Skip("Skipping test because it requires Azure")
 	}
-	assert.True(t, hasAzurePattern,
-		"expected at least one node type matching the Azure pattern (Standard_)")
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, nodeTypes.NodeTypes)
+
+	assert.False(t, clusters.IsAws(nodeTypes), "expected IsAws to be false for Azure workspace")
+	assert.True(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be true for Azure workspace")
+	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for Azure workspace")
 }
 
 // TestAccClusterAPI_ListNodeTypesGcp validates that a GCP workspace's ListNodeTypes
-// response does not contain node types matching the AWS detection pattern ("." followed by "large")
-// or the Azure detection pattern ("Standard_"). GCP is detected as neither AWS nor Azure.
+// response is detected as GCP and not AWS or Azure.
 func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsGcp(t) {
@@ -88,16 +91,24 @@ func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	// Validate no node types match the AWS pattern
-	for _, nt := range nodeTypes.NodeTypes {
-		dotIdx := strings.Index(nt.NodeTypeId, ".")
-		assert.False(t, dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large"),
-			"node type %s should not match the AWS pattern (dot followed by large)", nt.NodeTypeId)
-	}
+	assert.False(t, clusters.IsAws(nodeTypes), "expected IsAws to be false for GCP workspace")
+	assert.False(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be false for GCP workspace")
+	assert.True(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be true for GCP workspace")
+}
 
-	// Validate no node types match the Azure pattern
-	for _, nt := range nodeTypes.NodeTypes {
-		assert.False(t, strings.Contains(nt.NodeTypeId, "Standard_"),
-			"node type %s should not match the Azure pattern (Standard_)", nt.NodeTypeId)
+// TestAccClusterAPI_ListNodeTypesGcpUcws validates that a GCP workspace's ListNodeTypes
+// response is detected as GCP and not AWS or Azure.
+func TestAccClusterAPI_ListNodeTypesGcpUcws(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	if !acceptance.IsGcp(t) {
+		t.Skip("Skipping test because it requires GCP")
 	}
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	nodeTypes, err := w.Clusters.ListNodeTypes(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, nodeTypes.NodeTypes)
+
+	assert.False(t, clusters.IsAws(nodeTypes), "expected IsAws to be false for GCP workspace")
+	assert.False(t, clusters.IsAzure(nodeTypes), "expected IsAzure to be false for GCP workspace")
+	assert.True(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be true for GCP workspace")
 }

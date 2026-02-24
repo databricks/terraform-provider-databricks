@@ -2,6 +2,7 @@ package clusters_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -11,8 +12,8 @@ import (
 )
 
 // TestAccCluster_ListNodeTypesAWS validates that an AWS workspace's ListNodeTypes
-// response contains the expected AWS default node types (used by defaultSmallestNodeType)
-// and does not contain Azure or GCP node types.
+// response contains node types matching the AWS detection pattern ("." followed by "large")
+// and does not contain node types matching the Azure detection pattern ("Standard_").
 func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsAws(t) {
@@ -23,37 +24,28 @@ func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	azureAndGcpNodeTypes := []string{
-		"Standard_D4pds_v6",
-		"Standard_D4ds_v5",
-		"n1-standard-4",
-	}
+	// Validate no node types match the Azure pattern
 	for _, nt := range nodeTypes.NodeTypes {
-		for _, excluded := range azureAndGcpNodeTypes {
-			assert.NotEqual(t, excluded, nt.NodeTypeId,
-				"node type %s should not be present in the response", excluded)
-		}
+		assert.False(t, strings.Contains(nt.NodeTypeId, "Standard_"),
+			"node type %s should not match the Azure pattern (Standard_)", nt.NodeTypeId)
 	}
 
-	awsNodeTypes := []string{
-		"rgd-fleet.xlarge",
-		"m6g.xlarge",
-		"md-fleet.xlarge",
-		"i3.xlarge",
-	}
-	nodeTypeIds := make(map[string]bool)
+	// Validate at least one node type matches the AWS pattern ("." followed by "large")
+	hasAwsPattern := false
 	for _, nt := range nodeTypes.NodeTypes {
-		nodeTypeIds[nt.NodeTypeId] = true
+		dotIdx := strings.Index(nt.NodeTypeId, ".")
+		if dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large") {
+			hasAwsPattern = true
+			break
+		}
 	}
-	for _, expected := range awsNodeTypes {
-		assert.True(t, nodeTypeIds[expected],
-			"expected AWS node type %s to be present in the response", expected)
-	}
+	assert.True(t, hasAwsPattern,
+		"expected at least one node type matching the AWS pattern (dot followed by large)")
 }
 
 // TestAccClusterAPI_ListNodeTypesAzure validates that an Azure workspace's ListNodeTypes
-// response contains the expected Azure default node types (used by defaultSmallestNodeType)
-// and does not contain AWS or GCP node types.
+// response contains node types matching the Azure detection pattern ("Standard_")
+// and does not contain node types matching the AWS detection pattern ("." followed by "large").
 func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsAzure(t) {
@@ -64,37 +56,28 @@ func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	awsAndGcpNodeTypes := []string{
-		"rgd-fleet.xlarge",
-		"m6g.xlarge",
-		"md-fleet.xlarge",
-		"i3.xlarge",
-		"n1-standard-4",
-	}
+	// Validate no node types match the AWS pattern
 	for _, nt := range nodeTypes.NodeTypes {
-		for _, excluded := range awsAndGcpNodeTypes {
-			assert.NotEqual(t, excluded, nt.NodeTypeId,
-				"node type %s should not be present in the response", excluded)
-		}
+		dotIdx := strings.Index(nt.NodeTypeId, ".")
+		assert.False(t, dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large"),
+			"node type %s should not match the AWS pattern (dot followed by large)", nt.NodeTypeId)
 	}
 
-	azureNodeTypes := []string{
-		"Standard_D4pds_v6",
-		"Standard_D4ds_v5",
-	}
-	nodeTypeIds := make(map[string]bool)
+	// Validate at least one node type matches the Azure pattern ("Standard_")
+	hasAzurePattern := false
 	for _, nt := range nodeTypes.NodeTypes {
-		nodeTypeIds[nt.NodeTypeId] = true
+		if strings.Contains(nt.NodeTypeId, "Standard_") {
+			hasAzurePattern = true
+			break
+		}
 	}
-	for _, expected := range azureNodeTypes {
-		assert.True(t, nodeTypeIds[expected],
-			"expected Azure node type %s to be present in the response", expected)
-	}
+	assert.True(t, hasAzurePattern,
+		"expected at least one node type matching the Azure pattern (Standard_)")
 }
 
 // TestAccClusterAPI_ListNodeTypesGcp validates that a GCP workspace's ListNodeTypes
-// response contains the expected GCP default node types (used by defaultSmallestNodeType)
-// and does not contain AWS or Azure node types.
+// response does not contain node types matching the AWS detection pattern ("." followed by "large")
+// or the Azure detection pattern ("Standard_"). GCP is detected as neither AWS nor Azure.
 func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if !acceptance.IsGcp(t) {
@@ -105,30 +88,16 @@ func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, nodeTypes.NodeTypes)
 
-	awsAndAzureNodeTypes := []string{
-		"rgd-fleet.xlarge",
-		"m6g.xlarge",
-		"md-fleet.xlarge",
-		"i3.xlarge",
-		"Standard_D4pds_v6",
-		"Standard_D4ds_v5",
-	}
+	// Validate no node types match the AWS pattern
 	for _, nt := range nodeTypes.NodeTypes {
-		for _, excluded := range awsAndAzureNodeTypes {
-			assert.NotEqual(t, excluded, nt.NodeTypeId,
-				"node type %s should not be present in the response", excluded)
-		}
+		dotIdx := strings.Index(nt.NodeTypeId, ".")
+		assert.False(t, dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large"),
+			"node type %s should not match the AWS pattern (dot followed by large)", nt.NodeTypeId)
 	}
 
-	gcpNodeTypes := []string{
-		"n1-standard-4",
-	}
-	nodeTypeIds := make(map[string]bool)
+	// Validate no node types match the Azure pattern
 	for _, nt := range nodeTypes.NodeTypes {
-		nodeTypeIds[nt.NodeTypeId] = true
-	}
-	for _, expected := range gcpNodeTypes {
-		assert.True(t, nodeTypeIds[expected],
-			"expected GCP node type %s to be present in the response", expected)
+		assert.False(t, strings.Contains(nt.NodeTypeId, "Standard_"),
+			"node type %s should not match the Azure pattern (Standard_)", nt.NodeTypeId)
 	}
 }

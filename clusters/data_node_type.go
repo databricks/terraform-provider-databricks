@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -17,31 +18,30 @@ type NodeTypeRequest struct {
 	Arm bool `json:"arm,omitempty"`
 }
 
+// isAws detects AWS by checking if any node_type_id contains a "." followed by "large" (e.g. "i3.xlarge").
 func isAws(nodeTypes *compute.ListNodeTypesResponse) bool {
 	for _, nt := range nodeTypes.NodeTypes {
-		if nt.NodeTypeId == "i3.xlarge" {
+		dotIdx := strings.Index(nt.NodeTypeId, ".")
+		if dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large") {
 			return true
 		}
 	}
 	return false
 }
 
+// isAzure detects Azure by checking if any node_type_id contains "Standard_" (e.g. "Standard_D4ds_v5").
 func isAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
 	for _, nt := range nodeTypes.NodeTypes {
-		if nt.NodeTypeId == "Standard_D4ds_v5" {
+		if strings.Contains(nt.NodeTypeId, "Standard_") {
 			return true
 		}
 	}
 	return false
 }
 
+// isGcp detects GCP as a fallback when the node types match neither AWS nor Azure patterns.
 func isGcp(nodeTypes *compute.ListNodeTypesResponse) bool {
-	for _, nt := range nodeTypes.NodeTypes {
-		if nt.NodeTypeId == "n1-standard-4" {
-			return true
-		}
-	}
-	return false
+	return !isAws(nodeTypes) && !isAzure(nodeTypes)
 }
 
 func defaultSmallestNodeType(nodeTypes *compute.ListNodeTypesResponse, request NodeTypeRequest) string {

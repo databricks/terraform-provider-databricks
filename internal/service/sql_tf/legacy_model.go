@@ -2274,6 +2274,7 @@ func (m ChannelInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ClientConfig_SdkV2 struct {
+	// allow_custom_js_visualizations is not supported/implemneted.
 	AllowCustomJsVisualizations types.Bool `tfsdk:"allow_custom_js_visualizations"`
 
 	AllowDownloads types.Bool `tfsdk:"allow_downloads"`
@@ -3552,7 +3553,7 @@ type CreateWarehouseRequest_SdkV2 struct {
 	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
-	// Defaults to false.
+	// Defaults to true.
 	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
@@ -5465,7 +5466,7 @@ type EditWarehouseRequest_SdkV2 struct {
 	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
-	// Defaults to false.
+	// Defaults to true.
 	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
@@ -5960,7 +5961,7 @@ type EndpointInfo_SdkV2 struct {
 	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
-	// Defaults to false.
+	// Defaults to true.
 	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
@@ -8117,7 +8118,7 @@ type GetWarehouseResponse_SdkV2 struct {
 	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
-	// Defaults to false.
+	// Defaults to true.
 	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`

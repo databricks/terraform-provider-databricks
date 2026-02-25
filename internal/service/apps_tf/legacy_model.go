@@ -2292,6 +2292,8 @@ func (m *AppPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, 
 }
 
 type AppResource_SdkV2 struct {
+	App types.List `tfsdk:"app"`
+
 	Database types.List `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
@@ -2314,6 +2316,15 @@ type AppResource_SdkV2 struct {
 }
 
 func (to *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResource_SdkV2) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				// Recursively sync the fields of App
+				toApp.SyncFieldsDuringCreateOrUpdate(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2389,6 +2400,14 @@ func (to *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 }
 
 func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResource_SdkV2) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				toApp.SyncFieldsDuringRead(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2456,6 +2475,8 @@ func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppR
 }
 
 func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetOptional()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["database"] = attrs["database"].SetOptional()
 	attrs["database"] = attrs["database"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
@@ -2487,6 +2508,7 @@ func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"app":              reflect.TypeOf(AppResourceApp_SdkV2{}),
 		"database":         reflect.TypeOf(AppResourceDatabase_SdkV2{}),
 		"experiment":       reflect.TypeOf(AppResourceExperiment_SdkV2{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace_SdkV2{}),
@@ -2505,6 +2527,7 @@ func (m AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"app":              m.App,
 			"database":         m.Database,
 			"description":      m.Description,
 			"experiment":       m.Experiment,
@@ -2522,6 +2545,9 @@ func (m AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"app": basetypes.ListType{
+				ElemType: AppResourceApp_SdkV2{}.Type(ctx),
+			},
 			"database": basetypes.ListType{
 				ElemType: AppResourceDatabase_SdkV2{}.Type(ctx),
 			},
@@ -2550,6 +2576,32 @@ func (m AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetApp returns the value of the App field in AppResource_SdkV2 as
+// a AppResourceApp_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource_SdkV2) GetApp(ctx context.Context) (AppResourceApp_SdkV2, bool) {
+	var e AppResourceApp_SdkV2
+	if m.App.IsNull() || m.App.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceApp_SdkV2
+	d := m.App.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApp sets the value of the App field in AppResource_SdkV2.
+func (m *AppResource_SdkV2) SetApp(ctx context.Context, v AppResourceApp_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	m.App = types.ListValueMust(t, vs)
 }
 
 // GetDatabase returns the value of the Database field in AppResource_SdkV2 as
@@ -2758,6 +2810,47 @@ func (m *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcS
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_securable"]
 	m.UcSecurable = types.ListValueMust(t, vs)
+}
+
+type AppResourceApp_SdkV2 struct {
+}
+
+func (to *AppResourceApp_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceApp_SdkV2) {
+}
+
+func (to *AppResourceApp_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourceApp_SdkV2) {
+}
+
+func (m AppResourceApp_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceApp.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourceApp_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceApp_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppResourceApp_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourceApp_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type AppResourceDatabase_SdkV2 struct {
@@ -3151,6 +3244,9 @@ type AppResourceUcSecurable_SdkV2 struct {
 	Permission types.String `tfsdk:"permission"`
 
 	SecurableFullName types.String `tfsdk:"securable_full_name"`
+	// The securable kind from Unity Catalog. See
+	// https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind.
+	SecurableKind types.String `tfsdk:"securable_kind"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 }
@@ -3164,6 +3260,7 @@ func (to *AppResourceUcSecurable_SdkV2) SyncFieldsDuringRead(ctx context.Context
 func (m AppResourceUcSecurable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
+	attrs["securable_kind"] = attrs["securable_kind"].SetComputed()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
 	return attrs
@@ -3189,6 +3286,7 @@ func (m AppResourceUcSecurable_SdkV2) ToObjectValue(ctx context.Context) basetyp
 		map[string]attr.Value{
 			"permission":          m.Permission,
 			"securable_full_name": m.SecurableFullName,
+			"securable_kind":      m.SecurableKind,
 			"securable_type":      m.SecurableType,
 		})
 }
@@ -3199,6 +3297,7 @@ func (m AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"permission":          types.StringType,
 			"securable_full_name": types.StringType,
+			"securable_kind":      types.StringType,
 			"securable_type":      types.StringType,
 		},
 	}
@@ -6072,7 +6171,7 @@ func (m Space_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
 	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetOptional()

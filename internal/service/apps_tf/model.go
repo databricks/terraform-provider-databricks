@@ -2235,6 +2235,8 @@ func (m *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []Ap
 }
 
 type AppResource struct {
+	App types.Object `tfsdk:"app"`
+
 	Database types.Object `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
@@ -2257,6 +2259,15 @@ type AppResource struct {
 }
 
 func (to *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResource) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				// Recursively sync the fields of App
+				toApp.SyncFieldsDuringCreateOrUpdate(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2332,6 +2343,14 @@ func (to *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 }
 
 func (to *AppResource) SyncFieldsDuringRead(ctx context.Context, from AppResource) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				toApp.SyncFieldsDuringRead(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2399,6 +2418,7 @@ func (to *AppResource) SyncFieldsDuringRead(ctx context.Context, from AppResourc
 }
 
 func (m AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetOptional()
 	attrs["database"] = attrs["database"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["experiment"] = attrs["experiment"].SetOptional()
@@ -2422,6 +2442,7 @@ func (m AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"app":              reflect.TypeOf(AppResourceApp{}),
 		"database":         reflect.TypeOf(AppResourceDatabase{}),
 		"experiment":       reflect.TypeOf(AppResourceExperiment{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace{}),
@@ -2440,6 +2461,7 @@ func (m AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"app":              m.App,
 			"database":         m.Database,
 			"description":      m.Description,
 			"experiment":       m.Experiment,
@@ -2457,6 +2479,7 @@ func (m AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AppResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"app":              AppResourceApp{}.Type(ctx),
 			"database":         AppResourceDatabase{}.Type(ctx),
 			"description":      types.StringType,
 			"experiment":       AppResourceExperiment{}.Type(ctx),
@@ -2469,6 +2492,31 @@ func (m AppResource) Type(ctx context.Context) attr.Type {
 			"uc_securable":     AppResourceUcSecurable{}.Type(ctx),
 		},
 	}
+}
+
+// GetApp returns the value of the App field in AppResource as
+// a AppResourceApp value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource) GetApp(ctx context.Context) (AppResourceApp, bool) {
+	var e AppResourceApp
+	if m.App.IsNull() || m.App.IsUnknown() {
+		return e, false
+	}
+	var v AppResourceApp
+	d := m.App.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApp sets the value of the App field in AppResource.
+func (m *AppResource) SetApp(ctx context.Context, v AppResourceApp) {
+	vs := v.ToObjectValue(ctx)
+	m.App = vs
 }
 
 // GetDatabase returns the value of the Database field in AppResource as
@@ -2669,6 +2717,47 @@ func (m *AppResource) GetUcSecurable(ctx context.Context) (AppResourceUcSecurabl
 func (m *AppResource) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable) {
 	vs := v.ToObjectValue(ctx)
 	m.UcSecurable = vs
+}
+
+type AppResourceApp struct {
+}
+
+func (to *AppResourceApp) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceApp) {
+}
+
+func (to *AppResourceApp) SyncFieldsDuringRead(ctx context.Context, from AppResourceApp) {
+}
+
+func (m AppResourceApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceApp.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourceApp) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceApp
+// only implements ToObjectValue() and Type().
+func (m AppResourceApp) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourceApp) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type AppResourceDatabase struct {
@@ -3062,6 +3151,9 @@ type AppResourceUcSecurable struct {
 	Permission types.String `tfsdk:"permission"`
 
 	SecurableFullName types.String `tfsdk:"securable_full_name"`
+	// The securable kind from Unity Catalog. See
+	// https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind.
+	SecurableKind types.String `tfsdk:"securable_kind"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 }
@@ -3075,6 +3167,7 @@ func (to *AppResourceUcSecurable) SyncFieldsDuringRead(ctx context.Context, from
 func (m AppResourceUcSecurable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
+	attrs["securable_kind"] = attrs["securable_kind"].SetComputed()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
 	return attrs
@@ -3100,6 +3193,7 @@ func (m AppResourceUcSecurable) ToObjectValue(ctx context.Context) basetypes.Obj
 		map[string]attr.Value{
 			"permission":          m.Permission,
 			"securable_full_name": m.SecurableFullName,
+			"securable_kind":      m.SecurableKind,
 			"securable_type":      m.SecurableType,
 		})
 }
@@ -3110,6 +3204,7 @@ func (m AppResourceUcSecurable) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"permission":          types.StringType,
 			"securable_full_name": types.StringType,
+			"securable_kind":      types.StringType,
 			"securable_type":      types.StringType,
 		},
 	}
@@ -5943,7 +6038,7 @@ func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
 	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetOptional()

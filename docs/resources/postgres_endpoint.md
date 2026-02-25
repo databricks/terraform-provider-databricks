@@ -174,6 +174,22 @@ The following arguments are supported:
 ### ProviderConfig
 * `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
+### EndpointGroupSpec
+* `max` (integer, required) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
+  compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
+  true on the EndpointSpec
+* `min` (integer, required) - The minimum number of computes in the endpoint group. Currently, this must be equal to max. This must be greater
+  than or equal to 1
+* `enable_readable_secondaries` (boolean, optional) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
+  size.max > 1
+
+### EndpointGroupStatus
+* `max` (integer, required) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
+  compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
+  true on the EndpointSpec
+* `min` (integer, required) - The minimum number of computes in the endpoint group. Currently, this must be equal to max. This must be greater
+  than or equal to 1
+
 ### EndpointSettings
 * `pg_settings` (object, optional) - A raw representation of Postgres settings
 
@@ -185,6 +201,9 @@ The following arguments are supported:
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `group` (EndpointGroupSpec, optional) - Settings for optional HA configuration of the endpoint. If unspecified, the endpoint defaults
+  to non HA settings, with a single compute backing the endpoint (and no readable secondaries
+  for Read/Write endpoints)
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
   Should be set to true when provided
 * `settings` (EndpointSettings, optional)
@@ -200,21 +219,29 @@ In addition to the above arguments, the following attributes are exported:
 * `uid` (string) - System-generated unique ID for the endpoint
 * `update_time` (string) - A timestamp indicating when the compute endpoint was last updated
 
+### EndpointGroupStatus
+* `enable_readable_secondaries` (boolean) - Whether read-only connections to read-write endpoints are allowed. Only relevant if read replicas are configured
+  by specifying size.max > 1
+
 ### EndpointHosts
 * `host` (string) - The hostname to connect to this endpoint. For read-write endpoints, this is a read-write hostname which connects
   to the primary compute. For read-only endpoints, this is a read-only hostname which allows read-only operations
+* `read_only_host` (string) - An optionally defined read-only host for the endpoint, without pooling. For read-only endpoints,
+  this attribute is always defined and is equivalent to host. For read-write endpoints, this attribute is defined
+  if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
 
 ### EndpointStatus
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
-* `current_state` (string) - Possible values are: `ACTIVE`, `IDLE`, `INIT`
+* `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
+* `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
-* `pending_state` (string) - Possible values are: `ACTIVE`, `IDLE`, `INIT`
+* `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended
 

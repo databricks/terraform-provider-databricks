@@ -31,12 +31,28 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `projects`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the project was created
+* `initial_endpoint_spec` (InitialEndpointSpec) - Configuration settings for the initial Read/Write endpoint created inside the default branch for a newly
+  created project. If omitted, the initial endpoint created will have default settings, without high availability
+  configured. This field does not apply to any endpoints created after project creation. Use
+  spec.default_endpoint_settings to configure default settings for endpoints created after project creation
 * `name` (string) - Output only. The full resource path of the project.
   Format: projects/{project_id}
 * `spec` (ProjectSpec) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 * `status` (ProjectStatus) - The current status of a Project
 * `uid` (string) - System-generated unique ID for the project
 * `update_time` (string) - A timestamp indicating when the project was last updated
+
+### EndpointGroupSpec
+* `enable_readable_secondaries` (boolean) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
+  size.max > 1
+* `max` (integer) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
+  compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
+  true on the EndpointSpec
+* `min` (integer) - The minimum number of computes in the endpoint group. Currently, this must be equal to max. This must be greater
+  than or equal to 1
+
+### InitialEndpointSpec
+* `group` (EndpointGroupSpec) - Settings for HA configuration of the endpoint
 
 ### ProjectCustomTag
 * `key` (string) - The key of the custom tag

@@ -1406,6 +1406,132 @@ func (m *Endpoint) SetStatus(ctx context.Context, v EndpointStatus) {
 	m.Status = vs
 }
 
+type EndpointGroupSpec struct {
+	// Whether to allow read-only connections to read-write endpoints. Only
+	// relevant for read-write endpoints where size.max > 1.
+	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
+	// The maximum number of computes in the endpoint group. Currently, this
+	// must be equal to min. Set to 1 for single compute endpoints, to disable
+	// HA. To manually suspend all computes in an endpoint group, set disabled
+	// to true on the EndpointSpec.
+	Max types.Int64 `tfsdk:"max"`
+	// The minimum number of computes in the endpoint group. Currently, this
+	// must be equal to max. This must be greater than or equal to 1.
+	Min types.Int64 `tfsdk:"min"`
+}
+
+func (to *EndpointGroupSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointGroupSpec) {
+}
+
+func (to *EndpointGroupSpec) SyncFieldsDuringRead(ctx context.Context, from EndpointGroupSpec) {
+}
+
+func (m EndpointGroupSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetOptional()
+	attrs["max"] = attrs["max"].SetRequired()
+	attrs["min"] = attrs["min"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointGroupSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EndpointGroupSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EndpointGroupSpec
+// only implements ToObjectValue() and Type().
+func (m EndpointGroupSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enable_readable_secondaries": m.EnableReadableSecondaries,
+			"max":                         m.Max,
+			"min":                         m.Min,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EndpointGroupSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enable_readable_secondaries": types.BoolType,
+			"max":                         types.Int64Type,
+			"min":                         types.Int64Type,
+		},
+	}
+}
+
+type EndpointGroupStatus struct {
+	// Whether read-only connections to read-write endpoints are allowed. Only
+	// relevant if read replicas are configured by specifying size.max > 1.
+	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
+	// The maximum number of computes in the endpoint group. Currently, this
+	// must be equal to min. Set to 1 for single compute endpoints, to disable
+	// HA. To manually suspend all computes in an endpoint group, set disabled
+	// to true on the EndpointSpec.
+	Max types.Int64 `tfsdk:"max"`
+	// The minimum number of computes in the endpoint group. Currently, this
+	// must be equal to max. This must be greater than or equal to 1.
+	Min types.Int64 `tfsdk:"min"`
+}
+
+func (to *EndpointGroupStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointGroupStatus) {
+}
+
+func (to *EndpointGroupStatus) SyncFieldsDuringRead(ctx context.Context, from EndpointGroupStatus) {
+}
+
+func (m EndpointGroupStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetComputed()
+	attrs["max"] = attrs["max"].SetRequired()
+	attrs["min"] = attrs["min"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointGroupStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EndpointGroupStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EndpointGroupStatus
+// only implements ToObjectValue() and Type().
+func (m EndpointGroupStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enable_readable_secondaries": m.EnableReadableSecondaries,
+			"max":                         m.Max,
+			"min":                         m.Min,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EndpointGroupStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enable_readable_secondaries": types.BoolType,
+			"max":                         types.Int64Type,
+			"min":                         types.Int64Type,
+		},
+	}
+}
+
 // Encapsulates various hostnames (r/w or r/o, pooled or not) for an endpoint.
 type EndpointHosts struct {
 	// The hostname to connect to this endpoint. For read-write endpoints, this
@@ -1413,6 +1539,12 @@ type EndpointHosts struct {
 	// read-only endpoints, this is a read-only hostname which allows read-only
 	// operations.
 	Host types.String `tfsdk:"host"`
+	// An optionally defined read-only host for the endpoint, without pooling.
+	// For read-only endpoints, this attribute is always defined and is
+	// equivalent to host. For read-write endpoints, this attribute is defined
+	// if the enclosing endpoint is a group with greater than 1 computes
+	// configured, and has readable secondaries enabled.
+	ReadOnlyHost types.String `tfsdk:"read_only_host"`
 }
 
 func (to *EndpointHosts) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointHosts) {
@@ -1423,6 +1555,7 @@ func (to *EndpointHosts) SyncFieldsDuringRead(ctx context.Context, from Endpoint
 
 func (m EndpointHosts) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["host"] = attrs["host"].SetComputed()
+	attrs["read_only_host"] = attrs["read_only_host"].SetComputed()
 
 	return attrs
 }
@@ -1445,7 +1578,8 @@ func (m EndpointHosts) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"host": m.Host,
+			"host":           m.Host,
+			"read_only_host": m.ReadOnlyHost,
 		})
 }
 
@@ -1453,7 +1587,8 @@ func (m EndpointHosts) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m EndpointHosts) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"host": types.StringType,
+			"host":           types.StringType,
+			"read_only_host": types.StringType,
 		},
 	}
 }
@@ -1589,6 +1724,10 @@ type EndpointSpec struct {
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
+	// Settings for optional HA configuration of the endpoint. If unspecified,
+	// the endpoint defaults to non HA settings, with a single compute backing
+	// the endpoint (and no readable secondaries for Read/Write endpoints).
+	Group types.Object `tfsdk:"group"`
 	// When set to true, explicitly disables automatic suspension (never
 	// suspend). Should be set to true when provided.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
@@ -1601,6 +1740,15 @@ type EndpointSpec struct {
 }
 
 func (to *EndpointSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointSpec) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				// Recursively sync the fields of Group
+				toGroup.SyncFieldsDuringCreateOrUpdate(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
 			if fromSettings, ok := from.GetSettings(ctx); ok {
@@ -1613,6 +1761,14 @@ func (to *EndpointSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *EndpointSpec) SyncFieldsDuringRead(ctx context.Context, from EndpointSpec) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				toGroup.SyncFieldsDuringRead(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
 			if fromSettings, ok := from.GetSettings(ctx); ok {
@@ -1629,6 +1785,7 @@ func (m EndpointSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
 	attrs["endpoint_type"] = attrs["endpoint_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["group"] = attrs["group"].SetOptional()
 	attrs["no_suspension"] = attrs["no_suspension"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetOptional()
@@ -1645,6 +1802,7 @@ func (m EndpointSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m EndpointSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"group":    reflect.TypeOf(EndpointGroupSpec{}),
 		"settings": reflect.TypeOf(EndpointSettings{}),
 	}
 }
@@ -1660,6 +1818,7 @@ func (m EndpointSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"disabled":                 m.Disabled,
 			"endpoint_type":            m.EndpointType,
+			"group":                    m.Group,
 			"no_suspension":            m.NoSuspension,
 			"settings":                 m.Settings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
@@ -1674,11 +1833,37 @@ func (m EndpointSpec) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"disabled":                 types.BoolType,
 			"endpoint_type":            types.StringType,
+			"group":                    EndpointGroupSpec{}.Type(ctx),
 			"no_suspension":            types.BoolType,
 			"settings":                 EndpointSettings{}.Type(ctx),
 			"suspend_timeout_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
+}
+
+// GetGroup returns the value of the Group field in EndpointSpec as
+// a EndpointGroupSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EndpointSpec) GetGroup(ctx context.Context) (EndpointGroupSpec, bool) {
+	var e EndpointGroupSpec
+	if m.Group.IsNull() || m.Group.IsUnknown() {
+		return e, false
+	}
+	var v EndpointGroupSpec
+	d := m.Group.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroup sets the value of the Group field in EndpointSpec.
+func (m *EndpointSpec) SetGroup(ctx context.Context, v EndpointGroupSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Group = vs
 }
 
 // GetSettings returns the value of the Settings field in EndpointSpec as
@@ -1719,6 +1904,8 @@ type EndpointStatus struct {
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
+	// Details on the HA configuration of the endpoint.
+	Group types.Object `tfsdk:"group"`
 	// Contains host information for connecting to the endpoint.
 	Hosts types.Object `tfsdk:"hosts"`
 
@@ -1731,6 +1918,15 @@ type EndpointStatus struct {
 }
 
 func (to *EndpointStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointStatus) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				// Recursively sync the fields of Group
+				toGroup.SyncFieldsDuringCreateOrUpdate(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
 	if !from.Hosts.IsNull() && !from.Hosts.IsUnknown() {
 		if toHosts, ok := to.GetHosts(ctx); ok {
 			if fromHosts, ok := from.GetHosts(ctx); ok {
@@ -1752,6 +1948,14 @@ func (to *EndpointStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 }
 
 func (to *EndpointStatus) SyncFieldsDuringRead(ctx context.Context, from EndpointStatus) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				toGroup.SyncFieldsDuringRead(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
 	if !from.Hosts.IsNull() && !from.Hosts.IsUnknown() {
 		if toHosts, ok := to.GetHosts(ctx); ok {
 			if fromHosts, ok := from.GetHosts(ctx); ok {
@@ -1776,6 +1980,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
+	attrs["group"] = attrs["group"].SetComputed()
 	attrs["hosts"] = attrs["hosts"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
 	attrs["settings"] = attrs["settings"].SetComputed()
@@ -1793,6 +1998,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (m EndpointStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"group":    reflect.TypeOf(EndpointGroupStatus{}),
 		"hosts":    reflect.TypeOf(EndpointHosts{}),
 		"settings": reflect.TypeOf(EndpointSettings{}),
 	}
@@ -1810,6 +2016,7 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"current_state":            m.CurrentState,
 			"disabled":                 m.Disabled,
 			"endpoint_type":            m.EndpointType,
+			"group":                    m.Group,
 			"hosts":                    m.Hosts,
 			"pending_state":            m.PendingState,
 			"settings":                 m.Settings,
@@ -1826,12 +2033,38 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"current_state":            types.StringType,
 			"disabled":                 types.BoolType,
 			"endpoint_type":            types.StringType,
+			"group":                    EndpointGroupStatus{}.Type(ctx),
 			"hosts":                    EndpointHosts{}.Type(ctx),
 			"pending_state":            types.StringType,
 			"settings":                 EndpointSettings{}.Type(ctx),
 			"suspend_timeout_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
+}
+
+// GetGroup returns the value of the Group field in EndpointStatus as
+// a EndpointGroupStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EndpointStatus) GetGroup(ctx context.Context) (EndpointGroupStatus, bool) {
+	var e EndpointGroupStatus
+	if m.Group.IsNull() || m.Group.IsUnknown() {
+		return e, false
+	}
+	var v EndpointGroupStatus
+	d := m.Group.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroup sets the value of the Group field in EndpointStatus.
+func (m *EndpointStatus) SetGroup(ctx context.Context, v EndpointGroupStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Group = vs
 }
 
 // GetHosts returns the value of the Hosts field in EndpointStatus as
@@ -2224,6 +2457,98 @@ func (m GetRoleRequest) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+type InitialEndpointSpec struct {
+	// Settings for HA configuration of the endpoint
+	Group types.Object `tfsdk:"group"`
+}
+
+func (to *InitialEndpointSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from InitialEndpointSpec) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				// Recursively sync the fields of Group
+				toGroup.SyncFieldsDuringCreateOrUpdate(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
+}
+
+func (to *InitialEndpointSpec) SyncFieldsDuringRead(ctx context.Context, from InitialEndpointSpec) {
+	if !from.Group.IsNull() && !from.Group.IsUnknown() {
+		if toGroup, ok := to.GetGroup(ctx); ok {
+			if fromGroup, ok := from.GetGroup(ctx); ok {
+				toGroup.SyncFieldsDuringRead(ctx, fromGroup)
+				to.SetGroup(ctx, toGroup)
+			}
+		}
+	}
+}
+
+func (m InitialEndpointSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group"] = attrs["group"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in InitialEndpointSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m InitialEndpointSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"group": reflect.TypeOf(EndpointGroupSpec{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, InitialEndpointSpec
+// only implements ToObjectValue() and Type().
+func (m InitialEndpointSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"group": m.Group,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m InitialEndpointSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"group": EndpointGroupSpec{}.Type(ctx),
+		},
+	}
+}
+
+// GetGroup returns the value of the Group field in InitialEndpointSpec as
+// a EndpointGroupSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *InitialEndpointSpec) GetGroup(ctx context.Context) (EndpointGroupSpec, bool) {
+	var e EndpointGroupSpec
+	if m.Group.IsNull() || m.Group.IsUnknown() {
+		return e, false
+	}
+	var v EndpointGroupSpec
+	d := m.Group.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroup sets the value of the Group field in InitialEndpointSpec.
+func (m *InitialEndpointSpec) SetGroup(ctx context.Context, v EndpointGroupSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Group = vs
 }
 
 type ListBranchesRequest struct {
@@ -2965,6 +3290,13 @@ func (m *Operation) SetError(ctx context.Context, v DatabricksServiceExceptionWi
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Configuration settings for the initial Read/Write endpoint created inside
+	// the default branch for a newly created project. If omitted, the initial
+	// endpoint created will have default settings, without high availability
+	// configured. This field does not apply to any endpoints created after
+	// project creation. Use spec.default_endpoint_settings to configure default
+	// settings for endpoints created after project creation.
+	InitialEndpointSpec types.Object `tfsdk:"initial_endpoint_spec"`
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
@@ -2981,6 +3313,19 @@ type Project struct {
 }
 
 func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Project) {
+	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
+		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialEndpointSpec = from.InitialEndpointSpec
+	}
+	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
+		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
+			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
+				// Recursively sync the fields of InitialEndpointSpec
+				toInitialEndpointSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialEndpointSpec)
+				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
+			}
+		}
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -3006,6 +3351,18 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 }
 
 func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
+	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
+		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialEndpointSpec = from.InitialEndpointSpec
+	}
+	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
+		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
+			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
+				toInitialEndpointSpec.SyncFieldsDuringRead(ctx, fromInitialEndpointSpec)
+				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
+			}
+		}
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -3030,6 +3387,9 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
@@ -3050,8 +3410,9 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 // SDK values.
 func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":   reflect.TypeOf(ProjectSpec{}),
-		"status": reflect.TypeOf(ProjectStatus{}),
+		"initial_endpoint_spec": reflect.TypeOf(InitialEndpointSpec{}),
+		"spec":                  reflect.TypeOf(ProjectSpec{}),
+		"status":                reflect.TypeOf(ProjectStatus{}),
 	}
 }
 
@@ -3062,12 +3423,13 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
-			"update_time": m.UpdateTime,
+			"create_time":           m.CreateTime,
+			"initial_endpoint_spec": m.InitialEndpointSpec,
+			"name":                  m.Name,
+			"spec":                  m.Spec,
+			"status":                m.Status,
+			"uid":                   m.Uid,
+			"update_time":           m.UpdateTime,
 		})
 }
 
@@ -3075,14 +3437,40 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"spec":        ProjectSpec{}.Type(ctx),
-			"status":      ProjectStatus{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"initial_endpoint_spec": InitialEndpointSpec{}.Type(ctx),
+			"name":                  types.StringType,
+			"spec":                  ProjectSpec{}.Type(ctx),
+			"status":                ProjectStatus{}.Type(ctx),
+			"uid":                   types.StringType,
+			"update_time":           timetypes.RFC3339{}.Type(ctx),
 		},
 	}
+}
+
+// GetInitialEndpointSpec returns the value of the InitialEndpointSpec field in Project as
+// a InitialEndpointSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Project) GetInitialEndpointSpec(ctx context.Context) (InitialEndpointSpec, bool) {
+	var e InitialEndpointSpec
+	if m.InitialEndpointSpec.IsNull() || m.InitialEndpointSpec.IsUnknown() {
+		return e, false
+	}
+	var v InitialEndpointSpec
+	d := m.InitialEndpointSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitialEndpointSpec sets the value of the InitialEndpointSpec field in Project.
+func (m *Project) SetInitialEndpointSpec(ctx context.Context, v InitialEndpointSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.InitialEndpointSpec = vs
 }
 
 // GetSpec returns the value of the Spec field in Project as

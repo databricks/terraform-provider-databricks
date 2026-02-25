@@ -215,7 +215,8 @@ func (m *CreateTagPolicyRequest_SdkV2) SetTagPolicy(ctx context.Context, v TagPo
 }
 
 type DeleteTagAssignmentRequest_SdkV2 struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
@@ -322,7 +323,8 @@ func (m DeleteTagPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetTagAssignmentRequest_SdkV2 struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
@@ -429,7 +431,8 @@ func (m GetTagPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListTagAssignmentsRequest_SdkV2 struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
@@ -739,7 +742,8 @@ func (m *ListTagPoliciesResponse_SdkV2) SetTagPolicies(ctx context.Context, v []
 }
 
 type TagAssignment_SdkV2 struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"entity_id"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces
@@ -923,7 +927,8 @@ func (m *TagPolicy_SdkV2) SetValues(ctx context.Context, v []Value_SdkV2) {
 }
 
 type UpdateTagAssignmentRequest_SdkV2 struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces

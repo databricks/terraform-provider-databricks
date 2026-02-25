@@ -20,3 +20,4 @@
 ### Internal Changes
 
 * Add support for host agnostic SQL global config resource.
+* Update Go SDK to v0.113.

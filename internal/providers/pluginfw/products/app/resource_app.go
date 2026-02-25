@@ -39,6 +39,9 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["no_compute"] = s["no_compute"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["compute_size"] = s["compute_size"].SetComputed()
+    s["resources"] = s["resources"].SetComputed()
+	s["user_api_scopes"] = s["user_api_scopes"].SetComputed()
+	s["budget_policy_id"] = s["budget_policy_id"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s
 }

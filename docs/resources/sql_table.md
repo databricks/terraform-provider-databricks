@@ -167,6 +167,33 @@ resource "databricks_sql_table" "thing" {
 }
 ```
 
+## Use complex column types
+
+```hcl
+resource "databricks_sql_table" "thing" {
+  provider     = databricks.workspace
+  name         = "complex_types_table"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "MANAGED"
+
+  column {
+    name = "id"
+    type = "int"
+  }
+  column {
+    name = "metadata"
+    # Do not add whitespace after commas in complex types
+    type = "MAP<STRING,STRING>"
+  }
+  column {
+    name = "tags"
+    type = "ARRAY<STRING>"
+  }
+  comment = "this table is managed by terraform"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -197,6 +224,8 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
+
+  ~> **Note:** When using parameterized or complex column types such as `MAP`, `STRUCT`, or `ARRAY`, do not include whitespace after commas in the type definition. For example, use `MAP<STRING,STRING>` instead of `MAP<STRING, STRING>`. The Databricks API may return types without whitespace, causing the provider to detect a spurious type change and return an error like "changing the 'type' of an existing column is not supported" even when no actual type change was made.
 * `identity` - (Optional) Whether the field is an identity column. Can be `default`, `always`, or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)

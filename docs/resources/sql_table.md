@@ -197,6 +197,8 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
+
+  ~> **Note:** When using `MAP` column types, do not include whitespace after commas in the type definition. For example, use `MAP<STRING,STRING>` instead of `MAP<STRING, STRING>`.
 * `identity` - (Optional) Whether the field is an identity column. Can be `default`, `always`, or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)

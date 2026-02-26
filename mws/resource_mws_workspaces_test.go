@@ -734,7 +734,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,storage_customer_managed_key_id",
 				ExpectedRequest: map[string]any{
 					"credentials_id":                           "bcd",
 					"network_id":                               "fgh",
@@ -896,7 +896,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,storage_customer_managed_key_id",
 				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1235,7 +1235,7 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:   "PATCH",
-			Resource: "/api/2.0/accounts/c/workspaces/0",
+			Resource: "/api/2.0/accounts/c/workspaces/0?update_mask=network_id,storage_customer_managed_key_id",
 		},
 		{
 			Method:       "GET",
@@ -1615,7 +1615,7 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,private_access_settings_id,storage_customer_managed_key_id",
 				ExpectedRequest: map[string]any{
 					"credentials_id":                           "bcd",
 					"network_id":                               "fgh",

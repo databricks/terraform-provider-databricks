@@ -102,6 +102,13 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type ProjectData struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Configuration settings for the initial Read/Write endpoint created inside
+	// the default branch for a newly created project. If omitted, the initial
+	// endpoint created will have default settings, without high availability
+	// configured. This field does not apply to any endpoints created after
+	// project creation. Use spec.default_endpoint_settings to configure default
+	// settings for endpoints created after project creation.
+	InitialEndpointSpec types.Object `tfsdk:"initial_endpoint_spec"`
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
@@ -127,9 +134,10 @@ type ProjectData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m ProjectData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":            reflect.TypeOf(postgres_tf.ProjectSpec{}),
-		"status":          reflect.TypeOf(postgres_tf.ProjectStatus{}),
-		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
+		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
+		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
+		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -143,12 +151,13 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
-			"update_time": m.UpdateTime,
+			"create_time":           m.CreateTime,
+			"initial_endpoint_spec": m.InitialEndpointSpec,
+			"name":                  m.Name,
+			"spec":                  m.Spec,
+			"status":                m.Status,
+			"uid":                   m.Uid,
+			"update_time":           m.UpdateTime,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -160,12 +169,13 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m ProjectData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"spec":        postgres_tf.ProjectSpec{}.Type(ctx),
-			"status":      postgres_tf.ProjectStatus{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
+			"name":                  types.StringType,
+			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
+			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
+			"uid":                   types.StringType,
+			"update_time":           timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -174,6 +184,7 @@ func (m ProjectData) Type(ctx context.Context) attr.Type {
 
 func (m ProjectData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()

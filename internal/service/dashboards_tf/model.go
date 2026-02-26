@@ -786,7 +786,7 @@ type GenieAttachment struct {
 	Query types.Object `tfsdk:"query"`
 	// Follow-up questions suggested by Genie
 	SuggestedQuestions types.Object `tfsdk:"suggested_questions"`
-	// Text Attachment if Genie responds with text. This also contains the final
+	// Text Attachment if Genie responds with text This also contains the final
 	// summary when available.
 	Text types.Object `tfsdk:"text"`
 }
@@ -849,10 +849,10 @@ func (to *GenieAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieA
 }
 
 func (m GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attachment_id"] = attrs["attachment_id"].SetOptional()
-	attrs["query"] = attrs["query"].SetOptional()
-	attrs["suggested_questions"] = attrs["suggested_questions"].SetOptional()
-	attrs["text"] = attrs["text"].SetOptional()
+	attrs["attachment_id"] = attrs["attachment_id"].SetComputed()
+	attrs["query"] = attrs["query"].SetComputed()
+	attrs["suggested_questions"] = attrs["suggested_questions"].SetComputed()
+	attrs["text"] = attrs["text"].SetComputed()
 
 	return attrs
 }
@@ -998,12 +998,12 @@ func (to *GenieConversation) SyncFieldsDuringRead(ctx context.Context, from Geni
 
 func (m GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["title"] = attrs["title"].SetRequired()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 
 	return attrs
 }
@@ -1067,8 +1067,8 @@ func (to *GenieConversationSummary) SyncFieldsDuringRead(ctx context.Context, fr
 
 func (m GenieConversationSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetRequired()
-	attrs["title"] = attrs["title"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["title"] = attrs["title"].SetComputed()
 
 	return attrs
 }
@@ -1726,7 +1726,7 @@ func (m GenieGetDownloadFullQueryResultRequest) ApplySchemaCustomizations(attrs 
 	attrs["message_id"] = attrs["message_id"].SetRequired()
 	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
 	attrs["download_id"] = attrs["download_id"].SetRequired()
-	attrs["download_id_signature"] = attrs["download_id_signature"].SetOptional()
+	attrs["download_id_signature"] = attrs["download_id_signature"].SetRequired()
 
 	return attrs
 }
@@ -2762,19 +2762,19 @@ func (to *GenieMessage) SyncFieldsDuringRead(ctx context.Context, from GenieMess
 }
 
 func (m GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attachments"] = attrs["attachments"].SetOptional()
+	attrs["attachments"] = attrs["attachments"].SetComputed()
 	attrs["content"] = attrs["content"].SetRequired()
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
-	attrs["error"] = attrs["error"].SetOptional()
-	attrs["feedback"] = attrs["feedback"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["error"] = attrs["error"].SetComputed()
+	attrs["feedback"] = attrs["feedback"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["message_id"] = attrs["message_id"].SetRequired()
-	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["query_result"] = attrs["query_result"].SetComputed()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
-	attrs["status"] = attrs["status"].SetOptional()
-	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 
 	return attrs
 }
@@ -3000,12 +3000,12 @@ func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from G
 
 func (m GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["query"] = attrs["query"].SetOptional()
-	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetOptional()
-	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetComputed()
+	attrs["statement_id"] = attrs["statement_id"].SetComputed()
 	attrs["title"] = attrs["title"].SetOptional()
 
 	return attrs
@@ -3126,8 +3126,8 @@ func (to *GenieResultMetadata) SyncFieldsDuringRead(ctx context.Context, from Ge
 }
 
 func (m GenieResultMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
-	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["is_truncated"] = attrs["is_truncated"].SetComputed()
+	attrs["row_count"] = attrs["row_count"].SetComputed()
 
 	return attrs
 }
@@ -3528,7 +3528,7 @@ func (to *GenieSuggestedQuestionsAttachment) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GenieSuggestedQuestionsAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["questions"] = attrs["questions"].SetOptional()
+	attrs["questions"] = attrs["questions"].SetComputed()
 
 	return attrs
 }

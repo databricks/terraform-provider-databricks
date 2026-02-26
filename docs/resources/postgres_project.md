@@ -95,11 +95,27 @@ The following arguments are supported:
 * `project_id` (string, required) - The ID to use for the Project. This becomes the final component of the project's resource name.
   The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
   For example, `my-app` becomes `projects/my-app`
+* `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the default branch for a newly
+  created project. If omitted, the initial endpoint created will have default settings, without high availability
+  configured. This field does not apply to any endpoints created after project creation. Use
+  spec.default_endpoint_settings to configure default settings for endpoints created after project creation
 * `spec` (ProjectSpec, optional) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### EndpointGroupSpec
+* `max` (integer, required) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
+  compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
+  true on the EndpointSpec
+* `min` (integer, required) - The minimum number of computes in the endpoint group. Currently, this must be equal to max. This must be greater
+  than or equal to 1
+* `enable_readable_secondaries` (boolean, optional) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
+  size.max > 1
+
+### InitialEndpointSpec
+* `group` (EndpointGroupSpec, optional) - Settings for HA configuration of the endpoint
 
 ### ProjectCustomTag
 * `key` (string, optional) - The key of the custom tag

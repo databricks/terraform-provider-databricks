@@ -22,6 +22,7 @@ The following arguments are supported:
 
 ### AppResource
 * `name` (string, required) - Name of the App Resource
+* `app` (AppResourceApp, optional)
 * `database` (AppResourceDatabase, optional)
 * `description` (string, optional) - Description of the App Resource
 * `experiment` (AppResourceExperiment, optional)
@@ -64,7 +65,7 @@ The following arguments are supported:
 * `permission` (string, required) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppResourceUcSecurable
-* `permission` (string, required) - Possible values are: `EXECUTE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `permission` (string, required) - Possible values are: `EXECUTE`, `MODIFY`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
 * `securable_full_name` (string, required)
 * `securable_type` (string, required) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
 
@@ -85,6 +86,10 @@ In addition to the above arguments, the following attributes are exported:
 * `status` (SpaceStatus) - The status of the app space
 * `update_time` (string) - The update time of the app space. Formatted timestamp in ISO 6801
 * `updater` (string) - The email of the user that last updated the app space
+
+### AppResourceUcSecurable
+* `securable_kind` (string) - The securable kind from Unity Catalog.
+  See https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind
 
 ### SpaceStatus
 * `message` (string) - Message providing context about the current state

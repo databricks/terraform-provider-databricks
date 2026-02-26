@@ -10,7 +10,7 @@
 
 ### Documentation
 
-* Added documentation note about whitespace handling in complex column types (`MAP`, `STRUCT`, `ARRAY`) for `databricks_sql_table`.
+* Added documentation note about whitespace handling in `MAP` column types for `databricks_sql_table`.
 
 ### Exporter
 

@@ -260,6 +260,13 @@ func (a WorkspacesAPI) WaitForExpectedStatus(ws Workspace, expectedStatus string
 			return resource.NonRetryableError(err)
 		}
 
+		// If expected status is PROVISIONING but workspace is already RUNNING,
+		// consider it successful since RUNNING is a more advanced state
+		if expectedStatus == WorkspaceStatusProvisioning && workspace.WorkspaceStatus == WorkspaceStatusRunning {
+			log.Printf("[INFO] Workspace is RUNNING, which is acceptable when expected status is PROVISIONING")
+			return nil
+		}
+
 		switch workspace.WorkspaceStatus {
 		case expectedStatus:
 			log.Printf("[INFO] Workspace is now in expected status %s", expectedStatus)

@@ -282,7 +282,7 @@ func (aw accountWorkspaceSetting[T]) SettingStruct() T {
 	return aw.settingStruct
 }
 func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.DatabricksClient, etag string) (*T, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.Config.HostType() != config.WorkspaceHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return nil, err
@@ -297,7 +297,7 @@ func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.Databri
 	}
 }
 func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.DatabricksClient, t T) (string, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.Config.HostType() != config.WorkspaceHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err
@@ -312,7 +312,7 @@ func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.Datab
 	}
 }
 func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.DatabricksClient, etag string) (string, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.Config.HostType() != config.WorkspaceHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err

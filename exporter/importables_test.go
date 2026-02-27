@@ -77,7 +77,7 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 	ic := importContextForTest()
 	ic.Client = client
 	ic.Context = ctx
-	if client.Config.HostType() == config.AccountHost {
+	if client.Config.HostType() != config.WorkspaceHost {
 		ic.accountClient, _ = client.AccountClient()
 	} else {
 		ic.workspaceClient, _ = client.WorkspaceClient()

@@ -456,7 +456,7 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 
-	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
+	ic.accountLevel = ic.Client.Config.HostType() != config.WorkspaceHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		// TODO: check if we can get the current user from the account client

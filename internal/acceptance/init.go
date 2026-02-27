@@ -499,9 +499,9 @@ func initTest(t *testing.T, key string) {
 
 // loads debug environment from ~/.databricks/debug-env.json
 func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
-	if !isInDebug() {
-		return
-	}
+	// if !isInDebug() {
+	// 	return
+	// }
 	home, err := os.UserHomeDir()
 	if err != nil {
 		t.Fatalf("cannot find user home: %s", err)

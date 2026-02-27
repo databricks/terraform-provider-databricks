@@ -84,7 +84,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var users []iam.User
 	var err error
 
-	if d.Client.Config.HostType() == config.AccountHost {
+	if d.Client.Config.HostType() != config.WorkspaceHost {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {

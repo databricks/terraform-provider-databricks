@@ -75,7 +75,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
+	ic.accountLevel = ic.Client.Config.HostType() != config.WorkspaceHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()

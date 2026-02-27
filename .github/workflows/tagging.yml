@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     # No inputs are required for the manual dispatch.
 
-  # Runs at 8:00 UTC on Tuesday, Wednesday, and Thursday. To enable automated
+  # Runs at 8:00 UTC on Monday, Tuesday, Wednesday, and Thursday. To enable automated
   # tagging for a repository, simply add it to the if block of the tag job.
   schedule:
-    - cron: '0 8 * * TUE,WED,THU'
+    - cron: '0 8 * * MON,TUE,WED,THU'
 
 # Ensure that only a single instance of the workflow is running at a time.
 concurrency:

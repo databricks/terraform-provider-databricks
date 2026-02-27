@@ -2,7 +2,7 @@
 subcategory: "Provisioning"
 ---
 # databricks_endpoint Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 Endpoint datasource retrieves information about a single network connectivity endpoint for private access to Databricks workspaces.
 

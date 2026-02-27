@@ -1,5 +1,22 @@
 # Version changelog
 
+## Release v1.110.0 (2026-02-25)
+
+### New Features and Improvements
+
+* Changed default AWS availability for auto-created utility clusters from `SPOT` to `SPOT_WITH_FALLBACK` (API default). `SPOT_WITH_FALLBACK` improves reliability by falling back to on-demand instances when spot capacity is unavailable. Affects internal clusters created by `databricks_aws_s3_mount`, `databricks_mount`, `databricks_sql_permissions`, `databricks_sql_table`, and the exporter.
+
+### Bug Fixes
+
+* Mark plaintext credential fields in `databricks_model_serving` as sensitive to prevent them from being displayed in plan/apply output ([#5409](https://github.com/databricks/terraform-provider-databricks/pull/5409)).
+* Mark `personal_access_token` as sensitive in `databricks_git_credential` to prevent the value from being displayed in plan and apply output ([#5395](https://github.com/databricks/terraform-provider-databricks/pull/5395)).
+
+### Internal Changes
+
+* Add support for host agnostic SQL global config resource.
+* Update Go SDK to v0.113.
+
+
 ## Release v1.109.0 (2026-02-19)
 
 ### Bug Fixes

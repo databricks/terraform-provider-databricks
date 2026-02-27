@@ -41,6 +41,7 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `user_api_scopes` (list of string) - OAuth scopes for apps in the space
 
 ### AppResource
+* `app` (AppResourceApp)
 * `database` (AppResourceDatabase)
 * `description` (string) - Description of the App Resource
 * `experiment` (AppResourceExperiment)
@@ -51,6 +52,8 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `serving_endpoint` (AppResourceServingEndpoint)
 * `sql_warehouse` (AppResourceSqlWarehouse)
 * `uc_securable` (AppResourceUcSecurable)
+
+### AppResourceApp
 
 ### AppResourceDatabase
 * `database_name` (string)
@@ -84,8 +87,10 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `permission` (string) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppResourceUcSecurable
-* `permission` (string) - Possible values are: `EXECUTE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `permission` (string) - Possible values are: `EXECUTE`, `MODIFY`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
 * `securable_full_name` (string)
+* `securable_kind` (string) - The securable kind from Unity Catalog.
+  See https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind
 * `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
 
 ### SpaceStatus

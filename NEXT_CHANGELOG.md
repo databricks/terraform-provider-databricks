@@ -8,9 +8,9 @@
 
 ### Bug Fixes
 
-### Documentation
+* Fixed `databricks_cluster` to preserve externally-set `spark_env_vars` (e.g. from cluster policies) during updates when not configured in Terraform.
 
-* Added documentation note about whitespace handling in `MAP` column types for `databricks_sql_table`.
+### Documentation
 
 ### Exporter
 

@@ -130,7 +130,10 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	}
 	instanceProfileParts := strings.Split(arnSections[5], "/")
 	clusterName := fmt.Sprintf("terraform-mount-%s", strings.Join(instanceProfileParts[1:], "-"))
-	cluster := getCommonClusterObject(clustersAPI, clusterName)
+	cluster, err := getCommonClusterObject(clustersAPI, clusterName)
+	if err != nil {
+		return
+	}
 	cluster.AwsAttributes = &clusters.AwsAttributes{
 		InstanceProfileArn: instanceProfile,
 		Availability:       "SPOT",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -17,20 +18,46 @@ type NodeTypeRequest struct {
 	Arm bool `json:"arm,omitempty"`
 }
 
-func defaultSmallestNodeType(w *databricks.WorkspaceClient, request NodeTypeRequest) string {
+// IsAws detects AWS by checking if any node_type_id contains a "." followed by "large" (e.g. "i3.xlarge").
+func IsAws(nodeTypes *compute.ListNodeTypesResponse) bool {
+	for _, nt := range nodeTypes.NodeTypes {
+		dotIdx := strings.Index(nt.NodeTypeId, ".")
+		if dotIdx >= 0 && strings.Contains(nt.NodeTypeId[dotIdx:], "large") {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAzure detects Azure by checking if any node_type_id contains "Standard_" (e.g. "Standard_D4ds_v5").
+func IsAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
+	for _, nt := range nodeTypes.NodeTypes {
+		if strings.Contains(nt.NodeTypeId, "Standard_") {
+			return true
+		}
+	}
+	return false
+}
+
+// IsGcp detects GCP as a fallback when the node types match neither AWS nor Azure patterns.
+func IsGcp(nodeTypes *compute.ListNodeTypesResponse) bool {
+	return !IsAws(nodeTypes) && !IsAzure(nodeTypes)
+}
+
+func defaultSmallestNodeType(nodeTypes *compute.ListNodeTypesResponse, request NodeTypeRequest) string {
 	if request.Arm || request.Graviton {
-		if w.Config.IsAws() {
+		if IsAws(nodeTypes) {
 			if request.Fleet {
 				return "rgd-fleet.xlarge"
 			}
 			return "m6g.xlarge"
-		} else if w.Config.IsAzure() {
+		} else if IsAzure(nodeTypes) {
 			return "Standard_D4pds_v6"
 		}
 	}
-	if w.Config.IsAzure() {
+	if IsAzure(nodeTypes) {
 		return "Standard_D4ds_v5"
-	} else if w.Config.IsGcp() {
+	} else if IsGcp(nodeTypes) {
 		return "n1-standard-4"
 	}
 	if request.Fleet {
@@ -48,7 +75,7 @@ func smallestNodeType(ctx context.Context, request NodeTypeRequest, w *databrick
 	request.Graviton = request.Arm || request.Graviton
 	nodeType, err := nodeTypes.Smallest(request.NodeTypeRequest)
 	if err != nil {
-		nodeType = defaultSmallestNodeType(w, request)
+		nodeType = defaultSmallestNodeType(nodeTypes, request)
 	}
 	return nodeType, nil
 }

@@ -228,7 +228,7 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 		// If the user doesn't include an access_control block for themselves, do not include it in the state.
 		// On create/update, the provider will automatically include the current user in the access_control block
 		// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
-		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
+		if strings.EqualFold(me, accessControl.UserName) || strings.EqualFold(me, accessControl.ServicePrincipalName) {
 			if !existing.ContainsUserOrServicePrincipal(me) {
 				continue
 			}
@@ -244,8 +244,8 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 			}
 			entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
 				GroupName:            accessControl.GroupName,
-				UserName:             accessControl.UserName,
-				ServicePrincipalName: accessControl.ServicePrincipalName,
+				UserName:             strings.ToLower(accessControl.UserName),
+				ServicePrincipalName: strings.ToLower(accessControl.ServicePrincipalName),
 				PermissionLevel:      permission.PermissionLevel,
 			})
 		}

@@ -360,7 +360,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "workspace_id is not set, please set the workspace_id in the provider_config",
+			errorContains: "workspace_id is not set in provider_config and default_workspace_id is not configured at provider level",
 			description:   "Account-level provider requires workspace_id to be set",
 		},
 	}
@@ -637,4 +637,222 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWorkspaceClientUnifiedProviderWithDefaultWorkspaceID(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"provider_config": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	ctx := context.Background()
+	mockWorkspaceClient := &databricks.WorkspaceClient{}
+
+	testCases := []struct {
+		name          string
+		resourceData  map[string]interface{}
+		client        *DatabricksClient
+		expectError   bool
+		errorContains string
+		expectedHost  string // Host of the workspace client we expect to be returned
+		description   string
+	}{
+		{
+			name: "account-level with default_workspace_id and no provider_config - uses default",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			client: func() *DatabricksClient {
+				c := &DatabricksClient{
+					DatabricksClient: &client.DatabricksClient{
+						Config: &config.Config{
+							Host:      "https://accounts.cloud.databricks.com",
+							AccountID: "test-account-id",
+							Token:     "test-token",
+						},
+					},
+					defaultWorkspaceID: "123456",
+				}
+				c.Config = c.Config.WithTesting()
+				// Create mock workspace client for DEFAULT workspace
+				defaultWsClient := &databricks.WorkspaceClient{
+					Config: &config.Config{
+						Host:  "https://default-workspace.test.databricks.com",
+						Token: "test-token",
+					},
+				}
+				defaultWsClient.Config = defaultWsClient.Config.WithTesting()
+				// Create mock workspace client for OVERRIDE workspace
+				overrideWsClient := &databricks.WorkspaceClient{
+					Config: &config.Config{
+						Host:  "https://override-workspace.test.databricks.com",
+						Token: "test-token",
+					},
+				}
+				overrideWsClient.Config = overrideWsClient.Config.WithTesting()
+				// Cache BOTH workspace clients
+				c.cachedWorkspaceClients = map[int64]*databricks.WorkspaceClient{
+					123456: defaultWsClient,  // default_workspace_id
+					789012: overrideWsClient, // potential override
+				}
+				return c
+			}(),
+			expectError:  false,
+			expectedHost: "https://default-workspace.test.databricks.com",
+			description:  "Should use default_workspace_id from provider when provider_config is not set",
+		},
+		{
+			name: "account-level with default_workspace_id and provider_config override - uses override",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "789012",
+					},
+				},
+			},
+			client: func() *DatabricksClient {
+				c := &DatabricksClient{
+					DatabricksClient: &client.DatabricksClient{
+						Config: &config.Config{
+							Host:      "https://accounts.cloud.databricks.com",
+							AccountID: "test-account-id",
+							Token:     "test-token",
+						},
+					},
+					defaultWorkspaceID: "123456",
+				}
+				c.Config = c.Config.WithTesting()
+				// Create mock workspace client for DEFAULT workspace
+				defaultWsClient := &databricks.WorkspaceClient{
+					Config: &config.Config{
+						Host:  "https://default-workspace.test.databricks.com",
+						Token: "test-token",
+					},
+				}
+				defaultWsClient.Config = defaultWsClient.Config.WithTesting()
+				// Create mock workspace client for OVERRIDE workspace
+				overrideWsClient := &databricks.WorkspaceClient{
+					Config: &config.Config{
+						Host:  "https://override-workspace.test.databricks.com",
+						Token: "test-token",
+					},
+				}
+				overrideWsClient.Config = overrideWsClient.Config.WithTesting()
+				// Cache BOTH workspace clients - this is the key improvement!
+				c.cachedWorkspaceClients = map[int64]*databricks.WorkspaceClient{
+					123456: defaultWsClient,  // default_workspace_id - should NOT be used
+					789012: overrideWsClient, // provider_config override - SHOULD be used
+				}
+				return c
+			}(),
+			expectError:  false,
+			expectedHost: "https://override-workspace.test.databricks.com",
+			description:  "Should use workspace_id from provider_config over default_workspace_id",
+		},
+		{
+			name: "account-level without default_workspace_id and no provider_config - returns error",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:      "https://accounts.cloud.databricks.com",
+						AccountID: "test-account-id",
+						Token:     "test-token",
+					},
+				},
+			},
+			expectError:   true,
+			errorContains: "workspace_id is not set in provider_config and default_workspace_id is not configured at provider level",
+			description:   "Should return error when neither default_workspace_id nor provider_config.workspace_id is set",
+		},
+		{
+			name: "workspace-level with default_workspace_id - ignores default and uses workspace client",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:  "https://workspace.test.databricks.com",
+						Token: "test-token",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     123456,
+				defaultWorkspaceID:    "999999",
+			},
+			expectError: false,
+			description: "Workspace-level provider should ignore default_workspace_id and use configured workspace",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create resource data
+			d := schema.TestResourceDataRaw(t, testSchema, tc.resourceData)
+
+			// Call WorkspaceClientUnifiedProvider
+			result, err := tc.client.WorkspaceClientUnifiedProvider(ctx, d)
+
+			// Verify results
+			if tc.expectError {
+				assert.Error(t, err, tc.description)
+				if tc.errorContains != "" {
+					assert.Contains(t, err.Error(), tc.errorContains)
+				}
+			} else {
+				assert.NoError(t, err, tc.description)
+				assert.NotNil(t, result)
+				// Verify the correct workspace client was returned by checking its Host
+				if tc.expectedHost != "" {
+					assert.Equal(t, tc.expectedHost, result.Config.Host,
+						"Expected workspace client with host %s but got %s", tc.expectedHost, result.Config.Host)
+				}
+			}
+		})
+	}
+}
+
+func TestSetDefaultWorkspaceID(t *testing.T) {
+	client := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+	}
+
+	// Initially, defaultWorkspaceID should be empty
+	assert.Empty(t, client.defaultWorkspaceID)
+
+	// Set the default workspace ID
+	client.SetDefaultWorkspaceID("123456")
+
+	// Verify it was set correctly
+	assert.Equal(t, "123456", client.defaultWorkspaceID)
+
+	// Set it to a different value
+	client.SetDefaultWorkspaceID("789012")
+
+	// Verify it was updated
+	assert.Equal(t, "789012", client.defaultWorkspaceID)
 }

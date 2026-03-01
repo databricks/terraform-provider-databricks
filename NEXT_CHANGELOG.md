@@ -15,3 +15,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.

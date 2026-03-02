@@ -1,5 +1,59 @@
 # Version changelog
 
+## Release v1.110.0 (2026-02-25)
+
+### New Features and Improvements
+
+* Changed default AWS availability for auto-created utility clusters from `SPOT` to `SPOT_WITH_FALLBACK` (API default). `SPOT_WITH_FALLBACK` improves reliability by falling back to on-demand instances when spot capacity is unavailable. Affects internal clusters created by `databricks_aws_s3_mount`, `databricks_mount`, `databricks_sql_permissions`, `databricks_sql_table`, and the exporter.
+
+### Bug Fixes
+
+* Mark plaintext credential fields in `databricks_model_serving` as sensitive to prevent them from being displayed in plan/apply output ([#5409](https://github.com/databricks/terraform-provider-databricks/pull/5409)).
+* Mark `personal_access_token` as sensitive in `databricks_git_credential` to prevent the value from being displayed in plan and apply output ([#5395](https://github.com/databricks/terraform-provider-databricks/pull/5395)).
+
+### Internal Changes
+
+* Add support for host agnostic SQL global config resource.
+* Update Go SDK to v0.113.
+
+
+## Release v1.109.0 (2026-02-19)
+
+### Bug Fixes
+
+* Mark `effective_enable_file_events` as read-only in `databricks_external_location` to prevent Terraform drift.
+
+
+## Release v1.108.0 (2026-02-19)
+
+### New Features and Improvements
+
+* Added `database_project_name` to `databricks_permissions` for managing Lakebase database project permissions.
+* Added `node_type_flexibility` block to `databricks_instance_pool` resource ([#5381](https://github.com/databricks/terraform-provider-databricks/pull/5381)).
+
+### Bug Fixes
+
+* Handle error during WorkspaceClient() creation in databricks_grant and databricks_grants resources ([#5403](https://github.com/databricks/terraform-provider-databricks/pull/5403))
+
+### Documentation
+
+* Added note to `databricks_mws_ncc_binding` that a workspace can only have one NCC binding at a time.
+
+### Internal Changes
+
+* Update Go SDK to v0.110.
+
+
+## Release v1.107.0 (2026-02-16)
+
+### New Features and Improvements
+* Added resources and data sources for `databricks_apps_space` and `databricks_endpoint` ([#5397](https://github.com/databricks/terraform-provider-databricks/pull/5397)).
+
+### Internal Changes
+
+* Update Go SDK to v0.108.0.
+
+
 ## Release v1.106.0 (2026-02-12)
 
 ### New Features and Improvements

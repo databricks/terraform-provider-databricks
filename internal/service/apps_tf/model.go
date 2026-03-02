@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -74,6 +75,8 @@ type App struct {
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// Name of the space this app belongs to.
+	Space types.String `tfsdk:"space"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time"`
 	// The email of the user that last updated the app.
@@ -236,6 +239,7 @@ func (m App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+	attrs["space"] = attrs["space"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
@@ -294,6 +298,7 @@ func (m App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
 			"service_principal_name":      m.ServicePrincipalName,
+			"space":                       m.Space,
 			"update_time":                 m.UpdateTime,
 			"updater":                     m.Updater,
 			"url":                         m.Url,
@@ -332,6 +337,7 @@ func (m App) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
+			"space":                       types.StringType,
 			"update_time":                 types.StringType,
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
@@ -2229,6 +2235,8 @@ func (m *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []Ap
 }
 
 type AppResource struct {
+	App types.Object `tfsdk:"app"`
+
 	Database types.Object `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
@@ -2251,6 +2259,15 @@ type AppResource struct {
 }
 
 func (to *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResource) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				// Recursively sync the fields of App
+				toApp.SyncFieldsDuringCreateOrUpdate(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2326,6 +2343,14 @@ func (to *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 }
 
 func (to *AppResource) SyncFieldsDuringRead(ctx context.Context, from AppResource) {
+	if !from.App.IsNull() && !from.App.IsUnknown() {
+		if toApp, ok := to.GetApp(ctx); ok {
+			if fromApp, ok := from.GetApp(ctx); ok {
+				toApp.SyncFieldsDuringRead(ctx, fromApp)
+				to.SetApp(ctx, toApp)
+			}
+		}
+	}
 	if !from.Database.IsNull() && !from.Database.IsUnknown() {
 		if toDatabase, ok := to.GetDatabase(ctx); ok {
 			if fromDatabase, ok := from.GetDatabase(ctx); ok {
@@ -2393,6 +2418,7 @@ func (to *AppResource) SyncFieldsDuringRead(ctx context.Context, from AppResourc
 }
 
 func (m AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetOptional()
 	attrs["database"] = attrs["database"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["experiment"] = attrs["experiment"].SetOptional()
@@ -2416,6 +2442,7 @@ func (m AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"app":              reflect.TypeOf(AppResourceApp{}),
 		"database":         reflect.TypeOf(AppResourceDatabase{}),
 		"experiment":       reflect.TypeOf(AppResourceExperiment{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace{}),
@@ -2434,6 +2461,7 @@ func (m AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"app":              m.App,
 			"database":         m.Database,
 			"description":      m.Description,
 			"experiment":       m.Experiment,
@@ -2451,6 +2479,7 @@ func (m AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AppResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"app":              AppResourceApp{}.Type(ctx),
 			"database":         AppResourceDatabase{}.Type(ctx),
 			"description":      types.StringType,
 			"experiment":       AppResourceExperiment{}.Type(ctx),
@@ -2463,6 +2492,31 @@ func (m AppResource) Type(ctx context.Context) attr.Type {
 			"uc_securable":     AppResourceUcSecurable{}.Type(ctx),
 		},
 	}
+}
+
+// GetApp returns the value of the App field in AppResource as
+// a AppResourceApp value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource) GetApp(ctx context.Context) (AppResourceApp, bool) {
+	var e AppResourceApp
+	if m.App.IsNull() || m.App.IsUnknown() {
+		return e, false
+	}
+	var v AppResourceApp
+	d := m.App.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApp sets the value of the App field in AppResource.
+func (m *AppResource) SetApp(ctx context.Context, v AppResourceApp) {
+	vs := v.ToObjectValue(ctx)
+	m.App = vs
 }
 
 // GetDatabase returns the value of the Database field in AppResource as
@@ -2663,6 +2717,47 @@ func (m *AppResource) GetUcSecurable(ctx context.Context) (AppResourceUcSecurabl
 func (m *AppResource) SetUcSecurable(ctx context.Context, v AppResourceUcSecurable) {
 	vs := v.ToObjectValue(ctx)
 	m.UcSecurable = vs
+}
+
+type AppResourceApp struct {
+}
+
+func (to *AppResourceApp) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceApp) {
+}
+
+func (to *AppResourceApp) SyncFieldsDuringRead(ctx context.Context, from AppResourceApp) {
+}
+
+func (m AppResourceApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceApp.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourceApp) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourceApp
+// only implements ToObjectValue() and Type().
+func (m AppResourceApp) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourceApp) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type AppResourceDatabase struct {
@@ -3056,6 +3151,9 @@ type AppResourceUcSecurable struct {
 	Permission types.String `tfsdk:"permission"`
 
 	SecurableFullName types.String `tfsdk:"securable_full_name"`
+	// The securable kind from Unity Catalog. See
+	// https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind.
+	SecurableKind types.String `tfsdk:"securable_kind"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 }
@@ -3069,6 +3167,7 @@ func (to *AppResourceUcSecurable) SyncFieldsDuringRead(ctx context.Context, from
 func (m AppResourceUcSecurable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
 	attrs["securable_full_name"] = attrs["securable_full_name"].SetRequired()
+	attrs["securable_kind"] = attrs["securable_kind"].SetComputed()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
 	return attrs
@@ -3094,6 +3193,7 @@ func (m AppResourceUcSecurable) ToObjectValue(ctx context.Context) basetypes.Obj
 		map[string]attr.Value{
 			"permission":          m.Permission,
 			"securable_full_name": m.SecurableFullName,
+			"securable_kind":      m.SecurableKind,
 			"securable_type":      m.SecurableType,
 		})
 }
@@ -3104,6 +3204,7 @@ func (m AppResourceUcSecurable) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"permission":          types.StringType,
 			"securable_full_name": types.StringType,
+			"securable_kind":      types.StringType,
 			"securable_type":      types.StringType,
 		},
 	}
@@ -3920,6 +4021,97 @@ func (m *CreateCustomTemplateRequest) SetTemplate(ctx context.Context, v CustomT
 	m.Template = vs
 }
 
+type CreateSpaceRequest struct {
+	Space types.Object `tfsdk:"space"`
+}
+
+func (to *CreateSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSpaceRequest) {
+	if !from.Space.IsNull() && !from.Space.IsUnknown() {
+		if toSpace, ok := to.GetSpace(ctx); ok {
+			if fromSpace, ok := from.GetSpace(ctx); ok {
+				// Recursively sync the fields of Space
+				toSpace.SyncFieldsDuringCreateOrUpdate(ctx, fromSpace)
+				to.SetSpace(ctx, toSpace)
+			}
+		}
+	}
+}
+
+func (to *CreateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from CreateSpaceRequest) {
+	if !from.Space.IsNull() && !from.Space.IsUnknown() {
+		if toSpace, ok := to.GetSpace(ctx); ok {
+			if fromSpace, ok := from.GetSpace(ctx); ok {
+				toSpace.SyncFieldsDuringRead(ctx, fromSpace)
+				to.SetSpace(ctx, toSpace)
+			}
+		}
+	}
+}
+
+func (m CreateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space"] = attrs["space"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"space": reflect.TypeOf(Space{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m CreateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"space": m.Space,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"space": Space{}.Type(ctx),
+		},
+	}
+}
+
+// GetSpace returns the value of the Space field in CreateSpaceRequest as
+// a Space value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateSpaceRequest) GetSpace(ctx context.Context) (Space, bool) {
+	var e Space
+	if m.Space.IsNull() || m.Space.IsUnknown() {
+		return e, false
+	}
+	var v Space
+	d := m.Space.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpace sets the value of the Space field in CreateSpaceRequest.
+func (m *CreateSpaceRequest) SetSpace(ctx context.Context, v Space) {
+	vs := v.ToObjectValue(ctx)
+	m.Space = vs
+}
+
 type CustomTemplate struct {
 	Creator types.String `tfsdk:"creator"`
 	// The description of the template.
@@ -4044,6 +4236,111 @@ func (m *CustomTemplate) SetManifest(ctx context.Context, v AppManifest) {
 	m.Manifest = vs
 }
 
+// Databricks Error that is returned by all Databricks APIs.
+type DatabricksServiceExceptionWithDetailsProto struct {
+	Details types.List `tfsdk:"details"`
+
+	ErrorCode types.String `tfsdk:"error_code"`
+
+	Message types.String `tfsdk:"message"`
+
+	StackTrace types.String `tfsdk:"stack_trace"`
+}
+
+func (to *DatabricksServiceExceptionWithDetailsProto) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksServiceExceptionWithDetailsProto) {
+	if !from.Details.IsNull() && !from.Details.IsUnknown() && to.Details.IsNull() && len(from.Details.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Details, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Details = from.Details
+	}
+}
+
+func (to *DatabricksServiceExceptionWithDetailsProto) SyncFieldsDuringRead(ctx context.Context, from DatabricksServiceExceptionWithDetailsProto) {
+	if !from.Details.IsNull() && !from.Details.IsUnknown() && to.Details.IsNull() && len(from.Details.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Details, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Details = from.Details
+	}
+}
+
+func (m DatabricksServiceExceptionWithDetailsProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["details"] = attrs["details"].SetOptional()
+	attrs["error_code"] = attrs["error_code"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["stack_trace"] = attrs["stack_trace"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksServiceExceptionWithDetailsProto.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabricksServiceExceptionWithDetailsProto) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"details": reflect.TypeOf(types.Object{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksServiceExceptionWithDetailsProto
+// only implements ToObjectValue() and Type().
+func (m DatabricksServiceExceptionWithDetailsProto) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"details":     m.Details,
+			"error_code":  m.ErrorCode,
+			"message":     m.Message,
+			"stack_trace": m.StackTrace,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabricksServiceExceptionWithDetailsProto) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"details": basetypes.ListType{
+				ElemType: types.ObjectType{},
+			},
+			"error_code":  types.StringType,
+			"message":     types.StringType,
+			"stack_trace": types.StringType,
+		},
+	}
+}
+
+// GetDetails returns the value of the Details field in DatabricksServiceExceptionWithDetailsProto as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DatabricksServiceExceptionWithDetailsProto) GetDetails(ctx context.Context) ([]types.Object, bool) {
+	if m.Details.IsNull() || m.Details.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := m.Details.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDetails sets the value of the Details field in DatabricksServiceExceptionWithDetailsProto.
+func (m *DatabricksServiceExceptionWithDetailsProto) SetDetails(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["details"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Details = types.ListValueMust(t, vs)
+}
+
 type DeleteAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -4133,6 +4430,54 @@ func (m DeleteCustomTemplateRequest) ToObjectValue(ctx context.Context) basetype
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteCustomTemplateRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteSpaceRequest struct {
+	// The name of the app space.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSpaceRequest) {
+}
+
+func (to *DeleteSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteSpaceRequest) {
+}
+
+func (m DeleteSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSpaceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -4582,6 +4927,102 @@ func (m GetCustomTemplateRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetOperationRequest struct {
+	// The name of the operation resource.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetOperationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetOperationRequest) {
+}
+
+func (to *GetOperationRequest) SyncFieldsDuringRead(ctx context.Context, from GetOperationRequest) {
+}
+
+func (m GetOperationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOperationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetOperationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetOperationRequest
+// only implements ToObjectValue() and Type().
+func (m GetOperationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetOperationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetSpaceRequest struct {
+	// The name of the app space.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSpaceRequest) {
+}
+
+func (to *GetSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from GetSpaceRequest) {
+}
+
+func (m GetSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m GetSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 // Git repository configuration specifying the location of the repository.
 type GitRepository struct {
 	// Git provider. Case insensitive. Supported values: gitHub,
@@ -4923,6 +5364,9 @@ type ListAppsRequest struct {
 	// Pagination token to go to the next page of apps. Requests first page if
 	// absent.
 	PageToken types.String `tfsdk:"-"`
+	// Filter apps by app space name. When specified, only apps belonging to
+	// this space are returned.
+	Space types.String `tfsdk:"-"`
 }
 
 func (to *ListAppsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAppsRequest) {
@@ -4934,6 +5378,7 @@ func (to *ListAppsRequest) SyncFieldsDuringRead(ctx context.Context, from ListAp
 func (m ListAppsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["space"] = attrs["space"].SetOptional()
 
 	return attrs
 }
@@ -4958,6 +5403,7 @@ func (m ListAppsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		map[string]attr.Value{
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"space":      m.Space,
 		})
 }
 
@@ -4967,6 +5413,7 @@ func (m ListAppsRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"space":      types.StringType,
 		},
 	}
 }
@@ -5212,6 +5659,878 @@ func (m *ListCustomTemplatesResponse) SetTemplates(ctx context.Context, v []Cust
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["templates"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Templates = types.ListValueMust(t, vs)
+}
+
+type ListSpacesRequest struct {
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of app spaces. Requests first
+	// page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListSpacesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSpacesRequest) {
+}
+
+func (to *ListSpacesRequest) SyncFieldsDuringRead(ctx context.Context, from ListSpacesRequest) {
+}
+
+func (m ListSpacesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSpacesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSpacesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSpacesRequest
+// only implements ToObjectValue() and Type().
+func (m ListSpacesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSpacesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListSpacesResponse struct {
+	// Pagination token to request the next page of app spaces.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Spaces types.List `tfsdk:"spaces"`
+}
+
+func (to *ListSpacesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSpacesResponse) {
+	if !from.Spaces.IsNull() && !from.Spaces.IsUnknown() && to.Spaces.IsNull() && len(from.Spaces.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Spaces, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Spaces = from.Spaces
+	}
+}
+
+func (to *ListSpacesResponse) SyncFieldsDuringRead(ctx context.Context, from ListSpacesResponse) {
+	if !from.Spaces.IsNull() && !from.Spaces.IsUnknown() && to.Spaces.IsNull() && len(from.Spaces.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Spaces, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Spaces = from.Spaces
+	}
+}
+
+func (m ListSpacesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["spaces"] = attrs["spaces"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSpacesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSpacesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spaces": reflect.TypeOf(Space{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSpacesResponse
+// only implements ToObjectValue() and Type().
+func (m ListSpacesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"spaces":          m.Spaces,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSpacesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"spaces": basetypes.ListType{
+				ElemType: Space{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSpaces returns the value of the Spaces field in ListSpacesResponse as
+// a slice of Space values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListSpacesResponse) GetSpaces(ctx context.Context) ([]Space, bool) {
+	if m.Spaces.IsNull() || m.Spaces.IsUnknown() {
+		return nil, false
+	}
+	var v []Space
+	d := m.Spaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpaces sets the value of the Spaces field in ListSpacesResponse.
+func (m *ListSpacesResponse) SetSpaces(ctx context.Context, v []Space) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Spaces = types.ListValueMust(t, vs)
+}
+
+// This resource represents a long-running operation that is the result of a
+// network API call.
+type Operation struct {
+	// If the value is `false`, it means the operation is still in progress. If
+	// `true`, the operation is completed, and either `error` or `response` is
+	// available.
+	Done types.Bool `tfsdk:"done"`
+	// The error result of the operation in case of failure or cancellation.
+	Error types.Object `tfsdk:"error"`
+	// Service-specific metadata associated with the operation. It typically
+	// contains progress information and common metadata such as create time.
+	// Some services might not provide such metadata.
+	Metadata types.Object `tfsdk:"metadata"`
+	// The server-assigned name, which is only unique within the same service
+	// that originally returns it. If you use the default HTTP mapping, the
+	// `name` should be a resource name ending with `operations/{unique_id}`.
+	Name types.String `tfsdk:"name"`
+	// The normal, successful response of the operation.
+	Response types.Object `tfsdk:"response"`
+}
+
+func (to *Operation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Operation) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+}
+
+func (to *Operation) SyncFieldsDuringRead(ctx context.Context, from Operation) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+}
+
+func (m Operation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["done"] = attrs["done"].SetOptional()
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["response"] = attrs["response"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Operation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Operation) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"error": reflect.TypeOf(DatabricksServiceExceptionWithDetailsProto{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Operation
+// only implements ToObjectValue() and Type().
+func (m Operation) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"done":     m.Done,
+			"error":    m.Error,
+			"metadata": m.Metadata,
+			"name":     m.Name,
+			"response": m.Response,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Operation) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"done":     types.BoolType,
+			"error":    DatabricksServiceExceptionWithDetailsProto{}.Type(ctx),
+			"metadata": types.ObjectType{},
+			"name":     types.StringType,
+			"response": types.ObjectType{},
+		},
+	}
+}
+
+// GetError returns the value of the Error field in Operation as
+// a DatabricksServiceExceptionWithDetailsProto value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Operation) GetError(ctx context.Context) (DatabricksServiceExceptionWithDetailsProto, bool) {
+	var e DatabricksServiceExceptionWithDetailsProto
+	if m.Error.IsNull() || m.Error.IsUnknown() {
+		return e, false
+	}
+	var v DatabricksServiceExceptionWithDetailsProto
+	d := m.Error.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetError sets the value of the Error field in Operation.
+func (m *Operation) SetError(ctx context.Context, v DatabricksServiceExceptionWithDetailsProto) {
+	vs := v.ToObjectValue(ctx)
+	m.Error = vs
+}
+
+type Space struct {
+	// The creation time of the app space. Formatted timestamp in ISO 6801.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The email of the user that created the app space.
+	Creator types.String `tfsdk:"creator"`
+	// The description of the app space.
+	Description types.String `tfsdk:"description"`
+	// The effective usage policy ID used by apps in the space.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
+	// The effective api scopes granted to the user access token.
+	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
+	// The unique identifier of the app space.
+	Id types.String `tfsdk:"id"`
+	// The name of the app space. The name must contain only lowercase
+	// alphanumeric characters and hyphens. It must be unique within the
+	// workspace.
+	Name types.String `tfsdk:"name"`
+	// The OAuth2 app client ID for the app space.
+	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
+	// The OAuth2 app integration ID for the app space.
+	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
+	// Resources for the app space. Resources configured at the space level are
+	// available to all apps in the space.
+	Resources types.List `tfsdk:"resources"`
+	// The service principal client ID for the app space.
+	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
+	// The service principal ID for the app space.
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
+	// The service principal name for the app space.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// The status of the app space.
+	Status types.Object `tfsdk:"status"`
+	// The update time of the app space. Formatted timestamp in ISO 6801.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// The email of the user that last updated the app space.
+	Updater types.String `tfsdk:"updater"`
+	// The usage policy ID for managing cost at the space level.
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+	// OAuth scopes for apps in the space.
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
+}
+
+func (to *Space) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Space) {
+	if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (to *Space) SyncFieldsDuringRead(ctx context.Context, from Space) {
+	if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
+	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
+	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updater"] = attrs["updater"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Space.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Space) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"effective_user_api_scopes": reflect.TypeOf(types.String{}),
+		"resources":                 reflect.TypeOf(AppResource{}),
+		"status":                    reflect.TypeOf(SpaceStatus{}),
+		"user_api_scopes":           reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Space
+// only implements ToObjectValue() and Type().
+func (m Space) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time":                 m.CreateTime,
+			"creator":                     m.Creator,
+			"description":                 m.Description,
+			"effective_usage_policy_id":   m.EffectiveUsagePolicyId,
+			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
+			"id":                          m.Id,
+			"name":                        m.Name,
+			"oauth2_app_client_id":        m.Oauth2AppClientId,
+			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
+			"resources":                   m.Resources,
+			"service_principal_client_id": m.ServicePrincipalClientId,
+			"service_principal_id":        m.ServicePrincipalId,
+			"service_principal_name":      m.ServicePrincipalName,
+			"status":                      m.Status,
+			"update_time":                 m.UpdateTime,
+			"updater":                     m.Updater,
+			"usage_policy_id":             m.UsagePolicyId,
+			"user_api_scopes":             m.UserApiScopes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Space) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time":               timetypes.RFC3339{}.Type(ctx),
+			"creator":                   types.StringType,
+			"description":               types.StringType,
+			"effective_usage_policy_id": types.StringType,
+			"effective_user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"id":                        types.StringType,
+			"name":                      types.StringType,
+			"oauth2_app_client_id":      types.StringType,
+			"oauth2_app_integration_id": types.StringType,
+			"resources": basetypes.ListType{
+				ElemType: AppResource{}.Type(ctx),
+			},
+			"service_principal_client_id": types.StringType,
+			"service_principal_id":        types.Int64Type,
+			"service_principal_name":      types.StringType,
+			"status":                      SpaceStatus{}.Type(ctx),
+			"update_time":                 timetypes.RFC3339{}.Type(ctx),
+			"updater":                     types.StringType,
+			"usage_policy_id":             types.StringType,
+			"user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in Space as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Space) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.EffectiveUserApiScopes.IsNull() || m.EffectiveUserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveUserApiScopes sets the value of the EffectiveUserApiScopes field in Space.
+func (m *Space) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+}
+
+// GetResources returns the value of the Resources field in Space as
+// a slice of AppResource values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Space) GetResources(ctx context.Context) ([]AppResource, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []AppResource
+	d := m.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in Space.
+func (m *Space) SetResources(ctx context.Context, v []AppResource) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Resources = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in Space as
+// a SpaceStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Space) GetStatus(ctx context.Context) (SpaceStatus, bool) {
+	var e SpaceStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v SpaceStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in Space.
+func (m *Space) SetStatus(ctx context.Context, v SpaceStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+// GetUserApiScopes returns the value of the UserApiScopes field in Space as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Space) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.UserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserApiScopes sets the value of the UserApiScopes field in Space.
+func (m *Space) SetUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.UserApiScopes = types.ListValueMust(t, vs)
+}
+
+type SpaceStatus struct {
+	// Message providing context about the current state.
+	Message types.String `tfsdk:"message"`
+	// The state of the app space.
+	State types.String `tfsdk:"state"`
+}
+
+func (to *SpaceStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SpaceStatus) {
+}
+
+func (to *SpaceStatus) SyncFieldsDuringRead(ctx context.Context, from SpaceStatus) {
+}
+
+func (m SpaceStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SpaceStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SpaceStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SpaceStatus
+// only implements ToObjectValue() and Type().
+func (m SpaceStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"message": m.Message,
+			"state":   m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SpaceStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"message": types.StringType,
+			"state":   types.StringType,
+		},
+	}
+}
+
+// Tracks app space update information.
+type SpaceUpdate struct {
+	Description types.String `tfsdk:"description"`
+
+	Resources types.List `tfsdk:"resources"`
+
+	Status types.Object `tfsdk:"status"`
+
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
+}
+
+func (to *SpaceUpdate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SpaceUpdate) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (to *SpaceUpdate) SyncFieldsDuringRead(ctx context.Context, from SpaceUpdate) {
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Resources = from.Resources
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.UserApiScopes = from.UserApiScopes
+	}
+}
+
+func (m SpaceUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SpaceUpdate.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SpaceUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"resources":       reflect.TypeOf(AppResource{}),
+		"status":          reflect.TypeOf(SpaceUpdateStatus{}),
+		"user_api_scopes": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SpaceUpdate
+// only implements ToObjectValue() and Type().
+func (m SpaceUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":     m.Description,
+			"resources":       m.Resources,
+			"status":          m.Status,
+			"usage_policy_id": m.UsagePolicyId,
+			"user_api_scopes": m.UserApiScopes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SpaceUpdate) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"resources": basetypes.ListType{
+				ElemType: AppResource{}.Type(ctx),
+			},
+			"status":          SpaceUpdateStatus{}.Type(ctx),
+			"usage_policy_id": types.StringType,
+			"user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetResources returns the value of the Resources field in SpaceUpdate as
+// a slice of AppResource values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SpaceUpdate) GetResources(ctx context.Context) ([]AppResource, bool) {
+	if m.Resources.IsNull() || m.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []AppResource
+	d := m.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in SpaceUpdate.
+func (m *SpaceUpdate) SetResources(ctx context.Context, v []AppResource) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Resources = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in SpaceUpdate as
+// a SpaceUpdateStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SpaceUpdate) GetStatus(ctx context.Context) (SpaceUpdateStatus, bool) {
+	var e SpaceUpdateStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v SpaceUpdateStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in SpaceUpdate.
+func (m *SpaceUpdate) SetStatus(ctx context.Context, v SpaceUpdateStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+// GetUserApiScopes returns the value of the UserApiScopes field in SpaceUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SpaceUpdate) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.UserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserApiScopes sets the value of the UserApiScopes field in SpaceUpdate.
+func (m *SpaceUpdate) SetUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.UserApiScopes = types.ListValueMust(t, vs)
+}
+
+// Status of an app space update operation
+type SpaceUpdateStatus struct {
+	Message types.String `tfsdk:"message"`
+
+	State types.String `tfsdk:"state"`
+}
+
+func (to *SpaceUpdateStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SpaceUpdateStatus) {
+}
+
+func (to *SpaceUpdateStatus) SyncFieldsDuringRead(ctx context.Context, from SpaceUpdateStatus) {
+}
+
+func (m SpaceUpdateStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SpaceUpdateStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SpaceUpdateStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SpaceUpdateStatus
+// only implements ToObjectValue() and Type().
+func (m SpaceUpdateStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"message": m.Message,
+			"state":   m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SpaceUpdateStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"message": types.StringType,
+			"state":   types.StringType,
+		},
+	}
 }
 
 type StartAppRequest struct {
@@ -5504,4 +6823,118 @@ func (m *UpdateCustomTemplateRequest) GetTemplate(ctx context.Context) (CustomTe
 func (m *UpdateCustomTemplateRequest) SetTemplate(ctx context.Context, v CustomTemplate) {
 	vs := v.ToObjectValue(ctx)
 	m.Template = vs
+}
+
+type UpdateSpaceRequest struct {
+	// The name of the app space. The name must contain only lowercase
+	// alphanumeric characters and hyphens. It must be unique within the
+	// workspace.
+	Name types.String `tfsdk:"-"`
+
+	Space types.Object `tfsdk:"space"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateSpaceRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateSpaceRequest) {
+	if !from.Space.IsNull() && !from.Space.IsUnknown() {
+		if toSpace, ok := to.GetSpace(ctx); ok {
+			if fromSpace, ok := from.GetSpace(ctx); ok {
+				// Recursively sync the fields of Space
+				toSpace.SyncFieldsDuringCreateOrUpdate(ctx, fromSpace)
+				to.SetSpace(ctx, toSpace)
+			}
+		}
+	}
+}
+
+func (to *UpdateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateSpaceRequest) {
+	if !from.Space.IsNull() && !from.Space.IsUnknown() {
+		if toSpace, ok := to.GetSpace(ctx); ok {
+			if fromSpace, ok := from.GetSpace(ctx); ok {
+				toSpace.SyncFieldsDuringRead(ctx, fromSpace)
+				to.SetSpace(ctx, toSpace)
+			}
+		}
+	}
+}
+
+func (m UpdateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space"] = attrs["space"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"space": reflect.TypeOf(Space{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSpaceRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":        m.Name,
+			"space":       m.Space,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":        types.StringType,
+			"space":       Space{}.Type(ctx),
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetSpace returns the value of the Space field in UpdateSpaceRequest as
+// a Space value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateSpaceRequest) GetSpace(ctx context.Context) (Space, bool) {
+	var e Space
+	if m.Space.IsNull() || m.Space.IsUnknown() {
+		return e, false
+	}
+	var v Space
+	d := m.Space.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpace sets the value of the Space field in UpdateSpaceRequest.
+func (m *UpdateSpaceRequest) SetSpace(ctx context.Context, v Space) {
+	vs := v.ToObjectValue(ctx)
+	m.Space = vs
 }

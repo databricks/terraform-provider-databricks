@@ -14948,11 +14948,14 @@ func (m OnlineStore_SdkV2) Type(ctx context.Context) attr.Type {
 // Configuration for online store destination.
 type OnlineStoreConfig_SdkV2 struct {
 	// The Unity Catalog catalog name. This name is also used as the Lakebase
-	// logical database name.
+	// logical database name. Quoting is handled by the backend where needed, do
+	// not pre-quote it.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The name of the target online store.
 	OnlineStoreName types.String `tfsdk:"online_store_name"`
-	// The Unity Catalog schema name.
+	// The Unity Catalog schema name. This name is also used as the Lakebase
+	// schema name under the database. Quoting is handled by the backend where
+	// needed, do not pre-quote it.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// Prefix for Unity Catalog table name. The materialized feature will be
 	// stored in a Lakebase table with this prefix and a generated postfix.

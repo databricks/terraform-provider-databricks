@@ -799,7 +799,7 @@ type GenieAttachment_SdkV2 struct {
 	Query types.List `tfsdk:"query"`
 	// Follow-up questions suggested by Genie
 	SuggestedQuestions types.List `tfsdk:"suggested_questions"`
-	// Text Attachment if Genie responds with text. This also contains the final
+	// Text Attachment if Genie responds with text This also contains the final
 	// summary when available.
 	Text types.List `tfsdk:"text"`
 }
@@ -862,12 +862,12 @@ func (to *GenieAttachment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GenieAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attachment_id"] = attrs["attachment_id"].SetOptional()
-	attrs["query"] = attrs["query"].SetOptional()
+	attrs["attachment_id"] = attrs["attachment_id"].SetComputed()
+	attrs["query"] = attrs["query"].SetComputed()
 	attrs["query"] = attrs["query"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["suggested_questions"] = attrs["suggested_questions"].SetOptional()
+	attrs["suggested_questions"] = attrs["suggested_questions"].SetComputed()
 	attrs["suggested_questions"] = attrs["suggested_questions"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["text"] = attrs["text"].SetOptional()
+	attrs["text"] = attrs["text"].SetComputed()
 	attrs["text"] = attrs["text"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -1023,12 +1023,12 @@ func (to *GenieConversation_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m GenieConversation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["title"] = attrs["title"].SetRequired()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 
 	return attrs
 }
@@ -1092,8 +1092,8 @@ func (to *GenieConversationSummary_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 
 func (m GenieConversationSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetRequired()
-	attrs["title"] = attrs["title"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["title"] = attrs["title"].SetComputed()
 
 	return attrs
 }
@@ -1751,7 +1751,7 @@ func (m GenieGetDownloadFullQueryResultRequest_SdkV2) ApplySchemaCustomizations(
 	attrs["message_id"] = attrs["message_id"].SetRequired()
 	attrs["attachment_id"] = attrs["attachment_id"].SetRequired()
 	attrs["download_id"] = attrs["download_id"].SetRequired()
-	attrs["download_id_signature"] = attrs["download_id_signature"].SetOptional()
+	attrs["download_id_signature"] = attrs["download_id_signature"].SetRequired()
 
 	return attrs
 }
@@ -2795,22 +2795,22 @@ func (to *GenieMessage_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Gen
 }
 
 func (m GenieMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attachments"] = attrs["attachments"].SetOptional()
+	attrs["attachments"] = attrs["attachments"].SetComputed()
 	attrs["content"] = attrs["content"].SetRequired()
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
-	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
-	attrs["error"] = attrs["error"].SetOptional()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["error"] = attrs["error"].SetComputed()
 	attrs["error"] = attrs["error"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["feedback"] = attrs["feedback"].SetOptional()
+	attrs["feedback"] = attrs["feedback"].SetComputed()
 	attrs["feedback"] = attrs["feedback"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["message_id"] = attrs["message_id"].SetRequired()
-	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["query_result"] = attrs["query_result"].SetComputed()
 	attrs["query_result"] = attrs["query_result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["space_id"] = attrs["space_id"].SetRequired()
-	attrs["status"] = attrs["status"].SetOptional()
-	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 
 	return attrs
 }
@@ -3045,13 +3045,13 @@ func (to *GenieQueryAttachment_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m GenieQueryAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetComputed()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["query"] = attrs["query"].SetOptional()
-	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetOptional()
+	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetComputed()
 	attrs["query_result_metadata"] = attrs["query_result_metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetComputed()
 	attrs["title"] = attrs["title"].SetOptional()
 
 	return attrs
@@ -3175,8 +3175,8 @@ func (to *GenieResultMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m GenieResultMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
-	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["is_truncated"] = attrs["is_truncated"].SetComputed()
+	attrs["row_count"] = attrs["row_count"].SetComputed()
 
 	return attrs
 }
@@ -3585,7 +3585,7 @@ func (to *GenieSuggestedQuestionsAttachment_SdkV2) SyncFieldsDuringRead(ctx cont
 }
 
 func (m GenieSuggestedQuestionsAttachment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["questions"] = attrs["questions"].SetOptional()
+	attrs["questions"] = attrs["questions"].SetComputed()
 
 	return attrs
 }
@@ -5284,6 +5284,10 @@ type Subscription_SdkV2 struct {
 	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"schedule_id"`
+	// Controls whether notifications are sent to the subscriber for scheduled
+	// dashboard refreshes. If not defined, defaults to false in the backend to
+	// match the current behavior (refresh and notify)
+	SkipNotify types.Bool `tfsdk:"skip_notify"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
 	Subscriber types.List `tfsdk:"subscriber"`
@@ -5322,6 +5326,7 @@ func (m Subscription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["skip_notify"] = attrs["skip_notify"].SetOptional()
 	attrs["subscriber"] = attrs["subscriber"].SetRequired()
 	attrs["subscriber"] = attrs["subscriber"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["subscription_id"] = attrs["subscription_id"].SetComputed()
@@ -5355,6 +5360,7 @@ func (m Subscription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"dashboard_id":       m.DashboardId,
 			"etag":               m.Etag,
 			"schedule_id":        m.ScheduleId,
+			"skip_notify":        m.SkipNotify,
 			"subscriber":         m.Subscriber,
 			"subscription_id":    m.SubscriptionId,
 			"update_time":        m.UpdateTime,
@@ -5370,6 +5376,7 @@ func (m Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
+			"skip_notify":        types.BoolType,
 			"subscriber": basetypes.ListType{
 				ElemType: Subscriber_SdkV2{}.Type(ctx),
 			},

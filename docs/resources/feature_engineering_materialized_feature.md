@@ -28,9 +28,11 @@ The following arguments are supported:
   The materialized feature will be stored in a table with this prefix and a generated postfix
 
 ### OnlineStoreConfig
-* `catalog_name` (string, required) - The Unity Catalog catalog name. This name is also used as the Lakebase logical database name
+* `catalog_name` (string, required) - The Unity Catalog catalog name. This name is also used as the Lakebase logical database name.
+  Quoting is handled by the backend where needed, do not pre-quote it
 * `online_store_name` (string, required) - The name of the target online store
-* `schema_name` (string, required) - The Unity Catalog schema name
+* `schema_name` (string, required) - The Unity Catalog schema name. This name is also used as the Lakebase schema name under the database.
+  Quoting is handled by the backend where needed, do not pre-quote it
 * `table_name_prefix` (string, required) - Prefix for Unity Catalog table name.
   The materialized feature will be stored in a Lakebase table with this prefix and a generated postfix
 

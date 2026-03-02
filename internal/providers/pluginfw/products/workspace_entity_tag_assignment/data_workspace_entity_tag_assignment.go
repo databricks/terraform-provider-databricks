@@ -98,7 +98,8 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // TagAssignmentData extends the main model with additional fields.
 type TagAssignmentData struct {
-	// The identifier of the entity to which the tag is assigned
+	// The identifier of the entity to which the tag is assigned. For apps, the
+	// entity_id is the app name
 	EntityId types.String `tfsdk:"entity_id"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
 	// dashboards, geniespaces

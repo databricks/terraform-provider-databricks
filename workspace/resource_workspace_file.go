@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -53,20 +54,23 @@ func ResourceWorkspaceFile() common.Resource {
 				return err
 			}
 			path := d.Get("path").(string)
-			err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
+			// Ensure parent folder exists before uploading.
+			parent := filepath.ToSlash(filepath.Dir(path))
+			_, err = client.Workspace.GetStatusByPath(ctx, parent)
 			if err != nil {
-				if isParentDoesntExistError(err) {
-					parent := filepath.ToSlash(filepath.Dir(path))
+				if apierr.IsMissing(err) {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
 					err = client.Workspace.MkdirsByPath(ctx, parent)
 					if err != nil {
 						return err
 					}
-					err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
-				}
-				if err != nil {
+				} else {
 					return err
 				}
+			}
+			err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
+			if err != nil {
+				return err
 			}
 			d.SetId(path)
 			return nil

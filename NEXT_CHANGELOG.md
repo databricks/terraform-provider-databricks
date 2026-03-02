@@ -12,6 +12,8 @@
 
 ### Documentation
 
+* Documented `principal_id` argument for `databricks_git_credential` resource, allowing management of Git credentials on behalf of service principals.
+
 ### Exporter
 
 ### Internal Changes

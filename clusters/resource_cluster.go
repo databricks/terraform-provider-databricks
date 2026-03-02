@@ -619,6 +619,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
+			// Preserve externally-set spark_env_vars (e.g. from cluster policies)
+			// when not configured by the user. The Edit API does a full replacement,
+			// so omitting spark_env_vars would clear them.
+			//
+			// cluster.SparkEnvVars = from Terraform state (HCL config)
+			// clusterInfo.SparkEnvVars = from GET API (actual cluster values)
+			//
+			// HCL has env vars | Cluster has env vars | Action
+			// false            | false                | nothing to preserve
+			// false            | true                 | carry over values set outside of Terraform
+			// true             | false                | values in Terraform takes precedence
+			// true             | true                 | values in Terraform takes precedence
+			if len(cluster.SparkEnvVars) == 0 && len(clusterInfo.SparkEnvVars) > 0 {
+				cluster.SparkEnvVars = clusterInfo.SparkEnvVars
+			}
 			SetForceSendFieldsForCluster(&cluster, d)
 
 			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {

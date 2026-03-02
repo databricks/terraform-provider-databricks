@@ -14,6 +14,7 @@
 ### Documentation
 
 * Remove non-existent field from the `databricks_vector_search_index` doc ([#5605](https://github.com/databricks/terraform-provider-databricks/pull/5605)).
+* Documented `principal_id` argument for `databricks_git_credential` resource, allowing management of Git credentials on behalf of service principals.
 
 ### Exporter
 

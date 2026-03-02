@@ -14,7 +14,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/docs"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -173,12 +172,6 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 			return fmt.Errorf("%s - %s", err, derr)
 		}
 		return err
-	}
-	if a.client.Config.HostType() == config.UnifiedHost {
-		// Workspace may not be immediately routable through unified host
-		// after reaching RUNNING state. Wait for propagation.
-		log.Printf("[INFO] Unified host: waiting for workspace %d to become routable", ws.WorkspaceID)
-		time.Sleep(60 * time.Second)
 	}
 	if ws.WorkspaceURL == "" {
 		// WorkspaceURL is computed, yet very important field

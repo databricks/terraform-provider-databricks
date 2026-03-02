@@ -60,7 +60,9 @@ func TestResourceGitCredentialDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockGitCredentialsAPI().EXPECT().
-				DeleteByCredentialId(mock.Anything, credID).
+				Delete(mock.Anything, workspace.DeleteCredentialsRequest{
+					CredentialId: credID,
+				}).
 				Return(nil)
 		},
 		Resource: ResourceGitCredential(),
@@ -167,7 +169,10 @@ func TestResourceGitCredentialCreateWithPrincipalId(t *testing.T) {
 				PrincipalId:         int64(principalID),
 			}).
 				Return(&resp, nil)
-			gmock.Get(mock.Anything, workspace.GetCredentialsRequest{CredentialId: resp.CredentialId}).
+			gmock.Get(mock.Anything, workspace.GetCredentialsRequest{
+				CredentialId: resp.CredentialId,
+				PrincipalId:  int64(principalID),
+			}).
 				Return(&workspace.GetCredentialsResponse{
 					CredentialId: resp.CredentialId,
 					GitProvider:  provider,
@@ -188,6 +193,32 @@ func TestResourceGitCredentialCreateWithPrincipalId(t *testing.T) {
 		"git_username": user,
 		"principal_id": principalID,
 	})
+}
+
+func TestResourceGitCredentialDeleteWithPrincipalId(t *testing.T) {
+	credID := int64(48155820875912)
+	credIDStr := fmt.Sprintf("%d", credID)
+	principalID := int64(123456789)
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGitCredentialsAPI().EXPECT().
+				Delete(mock.Anything, workspace.DeleteCredentialsRequest{
+					CredentialId: credID,
+					PrincipalId:  principalID,
+				}).
+				Return(nil)
+		},
+		Resource: ResourceGitCredential(),
+		Delete:   true,
+		ID:       credIDStr,
+		HCL: fmt.Sprintf(`
+		git_provider          = "gitHub"
+		git_username          = "test"
+		personal_access_token = "12345"
+		principal_id          = %d
+		`, principalID),
+	}.ApplyAndExpectData(t, map[string]any{"id": credIDStr})
 }
 
 func TestResourceGitCredentialCreate(t *testing.T) {

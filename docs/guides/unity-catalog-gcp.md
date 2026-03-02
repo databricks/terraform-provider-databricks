@@ -142,25 +142,14 @@ resource "databricks_storage_credential" "ext" {
   depends_on = [databricks_metastore_assignment.this]
 }
 
+data "databricks_gcp_unity_catalog_policy" "this" {
+  databricks_google_service_account = databricks_storage_credential.ext.databricks_gcp_service_account[0].email
+}
+
 resource "google_project_iam_custom_role" "uc_file_events" {
-  role_id = "ucFileEvents"
-  title   = "Unity Catalog file events role"
-  permissions = [
-    "pubsub.subscriptions.consume",
-    "pubsub.subscriptions.create",
-    "pubsub.subscriptions.delete",
-    "pubsub.subscriptions.get",
-    "pubsub.subscriptions.list",
-    "pubsub.subscriptions.update",
-    "pubsub.topics.attachSubscription",
-    "pubsub.topics.detachSubscription",
-    "pubsub.topics.create",
-    "pubsub.topics.delete",
-    "pubsub.topics.get",
-    "pubsub.topics.list",
-    "pubsub.topics.update",
-    "storage.buckets.update"
-  ]
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  permissions = data.databricks_gcp_unity_catalog_policy.this.permissions
 }
 
 data "google_storage_project_service_account" "gcs_account" {}

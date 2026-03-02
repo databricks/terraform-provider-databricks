@@ -14,6 +14,11 @@ resource "databricks_app" "this" {
   name        = "my-custom-app"
   description = "My app"
 
+  git_repository {
+    provider = "gitHub"
+    url      = "https://github.com/example/my-app"
+  }
+
   resources = [{
     name = "sql-warehouse"
     sql_warehouse = {
@@ -48,6 +53,12 @@ The following arguments are required:
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
 * `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
+* `git_repository` - (Optional) A Git repository to use as the source code for the app. When configured, app deployments can reference code from this repository by providing only a git reference (branch, tag, or commit).
+
+### git_repository Configuration Block
+
+* `provider` - (Required) case insensitive name of the Git provider. Following values are supported right now (could be a subject for a change, consult [Apps API documentation](https://docs.databricks.com/api/workspace/apps/create)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
+* `url` - (Required) The URL of the Git repository.
 
 ### resources Configuration Attribute
 

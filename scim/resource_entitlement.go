@@ -34,7 +34,7 @@ func ResourceEntitlements() common.Resource {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.Config.HostType() == config.AccountHost {
+			if c.Config.HostType() != config.WorkspaceHost {
 				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
 			}
 			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)

@@ -192,7 +192,7 @@ func ResourceServicePrincipal() common.Resource {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
 			var err error = nil
-			isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+			isAccount := c.Config.HostType() != config.WorkspaceHost && c.Config.AccountID != ""
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

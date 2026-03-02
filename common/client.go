@@ -111,7 +111,7 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() == config.AccountHost {
+	if c.Config.HostType() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
@@ -267,21 +267,50 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return client, nil
 	}
-	a, err := c.accountClient()
-	if err != nil {
-		return nil, err
-	}
-	workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: workspaceId})
-	if err != nil {
-		return nil, err
-	}
-	w, err := a.GetWorkspaceClient(*workspace)
-	if err != nil {
-		return nil, err
+	var w *databricks.WorkspaceClient
+	if c.Config.HostType() == config.UnifiedHost {
+		// For unified host, create a workspace client that stays on the
+		// unified host URL with the workspace_id set. The SDK routes API
+		// requests to the correct workspace via the X-Databricks-Org-Id
+		// header. Using a.GetWorkspaceClient() would switch the host to
+		// the workspace's deployment URL which may not support the same
+		// auth mechanism (e.g. OAuth M2M).
+		var err error
+		w, err = c.workspaceClientForUnifiedHost(workspaceId)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		a, err := c.accountClient()
+		if err != nil {
+			return nil, err
+		}
+		workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: workspaceId})
+		if err != nil {
+			return nil, err
+		}
+		w, err = a.GetWorkspaceClient(*workspace)
+		if err != nil {
+			return nil, err
+		}
 	}
 	w.CurrentUser = newCachedMe(w.CurrentUser)
-	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
+	c.cachedWorkspaceClients[workspaceId] = w
 	return w, nil
+}
+
+// workspaceClientForUnifiedHost creates a workspace client that keeps the
+// unified host URL and sets the workspace_id. This preserves the auth
+// configuration (e.g. OAuth M2M) that works with the unified host, instead
+// of switching to the workspace's deployment URL.
+func (c *DatabricksClient) workspaceClientForUnifiedHost(workspaceId int64) (*databricks.WorkspaceClient, error) {
+	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
+	if err != nil {
+		return nil, err
+	}
+	cfg.AccountID = c.Config.AccountID
+	cfg.WorkspaceID = fmt.Sprintf("%d", workspaceId)
+	return databricks.NewWorkspaceClient((*databricks.Config)(cfg))
 }
 
 // SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.
@@ -373,7 +402,7 @@ func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.Resource
 }
 
 func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	if c.Config.HostType() == config.AccountHost {
+	if c.Config.HostType() != config.WorkspaceHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return err
@@ -446,7 +475,7 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config.HostType() == config.AccountHost && c.Config.AccountID != "" {
+	if c.Config.HostType() != config.WorkspaceHost && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
 		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",

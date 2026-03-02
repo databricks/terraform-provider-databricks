@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
@@ -112,15 +111,21 @@ func ResourceDashboard() common.Resource {
 				DatasetSchema:  d.Get("dataset_schema").(string),
 			}
 
-			createdDashboard, err := w.Lakeview.Create(ctx, createDashboardRequest)
-			if err != nil && isParentDoesntExistError(err) {
-				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
-				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
-				if err != nil {
+			// Ensure parent folder exists before creating the dashboard.
+			_, err = w.Workspace.GetStatusByPath(ctx, dashboard.ParentPath)
+			if err != nil {
+				if apierr.IsMissing(err) {
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
+					err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
+					if err != nil {
+						return err
+					}
+				} else {
 					return err
 				}
-				createdDashboard, err = w.Lakeview.Create(ctx, createDashboardRequest)
 			}
+
+			createdDashboard, err := w.Lakeview.Create(ctx, createDashboardRequest)
 			if err != nil {
 				return err
 			}
@@ -249,9 +254,4 @@ func ResourceDashboard() common.Resource {
 			return err
 		},
 	}
-}
-
-func isParentDoesntExistError(err error) bool {
-	errStr := err.Error()
-	return strings.HasPrefix(errStr, "Path (") && strings.HasSuffix(errStr, ") doesn't exist.")
 }

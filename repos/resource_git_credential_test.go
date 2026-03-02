@@ -146,6 +146,50 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 	}.ExpectError(t, "Git credential with the given ID could not be found.")
 }
 
+func TestResourceGitCredentialCreateWithPrincipalId(t *testing.T) {
+	provider := "gitHub"
+	user := "test"
+	token := "12345"
+	principalID := 123456789
+	resp := workspace.CreateCredentialsResponse{
+		CredentialId: 121232342,
+		GitProvider:  provider,
+		GitUsername:  user,
+	}
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			gmock := w.GetMockGitCredentialsAPI().EXPECT()
+			gmock.Create(mock.Anything, workspace.CreateCredentialsRequest{
+				GitProvider:         provider,
+				GitUsername:         user,
+				PersonalAccessToken: token,
+				PrincipalId:         int64(principalID),
+			}).
+				Return(&resp, nil)
+			gmock.Get(mock.Anything, workspace.GetCredentialsRequest{CredentialId: resp.CredentialId}).
+				Return(&workspace.GetCredentialsResponse{
+					CredentialId: resp.CredentialId,
+					GitProvider:  provider,
+					GitUsername:  user,
+				}, nil)
+		},
+		Resource: ResourceGitCredential(),
+		State: map[string]any{
+			"git_provider":          provider,
+			"git_username":          user,
+			"personal_access_token": token,
+			"principal_id":          principalID,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           fmt.Sprintf("%d", resp.CredentialId),
+		"git_provider": provider,
+		"git_username": user,
+		"principal_id": principalID,
+	})
+}
+
 func TestResourceGitCredentialCreate(t *testing.T) {
 	provider := "gitHub"
 	user := "test"

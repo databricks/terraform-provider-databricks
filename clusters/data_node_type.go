@@ -39,9 +39,14 @@ func IsAzure(nodeTypes *compute.ListNodeTypesResponse) bool {
 	return false
 }
 
-// IsGcp detects GCP as a fallback when the node types match neither AWS nor Azure patterns.
+// IsGcp detects GCP by checking if any node_type_id contains "-standard-" (e.g. "n1-standard-4").
 func IsGcp(nodeTypes *compute.ListNodeTypesResponse) bool {
-	return !IsAws(nodeTypes) && !IsAzure(nodeTypes)
+	for _, nt := range nodeTypes.NodeTypes {
+		if strings.Contains(nt.NodeTypeId, "-standard-") {
+			return true
+		}
+	}
+	return false
 }
 
 func defaultSmallestNodeType(nodeTypes *compute.ListNodeTypesResponse, request NodeTypeRequest) string {

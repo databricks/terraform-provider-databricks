@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fixed `databricks_app` producing "inconsistent result after apply" error when `description` is omitted.
+
 ### Documentation
 
 * Added documentation note about whitespace handling in `MAP` column types for `databricks_sql_table`.

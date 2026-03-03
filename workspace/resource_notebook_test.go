@@ -139,14 +139,6 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
-				Response: ObjectStatus{
-					ObjectType: Directory,
-					Path:       "/foo",
-				},
-			},
-			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
@@ -179,6 +171,22 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: apierr.APIError{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
@@ -228,6 +236,22 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: apierr.APIError{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
 				Response: apierr.APIError{
@@ -263,14 +287,6 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2F",
-				Response: ObjectStatus{
-					ObjectType: Directory,
-					Path:       "/",
-				},
-			},
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
@@ -331,14 +347,6 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 func TestResourceNotebookCreateSource(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2F",
-				Response: ObjectStatus{
-					ObjectType: Directory,
-					Path:       "/",
-				},
-			},
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",

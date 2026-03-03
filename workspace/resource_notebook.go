@@ -313,27 +313,25 @@ func ResourceNotebook() common.Resource {
 				d.Set("format", createNotebook.Format)
 				d.Set("language", createNotebook.Language)
 			}
-			// Ensure parent folder exists before importing.
-			parent := filepath.ToSlash(filepath.Dir(path))
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
-			if err != nil {
-				return err
-			}
-			_, err = w.Workspace.GetStatusByPath(ctx, parent)
-			if err != nil {
-				if apierr.IsMissing(err) {
-					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
-					err = notebooksAPI.Mkdirs(parent)
-					if err != nil {
-						return err
-					}
-				} else {
-					return err
-				}
-			}
 			resp, err := notebooksAPI.Create(createNotebook)
 			if err != nil {
-				return err
+				// If import failed, check if the parent folder is missing and create it.
+				parent := filepath.ToSlash(filepath.Dir(path))
+				w, err2 := c.WorkspaceClientUnifiedProvider(ctx, d)
+				if err2 != nil {
+					return err
+				}
+				_, err2 = w.Workspace.GetStatusByPath(ctx, parent)
+				if err2 != nil && apierr.IsMissing(err2) {
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					if err2 = notebooksAPI.Mkdirs(parent); err2 != nil {
+						return err2
+					}
+					resp, err = notebooksAPI.Create(createNotebook)
+				}
+				if err != nil {
+					return err
+				}
 			}
 			if d.Get("object_type").(string) == "" {
 				d.Set("object_type", Notebook)

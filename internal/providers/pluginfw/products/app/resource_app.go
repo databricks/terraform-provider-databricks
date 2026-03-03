@@ -40,6 +40,7 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
+	s["description"] = s["description"].SetComputed()
 	return s
 }
 
@@ -83,6 +84,7 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 		for _, field := range []string{
 			"create_time",
 			"creator",
+			"description",
 			"service_principal_client_id",
 			"service_principal_name",
 			"url",

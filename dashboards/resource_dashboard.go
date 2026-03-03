@@ -111,23 +111,20 @@ func ResourceDashboard() common.Resource {
 				DatasetSchema:  d.Get("dataset_schema").(string),
 			}
 
-			// Ensure parent folder exists before creating the dashboard.
-			_, err = w.Workspace.GetStatusByPath(ctx, dashboard.ParentPath)
-			if err != nil {
-				if apierr.IsMissing(err) {
-					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
-					err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
-					if err != nil {
-						return err
-					}
-				} else {
-					return err
-				}
-			}
-
 			createdDashboard, err := w.Lakeview.Create(ctx, createDashboardRequest)
 			if err != nil {
-				return err
+				// If creation failed, check if the parent folder is missing and create it.
+				_, errStatus := w.Workspace.GetStatusByPath(ctx, dashboard.ParentPath)
+				if errStatus != nil && apierr.IsMissing(errStatus) {
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
+					if errStatus = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath); errStatus != nil {
+						return errStatus
+					}
+					createdDashboard, err = w.Lakeview.Create(ctx, createDashboardRequest)
+				}
+				if err != nil {
+					return err
+				}
 			}
 
 			d.Set("etag", createdDashboard.Etag)

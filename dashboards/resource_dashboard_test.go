@@ -8,7 +8,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
-	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +17,6 @@ import (
 func TestDashboardCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/path").Return(&workspace.ObjectInfo{}, nil)
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
 				Dashboard: dashboards.Dashboard{
@@ -81,7 +79,6 @@ func TestDashboardCreateWithFilePath(t *testing.T) {
 
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/path").Return(&workspace.ObjectInfo{}, nil)
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
 				Dashboard: dashboards.Dashboard{
@@ -136,17 +133,20 @@ func TestDashboardCreate_NoParent(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			ws := w.GetMockWorkspaceAPI().EXPECT()
-			ws.GetStatusByPath(mock.Anything, "/path").Return(nil, apierr.ErrNotFound)
-			ws.MkdirsByPath(mock.Anything, "/path").Return(nil)
 			lv := w.GetMockLakeviewAPI().EXPECT()
-			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
+			createReq := dashboards.CreateDashboardRequest{
 				Dashboard: dashboards.Dashboard{
 					DisplayName:         "Dashboard name",
 					WarehouseId:         "abc",
 					ParentPath:          "/path",
 					SerializedDashboard: "serialized_json",
 				},
-			}).Return(&dashboards.Dashboard{
+			}
+			lv.Create(mock.Anything, createReq).Return(nil,
+				fmt.Errorf("RESOURCE_DOES_NOT_EXIST: Parent folder /path does not exist")).Once()
+			ws.GetStatusByPath(mock.Anything, "/path").Return(nil, apierr.ErrNotFound)
+			ws.MkdirsByPath(mock.Anything, "/path").Return(nil)
+			lv.Create(mock.Anything, createReq).Return(&dashboards.Dashboard{
 				DashboardId:         "xyz",
 				DisplayName:         "Dashboard name",
 				SerializedDashboard: "serialized_json_2",

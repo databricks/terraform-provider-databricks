@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -312,20 +313,27 @@ func ResourceNotebook() common.Resource {
 				d.Set("format", createNotebook.Format)
 				d.Set("language", createNotebook.Language)
 			}
-			resp, err := notebooksAPI.Create(createNotebook)
+			// Ensure parent folder exists before importing.
+			parent := filepath.ToSlash(filepath.Dir(path))
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
-				if isParentDoesntExistError(err) {
-					parent := filepath.ToSlash(filepath.Dir(path))
+				return err
+			}
+			_, err = w.Workspace.GetStatusByPath(ctx, parent)
+			if err != nil {
+				if apierr.IsMissing(err) {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
 					err = notebooksAPI.Mkdirs(parent)
 					if err != nil {
 						return err
 					}
-					resp, err = notebooksAPI.Create(createNotebook)
-				}
-				if err != nil {
+				} else {
 					return err
 				}
+			}
+			resp, err := notebooksAPI.Create(createNotebook)
+			if err != nil {
+				return err
 			}
 			if d.Get("object_type").(string) == "" {
 				d.Set("object_type", Notebook)
@@ -351,7 +359,7 @@ func ResourceNotebook() common.Resource {
 					oldFormat = "SOURCE"
 				}
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

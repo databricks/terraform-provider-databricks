@@ -27,14 +27,14 @@ func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
 	workspaceTemplate := `
 	resource "databricks_mws_workspaces" "ws1" {
 		account_id     = "{env.DATABRICKS_ACCOUNT_ID}"
-		workspace_name = "tf-unified-{var.RANDOM}-1"
+		workspace_name = "tf-unified-{var.STICKY_RANDOM}-1"
 		aws_region     = "{env.AWS_REGION}"
 		compute_mode   = "SERVERLESS"
 	}
 
 	resource "databricks_mws_workspaces" "ws2" {
 		account_id     = "{env.DATABRICKS_ACCOUNT_ID}"
-		workspace_name = "tf-unified-{var.RANDOM}-2"
+		workspace_name = "tf-unified-{var.STICKY_RANDOM}-2"
 		aws_region     = "{env.AWS_REGION}"
 		compute_mode   = "SERVERLESS"
 	}

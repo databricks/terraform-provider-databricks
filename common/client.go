@@ -270,11 +270,7 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	var w *databricks.WorkspaceClient
 	if c.Config.HostType() == config.UnifiedHost {
 		// For unified host, create a workspace client that stays on the
-		// unified host URL with the workspace_id set. The SDK routes API
-		// requests to the correct workspace via the X-Databricks-Org-Id
-		// header. Using a.GetWorkspaceClient() would switch the host to
-		// the workspace's deployment URL which may not support the same
-		// auth mechanism (e.g. OAuth M2M).
+		// unified host URL with the workspace_id set.
 		var err error
 		w, err = c.workspaceClientForUnifiedHost(workspaceId)
 		if err != nil {

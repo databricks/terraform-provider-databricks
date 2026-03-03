@@ -317,15 +317,15 @@ func ResourceNotebook() common.Resource {
 			if err != nil {
 				// If import failed, check if the parent folder is missing and create it.
 				parent := filepath.ToSlash(filepath.Dir(path))
-				w, err2 := c.WorkspaceClientUnifiedProvider(ctx, d)
-				if err2 != nil {
+				w, errStatus := c.WorkspaceClientUnifiedProvider(ctx, d)
+				if errStatus != nil {
 					return err
 				}
-				_, err2 = w.Workspace.GetStatusByPath(ctx, parent)
-				if err2 != nil && apierr.IsMissing(err2) {
+				_, errStatus = w.Workspace.GetStatusByPath(ctx, parent)
+				if errStatus != nil && apierr.IsMissing(errStatus) {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
-					if err2 = notebooksAPI.Mkdirs(parent); err2 != nil {
-						return err2
+					if errStatus = notebooksAPI.Mkdirs(parent); errStatus != nil {
+						return errStatus
 					}
 					resp, err = notebooksAPI.Create(createNotebook)
 				}

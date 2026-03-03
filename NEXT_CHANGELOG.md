@@ -17,3 +17,4 @@
 ### Internal Changes
 
 * Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.
+* Made `databricks_service_principal` update host-agnostic by removing `IsAzure()` check for `application_id` inclusion.

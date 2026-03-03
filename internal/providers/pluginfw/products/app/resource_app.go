@@ -84,7 +84,6 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 		for _, field := range []string{
 			"create_time",
 			"creator",
-			"description",
 			"service_principal_client_id",
 			"service_principal_name",
 			"url",

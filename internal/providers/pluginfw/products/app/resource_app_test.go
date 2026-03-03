@@ -24,5 +24,4 @@ func TestAppResourceSchema_DescriptionIsOptionalAndComputed(t *testing.T) {
 
 	assert.True(t, strAttr.Optional, "description must be Optional")
 	assert.True(t, strAttr.Computed, "description must be Computed")
-	assert.NotEmpty(t, strAttr.PlanModifiers, "description must have plan modifiers (UseStateForUnknown)")
 }

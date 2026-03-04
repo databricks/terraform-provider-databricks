@@ -330,6 +330,67 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+// TestResourceServicePrincipalUpdateWithApplicationId verifies that updates always include
+// application_id regardless of cloud provider (host-agnostic).
+func TestResourceServicePrincipalUpdateWithApplicationId(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=groups,roles",
+				Response: User{
+					ApplicationID: "existing-application-id",
+					DisplayName:   "Example Service Principal",
+					Active:        true,
+					ID:            "abc",
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: User{
+					ApplicationID: "existing-application-id",
+					Schemas:       []URN{ServicePrincipalSchema},
+					DisplayName:   "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Response: User{
+					Schemas:       []URN{ServicePrincipalSchema},
+					ApplicationID: "existing-application-id",
+					DisplayName:   "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
+				},
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"application_id": "existing-application-id",
+			"display_name":   "Example Service Principal",
+		},
+		HCL: `
+		application_id = "existing-application-id"
+		display_name = "Example Service Principal"
+		allow_cluster_create = true
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: qa.HTTPFailures,

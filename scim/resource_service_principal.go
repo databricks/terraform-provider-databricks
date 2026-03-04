@@ -176,12 +176,16 @@ func ResourceServicePrincipal() common.Resource {
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var applicationId string
+			if c.Config.AzureResourceID != "" {
+				applicationId = d.Get("application_id").(string)
+			}
 			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
 				DisplayName:   d.Get("display_name").(string),
 				Active:        d.Get("active").(bool),
 				Entitlements:  readEntitlementsFromData(d),
 				ExternalID:    d.Get("external_id").(string),
-				ApplicationID: d.Get("application_id").(string),
+				ApplicationID: applicationId,
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

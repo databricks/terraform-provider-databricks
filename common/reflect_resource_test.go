@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -750,6 +751,183 @@ func TestReadListFromData(t *testing.T) {
 	x := reflect.ValueOf(0)
 	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
+}
+
+func TestIsStructEmpty(t *testing.T) {
+	// Test with empty struct
+	type EmptyStruct struct{}
+	emptyStruct := reflect.ValueOf(EmptyStruct{})
+	assert.True(t, isStructEmpty(emptyStruct))
+
+	// Test with struct containing zero values
+	type ZeroStruct struct {
+		StringField string
+		IntField    int
+		BoolField   bool
+	}
+	zeroStruct := reflect.ValueOf(ZeroStruct{})
+	assert.True(t, isStructEmpty(zeroStruct))
+
+	// Test with struct containing non-zero values
+	type NonZeroStruct struct {
+		StringField string
+		IntField    int
+		BoolField   bool
+	}
+	nonZeroStruct := reflect.ValueOf(NonZeroStruct{
+		StringField: "test",
+		IntField:    42,
+		BoolField:   true,
+	})
+	assert.False(t, isStructEmpty(nonZeroStruct))
+
+	// Test with struct containing some zero and some non-zero values
+	type MixedStruct struct {
+		StringField string
+		IntField    int
+		BoolField   bool
+	}
+	mixedStruct := reflect.ValueOf(MixedStruct{
+		StringField: "test",
+		IntField:    0,     // zero value
+		BoolField:   false, // zero value
+	})
+	assert.False(t, isStructEmpty(mixedStruct))
+
+	// Test with non-struct value
+	nonStruct := reflect.ValueOf("string")
+	assert.False(t, isStructEmpty(nonStruct))
+}
+
+func TestReadListFromDataWithEmptyStructs(t *testing.T) {
+	// Define a test struct similar to EndpointTagPair
+	type TestTag struct {
+		Key   string `json:"key,omitempty"`
+		Value string `json:"value,omitempty"`
+	}
+
+	// Create schema for the test
+	schema := &schema.Schema{
+		Type: schema.TypeSet,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	// Test case 1: Empty list should result in empty slice
+	t.Run("EmptyList", func(t *testing.T) {
+		var result []TestTag
+		valueField := reflect.ValueOf(&result).Elem()
+
+		err := readListFromData([]string{"tags"}, &mockAttributeGetter{}, []any{}, &valueField, schema, map[string]map[string]string{}, strconv.Itoa)
+		assert.NoError(t, err)
+		assert.Len(t, result, 0)
+	})
+
+	// Test case 2: List with empty structs should be filtered out
+	t.Run("EmptyStructsFiltered", func(t *testing.T) {
+		var result []TestTag
+		valueField := reflect.ValueOf(&result).Elem()
+
+		// Create mock data with empty structs
+		rawList := []any{
+			map[string]any{"key": "", "value": ""}, // empty struct
+			map[string]any{"key": "", "value": ""}, // another empty struct
+		}
+
+		mockGetter := &mockAttributeGetter{
+			data: map[string]any{
+				"tags.0.key":   "",
+				"tags.0.value": "",
+				"tags.1.key":   "",
+				"tags.1.value": "",
+			},
+		}
+
+		err := readListFromData([]string{"tags"}, mockGetter, rawList, &valueField, schema, map[string]map[string]string{}, strconv.Itoa)
+		assert.NoError(t, err)
+		assert.Len(t, result, 0) // Should be empty because all structs are empty
+	})
+
+	// Test case 3: List with mixed empty and non-empty structs
+	t.Run("MixedStructs", func(t *testing.T) {
+		var result []TestTag
+		valueField := reflect.ValueOf(&result).Elem()
+
+		// Create mock data with one empty and one non-empty struct
+		rawList := []any{
+			map[string]any{"key": "", "value": ""},          // empty struct
+			map[string]any{"key": "test", "value": "value"}, // non-empty struct
+		}
+
+		mockGetter := &mockAttributeGetter{
+			data: map[string]any{
+				"tags.0.key":   "",
+				"tags.0.value": "",
+				"tags.1.key":   "test",
+				"tags.1.value": "value",
+			},
+		}
+
+		err := readListFromData([]string{"tags"}, mockGetter, rawList, &valueField, schema, map[string]map[string]string{}, strconv.Itoa)
+		assert.NoError(t, err)
+		assert.Len(t, result, 1) // Should contain only the non-empty struct
+		assert.Equal(t, "test", result[0].Key)
+		assert.Equal(t, "value", result[0].Value)
+	})
+
+	// Test case 4: List with only non-empty structs
+	t.Run("NonEmptyStructs", func(t *testing.T) {
+		var result []TestTag
+		valueField := reflect.ValueOf(&result).Elem()
+
+		// Create mock data with non-empty structs
+		rawList := []any{
+			map[string]any{"key": "key1", "value": "value1"},
+			map[string]any{"key": "key2", "value": "value2"},
+		}
+
+		mockGetter := &mockAttributeGetter{
+			data: map[string]any{
+				"tags.0.key":   "key1",
+				"tags.0.value": "value1",
+				"tags.1.key":   "key2",
+				"tags.1.value": "value2",
+			},
+		}
+
+		err := readListFromData([]string{"tags"}, mockGetter, rawList, &valueField, schema, map[string]map[string]string{}, strconv.Itoa)
+		assert.NoError(t, err)
+		assert.Len(t, result, 2) // Should contain both structs
+		assert.Equal(t, "key1", result[0].Key)
+		assert.Equal(t, "value1", result[0].Value)
+		assert.Equal(t, "key2", result[1].Key)
+		assert.Equal(t, "value2", result[1].Value)
+	})
+}
+
+// mockAttributeGetter implements the attributeGetter interface for testing
+type mockAttributeGetter struct {
+	data map[string]any
+}
+
+func (m *mockAttributeGetter) GetOk(key string) (any, bool) {
+	value, ok := m.data[key]
+	return value, ok
+}
+
+func (m *mockAttributeGetter) GetOkExists(key string) (any, bool) {
+	value, ok := m.data[key]
+	return value, ok
 }
 
 func TestReadReflectValueFromDataCornerCases(t *testing.T) {

@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -11,19 +10,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func initUnifiedHostEnv(t *testing.T) {
-	LoadAccountEnv(t)
-	unifiedHost := os.Getenv("UNIFIED_HOST")
-	if unifiedHost == "" {
-		Skipf(t)("UNIFIED_HOST environment variable is missing")
-	}
-	os.Setenv("DATABRICKS_HOST", unifiedHost)
-	os.Setenv("DATABRICKS_EXPERIMENTAL_IS_UNIFIED_HOST", "true")
-}
-
-func unifiedHostCreateJobTest(t *testing.T) {
+func accountHostCreateJobTest(t *testing.T) {
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
-	jobName := "tf-unified-" + RandomName() + "-job-1"
+	jobName := "tf-account-" + RandomName() + "-job-1"
 
 	run(t, []Step{
 		{
@@ -65,26 +54,26 @@ func unifiedHostCreateJobTest(t *testing.T) {
 	})
 }
 
-func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
-	initUnifiedHostEnv(t)
+func TestAccAccountHostCreateJobsAWS(t *testing.T) {
+	LoadAccountEnv(t)
 	if !IsAws(t) {
 		Skipf(t)("This test is only running on AWS")
 	}
-	unifiedHostCreateJobTest(t)
+	accountHostCreateJobTest(t)
 }
 
-func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
-	initUnifiedHostEnv(t)
+func TestAccAccountHostCreateJobsGCP(t *testing.T) {
+	LoadAccountEnv(t)
 	if !IsGcp(t) {
 		Skipf(t)("This test is only running on GCP")
 	}
-	unifiedHostCreateJobTest(t)
+	accountHostCreateJobTest(t)
 }
 
-func TestAccUnifiedHostCreateJobsAzure(t *testing.T) {
-	initUnifiedHostEnv(t)
+func TestAccAccountHostCreateJobsAzure(t *testing.T) {
+	LoadAccountEnv(t)
 	if !IsAzure(t) {
 		Skipf(t)("This test is only running on Azure")
 	}
-	unifiedHostCreateJobTest(t)
+	accountHostCreateJobTest(t)
 }

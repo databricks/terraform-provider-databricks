@@ -17,3 +17,4 @@
 ### Internal Changes
 
 * Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.
+* Use workspace `GetStatus` API to check parent folder existence before uploading workspace files, replacing fragile error string matching.

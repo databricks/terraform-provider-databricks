@@ -330,9 +330,9 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// TestResourceServicePrincipalUpdateWithoutAzureResourceID verifies that updates do NOT include
-// application_id when AzureResourceID is not configured (non-Azure or host-agnostic).
-func TestResourceServicePrincipalUpdateWithoutAzureResourceID(t *testing.T) {
+// TestResourceServicePrincipalUpdateWithApplicationId verifies that updates always include
+// application_id regardless of cloud provider (host-agnostic).
+func TestResourceServicePrincipalUpdateWithApplicationId(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -349,8 +349,9 @@ func TestResourceServicePrincipalUpdateWithoutAzureResourceID(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				ExpectedRequest: User{
-					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Example Service Principal",
+					ApplicationID: "existing-application-id",
+					Schemas:       []URN{ServicePrincipalSchema},
+					DisplayName:   "Example Service Principal",
 					Entitlements: entitlements{
 						{
 							Value: "allow-cluster-create",

@@ -19,4 +19,4 @@
 * Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.
 * Use workspace `GetStatus` API to check parent folder existence before creating Lakeview dashboards, replacing fragile error string matching.
 * Use workspace `GetStatus` API to check parent folder existence before uploading workspace files, replacing fragile error string matching.
-* Made `databricks_service_principal` update host-agnostic by removing `IsAzure()` check for `application_id` inclusion.
+* Remove cloud-specific `IsAzure()` gate from `databricks_service_principal` update — `application_id` is now always included when set, making updates host-agnostic.

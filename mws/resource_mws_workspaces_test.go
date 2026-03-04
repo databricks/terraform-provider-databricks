@@ -1504,6 +1504,8 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 }
 
 func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
+	t.Setenv("PATH", "testdata:/bin")
+	t.Setenv("HOME", t.TempDir())
 	client, err := client.New(&config.Config{})
 	if err != nil {
 		t.Fatal(err)

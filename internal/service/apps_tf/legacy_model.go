@@ -2306,6 +2306,8 @@ type AppResource_SdkV2 struct {
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name"`
 
+	Postgres types.List `tfsdk:"postgres"`
+
 	Secret types.List `tfsdk:"secret"`
 
 	ServingEndpoint types.List `tfsdk:"serving_endpoint"`
@@ -2358,6 +2360,15 @@ func (to *AppResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of Job
 				toJob.SyncFieldsDuringCreateOrUpdate(ctx, fromJob)
 				to.SetJob(ctx, toJob)
+			}
+		}
+	}
+	if !from.Postgres.IsNull() && !from.Postgres.IsUnknown() {
+		if toPostgres, ok := to.GetPostgres(ctx); ok {
+			if fromPostgres, ok := from.GetPostgres(ctx); ok {
+				// Recursively sync the fields of Postgres
+				toPostgres.SyncFieldsDuringCreateOrUpdate(ctx, fromPostgres)
+				to.SetPostgres(ctx, toPostgres)
 			}
 		}
 	}
@@ -2440,6 +2451,14 @@ func (to *AppResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppR
 			}
 		}
 	}
+	if !from.Postgres.IsNull() && !from.Postgres.IsUnknown() {
+		if toPostgres, ok := to.GetPostgres(ctx); ok {
+			if fromPostgres, ok := from.GetPostgres(ctx); ok {
+				toPostgres.SyncFieldsDuringRead(ctx, fromPostgres)
+				to.SetPostgres(ctx, toPostgres)
+			}
+		}
+	}
 	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
 		if toSecret, ok := to.GetSecret(ctx); ok {
 			if fromSecret, ok := from.GetSecret(ctx); ok {
@@ -2487,6 +2506,8 @@ func (m AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["job"] = attrs["job"].SetOptional()
 	attrs["job"] = attrs["job"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["postgres"] = attrs["postgres"].SetOptional()
+	attrs["postgres"] = attrs["postgres"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["secret"] = attrs["secret"].SetOptional()
 	attrs["secret"] = attrs["secret"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["serving_endpoint"] = attrs["serving_endpoint"].SetOptional()
@@ -2513,6 +2534,7 @@ func (m AppResource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 		"experiment":       reflect.TypeOf(AppResourceExperiment_SdkV2{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace_SdkV2{}),
 		"job":              reflect.TypeOf(AppResourceJob_SdkV2{}),
+		"postgres":         reflect.TypeOf(AppResourcePostgres_SdkV2{}),
 		"secret":           reflect.TypeOf(AppResourceSecret_SdkV2{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint_SdkV2{}),
 		"sql_warehouse":    reflect.TypeOf(AppResourceSqlWarehouse_SdkV2{}),
@@ -2534,6 +2556,7 @@ func (m AppResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"genie_space":      m.GenieSpace,
 			"job":              m.Job,
 			"name":             m.Name,
+			"postgres":         m.Postgres,
 			"secret":           m.Secret,
 			"serving_endpoint": m.ServingEndpoint,
 			"sql_warehouse":    m.SqlWarehouse,
@@ -2562,6 +2585,9 @@ func (m AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: AppResourceJob_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
+			"postgres": basetypes.ListType{
+				ElemType: AppResourcePostgres_SdkV2{}.Type(ctx),
+			},
 			"secret": basetypes.ListType{
 				ElemType: AppResourceSecret_SdkV2{}.Type(ctx),
 			},
@@ -2706,6 +2732,32 @@ func (m *AppResource_SdkV2) SetJob(ctx context.Context, v AppResourceJob_SdkV2) 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["job"]
 	m.Job = types.ListValueMust(t, vs)
+}
+
+// GetPostgres returns the value of the Postgres field in AppResource_SdkV2 as
+// a AppResourcePostgres_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource_SdkV2) GetPostgres(ctx context.Context) (AppResourcePostgres_SdkV2, bool) {
+	var e AppResourcePostgres_SdkV2
+	if m.Postgres.IsNull() || m.Postgres.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourcePostgres_SdkV2
+	d := m.Postgres.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPostgres sets the value of the Postgres field in AppResource_SdkV2.
+func (m *AppResource_SdkV2) SetPostgres(ctx context.Context, v AppResourcePostgres_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["postgres"]
+	m.Postgres = types.ListValueMust(t, vs)
 }
 
 // GetSecret returns the value of the Secret field in AppResource_SdkV2 as
@@ -3068,6 +3120,63 @@ func (m AppResourceJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id":         types.StringType,
+			"permission": types.StringType,
+		},
+	}
+}
+
+type AppResourcePostgres_SdkV2 struct {
+	Branch types.String `tfsdk:"branch"`
+
+	Database types.String `tfsdk:"database"`
+
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (to *AppResourcePostgres_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourcePostgres_SdkV2) {
+}
+
+func (to *AppResourcePostgres_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppResourcePostgres_SdkV2) {
+}
+
+func (m AppResourcePostgres_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["database"] = attrs["database"].SetOptional()
+	attrs["permission"] = attrs["permission"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourcePostgres.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourcePostgres_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourcePostgres_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppResourcePostgres_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":     m.Branch,
+			"database":   m.Database,
+			"permission": m.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourcePostgres_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch":     types.StringType,
+			"database":   types.StringType,
 			"permission": types.StringType,
 		},
 	}
@@ -6080,10 +6189,6 @@ type Space_SdkV2 struct {
 	// alphanumeric characters and hyphens. It must be unique within the
 	// workspace.
 	Name types.String `tfsdk:"name"`
-	// The OAuth2 app client ID for the app space.
-	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
-	// The OAuth2 app integration ID for the app space.
-	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
@@ -6172,8 +6277,6 @@ func (m Space_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
-	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
@@ -6218,8 +6321,6 @@ func (m Space_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
 			"id":                          m.Id,
 			"name":                        m.Name,
-			"oauth2_app_client_id":        m.Oauth2AppClientId,
-			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
 			"resources":                   m.Resources,
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
@@ -6243,10 +6344,8 @@ func (m Space_SdkV2) Type(ctx context.Context) attr.Type {
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"id":                        types.StringType,
-			"name":                      types.StringType,
-			"oauth2_app_client_id":      types.StringType,
-			"oauth2_app_integration_id": types.StringType,
+			"id":   types.StringType,
+			"name": types.StringType,
 			"resources": basetypes.ListType{
 				ElemType: AppResource_SdkV2{}.Type(ctx),
 			},

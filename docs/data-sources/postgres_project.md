@@ -86,6 +86,7 @@ The following attributes are exported:
   To preserve existing tags, omit this field from the update_mask (or use wildcard "*" which auto-excludes empty tags)
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings)
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
+* `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
 * `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 0s and 2592000s (up to 30 days)
 * `pg_version` (integer) - The major Postgres version number. Supported versions are 16 and 17
 
@@ -95,6 +96,7 @@ The following attributes are exported:
 * `custom_tags` (list of ProjectCustomTag) - The effective custom tags associated with the project
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings
 * `display_name` (string) - The effective human-readable project name
+* `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number

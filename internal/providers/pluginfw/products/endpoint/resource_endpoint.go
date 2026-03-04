@@ -59,7 +59,8 @@ type Endpoint struct {
 	// The resource name of the endpoint, which uniquely identifies the
 	// endpoint.
 	Name types.String `tfsdk:"name"`
-
+	// The parent resource name of the account under which the endpoint is
+	// created. Format: `accounts/{account_id}`.
 	Parent types.String `tfsdk:"parent"`
 	// The cloud provider region where this endpoint is located.
 	Region types.String `tfsdk:"region"`

@@ -14,6 +14,17 @@ resource "databricks_registered_model" "this" {
   name         = "my_model"
   catalog_name = "main"
   schema_name  = "default"
+  comment      = "My registered model"
+
+  aliases {
+    alias_name  = "champion"
+    version_num = 1
+  }
+
+  aliases {
+    alias_name  = "challenger"
+    version_num = 2
+  }
 }
 ```
 
@@ -27,6 +38,9 @@ The following arguments are supported:
 * `owner` - (Optional) Name of the registered model owner.
 * `comment` - (Optional) The comment attached to the registered model.
 * `storage_location` - (Optional) The storage location under which model version data files are stored.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). *Change of this parameter forces recreation of the resource.*
+* `aliases` - (Optional) List of aliases associated with the registered model. Each `aliases` block consists of the following fields:
+  * `alias_name` - (Required) The name of the alias, e.g. `champion` or `latest_stable`.
+  * `version_num` - (Required) The version number of the model version to which the alias points.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

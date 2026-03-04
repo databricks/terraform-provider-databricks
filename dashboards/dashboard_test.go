@@ -499,6 +499,39 @@ func TestAccDashboardTestAll(t *testing.T) {
 	})
 }
 
+func TestAccDashboardCreate_NonExistentParent(t *testing.T) {
+	randomSuffix := qa.RandomName()
+	parentPath := fmt.Sprintf("/Shared/provider-test/dashboard-parent-%s", randomSuffix)
+	displayName := fmt.Sprintf("Test Dashboard - %s", randomSuffix)
+	var template templateStruct
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: makeTemplate(template.SetAttributes(map[string]string{
+			"display_name":         displayName,
+			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
+			"parent_path":          parentPath,
+			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
+		})),
+		Check: acceptance.ResourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, displayName, dashboard.DisplayName)
+			assert.NotEmpty(t, dashboard.SerializedDashboard)
+			// Verify the parent folder was created
+			_, err = w.Workspace.GetStatusByPath(ctx, parentPath)
+			assert.NoError(t, err, "parent folder should have been created automatically")
+			return nil
+		}),
+	})
+}
+
 func TestAccDashboardWithWorkspacePrefix(t *testing.T) {
 	var template templateStruct
 

@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fixed `databricks_instance_pool` ignoring `enable_elastic_disk = false` due to `omitempty` JSON tag ([#5454](https://github.com/databricks/terraform-provider-databricks/pull/5454)).
+
 ### Documentation
 
 * Added documentation note about whitespace handling in `MAP` column types for `databricks_sql_table`.

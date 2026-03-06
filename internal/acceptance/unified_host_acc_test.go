@@ -7,21 +7,48 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
-func initUnifiedHostEnv(t *testing.T) {
+func unifiedHostProviderFactories(unifiedHost string) map[string]func() (tfprotov6.ProviderServer, error) {
+	customizer := func(cfg *config.Config) error {
+		cfg.Host = unifiedHost
+		cfg.Experimental_IsUnifiedHost = true
+		return nil
+	}
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+			sdkPluginProvider := sdkv2.DatabricksProvider(
+				sdkv2.WithConfigCustomizer(DefaultConfigCustomizer),
+				sdkv2.WithConfigCustomizer(customizer),
+			)
+			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
+				pluginfw.WithConfigCustomizer(DefaultConfigCustomizer),
+				pluginfw.WithConfigCustomizer(customizer),
+			)
+			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
+		},
+	}
+}
+
+func initUnifiedHostAccountEnv(t *testing.T) {
 	LoadAccountEnv(t)
 	unifiedHost := os.Getenv("UNIFIED_HOST")
 	if unifiedHost == "" {
 		Skipf(t)("UNIFIED_HOST environment variable is missing")
 	}
-	os.Setenv("DATABRICKS_HOST", unifiedHost)
-	os.Setenv("DATABRICKS_EXPERIMENTAL_IS_UNIFIED_HOST", "true")
 }
 
+
 func unifiedHostCreateJobTest(t *testing.T) {
+	unifiedHost := os.Getenv("UNIFIED_HOST")
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
 	jobName := "tf-unified-" + RandomName() + "-job-1"
 
@@ -43,6 +70,7 @@ func unifiedHostCreateJobTest(t *testing.T) {
 				}
 			}
 			`,
+			ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
 			Check: ResourceCheck("databricks_job.j1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				w, err := client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 				if err != nil {
@@ -66,7 +94,7 @@ func unifiedHostCreateJobTest(t *testing.T) {
 }
 
 func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
-	initUnifiedHostEnv(t)
+	initUnifiedHostAccountEnv(t)
 	if !IsAws(t) {
 		Skipf(t)("This test is only running on AWS")
 	}
@@ -74,7 +102,7 @@ func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
 }
 
 func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
-	initUnifiedHostEnv(t)
+	initUnifiedHostAccountEnv(t)
 	if !IsGcp(t) {
 		Skipf(t)("This test is only running on GCP")
 	}
@@ -82,9 +110,10 @@ func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
 }
 
 func TestAccUnifiedHostCreateJobsAzure(t *testing.T) {
-	initUnifiedHostEnv(t)
+	initUnifiedHostAccountEnv(t)
 	if !IsAzure(t) {
 		Skipf(t)("This test is only running on Azure")
 	}
 	unifiedHostCreateJobTest(t)
 }
+

@@ -544,6 +544,117 @@ func (m *CreateBranchRequest) SetBranch(ctx context.Context, v Branch) {
 	m.Branch = vs
 }
 
+type CreateDatabaseRequest struct {
+	// The desired specification of a Database.
+	Database types.Object `tfsdk:"database"`
+	// The ID to use for the Database, which will become the final component of
+	// the database's resource name. This ID becomes the database name in
+	// postgres.
+	//
+	// This value should be 4-63 characters, and only use characters available
+	// in DNS names, as defined by RFC-1123
+	//
+	// If database_id is not specified in the request, it is generated
+	// automatically.
+	DatabaseId types.String `tfsdk:"-"`
+	// The Branch where this Database will be created. Format:
+	// projects/{project_id}/branches/{branch_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateDatabaseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDatabaseRequest) {
+	if !from.Database.IsNull() && !from.Database.IsUnknown() {
+		if toDatabase, ok := to.GetDatabase(ctx); ok {
+			if fromDatabase, ok := from.GetDatabase(ctx); ok {
+				// Recursively sync the fields of Database
+				toDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabase)
+				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+}
+
+func (to *CreateDatabaseRequest) SyncFieldsDuringRead(ctx context.Context, from CreateDatabaseRequest) {
+	if !from.Database.IsNull() && !from.Database.IsUnknown() {
+		if toDatabase, ok := to.GetDatabase(ctx); ok {
+			if fromDatabase, ok := from.GetDatabase(ctx); ok {
+				toDatabase.SyncFieldsDuringRead(ctx, fromDatabase)
+				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+}
+
+func (m CreateDatabaseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database"] = attrs["database"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["database_id"] = attrs["database_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDatabaseRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateDatabaseRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database": reflect.TypeOf(Database{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDatabaseRequest
+// only implements ToObjectValue() and Type().
+func (m CreateDatabaseRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database":    m.Database,
+			"database_id": m.DatabaseId,
+			"parent":      m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateDatabaseRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database":    Database{}.Type(ctx),
+			"database_id": types.StringType,
+			"parent":      types.StringType,
+		},
+	}
+}
+
+// GetDatabase returns the value of the Database field in CreateDatabaseRequest as
+// a Database value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateDatabaseRequest) GetDatabase(ctx context.Context) (Database, bool) {
+	var e Database
+	if m.Database.IsNull() || m.Database.IsUnknown() {
+		return e, false
+	}
+	var v Database
+	d := m.Database.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabase sets the value of the Database field in CreateDatabaseRequest.
+func (m *CreateDatabaseRequest) SetDatabase(ctx context.Context, v Database) {
+	vs := v.ToObjectValue(ctx)
+	m.Database = vs
+}
+
 type CreateEndpointRequest struct {
 	// The Endpoint to create.
 	Endpoint types.Object `tfsdk:"endpoint"`
@@ -861,6 +972,179 @@ func (m *CreateRoleRequest) SetRole(ctx context.Context, v Role) {
 	m.Role = vs
 }
 
+// Database represents a Postgres database within a Branch.
+type Database struct {
+	// A timestamp indicating when the database was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The resource name of the database. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Name types.String `tfsdk:"name"`
+	// The branch containing this database. Format:
+	// projects/{project_id}/branches/{branch_id}
+	Parent types.String `tfsdk:"parent"`
+	// The desired state of the Database.
+	Spec types.Object `tfsdk:"spec"`
+	// The observed state of the Database.
+	Status types.Object `tfsdk:"status"`
+	// A timestamp indicating when the database was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Database.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Database) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spec":   reflect.TypeOf(DatabaseDatabaseSpec{}),
+		"status": reflect.TypeOf(DatabaseDatabaseStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Database
+// only implements ToObjectValue() and Type().
+func (m Database) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"name":        m.Name,
+			"parent":      m.Parent,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"update_time": m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Database) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"parent":      types.StringType,
+			"spec":        DatabaseDatabaseSpec{}.Type(ctx),
+			"status":      DatabaseDatabaseStatus{}.Type(ctx),
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetSpec returns the value of the Spec field in Database as
+// a DatabaseDatabaseSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Database) GetSpec(ctx context.Context) (DatabaseDatabaseSpec, bool) {
+	var e DatabaseDatabaseSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v DatabaseDatabaseSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in Database.
+func (m *Database) SetSpec(ctx context.Context, v DatabaseDatabaseSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// GetStatus returns the value of the Status field in Database as
+// a DatabaseDatabaseStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Database) GetStatus(ctx context.Context) (DatabaseDatabaseStatus, bool) {
+	var e DatabaseDatabaseStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v DatabaseDatabaseStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in Database.
+func (m *Database) SetStatus(ctx context.Context, v DatabaseDatabaseStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
 type DatabaseCredential struct {
 	// Timestamp in UTC of when this credential expires.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
@@ -912,6 +1196,166 @@ func (m DatabaseCredential) Type(ctx context.Context) attr.Type {
 			"expire_time": timetypes.RFC3339{}.Type(ctx),
 			"token":       types.StringType,
 		},
+	}
+}
+
+type DatabaseDatabaseSpec struct {
+	// The name of the Postgres database.
+	//
+	// This expects a valid Postgres identifier as specified in the link below.
+	// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+	// Required when creating the Database.
+	//
+	// To rename, pass a valid postgres identifier when updating the Database.
+	PostgresDatabase types.String `tfsdk:"postgres_database"`
+	// The name of the role that owns the database. Format:
+	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
+	//
+	// To change the owner, pass valid existing Role name when updating the
+	// Database
+	//
+	// A database always has an owner.
+	Role types.String `tfsdk:"role"`
+}
+
+func (to *DatabaseDatabaseSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseDatabaseSpec) {
+}
+
+func (to *DatabaseDatabaseSpec) SyncFieldsDuringRead(ctx context.Context, from DatabaseDatabaseSpec) {
+}
+
+func (m DatabaseDatabaseSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
+	attrs["role"] = attrs["role"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseDatabaseSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseDatabaseSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseDatabaseSpec
+// only implements ToObjectValue() and Type().
+func (m DatabaseDatabaseSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"postgres_database": m.PostgresDatabase,
+			"role":              m.Role,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseDatabaseSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"postgres_database": types.StringType,
+			"role":              types.StringType,
+		},
+	}
+}
+
+type DatabaseDatabaseStatus struct {
+	// The name of the Postgres database.
+	PostgresDatabase types.String `tfsdk:"postgres_database"`
+	// The name of the role that owns the database. Format:
+	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
+	Role types.String `tfsdk:"role"`
+}
+
+func (to *DatabaseDatabaseStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseDatabaseStatus) {
+}
+
+func (to *DatabaseDatabaseStatus) SyncFieldsDuringRead(ctx context.Context, from DatabaseDatabaseStatus) {
+}
+
+func (m DatabaseDatabaseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
+	attrs["role"] = attrs["role"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseDatabaseStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseDatabaseStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseDatabaseStatus
+// only implements ToObjectValue() and Type().
+func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"postgres_database": m.PostgresDatabase,
+			"role":              m.Role,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseDatabaseStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"postgres_database": types.StringType,
+			"role":              types.StringType,
+		},
+	}
+}
+
+type DatabaseOperationMetadata struct {
+}
+
+func (to *DatabaseOperationMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseOperationMetadata) {
+}
+
+func (to *DatabaseOperationMetadata) SyncFieldsDuringRead(ctx context.Context, from DatabaseOperationMetadata) {
+}
+
+func (m DatabaseOperationMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseOperationMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseOperationMetadata
+// only implements ToObjectValue() and Type().
+func (m DatabaseOperationMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseOperationMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -1062,6 +1506,55 @@ func (m DeleteBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteBranchRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteDatabaseRequest struct {
+	// The resource name of the postgres database. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteDatabaseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDatabaseRequest) {
+}
+
+func (to *DeleteDatabaseRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteDatabaseRequest) {
+}
+
+func (m DeleteDatabaseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDatabaseRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteDatabaseRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDatabaseRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteDatabaseRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteDatabaseRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2264,6 +2757,55 @@ func (m GetBranchRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetDatabaseRequest struct {
+	// The name of the Database to retrieve. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetDatabaseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDatabaseRequest) {
+}
+
+func (to *GetDatabaseRequest) SyncFieldsDuringRead(ctx context.Context, from GetDatabaseRequest) {
+}
+
+func (m GetDatabaseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDatabaseRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetDatabaseRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDatabaseRequest
+// only implements ToObjectValue() and Type().
+func (m GetDatabaseRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetDatabaseRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetEndpointRequest struct {
 	// The full resource path of the endpoint to retrieve. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
@@ -2704,6 +3246,161 @@ func (m *ListBranchesResponse) SetBranches(ctx context.Context, v []Branch) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["branches"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Branches = types.ListValueMust(t, vs)
+}
+
+type ListDatabasesRequest struct {
+	// Upper bound for items returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page of Databases. Requests first page
+	// if absent.
+	PageToken types.String `tfsdk:"-"`
+	// The Branch that owns this collection of databases. Format:
+	// projects/{project_id}/branches/{branch_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListDatabasesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDatabasesRequest) {
+}
+
+func (to *ListDatabasesRequest) SyncFieldsDuringRead(ctx context.Context, from ListDatabasesRequest) {
+}
+
+func (m ListDatabasesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabasesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDatabasesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabasesRequest
+// only implements ToObjectValue() and Type().
+func (m ListDatabasesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDatabasesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+type ListDatabasesResponse struct {
+	// List of databases.
+	Databases types.List `tfsdk:"databases"`
+	// Pagination token to request the next page of databases.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListDatabasesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDatabasesResponse) {
+	if !from.Databases.IsNull() && !from.Databases.IsUnknown() && to.Databases.IsNull() && len(from.Databases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Databases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Databases = from.Databases
+	}
+}
+
+func (to *ListDatabasesResponse) SyncFieldsDuringRead(ctx context.Context, from ListDatabasesResponse) {
+	if !from.Databases.IsNull() && !from.Databases.IsUnknown() && to.Databases.IsNull() && len(from.Databases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Databases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Databases = from.Databases
+	}
+}
+
+func (m ListDatabasesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["databases"] = attrs["databases"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDatabasesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDatabasesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"databases": reflect.TypeOf(Database{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDatabasesResponse
+// only implements ToObjectValue() and Type().
+func (m ListDatabasesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"databases":       m.Databases,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDatabasesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"databases": basetypes.ListType{
+				ElemType: Database{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetDatabases returns the value of the Databases field in ListDatabasesResponse as
+// a slice of Database values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListDatabasesResponse) GetDatabases(ctx context.Context) ([]Database, bool) {
+	if m.Databases.IsNull() || m.Databases.IsUnknown() {
+		return nil, false
+	}
+	var v []Database
+	d := m.Databases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabases sets the value of the Databases field in ListDatabasesResponse.
+func (m *ListDatabasesResponse) SetDatabases(ctx context.Context, v []Database) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["databases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Databases = types.ListValueMust(t, vs)
 }
 
 type ListEndpointsRequest struct {
@@ -3736,6 +4433,9 @@ type ProjectSpec struct {
 	// Human-readable project name. Length should be between 1 and 256
 	// characters.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Whether to enable PG native password login on all endpoints in this
+	// project. Defaults to true.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between 0s and
 	// 2592000s (up to 30 days).
@@ -3784,6 +4484,7 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -3816,6 +4517,7 @@ func (m ProjectSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"custom_tags":                m.CustomTags,
 			"default_endpoint_settings":  m.DefaultEndpointSettings,
 			"display_name":               m.DisplayName,
+			"enable_pg_native_login":     m.EnablePgNativeLogin,
 			"history_retention_duration": m.HistoryRetentionDuration,
 			"pg_version":                 m.PgVersion,
 		})
@@ -3831,6 +4533,7 @@ func (m ProjectSpec) Type(ctx context.Context) attr.Type {
 			},
 			"default_endpoint_settings":  ProjectDefaultEndpointSettings{}.Type(ctx),
 			"display_name":               types.StringType,
+			"enable_pg_native_login":     types.BoolType,
 			"history_retention_duration": timetypes.GoDuration{}.Type(ctx),
 			"pg_version":                 types.Int64Type,
 		},
@@ -3899,6 +4602,9 @@ type ProjectStatus struct {
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
 	// The effective human-readable project name.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Whether to enable PG native password login on all endpoints in this
+	// project.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The effective number of seconds to retain the shared history for point in
 	// time recovery.
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
@@ -3951,6 +4657,7 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
@@ -3985,6 +4692,7 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"custom_tags":                     m.CustomTags,
 			"default_endpoint_settings":       m.DefaultEndpointSettings,
 			"display_name":                    m.DisplayName,
+			"enable_pg_native_login":          m.EnablePgNativeLogin,
 			"history_retention_duration":      m.HistoryRetentionDuration,
 			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
@@ -4003,6 +4711,7 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 			},
 			"default_endpoint_settings":    ProjectDefaultEndpointSettings{}.Type(ctx),
 			"display_name":                 types.StringType,
+			"enable_pg_native_login":       types.BoolType,
 			"history_retention_duration":   timetypes.GoDuration{}.Type(ctx),
 			"owner":                        types.StringType,
 			"pg_version":                   types.Int64Type,
@@ -4869,6 +5578,114 @@ func (m *UpdateBranchRequest) GetBranch(ctx context.Context) (Branch, bool) {
 func (m *UpdateBranchRequest) SetBranch(ctx context.Context, v Branch) {
 	vs := v.ToObjectValue(ctx)
 	m.Branch = vs
+}
+
+type UpdateDatabaseRequest struct {
+	// The Database to update.
+	//
+	// The database's `name` field is used to identify the database to update.
+	// Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Database types.Object `tfsdk:"database"`
+	// The resource name of the database. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Name types.String `tfsdk:"-"`
+	// The list of fields to update. If unspecified, all fields will be updated
+	// when possible.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateDatabaseRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDatabaseRequest) {
+	if !from.Database.IsNull() && !from.Database.IsUnknown() {
+		if toDatabase, ok := to.GetDatabase(ctx); ok {
+			if fromDatabase, ok := from.GetDatabase(ctx); ok {
+				// Recursively sync the fields of Database
+				toDatabase.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabase)
+				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+}
+
+func (to *UpdateDatabaseRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateDatabaseRequest) {
+	if !from.Database.IsNull() && !from.Database.IsUnknown() {
+		if toDatabase, ok := to.GetDatabase(ctx); ok {
+			if fromDatabase, ok := from.GetDatabase(ctx); ok {
+				toDatabase.SyncFieldsDuringRead(ctx, fromDatabase)
+				to.SetDatabase(ctx, toDatabase)
+			}
+		}
+	}
+}
+
+func (m UpdateDatabaseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database"] = attrs["database"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDatabaseRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateDatabaseRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database": reflect.TypeOf(Database{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDatabaseRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateDatabaseRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database":    m.Database,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateDatabaseRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database":    Database{}.Type(ctx),
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetDatabase returns the value of the Database field in UpdateDatabaseRequest as
+// a Database value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateDatabaseRequest) GetDatabase(ctx context.Context) (Database, bool) {
+	var e Database
+	if m.Database.IsNull() || m.Database.IsUnknown() {
+		return e, false
+	}
+	var v Database
+	d := m.Database.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabase sets the value of the Database field in UpdateDatabaseRequest.
+func (m *UpdateDatabaseRequest) SetDatabase(ctx context.Context, v Database) {
+	vs := v.ToObjectValue(ctx)
+	m.Database = vs
 }
 
 type UpdateEndpointRequest struct {

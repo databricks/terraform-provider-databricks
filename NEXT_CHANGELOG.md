@@ -6,6 +6,9 @@
 
 ### New Features and Improvements
 
+* Added `databricks_postgres_database` resource and data source.
+* Renamed `databricks_apps_space` to `databricks_app_space`.
+
 ### Bug Fixes
 
 ### Documentation

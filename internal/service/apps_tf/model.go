@@ -2249,6 +2249,8 @@ type AppResource struct {
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name"`
 
+	Postgres types.Object `tfsdk:"postgres"`
+
 	Secret types.Object `tfsdk:"secret"`
 
 	ServingEndpoint types.Object `tfsdk:"serving_endpoint"`
@@ -2301,6 +2303,15 @@ func (to *AppResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of Job
 				toJob.SyncFieldsDuringCreateOrUpdate(ctx, fromJob)
 				to.SetJob(ctx, toJob)
+			}
+		}
+	}
+	if !from.Postgres.IsNull() && !from.Postgres.IsUnknown() {
+		if toPostgres, ok := to.GetPostgres(ctx); ok {
+			if fromPostgres, ok := from.GetPostgres(ctx); ok {
+				// Recursively sync the fields of Postgres
+				toPostgres.SyncFieldsDuringCreateOrUpdate(ctx, fromPostgres)
+				to.SetPostgres(ctx, toPostgres)
 			}
 		}
 	}
@@ -2383,6 +2394,14 @@ func (to *AppResource) SyncFieldsDuringRead(ctx context.Context, from AppResourc
 			}
 		}
 	}
+	if !from.Postgres.IsNull() && !from.Postgres.IsUnknown() {
+		if toPostgres, ok := to.GetPostgres(ctx); ok {
+			if fromPostgres, ok := from.GetPostgres(ctx); ok {
+				toPostgres.SyncFieldsDuringRead(ctx, fromPostgres)
+				to.SetPostgres(ctx, toPostgres)
+			}
+		}
+	}
 	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
 		if toSecret, ok := to.GetSecret(ctx); ok {
 			if fromSecret, ok := from.GetSecret(ctx); ok {
@@ -2425,6 +2444,7 @@ func (m AppResource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["job"] = attrs["job"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["postgres"] = attrs["postgres"].SetOptional()
 	attrs["secret"] = attrs["secret"].SetOptional()
 	attrs["serving_endpoint"] = attrs["serving_endpoint"].SetOptional()
 	attrs["sql_warehouse"] = attrs["sql_warehouse"].SetOptional()
@@ -2447,6 +2467,7 @@ func (m AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"experiment":       reflect.TypeOf(AppResourceExperiment{}),
 		"genie_space":      reflect.TypeOf(AppResourceGenieSpace{}),
 		"job":              reflect.TypeOf(AppResourceJob{}),
+		"postgres":         reflect.TypeOf(AppResourcePostgres{}),
 		"secret":           reflect.TypeOf(AppResourceSecret{}),
 		"serving_endpoint": reflect.TypeOf(AppResourceServingEndpoint{}),
 		"sql_warehouse":    reflect.TypeOf(AppResourceSqlWarehouse{}),
@@ -2468,6 +2489,7 @@ func (m AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"genie_space":      m.GenieSpace,
 			"job":              m.Job,
 			"name":             m.Name,
+			"postgres":         m.Postgres,
 			"secret":           m.Secret,
 			"serving_endpoint": m.ServingEndpoint,
 			"sql_warehouse":    m.SqlWarehouse,
@@ -2486,6 +2508,7 @@ func (m AppResource) Type(ctx context.Context) attr.Type {
 			"genie_space":      AppResourceGenieSpace{}.Type(ctx),
 			"job":              AppResourceJob{}.Type(ctx),
 			"name":             types.StringType,
+			"postgres":         AppResourcePostgres{}.Type(ctx),
 			"secret":           AppResourceSecret{}.Type(ctx),
 			"serving_endpoint": AppResourceServingEndpoint{}.Type(ctx),
 			"sql_warehouse":    AppResourceSqlWarehouse{}.Type(ctx),
@@ -2617,6 +2640,31 @@ func (m *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
 func (m *AppResource) SetJob(ctx context.Context, v AppResourceJob) {
 	vs := v.ToObjectValue(ctx)
 	m.Job = vs
+}
+
+// GetPostgres returns the value of the Postgres field in AppResource as
+// a AppResourcePostgres value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppResource) GetPostgres(ctx context.Context) (AppResourcePostgres, bool) {
+	var e AppResourcePostgres
+	if m.Postgres.IsNull() || m.Postgres.IsUnknown() {
+		return e, false
+	}
+	var v AppResourcePostgres
+	d := m.Postgres.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPostgres sets the value of the Postgres field in AppResource.
+func (m *AppResource) SetPostgres(ctx context.Context, v AppResourcePostgres) {
+	vs := v.ToObjectValue(ctx)
+	m.Postgres = vs
 }
 
 // GetSecret returns the value of the Secret field in AppResource as
@@ -2975,6 +3023,63 @@ func (m AppResourceJob) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id":         types.StringType,
+			"permission": types.StringType,
+		},
+	}
+}
+
+type AppResourcePostgres struct {
+	Branch types.String `tfsdk:"branch"`
+
+	Database types.String `tfsdk:"database"`
+
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (to *AppResourcePostgres) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourcePostgres) {
+}
+
+func (to *AppResourcePostgres) SyncFieldsDuringRead(ctx context.Context, from AppResourcePostgres) {
+}
+
+func (m AppResourcePostgres) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["database"] = attrs["database"].SetOptional()
+	attrs["permission"] = attrs["permission"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourcePostgres.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppResourcePostgres) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppResourcePostgres
+// only implements ToObjectValue() and Type().
+func (m AppResourcePostgres) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":     m.Branch,
+			"database":   m.Database,
+			"permission": m.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppResourcePostgres) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch":     types.StringType,
+			"database":   types.StringType,
 			"permission": types.StringType,
 		},
 	}
@@ -5947,10 +6052,6 @@ type Space struct {
 	// alphanumeric characters and hyphens. It must be unique within the
 	// workspace.
 	Name types.String `tfsdk:"name"`
-	// The OAuth2 app client ID for the app space.
-	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
-	// The OAuth2 app integration ID for the app space.
-	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
@@ -6039,8 +6140,6 @@ func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
-	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
@@ -6084,8 +6183,6 @@ func (m Space) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
 			"id":                          m.Id,
 			"name":                        m.Name,
-			"oauth2_app_client_id":        m.Oauth2AppClientId,
-			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
 			"resources":                   m.Resources,
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
@@ -6109,10 +6206,8 @@ func (m Space) Type(ctx context.Context) attr.Type {
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"id":                        types.StringType,
-			"name":                      types.StringType,
-			"oauth2_app_client_id":      types.StringType,
-			"oauth2_app_integration_id": types.StringType,
+			"id":   types.StringType,
+			"name": types.StringType,
 			"resources": basetypes.ListType{
 				ElemType: AppResource{}.Type(ctx),
 			},

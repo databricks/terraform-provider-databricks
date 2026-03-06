@@ -1,7 +1,7 @@
 ---
 subcategory: "Apps"
 ---
-# databricks_apps_space Resource
+# databricks_app_space Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 
@@ -11,6 +11,8 @@ subcategory: "Apps"
 
 ## Arguments
 The following arguments are supported:
+* `name` (string, required) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
+  It must be unique within the workspace
 * `description` (string, optional) - The description of the app space
 * `resources` (list of AppResource, optional) - Resources for the app space. Resources configured at the space level are available to all apps in the space
 * `usage_policy_id` (string, optional) - The usage policy ID for managing cost at the space level
@@ -28,6 +30,7 @@ The following arguments are supported:
 * `experiment` (AppResourceExperiment, optional)
 * `genie_space` (AppResourceGenieSpace, optional)
 * `job` (AppResourceJob, optional)
+* `postgres` (AppResourcePostgres, optional)
 * `secret` (AppResourceSecret, optional)
 * `serving_endpoint` (AppResourceServingEndpoint, optional)
 * `sql_warehouse` (AppResourceSqlWarehouse, optional)
@@ -50,6 +53,11 @@ The following arguments are supported:
 ### AppResourceJob
 * `id` (string, required) - Id of the job to grant permission on
 * `permission` (string, required) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
+
+### AppResourcePostgres
+* `branch` (string, optional)
+* `database` (string, optional)
+* `permission` (string, optional) - Possible values are: `CAN_CONNECT_AND_CREATE`
 
 ### AppResourceSecret
 * `key` (string, required) - Key of the secret to grant permission on
@@ -76,10 +84,6 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_usage_policy_id` (string) - The effective usage policy ID used by apps in the space
 * `effective_user_api_scopes` (list of string) - The effective api scopes granted to the user access token
 * `id` (string) - The unique identifier of the app space
-* `name` (string) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
-  It must be unique within the workspace
-* `oauth2_app_client_id` (string) - The OAuth2 app client ID for the app space
-* `oauth2_app_integration_id` (string) - The OAuth2 app integration ID for the app space
 * `service_principal_client_id` (string) - The service principal client ID for the app space
 * `service_principal_id` (integer) - The service principal ID for the app space
 * `service_principal_name` (string) - The service principal name for the app space
@@ -100,11 +104,11 @@ As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
   id = "name"
-  to = databricks_apps_space.this
+  to = databricks_app_space.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_apps_space.this "name"
+terraform import databricks_app_space.this "name"
 ```

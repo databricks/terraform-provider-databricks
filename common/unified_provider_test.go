@@ -388,7 +388,6 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 	}
 }
 
-
 func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 	cachedWorkspaceHost := "https://workspace.test.databricks.com"
 	testSchema := map[string]*schema.Schema{
@@ -639,4 +638,3 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 		})
 	}
 }
-

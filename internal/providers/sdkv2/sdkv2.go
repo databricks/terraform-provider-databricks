@@ -336,6 +336,22 @@ func providerSchema() map[string]*schema.Schema {
 			}
 		}
 	}
+	// Add default_workspace_id for unified provider support
+	ps["default_workspace_id"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			v := val.(string)
+			if v == "" {
+				return
+			}
+			if !regexp.MustCompile(`^[1-9]\d*$`).MatchString(v) {
+				errs = append(errs, fmt.Errorf("default_workspace_id must be a positive integer without leading zeros"))
+			}
+			return
+		},
+		Description: "Default workspace ID to use when workspace_id is not specified in provider_config at the resource level",
+	}
 	return ps
 }
 
@@ -363,6 +379,10 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 			attrsUsed = append(attrsUsed, attr.Name)
 		}
 	}
+	// Check for default_workspace_id before logging
+	if _, ok := d.GetOk("default_workspace_id"); ok {
+		attrsUsed = append(attrsUsed, "default_workspace_id")
+	}
 	if len(attrsUsed) > 0 {
 		sort.Strings(attrsUsed)
 		tflog.Info(ctx, fmt.Sprintf("(sdkv2) Attributes specified in provider configuration: %s", strings.Join(attrsUsed, ", ")))
@@ -372,6 +392,10 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, configCustomizer)
 	if err != nil {
 		return nil, diag.FromErr(err)
+	}
+	// Store default_workspace_id in the client if provided
+	if defaultWorkspaceID, ok := d.GetOk("default_workspace_id"); ok {
+		databricksClient.SetDefaultWorkspaceID(defaultWorkspaceID.(string))
 	}
 	return databricksClient, nil
 }

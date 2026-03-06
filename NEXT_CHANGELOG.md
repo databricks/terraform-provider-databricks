@@ -16,6 +16,7 @@
 
 ### Internal Changes
 
+* Added `unifiedprovider/true` to User-Agent telemetry when `provider_config` is used.
 * Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.
 * Use workspace `GetStatus` API to check parent folder existence before creating Lakeview dashboards, replacing fragile error string matching.
 * Use workspace `GetStatus` API to check parent folder existence before uploading workspace files, replacing fragile error string matching.

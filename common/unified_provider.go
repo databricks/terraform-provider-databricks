@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -111,6 +112,9 @@ func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
+	if workspaceID != "" {
+		useragent.WithUserAgentExtra("unifiedprovider", "true")
+	}
 	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 }
 
@@ -135,6 +139,7 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	if workspaceID == "" {
 		return c, nil
 	}
+	useragent.WithUserAgentExtra("unifiedprovider", "true")
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
 }
 

@@ -40,6 +40,7 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
+	s["description"] = s["description"].SetComputed()
 	return s
 }
 

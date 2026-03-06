@@ -370,6 +370,7 @@ func TestWorkspaceClientForWorkspace_WorkspaceDoesNotExist(t *testing.T) {
 func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
 		Token: "dapi123", // Instantiating WorkspaceClient attempts authentication, this allows Configure() to complete quickly.
 	}
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -45,7 +46,6 @@ func initUnifiedHostAccountEnv(t *testing.T) {
 		Skipf(t)("UNIFIED_HOST environment variable is missing")
 	}
 }
-
 
 func unifiedHostCreateJobTest(t *testing.T) {
 	unifiedHost := os.Getenv("UNIFIED_HOST")
@@ -100,6 +100,13 @@ func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
 	}
 	unifiedHostCreateJobTest(t)
 }
+func TestAccUnifiedHostCreateJobsAzure(t *testing.T) {
+	initUnifiedHostAccountEnv(t)
+	if !IsAzure(t) {
+		Skipf(t)("This test is only running on Azure")
+	}
+	unifiedHostCreateJobTest(t)
+}
 
 func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
 	initUnifiedHostAccountEnv(t)
@@ -109,11 +116,84 @@ func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
 	unifiedHostCreateJobTest(t)
 }
 
-func TestAccUnifiedHostCreateJobsAzure(t *testing.T) {
-	initUnifiedHostAccountEnv(t)
+func unifiedHostWorkspaceCreateJobTest(t *testing.T) {
+	unifiedHost := os.Getenv("UNIFIED_HOST")
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		t.Fatalf("failed to get current workspace ID: %s", err)
+	}
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	jobName := "tf-unified-ws-" + RandomName() + "-job-1"
+
+	run(t, []Step{
+		{
+			Template: `
+			resource "databricks_job" "j1" {
+				name = "` + jobName + `"
+				provider_config {
+					workspace_id = ` + workspaceIDStr + `
+				}
+				task {
+					task_key = "check"
+					condition_task {
+						left  = "true"
+						op    = "EQUAL_TO"
+						right = "true"
+					}
+				}
+			}
+			`,
+			ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
+			Check: ResourceCheck("databricks_job.j1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				w, err := client.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				jobID, err := strconv.ParseInt(id, 10, 64)
+				if err != nil {
+					return err
+				}
+				res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{JobId: jobID})
+				if err != nil {
+					return err
+				}
+				if res.Settings.Name != jobName {
+					return fmt.Errorf("expected job name %q, got %q", jobName, res.Settings.Name)
+				}
+				return nil
+			}),
+		},
+	})
+}
+
+func initUnifiedHostWorkspaceEnv(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	unifiedHost := os.Getenv("UNIFIED_HOST")
+	if unifiedHost == "" {
+		Skipf(t)("UNIFIED_HOST environment variable is missing")
+	}
+}
+
+func TestAccUnifiedHostWorkspaceCreateJobsAWS(t *testing.T) {
+	initUnifiedHostWorkspaceEnv(t)
+	if !IsAws(t) {
+		Skipf(t)("This test is only running on AWS")
+	}
+	unifiedHostWorkspaceCreateJobTest(t)
+}
+func TestAccUnifiedHostWorkspaceCreateJobsAzure(t *testing.T) {
+	initUnifiedHostWorkspaceEnv(t)
 	if !IsAzure(t) {
 		Skipf(t)("This test is only running on Azure")
 	}
-	unifiedHostCreateJobTest(t)
+	unifiedHostWorkspaceCreateJobTest(t)
 }
-
+func TestAccUnifiedHostWorkspaceCreateJobsGCP(t *testing.T) {
+	initUnifiedHostWorkspaceEnv(t)
+	if !IsGcp(t) {
+		Skipf(t)("This test is only running on GCP")
+	}
+	unifiedHostWorkspaceCreateJobTest(t)
+}

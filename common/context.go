@@ -16,7 +16,7 @@ const sdkName = "sdkv2"
 func AddContextToAllResources(p *schema.Provider, prefix string) {
 	for k, r := range p.DataSourcesMap {
 		name := strings.ReplaceAll(k, prefix+"_", "")
-		wrap := op(r.ReadContext).addContext(ResourceName, name).addContext(IsData, "yes").addContext(Sdk, sdkName)
+		wrap := op(r.ReadContext).addContext(ResourceName, name).addContext(IsData, "yes").addContext(Sdk, sdkName).addUnifiedProviderContext()
 		r.ReadContext = schema.ReadContextFunc(wrap)
 	}
 	for k, r := range p.ResourcesMap {
@@ -46,7 +46,7 @@ func (f op) addContext(k contextKey, v string) op {
 
 func addContextToResource(name string, r *schema.Resource) {
 	addName := func(a op) func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-		return a.addContext(ResourceName, name).addContext(Sdk, sdkName)
+		return a.addContext(ResourceName, name).addContext(Sdk, sdkName).addUnifiedProviderContext()
 	}
 	if r.CreateContext != nil {
 		r.CreateContext = addName(op(r.CreateContext))
@@ -59,5 +59,20 @@ func addContextToResource(name string, r *schema.Resource) {
 	}
 	if r.DeleteContext != nil {
 		r.DeleteContext = addName(op(r.DeleteContext))
+	}
+}
+
+// addUnifiedProviderContext checks if provider_config.workspace_id is set
+// in the resource data and adds unifiedprovider/true to the user agent context.
+func (f op) addUnifiedProviderContext() op {
+	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		if d != nil {
+			if workspaceID, ok := d.GetOk(workspaceIDSchemaKey); ok {
+				if ws, isStr := workspaceID.(string); isStr && ws != "" {
+					ctx = useragent.InContext(ctx, "unifiedprovider", "true")
+				}
+			}
+		}
+		return f(ctx, d, m)
 	}
 }

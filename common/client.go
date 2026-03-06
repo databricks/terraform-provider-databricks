@@ -112,15 +112,15 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
 	if c.Config.HostType() != config.WorkspaceHost {
-		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
 }
 
-// getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
+// getWorkspaceClientForAccountUnifiedHost gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured
 // at account level.
-func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
+func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// Workspace ID must be set in a workspace level resource if

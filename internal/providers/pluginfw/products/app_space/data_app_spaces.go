@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package apps_space
+package app_space
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourcesName = "apps_spaces"
+const dataSourcesName = "app_spaces"
 
 var _ datasource.DataSourceWithConfigure = &SpacesDataSource{}
 
@@ -103,7 +103,7 @@ func (r *SpacesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	response, err := client.Apps.ListSpacesAll(ctx, listRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to list apps_spaces", err.Error())
+		resp.Diagnostics.AddError("failed to list app_spaces", err.Error())
 		return
 	}
 

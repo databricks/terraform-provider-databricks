@@ -5,33 +5,12 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
-			Status:   404,
-			Response: &apierr.APIError{
-				ErrorCode:  "NOT_FOUND",
-				StatusCode: 404,
-				Message:    "cluster deleted",
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceMount()
-		d := r.ToResource().TestResourceData()
-		d.Set("uri", "s3://bucket")
-		d.Set("cluster_id", "removed-cluster")
-		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
-		assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
-	})
-}
 
 func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
@@ -61,6 +40,16 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 			ReuseRequest: true,
 			Method:       "GET",
 			Resource:     "/api/2.1/clusters/list-node-types",
+			Response: compute.ListNodeTypesResponse{
+				NodeTypes: []compute.NodeType{
+					{
+						NodeTypeId:     "i3.xlarge",
+						InstanceTypeId: "i3.xlarge",
+						MemoryMb:       30500,
+						NumCores:       4,
+					},
+				},
+			},
 		},
 		{
 			Method:   "POST",
@@ -112,5 +101,27 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
 		assert.NoError(t, err)
 		assert.Equal(t, "new-cluster", d.Get("cluster_id"))
+	})
+}
+
+func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
+			Status:   404,
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceMount()
+		d := r.ToResource().TestResourceData()
+		d.Set("uri", "s3://bucket")
+		d.Set("cluster_id", "removed-cluster")
+		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
+		assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
 	})
 }

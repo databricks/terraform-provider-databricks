@@ -93,26 +93,8 @@ func unifiedHostCreateJobTest(t *testing.T) {
 	})
 }
 
-func TestAccUnifiedHostCreateJobsAWS(t *testing.T) {
+func TestMwsAccUnifiedHostCreateJobs(t *testing.T) {
 	initUnifiedHostAccountEnv(t)
-	if !IsAws(t) {
-		Skipf(t)("This test is only running on AWS")
-	}
-	unifiedHostCreateJobTest(t)
-}
-func TestAccUnifiedHostCreateJobsAzure(t *testing.T) {
-	initUnifiedHostAccountEnv(t)
-	if !IsAzure(t) {
-		Skipf(t)("This test is only running on Azure")
-	}
-	unifiedHostCreateJobTest(t)
-}
-
-func TestAccUnifiedHostCreateJobsGCP(t *testing.T) {
-	initUnifiedHostAccountEnv(t)
-	if !IsGcp(t) {
-		Skipf(t)("This test is only running on GCP")
-	}
 	unifiedHostCreateJobTest(t)
 }
 
@@ -176,24 +158,7 @@ func initUnifiedHostWorkspaceEnv(t *testing.T) {
 	}
 }
 
-func TestAccUnifiedHostWorkspaceCreateJobsAWS(t *testing.T) {
+func TestAccUnifiedHostWorkspaceCreateJobs(t *testing.T) {
 	initUnifiedHostWorkspaceEnv(t)
-	if !IsAws(t) {
-		Skipf(t)("This test is only running on AWS")
-	}
-	unifiedHostWorkspaceCreateJobTest(t)
-}
-func TestAccUnifiedHostWorkspaceCreateJobsAzure(t *testing.T) {
-	initUnifiedHostWorkspaceEnv(t)
-	if !IsAzure(t) {
-		Skipf(t)("This test is only running on Azure")
-	}
-	unifiedHostWorkspaceCreateJobTest(t)
-}
-func TestAccUnifiedHostWorkspaceCreateJobsGCP(t *testing.T) {
-	initUnifiedHostWorkspaceEnv(t)
-	if !IsGcp(t) {
-		Skipf(t)("This test is only running on GCP")
-	}
 	unifiedHostWorkspaceCreateJobTest(t)
 }

@@ -54,25 +54,7 @@ func accountHostCreateJobTest(t *testing.T) {
 	})
 }
 
-func TestAccAccountHostCreateJobsAWS(t *testing.T) {
+func TestMwsAccAccountHostCreateJobs(t *testing.T) {
 	LoadAccountEnv(t)
-	if !IsAws(t) {
-		Skipf(t)("This test is only running on AWS")
-	}
-	accountHostCreateJobTest(t)
-}
-
-func TestAccAccountHostCreateJobsAzure(t *testing.T) {
-	LoadAccountEnv(t)
-	if !IsAzure(t) {
-		Skipf(t)("This test is only running on Azure")
-	}
-	accountHostCreateJobTest(t)
-}
-func TestAccAccountHostCreateJobsGCP(t *testing.T) {
-	LoadAccountEnv(t)
-	if !IsGcp(t) {
-		Skipf(t)("This test is only running on GCP")
-	}
 	accountHostCreateJobTest(t)
 }

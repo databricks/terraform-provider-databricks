@@ -241,7 +241,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
-	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()

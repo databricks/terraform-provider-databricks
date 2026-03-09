@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package workspace_entity_tag_assignment
+package knowledge_assistant
 
 import (
 	"context"
@@ -10,11 +10,13 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/tags"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
+	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -28,15 +30,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "workspace_entity_tag_assignment"
+const resourceName = "knowledge_assistant"
 
-var _ resource.ResourceWithConfigure = &TagAssignmentResource{}
+var _ resource.ResourceWithConfigure = &KnowledgeAssistantResource{}
 
-func ResourceTagAssignment() resource.Resource {
-	return &TagAssignmentResource{}
+func ResourceKnowledgeAssistant() resource.Resource {
+	return &KnowledgeAssistantResource{}
 }
 
-type TagAssignmentResource struct {
+type KnowledgeAssistantResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -105,30 +107,48 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// TagAssignment extends the main model with additional fields.
-type TagAssignment struct {
-	// The identifier of the entity to which the tag is assigned. For apps, the
-	// entity_id is the app name
-	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces, notebooks
-	EntityType types.String `tfsdk:"entity_type"`
-	// The key of the tag. The characters , . : / - = and leading/trailing
-	// spaces are not allowed
-	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
-	TagValue       types.String `tfsdk:"tag_value"`
+// KnowledgeAssistant extends the main model with additional fields.
+type KnowledgeAssistant struct {
+	// Creation timestamp.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The creator of the Knowledge Assistant.
+	Creator types.String `tfsdk:"creator"`
+	// Description of what this agent can do (user-facing). Required when
+	// creating a Knowledge Assistant. When updating a Knowledge Assistant,
+	// optional unless included in update_mask.
+	Description types.String `tfsdk:"description"`
+	// The display name of the Knowledge Assistant, unique at workspace level.
+	// Required when creating a Knowledge Assistant. When updating a Knowledge
+	// Assistant, optional unless included in update_mask.
+	DisplayName types.String `tfsdk:"display_name"`
+	// The name of the knowledge assistant agent endpoint.
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// Error details when the Knowledge Assistant is in FAILED state.
+	ErrorInfo types.String `tfsdk:"error_info"`
+	// The MLflow experiment ID.
+	ExperimentId types.String `tfsdk:"experiment_id"`
+	// The universally unique identifier (UUID) of the Knowledge Assistant.
+	Id types.String `tfsdk:"id"`
+	// Additional global instructions on how the agent should generate answers.
+	// Optional on create and update. When updating a Knowledge Assistant,
+	// include this field in update_mask to modify it.
+	Instructions types.String `tfsdk:"instructions"`
+	// The resource name of the Knowledge Assistant. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
+	Name types.String `tfsdk:"name"`
+	// State of the Knowledge Assistant. Not returned in List responses.
+	State          types.String `tfsdk:"state"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagAssignment struct. Container types (types.Map, types.List, types.Set) and
+// KnowledgeAssistant struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m TagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m KnowledgeAssistant) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
@@ -138,15 +158,22 @@ func (m TagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TagAssignment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistant
 // only implements ToObjectValue() and Type().
-func (m TagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m KnowledgeAssistant) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"entity_id": m.EntityId,
-			"entity_type": m.EntityType,
-			"tag_key":     m.TagKey,
-			"tag_value":   m.TagValue,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"creator":       m.Creator,
+			"description":   m.Description,
+			"display_name":  m.DisplayName,
+			"endpoint_name": m.EndpointName,
+			"error_info":    m.ErrorInfo,
+			"experiment_id": m.ExperimentId,
+			"id":            m.Id,
+			"instructions":  m.Instructions,
+			"name":          m.Name,
+			"state":         m.State,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -155,12 +182,19 @@ func (m TagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m TagAssignment) Type(ctx context.Context) attr.Type {
+func (m KnowledgeAssistant) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"entity_id": types.StringType,
-			"entity_type": types.StringType,
-			"tag_key":     types.StringType,
-			"tag_value":   types.StringType,
+		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
+			"creator":       types.StringType,
+			"description":   types.StringType,
+			"display_name":  types.StringType,
+			"endpoint_name": types.StringType,
+			"error_info":    types.StringType,
+			"experiment_id": types.StringType,
+			"id":            types.StringType,
+			"instructions":  types.StringType,
+			"name":          types.StringType,
+			"state":         types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -170,7 +204,7 @@ func (m TagAssignment) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *TagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagAssignment) {
+func (to *KnowledgeAssistant) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistant) {
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -178,62 +212,64 @@ func (to *TagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *TagAssignment) SyncFieldsDuringRead(ctx context.Context, from TagAssignment) {
+func (to *KnowledgeAssistant) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistant) {
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
-func (m TagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["entity_id"] = attrs["entity_id"].SetRequired()
-	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["entity_type"] = attrs["entity_type"].SetRequired()
-	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["tag_key"] = attrs["tag_key"].SetRequired()
-	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+func (m KnowledgeAssistant) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["description"] = attrs["description"].SetRequired()
+	attrs["display_name"] = attrs["display_name"].SetRequired()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
+	attrs["error_info"] = attrs["error_info"].SetComputed()
+	attrs["experiment_id"] = attrs["experiment_id"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["instructions"] = attrs["instructions"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
 
-	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
-func (r *TagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *KnowledgeAssistantResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *TagAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagAssignment{}, nil)
+func (r *KnowledgeAssistantResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, KnowledgeAssistant{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks workspace_entity_tag_assignment",
+		Description: "Terraform schema for Databricks knowledge_assistant",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *TagAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *KnowledgeAssistantResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *KnowledgeAssistantResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan TagAssignment
+	var plan KnowledgeAssistant
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var tag_assignment tags.TagAssignment
+	var knowledge_assistant knowledgeassistants.KnowledgeAssistant
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_assignment)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &knowledge_assistant)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := tags.CreateTagAssignmentRequest{
-		TagAssignment: tag_assignment,
+	createRequest := knowledgeassistants.CreateKnowledgeAssistantRequest{
+		KnowledgeAssistant: knowledge_assistant,
 	}
 
 	var namespace ProviderConfig
@@ -251,13 +287,13 @@ func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	response, err := client.WorkspaceEntityTagAssignments.CreateTagAssignment(ctx, createRequest)
+	response, err := client.KnowledgeAssistants.CreateKnowledgeAssistant(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to create knowledge_assistant", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState KnowledgeAssistant
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -273,16 +309,16 @@ func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateR
 	}
 }
 
-func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *KnowledgeAssistantResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState TagAssignment
+	var existingState KnowledgeAssistant
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest tags.GetTagAssignmentRequest
+	var readRequest knowledgeassistants.GetKnowledgeAssistantRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -302,18 +338,18 @@ func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.WorkspaceEntityTagAssignments.GetTagAssignment(ctx, readRequest)
+	response, err := client.KnowledgeAssistants.GetKnowledgeAssistant(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to get knowledge_assistant", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState KnowledgeAssistant
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -324,20 +360,18 @@ func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, diags *diag.Diagnostics, state *tfsdk.State) {
-	var tag_assignment tags.TagAssignment
+func (r *KnowledgeAssistantResource) update(ctx context.Context, plan KnowledgeAssistant, diags *diag.Diagnostics, state *tfsdk.State) {
+	var knowledge_assistant knowledgeassistants.KnowledgeAssistant
 
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_assignment)...)
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &knowledge_assistant)...)
 	if diags.HasError() {
 		return
 	}
 
-	updateRequest := tags.UpdateTagAssignmentRequest{
-		TagAssignment: tag_assignment,
-		EntityId:      plan.EntityId.ValueString(),
-		EntityType:    plan.EntityType.ValueString(),
-		TagKey:        plan.TagKey.ValueString(),
-		UpdateMask:    "tag_value",
+	updateRequest := knowledgeassistants.UpdateKnowledgeAssistantRequest{
+		KnowledgeAssistant: knowledge_assistant,
+		Name:               plan.Name.ValueString(),
+		UpdateMask:         *fieldmask.New(strings.Split("description,display_name,instructions", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -354,13 +388,13 @@ func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, 
 	if diags.HasError() {
 		return
 	}
-	response, err := client.WorkspaceEntityTagAssignments.UpdateTagAssignment(ctx, updateRequest)
+	response, err := client.KnowledgeAssistants.UpdateKnowledgeAssistant(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update workspace_entity_tag_assignment", err.Error())
+		diags.AddError("failed to update knowledge_assistant", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState KnowledgeAssistant
 
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -372,10 +406,10 @@ func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, 
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *TagAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *KnowledgeAssistantResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan TagAssignment
+	var plan KnowledgeAssistant
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -384,16 +418,16 @@ func (r *TagAssignmentResource) Update(ctx context.Context, req resource.UpdateR
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *TagAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *KnowledgeAssistantResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var state TagAssignment
+	var state KnowledgeAssistant
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest tags.DeleteTagAssignmentRequest
+	var deleteRequest knowledgeassistants.DeleteKnowledgeAssistantRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -414,34 +448,30 @@ func (r *TagAssignmentResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	err := client.WorkspaceEntityTagAssignments.DeleteTagAssignment(ctx, deleteRequest)
+	err := client.KnowledgeAssistants.DeleteKnowledgeAssistant(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to delete knowledge_assistant", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &TagAssignmentResource{}
+var _ resource.ResourceWithImportState = &KnowledgeAssistantResource{}
 
-func (r *TagAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *KnowledgeAssistantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: entity_type,entity_id,tag_key. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	entityType := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_type"), entityType)...)
-	entityId := parts[1]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_id"), entityId)...)
-	tagKey := parts[2]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("tag_key"), tagKey)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

@@ -5355,6 +5355,7 @@ type DeltaTableSource_SdkV2 struct {
 	// transformation_sql is specified. Example:
 	// {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
 	DataframeSchema types.String `tfsdk:"dataframe_schema"`
+	// Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
 	// The entity columns of the Delta table.
 	EntityColumns types.List `tfsdk:"entity_columns"`
 	// Single WHERE clause to filter delta table before applying
@@ -5363,7 +5364,8 @@ type DeltaTableSource_SdkV2 struct {
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
-	// The timeseries column of the Delta table.
+	// Deprecated: Use Feature.timeseries_column instead. Kept for backwards
+	// compatibility. The timeseries column of the Delta table.
 	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
 	// A single SQL SELECT expression applied after filter_condition. Should
 	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
@@ -6157,24 +6159,30 @@ func (m ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 type Feature_SdkV2 struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// Deprecated: Use DeltaTableSource.filter_condition or
+	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.List `tfsdk:"function"`
-	// The input columns from which the feature is computed.
+	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
+	// compatibility. The input columns from which the feature is computed.
 	Inputs types.List `tfsdk:"inputs"`
-	// WARNING: This field is primarily intended for internal use by Databricks
-	// systems and is automatically populated when features are created through
-	// Databricks notebooks or jobs. Users should not manually set this field as
-	// incorrect values may lead to inaccurate lineage tracking or unexpected
-	// behavior. This field will be set by feature-engineering client and should
-	// be left unset by SDK and terraform users.
+	// Lineage context information for this feature. WARNING: This field is
+	// primarily intended for internal use by Databricks systems and is
+	// automatically populated when features are created through Databricks
+	// notebooks or jobs. Users should not manually set this field as incorrect
+	// values may lead to inaccurate lineage tracking or unexpected behavior.
+	// This field will be set by feature-engineering client and should be left
+	// unset by SDK and terraform users.
 	LineageContext types.List `tfsdk:"lineage_context"`
 	// The data source of the feature.
 	Source types.List `tfsdk:"source"`
-	// The time window in which the feature is computed.
+	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
+	// for backwards compatibility. The time window in which the feature is
+	// computed.
 	TimeWindow types.List `tfsdk:"time_window"`
 }
 
@@ -7215,9 +7223,12 @@ func (m ForecastingExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Function_SdkV2 struct {
-	// Extra parameters for parameterized functions.
+	// Deprecated: Use the function oneof with AggregationFunction instead. Kept
+	// for backwards compatibility. Extra parameters for parameterized
+	// functions.
 	ExtraParameters types.List `tfsdk:"extra_parameters"`
-	// The type of the function.
+	// Deprecated: Use the function oneof with AggregationFunction instead. Kept
+	// for backwards compatibility. The type of the function.
 	FunctionType types.String `tfsdk:"function_type"`
 }
 
@@ -7309,6 +7320,9 @@ func (m *Function_SdkV2) SetExtraParameters(ctx context.Context, v []FunctionExt
 	m.ExtraParameters = types.ListValueMust(t, vs)
 }
 
+// Deprecated: Use typed fields on function-specific messages (e.g.
+// ApproxPercentileFunction.percentile) or AggregationFunction.ExtraParameter
+// instead. Kept for backwards compatibility.
 type FunctionExtraParameter_SdkV2 struct {
 	// The name of the parameter.
 	Key types.String `tfsdk:"key"`
@@ -10131,12 +10145,14 @@ func (m *KafkaConfig_SdkV2) SetValueSchema(ctx context.Context, v SchemaConfig_S
 }
 
 type KafkaSource_SdkV2 struct {
+	// Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
 	// The entity column identifiers of the Kafka source.
 	EntityColumnIdentifiers types.List `tfsdk:"entity_column_identifiers"`
 	// Name of the Kafka source, used to identify it. This is used to look up
 	// the corresponding KafkaConfig object. Can be distinct from topic name.
 	Name types.String `tfsdk:"name"`
-	// The timeseries column identifier of the Kafka source.
+	// Deprecated: Use Feature.timeseries_column instead. Kept for backwards
+	// compatibility. The timeseries column identifier of the Kafka source.
 	TimeseriesColumnIdentifier types.List `tfsdk:"timeseries_column_identifier"`
 }
 
@@ -13661,7 +13677,7 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
-	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
@@ -20654,7 +20670,7 @@ func (to *UpdateMaterializedFeatureRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 func (m UpdateMaterializedFeatureRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["materialized_feature"] = attrs["materialized_feature"].SetRequired()
 	attrs["materialized_feature"] = attrs["materialized_feature"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs

@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package workspace_entity_tag_assignment
+package data_classification_catalog_config
 
 import (
 	"context"
@@ -10,11 +10,14 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/tags"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
+	"github.com/databricks/databricks-sdk-go/service/dataclassification"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/dataclassification_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -28,15 +31,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "workspace_entity_tag_assignment"
+const resourceName = "data_classification_catalog_config"
 
-var _ resource.ResourceWithConfigure = &TagAssignmentResource{}
+var _ resource.ResourceWithConfigure = &CatalogConfigResource{}
 
-func ResourceTagAssignment() resource.Resource {
-	return &TagAssignmentResource{}
+func ResourceCatalogConfig() resource.Resource {
+	return &CatalogConfigResource{}
 }
 
-type TagAssignmentResource struct {
+type CatalogConfigResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -105,32 +108,34 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// TagAssignment extends the main model with additional fields.
-type TagAssignment struct {
-	// The identifier of the entity to which the tag is assigned. For apps, the
-	// entity_id is the app name
-	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces, notebooks
-	EntityType types.String `tfsdk:"entity_type"`
-	// The key of the tag. The characters , . : / - = and leading/trailing
-	// spaces are not allowed
-	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
-	TagValue       types.String `tfsdk:"tag_value"`
+// CatalogConfig extends the main model with additional fields.
+type CatalogConfig struct {
+	// List of auto-tagging configurations for this catalog. Empty list means no
+	// auto-tagging is enabled.
+	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
+	// Schemas to include in the scan. Empty list is not supported as it results
+	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// scanned.
+	IncludedSchemas types.Object `tfsdk:"included_schemas"`
+	// Resource name in the format: catalogs/{catalog_name}/config.
+	Name types.String `tfsdk:"name"`
+	// Parent resource in the format: catalogs/{catalog_name}
+	Parent         types.String `tfsdk:"parent"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagAssignment struct. Container types (types.Map, types.List, types.Set) and
+// CatalogConfig struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m TagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		"auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
+		"included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
+		"provider_config":  reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -138,15 +143,15 @@ func (m TagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]refl
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TagAssignment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CatalogConfig
 // only implements ToObjectValue() and Type().
-func (m TagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"entity_id": m.EntityId,
-			"entity_type": m.EntityType,
-			"tag_key":     m.TagKey,
-			"tag_value":   m.TagValue,
+		map[string]attr.Value{"auto_tag_configs": m.AutoTagConfigs,
+			"included_schemas": m.IncludedSchemas,
+			"name":             m.Name,
+			"parent":           m.Parent,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -155,12 +160,14 @@ func (m TagAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m TagAssignment) Type(ctx context.Context) attr.Type {
+func (m CatalogConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"entity_id": types.StringType,
-			"entity_type": types.StringType,
-			"tag_key":     types.StringType,
-			"tag_value":   types.StringType,
+		AttrTypes: map[string]attr.Type{"auto_tag_configs": basetypes.ListType{
+			ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
+		},
+			"included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
+			"name":             types.StringType,
+			"parent":           types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -170,7 +177,23 @@ func (m TagAssignment) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *TagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagAssignment) {
+func (to *CatalogConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogConfig) {
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
+		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
+			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
+				// Recursively sync the fields of IncludedSchemas
+				toIncludedSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromIncludedSchemas)
+				to.SetIncludedSchemas(ctx, toIncludedSchemas)
+			}
+		}
+	}
+	to.Parent = from.Parent
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -178,62 +201,125 @@ func (to *TagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *TagAssignment) SyncFieldsDuringRead(ctx context.Context, from TagAssignment) {
+func (to *CatalogConfig) SyncFieldsDuringRead(ctx context.Context, from CatalogConfig) {
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
+		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
+			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
+				toIncludedSchemas.SyncFieldsDuringRead(ctx, fromIncludedSchemas)
+				to.SetIncludedSchemas(ctx, toIncludedSchemas)
+			}
+		}
+	}
+	to.Parent = from.Parent
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
-func (m TagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["entity_id"] = attrs["entity_id"].SetRequired()
-	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["entity_type"] = attrs["entity_type"].SetRequired()
-	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["tag_key"] = attrs["tag_key"].SetRequired()
-	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+func (m CatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetOptional()
+	attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
-	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["entity_id"] = attrs["entity_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
-func (r *TagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+// GetAutoTagConfigs returns the value of the AutoTagConfigs field in CatalogConfig as
+// a slice of dataclassification_tf.AutoTaggingConfig values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CatalogConfig) GetAutoTagConfigs(ctx context.Context) ([]dataclassification_tf.AutoTaggingConfig, bool) {
+	if m.AutoTagConfigs.IsNull() || m.AutoTagConfigs.IsUnknown() {
+		return nil, false
+	}
+	var v []dataclassification_tf.AutoTaggingConfig
+	d := m.AutoTagConfigs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAutoTagConfigs sets the value of the AutoTagConfigs field in CatalogConfig.
+func (m *CatalogConfig) SetAutoTagConfigs(ctx context.Context, v []dataclassification_tf.AutoTaggingConfig) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_tag_configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AutoTagConfigs = types.ListValueMust(t, vs)
+}
+
+// GetIncludedSchemas returns the value of the IncludedSchemas field in CatalogConfig as
+// a dataclassification_tf.CatalogConfigSchemaNames value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CatalogConfig) GetIncludedSchemas(ctx context.Context) (dataclassification_tf.CatalogConfigSchemaNames, bool) {
+	var e dataclassification_tf.CatalogConfigSchemaNames
+	if m.IncludedSchemas.IsNull() || m.IncludedSchemas.IsUnknown() {
+		return e, false
+	}
+	var v dataclassification_tf.CatalogConfigSchemaNames
+	d := m.IncludedSchemas.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludedSchemas sets the value of the IncludedSchemas field in CatalogConfig.
+func (m *CatalogConfig) SetIncludedSchemas(ctx context.Context, v dataclassification_tf.CatalogConfigSchemaNames) {
+	vs := v.ToObjectValue(ctx)
+	m.IncludedSchemas = vs
+}
+
+func (r *CatalogConfigResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *TagAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, TagAssignment{}, nil)
+func (r *CatalogConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CatalogConfig{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks workspace_entity_tag_assignment",
+		Description: "Terraform schema for Databricks data_classification_catalog_config",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *TagAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CatalogConfigResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CatalogConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan TagAssignment
+	var plan CatalogConfig
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var tag_assignment tags.TagAssignment
+	var catalog_config dataclassification.CatalogConfig
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_assignment)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &catalog_config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := tags.CreateTagAssignmentRequest{
-		TagAssignment: tag_assignment,
+	createRequest := dataclassification.CreateCatalogConfigRequest{
+		CatalogConfig: catalog_config,
+		Parent:        plan.Parent.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -251,13 +337,13 @@ func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	response, err := client.WorkspaceEntityTagAssignments.CreateTagAssignment(ctx, createRequest)
+	response, err := client.DataClassification.CreateCatalogConfig(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to create data_classification_catalog_config", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState CatalogConfig
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -273,16 +359,16 @@ func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateR
 	}
 }
 
-func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CatalogConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState TagAssignment
+	var existingState CatalogConfig
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest tags.GetTagAssignmentRequest
+	var readRequest dataclassification.GetCatalogConfigRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -302,18 +388,18 @@ func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.WorkspaceEntityTagAssignments.GetTagAssignment(ctx, readRequest)
+	response, err := client.DataClassification.GetCatalogConfig(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to get data_classification_catalog_config", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState CatalogConfig
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -324,20 +410,18 @@ func (r *TagAssignmentResource) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, diags *diag.Diagnostics, state *tfsdk.State) {
-	var tag_assignment tags.TagAssignment
+func (r *CatalogConfigResource) update(ctx context.Context, plan CatalogConfig, diags *diag.Diagnostics, state *tfsdk.State) {
+	var catalog_config dataclassification.CatalogConfig
 
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &tag_assignment)...)
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &catalog_config)...)
 	if diags.HasError() {
 		return
 	}
 
-	updateRequest := tags.UpdateTagAssignmentRequest{
-		TagAssignment: tag_assignment,
-		EntityId:      plan.EntityId.ValueString(),
-		EntityType:    plan.EntityType.ValueString(),
-		TagKey:        plan.TagKey.ValueString(),
-		UpdateMask:    "tag_value",
+	updateRequest := dataclassification.UpdateCatalogConfigRequest{
+		CatalogConfig: catalog_config,
+		Name:          plan.Name.ValueString(),
+		UpdateMask:    *fieldmask.New(strings.Split("auto_tag_configs,included_schemas", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -354,13 +438,13 @@ func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, 
 	if diags.HasError() {
 		return
 	}
-	response, err := client.WorkspaceEntityTagAssignments.UpdateTagAssignment(ctx, updateRequest)
+	response, err := client.DataClassification.UpdateCatalogConfig(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update workspace_entity_tag_assignment", err.Error())
+		diags.AddError("failed to update data_classification_catalog_config", err.Error())
 		return
 	}
 
-	var newState TagAssignment
+	var newState CatalogConfig
 
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -372,10 +456,10 @@ func (r *TagAssignmentResource) update(ctx context.Context, plan TagAssignment, 
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *TagAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CatalogConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan TagAssignment
+	var plan CatalogConfig
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -384,16 +468,16 @@ func (r *TagAssignmentResource) Update(ctx context.Context, req resource.UpdateR
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *TagAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CatalogConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var state TagAssignment
+	var state CatalogConfig
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest tags.DeleteTagAssignmentRequest
+	var deleteRequest dataclassification.DeleteCatalogConfigRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -414,34 +498,30 @@ func (r *TagAssignmentResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	err := client.WorkspaceEntityTagAssignments.DeleteTagAssignment(ctx, deleteRequest)
+	err := client.DataClassification.DeleteCatalogConfig(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to delete data_classification_catalog_config", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &TagAssignmentResource{}
+var _ resource.ResourceWithImportState = &CatalogConfigResource{}
 
-func (r *TagAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *CatalogConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: entity_type,entity_id,tag_key. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	entityType := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_type"), entityType)...)
-	entityId := parts[1]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_id"), entityId)...)
-	tagKey := parts[2]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("tag_key"), tagKey)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

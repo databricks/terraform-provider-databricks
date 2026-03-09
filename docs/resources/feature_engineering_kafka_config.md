@@ -33,9 +33,11 @@ The following arguments are supported:
   Only the delta table name is used for backfill, the entity columns and timeseries column are ignored as they are defined by the associated KafkaSource
 
 ### DeltaTableSource
-* `entity_columns` (list of string, required) - The entity columns of the Delta table
+* `entity_columns` (list of string, required, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
+  The entity columns of the Delta table
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
-* `timeseries_column` (string, required) - The timeseries column of the Delta table
+* `timeseries_column` (string, required, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
+  The timeseries column of the Delta table
 * `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}

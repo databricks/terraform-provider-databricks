@@ -351,10 +351,15 @@ func TestWorkspaceClientForWorkspace_WorkspaceDoesNotExist(t *testing.T) {
 		WorkspaceId: 12345,
 	}).Return(nil, fmt.Errorf("workspace not found"))
 
-	// Create a DatabricksClient with the mock account client
+	// Create a DatabricksClient with an account host. When the account API fails,
+	// the fallback (tryWorkspaceClientDirect) also fails because account hosts
+	// cannot be used to create workspace clients.
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
+			Config: &config.Config{
+				Host:  "https://accounts.cloud.databricks.com",
+				Token: "dapi123",
+			},
 		},
 	}
 	dc.SetAccountClient(mockAcc.AccountClient)
@@ -362,14 +367,46 @@ func TestWorkspaceClientForWorkspace_WorkspaceDoesNotExist(t *testing.T) {
 	// Call the method with a non-existent workspace ID
 	_, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
 
-	// Verify the error
+	// Both the account API and the fallback fail
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "workspace not found")
+}
+
+func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+
+	// Setup the mock to return an error (e.g. no account-level access)
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: 12345,
+	}).Return(nil, fmt.Errorf("workspace not found"))
+
+	// Create a DatabricksClient with the mock account client
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Token: "dapi123",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// When account API fails, fallback creates a direct workspace client
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	assert.NoError(t, err)
+	assert.NotNil(t, workspaceClient)
+
+	// Verify the client is cached
+	dc.mu.Lock()
+	cachedClient, exists := dc.cachedWorkspaceClients[12345]
+	dc.mu.Unlock()
+	assert.True(t, exists)
+	assert.Equal(t, workspaceClient, cachedClient)
 }
 
 func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
 		Token: "dapi123", // Instantiating WorkspaceClient attempts authentication, this allows Configure() to complete quickly.
 	}
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()

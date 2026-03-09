@@ -86,23 +86,25 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 
 // namespaceForceNew marks the workspace_id field as ForceNew if it changed.
 func namespaceForceNew(d *schema.ResourceDiff) error {
-	workspaceIDKey := workspaceIDSchemaKey
-	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDKey)
+	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
 	if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
-		if err := d.ForceNew(workspaceIDKey); err != nil {
+		if err := d.ForceNew(workspaceIDSchemaKey); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// namespaceValidateWorkspaceID validates that the workspace_id in provider_config
+// NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
 // is reachable during the plan phase.
 // For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
 // For account-level providers, it checks that the workspace is accessible from the account.
 // This is a no-op when provider_config is not set.
-func namespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
+	if newWorkspaceID == nil {
+		return nil
+	}
 	newWSID, ok := newWorkspaceID.(string)
 	if !ok || newWSID == "" {
 		return nil
@@ -118,13 +120,9 @@ func namespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 		}
 		return nil
 	}
-	w, err := c.WorkspaceClient()
+	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
 	if err != nil {
 		return err
-	}
-	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
-	if err != nil {
-		return fmt.Errorf("failed to validate workspace_id: %w", err)
 	}
 	return nil
 }
@@ -135,7 +133,7 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 	if err := namespaceForceNew(d); err != nil {
 		return err
 	}
-	return namespaceValidateWorkspaceID(ctx, d, c)
+	return NamespaceValidateWorkspaceID(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data

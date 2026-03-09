@@ -40,6 +40,7 @@ func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string)
 
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 	t.Setenv("PATH", "testdata:/bin")
+	t.Setenv("HOME", t.TempDir())
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{},

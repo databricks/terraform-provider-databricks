@@ -111,16 +111,16 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() == config.AccountHost {
-		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+	if c.Config.HostType() != config.WorkspaceHost {
+		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
 }
 
-// getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
+// getWorkspaceClientForAccountUnifiedHost gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured
 // at account level.
-func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
+func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// Workspace ID must be set in a workspace level resource if
@@ -267,6 +267,25 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return client, nil
 	}
+	// Get workspace client via account API.
+	w, err := c.workspaceClientViaAccountAPI(ctx, workspaceId)
+	if err != nil {
+		// Fallback: create workspace client on the same host with workspace_id set.
+		// This works for unified hosts that can route by workspace_id through X-Databricks-Org-Id header.
+		// Note: GetWorkspaceClient(*workspace) supports all host, this is the case when users don't have access to the account
+		w, err = c.tryWorkspaceClientDirect(workspaceId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	w.CurrentUser = newCachedMe(w.CurrentUser)
+	c.cachedWorkspaceClients[workspaceId] = w
+	return w, nil
+}
+
+// workspaceClientViaAccountAPI resolves the workspace deployment URL via the
+// account API and creates a workspace client pointing to it.
+func (c *DatabricksClient) workspaceClientViaAccountAPI(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
 	a, err := c.accountClient()
 	if err != nil {
 		return nil, err
@@ -275,13 +294,20 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if err != nil {
 		return nil, err
 	}
-	w, err := a.GetWorkspaceClient(*workspace)
+	return a.GetWorkspaceClient(*workspace)
+}
+
+// tryWorkspaceClientDirect creates a workspace client on the same host with
+// workspace_id set, then validates it with a lightweight API call. This works
+// for unified hosts that can route requests by workspace_id.
+func (c *DatabricksClient) tryWorkspaceClientDirect(workspaceId int64) (*databricks.WorkspaceClient, error) {
+	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
 	if err != nil {
 		return nil, err
 	}
-	w.CurrentUser = newCachedMe(w.CurrentUser)
-	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
-	return w, nil
+	cfg.AccountID = c.Config.AccountID
+	cfg.WorkspaceID = fmt.Sprintf("%d", workspaceId)
+	return databricks.NewWorkspaceClient((*databricks.Config)(cfg))
 }
 
 // SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.

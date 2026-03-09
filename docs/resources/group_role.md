@@ -3,13 +3,13 @@ subcategory: "Security"
 ---
 # databricks_group_role Resource
 
-This resource allows you to attach a role to [databricks_group](group.md). This role could be a pre-defined role such as account admin, or an instance profile ARN.
+This resource allows you to attach a role to [databricks_group](group.md). This role could be a pre-defined role such as account admin, or an instance profile ARN. This resource replaces the deprecated [databricks_group_instance_profile](group_instance_profile.md) resource for attaching an instance profile to a group.
 
 -> This resource can be used with an account or workspace-level provider.
 
 ## Example Usage
 
-Attach an instance profile to a group
+Attach an instance profile to a group using `databricks_group_role`
 
 ```hcl
 resource "databricks_instance_profile" "instance_profile" {
@@ -20,7 +20,7 @@ resource "databricks_group" "my_group" {
   display_name = "my_group_name"
 }
 
-resource "databricks_group_role" "my_group_instance_profile" {
+resource "databricks_group_role" "my_group_role" {
   group_id = databricks_group.my_group.id
   role     = databricks_instance_profile.instance_profile.id
 }

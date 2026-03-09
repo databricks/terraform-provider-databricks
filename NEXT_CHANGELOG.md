@@ -8,6 +8,9 @@
 
 * Added `databricks_postgres_database` resource and data source.
 * Renamed `databricks_apps_space` to `databricks_app_space`.
+* Added `databricks_data_classification_catalog_config` resource and data source.
+* Added `databricks_knowledge_assistant` resource and data source.
+* Added `databricks_knowledge_assistant_knowledge_source` resource and data source.
 
 ### Bug Fixes
 

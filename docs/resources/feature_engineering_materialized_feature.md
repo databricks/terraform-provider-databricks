@@ -13,6 +13,7 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `feature_name` (string, required) - The full name of the feature in Unity Catalog
 * `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
+* `materialized_feature_id` (string, optional) - Unique identifier for the materialized feature
 * `offline_store_config` (OfflineStoreConfig, optional)
 * `online_store_config` (OnlineStoreConfig, optional)
 * `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
@@ -40,7 +41,6 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
-* `materialized_feature_id` (string) - Unique identifier for the materialized feature
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only
 
 ## Import

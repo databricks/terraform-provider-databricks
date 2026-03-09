@@ -1,17 +1,19 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package workspace_entity_tag_assignment
+package knowledge_assistant_knowledge_source
 
 import (
 	"context"
 	"reflect"
 	"regexp"
 
-	"github.com/databricks/databricks-sdk-go/service/tags"
+	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/knowledgeassistants_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -22,15 +24,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourceName = "workspace_entity_tag_assignment"
+const dataSourceName = "knowledge_assistant_knowledge_source"
 
-var _ datasource.DataSourceWithConfigure = &TagAssignmentDataSource{}
+var _ datasource.DataSourceWithConfigure = &KnowledgeSourceDataSource{}
 
-func DataSourceTagAssignment() datasource.DataSource {
-	return &TagAssignmentDataSource{}
+func DataSourceKnowledgeSource() datasource.DataSource {
+	return &KnowledgeSourceDataSource{}
 }
 
-type TagAssignmentDataSource struct {
+type KnowledgeSourceDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -96,31 +98,53 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// TagAssignmentData extends the main model with additional fields.
-type TagAssignmentData struct {
-	// The identifier of the entity to which the tag is assigned. For apps, the
-	// entity_id is the app name
-	EntityId types.String `tfsdk:"entity_id"`
-	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces, notebooks
-	EntityType types.String `tfsdk:"entity_type"`
-	// The key of the tag. The characters , . : / - = and leading/trailing
-	// spaces are not allowed
-	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
-	TagValue           types.String `tfsdk:"tag_value"`
+// KnowledgeSourceData extends the main model with additional fields.
+type KnowledgeSourceData struct {
+	// Timestamp when this knowledge source was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Description of the knowledge source. Required when creating a Knowledge
+	// Source. When updating a Knowledge Source, optional unless included in
+	// update_mask.
+	Description types.String `tfsdk:"description"`
+	// Human-readable display name of the knowledge source. Required when
+	// creating a Knowledge Source. When updating a Knowledge Source, optional
+	// unless included in update_mask.
+	DisplayName types.String `tfsdk:"display_name"`
+
+	FileTable types.Object `tfsdk:"file_table"`
+
+	Files types.Object `tfsdk:"files"`
+
+	Id types.String `tfsdk:"id"`
+
+	Index types.Object `tfsdk:"index"`
+	// Timestamp representing the cutoff before which content in this knowledge
+	// source is being ingested.
+	KnowledgeCutoffTime timetypes.RFC3339 `tfsdk:"knowledge_cutoff_time"`
+	// Full resource name:
+	// knowledge-assistants/{knowledge_assistant_id}/knowledge-sources/{knowledge_source_id}
+	Name types.String `tfsdk:"name"`
+	// The type of the source: "index", "files", or "file_table". Required when
+	// creating a Knowledge Source. When updating a Knowledge Source, this field
+	// is ignored.
+	SourceType types.String `tfsdk:"source_type"`
+
+	State              types.String `tfsdk:"state"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagAssignmentData struct. Container types (types.Map, types.List, types.Set) and
+// KnowledgeSourceData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m TagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m KnowledgeSourceData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"file_table":      reflect.TypeOf(knowledgeassistants_tf.FileTableSpec{}),
+		"files":           reflect.TypeOf(knowledgeassistants_tf.FilesSpec{}),
+		"index":           reflect.TypeOf(knowledgeassistants_tf.IndexSpec{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
@@ -129,16 +153,23 @@ func (m TagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[string]
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TagAssignmentData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeSourceData
 // only implements ToObjectValue() and Type().
-func (m TagAssignmentData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m KnowledgeSourceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entity_id":   m.EntityId,
-			"entity_type": m.EntityType,
-			"tag_key":     m.TagKey,
-			"tag_value":   m.TagValue,
+			"create_time":           m.CreateTime,
+			"description":           m.Description,
+			"display_name":          m.DisplayName,
+			"file_table":            m.FileTable,
+			"files":                 m.Files,
+			"id":                    m.Id,
+			"index":                 m.Index,
+			"knowledge_cutoff_time": m.KnowledgeCutoffTime,
+			"name":                  m.Name,
+			"source_type":           m.SourceType,
+			"state":                 m.State,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -147,57 +178,71 @@ func (m TagAssignmentData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m TagAssignmentData) Type(ctx context.Context) attr.Type {
+func (m KnowledgeSourceData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entity_id":   types.StringType,
-			"entity_type": types.StringType,
-			"tag_key":     types.StringType,
-			"tag_value":   types.StringType,
+			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"description":           types.StringType,
+			"display_name":          types.StringType,
+			"file_table":            knowledgeassistants_tf.FileTableSpec{}.Type(ctx),
+			"files":                 knowledgeassistants_tf.FilesSpec{}.Type(ctx),
+			"id":                    types.StringType,
+			"index":                 knowledgeassistants_tf.IndexSpec{}.Type(ctx),
+			"knowledge_cutoff_time": timetypes.RFC3339{}.Type(ctx),
+			"name":                  types.StringType,
+			"source_type":           types.StringType,
+			"state":                 types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
 	}
 }
 
-func (m TagAssignmentData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["entity_id"] = attrs["entity_id"].SetRequired()
-	attrs["entity_type"] = attrs["entity_type"].SetRequired()
-	attrs["tag_key"] = attrs["tag_key"].SetRequired()
-	attrs["tag_value"] = attrs["tag_value"].SetComputed()
+func (m KnowledgeSourceData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["file_table"] = attrs["file_table"].SetComputed()
+	attrs["files"] = attrs["files"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["index"] = attrs["index"].SetComputed()
+	attrs["knowledge_cutoff_time"] = attrs["knowledge_cutoff_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
-func (r *TagAssignmentDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *KnowledgeSourceDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *TagAssignmentDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, TagAssignmentData{}, nil)
+func (r *KnowledgeSourceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, KnowledgeSourceData{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks TagAssignment",
+		Description: "Terraform schema for Databricks KnowledgeSource",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *TagAssignmentDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *KnowledgeSourceDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *TagAssignmentDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *KnowledgeSourceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	var config TagAssignmentData
+	var config KnowledgeSourceData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest tags.GetTagAssignmentRequest
+	var readRequest knowledgeassistants.GetKnowledgeSourceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -218,13 +263,13 @@ func (r *TagAssignmentDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	response, err := client.WorkspaceEntityTagAssignments.GetTagAssignment(ctx, readRequest)
+	response, err := client.KnowledgeAssistants.GetKnowledgeSource(ctx, readRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get workspace_entity_tag_assignment", err.Error())
+		resp.Diagnostics.AddError("failed to get knowledge_assistant_knowledge_source", err.Error())
 		return
 	}
 
-	var newState TagAssignmentData
+	var newState KnowledgeSourceData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

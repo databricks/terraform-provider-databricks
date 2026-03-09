@@ -301,6 +301,8 @@ func DefaultConfigCustomizer(cfg *config.Config) error {
 // The resulting values are written to a hard-coded location, which we read from if present to use OIDC.
 // It is not an error if these files are not present.
 func OidcConfigCustomizer(cfg *config.Config) error {
+	// Set the HTTP timeout to 10 minutes for tests, same as DefaultConfigCustomizer.
+	cfg.HTTPTimeoutSeconds = 10 * 60
 	// This is a no-op for non-AWS and for non-UC AWS workspace environments because the OIDC auth is not supported.
 	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
 		return nil

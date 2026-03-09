@@ -193,6 +193,56 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	})
 }
 
+
+func TestAccAppResource_InSpace(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	spaceTemplate := `
+	resource "databricks_sql_endpoint" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+		cluster_size = "2X-Small"
+		max_num_clusters = 1
+
+		tags {
+			custom_tags {
+				key   = "Owner"
+				value = "eng-dev-ecosystem-team_at_databricks.com"
+			}
+		}
+	}
+
+	resource "databricks_app_space" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "Space for acceptance test"
+		resources = [{
+			name = "warehouse"
+			sql_warehouse = {
+				id = databricks_sql_endpoint.this.id
+				permission = "CAN_USE"
+			}
+		}]
+		user_api_scopes = ["sql"]
+	}
+
+	resource "databricks_app" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "App in a space"
+		space = databricks_app_space.this.name
+		no_compute = true
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: spaceTemplate,
+		Check: func(s *terraform.State) error {
+			attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+			assert.NotEmpty(t, attrs["resources.#"], "resources should be populated from the space")
+			assert.NotEmpty(t, attrs["user_api_scopes.#"], "user_api_scopes should be populated from the space")
+			return nil
+		},
+	})
+}
+
 var deletedOutsideTemplate = `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-{var.STICKY_RANDOM}"

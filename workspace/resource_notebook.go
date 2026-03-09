@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -314,12 +315,17 @@ func ResourceNotebook() common.Resource {
 			}
 			resp, err := notebooksAPI.Create(createNotebook)
 			if err != nil {
-				if isParentDoesntExistError(err) {
-					parent := filepath.ToSlash(filepath.Dir(path))
+				// If import failed, check if the parent folder is missing and create it.
+				parent := filepath.ToSlash(filepath.Dir(path))
+				w, errStatus := c.WorkspaceClientUnifiedProvider(ctx, d)
+				if errStatus != nil {
+					return err
+				}
+				_, errStatus = w.Workspace.GetStatusByPath(ctx, parent)
+				if errStatus != nil && apierr.IsMissing(errStatus) {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
-					err = notebooksAPI.Mkdirs(parent)
-					if err != nil {
-						return err
+					if errStatus = notebooksAPI.Mkdirs(parent); errStatus != nil {
+						return errStatus
 					}
 					resp, err = notebooksAPI.Create(createNotebook)
 				}
@@ -351,7 +357,7 @@ func ResourceNotebook() common.Resource {
 					oldFormat = "SOURCE"
 				}
 			}
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -419,9 +425,4 @@ func ResourceNotebook() common.Resource {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 	}
-}
-
-func isParentDoesntExistError(err error) bool {
-	errStr := strings.ToLower(err.Error())
-	return strings.Contains(errStr, "parent folder ") && strings.Contains(errStr, " does not exist")
 }

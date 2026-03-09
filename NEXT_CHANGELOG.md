@@ -26,3 +26,4 @@
 * Use workspace `GetStatus` API to check parent folder existence before creating Lakeview dashboards, replacing fragile error string matching.
 * Use workspace `GetStatus` API to check parent folder existence before uploading workspace files, replacing fragile error string matching.
 * Skip `TestMwsAccNetworkConnectivityConfig` test to unblock merging PRs in the repository
+* Use workspace `GetStatus` API to check parent folder existence before importing notebooks, replacing fragile error string matching.

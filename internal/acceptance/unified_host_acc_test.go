@@ -47,109 +47,6 @@ func initUnifiedHostAccountEnv(t *testing.T) {
 	}
 }
 
-func unifiedHostCreateJobTest(t *testing.T) {
-	unifiedHost := os.Getenv("UNIFIED_HOST")
-	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
-	jobName := "tf-unified-" + RandomName() + "-job-1"
-
-	run(t, []Step{
-		{
-			Template: `
-			resource "databricks_job" "j1" {
-				name = "` + jobName + `"
-				provider_config {
-					workspace_id = ` + workspaceID + `
-				}
-				task {
-					task_key = "check"
-					condition_task {
-						left  = "true"
-						op    = "EQUAL_TO"
-						right = "true"
-					}
-				}
-			}
-			`,
-			ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
-			Check: ResourceCheck("databricks_job.j1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				w, err := client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
-				if err != nil {
-					return err
-				}
-				jobID, err := strconv.ParseInt(id, 10, 64)
-				if err != nil {
-					return err
-				}
-				res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{JobId: jobID})
-				if err != nil {
-					return err
-				}
-				if res.Settings.Name != jobName {
-					return fmt.Errorf("expected job name %q, got %q", jobName, res.Settings.Name)
-				}
-				return nil
-			}),
-		},
-	})
-}
-
-func TestMwsAccUnifiedHostCreateJobs(t *testing.T) {
-	initUnifiedHostAccountEnv(t)
-	unifiedHostCreateJobTest(t)
-}
-
-func unifiedHostWorkspaceCreateJobTest(t *testing.T) {
-	unifiedHost := os.Getenv("UNIFIED_HOST")
-	ctx := context.Background()
-	w := databricks.Must(databricks.NewWorkspaceClient())
-	workspaceID, err := w.CurrentWorkspaceID(ctx)
-	if err != nil {
-		t.Fatalf("failed to get current workspace ID: %s", err)
-	}
-	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
-	jobName := "tf-unified-ws-" + RandomName() + "-job-1"
-
-	run(t, []Step{
-		{
-			Template: `
-			resource "databricks_job" "j1" {
-				name = "` + jobName + `"
-				provider_config {
-					workspace_id = ` + workspaceIDStr + `
-				}
-				task {
-					task_key = "check"
-					condition_task {
-						left  = "true"
-						op    = "EQUAL_TO"
-						right = "true"
-					}
-				}
-			}
-			`,
-			ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
-			Check: ResourceCheck("databricks_job.j1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				w, err := client.WorkspaceClient()
-				if err != nil {
-					return err
-				}
-				jobID, err := strconv.ParseInt(id, 10, 64)
-				if err != nil {
-					return err
-				}
-				res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{JobId: jobID})
-				if err != nil {
-					return err
-				}
-				if res.Settings.Name != jobName {
-					return fmt.Errorf("expected job name %q, got %q", jobName, res.Settings.Name)
-				}
-				return nil
-			}),
-		},
-	})
-}
-
 func initUnifiedHostWorkspaceEnv(t *testing.T) {
 	LoadWorkspaceEnv(t)
 	unifiedHost := os.Getenv("UNIFIED_HOST")
@@ -158,10 +55,78 @@ func initUnifiedHostWorkspaceEnv(t *testing.T) {
 	}
 }
 
+// createJobWithProviderConfig is a shared test helper that creates a job with
+// provider_config { workspace_id } and verifies it. If providerFactories is nil,
+// it uses the default provider factories.
+func createJobWithProviderConfig(t *testing.T, workspaceID string, providerFactories map[string]func() (tfprotov6.ProviderServer, error)) {
+	jobName := "tf-" + RandomName() + "-job-1"
+
+	step := Step{
+		Template: `
+		resource "databricks_job" "j1" {
+			name = "` + jobName + `"
+			provider_config {
+				workspace_id = ` + workspaceID + `
+			}
+			task {
+				task_key = "check"
+				condition_task {
+					left  = "true"
+					op    = "EQUAL_TO"
+					right = "true"
+				}
+			}
+		}
+		`,
+		Check: ResourceCheck("databricks_job.j1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+			if err != nil {
+				return err
+			}
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			if err != nil {
+				return err
+			}
+			res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{JobId: jobID})
+			if err != nil {
+				return err
+			}
+			if res.Settings.Name != jobName {
+				return fmt.Errorf("expected job name %q, got %q", jobName, res.Settings.Name)
+			}
+			return nil
+		}),
+	}
+	if providerFactories != nil {
+		step.ProtoV6ProviderFactories = providerFactories
+	}
+	run(t, []Step{step})
+}
+
+func TestMwsAccUnifiedHostCreateJobs(t *testing.T) {
+	initUnifiedHostAccountEnv(t)
+	unifiedHost := os.Getenv("UNIFIED_HOST")
+	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
+	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost))
+}
+
 func TestAccUnifiedHostWorkspaceCreateJobs(t *testing.T) {
 	initUnifiedHostWorkspaceEnv(t)
 	if !IsAzure(t) {
 		Skipf(t)("This test is only running on Azure until ACCOUNT_ID is exported in our workspace test environments")
 	}
-	unifiedHostWorkspaceCreateJobTest(t)
+	unifiedHost := os.Getenv("UNIFIED_HOST")
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		t.Fatalf("failed to get current workspace ID: %s", err)
+	}
+	createJobWithProviderConfig(t, strconv.FormatInt(workspaceID, 10), unifiedHostProviderFactories(unifiedHost))
+}
+
+func TestMwsAccAccountHostCreateJobs(t *testing.T) {
+	LoadAccountEnv(t)
+	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
+	createJobWithProviderConfig(t, workspaceID, nil)
 }

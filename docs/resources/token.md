@@ -53,7 +53,9 @@ resource "databricks_token" "pat" {
 The following arguments are available:
 
 * `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, then expire time will be set to maximum allowed by the workspace configuration or platform.
-* `comment` - (Optional) (String) Comment that will appear on the user’s settings page for this token.
+* `comment` - (Optional) (String) Comment that will appear on the user's settings page for this token.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

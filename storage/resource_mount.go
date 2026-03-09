@@ -97,10 +97,37 @@ func ResourceDatabricksMountSchema() map[string]*schema.Schema {
 // ResourceMount mounts using given configuration
 func ResourceMount() common.Resource {
 	tpl := GenericMount{}
-	r := commonMountResource(tpl, ResourceDatabricksMountSchema())
-	r.Create = mountCallback(mountCreate).preProcess(r)
-	r.Read = removeFromStateIfClusterDoesNotExist(mountCallback(mountRead).preProcess(r))
-	r.Delete = removeFromStateIfClusterDoesNotExist(mountCallback(mountDelete).preProcess(r))
+	s := ResourceDatabricksMountSchema()
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
+	r := commonMountResource(tpl, s)
+	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+		return common.NamespaceCustomizeDiff(ctx, d, c)
+	}
+	origCreate := mountCallback(mountCreate).preProcess(r)
+	origRead := mountCallback(mountRead).preProcess(r)
+	origDelete := mountCallback(mountDelete).preProcess(r)
+	r.Create = func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+		if err != nil {
+			return err
+		}
+		return origCreate(ctx, d, newClient)
+	}
+	r.Read = removeFromStateIfClusterDoesNotExist(func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+		if err != nil {
+			return err
+		}
+		return origRead(ctx, d, newClient)
+	})
+	r.Delete = removeFromStateIfClusterDoesNotExist(func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+		if err != nil {
+			return err
+		}
+		return origDelete(ctx, d, newClient)
+	})
 	r.Importer = nil
 	r.Timeouts = &schema.ResourceTimeout{
 		Default: schema.DefaultTimeout(20 * time.Minute),

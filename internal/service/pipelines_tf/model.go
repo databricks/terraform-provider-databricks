@@ -3409,6 +3409,8 @@ type GetPipelineResponse struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Serverless budget policy ID of this pipeline.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// Publishing mode of the pipeline
+	EffectivePublishingMode types.String `tfsdk:"effective_publishing_mode"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health"`
 	// The last time the pipeline settings were modified or created.
@@ -3491,6 +3493,7 @@ func (m GetPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
+	attrs["effective_publishing_mode"] = attrs["effective_publishing_mode"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["last_modified"] = attrs["last_modified"].SetOptional()
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
@@ -3530,6 +3533,7 @@ func (m GetPipelineResponse) ToObjectValue(ctx context.Context) basetypes.Object
 			"cluster_id":                 m.ClusterId,
 			"creator_user_name":          m.CreatorUserName,
 			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
+			"effective_publishing_mode":  m.EffectivePublishingMode,
 			"health":                     m.Health,
 			"last_modified":              m.LastModified,
 			"latest_updates":             m.LatestUpdates,
@@ -3550,6 +3554,7 @@ func (m GetPipelineResponse) Type(ctx context.Context) attr.Type {
 			"cluster_id":                 types.StringType,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_publishing_mode":  types.StringType,
 			"health":                     types.StringType,
 			"last_modified":              types.Int64Type,
 			"latest_updates": basetypes.ListType{
@@ -8540,6 +8545,19 @@ type PipelinesEnvironment struct {
 	// dependency could be <requirement specifier>, <archive url/path>, <local
 	// project path>(WSFS or Volumes in Databricks), <vcs project url>
 	Dependencies types.List `tfsdk:"dependencies"`
+	// The environment version of the serverless Python environment used to
+	// execute customer Python code. Each environment version includes a
+	// specific Python version and a curated set of pre-installed libraries with
+	// defined versions, providing a stable and reproducible execution
+	// environment.
+	//
+	// Databricks supports a three-year lifecycle for each environment version.
+	// For available versions and their included packages, see
+	// https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/
+	//
+	// The value should be a string representing the environment version number,
+	// for example: `"4"`.
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
 }
 
 func (to *PipelinesEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelinesEnvironment) {
@@ -8562,6 +8580,7 @@ func (to *PipelinesEnvironment) SyncFieldsDuringRead(ctx context.Context, from P
 
 func (m PipelinesEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 
 	return attrs
 }
@@ -8586,7 +8605,8 @@ func (m PipelinesEnvironment) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dependencies": m.Dependencies,
+			"dependencies":        m.Dependencies,
+			"environment_version": m.EnvironmentVersion,
 		})
 }
 
@@ -8597,6 +8617,7 @@ func (m PipelinesEnvironment) Type(ctx context.Context) attr.Type {
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"environment_version": types.StringType,
 		},
 	}
 }
@@ -8771,6 +8792,61 @@ func (m PostgresSlotConfig) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"publication_name": types.StringType,
 			"slot_name":        types.StringType,
+		},
+	}
+}
+
+// Specifies a replace_where predicate override for a replace where flow.
+type ReplaceWhereOverride struct {
+	// Name of the flow to apply this override to.
+	FlowName types.String `tfsdk:"flow_name"`
+	// SQL predicate string to use as replace_where condition. Example: `date =
+	// '2024-10-10' AND city = 'xyz'`
+	PredicateOverride types.String `tfsdk:"predicate_override"`
+}
+
+func (to *ReplaceWhereOverride) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReplaceWhereOverride) {
+}
+
+func (to *ReplaceWhereOverride) SyncFieldsDuringRead(ctx context.Context, from ReplaceWhereOverride) {
+}
+
+func (m ReplaceWhereOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["flow_name"] = attrs["flow_name"].SetOptional()
+	attrs["predicate_override"] = attrs["predicate_override"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplaceWhereOverride.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ReplaceWhereOverride) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ReplaceWhereOverride
+// only implements ToObjectValue() and Type().
+func (m ReplaceWhereOverride) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"flow_name":          m.FlowName,
+			"predicate_override": m.PredicateOverride,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ReplaceWhereOverride) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"flow_name":          types.StringType,
+			"predicate_override": types.StringType,
 		},
 	}
 }
@@ -9798,6 +9874,8 @@ type StartUpdate struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Key/value map of parameters to pass to the pipeline execution
+	Parameters types.Map `tfsdk:"parameters"`
 
 	PipelineId types.String `tfsdk:"-"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
@@ -9805,6 +9883,15 @@ type StartUpdate struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// A list of predicate overrides for replace_where flows in this update.
+	// Only replace_where flows may be specified. Flows not listed use their
+	// original predicate.
+	ReplaceWhereOverrides types.List `tfsdk:"replace_where_overrides"`
+	// A list of flows for which this update should reset the streaming
+	// checkpoint. This selection will not clear the data in the flow's target
+	// table. Flows in this list may also appear in refresh_selection and
+	// full_refresh_selection.
+	ResetCheckpointSelection types.List `tfsdk:"reset_checkpoint_selection"`
 	// The information about the requested rewind operation. If specified this
 	// is a rewind mode update.
 	RewindSpec types.Object `tfsdk:"rewind_spec"`
@@ -9825,6 +9912,18 @@ func (to *StartUpdate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.ReplaceWhereOverrides.IsNull() && !from.ReplaceWhereOverrides.IsUnknown() && to.ReplaceWhereOverrides.IsNull() && len(from.ReplaceWhereOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ReplaceWhereOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ReplaceWhereOverrides = from.ReplaceWhereOverrides
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
 	}
 	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
 		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
@@ -9850,6 +9949,18 @@ func (to *StartUpdate) SyncFieldsDuringRead(ctx context.Context, from StartUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
 	}
+	if !from.ReplaceWhereOverrides.IsNull() && !from.ReplaceWhereOverrides.IsUnknown() && to.ReplaceWhereOverrides.IsNull() && len(from.ReplaceWhereOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ReplaceWhereOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ReplaceWhereOverrides = from.ReplaceWhereOverrides
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
 		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
 			if fromRewindSpec, ok := from.GetRewindSpec(ctx); ok {
@@ -9864,7 +9975,10 @@ func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["cause"] = attrs["cause"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["replace_where_overrides"] = attrs["replace_where_overrides"].SetOptional()
+	attrs["reset_checkpoint_selection"] = attrs["reset_checkpoint_selection"].SetOptional()
 	attrs["rewind_spec"] = attrs["rewind_spec"].SetOptional()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
@@ -9881,9 +9995,12 @@ func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m StartUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"full_refresh_selection": reflect.TypeOf(types.String{}),
-		"refresh_selection":      reflect.TypeOf(types.String{}),
-		"rewind_spec":            reflect.TypeOf(RewindSpec{}),
+		"full_refresh_selection":     reflect.TypeOf(types.String{}),
+		"parameters":                 reflect.TypeOf(types.String{}),
+		"refresh_selection":          reflect.TypeOf(types.String{}),
+		"replace_where_overrides":    reflect.TypeOf(ReplaceWhereOverride{}),
+		"reset_checkpoint_selection": reflect.TypeOf(types.String{}),
+		"rewind_spec":                reflect.TypeOf(RewindSpec{}),
 	}
 }
 
@@ -9894,13 +10011,16 @@ func (m StartUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                  m.Cause,
-			"full_refresh":           m.FullRefresh,
-			"full_refresh_selection": m.FullRefreshSelection,
-			"pipeline_id":            m.PipelineId,
-			"refresh_selection":      m.RefreshSelection,
-			"rewind_spec":            m.RewindSpec,
-			"validate_only":          m.ValidateOnly,
+			"cause":                      m.Cause,
+			"full_refresh":               m.FullRefresh,
+			"full_refresh_selection":     m.FullRefreshSelection,
+			"parameters":                 m.Parameters,
+			"pipeline_id":                m.PipelineId,
+			"refresh_selection":          m.RefreshSelection,
+			"replace_where_overrides":    m.ReplaceWhereOverrides,
+			"reset_checkpoint_selection": m.ResetCheckpointSelection,
+			"rewind_spec":                m.RewindSpec,
+			"validate_only":              m.ValidateOnly,
 		})
 }
 
@@ -9913,8 +10033,17 @@ func (m StartUpdate) Type(ctx context.Context) attr.Type {
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"pipeline_id": types.StringType,
 			"refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"replace_where_overrides": basetypes.ListType{
+				ElemType: ReplaceWhereOverride{}.Type(ctx),
+			},
+			"reset_checkpoint_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"rewind_spec":   RewindSpec{}.Type(ctx),
@@ -9949,6 +10078,32 @@ func (m *StartUpdate) SetFullRefreshSelection(ctx context.Context, v []types.Str
 	m.FullRefreshSelection = types.ListValueMust(t, vs)
 }
 
+// GetParameters returns the value of the Parameters field in StartUpdate as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in StartUpdate.
+func (m *StartUpdate) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
+}
+
 // GetRefreshSelection returns the value of the RefreshSelection field in StartUpdate as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
@@ -9973,6 +10128,58 @@ func (m *StartUpdate) SetRefreshSelection(ctx context.Context, v []types.String)
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetReplaceWhereOverrides returns the value of the ReplaceWhereOverrides field in StartUpdate as
+// a slice of ReplaceWhereOverride values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate) GetReplaceWhereOverrides(ctx context.Context) ([]ReplaceWhereOverride, bool) {
+	if m.ReplaceWhereOverrides.IsNull() || m.ReplaceWhereOverrides.IsUnknown() {
+		return nil, false
+	}
+	var v []ReplaceWhereOverride
+	d := m.ReplaceWhereOverrides.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetReplaceWhereOverrides sets the value of the ReplaceWhereOverrides field in StartUpdate.
+func (m *StartUpdate) SetReplaceWhereOverrides(ctx context.Context, v []ReplaceWhereOverride) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["replace_where_overrides"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ReplaceWhereOverrides = types.ListValueMust(t, vs)
+}
+
+// GetResetCheckpointSelection returns the value of the ResetCheckpointSelection field in StartUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate) GetResetCheckpointSelection(ctx context.Context) ([]types.String, bool) {
+	if m.ResetCheckpointSelection.IsNull() || m.ResetCheckpointSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ResetCheckpointSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResetCheckpointSelection sets the value of the ResetCheckpointSelection field in StartUpdate.
+func (m *StartUpdate) SetResetCheckpointSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["reset_checkpoint_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ResetCheckpointSelection = types.ListValueMust(t, vs)
 }
 
 // GetRewindSpec returns the value of the RewindSpec field in StartUpdate as
@@ -10825,6 +11032,8 @@ type UpdateInfo struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Key/value map of parameters used to initiate the update
+	Parameters types.Map `tfsdk:"parameters"`
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
@@ -10895,6 +11104,7 @@ func (m UpdateInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
@@ -10915,6 +11125,7 @@ func (m UpdateInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{
 		"config":                 reflect.TypeOf(PipelineSpec{}),
 		"full_refresh_selection": reflect.TypeOf(types.String{}),
+		"parameters":             reflect.TypeOf(types.String{}),
 		"refresh_selection":      reflect.TypeOf(types.String{}),
 	}
 }
@@ -10932,6 +11143,7 @@ func (m UpdateInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creation_time":          m.CreationTime,
 			"full_refresh":           m.FullRefresh,
 			"full_refresh_selection": m.FullRefreshSelection,
+			"parameters":             m.Parameters,
 			"pipeline_id":            m.PipelineId,
 			"refresh_selection":      m.RefreshSelection,
 			"state":                  m.State,
@@ -10950,6 +11162,9 @@ func (m UpdateInfo) Type(ctx context.Context) attr.Type {
 			"creation_time": types.Int64Type,
 			"full_refresh":  types.BoolType,
 			"full_refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"pipeline_id": types.StringType,
@@ -11012,6 +11227,32 @@ func (m *UpdateInfo) SetFullRefreshSelection(ctx context.Context, v []types.Stri
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in UpdateInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateInfo) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in UpdateInfo.
+func (m *UpdateInfo) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 // GetRefreshSelection returns the value of the RefreshSelection field in UpdateInfo as

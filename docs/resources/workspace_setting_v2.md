@@ -2,7 +2,7 @@
 subcategory: "Settings"
 ---
 # databricks_workspace_setting_v2 Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 
@@ -37,6 +37,10 @@ The following arguments are supported:
 * `personal_compute` (PersonalComputeMessage, optional) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage, optional) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`

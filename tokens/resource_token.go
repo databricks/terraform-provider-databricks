@@ -131,13 +131,22 @@ func ResourceToken() common.Resource {
 			Computed: true,
 		},
 	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			comment := d.Get("comment").(string)
 			lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 			tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
-			tokenResp, err := NewTokensAPI(ctx, c).Create(tokenDuration, comment)
+			tokenResp, err := NewTokensAPI(ctx, newClient).Create(tokenDuration, comment)
 			if err != nil {
 				return err
 			}
@@ -145,7 +154,11 @@ func ResourceToken() common.Resource {
 			return d.Set("token_value", tokenResp.TokenValue)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			tokenInfo, err := NewTokensAPI(ctx, c).Read(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			tokenInfo, err := NewTokensAPI(ctx, newClient).Read(d.Id())
 			if err != nil {
 				err = common.IgnoreNotFoundError(err)
 				if err != nil {
@@ -166,7 +179,11 @@ func ResourceToken() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewTokensAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewTokensAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

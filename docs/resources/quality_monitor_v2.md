@@ -32,6 +32,10 @@ The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
 * `validity_check_configurations` (list of ValidityCheckConfiguration, optional) - Validity check configurations for anomaly detection
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AnomalyDetectionConfig
 * `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection

@@ -110,6 +110,10 @@ The following arguments are supported:
   Valid values are 2 to 35 days
 * `stopped` (boolean, optional) - Whether to stop the instance. An input only param, see effective_stopped for the output
 * `usage_policy_id` (string, optional) - The desired usage policy to associate with the instance
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### CustomTag
 * `key` (string, optional) - The key of the custom tag

@@ -892,11 +892,14 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeType(NodeTypeRequest{
+	smallestNodeType, err := a.GetSmallestNodeType(NodeTypeRequest{
 		NodeTypeRequest: compute.NodeTypeRequest{
 			LocalDisk: true,
 		},
 	})
+	if err != nil {
+		return ClusterInfo{}, err
+	}
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
 	r := Cluster{
 		NumWorkers:  1,
@@ -907,11 +910,6 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		}),
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
-	}
-	if a.client.IsAws() {
-		r.AwsAttributes = &AwsAttributes{
-			Availability: "SPOT",
-		}
 	}
 	if len(custom) == 1 {
 		r = custom[0]

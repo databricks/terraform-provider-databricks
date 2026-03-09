@@ -43,6 +43,8 @@ The following arguments are available:
 * `service_principal_id` (Required, string) - SCIM ID of the [databricks_service_principal](service_principal.md) (not application ID).
 * `lifetime` (Optional, string) - The lifetime of the secret in seconds formatted as `NNNNs`. If this parameter is not provided, the secret will have a default lifetime of 730 days (`63072000s`).  Expiration of secret will lead to generation of new secret.
 * `time_rotating` - (Optional, string) - Changing this argument forces recreation of the secret.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

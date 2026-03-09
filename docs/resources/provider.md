@@ -37,6 +37,8 @@ The following arguments are required:
 * `comment` - (Optional) Description about the provider.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN`.
 * `recipient_profile_str` - (Optional) This is the json file that is created from a recipient url.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

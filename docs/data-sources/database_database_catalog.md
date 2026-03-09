@@ -20,6 +20,10 @@ data "databricks_database_database_catalog" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the catalog in UC
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

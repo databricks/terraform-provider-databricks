@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "postgres_branches"
@@ -32,12 +33,14 @@ type BranchesData struct {
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// The Project that owns this collection of branches. Format:
 	// projects/{project_id}
-	Parent types.String `tfsdk:"parent"`
+	Parent             types.String `tfsdk:"parent"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (BranchesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"branches": reflect.TypeOf(BranchData{}),
+		"branches":        reflect.TypeOf(BranchData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -46,6 +49,8 @@ func (m BranchesData) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["branches"] = attrs["branches"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -85,7 +90,15 @@ func (r *BranchesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -105,6 +118,8 @@ func (r *BranchesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		branch.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, branch.ToObjectValue(ctx))
 	}
 

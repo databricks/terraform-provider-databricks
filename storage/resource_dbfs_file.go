@@ -12,32 +12,46 @@ import (
 
 // ResourceDbfsFile manages files on DBFS
 func ResourceDbfsFile() common.Resource {
+	s := workspace.FileContentSchema(map[string]*schema.Schema{
+		"file_size": {
+			Type:     schema.TypeInt,
+			Computed: true,
+		},
+		"dbfs_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		SchemaVersion: 1,
-		Schema: workspace.FileContentSchema(map[string]*schema.Schema{
-			"file_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"dbfs_path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		}),
+		Schema:        s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			path := d.Get("path").(string)
 			content, err := workspace.ReadContent(d)
 			if err != nil {
 				return err
 			}
-			if err = NewDbfsAPI(ctx, c).Create(path, content, true); err != nil {
+			if err = NewDbfsAPI(ctx, newClient).Create(path, content, true); err != nil {
 				return err
 			}
 			d.SetId(path)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			dbfsAPI := NewDbfsAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			dbfsAPI := NewDbfsAPI(ctx, newClient)
 			fileInfo, err := dbfsAPI.Status(d.Id())
 			if err != nil {
 				return err
@@ -48,7 +62,11 @@ func ResourceDbfsFile() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewDbfsAPI(ctx, c).Delete(d.Id(), false)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewDbfsAPI(ctx, newClient).Delete(d.Id(), false)
 		},
 		StateUpgraders: []schema.StateUpgrader{
 			{

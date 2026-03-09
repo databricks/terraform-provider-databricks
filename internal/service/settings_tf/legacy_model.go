@@ -2755,7 +2755,7 @@ type CreateTokenRequest_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The lifetime of the token, in seconds.
 	//
-	// If the lifetime is not specified, this token remains valid indefinitely.
+	// If the lifetime is not specified, this token remains valid for 2 years.
 	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
 }
 

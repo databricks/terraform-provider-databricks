@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -835,6 +836,28 @@ func TestModelServingReadWithMultipleSensitiveFields(t *testing.T) {
 		"config.0.served_entities.0.external_model.0.openai_config.0.microsoft_entra_client_secret_plaintext": "client-secret-xyz",
 		"config.0.served_entities.1.external_model.0.google_cloud_vertex_ai_config.0.private_key_plaintext":   "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----",
 	})
+}
+
+func TestModelServingSensitiveFieldsMarkedInSchema(t *testing.T) {
+	r := ResourceModelServing()
+	sensitiveFields := [][]string{
+		{"config", "served_entities", "external_model", "ai21labs_config", "ai21labs_api_key_plaintext"},
+		{"config", "served_entities", "external_model", "amazon_bedrock_config", "aws_access_key_id_plaintext"},
+		{"config", "served_entities", "external_model", "amazon_bedrock_config", "aws_secret_access_key_plaintext"},
+		{"config", "served_entities", "external_model", "anthropic_config", "anthropic_api_key_plaintext"},
+		{"config", "served_entities", "external_model", "cohere_config", "cohere_api_key_plaintext"},
+		{"config", "served_entities", "external_model", "databricks_model_serving_config", "databricks_api_token_plaintext"},
+		{"config", "served_entities", "external_model", "google_cloud_vertex_ai_config", "private_key_plaintext"},
+		{"config", "served_entities", "external_model", "openai_config", "openai_api_key_plaintext"},
+		{"config", "served_entities", "external_model", "openai_config", "microsoft_entra_client_secret_plaintext"},
+		{"config", "served_entities", "external_model", "palm_config", "palm_api_key_plaintext"},
+		{"config", "served_entities", "external_model", "custom_provider_config", "api_key_auth", "value_plaintext"},
+		{"config", "served_entities", "external_model", "custom_provider_config", "bearer_token_auth", "token_plaintext"},
+	}
+	for _, path := range sensitiveFields {
+		sch := common.MustSchemaPath(r.Schema, path...)
+		assert.True(t, sch.Sensitive, "field %v should be marked sensitive", path)
+	}
 }
 
 // TestCopySensitiveFields tests the reflection-based sensitive field copying logic

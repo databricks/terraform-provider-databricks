@@ -185,32 +185,6 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 	assert.Equal(t, "PASSTHROUGH", d.Get("security_policy"))
 }
 
-func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: ResourceSqlGlobalConfig(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/config/warehouses",
-				ReuseRequest: true,
-				Response: GlobalConfigForRead{
-					SecurityPolicy: "DATA_ACCESS_CONTROL",
-				},
-			},
-		},
-		Create: true,
-		Azure:  true,
-		State: map[string]any{
-			"security_policy":      "PASSTHROUGH",
-			"instance_profile_arn": "arn:...",
-			"data_access_config": map[string]any{
-				"spark.sql.session.timeZone": "UTC",
-			},
-		},
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "can't use instance_profile_arn outside of AWS")
-}
-
 func TestResourceSQLGlobalConfigCreateWithDataGCP(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

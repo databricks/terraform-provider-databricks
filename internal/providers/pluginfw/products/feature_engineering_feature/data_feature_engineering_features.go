@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "feature_engineering_features"
@@ -29,12 +30,14 @@ func DataSourceFeatures() datasource.DataSource {
 type FeaturesData struct {
 	FeatureEngineering types.List `tfsdk:"features"`
 	// The maximum number of results to return.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"features": reflect.TypeOf(FeatureData{}),
+		"features":        reflect.TypeOf(FeatureData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m FeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["features"] = attrs["features"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *FeaturesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		feature.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, feature.ToObjectValue(ctx))
 	}
 

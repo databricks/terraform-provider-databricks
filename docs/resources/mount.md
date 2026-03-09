@@ -328,6 +328,9 @@ resource "databricks_mount" "marketing" {
 }
 ```
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Migration from other mount resources
 
 Migration from the specific mount resource is straightforward:

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "database_instances"
@@ -28,13 +29,15 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 // DatabaseInstancesData extends the main model with additional fields.
 type DatabaseInstancesData struct {
 	Database types.List `tfsdk:"database_instances"`
-	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	// Upper bound for items returned. The maximum value is 100.
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (DatabaseInstancesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database_instances": reflect.TypeOf(DatabaseInstanceData{}),
+		"provider_config":    reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -42,6 +45,8 @@ func (m DatabaseInstancesData) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["database_instances"] = attrs["database_instances"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -81,7 +86,15 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,8 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		database_instance.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, database_instance.ToObjectValue(ctx))
 	}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "external_metadatas"
@@ -30,12 +31,14 @@ type ExternalMetadatasData struct {
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
 	// Specifies the maximum number of external metadata objects to return in a
 	// single response. The value must be less than or equal to 1000.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (ExternalMetadatasData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"external_metadata": reflect.TypeOf(ExternalMetadataData{}),
+		"provider_config":   reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -43,6 +46,8 @@ func (m ExternalMetadatasData) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["external_metadata"] = attrs["external_metadata"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -82,7 +87,15 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -102,6 +115,8 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		external_metadata.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, external_metadata.ToObjectValue(ctx))
 	}
 

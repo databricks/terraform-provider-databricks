@@ -13,6 +13,10 @@ subcategory: "Machine Learning"
 The following arguments are supported:
 * `feature_name` (string, optional) - Filter by feature name. If specified, only materialized features materialized from this feature will be returned
 * `page_size` (integer, optional) - The maximum number of results to return. Defaults to 100 if not specified. Cannot be greater than 1000
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -34,8 +38,10 @@ This data source exports a single attribute, `materialized_features`. It is a li
   The materialized feature will be stored in a table with this prefix and a generated postfix
 
 ### OnlineStoreConfig
-* `catalog_name` (string) - The Unity Catalog catalog name. This name is also used as the Lakebase logical database name
+* `catalog_name` (string) - The Unity Catalog catalog name. This name is also used as the Lakebase logical database name.
+  Quoting is handled by the backend where needed, do not pre-quote it
 * `online_store_name` (string) - The name of the target online store
-* `schema_name` (string) - The Unity Catalog schema name
+* `schema_name` (string) - The Unity Catalog schema name. This name is also used as the Lakebase schema name under the database.
+  Quoting is handled by the backend where needed, do not pre-quote it
 * `table_name_prefix` (string) - Prefix for Unity Catalog table name.
   The materialized feature will be stored in a Lakebase table with this prefix and a generated postfix

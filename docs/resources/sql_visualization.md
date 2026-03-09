@@ -86,6 +86,11 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
     }
     ```
 
+## Argument Reference
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Known Issues
 
 As of 2022-09, databricks sql visualization backend API does not validate the content of what is passed via `options`, couple that with `options` being outputted as string in the module, it can lead to configurations which succeed `terraform plan` but do fail at `terraform apply`.

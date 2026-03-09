@@ -53,6 +53,8 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 func ResourceProvider() common.Resource {
 	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -63,29 +65,48 @@ func ResourceProvider() common.Resource {
 	}
 	return common.Resource{
 		Schema: providerSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
-			if err := NewProvidersAPI(ctx, c).createProvider(&ri); err != nil {
+			if err := NewProvidersAPI(ctx, newClient).createProvider(&ri); err != nil {
 				return err
 			}
 			d.SetId(ri.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ri, err := NewProvidersAPI(ctx, c).getProvider(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ri, err := NewProvidersAPI(ctx, newClient).getProvider(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ri, providerSchemaForRead, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
-			return NewProvidersAPI(ctx, c).updateProvider(&ri)
+			return NewProvidersAPI(ctx, newClient).updateProvider(&ri)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewProvidersAPI(ctx, c).deleteProvider(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewProvidersAPI(ctx, newClient).deleteProvider(d.Id())
 		},
 	}
 }

@@ -183,14 +183,23 @@ func ResourceRepo() common.Resource {
 		}
 
 		delete(s, "id")
+		common.AddNamespaceInSchema(s)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			reposAPI := NewReposAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			reposAPI := NewReposAPI(ctx, newClient)
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
@@ -212,7 +221,11 @@ func ResourceRepo() common.Resource {
 			return reposAPI.Update(d.Id(), updateReq)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			reposAPI := NewReposAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			reposAPI := NewReposAPI(ctx, newClient)
 			resp, err := reposAPI.Read(d.Id())
 			if err != nil {
 				return err
@@ -225,10 +238,14 @@ func ResourceRepo() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
-			reposAPI := NewReposAPI(ctx, c)
+			reposAPI := NewReposAPI(ctx, newClient)
 			req := map[string]any{}
 			// Not working yet, wait until API is ready
 			// if d.HasChange("path") {
@@ -253,7 +270,11 @@ func ResourceRepo() common.Resource {
 			return reposAPI.Update(d.Id(), req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewReposAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewReposAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

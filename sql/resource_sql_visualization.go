@@ -158,17 +158,26 @@ func ResourceSqlVisualization() common.Resource {
 			m["query_plan"].DiffSuppressFunc = suppressWhitespaceChangesInJSON
 			return m
 		})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		DeprecationMessage: "This resource is deprecated and will be removed in future. Please switch to databricks_dashboard to author new AI/BI dashboards using the latest tooling.",
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var v VisualizationEntity
 			av, err := v.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewVisualizationAPI(ctx, c).Create(av)
+			err = NewVisualizationAPI(ctx, newClient).Create(av)
 			if err != nil {
 				return err
 			}
@@ -186,12 +195,16 @@ func ResourceSqlVisualization() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			queryID, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
 
-			av, err := NewVisualizationAPI(ctx, c).Read(queryID, visualizationID)
+			av, err := NewVisualizationAPI(ctx, newClient).Read(queryID, visualizationID)
 			if err != nil {
 				return err
 			}
@@ -200,6 +213,10 @@ func ResourceSqlVisualization() common.Resource {
 			return v.fromAPIObject(av, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			_, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -211,14 +228,18 @@ func ResourceSqlVisualization() common.Resource {
 				return err
 			}
 
-			return NewVisualizationAPI(ctx, c).Update(visualizationID, av)
+			return NewVisualizationAPI(ctx, newClient).Update(visualizationID, av)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			_, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
 			}
-			return NewVisualizationAPI(ctx, c).Delete(visualizationID)
+			return NewVisualizationAPI(ctx, newClient).Delete(visualizationID)
 		},
 		Schema: s,
 	}

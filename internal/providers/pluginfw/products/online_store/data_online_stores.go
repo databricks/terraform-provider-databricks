@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "online_stores"
@@ -30,12 +31,14 @@ type OnlineStoresData struct {
 	FeatureStore types.List `tfsdk:"online_stores"`
 	// The maximum number of results to return. Defaults to 100 if not
 	// specified.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (OnlineStoresData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"online_stores": reflect.TypeOf(OnlineStoreData{}),
+		"online_stores":   reflect.TypeOf(OnlineStoreData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -43,6 +46,8 @@ func (m OnlineStoresData) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["online_stores"] = attrs["online_stores"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -82,7 +87,15 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -102,6 +115,8 @@ func (r *OnlineStoresDataSource) Read(ctx context.Context, req datasource.ReadRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		online_store.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, online_store.ToObjectValue(ctx))
 	}
 

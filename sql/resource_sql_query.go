@@ -547,16 +547,25 @@ func ResourceSqlQuery() common.Resource {
 			m["query"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			return m
 		})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewQueryAPI(ctx, c).Create(aq)
+			err = NewQueryAPI(ctx, newClient).Create(aq)
 			if err != nil {
 				return err
 			}
@@ -567,7 +576,11 @@ func ResourceSqlQuery() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			aq, err := NewQueryAPI(ctx, c).Read(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			aq, err := NewQueryAPI(ctx, newClient).Read(data.Id())
 			if err != nil {
 				return err
 			}
@@ -576,16 +589,24 @@ func ResourceSqlQuery() common.Resource {
 			return q.fromAPIObject(aq, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			return NewQueryAPI(ctx, c).Update(data.Id(), aq)
+			return NewQueryAPI(ctx, newClient).Update(data.Id(), aq)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewQueryAPI(ctx, c).Delete(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			return NewQueryAPI(ctx, newClient).Delete(data.Id())
 		},
 		Schema:             s,
 		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "database_synced_database_tables"
@@ -31,12 +32,14 @@ type SyncedDatabaseTablesData struct {
 	// Name of the instance to get synced tables for.
 	InstanceName types.String `tfsdk:"instance_name"`
 	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"synced_tables": reflect.TypeOf(SyncedDatabaseTableData{}),
+		"synced_tables":   reflect.TypeOf(SyncedDatabaseTableData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -45,6 +48,8 @@ func (m SyncedDatabaseTablesData) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["synced_tables"] = attrs["synced_tables"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -84,7 +89,15 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -104,6 +117,8 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		synced_database_table.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, synced_database_table.ToObjectValue(ctx))
 	}
 

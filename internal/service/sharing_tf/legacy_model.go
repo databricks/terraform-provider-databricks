@@ -201,6 +201,8 @@ type CreateRecipient_SdkV2 struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.List `tfsdk:"ip_access_list"`
 	// Name of Recipient.
@@ -262,6 +264,7 @@ func (m CreateRecipient_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -298,6 +301,7 @@ func (m CreateRecipient_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"comment":                            m.Comment,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"name":                               m.Name,
 			"owner":                              m.Owner,
@@ -314,6 +318,7 @@ func (m CreateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":                            types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list": basetypes.ListType{
 				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
@@ -4150,6 +4155,8 @@ type RecipientInfo_SdkV2 struct {
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.List `tfsdk:"ip_access_list"`
 	// Unique identifier of recipient's Unity Catalog Metastore. This field is
@@ -4240,6 +4247,7 @@ func (m RecipientInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
@@ -4287,6 +4295,7 @@ func (m RecipientInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"created_by":                         m.CreatedBy,
 			"data_recipient_global_metastore_id": m.DataRecipientGlobalMetastoreId,
 			"expiration_time":                    m.ExpirationTime,
+			"id":                                 m.Id,
 			"ip_access_list":                     m.IpAccessList,
 			"metastore_id":                       m.MetastoreId,
 			"name":                               m.Name,
@@ -4313,6 +4322,7 @@ func (m RecipientInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
+			"id":                                 types.StringType,
 			"ip_access_list": basetypes.ListType{
 				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
@@ -5630,9 +5640,6 @@ type Table_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The id of the table.
 	Id types.String `tfsdk:"id"`
-	// Internal information for D2D sharing that should not be disclosed to
-	// external users.
-	InternalAttributes types.List `tfsdk:"internal_attributes"`
 	// The catalog and schema of the materialized table
 	MaterializationNamespace types.String `tfsdk:"materialization_namespace"`
 	// The name of a materialized table.
@@ -5650,15 +5657,6 @@ type Table_SdkV2 struct {
 }
 
 func (to *Table_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Table_SdkV2) {
-	if !from.InternalAttributes.IsNull() && !from.InternalAttributes.IsUnknown() {
-		if toInternalAttributes, ok := to.GetInternalAttributes(ctx); ok {
-			if fromInternalAttributes, ok := from.GetInternalAttributes(ctx); ok {
-				// Recursively sync the fields of InternalAttributes
-				toInternalAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromInternalAttributes)
-				to.SetInternalAttributes(ctx, toInternalAttributes)
-			}
-		}
-	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
@@ -5668,14 +5666,6 @@ func (to *Table_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 }
 
 func (to *Table_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Table_SdkV2) {
-	if !from.InternalAttributes.IsNull() && !from.InternalAttributes.IsUnknown() {
-		if toInternalAttributes, ok := to.GetInternalAttributes(ctx); ok {
-			if fromInternalAttributes, ok := from.GetInternalAttributes(ctx); ok {
-				toInternalAttributes.SyncFieldsDuringRead(ctx, fromInternalAttributes)
-				to.SetInternalAttributes(ctx, toInternalAttributes)
-			}
-		}
-	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
@@ -5687,8 +5677,6 @@ func (to *Table_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Table_SdkV
 func (m Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
-	attrs["internal_attributes"] = attrs["internal_attributes"].SetOptional()
-	attrs["internal_attributes"] = attrs["internal_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["materialization_namespace"] = attrs["materialization_namespace"].SetOptional()
 	attrs["materialized_table_name"] = attrs["materialized_table_name"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -5709,8 +5697,7 @@ func (m Table_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m Table_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"internal_attributes": reflect.TypeOf(TableInternalAttributes_SdkV2{}),
-		"tags":                reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
+		"tags": reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
 	}
 }
 
@@ -5723,7 +5710,6 @@ func (m Table_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"comment":                   m.Comment,
 			"id":                        m.Id,
-			"internal_attributes":       m.InternalAttributes,
 			"materialization_namespace": m.MaterializationNamespace,
 			"materialized_table_name":   m.MaterializedTableName,
 			"name":                      m.Name,
@@ -5738,11 +5724,8 @@ func (m Table_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Table_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment": types.StringType,
-			"id":      types.StringType,
-			"internal_attributes": basetypes.ListType{
-				ElemType: TableInternalAttributes_SdkV2{}.Type(ctx),
-			},
+			"comment":                   types.StringType,
+			"id":                        types.StringType,
 			"materialization_namespace": types.StringType,
 			"materialized_table_name":   types.StringType,
 			"name":                      types.StringType,
@@ -5754,32 +5737,6 @@ func (m Table_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
-}
-
-// GetInternalAttributes returns the value of the InternalAttributes field in Table_SdkV2 as
-// a TableInternalAttributes_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Table_SdkV2) GetInternalAttributes(ctx context.Context) (TableInternalAttributes_SdkV2, bool) {
-	var e TableInternalAttributes_SdkV2
-	if m.InternalAttributes.IsNull() || m.InternalAttributes.IsUnknown() {
-		return e, false
-	}
-	var v []TableInternalAttributes_SdkV2
-	d := m.InternalAttributes.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetInternalAttributes sets the value of the InternalAttributes field in Table_SdkV2.
-func (m *Table_SdkV2) SetInternalAttributes(ctx context.Context, v TableInternalAttributes_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["internal_attributes"]
-	m.InternalAttributes = types.ListValueMust(t, vs)
 }
 
 // GetTags returns the value of the Tags field in Table_SdkV2 as
@@ -5806,137 +5763,6 @@ func (m *Table_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_Sd
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
-}
-
-// Internal information for D2D sharing that should not be disclosed to external
-// users.
-type TableInternalAttributes_SdkV2 struct {
-	// Managed Delta Metadata location for foreign iceberg tables.
-	AuxiliaryManagedLocation types.String `tfsdk:"auxiliary_managed_location"`
-	// Storage locations of all table dependencies for shared views. Used on the
-	// recipient side for SEG (Secure Egress Gateway) whitelisting.
-	DependencyStorageLocations types.List `tfsdk:"dependency_storage_locations"`
-	// Whether the table has uniform enabled.
-	HasDeltaUniformIceberg types.Bool `tfsdk:"has_delta_uniform_iceberg"`
-	// Will be populated in the reconciliation response for VIEW and
-	// FOREIGN_TABLE, with the value of the parent UC entity's storage_location,
-	// following the same logic as getManagedEntityPath in
-	// CreateStagingTableHandler, which is used to store the materialized table
-	// for a shared VIEW/FOREIGN_TABLE for D2O queries. The value will be used
-	// on the recipient side to be whitelisted when SEG is enabled on the
-	// workspace of the recipient, to allow the recipient users to query this
-	// shared VIEW/FOREIGN_TABLE.
-	ParentStorageLocation types.String `tfsdk:"parent_storage_location"`
-	// The cloud storage location of a shard table with DIRECTORY_BASED_TABLE
-	// type.
-	StorageLocation types.String `tfsdk:"storage_location"`
-	// The type of the shared table.
-	Type_ types.String `tfsdk:"type"`
-	// The view definition of a shared view. DEPRECATED.
-	ViewDefinition types.String `tfsdk:"view_definition"`
-}
-
-func (to *TableInternalAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableInternalAttributes_SdkV2) {
-	if !from.DependencyStorageLocations.IsNull() && !from.DependencyStorageLocations.IsUnknown() && to.DependencyStorageLocations.IsNull() && len(from.DependencyStorageLocations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for DependencyStorageLocations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.DependencyStorageLocations = from.DependencyStorageLocations
-	}
-}
-
-func (to *TableInternalAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableInternalAttributes_SdkV2) {
-	if !from.DependencyStorageLocations.IsNull() && !from.DependencyStorageLocations.IsUnknown() && to.DependencyStorageLocations.IsNull() && len(from.DependencyStorageLocations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for DependencyStorageLocations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.DependencyStorageLocations = from.DependencyStorageLocations
-	}
-}
-
-func (m TableInternalAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["auxiliary_managed_location"] = attrs["auxiliary_managed_location"].SetOptional()
-	attrs["dependency_storage_locations"] = attrs["dependency_storage_locations"].SetOptional()
-	attrs["has_delta_uniform_iceberg"] = attrs["has_delta_uniform_iceberg"].SetOptional()
-	attrs["parent_storage_location"] = attrs["parent_storage_location"].SetOptional()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-	attrs["type"] = attrs["type"].SetOptional()
-	attrs["view_definition"] = attrs["view_definition"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableInternalAttributes.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m TableInternalAttributes_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"dependency_storage_locations": reflect.TypeOf(types.String{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, TableInternalAttributes_SdkV2
-// only implements ToObjectValue() and Type().
-func (m TableInternalAttributes_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"auxiliary_managed_location":   m.AuxiliaryManagedLocation,
-			"dependency_storage_locations": m.DependencyStorageLocations,
-			"has_delta_uniform_iceberg":    m.HasDeltaUniformIceberg,
-			"parent_storage_location":      m.ParentStorageLocation,
-			"storage_location":             m.StorageLocation,
-			"type":                         m.Type_,
-			"view_definition":              m.ViewDefinition,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m TableInternalAttributes_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"auxiliary_managed_location": types.StringType,
-			"dependency_storage_locations": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"has_delta_uniform_iceberg": types.BoolType,
-			"parent_storage_location":   types.StringType,
-			"storage_location":          types.StringType,
-			"type":                      types.StringType,
-			"view_definition":           types.StringType,
-		},
-	}
-}
-
-// GetDependencyStorageLocations returns the value of the DependencyStorageLocations field in TableInternalAttributes_SdkV2 as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TableInternalAttributes_SdkV2) GetDependencyStorageLocations(ctx context.Context) ([]types.String, bool) {
-	if m.DependencyStorageLocations.IsNull() || m.DependencyStorageLocations.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.DependencyStorageLocations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetDependencyStorageLocations sets the value of the DependencyStorageLocations field in TableInternalAttributes_SdkV2.
-func (m *TableInternalAttributes_SdkV2) SetDependencyStorageLocations(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dependency_storage_locations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.DependencyStorageLocations = types.ListValueMust(t, vs)
 }
 
 type UpdateProvider_SdkV2 struct {
@@ -6013,6 +5839,8 @@ type UpdateRecipient_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// [Create,Update:IGN] common - id of the recipient
+	Id types.String `tfsdk:"id"`
 	// IP Access List
 	IpAccessList types.List `tfsdk:"ip_access_list"`
 	// Name of the recipient.
@@ -6071,6 +5899,7 @@ func (to *UpdateRecipient_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 func (m UpdateRecipient_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["new_name"] = attrs["new_name"].SetOptional()
@@ -6105,6 +5934,7 @@ func (m UpdateRecipient_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		map[string]attr.Value{
 			"comment":            m.Comment,
 			"expiration_time":    m.ExpirationTime,
+			"id":                 m.Id,
 			"ip_access_list":     m.IpAccessList,
 			"name":               m.Name,
 			"new_name":           m.NewName,
@@ -6119,6 +5949,7 @@ func (m UpdateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment":         types.StringType,
 			"expiration_time": types.Int64Type,
+			"id":              types.StringType,
 			"ip_access_list": basetypes.ListType{
 				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
@@ -6506,9 +6337,6 @@ type Volume_SdkV2 struct {
 	// shared_volume_id for recon to check if this volume is already in
 	// recipient's DB or not.
 	Id types.String `tfsdk:"id"`
-	// Internal attributes for D2D sharing that should not be disclosed to
-	// external users.
-	InternalAttributes types.List `tfsdk:"internal_attributes"`
 	// The name of the volume.
 	Name types.String `tfsdk:"name"`
 	// The name of the schema that the volume belongs to.
@@ -6522,15 +6350,6 @@ type Volume_SdkV2 struct {
 }
 
 func (to *Volume_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Volume_SdkV2) {
-	if !from.InternalAttributes.IsNull() && !from.InternalAttributes.IsUnknown() {
-		if toInternalAttributes, ok := to.GetInternalAttributes(ctx); ok {
-			if fromInternalAttributes, ok := from.GetInternalAttributes(ctx); ok {
-				// Recursively sync the fields of InternalAttributes
-				toInternalAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromInternalAttributes)
-				to.SetInternalAttributes(ctx, toInternalAttributes)
-			}
-		}
-	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
@@ -6540,14 +6359,6 @@ func (to *Volume_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *Volume_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Volume_SdkV2) {
-	if !from.InternalAttributes.IsNull() && !from.InternalAttributes.IsUnknown() {
-		if toInternalAttributes, ok := to.GetInternalAttributes(ctx); ok {
-			if fromInternalAttributes, ok := from.GetInternalAttributes(ctx); ok {
-				toInternalAttributes.SyncFieldsDuringRead(ctx, fromInternalAttributes)
-				to.SetInternalAttributes(ctx, toInternalAttributes)
-			}
-		}
-	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
@@ -6559,8 +6370,6 @@ func (to *Volume_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Volume_Sd
 func (m Volume_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
-	attrs["internal_attributes"] = attrs["internal_attributes"].SetOptional()
-	attrs["internal_attributes"] = attrs["internal_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["share"] = attrs["share"].SetOptional()
@@ -6579,8 +6388,7 @@ func (m Volume_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m Volume_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"internal_attributes": reflect.TypeOf(VolumeInternalAttributes_SdkV2{}),
-		"tags":                reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
+		"tags": reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
 	}
 }
 
@@ -6591,14 +6399,13 @@ func (m Volume_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":             m.Comment,
-			"id":                  m.Id,
-			"internal_attributes": m.InternalAttributes,
-			"name":                m.Name,
-			"schema":              m.Schema,
-			"share":               m.Share,
-			"share_id":            m.ShareId,
-			"tags":                m.Tags,
+			"comment":  m.Comment,
+			"id":       m.Id,
+			"name":     m.Name,
+			"schema":   m.Schema,
+			"share":    m.Share,
+			"share_id": m.ShareId,
+			"tags":     m.Tags,
 		})
 }
 
@@ -6606,11 +6413,8 @@ func (m Volume_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Volume_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment": types.StringType,
-			"id":      types.StringType,
-			"internal_attributes": basetypes.ListType{
-				ElemType: VolumeInternalAttributes_SdkV2{}.Type(ctx),
-			},
+			"comment":  types.StringType,
+			"id":       types.StringType,
 			"name":     types.StringType,
 			"schema":   types.StringType,
 			"share":    types.StringType,
@@ -6620,32 +6424,6 @@ func (m Volume_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
-}
-
-// GetInternalAttributes returns the value of the InternalAttributes field in Volume_SdkV2 as
-// a VolumeInternalAttributes_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Volume_SdkV2) GetInternalAttributes(ctx context.Context) (VolumeInternalAttributes_SdkV2, bool) {
-	var e VolumeInternalAttributes_SdkV2
-	if m.InternalAttributes.IsNull() || m.InternalAttributes.IsUnknown() {
-		return e, false
-	}
-	var v []VolumeInternalAttributes_SdkV2
-	d := m.InternalAttributes.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetInternalAttributes sets the value of the InternalAttributes field in Volume_SdkV2.
-func (m *Volume_SdkV2) SetInternalAttributes(ctx context.Context, v VolumeInternalAttributes_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["internal_attributes"]
-	m.InternalAttributes = types.ListValueMust(t, vs)
 }
 
 // GetTags returns the value of the Tags field in Volume_SdkV2 as
@@ -6672,59 +6450,4 @@ func (m *Volume_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_S
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
-}
-
-// Internal information for D2D sharing that should not be disclosed to external
-// users.
-type VolumeInternalAttributes_SdkV2 struct {
-	// The cloud storage location of the volume
-	StorageLocation types.String `tfsdk:"storage_location"`
-	// The type of the shared volume.
-	Type_ types.String `tfsdk:"type"`
-}
-
-func (to *VolumeInternalAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VolumeInternalAttributes_SdkV2) {
-}
-
-func (to *VolumeInternalAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, from VolumeInternalAttributes_SdkV2) {
-}
-
-func (m VolumeInternalAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-	attrs["type"] = attrs["type"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in VolumeInternalAttributes.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m VolumeInternalAttributes_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, VolumeInternalAttributes_SdkV2
-// only implements ToObjectValue() and Type().
-func (m VolumeInternalAttributes_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"storage_location": m.StorageLocation,
-			"type":             m.Type_,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m VolumeInternalAttributes_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"storage_location": types.StringType,
-			"type":             types.StringType,
-		},
-	}
 }

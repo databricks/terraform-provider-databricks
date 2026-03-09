@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "data_quality_refreshes"
@@ -29,14 +30,16 @@ func DataSourceRefreshes() datasource.DataSource {
 type RefreshesData struct {
 	DataQuality types.List `tfsdk:"refreshes"`
 
-	PageSize   types.Int64  `tfsdk:"page_size"`
-	ObjectType types.String `tfsdk:"object_type"`
-	ObjectId   types.String `tfsdk:"object_id"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ObjectType         types.String `tfsdk:"object_type"`
+	ObjectId           types.String `tfsdk:"object_id"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (RefreshesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"refreshes": reflect.TypeOf(RefreshData{}),
+		"refreshes":       reflect.TypeOf(RefreshData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -46,6 +49,8 @@ func (m RefreshesData) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["refreshes"] = attrs["refreshes"].SetComputed()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -85,7 +90,15 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -105,6 +118,8 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		refresh.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, refresh.ToObjectValue(ctx))
 	}
 

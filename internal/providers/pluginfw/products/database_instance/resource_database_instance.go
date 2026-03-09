@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -16,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,6 +44,71 @@ func ResourceDatabaseInstance() resource.Resource {
 
 type DatabaseInstanceResource struct {
 	Client *autogen.DatabricksClient
+}
+
+// ProviderConfig contains the fields to configure the provider.
+type ProviderConfig struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
+		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
+	return attrs
+}
+
+// ProviderConfigWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
+// only implements ToObjectValue() and Type().
+func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
 }
 
 // DatabaseInstance extends the main model with additional fields.
@@ -137,7 +205,8 @@ type DatabaseInstance struct {
 	// An immutable UUID identifier for the instance.
 	Uid types.String `tfsdk:"uid"`
 	// The desired usage policy to associate with the instance.
-	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+	UsagePolicyId  types.String `tfsdk:"usage_policy_id"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -153,6 +222,7 @@ func (m DatabaseInstance) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"custom_tags":           reflect.TypeOf(database_tf.CustomTag{}),
 		"effective_custom_tags": reflect.TypeOf(database_tf.CustomTag{}),
 		"parent_instance_ref":   reflect.TypeOf(database_tf.DatabaseInstanceRef{}),
+		"provider_config":       reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -192,6 +262,8 @@ func (m DatabaseInstance) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"stopped":                               m.Stopped,
 			"uid":                                   m.Uid,
 			"usage_policy_id":                       m.UsagePolicyId,
+
+			"provider_config": m.ProviderConfig,
 		},
 	)
 }
@@ -233,6 +305,8 @@ func (m DatabaseInstance) Type(ctx context.Context) attr.Type {
 			"stopped":                               types.BoolType,
 			"uid":                                   types.StringType,
 			"usage_policy_id":                       types.StringType,
+
+			"provider_config": ProviderConfig{}.Type(ctx),
 		},
 	}
 }
@@ -297,6 +371,8 @@ func (to *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.UsagePolicyId = from.UsagePolicyId
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -358,6 +434,8 @@ func (to *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, from Datab
 		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.UsagePolicyId = from.UsagePolicyId
 	}
+	to.ProviderConfig = from.ProviderConfig
+
 }
 
 func (m DatabaseInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -405,6 +483,8 @@ func (m DatabaseInstance) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -547,7 +627,15 @@ func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.Crea
 		DatabaseInstance: database_instance,
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -608,7 +696,15 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -650,7 +746,15 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan DatabaseInst
 		UpdateMask:       "capacity,custom_tags,enable_pg_native_login,enable_readable_secondaries,node_count,retention_window_in_days,stopped,usage_policy_id",
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if diags.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	diags.Append(clientDiags...)
 	if diags.HasError() {
@@ -704,7 +808,15 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {

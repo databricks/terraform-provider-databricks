@@ -190,6 +190,9 @@ The configuration for a managed ingestion pipeline. These settings cannot be use
 * `source_configurations` - Array of objects describing top-level source configurations. See the [REST API docs](https://docs.databricks.com/api/workspace/pipelines/create#ingestion_definition-source_configurations) for reference.
 * `table_configuration` - Configuration settings to control the ingestion of tables. These settings are applied to all tables in the pipeline.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

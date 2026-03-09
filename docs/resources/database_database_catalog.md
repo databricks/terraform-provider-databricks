@@ -57,6 +57,10 @@ The following arguments are supported:
 * `database_name` (string, required) - The name of the database (in a instance) associated with the catalog
 * `name` (string, required) - The name of the catalog in UC
 * `create_database_if_not_exists` (boolean, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

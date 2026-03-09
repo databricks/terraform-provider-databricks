@@ -15,6 +15,10 @@ The following arguments are supported:
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
 * `read_replica_count` (integer, optional) - The number of read replicas for the online store. Defaults to 0
 * `usage_policy_id` (string, optional) - The usage policy applied to the online store to track billing
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

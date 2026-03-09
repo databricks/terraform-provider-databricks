@@ -2,7 +2,7 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_warehouses_default_warehouse_override Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 The Default Warehouse Override data source allows you to retrieve information about a user's default warehouse selection configuration in Databricks SQL.
 
@@ -31,6 +31,10 @@ data "databricks_default_warehouse_override" "user" {
 The following arguments are supported:
 * `name` (string, required) - The resource name of the default warehouse override.
   Format: default-warehouse-overrides/{default_warehouse_override_id}
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

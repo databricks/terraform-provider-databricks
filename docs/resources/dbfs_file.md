@@ -60,6 +60,8 @@ The following arguments are supported:
 * `source` - The full absolute path to the file. Conflicts with `content_base64`.
 * `content_base64` - Encoded file contents. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a data pipeline configuration file.
 * `path` - (Required) The path of the file in which you wish to save.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

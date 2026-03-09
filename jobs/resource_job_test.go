@@ -2287,7 +2287,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> ForceSendFields:[]}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> SparseCheckout:<nil> ForceSendFields:[]}")
 }
 
 func TestResourceJobRead(t *testing.T) {

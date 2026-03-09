@@ -145,9 +145,15 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 	}
 }
 
+// InstanceProfileSchemaStruct is used to generate schema with provider_config
+type InstanceProfileSchemaStruct struct {
+	InstanceProfileInfo
+	common.Namespace
+}
+
 // ResourceInstanceProfile manages Instance Profile ARN binding
 func ResourceInstanceProfile() common.Resource {
-	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
+	instanceProfileSchema := common.StructToSchema(InstanceProfileSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["instance_profile_arn"].ValidateDiagFunc = ValidArn
 			m["iam_role_arn"].ValidateDiagFunc = ValidArn
@@ -157,33 +163,53 @@ func ResourceInstanceProfile() common.Resource {
 				}
 				return false
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	return common.Resource{
 		Schema: instanceProfileSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			profile, err := NewInstanceProfilesAPI(ctx, newClient).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(profile, instanceProfileSchema, d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var profile InstanceProfileInfo
 			common.DataToStructPointer(d, instanceProfileSchema, &profile)
-			if err := NewInstanceProfilesAPI(ctx, c).Create(profile); err != nil {
+			if err := NewInstanceProfilesAPI(ctx, newClient).Create(profile); err != nil {
 				return err
 			}
 			d.SetId(profile.InstanceProfileArn)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewInstanceProfilesAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewInstanceProfilesAPI(ctx, newClient).Delete(d.Id())
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var profile InstanceProfileInfo
 			common.DataToStructPointer(d, instanceProfileSchema, &profile)
-			return NewInstanceProfilesAPI(ctx, c).Update(profile)
+			return NewInstanceProfilesAPI(ctx, newClient).Update(profile)
 		},
 	}
 }

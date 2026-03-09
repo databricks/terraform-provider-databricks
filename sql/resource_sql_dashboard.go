@@ -100,17 +100,26 @@ func ResourceSqlDashboard() common.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
 		common.NoCustomize)
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewDashboardAPI(ctx, c).Create(ad)
+			err = NewDashboardAPI(ctx, newClient).Create(ad)
 			if err != nil {
 				return err
 			}
@@ -121,7 +130,11 @@ func ResourceSqlDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			ad, err := NewDashboardAPI(ctx, c).Read(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			ad, err := NewDashboardAPI(ctx, newClient).Read(data.Id())
 			if err != nil {
 				return err
 			}
@@ -130,16 +143,24 @@ func ResourceSqlDashboard() common.Resource {
 			return d.fromAPIObject(ad, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			return NewDashboardAPI(ctx, c).Update(data.Id(), ad)
+			return NewDashboardAPI(ctx, newClient).Update(data.Id(), ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewDashboardAPI(ctx, c).Delete(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			return NewDashboardAPI(ctx, newClient).Delete(data.Id())
 		},
 		Schema: s,
 	}

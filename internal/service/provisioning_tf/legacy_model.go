@@ -1658,7 +1658,8 @@ func (m *CreateVpcEndpointRequest_SdkV2) SetGcpVpcEndpointInfo(ctx context.Conte
 
 type CreateWorkspaceRequest_SdkV2 struct {
 	AwsRegion types.String `tfsdk:"aws_region"`
-	// The cloud name. This field always has the value `gcp`.
+	// DEPRECATED: This field is being ignored by the server and will be removed
+	// in the future. The cloud name. This field always has the value `gcp`.
 	Cloud types.String `tfsdk:"cloud"`
 
 	CloudResourceContainer types.List `tfsdk:"cloud_resource_container"`

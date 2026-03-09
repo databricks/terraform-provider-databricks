@@ -50,6 +50,8 @@ The following arguments are supported (see [documentation](https://docs.databric
 * `instance_profile_arn` (Optional, String) - [databricks_instance_profile](instance_profile.md) used to access storage from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for AWS, and will generate an error if used on other clouds.
 * `google_service_account` (Optional, String) - used to access GCP services, such as Cloud Storage, from [databricks_sql_endpoint](sql_endpoint.md). Please note that this parameter is only for GCP, and will generate an error if used on other clouds.
 * `sql_config_params` (Optional, Map) - SQL Configuration Parameters let you override the default behavior for all sessions with all endpoints.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

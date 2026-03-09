@@ -178,6 +178,10 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline

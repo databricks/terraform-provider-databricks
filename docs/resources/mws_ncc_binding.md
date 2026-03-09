@@ -11,6 +11,8 @@ Allows you to attach a [Network Connectivity Config](mws_network_connectivity_co
 
 The NCC and workspace must be in the same region.
 
+-> A workspace can only be bound to a single NCC. Binding a different NCC to the same workspace will overwrite the previous one. If you need multiple private endpoint rules, add them to a single NCC using [`databricks_mws_ncc_private_endpoint_rule`](mws_ncc_private_endpoint_rule.md).
+
 ## Example Usage
 
 ```hcl

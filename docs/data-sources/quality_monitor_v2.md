@@ -31,6 +31,10 @@ data "databricks_quality_monitor_v2" "this" {
 The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:

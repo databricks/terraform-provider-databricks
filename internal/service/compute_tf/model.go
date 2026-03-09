@@ -9601,8 +9601,6 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// Flexible node type configuration for the pool.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -9618,26 +9616,9 @@ type EditInstancePool struct {
 }
 
 func (to *EditInstancePool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditInstancePool) {
-	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
-		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
-			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
-				// Recursively sync the fields of NodeTypeFlexibility
-				toNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromNodeTypeFlexibility)
-				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
-			}
-		}
-	}
 }
 
 func (to *EditInstancePool) SyncFieldsDuringRead(ctx context.Context, from EditInstancePool) {
-	if !from.NodeTypeFlexibility.IsNull() && !from.NodeTypeFlexibility.IsUnknown() {
-		if toNodeTypeFlexibility, ok := to.GetNodeTypeFlexibility(ctx); ok {
-			if fromNodeTypeFlexibility, ok := from.GetNodeTypeFlexibility(ctx); ok {
-				toNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromNodeTypeFlexibility)
-				to.SetNodeTypeFlexibility(ctx, toNodeTypeFlexibility)
-			}
-		}
-	}
 }
 
 func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9647,7 +9628,6 @@ func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
 	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
@@ -9664,8 +9644,7 @@ func (m EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags":           reflect.TypeOf(types.String{}),
-		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"custom_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -9682,7 +9661,6 @@ func (m EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"instance_pool_name":                    m.InstancePoolName,
 			"max_capacity":                          m.MaxCapacity,
 			"min_idle_instances":                    m.MinIdleInstances,
-			"node_type_flexibility":                 m.NodeTypeFlexibility,
 			"node_type_id":                          m.NodeTypeId,
 			"remote_disk_throughput":                m.RemoteDiskThroughput,
 			"total_initial_remote_disk_size":        m.TotalInitialRemoteDiskSize,
@@ -9701,7 +9679,6 @@ func (m EditInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"remote_disk_throughput":                types.Int64Type,
 			"total_initial_remote_disk_size":        types.Int64Type,
@@ -9733,31 +9710,6 @@ func (m *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.CustomTags = types.MapValueMust(t, vs)
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if m.NodeTypeFlexibility.IsNull() || m.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v NodeTypeFlexibility
-	d := m.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
-func (m *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	m.NodeTypeFlexibility = vs
 }
 
 type EditInstancePoolResponse struct {
@@ -10183,6 +10135,15 @@ func (m *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 // and serverless pipelines. In this minimal environment spec, only pip
 // dependencies are supported.
 type Environment struct {
+	// The `base_environment` key refers to an `env.yaml` file that specifies an
+	// environment version and a collection of dependencies required for the
+	// environment setup. This `env.yaml` file may itself include a
+	// `base_environment` reference pointing to another `env_1.yaml` file.
+	// However, when used as a base environment, `env_1.yaml` (or further nested
+	// references) will not be processed or included in the final environment,
+	// meaning that the resolution of `base_environment` references is not
+	// recursive.
+	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
 	// List of pip dependencies, as supported by the version of pip in this
@@ -10232,6 +10193,7 @@ func (to *Environment) SyncFieldsDuringRead(ctx context.Context, from Environmen
 }
 
 func (m Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_environment"] = attrs["base_environment"].SetOptional()
 	attrs["client"] = attrs["client"].SetOptional()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
@@ -10261,6 +10223,7 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"base_environment":    m.BaseEnvironment,
 			"client":              m.Client,
 			"dependencies":        m.Dependencies,
 			"environment_version": m.EnvironmentVersion,
@@ -10272,7 +10235,8 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Environment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"client": types.StringType,
+			"base_environment": types.StringType,
+			"client":           types.StringType,
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},

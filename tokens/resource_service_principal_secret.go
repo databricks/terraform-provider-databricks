@@ -42,12 +42,21 @@ func ResourceServicePrincipalSecret() common.Resource {
 			m["status"].Computed = true
 			return m
 		})
+	common.AddNamespaceInSchema(spnSecretSchema)
+	common.NamespaceCustomizeSchemaMap(spnSecretSchema)
 	return common.Resource{
 		Schema: spnSecretSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			spId := d.Get("service_principal_id").(string)
 			spIdNumeric, err := strconv.ParseInt(spId, 10, 64)
 			if err != nil {
@@ -56,7 +65,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			lifetime := d.Get("lifetime").(string)
 			var res *oauth2.CreateServicePrincipalSecretResponse
 
-			err = c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var err error
 				res, err = acc.ServicePrincipalSecrets.Create(ctx, oauth2.CreateServicePrincipalSecretRequest{
 					ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),
@@ -84,9 +93,13 @@ func ResourceServicePrincipalSecret() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			spId := d.Get("service_principal_id").(string)
 			var secrets []oauth2.SecretInfo
-			err := c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var err error
 				secrets, err = acc.ServicePrincipalSecrets.ListAll(ctx, oauth2.ListServicePrincipalSecretsRequest{
 					ServicePrincipalId: spId,
@@ -133,12 +146,16 @@ func ResourceServicePrincipalSecret() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			spId := d.Get("service_principal_id").(string)
 			spIdNumeric, err := strconv.ParseInt(spId, 10, 64)
 			if err != nil {
 				return fmt.Errorf("failed to convert service principal ID to numeric: %w", err)
 			}
-			err = c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.ServicePrincipalSecrets.Delete(ctx, oauth2.DeleteServicePrincipalSecretRequest{
 					SecretId:           d.Id(),
 					ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),

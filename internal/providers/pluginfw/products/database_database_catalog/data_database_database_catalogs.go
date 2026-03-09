@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "database_database_catalogs"
@@ -31,12 +32,14 @@ type DatabaseCatalogsData struct {
 	// Name of the instance to get database catalogs for.
 	InstanceName types.String `tfsdk:"instance_name"`
 	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (DatabaseCatalogsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"database_catalogs": reflect.TypeOf(DatabaseCatalogData{}),
+		"provider_config":   reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -45,6 +48,8 @@ func (m DatabaseCatalogsData) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["database_catalogs"] = attrs["database_catalogs"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
 	return attrs
 }
 
@@ -84,7 +89,15 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	client, clientDiags := r.Client.GetWorkspaceClient()
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
 
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
@@ -104,6 +117,8 @@ func (r *DatabaseCatalogsDataSource) Read(ctx context.Context, req datasource.Re
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		database_catalog.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, database_catalog.ToObjectValue(ctx))
 	}
 

@@ -160,5 +160,8 @@ func initUnifiedHostWorkspaceEnv(t *testing.T) {
 
 func TestAccUnifiedHostWorkspaceCreateJobs(t *testing.T) {
 	initUnifiedHostWorkspaceEnv(t)
+	if !IsAzure(t) {
+		Skipf(t)("This test is only running on Azure until ACCOUNT_ID is exported in our workspace test environments")
+	}
 	unifiedHostWorkspaceCreateJobTest(t)
 }

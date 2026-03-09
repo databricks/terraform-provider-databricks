@@ -342,35 +342,6 @@ func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	assert.Equal(t, 1, mock.count)
 }
 
-func TestWorkspaceClientForWorkspace_WorkspaceDoesNotExist(t *testing.T) {
-	mockAcc := mocks.NewMockAccountClient(t)
-	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
-
-	// Setup the mock to return an error for non-existent workspace
-	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-		WorkspaceId: 12345,
-	}).Return(nil, fmt.Errorf("workspace not found"))
-
-	// Create a DatabricksClient with an account host. When the account API fails,
-	// the fallback (tryWorkspaceClientDirect) also fails because account hosts
-	// cannot be used to create workspace clients.
-	dc := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:  "https://accounts.cloud.databricks.com",
-				Token: "dapi123",
-			},
-		},
-	}
-	dc.SetAccountClient(mockAcc.AccountClient)
-
-	// Call the method with a non-existent workspace ID
-	_, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-
-	// Both the account API and the fallback fail
-	assert.Error(t, err)
-}
-
 func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()

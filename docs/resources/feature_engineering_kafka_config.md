@@ -36,6 +36,13 @@ The following arguments are supported:
 * `entity_columns` (list of string, required) - The entity columns of the Delta table
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
 * `timeseries_column` (string, required) - The timeseries column of the Delta table
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
 ### SchemaConfig
 * `json_schema` (string, optional) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)

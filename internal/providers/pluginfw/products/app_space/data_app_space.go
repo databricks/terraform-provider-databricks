@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package apps_space
+package app_space
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourceName = "apps_space"
+const dataSourceName = "app_space"
 
 var _ datasource.DataSourceWithConfigure = &SpaceDataSource{}
 
@@ -116,10 +116,6 @@ type SpaceData struct {
 	// alphanumeric characters and hyphens. It must be unique within the
 	// workspace.
 	Name types.String `tfsdk:"name"`
-	// The OAuth2 app client ID for the app space.
-	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
-	// The OAuth2 app integration ID for the app space.
-	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
@@ -176,8 +172,6 @@ func (m SpaceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
 			"id":                          m.Id,
 			"name":                        m.Name,
-			"oauth2_app_client_id":        m.Oauth2AppClientId,
-			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
 			"resources":                   m.Resources,
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
@@ -205,10 +199,8 @@ func (m SpaceData) Type(ctx context.Context) attr.Type {
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"id":                        types.StringType,
-			"name":                      types.StringType,
-			"oauth2_app_client_id":      types.StringType,
-			"oauth2_app_integration_id": types.StringType,
+			"id":   types.StringType,
+			"name": types.StringType,
 			"resources": basetypes.ListType{
 				ElemType: apps_tf.AppResource{}.Type(ctx),
 			},
@@ -236,8 +228,6 @@ func (m SpaceData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
-	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetComputed()
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
@@ -302,7 +292,7 @@ func (r *SpaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	response, err := client.Apps.GetSpace(ctx, readRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get apps_space", err.Error())
+		resp.Diagnostics.AddError("failed to get app_space", err.Error())
 		return
 	}
 

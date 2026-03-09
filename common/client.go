@@ -272,6 +272,7 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if err != nil {
 		// Fallback: create workspace client on the same host with workspace_id set.
 		// This works for unified hosts that can route by workspace_id through X-Databricks-Org-Id header.
+		// Note: GetWorkspaceClient(*workspace) supports all host, this is the case when users don't have access to the account
 		w, err = c.tryWorkspaceClientDirect(workspaceId)
 		if err != nil {
 			return nil, err

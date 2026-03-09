@@ -3409,6 +3409,8 @@ type GetPipelineResponse struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Serverless budget policy ID of this pipeline.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// Publishing mode of the pipeline
+	EffectivePublishingMode types.String `tfsdk:"effective_publishing_mode"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health"`
 	// The last time the pipeline settings were modified or created.
@@ -3491,6 +3493,7 @@ func (m GetPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
+	attrs["effective_publishing_mode"] = attrs["effective_publishing_mode"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["last_modified"] = attrs["last_modified"].SetOptional()
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
@@ -3530,6 +3533,7 @@ func (m GetPipelineResponse) ToObjectValue(ctx context.Context) basetypes.Object
 			"cluster_id":                 m.ClusterId,
 			"creator_user_name":          m.CreatorUserName,
 			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
+			"effective_publishing_mode":  m.EffectivePublishingMode,
 			"health":                     m.Health,
 			"last_modified":              m.LastModified,
 			"latest_updates":             m.LatestUpdates,
@@ -3550,6 +3554,7 @@ func (m GetPipelineResponse) Type(ctx context.Context) attr.Type {
 			"cluster_id":                 types.StringType,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"effective_publishing_mode":  types.StringType,
 			"health":                     types.StringType,
 			"last_modified":              types.Int64Type,
 			"latest_updates": basetypes.ListType{
@@ -8540,6 +8545,19 @@ type PipelinesEnvironment struct {
 	// dependency could be <requirement specifier>, <archive url/path>, <local
 	// project path>(WSFS or Volumes in Databricks), <vcs project url>
 	Dependencies types.List `tfsdk:"dependencies"`
+	// The environment version of the serverless Python environment used to
+	// execute customer Python code. Each environment version includes a
+	// specific Python version and a curated set of pre-installed libraries with
+	// defined versions, providing a stable and reproducible execution
+	// environment.
+	//
+	// Databricks supports a three-year lifecycle for each environment version.
+	// For available versions and their included packages, see
+	// https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/
+	//
+	// The value should be a string representing the environment version number,
+	// for example: `"4"`.
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
 }
 
 func (to *PipelinesEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelinesEnvironment) {
@@ -8562,6 +8580,7 @@ func (to *PipelinesEnvironment) SyncFieldsDuringRead(ctx context.Context, from P
 
 func (m PipelinesEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 
 	return attrs
 }
@@ -8586,7 +8605,8 @@ func (m PipelinesEnvironment) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dependencies": m.Dependencies,
+			"dependencies":        m.Dependencies,
+			"environment_version": m.EnvironmentVersion,
 		})
 }
 
@@ -8597,6 +8617,7 @@ func (m PipelinesEnvironment) Type(ctx context.Context) attr.Type {
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"environment_version": types.StringType,
 		},
 	}
 }
@@ -9866,6 +9887,11 @@ type StartUpdate struct {
 	// Only replace_where flows may be specified. Flows not listed use their
 	// original predicate.
 	ReplaceWhereOverrides types.List `tfsdk:"replace_where_overrides"`
+	// A list of flows for which this update should reset the streaming
+	// checkpoint. This selection will not clear the data in the flow's target
+	// table. Flows in this list may also appear in refresh_selection and
+	// full_refresh_selection.
+	ResetCheckpointSelection types.List `tfsdk:"reset_checkpoint_selection"`
 	// The information about the requested rewind operation. If specified this
 	// is a rewind mode update.
 	RewindSpec types.Object `tfsdk:"rewind_spec"`
@@ -9892,6 +9918,12 @@ func (to *StartUpdate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for ReplaceWhereOverrides, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ReplaceWhereOverrides = from.ReplaceWhereOverrides
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
 	}
 	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
 		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
@@ -9923,6 +9955,12 @@ func (to *StartUpdate) SyncFieldsDuringRead(ctx context.Context, from StartUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ReplaceWhereOverrides = from.ReplaceWhereOverrides
 	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 	if !from.RewindSpec.IsNull() && !from.RewindSpec.IsUnknown() {
 		if toRewindSpec, ok := to.GetRewindSpec(ctx); ok {
 			if fromRewindSpec, ok := from.GetRewindSpec(ctx); ok {
@@ -9940,6 +9978,7 @@ func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
 	attrs["replace_where_overrides"] = attrs["replace_where_overrides"].SetOptional()
+	attrs["reset_checkpoint_selection"] = attrs["reset_checkpoint_selection"].SetOptional()
 	attrs["rewind_spec"] = attrs["rewind_spec"].SetOptional()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
@@ -9956,11 +9995,12 @@ func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m StartUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"full_refresh_selection":  reflect.TypeOf(types.String{}),
-		"parameters":              reflect.TypeOf(types.String{}),
-		"refresh_selection":       reflect.TypeOf(types.String{}),
-		"replace_where_overrides": reflect.TypeOf(ReplaceWhereOverride{}),
-		"rewind_spec":             reflect.TypeOf(RewindSpec{}),
+		"full_refresh_selection":     reflect.TypeOf(types.String{}),
+		"parameters":                 reflect.TypeOf(types.String{}),
+		"refresh_selection":          reflect.TypeOf(types.String{}),
+		"replace_where_overrides":    reflect.TypeOf(ReplaceWhereOverride{}),
+		"reset_checkpoint_selection": reflect.TypeOf(types.String{}),
+		"rewind_spec":                reflect.TypeOf(RewindSpec{}),
 	}
 }
 
@@ -9971,15 +10011,16 @@ func (m StartUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                   m.Cause,
-			"full_refresh":            m.FullRefresh,
-			"full_refresh_selection":  m.FullRefreshSelection,
-			"parameters":              m.Parameters,
-			"pipeline_id":             m.PipelineId,
-			"refresh_selection":       m.RefreshSelection,
-			"replace_where_overrides": m.ReplaceWhereOverrides,
-			"rewind_spec":             m.RewindSpec,
-			"validate_only":           m.ValidateOnly,
+			"cause":                      m.Cause,
+			"full_refresh":               m.FullRefresh,
+			"full_refresh_selection":     m.FullRefreshSelection,
+			"parameters":                 m.Parameters,
+			"pipeline_id":                m.PipelineId,
+			"refresh_selection":          m.RefreshSelection,
+			"replace_where_overrides":    m.ReplaceWhereOverrides,
+			"reset_checkpoint_selection": m.ResetCheckpointSelection,
+			"rewind_spec":                m.RewindSpec,
+			"validate_only":              m.ValidateOnly,
 		})
 }
 
@@ -10001,6 +10042,9 @@ func (m StartUpdate) Type(ctx context.Context) attr.Type {
 			},
 			"replace_where_overrides": basetypes.ListType{
 				ElemType: ReplaceWhereOverride{}.Type(ctx),
+			},
+			"reset_checkpoint_selection": basetypes.ListType{
+				ElemType: types.StringType,
 			},
 			"rewind_spec":   RewindSpec{}.Type(ctx),
 			"validate_only": types.BoolType,
@@ -10110,6 +10154,32 @@ func (m *StartUpdate) SetReplaceWhereOverrides(ctx context.Context, v []ReplaceW
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["replace_where_overrides"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ReplaceWhereOverrides = types.ListValueMust(t, vs)
+}
+
+// GetResetCheckpointSelection returns the value of the ResetCheckpointSelection field in StartUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate) GetResetCheckpointSelection(ctx context.Context) ([]types.String, bool) {
+	if m.ResetCheckpointSelection.IsNull() || m.ResetCheckpointSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ResetCheckpointSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResetCheckpointSelection sets the value of the ResetCheckpointSelection field in StartUpdate.
+func (m *StartUpdate) SetResetCheckpointSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["reset_checkpoint_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ResetCheckpointSelection = types.ListValueMust(t, vs)
 }
 
 // GetRewindSpec returns the value of the RewindSpec field in StartUpdate as

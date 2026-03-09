@@ -15,6 +15,19 @@ if [ "corrupt" == "$FAIL" ]; then
     exit
 fi
 
+# Handle "az account show" subcommand for SDK v0.117.0+
+if [ "$1" == "account" ] && [ "$2" == "show" ]; then
+    /bin/echo "{
+  \"user\": {
+    \"name\": \"testuser@example.com\",
+    \"type\": \"user\"
+  },
+  \"id\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tenantId\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"
+}"
+    exit
+fi
+
 # Macos
 EXP="$(/bin/date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
 if [ -z "${EXP}" ]; then

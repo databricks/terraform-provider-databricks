@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package apps_space
+package app_space
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "apps_space"
+const resourceName = "app_space"
 
 var _ resource.ResourceWithConfigure = &SpaceResource{}
 
@@ -127,10 +127,6 @@ type Space struct {
 	// alphanumeric characters and hyphens. It must be unique within the
 	// workspace.
 	Name types.String `tfsdk:"name"`
-	// The OAuth2 app client ID for the app space.
-	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
-	// The OAuth2 app integration ID for the app space.
-	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
@@ -186,8 +182,6 @@ func (m Space) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
 			"id":                          m.Id,
 			"name":                        m.Name,
-			"oauth2_app_client_id":        m.Oauth2AppClientId,
-			"oauth2_app_integration_id":   m.Oauth2AppIntegrationId,
 			"resources":                   m.Resources,
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
@@ -214,10 +208,8 @@ func (m Space) Type(ctx context.Context) attr.Type {
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"id":                        types.StringType,
-			"name":                      types.StringType,
-			"oauth2_app_client_id":      types.StringType,
-			"oauth2_app_integration_id": types.StringType,
+			"id":   types.StringType,
+			"name": types.StringType,
 			"resources": basetypes.ListType{
 				ElemType: apps_tf.AppResource{}.Type(ctx),
 			},
@@ -313,9 +305,7 @@ func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
-	attrs["name"] = attrs["name"].SetComputed()
-	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
-	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
@@ -442,7 +432,7 @@ func (r *SpaceResource) Metadata(ctx context.Context, req resource.MetadataReque
 func (r *SpaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Space{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks apps_space",
+		Description: "Terraform schema for Databricks app_space",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
@@ -488,7 +478,7 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	response, err := client.Apps.CreateSpace(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create apps_space", err.Error())
+		resp.Diagnostics.AddError("failed to create app_space", err.Error())
 		return
 	}
 
@@ -496,7 +486,7 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("error waiting for apps_space to be ready", err.Error())
+		resp.Diagnostics.AddError("error waiting for app_space to be ready", err.Error())
 		return
 	}
 
@@ -550,7 +540,7 @@ func (r *SpaceResource) Read(ctx context.Context, req resource.ReadRequest, resp
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get apps_space", err.Error())
+		resp.Diagnostics.AddError("failed to get app_space", err.Error())
 		return
 	}
 
@@ -595,7 +585,7 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 	}
 	response, err := client.Apps.UpdateSpace(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update apps_space", err.Error())
+		diags.AddError("failed to update app_space", err.Error())
 		return
 	}
 
@@ -603,7 +593,7 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		diags.AddError("error waiting for apps_space update", err.Error())
+		diags.AddError("error waiting for app_space update", err.Error())
 		return
 	}
 
@@ -661,13 +651,13 @@ func (r *SpaceResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	response, err := client.Apps.DeleteSpace(ctx, deleteRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete apps_space", err.Error())
+		resp.Diagnostics.AddError("failed to delete app_space", err.Error())
 		return
 	}
 
 	err = response.Wait(ctx)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("error waiting for apps_space delete", err.Error())
+		resp.Diagnostics.AddError("error waiting for app_space delete", err.Error())
 		return
 	}
 

@@ -5270,12 +5270,27 @@ func (m DeleteWebhookResponse) Type(ctx context.Context) attr.Type {
 }
 
 type DeltaTableSource struct {
+	// Schema of the resulting dataframe after transformations, in Spark
+	// StructType JSON format (from df.schema.json()). Required if
+	// transformation_sql is specified. Example:
+	// {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 	// The entity columns of the Delta table.
 	EntityColumns types.List `tfsdk:"entity_columns"`
+	// Single WHERE clause to filter delta table before applying
+	// transformations. Will be row-wise evaluated, so should only include
+	// conditionals and projections.
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
 	// The timeseries column of the Delta table.
 	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
+	// A single SQL SELECT expression applied after filter_condition. Should
+	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
+	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
+	// col_b AS col_c") If transformation_sql is not provided, all columns of
+	// the delta table are present in the DataSource dataframe.
+	TransformationSql types.String `tfsdk:"transformation_sql"`
 }
 
 func (to *DeltaTableSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaTableSource) {
@@ -5285,9 +5300,12 @@ func (to *DeltaTableSource) SyncFieldsDuringRead(ctx context.Context, from Delta
 }
 
 func (m DeltaTableSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
 	attrs["entity_columns"] = attrs["entity_columns"].SetRequired()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetRequired()
+	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
 
 	return attrs
 }
@@ -5312,9 +5330,12 @@ func (m DeltaTableSource) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entity_columns":    m.EntityColumns,
-			"full_name":         m.FullName,
-			"timeseries_column": m.TimeseriesColumn,
+			"dataframe_schema":   m.DataframeSchema,
+			"entity_columns":     m.EntityColumns,
+			"filter_condition":   m.FilterCondition,
+			"full_name":          m.FullName,
+			"timeseries_column":  m.TimeseriesColumn,
+			"transformation_sql": m.TransformationSql,
 		})
 }
 
@@ -5322,11 +5343,14 @@ func (m DeltaTableSource) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m DeltaTableSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"dataframe_schema": types.StringType,
 			"entity_columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"full_name":         types.StringType,
-			"timeseries_column": types.StringType,
+			"filter_condition":   types.StringType,
+			"full_name":          types.StringType,
+			"timeseries_column":  types.StringType,
+			"transformation_sql": types.StringType,
 		},
 	}
 }

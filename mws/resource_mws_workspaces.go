@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -334,6 +335,13 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if len(request) == 0 {
 		return nil
 	}
+
+	updateMaskFields := make([]string, 0, len(request))
+	for field := range request {
+		updateMaskFields = append(updateMaskFields, field)
+	}
+	sort.Strings(updateMaskFields)
+	workspacesAPIPath = fmt.Sprintf("%s?update_mask=%s", workspacesAPIPath, strings.Join(updateMaskFields, ","))
 
 	err := a.client.Patch(a.context, workspacesAPIPath, request)
 	if err != nil {

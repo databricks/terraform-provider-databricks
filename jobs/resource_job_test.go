@@ -297,6 +297,97 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_DisabledTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "DisabledTaskJob",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:           "disabled_task",
+							Disabled:          true,
+							ExistingClusterID: "abc",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "enabled_task",
+								},
+							},
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Inactive",
+							},
+						},
+						{
+							TaskKey:           "enabled_task",
+							ExistingClusterID: "abc",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Active",
+							},
+						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 123,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=123",
+				Response: Job{
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "enabled_task",
+							},
+							{
+								TaskKey:  "disabled_task",
+								Disabled: true,
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "DisabledTaskJob"
+
+		task {
+			task_key = "enabled_task"
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Active"
+			}
+		}
+
+		task {
+			task_key = "disabled_task"
+			disabled = true
+
+			depends_on {
+				task_key = "enabled_task"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Inactive"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+}
+
 func TestResourceJobCreate_TaskOrder(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

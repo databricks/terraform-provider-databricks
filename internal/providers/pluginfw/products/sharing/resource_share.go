@@ -220,23 +220,27 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	upToDateShareInfo := shareInfo
 	shareChanges := shareChanges(planGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
 
-	updatedShareInfo, err := w.Shares.Update(ctx, shareChanges)
-	if err != nil {
-		// delete orphaned share if update fails
-		if d_err := w.Shares.DeleteByName(ctx, shareInfo.Name); d_err != nil {
-			resp.Diagnostics.AddError("failed to delete orphaned share", d_err.Error())
+	if len(shareChanges.Updates) > 0 || shareChanges.Owner != "" || !plan.Comment.IsNull() {
+		updatedShareInfo, err := w.Shares.Update(ctx, shareChanges)
+		if err != nil {
+			// delete orphaned share if update fails
+			if d_err := w.Shares.DeleteByName(ctx, shareInfo.Name); d_err != nil {
+				resp.Diagnostics.AddError("failed to delete orphaned share", d_err.Error())
+				return
+			}
+			resp.Diagnostics.AddError("failed to update share", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("failed to update share", err.Error())
-		return
+		upToDateShareInfo = updatedShareInfo
 	}
 
-	matchOrder(updatedShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+	matchOrder(upToDateShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 
 	var newState ShareInfoExtended
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &newState)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, upToDateShareInfo, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

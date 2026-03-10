@@ -406,6 +406,20 @@ func TestShareChanges(t *testing.T) {
 	}
 }
 
+// TestShareChangesEmpty tests that shareChanges returns no updates for an empty share
+func TestShareChangesEmpty(t *testing.T) {
+	si := sharing.ShareInfo{
+		Name:    "test-share",
+		Objects: []sharing.SharedDataObject{},
+	}
+
+	result := shareChanges(si, "ADD")
+	assert.Equal(t, "test-share", result.Name)
+	assert.Empty(t, result.Updates, "Should have no updates for empty share")
+	assert.Empty(t, result.Owner, "Owner should be empty")
+	assert.Empty(t, result.Comment, "Comment should be empty")
+}
+
 // TestDiffUpdateObjectComment tests updating an object's comment field
 func TestDiffUpdateObjectComment(t *testing.T) {
 	before := sharing.ShareInfo{

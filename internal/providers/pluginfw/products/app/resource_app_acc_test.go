@@ -295,7 +295,6 @@ func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
 }
 
 func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
-	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`
 			provider_config = {

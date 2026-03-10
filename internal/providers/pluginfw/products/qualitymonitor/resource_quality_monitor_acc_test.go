@@ -3,6 +3,7 @@ package qualitymonitor_test
 import (
 	"context"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -281,4 +282,36 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 			ImportStateVerifyIdentifierAttribute: "table_name",
 		},
 	)
+}
+
+func TestAccQualityMonitor_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: commonPartQualityMonitoring + `
+			resource "databricks_sql_table" "myTable" {
+				catalog_name = databricks_catalog.sandbox.id
+				schema_name = databricks_schema.things.name
+				name = "bar{var.STICKY_RANDOM}"
+				table_type = "MANAGED"
+				data_source_format = "DELTA"
+				column {
+					name = "timestamp"
+					type = "int"
+				}
+			}
+
+			resource "databricks_quality_monitor" "testMonitor" {
+				table_name = databricks_sql_table.myTable.id
+				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTable.name}"
+				output_schema_name = databricks_schema.things.id
+				snapshot {}
+				provider_config {
+					workspace_id = "1234"
+				}
+			}
+		`,
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client`,
+		),
+		PlanOnly: true,
+	})
 }

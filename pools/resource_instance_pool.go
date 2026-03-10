@@ -89,7 +89,7 @@ type InstancePool struct {
 	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
 	CustomTags                         map[string]string               `json:"custom_tags" tf:"optional"`
-	EnableElasticDisk                  bool                            `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
+	EnableElasticDisk                  bool                            `json:"enable_elastic_disk" tf:"force_new,suppress_diff"`
 	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
 	PreloadedDockerImages              []clusters.DockerImage          `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
@@ -118,7 +118,7 @@ type InstancePoolAndStats struct {
 	DefaultTags                        map[string]string                `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string                `json:"custom_tags,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                            `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                             `json:"enable_elastic_disk,omitempty"`
+	EnableElasticDisk                  bool                             `json:"enable_elastic_disk"`
 	DiskSpec                           *InstancePoolDiskSpec            `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                         `json:"preloaded_spark_versions,omitempty"`
 	State                              string                           `json:"state,omitempty"`

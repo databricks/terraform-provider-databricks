@@ -3,6 +3,7 @@ package library_test
 import (
 	"context"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 
@@ -158,6 +159,26 @@ var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
 		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_library"})
 		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 	},
+}
+
+func TestAccLibrary_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+			resource "databricks_library" "this" {
+				cluster_id = "fake-cluster-id"
+				pypi {
+					package = "networkx"
+				}
+				provider_config {
+					workspace_id = "1234"
+				}
+			}
+		`,
+		ExpectError: regexp.MustCompile(
+			`(?s)failed to get workspace client`,
+		),
+		PlanOnly: true,
+	})
 }
 
 // Testing the transition from sdkv2 to plugin framework.

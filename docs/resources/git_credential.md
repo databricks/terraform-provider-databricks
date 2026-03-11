@@ -3,7 +3,7 @@ subcategory: "Workspace"
 ---
 # databricks_git_credential Resource
 
-This resource allows you to manage credentials for [Databricks Repos](https://docs.databricks.com/repos.html) using [Git Credentials API](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html).
+This resource allows you to manage credentials for [Databricks Repos](https://docs.databricks.com/repos.html) and [Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) Git deployments using [Git Credentials API](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html).
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -73,3 +73,5 @@ terraform import databricks_git_credential.this <git-credential-id>
 The following resources are often used in the same context:
 
 * [databricks_repo](repo.md) to manage Databricks Repos.
+* [databricks_app](app.md) to manage Databricks Apps with Git repository integration.
+* [databricks_app_deployment](app_deployment.md) to deploy code to Databricks Apps from Git repositories.

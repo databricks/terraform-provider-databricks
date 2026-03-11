@@ -1085,6 +1085,67 @@ func TestResourceClusterUpdate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
+func TestResourceClusterUpdate_PreservesExternalSparkEnvVars(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+					SparkEnvVars: map[string]string{
+						"PYSPARK_PYTHON":  "/databricks/python3/bin/python3",
+						"ENV_FROM_POLICY": "policy_value",
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/edit",
+				ExpectedRequest: compute.ClusterDetails{
+					AutoterminationMinutes: 15,
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					SparkEnvVars: map[string]string{
+						"PYSPARK_PYTHON":  "/databricks/python3/bin/python3",
+						"ENV_FROM_POLICY": "policy_value",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

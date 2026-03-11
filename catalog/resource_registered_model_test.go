@@ -31,7 +31,10 @@ func TestRegisteredModelCreate(t *testing.T) {
 				FullName:    "catalog.schema.model",
 				Comment:     "comment",
 			}, nil)
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				Owner:       "owner",
@@ -89,7 +92,10 @@ func TestRegisteredModelCreateWithOwner(t *testing.T) {
 				FullName:    "catalog.schema.model",
 				Comment:     "comment",
 			}, nil)
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				Owner:       "owner",
@@ -130,7 +136,10 @@ func TestRegisteredModelRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockRegisteredModelsAPI().EXPECT()
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				SchemaName:  "schema",
@@ -152,7 +161,10 @@ func TestRegisteredModelRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockRegisteredModelsAPI().EXPECT()
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(nil, errors.New("Internal error happened"))
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(nil, errors.New("Internal error happened"))
 		},
 		Resource: ResourceRegisteredModel(),
 		Read:     true,
@@ -177,7 +189,10 @@ func TestRegisteredModelUpdate(t *testing.T) {
 				FullName:    "catalog.schema.model",
 				Comment:     "new comment",
 			}, nil)
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				SchemaName:  "schema",
@@ -221,7 +236,10 @@ func TestRegisteredModelUpdateCommentOnly(t *testing.T) {
 				FullName:    "catalog.schema.model",
 				Comment:     "",
 			}, nil)
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				SchemaName:  "schema",
@@ -275,7 +293,10 @@ func TestRegisteredModelUpdateOwner(t *testing.T) {
 				FullName:    "catalog.schema.model",
 				Comment:     "new comment",
 			}, nil)
-			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
 				CatalogName: "catalog",
 				SchemaName:  "schema",
@@ -418,4 +439,241 @@ func TestRegisteredModelDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "catalog.schema.model",
 	}.ExpectError(t, "Internal error happened")
+}
+
+func TestRegisteredModelCreateWithAliases(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateRegisteredModelRequest{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Comment:     "comment",
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				Owner:       "owner",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+			}, nil)
+			e.SetAlias(mock.Anything, catalog.SetRegisteredModelAliasRequest{
+				FullName:   "catalog.schema.model",
+				Alias:      "champion",
+				VersionNum: 1,
+			}).Return(&catalog.RegisteredModelAlias{
+				AliasName:  "champion",
+				VersionNum: 1,
+			}, nil)
+			e.SetAlias(mock.Anything, catalog.SetRegisteredModelAliasRequest{
+				FullName:   "catalog.schema.model",
+				Alias:      "challenger",
+				VersionNum: 2,
+			}).Return(&catalog.RegisteredModelAlias{
+				AliasName:  "challenger",
+				VersionNum: 2,
+			}, nil)
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				Owner:       "owner",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+				Aliases: []catalog.RegisteredModelAlias{
+					{AliasName: "champion", VersionNum: 1},
+					{AliasName: "challenger", VersionNum: 2},
+				},
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			schema_name = "schema"
+			comment = "comment"
+			aliases {
+				alias_name = "champion"
+				version_num = 1
+			}
+			aliases {
+				alias_name = "challenger"
+				version_num = 2
+			}
+			`,
+		Create: true,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":    "catalog.schema.model",
+			"owner": "owner",
+		},
+	)
+}
+
+func TestRegisteredModelReadWithAliases(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+				Aliases: []catalog.RegisteredModelAlias{
+					{AliasName: "champion", VersionNum: 1},
+					{AliasName: "challenger", VersionNum: 2},
+				},
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		Read:     true,
+		ID:       "catalog.schema.model",
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":        "catalog.schema.model",
+			"aliases.#": 2,
+		},
+	)
+}
+
+func TestRegisteredModelUpdateAliases(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Name:        "model",
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+			}, nil)
+			e.DeleteAlias(mock.Anything, catalog.DeleteAliasRequest{
+				FullName: "catalog.schema.model",
+				Alias:    "old_alias",
+			}).Return(nil)
+			e.SetAlias(mock.Anything, catalog.SetRegisteredModelAliasRequest{
+				FullName:   "catalog.schema.model",
+				Alias:      "new_alias",
+				VersionNum: 3,
+			}).Return(&catalog.RegisteredModelAlias{
+				AliasName:  "new_alias",
+				VersionNum: 3,
+			}, nil)
+			e.SetAlias(mock.Anything, catalog.SetRegisteredModelAliasRequest{
+				FullName:   "catalog.schema.model",
+				Alias:      "champion",
+				VersionNum: 2,
+			}).Return(&catalog.RegisteredModelAlias{
+				AliasName:  "champion",
+				VersionNum: 2,
+			}, nil)
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "new comment",
+				Aliases: []catalog.RegisteredModelAlias{
+					{AliasName: "champion", VersionNum: 2},
+					{AliasName: "new_alias", VersionNum: 3},
+				},
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		Update:   true,
+		ID:       "catalog.schema.model",
+		InstanceState: map[string]string{
+			"name":                  "model",
+			"catalog_name":          "catalog",
+			"schema_name":           "schema",
+			"comment":               "comment",
+			"aliases.#":             "2",
+			"aliases.0.alias_name":  "champion",
+			"aliases.0.version_num": "1",
+			"aliases.1.alias_name":  "old_alias",
+			"aliases.1.version_num": "5",
+		},
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			schema_name = "schema"
+			comment = "new comment"
+			aliases {
+				alias_name = "champion"
+				version_num = 2
+			}
+			aliases {
+				alias_name = "new_alias"
+				version_num = 3
+			}
+			`,
+	}.ApplyNoError(t)
+}
+
+func TestRegisteredModelUpdateAliasesOnly(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.SetAlias(mock.Anything, catalog.SetRegisteredModelAliasRequest{
+				FullName:   "catalog.schema.model",
+				Alias:      "champion",
+				VersionNum: 2,
+			}).Return(&catalog.RegisteredModelAlias{
+				AliasName:  "champion",
+				VersionNum: 2,
+			}, nil)
+			e.Get(mock.Anything, catalog.GetRegisteredModelRequest{
+				FullName:       "catalog.schema.model",
+				IncludeAliases: true,
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+				Aliases: []catalog.RegisteredModelAlias{
+					{AliasName: "champion", VersionNum: 2},
+				},
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		Update:   true,
+		ID:       "catalog.schema.model",
+		InstanceState: map[string]string{
+			"name":                  "model",
+			"catalog_name":          "catalog",
+			"schema_name":           "schema",
+			"comment":               "comment",
+			"aliases.#":             "1",
+			"aliases.0.alias_name":  "champion",
+			"aliases.0.version_num": "1",
+		},
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			schema_name = "schema"
+			comment = "comment"
+			aliases {
+				alias_name = "champion"
+				version_num = 2
+			}
+			`,
+	}.ApplyNoError(t)
 }

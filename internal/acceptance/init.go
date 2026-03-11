@@ -436,35 +436,33 @@ func setDebugLogger() {
 
 func LoadWorkspaceEnv(t *testing.T) {
 	initTest(t, "workspace")
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		Skipf(t)("Skipping workspace test on account level")
-	}
+	skipIfNotEnvironmentType(t, "WORKSPACE")
 }
 
 func LoadAccountEnv(t *testing.T) {
 	initTest(t, "account")
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
-		Skipf(t)("Skipping account test on workspace level")
-	}
+	skipIfNotEnvironmentType(t, "ACCOUNT")
 }
 
 func LoadUcwsEnv(t *testing.T) {
 	initTest(t, "ucws")
-	if os.Getenv("TEST_METASTORE_ID") == "" {
-		Skipf(t)("Skipping non-Unity Catalog test")
-	}
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		Skipf(t)("Skipping workspace test on account level")
-	}
+	skipIfNotEnvironmentType(t, "UC_WORKSPACE")
 }
 
 func LoadUcacctEnv(t *testing.T) {
 	initTest(t, "ucacct")
-	if os.Getenv("TEST_METASTORE_ID") == "" {
-		Skipf(t)("Skipping non-Unity Catalog test")
+	skipIfNotEnvironmentType(t, "UC_ACCOUNT")
+}
+
+// skipIfNotEnvironmentType skips the test if TEST_ENVIRONMENT_TYPE doesn't match the expected type.
+// TEST_ENVIRONMENT_TYPE values: "ACCOUNT", "WORKSPACE", "UC_ACCOUNT", "UC_WORKSPACE".
+func skipIfNotEnvironmentType(t *testing.T, expectedType string) {
+	envType := os.Getenv("TEST_ENVIRONMENT_TYPE")
+	if envType == "" {
+		Skipf(t)("Skipping test because TEST_ENVIRONMENT_TYPE is not set")
 	}
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
-		Skipf(t)("Skipping account test on workspace level")
+	if envType != expectedType {
+		Skipf(t)("Skipping %s test in %s environment", expectedType, envType)
 	}
 }
 

@@ -1115,7 +1115,7 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeThrowsError(t *testing.T) {
 				},
 			},
 			allowedCommands:  []string{},
-			expectedErrorMsg: "changing the 'type' of an existing column is not supported",
+			expectedErrorMsg: "changing the 'type' of an existing column is not supported: column 'one' type changed from 'string' to 'int'",
 		},
 	)
 }

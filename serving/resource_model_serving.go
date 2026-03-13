@@ -2,6 +2,7 @@ package serving
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -218,8 +219,26 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 	return nil
 }
 
+// setForceSendFieldsForRateLimits ensures that explicitly configured zero values
+// for Calls and Tokens in AI Gateway rate limits are serialized in API requests.
+// Without this, the SDK's omitempty JSON tag causes zero values to be omitted,
+// preventing users from setting rate limits to 0 to disable rate limiting.
+func setForceSendFieldsForRateLimits(rateLimits []serving.AiGatewayRateLimit, d *schema.ResourceData) {
+	for i := range rateLimits {
+		callsKey := fmt.Sprintf("ai_gateway.0.rate_limits.%d.calls", i)
+		tokensKey := fmt.Sprintf("ai_gateway.0.rate_limits.%d.tokens", i)
+		if v, ok := d.GetOkExists(callsKey); ok && reflect.ValueOf(v).IsZero() {
+			rateLimits[i].ForceSendFields = append(rateLimits[i].ForceSendFields, "Calls")
+		}
+		if v, ok := d.GetOkExists(tokensKey); ok && reflect.ValueOf(v).IsZero() {
+			rateLimits[i].ForceSendFields = append(rateLimits[i].ForceSendFields, "Tokens")
+		}
+	}
+}
+
 // Update the AI Gateway configuration for a model serving endpoint.
 func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name string, newAiGateway serving.AiGatewayConfig, d *schema.ResourceData) error {
+	setForceSendFieldsForRateLimits(newAiGateway.RateLimits, d)
 	_, err := w.ServingEndpoints.PutAiGateway(ctx, serving.PutAiGatewayRequest{
 		Name:                 name,
 		FallbackConfig:       newAiGateway.FallbackConfig,
@@ -435,6 +454,9 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+			if e.AiGateway != nil {
+				setForceSendFieldsForRateLimits(e.AiGateway.RateLimits, d)
+			}
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {
 				return err

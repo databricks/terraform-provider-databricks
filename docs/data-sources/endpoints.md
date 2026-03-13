@@ -2,7 +2,7 @@
 subcategory: "Provisioning"
 ---
 # databricks_endpoints Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 Endpoints datasource retrieves a list of all network connectivity endpoints for private access to Databricks workspaces.
 
@@ -14,14 +14,15 @@ Endpoints datasource retrieves a list of all network connectivity endpoints for 
 This is an example for listing endpoints in Azure cloud:
 ```hcl
 data "databricks_endpoints" "all" {
-  account_id = "eae3abf6-1496-494e-9983-4660a5ad5aab"
+  parent = "accounts/123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required)
+* `parent` (string, required) - The parent resource name of the account to list endpoints for.
+  Format: `accounts/{account_id}`
 * `page_size` (integer, optional)
 
 

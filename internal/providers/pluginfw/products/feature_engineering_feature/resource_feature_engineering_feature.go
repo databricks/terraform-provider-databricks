@@ -113,24 +113,30 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Feature struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
+	// Deprecated: Use DeltaTableSource.filter_condition or
+	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
-	// The input columns from which the feature is computed.
+	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
+	// compatibility. The input columns from which the feature is computed.
 	Inputs types.List `tfsdk:"inputs"`
-	// WARNING: This field is primarily intended for internal use by Databricks
-	// systems and is automatically populated when features are created through
-	// Databricks notebooks or jobs. Users should not manually set this field as
-	// incorrect values may lead to inaccurate lineage tracking or unexpected
-	// behavior. This field will be set by feature-engineering client and should
-	// be left unset by SDK and terraform users.
+	// Lineage context information for this feature. WARNING: This field is
+	// primarily intended for internal use by Databricks systems and is
+	// automatically populated when features are created through Databricks
+	// notebooks or jobs. Users should not manually set this field as incorrect
+	// values may lead to inaccurate lineage tracking or unexpected behavior.
+	// This field will be set by feature-engineering client and should be left
+	// unset by SDK and terraform users.
 	LineageContext types.Object `tfsdk:"lineage_context"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
-	// The time window in which the feature is computed.
+	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
+	// for backwards compatibility. The time window in which the feature is
+	// computed.
 	TimeWindow     types.Object `tfsdk:"time_window"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }

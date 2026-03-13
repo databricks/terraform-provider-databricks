@@ -8,9 +8,11 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,6 +27,32 @@ func TestAccNotebookResourceScalability(t *testing.T) {
 			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "/Shared/provider-test/xx_{var.RANDOM}_renamed"
 		}`,
+	})
+}
+
+func TestAccNotebookCreate_NonExistentParent(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `resource "databricks_notebook" "this" {
+			content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgiaGVsbG8iKQ=="
+			language = "PYTHON"
+			path = "/Shared/provider-test/notebook-parent-{var.RANDOM}/test.py"
+		}`,
+		Check: acceptance.ResourceCheck("databricks_notebook.this",
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				w, err := client.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				// Verify the notebook exists.
+				info, err := w.Workspace.GetStatusByPath(ctx, id)
+				require.NoError(t, err)
+				assert.Equal(t, id, info.Path)
+				// Verify the parent folder was created automatically.
+				parent := id[:len(id)-len("/test.py")]
+				_, err = w.Workspace.GetStatusByPath(ctx, parent)
+				assert.NoError(t, err, "parent folder should have been created automatically")
+				return nil
+			}),
 	})
 }
 
@@ -86,6 +114,7 @@ func TestAccNotebook_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 
@@ -96,6 +125,7 @@ func TestAccNotebook_ProviderConfig_Required(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
 	})
 }
 
@@ -107,6 +137,7 @@ func TestAccNotebook_ProviderConfig_EmptyID(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
 	})
 }
 
@@ -154,13 +185,8 @@ func TestAccNotebook_ProviderConfig_Recreate(t *testing.T) {
 				workspace_id = "123"
 			}
 		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionDestroyBeforeCreate),
-			},
-		},
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 

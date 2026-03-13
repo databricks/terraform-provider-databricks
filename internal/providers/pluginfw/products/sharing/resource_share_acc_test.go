@@ -681,6 +681,7 @@ func TestAccShare_ProviderConfig_Required(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
+		PlanOnly:    true,
 	})
 }
 

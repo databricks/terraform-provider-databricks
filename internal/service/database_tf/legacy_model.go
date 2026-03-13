@@ -1487,7 +1487,6 @@ func (m DatabaseInstanceRoleAttributes_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Next field marker: 13
 type DatabaseTable_SdkV2 struct {
 	// Name of the target database instance. This is required when creating
 	// database tables in standard catalogs. This is optional when creating
@@ -1936,11 +1935,15 @@ func (m FindDatabaseInstanceByUidRequest_SdkV2) Type(ctx context.Context) attr.T
 
 // Generates a credential that can be used to access database instances
 type GenerateDatabaseCredentialRequest_SdkV2 struct {
-	// The returned token will be scoped to the union of instance_names and
-	// instances containing the specified UC tables, so instance_names is
-	// allowed to be empty.
+	// A set of UC permissions to add to the credential. We verify that the
+	// caller has the necessary permissions in UC and include a reference in the
+	// token. Postgres uses that token to give the connecting user additional
+	// grants to the Postgres resources that correspond to the UC resources. The
+	// UC resources need to be something that have a Postgres counterpart. For
+	// example, a synced table or a table in a UC database catalog.
 	Claims types.List `tfsdk:"claims"`
-	// Instances to which the token will be scoped.
+	// Instances to request a credential for. At least one of instance_names or
+	// claims must be specified.
 	InstanceNames types.List `tfsdk:"instance_names"`
 
 	RequestId types.String `tfsdk:"request_id"`
@@ -3145,7 +3148,6 @@ func (m RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next field marker: 18
 type SyncedDatabaseTable_SdkV2 struct {
 	// Synced Table data synchronization status
 	DataSynchronizationStatus types.List `tfsdk:"data_synchronization_status"`

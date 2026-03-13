@@ -419,6 +419,14 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 	}.ExpectError(t, "Git credential with the given ID could not be found.")
 }
 
+func TestResourceGitCredentialPATIsSensitive(t *testing.T) {
+	resource := ResourceGitCredential()
+	s := resource.Schema["personal_access_token"]
+	if !s.Sensitive {
+		t.Error("personal_access_token should be marked as Sensitive")
+	}
+}
+
 func TestGitCredentialCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceGitCredential(),
 		qa.CornerCaseSkipCRUD("create"),

@@ -81,6 +81,10 @@ type CreateEndpoint_SdkV2 struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Type of endpoint
 	EndpointType types.String `tfsdk:"endpoint_type"`
+	// Min QPS for the endpoint. Mutually exclusive with num_replicas. The
+	// actual replica count is calculated at index creation/sync time based on
+	// this value.
+	MinQps types.Int64 `tfsdk:"min_qps"`
 	// Name of the vector search endpoint
 	Name types.String `tfsdk:"name"`
 }
@@ -94,6 +98,7 @@ func (to *CreateEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 func (m CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
+	attrs["min_qps"] = attrs["min_qps"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -119,6 +124,7 @@ func (m CreateEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"budget_policy_id": m.BudgetPolicyId,
 			"endpoint_type":    m.EndpointType,
+			"min_qps":          m.MinQps,
 			"name":             m.Name,
 		})
 }
@@ -129,6 +135,7 @@ func (m CreateEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"budget_policy_id": types.StringType,
 			"endpoint_type":    types.StringType,
+			"min_qps":          types.Int64Type,
 			"name":             types.StringType,
 		},
 	}
@@ -1466,6 +1473,8 @@ type EndpointInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Number of indexes on the endpoint
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
+	// Scaling information for the endpoint
+	ScalingInfo types.List `tfsdk:"scaling_info"`
 }
 
 func (to *EndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointInfo_SdkV2) {
@@ -1481,6 +1490,15 @@ func (to *EndpointInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 				// Recursively sync the fields of EndpointStatus
 				toEndpointStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromEndpointStatus)
 				to.SetEndpointStatus(ctx, toEndpointStatus)
+			}
+		}
+	}
+	if !from.ScalingInfo.IsNull() && !from.ScalingInfo.IsUnknown() {
+		if toScalingInfo, ok := to.GetScalingInfo(ctx); ok {
+			if fromScalingInfo, ok := from.GetScalingInfo(ctx); ok {
+				// Recursively sync the fields of ScalingInfo
+				toScalingInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromScalingInfo)
+				to.SetScalingInfo(ctx, toScalingInfo)
 			}
 		}
 	}
@@ -1501,6 +1519,14 @@ func (to *EndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from End
 			}
 		}
 	}
+	if !from.ScalingInfo.IsNull() && !from.ScalingInfo.IsUnknown() {
+		if toScalingInfo, ok := to.GetScalingInfo(ctx); ok {
+			if fromScalingInfo, ok := from.GetScalingInfo(ctx); ok {
+				toScalingInfo.SyncFieldsDuringRead(ctx, fromScalingInfo)
+				to.SetScalingInfo(ctx, toScalingInfo)
+			}
+		}
+	}
 }
 
 func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1516,6 +1542,8 @@ func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["last_updated_user"] = attrs["last_updated_user"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["num_indexes"] = attrs["num_indexes"].SetOptional()
+	attrs["scaling_info"] = attrs["scaling_info"].SetOptional()
+	attrs["scaling_info"] = attrs["scaling_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1531,6 +1559,7 @@ func (m EndpointInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{
 		"custom_tags":     reflect.TypeOf(CustomTag_SdkV2{}),
 		"endpoint_status": reflect.TypeOf(EndpointStatus_SdkV2{}),
+		"scaling_info":    reflect.TypeOf(EndpointScalingInfo_SdkV2{}),
 	}
 }
 
@@ -1552,6 +1581,7 @@ func (m EndpointInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"last_updated_user":          m.LastUpdatedUser,
 			"name":                       m.Name,
 			"num_indexes":                m.NumIndexes,
+			"scaling_info":               m.ScalingInfo,
 		})
 }
 
@@ -1574,6 +1604,9 @@ func (m EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"last_updated_user":      types.StringType,
 			"name":                   types.StringType,
 			"num_indexes":            types.Int64Type,
+			"scaling_info": basetypes.ListType{
+				ElemType: EndpointScalingInfo_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1628,6 +1661,85 @@ func (m *EndpointInfo_SdkV2) SetEndpointStatus(ctx context.Context, v EndpointSt
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoint_status"]
 	m.EndpointStatus = types.ListValueMust(t, vs)
+}
+
+// GetScalingInfo returns the value of the ScalingInfo field in EndpointInfo_SdkV2 as
+// a EndpointScalingInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EndpointInfo_SdkV2) GetScalingInfo(ctx context.Context) (EndpointScalingInfo_SdkV2, bool) {
+	var e EndpointScalingInfo_SdkV2
+	if m.ScalingInfo.IsNull() || m.ScalingInfo.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointScalingInfo_SdkV2
+	d := m.ScalingInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetScalingInfo sets the value of the ScalingInfo field in EndpointInfo_SdkV2.
+func (m *EndpointInfo_SdkV2) SetScalingInfo(ctx context.Context, v EndpointScalingInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["scaling_info"]
+	m.ScalingInfo = types.ListValueMust(t, vs)
+}
+
+type EndpointScalingInfo_SdkV2 struct {
+	// The minimum QPS target requested for the endpoint.
+	RequestedMinQps types.Int64 `tfsdk:"requested_min_qps"`
+	// The current state of the scaling change request.
+	State types.String `tfsdk:"state"`
+}
+
+func (to *EndpointScalingInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointScalingInfo_SdkV2) {
+}
+
+func (to *EndpointScalingInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EndpointScalingInfo_SdkV2) {
+}
+
+func (m EndpointScalingInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["requested_min_qps"] = attrs["requested_min_qps"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointScalingInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EndpointScalingInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EndpointScalingInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (m EndpointScalingInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"requested_min_qps": m.RequestedMinQps,
+			"state":             m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EndpointScalingInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"requested_min_qps": types.Int64Type,
+			"state":             types.StringType,
+		},
+	}
 }
 
 // Status information of an endpoint
@@ -2791,6 +2903,60 @@ func (m PatchEndpointBudgetPolicyResponse_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"effective_budget_policy_id": types.StringType,
+		},
+	}
+}
+
+type PatchEndpointRequest_SdkV2 struct {
+	// Name of the vector search endpoint
+	EndpointName types.String `tfsdk:"-"`
+	// Min QPS for the endpoint. Positive integer sets QPS target; -1 resets to
+	// default scaling behavior.
+	MinQps types.Int64 `tfsdk:"min_qps"`
+}
+
+func (to *PatchEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchEndpointRequest_SdkV2) {
+}
+
+func (to *PatchEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchEndpointRequest_SdkV2) {
+}
+
+func (m PatchEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["min_qps"] = attrs["min_qps"].SetOptional()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PatchEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PatchEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoint_name": m.EndpointName,
+			"min_qps":       m.MinQps,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PatchEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoint_name": types.StringType,
+			"min_qps":       types.Int64Type,
 		},
 	}
 }

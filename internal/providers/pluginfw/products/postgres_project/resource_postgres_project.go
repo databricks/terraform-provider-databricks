@@ -114,6 +114,13 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Configuration settings for the initial Read/Write endpoint created inside
+	// the default branch for a newly created project. If omitted, the initial
+	// endpoint created will have default settings, without high availability
+	// configured. This field does not apply to any endpoints created after
+	// project creation. Use spec.default_endpoint_settings to configure default
+	// settings for endpoints created after project creation.
+	InitialEndpointSpec types.Object `tfsdk:"initial_endpoint_spec"`
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
@@ -144,9 +151,10 @@ type Project struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":            reflect.TypeOf(postgres_tf.ProjectSpec{}),
-		"status":          reflect.TypeOf(postgres_tf.ProjectStatus{}),
-		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
+		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
+		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
+		"provider_config":       reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -160,12 +168,13 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"name":        m.Name,
-			"project_id":  m.ProjectId,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
-			"update_time": m.UpdateTime,
+			"initial_endpoint_spec": m.InitialEndpointSpec,
+			"name":                  m.Name,
+			"project_id":            m.ProjectId,
+			"spec":                  m.Spec,
+			"status":                m.Status,
+			"uid":                   m.Uid,
+			"update_time":           m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -177,12 +186,13 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"project_id":  types.StringType,
-			"spec":        postgres_tf.ProjectSpec{}.Type(ctx),
-			"status":      postgres_tf.ProjectStatus{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
+			"name":                  types.StringType,
+			"project_id":            types.StringType,
+			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
+			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
+			"uid":                   types.StringType,
+			"update_time":           timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -193,6 +203,19 @@ func (m Project) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Project) {
+	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
+		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialEndpointSpec = from.InitialEndpointSpec
+	}
+	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
+		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
+			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
+				// Recursively sync the fields of InitialEndpointSpec
+				toInitialEndpointSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialEndpointSpec)
+				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
+			}
+		}
+	}
 	to.ProjectId = from.ProjectId
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -224,6 +247,18 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
+	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
+		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialEndpointSpec = from.InitialEndpointSpec
+	}
+	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
+		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
+			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
+				toInitialEndpointSpec.SyncFieldsDuringRead(ctx, fromInitialEndpointSpec)
+				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
+			}
+		}
+	}
 	to.ProjectId = from.ProjectId
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -251,6 +286,9 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
@@ -266,6 +304,31 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
+}
+
+// GetInitialEndpointSpec returns the value of the InitialEndpointSpec field in Project as
+// a postgres_tf.InitialEndpointSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Project) GetInitialEndpointSpec(ctx context.Context) (postgres_tf.InitialEndpointSpec, bool) {
+	var e postgres_tf.InitialEndpointSpec
+	if m.InitialEndpointSpec.IsNull() || m.InitialEndpointSpec.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.InitialEndpointSpec
+	d := m.InitialEndpointSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitialEndpointSpec sets the value of the InitialEndpointSpec field in Project.
+func (m *Project) SetInitialEndpointSpec(ctx context.Context, v postgres_tf.InitialEndpointSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.InitialEndpointSpec = vs
 }
 
 // GetSpec returns the value of the Spec field in Project as
@@ -460,7 +523,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("initial_endpoint_spec,spec", ",")),
 	}
 
 	var namespace ProviderConfig

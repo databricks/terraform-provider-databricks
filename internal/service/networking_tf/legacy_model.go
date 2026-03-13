@@ -93,7 +93,8 @@ func (m AzurePrivateEndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateEndpointRequest_SdkV2 struct {
 	Endpoint types.List `tfsdk:"endpoint"`
-
+	// The parent resource name of the account under which the endpoint is
+	// created. Format: `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -444,7 +445,8 @@ type ListEndpointsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
-
+	// The parent resource name of the account to list endpoints for. Format:
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 

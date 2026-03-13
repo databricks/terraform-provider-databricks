@@ -280,7 +280,10 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 		Latest:          true,
 		LongTermSupport: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	nodeType, err := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	if err != nil {
+		return "", err
+	}
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terraform-table-acl", clusters.Cluster{
 			ClusterName:            "terraform-table-acl",

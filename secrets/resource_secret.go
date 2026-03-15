@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -35,16 +35,43 @@ func readSecret(ctx context.Context, w *databricks.WorkspaceClient, scope string
 	}
 }
 
+func getStringValue(d *schema.ResourceData) (string, error) {
+	woValue, diags := d.GetRawConfigAt(cty.GetAttrPath("string_value_wo"))
+	if !diags.HasError() && woValue.Type().Equals(cty.String) && !woValue.IsNull() {
+		return woValue.AsString(), nil
+	}
+	if v, ok := d.GetOk("string_value"); ok {
+		return v.(string), nil
+	}
+	return "", fmt.Errorf("failed to get one of attributes `string_value_wo` or `string_value`")
+}
+
 // ResourceSecret manages secrets
 func ResourceSecret() common.Resource {
 	p := common.NewPairSeparatedID("scope", "key", "|||")
 	s := map[string]*schema.Schema{
 		"string_value": {
-			Type:         schema.TypeString,
-			ValidateFunc: validation.StringIsNotEmpty,
-			Required:     true,
+			Type:          schema.TypeString,
+			ValidateFunc:  validation.StringIsNotEmpty,
+			Optional:      true,
+			ForceNew:      true,
+			Sensitive:     true,
+			ExactlyOneOf:  []string{"string_value", "string_value_wo"},
+		},
+		"string_value_wo": {
+			Type:          schema.TypeString,
+			ValidateFunc:  validation.StringIsNotEmpty,
+			Optional:      true,
+			WriteOnly:     true,
+			Sensitive:     true,
+			RequiredWith:  []string{"string_value_wo_version"},
+			ExactlyOneOf:  []string{"string_value", "string_value_wo"},
+		},
+		"string_value_wo_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
 			ForceNew:     true,
-			Sensitive:    true,
+			RequiredWith: []string{"string_value_wo"},
 		},
 		"scope": {
 			Type:         schema.TypeString,
@@ -81,6 +108,11 @@ func ResourceSecret() common.Resource {
 			}
 			var putSecretReq workspace.PutSecret
 			common.DataToStructPointer(d, s, &putSecretReq)
+			stringValue, err := getStringValue(d)
+			if err != nil {
+				return err
+			}
+			putSecretReq.StringValue = stringValue
 			err = w.Secrets.PutSecret(ctx, putSecretReq)
 			if err != nil {
 				return err

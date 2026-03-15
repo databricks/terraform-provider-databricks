@@ -116,6 +116,9 @@ func (r Resource) ToResource() *schema.Resource {
 				if v.Computed {
 					continue
 				}
+				if v.WriteOnly {
+					continue
+				}
 				if nested, ok := v.Elem.(*schema.Resource); ok {
 					queue = append(queue, nested)
 				}

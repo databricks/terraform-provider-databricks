@@ -121,6 +121,91 @@ func TestResourceSecretCreate(t *testing.T) {
 	assert.Equal(t, "foo|||bar", d.Id())
 }
 
+func TestResourceSecretCreate_WriteOnlyValue(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/put",
+				ExpectedRequest: workspace.PutSecret{
+					StringValue: "SparkIsTh3Be$t",
+					Scope:       "foo",
+					Key:         "bar",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/list?scope=foo",
+				Response: workspace.ListSecretsResponse{
+					Secrets: []workspace.SecretMetadata{
+						{
+							Key:                  "bar",
+							LastUpdatedTimestamp: 12345678,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSecret(),
+		State: map[string]any{
+			"scope":                   "foo",
+			"key":                     "bar",
+			"string_value_wo":         "SparkIsTh3Be$t",
+			"string_value_wo_version": 1,
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "foo|||bar", d.Id())
+	assert.Equal(t, "", d.Get("string_value"))
+}
+
+func TestResourceSecretUpdate_WriteOnlyValueVersionChange(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/put",
+				ExpectedRequest: workspace.PutSecret{
+					StringValue: "SparkIsTh3Be$t-v2",
+					Scope:       "foo",
+					Key:         "bar",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/list?scope=foo",
+				Response: workspace.ListSecretsResponse{
+					Secrets: []workspace.SecretMetadata{
+						{
+							Key:                  "bar",
+							LastUpdatedTimestamp: 12345679,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSecret(),
+		InstanceState: map[string]string{
+			"scope":                   "foo",
+			"key":                     "bar",
+			"string_value_wo_version": "1",
+		},
+		State: map[string]any{
+			"scope":                   "foo",
+			"key":                     "bar",
+			"string_value_wo":         "SparkIsTh3Be$t-v2",
+			"string_value_wo_version": 2,
+		},
+		Update:      true,
+		RequiresNew: true,
+		ID:          "foo|||bar",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "foo|||bar", d.Id())
+	assert.Equal(t, 12345679, d.Get("last_updated_timestamp"))
+}
+
 func TestResourceSecretCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

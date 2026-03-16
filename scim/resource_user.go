@@ -93,12 +93,12 @@ func ResourceUser() common.Resource {
 	return common.Resource{
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
 			usersAPI := NewUsersAPI(ctx, c)
+			usersAPI.ApiLevel = common.GetApiLevel(d)
 			user, err := usersAPI.Create(u)
 			if err != nil {
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
@@ -107,8 +107,9 @@ func ResourceUser() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
-			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
+			usersAPI := NewUsersAPI(ctx, c)
+			usersAPI.ApiLevel = common.GetApiLevel(d)
+			user, err := usersAPI.Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
@@ -118,16 +119,17 @@ func ResourceUser() common.Resource {
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), u)
+			usersAPI := NewUsersAPI(ctx, c)
+			usersAPI.ApiLevel = common.GetApiLevel(d)
+			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			user := NewUsersAPI(ctx, c)
+			user.ApiLevel = common.GetApiLevel(d)
 			userName := d.Get("user_name").(string)
 			var err error = nil
 			isAccount := common.IsAccountLevel(d, c)

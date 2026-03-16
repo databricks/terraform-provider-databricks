@@ -1,30 +1,34 @@
 package common
 
 import (
-	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestContextWithApiLevel(t *testing.T) {
-	ctx := context.Background()
-	assert.Equal(t, "", ApiLevelFromContext(ctx))
+func TestAddApiField_ValidValues(t *testing.T) {
+	s := AddApiField(map[string]*schema.Schema{})
+	apiSchema := s["api"]
+	require.NotNil(t, apiSchema)
+	require.NotNil(t, apiSchema.ValidateFunc)
 
-	ctx = ContextWithApiLevel(ctx, ApiLevelAccount)
-	assert.Equal(t, ApiLevelAccount, ApiLevelFromContext(ctx))
+	// "account" is valid
+	_, errs := apiSchema.ValidateFunc("account", "api")
+	assert.Empty(t, errs)
 
-	ctx = ContextWithApiLevel(ctx, ApiLevelWorkspace)
-	assert.Equal(t, ApiLevelWorkspace, ApiLevelFromContext(ctx))
+	// "workspace" is valid
+	_, errs = apiSchema.ValidateFunc("workspace", "api")
+	assert.Empty(t, errs)
 }
 
-func TestApiLevelFromContextEmpty(t *testing.T) {
-	ctx := context.Background()
-	assert.Equal(t, "", ApiLevelFromContext(ctx))
-}
+func TestAddApiField_InvalidValues(t *testing.T) {
+	s := AddApiField(map[string]*schema.Schema{})
+	validateFunc := s["api"].ValidateFunc
 
-func TestValidateApiField(t *testing.T) {
-	// Validation is done by the schema ValidateFunc, so we just test the constants
-	assert.Equal(t, "account", ApiLevelAccount)
-	assert.Equal(t, "workspace", ApiLevelWorkspace)
+	for _, invalid := range []string{"", "foo", "ACCOUNT", "Workspace", "acct", "ws"} {
+		_, errs := validateFunc(invalid, "api")
+		assert.NotEmpty(t, errs, "expected error for value %q", invalid)
+	}
 }

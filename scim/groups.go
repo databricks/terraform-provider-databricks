@@ -18,14 +18,15 @@ func NewGroupsAPI(ctx context.Context, m any) GroupsAPI {
 
 // GroupsAPI exposes the scim groups API
 type GroupsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
+	client   *common.DatabricksClient
+	context  context.Context
+	ApiLevel string
 }
 
 // Create creates a scim group in the Databricks workspace
 func (a GroupsAPI) Create(scimGroupRequest Group) (group Group, err error) {
 	scimGroupRequest.Schemas = []URN{GroupSchema}
-	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group)
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Groups", scimGroupRequest, &group, a.ApiLevel)
 	return
 }
 
@@ -33,7 +34,7 @@ func (a GroupsAPI) Create(scimGroupRequest Group) (group Group, err error) {
 func (a GroupsAPI) Read(groupID, attributes string) (group Group, err error) {
 	key := fmt.Sprintf(
 		"/preview/scim/v2/Groups/%v?attributes=%s", groupID, attributes)
-	err = a.client.Scim(a.context, http.MethodGet, key, nil, &group)
+	err = a.client.Scim(a.context, http.MethodGet, key, nil, &group, a.ApiLevel)
 	return
 }
 
@@ -47,7 +48,7 @@ func (a GroupsAPI) Filter(filter string, attributes string) (GroupList, error) {
 	if attributes != "" {
 		req["attributes"] = attributes
 	}
-	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
+	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups, a.ApiLevel)
 	return groups, err
 }
 
@@ -65,7 +66,7 @@ func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Grou
 }
 
 func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
-	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil, a.ApiLevel)
 }
 
 func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, externalID string, e entitlements) error {
@@ -83,17 +84,17 @@ func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, extern
 			Members:      g.Members,
 			Schemas:      []URN{GroupSchema},
 			ExternalID:   externalID,
-		}, nil)
+		}, nil, a.ApiLevel)
 }
 
 func (a GroupsAPI) UpdateEntitlements(groupID string, entitlements patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch,
-		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), entitlements, nil)
+		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), entitlements, nil, a.ApiLevel)
 }
 
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
 	return a.client.Scim(a.context, http.MethodDelete,
 		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID),
-		nil, nil)
+		nil, nil, a.ApiLevel)
 }

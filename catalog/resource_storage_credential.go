@@ -88,7 +88,7 @@ func ResourceStorageCredential() common.Resource {
 				update.DatabricksGcpServiceAccount = nil
 			}
 
-			return c.AccountOrWorkspaceRequestWithApiField(d, func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
@@ -146,7 +146,7 @@ func ResourceStorageCredential() common.Resource {
 				return err
 			}
 
-			return c.AccountOrWorkspaceRequestWithApiField(d, func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
 					StorageCredentialName: storageCredentialName,
@@ -214,7 +214,7 @@ func ResourceStorageCredential() common.Resource {
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
-			return c.AccountOrWorkspaceRequestWithApiField(d, func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
 					ownerUpdate := catalog.UpdateStorageCredential{
 						Name:  update.Name,
@@ -319,7 +319,7 @@ func ResourceStorageCredential() common.Resource {
 			}
 
 			force := d.Get("force_destroy").(bool)
-			return c.AccountOrWorkspaceRequestWithApiField(d, func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					Force:                 force,
 					StorageCredentialName: storageCredentialName,

@@ -38,13 +38,13 @@ func ResourceGroup() common.Resource {
 	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
 				ExternalID:   d.Get("external_id").(string),
 			}
 			groupsAPI := NewGroupsAPI(ctx, c)
+			groupsAPI.ApiLevel = common.GetApiLevel(d)
 			group, err := groupsAPI.Create(g)
 			if err != nil {
 				return createForceOverridesManuallyAddedGroup(err, d, groupsAPI, g)
@@ -53,8 +53,9 @@ func ResourceGroup() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
-			group, err := NewGroupsAPI(ctx, c).Read(d.Id(), "displayName,externalId,entitlements")
+			groupsAPI := NewGroupsAPI(ctx, c)
+			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			group, err := groupsAPI.Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
 				return err
 			}
@@ -69,14 +70,16 @@ func ResourceGroup() common.Resource {
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
+			groupsAPI := NewGroupsAPI(ctx, c)
+			groupsAPI.ApiLevel = common.GetApiLevel(d)
 			groupName := d.Get("display_name").(string)
-			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName,
+			return groupsAPI.UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = common.ContextWithApiLevelFromData(ctx, d)
-			return NewGroupsAPI(ctx, c).Delete(d.Id())
+			groupsAPI := NewGroupsAPI(ctx, c)
+			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			return groupsAPI.Delete(d.Id())
 		},
 		Schema: groupSchema,
 	}

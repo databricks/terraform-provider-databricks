@@ -414,6 +414,23 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databrick
 	}
 }
 
+// AccountOrWorkspaceRequestWithApiField routes the request to account or workspace
+// callbacks based on the `api` field in the resource data, falling back to host type.
+func (c *DatabricksClient) AccountOrWorkspaceRequestWithApiField(d *schema.ResourceData, accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if IsAccountLevel(d, c) {
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		return accCallback(a)
+	}
+	ws, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	return wsCallback(ws)
+}
+
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
 	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix)
@@ -472,7 +489,12 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config.HostType() == config.AccountHost && c.Config.AccountID != "" {
+	isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+	// Check for API level override from context (set by resource-level `api` field)
+	if apiLevel := ApiLevelFromContext(r.Context()); apiLevel != "" {
+		isAccount = apiLevel == ApiLevelAccount && c.Config.AccountID != ""
+	}
+	if isAccount {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
 		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",

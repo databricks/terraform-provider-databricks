@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +20,7 @@ func ResourceGroup() common.Resource {
 	groupSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
+			common.AddApiField(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
@@ -38,6 +38,7 @@ func ResourceGroup() common.Resource {
 	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
@@ -52,6 +53,7 @@ func ResourceGroup() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			group, err := NewGroupsAPI(ctx, c).Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
 				return err
@@ -59,7 +61,7 @@ func ResourceGroup() common.Resource {
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
 			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
-			if c.Config.HostType() == config.AccountHost {
+			if common.IsAccountLevel(d, c) {
 				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
 			} else {
 				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
@@ -67,11 +69,13 @@ func ResourceGroup() common.Resource {
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			groupName := d.Get("display_name").(string)
 			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: groupSchema,

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,6 +42,7 @@ func ResourceUser() common.Resource {
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
+			common.AddApiField(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
@@ -93,6 +93,7 @@ func ResourceUser() common.Resource {
 	return common.Resource{
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
@@ -106,6 +107,7 @@ func ResourceUser() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
@@ -116,6 +118,7 @@ func ResourceUser() common.Resource {
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
@@ -123,10 +126,11 @@ func ResourceUser() common.Resource {
 			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			ctx = common.ContextWithApiLevelFromData(ctx, d)
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
 			var err error = nil
-			isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

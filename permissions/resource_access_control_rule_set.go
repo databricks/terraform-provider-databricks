@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -25,7 +26,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return m
 		})
 	readFromWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config.AccountID != "" {
+		if c.Config.HostType() == config.AccountHost {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err
@@ -39,7 +40,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 		return workspaceClient.AccountAccessControlProxy.GetRuleSet(ctx, getRuleSetReq)
 	}
 	updateThroughWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, updateRuleSetReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config.AccountID != "" {
+		if c.Config.HostType() == config.AccountHost {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err

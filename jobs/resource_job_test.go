@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -3638,4 +3639,13 @@ func TestJobResource_SparkConfDiffSuppress(t *testing.T) {
 	scs := common.MustSchemaPath(jr.Schema, "new_cluster", "spark_conf")
 	assert.True(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "0", nil))
 	assert.False(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "1", nil))
+}
+
+func TestJobResource_TaskDisabledFieldInSchema(t *testing.T) {
+	jr := ResourceJob()
+	taskSchema := common.MustSchemaPath(jr.Schema, "task")
+	s, ok := taskSchema.Elem.(*schema.Resource).Schema["disabled"]
+	assert.True(t, ok, "disabled field should be in the task schema via SDK embedding (jobs.JobSettings → []jobs.Task → Disabled)")
+	assert.Equal(t, schema.TypeBool, s.Type)
+	assert.True(t, s.Optional)
 }

@@ -44,9 +44,9 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
-* `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
-* `resources` - (Optional) A list of resources that the app have access to.
-* `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
+* `budget_policy_id` - (Optional) The Budget Policy ID set for this resource. When the app is in a space, this may be automatically populated from the space's usage policy.
+* `resources` - (Optional) A list of resources that the app has access to. When the app is in a space, this may be automatically populated from the space's resource configuration.
+* `user_api_scopes` - (Optional) A list of api scopes granted to the user access token. When the app is in a space, this may be automatically populated from the space's configuration.
 * `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
 
 ### resources Configuration Attribute

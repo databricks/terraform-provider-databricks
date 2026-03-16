@@ -1,6 +1,7 @@
 {
     "formatter": "make fmt",
     "mode": "tf_v1",
+    "api_changelog": true,
     "changelog_config": ".codegen/changelog_config.yml",
     "version": {
         "common/version.go": "version = \"$VERSION\""

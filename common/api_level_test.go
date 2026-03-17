@@ -32,3 +32,26 @@ func TestAddApiField_InvalidValues(t *testing.T) {
 		assert.NotEmpty(t, errs, "expected error for value %q", invalid)
 	}
 }
+
+func testSchemaWithApiField() map[string]*schema.Schema {
+	return AddApiField(map[string]*schema.Schema{})
+}
+
+func TestGetApiLevel_ReturnsValueWhenSet(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, testSchemaWithApiField(), map[string]any{
+		"api": "account",
+	})
+	assert.Equal(t, "account", GetApiLevel(d))
+}
+
+func TestGetApiLevel_ReturnsWorkspaceWhenSet(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, testSchemaWithApiField(), map[string]any{
+		"api": "workspace",
+	})
+	assert.Equal(t, "workspace", GetApiLevel(d))
+}
+
+func TestGetApiLevel_ReturnsEmptyWhenNotSet(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, testSchemaWithApiField(), map[string]any{})
+	assert.Equal(t, "", GetApiLevel(d))
+}

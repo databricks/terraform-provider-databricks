@@ -478,9 +478,12 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 // host-based inference when non-empty.
 func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Request) error {
 	return func(r *http.Request) error {
-		isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+		var isAccount bool
 		if apiLevel != "" {
-			isAccount = apiLevel == ApiLevelAccount && c.Config.AccountID != ""
+			// Explicit api field takes precedence over host-based inference
+			isAccount = apiLevel == ApiLevelAccount
+		} else {
+			isAccount = c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
 		}
 		if isAccount {
 			// until `/preview` is there for workspace scim,

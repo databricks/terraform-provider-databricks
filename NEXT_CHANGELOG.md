@@ -13,5 +13,3 @@
 ### Exporter
 
 ### Internal Changes
-
-* Added unit test verifying `disabled` field is present in job task schema via SDK embedding.

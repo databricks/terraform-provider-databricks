@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fixed `databricks_app` producing "inconsistent result after apply" error when `description` is omitted ([#5451](https://github.com/databricks/terraform-provider-databricks/pull/5451)).
+
 ### Documentation
 
 ### Exporter

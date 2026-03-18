@@ -4239,6 +4239,8 @@ func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 type GenieSpace struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
+	// Parent folder path of the Genie Space
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The contents of the Genie Space in serialized string form. This field is
 	// excluded in List Genie spaces responses. Use the [Get Genie
 	// Space](:method:genie/getspace) API to retrieve an example response, which
@@ -4261,6 +4263,7 @@ func (to *GenieSpace) SyncFieldsDuringRead(ctx context.Context, from GenieSpace)
 
 func (m GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["title"] = attrs["title"].SetRequired()
@@ -4288,6 +4291,7 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"description":      m.Description,
+			"parent_path":      m.ParentPath,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
 			"title":            m.Title,
@@ -4300,6 +4304,7 @@ func (m GenieSpace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
+			"parent_path":      types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
 			"title":            types.StringType,

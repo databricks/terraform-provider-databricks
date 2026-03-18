@@ -10389,7 +10389,7 @@ func (m *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 
 // The environment entity used to preserve serverless environment side panel,
 // jobs' environment for non-notebook task, and DLT's environment for classic
-// and serverless pipelines. In this minimal environment spec, only pip
+// and serverless pipelines. In this minimal environment spec, only pip and java
 // dependencies are supported.
 type Environment_SdkV2 struct {
 	// The `base_environment` key refers to an `env.yaml` file that specifies an
@@ -10410,9 +10410,10 @@ type Environment_SdkV2 struct {
 	// local project path (such as WSFS or UC Volumes in Databricks), or a VCS
 	// project URL.
 	Dependencies types.List `tfsdk:"dependencies"`
-	// Required. Environment version used by the environment. Each version comes
-	// with a specific Python version and a set of Python packages. The version
-	// is a string, consisting of an integer.
+	// Either `environment_version` or `base_environment` needs to be provided.
+	// Environment version used by the environment. Each version comes with a
+	// specific Python version and a set of Python packages. The version is a
+	// string, consisting of an integer.
 	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// List of java dependencies. Each dependency is a string representing a
 	// java library path. For example: `/Volumes/path/to/test.jar`.

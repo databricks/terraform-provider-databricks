@@ -1979,6 +1979,72 @@ func (m DataPlaneId_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Location of staged data storage
+type DataStagingOptions_SdkV2 struct {
+	// (Required, Immutable) The name of the catalog for the connector's staging
+	// storage location.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// (Required, Immutable) The name of the schema for the connector's staging
+	// storage location.
+	SchemaName types.String `tfsdk:"schema_name"`
+	// (Optional) The Unity Catalog-compatible name for the storage location.
+	// This is the volume to use for the data that is extracted by the
+	// connector. Spark Declarative Pipelines system will automatically create
+	// the volume under the catalog and schema. For Combined Cdc Managed
+	// Ingestion pipelines default name for the volume would be :
+	// __databricks_ingestion_gateway_staging_data-$pipelineId
+	VolumeName types.String `tfsdk:"volume_name"`
+}
+
+func (to *DataStagingOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataStagingOptions_SdkV2) {
+}
+
+func (to *DataStagingOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataStagingOptions_SdkV2) {
+}
+
+func (m DataStagingOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
+	attrs["volume_name"] = attrs["volume_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataStagingOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DataStagingOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataStagingOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DataStagingOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name": m.CatalogName,
+			"schema_name":  m.SchemaName,
+			"volume_name":  m.VolumeName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DataStagingOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name": types.StringType,
+			"schema_name":  types.StringType,
+			"volume_name":  types.StringType,
+		},
+	}
+}
+
 type DeletePipelineRequest_SdkV2 struct {
 	// If true, deletion will proceed even if resource cleanup fails. By
 	// default, deletion will fail if resources cleanup is required but fails.
@@ -4254,6 +4320,14 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// replaced with ingestion_gateway_id to change the connector to Cdc Managed
 	// Ingestion Pipeline with Gateway pipeline.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// (Optional) Connector Type for sources. Ex: CDC, Query Based.
+	ConnectorType types.String `tfsdk:"connector_type"`
+	// (Optional) Location of staged data storage. This is required for
+	// migration from Cdc Managed Ingestion Pipeline with Gateway pipeline to
+	// Combined Cdc Managed Ingestion Pipeline. If not specified, the volume for
+	// staged data will be created in catalog and schema/target specified in the
+	// top level pipeline definition.
+	DataStagingOptions types.List `tfsdk:"data_staging_options"`
 	// (Optional) A window that specifies a set of time ranges for snapshot
 	// queries in CDC.
 	FullRefreshWindow types.List `tfsdk:"full_refresh_window"`
@@ -4288,6 +4362,15 @@ type IngestionPipelineDefinition_SdkV2 struct {
 }
 
 func (to *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionPipelineDefinition_SdkV2) {
+	if !from.DataStagingOptions.IsNull() && !from.DataStagingOptions.IsUnknown() {
+		if toDataStagingOptions, ok := to.GetDataStagingOptions(ctx); ok {
+			if fromDataStagingOptions, ok := from.GetDataStagingOptions(ctx); ok {
+				// Recursively sync the fields of DataStagingOptions
+				toDataStagingOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromDataStagingOptions)
+				to.SetDataStagingOptions(ctx, toDataStagingOptions)
+			}
+		}
+	}
 	if !from.FullRefreshWindow.IsNull() && !from.FullRefreshWindow.IsUnknown() {
 		if toFullRefreshWindow, ok := to.GetFullRefreshWindow(ctx); ok {
 			if fromFullRefreshWindow, ok := from.GetFullRefreshWindow(ctx); ok {
@@ -4321,6 +4404,14 @@ func (to *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 }
 
 func (to *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Context, from IngestionPipelineDefinition_SdkV2) {
+	if !from.DataStagingOptions.IsNull() && !from.DataStagingOptions.IsUnknown() {
+		if toDataStagingOptions, ok := to.GetDataStagingOptions(ctx); ok {
+			if fromDataStagingOptions, ok := from.GetDataStagingOptions(ctx); ok {
+				toDataStagingOptions.SyncFieldsDuringRead(ctx, fromDataStagingOptions)
+				to.SetDataStagingOptions(ctx, toDataStagingOptions)
+			}
+		}
+	}
 	if !from.FullRefreshWindow.IsNull() && !from.FullRefreshWindow.IsUnknown() {
 		if toFullRefreshWindow, ok := to.GetFullRefreshWindow(ctx); ok {
 			if fromFullRefreshWindow, ok := from.GetFullRefreshWindow(ctx); ok {
@@ -4353,6 +4444,9 @@ func (to *IngestionPipelineDefinition_SdkV2) SyncFieldsDuringRead(ctx context.Co
 
 func (m IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["connector_type"] = attrs["connector_type"].SetOptional()
+	attrs["data_staging_options"] = attrs["data_staging_options"].SetOptional()
+	attrs["data_staging_options"] = attrs["data_staging_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["full_refresh_window"] = attrs["full_refresh_window"].SetOptional()
 	attrs["full_refresh_window"] = attrs["full_refresh_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["ingest_from_uc_foreign_catalog"] = attrs["ingest_from_uc_foreign_catalog"].SetOptional()
@@ -4376,6 +4470,7 @@ func (m IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[s
 // SDK values.
 func (m IngestionPipelineDefinition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"data_staging_options":  reflect.TypeOf(DataStagingOptions_SdkV2{}),
 		"full_refresh_window":   reflect.TypeOf(OperationTimeWindow_SdkV2{}),
 		"objects":               reflect.TypeOf(IngestionConfig_SdkV2{}),
 		"source_configurations": reflect.TypeOf(SourceConfig_SdkV2{}),
@@ -4391,6 +4486,8 @@ func (m IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"connection_name":                m.ConnectionName,
+			"connector_type":                 m.ConnectorType,
+			"data_staging_options":           m.DataStagingOptions,
 			"full_refresh_window":            m.FullRefreshWindow,
 			"ingest_from_uc_foreign_catalog": m.IngestFromUcForeignCatalog,
 			"ingestion_gateway_id":           m.IngestionGatewayId,
@@ -4407,6 +4504,10 @@ func (m IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_name": types.StringType,
+			"connector_type":  types.StringType,
+			"data_staging_options": basetypes.ListType{
+				ElemType: DataStagingOptions_SdkV2{}.Type(ctx),
+			},
 			"full_refresh_window": basetypes.ListType{
 				ElemType: OperationTimeWindow_SdkV2{}.Type(ctx),
 			},
@@ -4425,6 +4526,32 @@ func (m IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDataStagingOptions returns the value of the DataStagingOptions field in IngestionPipelineDefinition_SdkV2 as
+// a DataStagingOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionPipelineDefinition_SdkV2) GetDataStagingOptions(ctx context.Context) (DataStagingOptions_SdkV2, bool) {
+	var e DataStagingOptions_SdkV2
+	if m.DataStagingOptions.IsNull() || m.DataStagingOptions.IsUnknown() {
+		return e, false
+	}
+	var v []DataStagingOptions_SdkV2
+	d := m.DataStagingOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataStagingOptions sets the value of the DataStagingOptions field in IngestionPipelineDefinition_SdkV2.
+func (m *IngestionPipelineDefinition_SdkV2) SetDataStagingOptions(ctx context.Context, v DataStagingOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["data_staging_options"]
+	m.DataStagingOptions = types.ListValueMust(t, vs)
 }
 
 // GetFullRefreshWindow returns the value of the FullRefreshWindow field in IngestionPipelineDefinition_SdkV2 as
@@ -5798,6 +5925,21 @@ type Origin_SdkV2 struct {
 	FlowName types.String `tfsdk:"flow_name"`
 	// The optional host name where the event was triggered
 	Host types.String `tfsdk:"host"`
+	// The name of the source catalog name (if known) from whose data ingestion
+	// is described by this event.
+	IngestionSourceCatalogName types.String `tfsdk:"ingestion_source_catalog_name"`
+	// The name of the source UC connection (if known) from whose data ingestion
+	// is described by this event.
+	IngestionSourceConnectionName types.String `tfsdk:"ingestion_source_connection_name"`
+	// The name of the source schema name (if known) from whose data ingestion
+	// is described by this event.
+	IngestionSourceSchemaName types.String `tfsdk:"ingestion_source_schema_name"`
+	// The name of the source table name (if known) from whose data ingestion is
+	// described by this event.
+	IngestionSourceTableName types.String `tfsdk:"ingestion_source_table_name"`
+	// An optional implementation-defined source table version of a dataset
+	// being (re)ingested.
+	IngestionSourceTableVersion types.String `tfsdk:"ingestion_source_table_version"`
 	// The id of a maintenance run. Globally unique.
 	MaintenanceId types.String `tfsdk:"maintenance_id"`
 	// Materialization name.
@@ -5834,6 +5976,11 @@ func (m Origin_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["flow_id"] = attrs["flow_id"].SetOptional()
 	attrs["flow_name"] = attrs["flow_name"].SetOptional()
 	attrs["host"] = attrs["host"].SetOptional()
+	attrs["ingestion_source_catalog_name"] = attrs["ingestion_source_catalog_name"].SetOptional()
+	attrs["ingestion_source_connection_name"] = attrs["ingestion_source_connection_name"].SetOptional()
+	attrs["ingestion_source_schema_name"] = attrs["ingestion_source_schema_name"].SetOptional()
+	attrs["ingestion_source_table_name"] = attrs["ingestion_source_table_name"].SetOptional()
+	attrs["ingestion_source_table_version"] = attrs["ingestion_source_table_version"].SetOptional()
 	attrs["maintenance_id"] = attrs["maintenance_id"].SetOptional()
 	attrs["materialization_name"] = attrs["materialization_name"].SetOptional()
 	attrs["org_id"] = attrs["org_id"].SetOptional()
@@ -5866,23 +6013,28 @@ func (m Origin_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"batch_id":             m.BatchId,
-			"cloud":                m.Cloud,
-			"cluster_id":           m.ClusterId,
-			"dataset_name":         m.DatasetName,
-			"flow_id":              m.FlowId,
-			"flow_name":            m.FlowName,
-			"host":                 m.Host,
-			"maintenance_id":       m.MaintenanceId,
-			"materialization_name": m.MaterializationName,
-			"org_id":               m.OrgId,
-			"pipeline_id":          m.PipelineId,
-			"pipeline_name":        m.PipelineName,
-			"region":               m.Region,
-			"request_id":           m.RequestId,
-			"table_id":             m.TableId,
-			"uc_resource_id":       m.UcResourceId,
-			"update_id":            m.UpdateId,
+			"batch_id":                         m.BatchId,
+			"cloud":                            m.Cloud,
+			"cluster_id":                       m.ClusterId,
+			"dataset_name":                     m.DatasetName,
+			"flow_id":                          m.FlowId,
+			"flow_name":                        m.FlowName,
+			"host":                             m.Host,
+			"ingestion_source_catalog_name":    m.IngestionSourceCatalogName,
+			"ingestion_source_connection_name": m.IngestionSourceConnectionName,
+			"ingestion_source_schema_name":     m.IngestionSourceSchemaName,
+			"ingestion_source_table_name":      m.IngestionSourceTableName,
+			"ingestion_source_table_version":   m.IngestionSourceTableVersion,
+			"maintenance_id":                   m.MaintenanceId,
+			"materialization_name":             m.MaterializationName,
+			"org_id":                           m.OrgId,
+			"pipeline_id":                      m.PipelineId,
+			"pipeline_name":                    m.PipelineName,
+			"region":                           m.Region,
+			"request_id":                       m.RequestId,
+			"table_id":                         m.TableId,
+			"uc_resource_id":                   m.UcResourceId,
+			"update_id":                        m.UpdateId,
 		})
 }
 
@@ -5890,23 +6042,28 @@ func (m Origin_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Origin_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"batch_id":             types.Int64Type,
-			"cloud":                types.StringType,
-			"cluster_id":           types.StringType,
-			"dataset_name":         types.StringType,
-			"flow_id":              types.StringType,
-			"flow_name":            types.StringType,
-			"host":                 types.StringType,
-			"maintenance_id":       types.StringType,
-			"materialization_name": types.StringType,
-			"org_id":               types.Int64Type,
-			"pipeline_id":          types.StringType,
-			"pipeline_name":        types.StringType,
-			"region":               types.StringType,
-			"request_id":           types.StringType,
-			"table_id":             types.StringType,
-			"uc_resource_id":       types.StringType,
-			"update_id":            types.StringType,
+			"batch_id":                         types.Int64Type,
+			"cloud":                            types.StringType,
+			"cluster_id":                       types.StringType,
+			"dataset_name":                     types.StringType,
+			"flow_id":                          types.StringType,
+			"flow_name":                        types.StringType,
+			"host":                             types.StringType,
+			"ingestion_source_catalog_name":    types.StringType,
+			"ingestion_source_connection_name": types.StringType,
+			"ingestion_source_schema_name":     types.StringType,
+			"ingestion_source_table_name":      types.StringType,
+			"ingestion_source_table_version":   types.StringType,
+			"maintenance_id":                   types.StringType,
+			"materialization_name":             types.StringType,
+			"org_id":                           types.Int64Type,
+			"pipeline_id":                      types.StringType,
+			"pipeline_name":                    types.StringType,
+			"region":                           types.StringType,
+			"request_id":                       types.StringType,
+			"table_id":                         types.StringType,
+			"uc_resource_id":                   types.StringType,
+			"update_id":                        types.StringType,
 		},
 	}
 }

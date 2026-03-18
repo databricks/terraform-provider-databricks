@@ -282,7 +282,7 @@ func (r *DefaultWorkspaceBaseEnvironmentResource) update(ctx context.Context, pl
 
 	updateRequest := environments.UpdateDefaultWorkspaceBaseEnvironmentRequest{
 		DefaultWorkspaceBaseEnvironment: default_workspace_base_environment,
-		Name:                            plan.Name.ValueString(),
+		Name:                            "default-workspace-base-environment",
 		UpdateMask:                      *fieldmask.New(strings.Split("cpu_workspace_base_environment,gpu_workspace_base_environment", ",")),
 	}
 

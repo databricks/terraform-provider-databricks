@@ -123,11 +123,14 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
+	// If workspace_id is not provided in provider_config, use the provider-level
+	// workspace_id from SDK config as fallback
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+		workspaceID = c.Config.WorkspaceID
+	}
+	if workspaceID == "" {
+		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+			"but none was found in provider_config or the provider configuration")
 	}
 
 	// Parse the workspace ID to int.
@@ -184,6 +187,23 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 
 	}
 	return workspaceIDInt, nil
+}
+
+// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
+// It uses the cached value if available, otherwise makes an API call to resolve it.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.cachedWorkspaceID != 0 {
+		return c.cachedWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	err = c.setCachedWorkspaceID(ctx, w)
+	if err != nil {
+		return 0, err
+	}
+	return c.cachedWorkspaceID, nil
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the

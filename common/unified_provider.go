@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -48,6 +50,7 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 	m["provider_config"] = &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -64,6 +67,7 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
 // for a single schema.
 func NamespaceCustomizeSchema(s *CustomizableSchema) {
+	s.SchemaPath("provider_config").SetComputed()
 	s.SchemaPath("provider_config", "workspace_id").SetValidateFunc(workspaceIDValidateFunc())
 }
 
@@ -74,6 +78,7 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	if !ok {
 		panic("provider_config not found in schema")
 	}
+	providerConfig.Computed = true
 	elem, ok := providerConfig.Elem.(*schema.Resource)
 	if !ok {
 		panic("provider_config.Elem is not a *schema.Resource")
@@ -84,11 +89,63 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	return m
 }
 
-// namespaceForceNew marks the workspace_id field as ForceNew if it changed.
-func namespaceForceNew(d *schema.ResourceDiff) error {
-	oldWorkspaceID, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
-	if oldWorkspaceID != "" && newWorkspaceID != "" && oldWorkspaceID != newWorkspaceID {
-		if err := d.ForceNew(workspaceIDSchemaKey); err != nil {
+// namespaceForceNew is used to customize the diff for the provider configuration
+// in a resource diff. It resolves effective workspace IDs (accounting for
+// workspace_id fallback) and triggers ForceNew when the effective
+// workspace changes.
+//
+// With provider_config marked as Optional+Computed, Terraform preserves the state
+// value when the config doesn't specify provider_config. This means d.GetChange()
+// shows no change in that case. We use GetRawConfigAt to inspect the actual user
+// config and determine the true effective new workspace ID.
+func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	workspaceIDKey := workspaceIDSchemaKey
+
+	// Get the old (state) workspace ID.
+	oldWsID, _ := d.GetChange(workspaceIDKey)
+	oldEffective, _ := oldWsID.(string)
+
+	// Determine the new effective workspace ID by inspecting the raw config.
+	// With Optional+Computed, d.GetChange may return the preserved state value
+	// rather than reflecting the actual config, so we check the raw config directly.
+	configWsID, configHasProviderConfig := workspaceIDFromRawDiffConfig(d)
+
+	var newEffective string
+	if configHasProviderConfig {
+		// Config explicitly sets provider_config.workspace_id
+		newEffective = configWsID
+	} else {
+		// Config does not have provider_config; use workspace_id
+		newEffective = c.Config.WorkspaceID
+	}
+	// Fallback to cachedWorkspaceID (resolved from provider host during init).
+	// This handles workspace host changes: if the user switches from
+	// host=ws-A to host=ws-B, the cached ID reflects the new workspace.
+	if newEffective == "" && c.cachedWorkspaceID != 0 {
+		newEffective = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	}
+
+	// CUJ-14: If a resource has a workspace ID in state but the new effective
+	// workspace ID is empty (user removed workspace_id and there's no
+	// explicit provider_config), error out. This prevents silently continuing
+	// to operate against a workspace the user thought they disconnected from.
+	if oldEffective != "" && newEffective == "" && c.Config.HostType() != config.WorkspaceHost {
+		return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
+			"but managing workspace-level resources requires a workspace_id and "+
+			"none was found in provider_config or the provider configuration", oldEffective)
+	}
+
+	if oldEffective != "" && newEffective != "" && oldEffective != newEffective {
+		// When Optional+Computed preserves the old state value (config removes
+		// provider_config), the SDK sees no diff for workspace_id. ForceNew
+		// requires HasChange, so we SetNew on the top-level provider_config key
+		// to create the diff entry before calling ForceNew.
+		if !d.HasChange(workspaceIDKey) {
+			if err := d.SetNew("provider_config", []map[string]interface{}{{"workspace_id": newEffective}}); err != nil {
+				return err
+			}
+		}
+		if err := d.ForceNew(workspaceIDKey); err != nil {
 			return err
 		}
 	}
@@ -127,10 +184,29 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	return nil
 }
 
+// workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config
+// of a ResourceDiff. Returns the workspace ID string and whether provider_config
+// is present in the config.
+func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
+	path := cty.Path{
+		cty.GetAttrStep{Name: "provider_config"},
+		cty.IndexStep{Key: cty.NumberIntVal(0)},
+		cty.GetAttrStep{Name: "workspace_id"},
+	}
+	rawValue, diags := d.GetRawConfigAt(path)
+	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
+		return "", false
+	}
+	if rawValue.Type() == cty.String {
+		return rawValue.AsString(), true
+	}
+	return "", false
+}
+
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := namespaceForceNew(d); err != nil {
+	if err := namespaceForceNew(ctx, d, c); err != nil {
 		return err
 	}
 	return NamespaceValidateWorkspaceID(ctx, d, c)
@@ -205,6 +281,65 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	return &DatabricksClient{
 		DatabricksClient: c.cachedDatabricksClients[workspaceIDInt],
 	}, nil
+}
+
+func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
+	path := cty.Path{
+		cty.GetAttrStep{Name: "provider_config"},
+		cty.IndexStep{Key: cty.NumberIntVal(0)},
+		cty.GetAttrStep{Name: "workspace_id"},
+	}
+	rawValue, diags := d.GetRawConfigAt(path)
+	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
+		return "", false
+	}
+	if rawValue.Type() == cty.String {
+		return rawValue.AsString(), true
+	}
+	return "", false
+}
+
+// populateProviderConfigInState writes the effective workspace ID into
+// provider_config in the resource state.
+//
+// During refresh reads (terraform plan), the prior state value must be preserved
+// so that CustomizeDiff can compare the old effective workspace ID against the
+// new one and trigger ForceNew when they differ. If this hook resolved the "new
+// effective" workspace ID and wrote it during refresh, it would overwrite the old
+// value before CustomizeDiff runs, making workspace-change detection impossible.
+//
+// Therefore this hook only resolves from provider-level sources (workspace_id,
+// host) on the first time — when no workspace ID exists in state yet (after Create).
+// On subsequent reads, it preserves whatever is already in state.
+func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	// If provider_config.workspace_id already exists in state, preserve it.
+	// During refresh reads the state value reflects the workspace the Read
+	// actually targeted. Overwriting it would prevent CustomizeDiff from
+	// detecting workspace changes.
+	if existing := d.Get(workspaceIDSchemaKey); existing != nil {
+		if existingStr, ok := existing.(string); ok && existingStr != "" {
+			d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}})
+			return nil
+		}
+	}
+
+	// No workspace ID in state yet (first time — after Create/Import).
+	// Resolve from provider config to populate state for the first time:
+	// 1. provider_config.workspace_id from raw config
+	// 2. workspace_id from provider
+	// 3. cachedWorkspaceID (workspace host, primed during provider init)
+	wsID, _ := workspaceIDFromRawConfig(d)
+	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
+		wsID = c.Config.WorkspaceID
+	}
+	if wsID == "" && c.cachedWorkspaceID != 0 {
+		wsID = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	}
+
+	if wsID != "" {
+		d.Set("provider_config", []map[string]any{{"workspace_id": wsID}})
+	}
+	return nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.

@@ -50,6 +50,20 @@ func AccountLevel(t *testing.T, steps ...Step) {
 	run(t, steps)
 }
 
+// noOidcProviderFactories creates provider factories that skip the OidcConfigCustomizer.
+// This is needed for unified host tests where the auth is handled via client credentials,
+// not github-oidc.
+func noOidcProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+			sdkPluginProvider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
+			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
+			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
+		},
+	}
+}
+
 func UnityWorkspaceLevel(t *testing.T, steps ...Step) {
 	LoadUcwsEnv(t)
 	run(t, steps)

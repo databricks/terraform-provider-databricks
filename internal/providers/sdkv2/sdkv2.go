@@ -373,6 +373,19 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
+	// Validate workspace_id is not used with workspace-level providers
+	if databricksClient.Config.WorkspaceID != "" && databricksClient.Config.HostType() == config.WorkspaceHost {
+		return nil, diag.FromErr(fmt.Errorf("workspace_id cannot be used with a workspace-level provider; " +
+			"it is only supported when the provider is configured at the account level"))
+	}
+	// For workspace-level providers, eagerly resolve and cache the workspace ID
+	// so it's available for populateProviderConfigInState in the post-Read hook.
+	// This ensures the workspace ID from the host is stored in state.
+	if databricksClient.Config.HostType() != config.AccountHost {
+		if _, err := databricksClient.CurrentWorkspaceID(ctx); err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("(sdkv2) Could not eagerly resolve workspace ID: %v", err))
+		}
+	}
 	return databricksClient, nil
 }
 

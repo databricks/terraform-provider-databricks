@@ -85,6 +85,9 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
+	// Check if this resource has provider_config in its schema (unified provider resource)
+	_, hasProviderConfig := r.Schema["provider_config"]
+
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
 	if r.Update != nil {
@@ -102,6 +105,10 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
+			// No post-Read hook needed for Update: provider_config.workspace_id is
+			// already in state from a previous Create, and r.Read() never touches it.
+			// If the workspace ID had changed, CustomizeDiff would have triggered
+			// ForceNew (destroy+create), so Update only runs when it's unchanged.
 			return nil
 		}
 	} else {
@@ -132,7 +139,8 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
+			c := m.(*DatabricksClient)
+			err := recoverable(r.Read)(ctx, d, c)
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -143,6 +151,16 @@ func (r Resource) ToResource() *schema.Resource {
 			if err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
+			}
+			// Post-Read hook for refresh reads and imports: populate provider_config in state.
+			// During normal refresh, provider_config is already in prior state and r.Read()
+			// doesn't touch it, so the hook preserves the existing value (no-op).
+			// During import (no prior state), the hook resolves the effective workspace ID
+			// from workspace_id / cached host for the first time.
+			if hasProviderConfig && d.Id() != "" {
+				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
+					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
 			}
 			return nil
 		}
@@ -172,6 +190,16 @@ func (r Resource) ToResource() *schema.Resource {
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
+			}
+			// Post-Read hook for Create: populate provider_config in state for the first time.
+			// If the user set provider_config.workspace_id in config, it's already in d and
+			// the hook preserves it. If the user relies on workspace_id (no provider_config
+			// in config), this is the only place where the effective workspace ID gets written
+			// into state — critical for CustomizeDiff to detect workspace changes on the next plan.
+			if hasProviderConfig && d.Id() != "" {
+				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
+					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
 			}
 			return nil
 		}

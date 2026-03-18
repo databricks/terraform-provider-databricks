@@ -124,6 +124,10 @@ type ResourceFixture struct {
 	Token       string
 	// new resource
 	New bool
+
+	// ProviderWorkspaceID sets the workspace_id on the client config for testing
+	// unified provider behavior with provider-level workspace ID fallback.
+	ProviderWorkspaceID string
 }
 
 // wrapper type for calling resource methords
@@ -223,6 +227,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}
 	if f.Fixtures != nil {
 		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
+		if err == nil && f.ProviderWorkspaceID != "" {
+			client.Config.WorkspaceID = f.ProviderWorkspaceID
+		}
 		ss := server{
 			Close: s.Close,
 			URL:   s.URL,
@@ -245,6 +252,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
 	c.Config.Credentials = testCredentialsProvider{token: token}
+	if f.ProviderWorkspaceID != "" {
+		c.Config.WorkspaceID = f.ProviderWorkspaceID
+	}
 	return c, server{
 		Close: func() {},
 		URL:   "does-not-matter",

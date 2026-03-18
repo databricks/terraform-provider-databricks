@@ -77,7 +77,7 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings)
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
-* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 0s and 2592000s (up to 30 days)
+* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 2592000s (30 days)
 * `pg_version` (integer) - The major Postgres version number. Supported versions are 16 and 17
 
 ### ProjectStatus

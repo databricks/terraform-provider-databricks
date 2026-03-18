@@ -27,7 +27,7 @@ This example creates a default warehouse override that remembers the user's last
 The `default_warehouse_override_id` represents the user ID of the target user:
 
 ```hcl
-resource "databricks_default_warehouse_override" "last_selected" {
+resource "databricks_warehouses_default_warehouse_override" "last_selected" {
   # The user ID to configure the default warehouse override for
   default_warehouse_override_id = data.databricks_user.example.id
   type                          = "LAST_SELECTED"
@@ -38,7 +38,7 @@ resource "databricks_default_warehouse_override" "last_selected" {
 This example creates a default warehouse override that always uses a specific warehouse:
 
 ```hcl
-resource "databricks_default_warehouse_override" "custom" {
+resource "databricks_warehouses_default_warehouse_override" "custom" {
   # The user ID to configure the default warehouse override for
   default_warehouse_override_id = data.databricks_user.example.id
   type                          = "CUSTOM"

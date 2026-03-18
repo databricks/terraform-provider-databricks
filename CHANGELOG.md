@@ -1,5 +1,11 @@
 # Version changelog
 
+## Release v1.112.0 (2026-03-18)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_postgres_role`.
+
+
 ## Release v1.111.0 (2026-03-10)
 
 ### New Features and Improvements

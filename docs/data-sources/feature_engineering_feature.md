@@ -20,6 +20,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `description` (string) - The description of the feature
+* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
 * `filter_condition` (string, deprecated) - Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility.
   The filter condition applied to the source data before aggregation
 * `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
@@ -34,6 +35,35 @@ The following attributes are exported:
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated) - Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility.
   The time window in which the feature is computed
+* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
+
+### AggregationFunction
+* `approx_count_distinct` (ApproxCountDistinctFunction)
+* `approx_percentile` (ApproxPercentileFunction)
+* `avg` (AvgFunction)
+* `count_function` (CountFunction)
+* `first` (FirstFunction)
+* `last` (LastFunction)
+* `max` (MaxFunction)
+* `min` (MinFunction)
+* `stddev_pop` (StddevPopFunction)
+* `stddev_samp` (StddevSampFunction)
+* `sum` (SumFunction)
+* `time_window` (TimeWindow) - The time window over which the aggregation is computed
+* `var_pop` (VarPopFunction)
+* `var_samp` (VarSampFunction)
+
+### ApproxCountDistinctFunction
+* `input` (string) - The input column from which the approximate count of distinct values is computed
+* `relative_sd` (number) - The maximum relative standard deviation allowed (default defined by Spark)
+
+### ApproxPercentileFunction
+* `accuracy` (integer) - The accuracy parameter (higher is more accurate but slower)
+* `input` (string) - The input column from which the approximate percentile is computed
+* `percentile` (number) - The percentile value to compute (between 0 and 1)
+
+### AvgFunction
+* `input` (string) - The input column from which the average is computed
 
 ### ColumnIdentifier
 * `variant_expr_path` (string) - String representation of the column name or variant expression path. For nested fields, the leaf value is what will be present in materialized tables
@@ -42,6 +72,9 @@ The following attributes are exported:
 ### ContinuousWindow
 * `offset` (string) - The offset of the continuous window (must be non-positive)
 * `window_duration` (string) - The duration of the continuous window (must be positive)
+
+### CountFunction
+* `input` (string) - The input column from which the count is computed
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource)
@@ -61,7 +94,14 @@ The following attributes are exported:
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
+### EntityColumn
+* `name` (string) - The name of the entity column
+
+### FirstFunction
+* `input` (string) - The input column from which the first value is returned
+
 ### Function
+* `aggregation_function` (AggregationFunction) - An aggregation function applied over a time window
 * `extra_parameters` (list of FunctionExtraParameter, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
   Extra parameters for parameterized functions
 * `function_type` (string, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
@@ -78,22 +118,50 @@ The following attributes are exported:
 ### KafkaSource
 * `entity_column_identifiers` (list of ColumnIdentifier, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
   The entity column identifiers of the Kafka source
+* `filter_condition` (string) - The filter condition applied to the source data before aggregation
 * `name` (string) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
 * `timeseries_column_identifier` (ColumnIdentifier, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
   The timeseries column identifier of the Kafka source
+
+### LastFunction
+* `input` (string) - The input column from which the last value is returned
 
 ### LineageContext
 * `job_context` (JobContext) - Job context information including job ID and run ID
 * `notebook_id` (integer) - The notebook ID where this API was invoked
 
+### MaxFunction
+* `input` (string) - The input column from which the maximum is computed
+
+### MinFunction
+* `input` (string) - The input column from which the minimum is computed
+
 ### SlidingWindow
 * `slide_duration` (string) - The slide duration (interval by which windows advance, must be positive and less than duration)
 * `window_duration` (string) - The duration of the sliding window
+
+### StddevPopFunction
+* `input` (string) - The input column from which the population standard deviation is computed
+
+### StddevSampFunction
+* `input` (string) - The input column from which the sample standard deviation is computed
+
+### SumFunction
+* `input` (string) - The input column from which the sum is computed
 
 ### TimeWindow
 * `continuous` (ContinuousWindow)
 * `sliding` (SlidingWindow)
 * `tumbling` (TumblingWindow)
 
+### TimeseriesColumn
+* `name` (string) - The name of the timeseries column
+
 ### TumblingWindow
 * `window_duration` (string) - The duration of each tumbling window (non-overlapping, fixed-duration windows)
+
+### VarPopFunction
+* `input` (string) - The input column from which the population variance is computed
+
+### VarSampFunction
+* `input` (string) - The input column from which the sample variance is computed

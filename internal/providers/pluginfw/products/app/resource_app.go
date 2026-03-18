@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -17,9 +18,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -90,6 +93,13 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 			cs.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), field)
 		}
 		cs.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "service_principal_id")
+		cs.AddPlanModifier(uppercasePlanModifier{}, "compute_size")
+		var computeSize apps.ComputeSize
+		computeSizeValues := make([]string, 0)
+		for _, v := range computeSize.Values() {
+			computeSizeValues = append(computeSizeValues, string(v))
+		}
+		cs.AddValidator(stringvalidator.OneOfCaseInsensitive(computeSizeValues...), "compute_size")
 		return cs
 	})
 }
@@ -334,6 +344,26 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 func (a *resourceApp) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+}
+
+// uppercasePlanModifier normalizes a string value to uppercase during planning.
+// This is needed for enum fields like compute_size where the API accepts case-insensitive
+// values but the Go SDK enum validation is case-sensitive (e.g. "Medium" vs "MEDIUM").
+type uppercasePlanModifier struct{}
+
+func (m uppercasePlanModifier) Description(ctx context.Context) string {
+	return "Normalizes the string value to uppercase."
+}
+
+func (m uppercasePlanModifier) MarkdownDescription(ctx context.Context) string {
+	return "Normalizes the string value to uppercase."
+}
+
+func (m uppercasePlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.PlanValue.IsNull() || req.PlanValue.IsUnknown() {
+		return
+	}
+	resp.PlanValue = types.StringValue(strings.ToUpper(req.PlanValue.ValueString()))
 }
 
 var _ resource.ResourceWithConfigure = &resourceApp{}

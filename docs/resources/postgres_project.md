@@ -140,7 +140,7 @@ The following arguments are supported:
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional)
 * `display_name` (string, optional) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
-* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 0s and 2592000s (up to 30 days)
+* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 2592000s (30 days)
 * `pg_version` (integer, optional) - The major Postgres version number. Supported versions are 16 and 17
 
 ## Attributes

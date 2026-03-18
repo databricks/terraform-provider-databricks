@@ -2,6 +2,8 @@
 package tfschema
 
 import (
+	"maps"
+
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
@@ -14,9 +16,7 @@ type NestedBlockObject struct {
 
 func (a NestedBlockObject) ToNestedAttributeObject() NestedAttributeObject {
 	attributes := make(map[string]AttributeBuilder)
-	for k, v := range a.Attributes {
-		attributes[k] = v
-	}
+	maps.Copy(attributes, a.Attributes)
 	for k, v := range a.Blocks {
 		attributes[k] = v.ToAttribute()
 	}

@@ -326,3 +326,130 @@ func TestAccApp_ProviderConfig_Apply(t *testing.T) {
 		`, workspaceIDStr)),
 	})
 }
+
+func TestAccAppResource_GitRepository_Update(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+
+	template1 := `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "App without git_repository"
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+	`
+
+	template2 := `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "App with git_repository"
+		git_repository {
+			provider = "gitHub"
+			url = "https://github.com/databricks/databricks-sdk-py"
+		}
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+	`
+
+	template3 := `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "App with updated git_repository"
+		git_repository {
+			provider = "gitHub"
+			url = "https://github.com/databricks/databricks-sdk-go"
+		}
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+	`
+
+	var updateTime1 string
+	var updateTime2 string
+
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template1,
+		Check: func(s *terraform.State) error {
+			updateTime1 = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			return nil
+		},
+	}, acceptance.Step{
+		Template: template2,
+		Check: func(s *terraform.State) error {
+			updateTime2 = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			// update_time should change when git_repository is added
+			assert.NotEqual(t, updateTime1, updateTime2)
+			gitRepoURL := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["git_repository.0.url"]
+			assert.Equal(t, "https://github.com/databricks/databricks-sdk-py", gitRepoURL)
+			return nil
+		},
+	}, acceptance.Step{
+		Template: template3,
+		Check: func(s *terraform.State) error {
+			updateTime3 := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			// update_time should change when git_repository is updated
+			assert.NotEqual(t, updateTime2, updateTime3)
+			gitRepoURL := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["git_repository.0.url"]
+			assert.Equal(t, "https://github.com/databricks/databricks-sdk-go", gitRepoURL)
+			return nil
+		},
+	})
+}

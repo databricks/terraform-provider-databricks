@@ -491,12 +491,6 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MismatchedWorkspaceI
 			Token: "test-token",
 		},
 	}
-	mockWS99999 := &databricks.WorkspaceClient{
-		Config: &config.Config{
-			Host:  "https://ws-99999.cloud.databricks.com",
-			Token: "test-token",
-		},
-	}
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -507,13 +501,12 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MismatchedWorkspaceI
 		cachedWorkspaceClient: mockWS,
 		cachedWorkspaceID:     12345,
 	}
-	// Pre-cache a workspace client for workspace 99999 so the account fallback returns it.
-	dc.SetWorkspaceClientForWorkspace(99999, mockWS99999)
 
-	// Mismatched workspace ID — direct path fails, falls through to account path.
+	// Mismatched workspace ID — direct path fails, falls through to account path which also fails.
 	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
-	assert.NoError(t, err)
-	assert.Equal(t, mockWS99999, w)
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
 }
 
 func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WithWorkspaceID(t *testing.T) {

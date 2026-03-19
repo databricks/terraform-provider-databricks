@@ -146,7 +146,7 @@ func (c *DatabricksClient) getWorkspaceClientDirectly(
 
 	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate workspace_id: %w", err)
+		return nil, err
 	}
 	// The provider is configured at the workspace level and the
 	// workspace ID matches

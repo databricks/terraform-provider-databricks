@@ -283,7 +283,7 @@ func TestAccCatalog_ProviderConfig_Mismatched(t *testing.T) {
 				workspace_id = "123"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		ExpectError: regexp.MustCompile(`failed to get workspace client with workspace_id 123`),
 	})
 }
 

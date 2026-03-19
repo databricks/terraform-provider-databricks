@@ -336,30 +336,19 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			client: func() *DatabricksClient {
-				c := &DatabricksClient{
-					DatabricksClient: &client.DatabricksClient{
-						Config: &config.Config{
-							Host:  "https://test.cloud.databricks.com",
-							Token: "test-token",
-						},
-					},
-					cachedWorkspaceClient: mockWorkspaceClient,
-					cachedWorkspaceID:     1234,
-				}
-				// Pre-cache a workspace client for workspace 789012 so the account
-				// fallback path returns it.
-				mockWS789012 := &databricks.WorkspaceClient{
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
 					Config: &config.Config{
-						Host:  "https://ws-789012.cloud.databricks.com",
+						Host:  "https://test.cloud.databricks.com",
 						Token: "test-token",
 					},
-				}
-				c.SetWorkspaceClientForWorkspace(789012, mockWS789012)
-				return c
-			}(),
-			expectError: false,
-			description: "When workspace_id doesn't match, falls through to account path",
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     1234,
+			},
+			expectError:   true,
+			errorContains: "failed to get workspace client with workspace_id 789012",
+			description:   "Mismatched workspace_id falls through to account path which fails",
 		},
 		{
 			name: "account level provider without provider_config - returns error",
@@ -640,21 +629,11 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 				mockWorkspaceClient.Config = mockWorkspaceClient.Config.WithTesting()
 				c.SetWorkspaceClient(mockWorkspaceClient)
 				c.cachedWorkspaceID = 200
-				// Pre-cache a workspace client for workspace 100 so the account
-				// fallback path returns it via getDatabricksClientForUnifiedProvider.
-				mockWS100 := &databricks.WorkspaceClient{
-					Config: &config.Config{
-						Host:  cachedWorkspaceHost,
-						Token: "test-token",
-					},
-				}
-				mockWS100.Config = mockWS100.Config.WithTesting()
-				c.SetWorkspaceClientForWorkspace(100, mockWS100)
 				return c
 			}(),
-			expectError:      false,
-			expectSameClient: false,
-			description:      "When workspace_id doesn't match, falls through to account path (hostless)",
+			expectError:   true,
+			errorContains: "failed to get workspace client with workspace_id 100",
+			description:   "Mismatched workspace_id falls through to account path which fails",
 		},
 	}
 
@@ -767,17 +746,11 @@ func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
 	assert.Nil(t, diff)
 }
 
-func TestNamespaceCustomizeDiff_MismatchedWorkspaceID_FallsThrough(t *testing.T) {
+func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
 		Config: &config.Config{
 			Host:  "https://test.cloud.databricks.com",
-			Token: "test-token",
-		},
-	}
-	mockWS123 := &databricks.WorkspaceClient{
-		Config: &config.Config{
-			Host:  "https://ws-123.cloud.databricks.com",
 			Token: "test-token",
 		},
 	}
@@ -791,8 +764,6 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID_FallsThrough(t *testing.T)
 		cachedWorkspaceClient: mockWS,
 		cachedWorkspaceID:     999999,
 	}
-	// Pre-cache workspace client for workspace 123 so the account fallback succeeds.
-	c.SetWorkspaceClientForWorkspace(123, mockWS123)
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{
@@ -801,7 +772,8 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID_FallsThrough(t *testing.T)
 			},
 		},
 	}, c)
-	assert.NoError(t, err)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 123")
 }
 
 func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {

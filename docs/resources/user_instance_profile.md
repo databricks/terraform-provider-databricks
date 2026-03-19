@@ -31,8 +31,6 @@ The following arguments are supported:
 * `user_id` - (Required) This is the id of the [user](user.md) resource.
 * `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
 * `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
-* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
-  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

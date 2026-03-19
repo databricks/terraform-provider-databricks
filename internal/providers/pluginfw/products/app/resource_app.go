@@ -100,6 +100,28 @@ func (a *resourceApp) Configure(ctx context.Context, req resource.ConfigureReque
 	}
 }
 
+func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if a.client == nil {
+		return
+	}
+	var app AppResource
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, app.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
+}
+
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 

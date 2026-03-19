@@ -34,7 +34,10 @@ func AddApiField(s map[string]*schema.Schema) map[string]*schema.Schema {
 // or empty string if not set.
 func GetApiLevel(d *schema.ResourceData) string {
 	if v, ok := d.GetOk("api"); ok {
-		return v.(string)
+		level := v.(string)
+		if level == ApiLevelAccount || level == ApiLevelWorkspace {
+			return level
+		}
 	}
 	return ""
 }
@@ -44,7 +47,14 @@ func GetApiLevel(d *schema.ResourceData) string {
 // falls back to the provider's host type.
 func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
 	if apiLevel, ok := d.GetOk("api"); ok {
-		return apiLevel.(string) == ApiLevelAccount
+		switch apiLevel.(string) {
+		case ApiLevelAccount:
+			return true
+		case ApiLevelWorkspace:
+			return false
+		default:
+			return c.Config.HostType() == config.AccountHost
+		}
 	}
 	return c.Config.HostType() == config.AccountHost
 }

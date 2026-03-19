@@ -25,6 +25,8 @@ func ResourceAccessControlRuleSet() common.Resource {
 
 			return m
 		})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	readFromWsOrAcc := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
 		if common.IsAccountLevel(d, c) {
 			accountClient, err := c.AccountClient()
@@ -97,10 +99,17 @@ func ResourceAccessControlRuleSet() common.Resource {
 	}
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		CanSkipReadAfterCreateAndUpdate: func(_ *schema.ResourceData) bool {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ruleSetUpdateReq iam.UpdateRuleSetRequest
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
@@ -118,6 +127,10 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			data, err := readFromWsOrAcc(ctx, d, c, iam.GetRuleSetRequest{
 				Name: d.Id(),
 				Etag: "",
@@ -130,6 +143,10 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return common.StructToData(data, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// Fetch the latest Etag
 			latestEtag, err := fetchLatestEtag(ctx, d, c, d.Id())
 			if err != nil {
@@ -154,6 +171,10 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// Fetch the latest Etag
 			latestEtag, err := fetchLatestEtag(ctx, d, c, d.Id())
 			if err != nil {

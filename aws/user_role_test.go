@@ -24,7 +24,7 @@ func TestAccUserRole(t *testing.T) {
 
 func TestAccUserRoleWithApiField(t *testing.T) {
 	if !acceptance.IsAws(t) {
-		acceptance.Skipf(t)("TestMwsAccUserRoleWithApiField is only valid on AWS.")
+		acceptance.Skipf(t)("TestAccUserRoleWithApiField is only valid on AWS.")
 	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `

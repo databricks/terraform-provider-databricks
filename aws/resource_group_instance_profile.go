@@ -16,9 +16,16 @@ func ResourceGroupInstanceProfile() common.Resource {
 	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn
-		return common.AddApiField(m)
+		common.AddApiField(m)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
+		return m
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			group, err := scim.NewGroupsAPI(ctx, c, common.GetApiLevel(d)).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
@@ -31,13 +38,24 @@ func ResourceGroupInstanceProfile() common.Resource {
 			return err
 		},
 		CreateContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			return scim.NewGroupsAPI(ctx, c, common.GetApiLevel(d)).Patch(groupID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			return scim.NewGroupsAPI(ctx, c, common.GetApiLevel(d)).Patch(groupID, scim.PatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN)))
 		},
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_group_role`"
+	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+		return common.NamespaceCustomizeDiff(ctx, d, c)
+	}
 	return r
 }

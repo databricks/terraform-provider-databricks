@@ -79,6 +79,8 @@ func ResourceUser() common.Resource {
 			}
 			return m
 		})
+	common.AddNamespaceInSchema(userSchema)
+	common.NamespaceCustomizeSchemaMap(userSchema)
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
 		var u entity
 		common.DataToStructPointer(d, userSchema, &u)
@@ -92,7 +94,14 @@ func ResourceUser() common.Resource {
 	}
 	return common.Resource{
 		Schema: userSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
@@ -106,6 +115,10 @@ func ResourceUser() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			user, err := usersAPI.Read(d.Id(), userAttributes)
 			if err != nil {
@@ -117,6 +130,10 @@ func ResourceUser() common.Resource {
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
@@ -125,9 +142,12 @@ func ResourceUser() common.Resource {
 			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			user := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			userName := d.Get("user_name").(string)
-			var err error = nil
 			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,6 +42,7 @@ func ResourceUser() common.Resource {
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
+			common.AddApiField(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
@@ -97,7 +97,7 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c)
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			user, err := usersAPI.Create(u)
 			if err != nil {
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
@@ -106,7 +106,8 @@ func ResourceUser() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			user, err := usersAPI.Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
@@ -120,13 +121,14 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), u)
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user := NewUsersAPI(ctx, c)
+			user := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			userName := d.Get("user_name").(string)
 			var err error = nil
-			isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

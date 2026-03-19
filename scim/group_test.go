@@ -25,7 +25,7 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				// duplicate code between workspace level and account level, because clients
 				// might get different
-				groupsAPI := scim.NewGroupsAPI(ctx, client)
+				groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 				group, err := groupsAPI.Read(id, "displayName,entitlements")
 				if err != nil {
 					return err
@@ -54,7 +54,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "allow_instance_pool_create", "false"),
 			acceptance.ResourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					groupsAPI := scim.NewGroupsAPI(ctx, client)
+					groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
@@ -83,7 +83,7 @@ func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "display_name", nameInit),
 			acceptance.ResourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					groupsAPI := scim.NewGroupsAPI(ctx, client)
+					groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
@@ -100,7 +100,7 @@ func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "display_name", nameUpdate),
 			acceptance.ResourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					groupsAPI := scim.NewGroupsAPI(ctx, client)
+					groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
@@ -122,7 +122,7 @@ func TestAccGroupsUpdateDisplayName(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "display_name", nameInit),
 			acceptance.ResourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					groupsAPI := scim.NewGroupsAPI(ctx, client)
+					groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
@@ -139,7 +139,7 @@ func TestAccGroupsUpdateDisplayName(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "display_name", nameUpdate),
 			acceptance.ResourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					groupsAPI := scim.NewGroupsAPI(ctx, client)
+					groupsAPI := scim.NewGroupsAPI(ctx, client, "")
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
@@ -148,5 +148,27 @@ func TestAccGroupsUpdateDisplayName(t *testing.T) {
 					return nil
 				}),
 		),
+	})
+}
+
+func TestMwsAccGroupWithApiField(t *testing.T) {
+	name := qa.RandomName("tfgroup")
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `resource "databricks_group" "this" {
+			display_name = "` + name + `"
+			api = "account"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_group.this", "api", "account"),
+	})
+}
+
+func TestAccGroupWithApiField(t *testing.T) {
+	name := qa.RandomName("tfgroup")
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `resource "databricks_group" "this" {
+			display_name = "` + name + `"
+			api = "workspace"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_group.this", "api", "workspace"),
 	})
 }

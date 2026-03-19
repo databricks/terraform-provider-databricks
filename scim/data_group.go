@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,6 +33,7 @@ func DataSourceGroup() common.Resource {
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
 		addEntitlementsToSchema(s)
+		common.AddApiField(s)
 		return s
 	})
 	common.AddNamespaceInSchema(s)
@@ -49,9 +49,9 @@ func DataSourceGroup() common.Resource {
 			var this entity
 			var group Group
 			common.DataToStructPointer(d, s, &this)
-			groupsAPI := NewGroupsAPI(ctx, newClient)
+			groupsAPI := NewGroupsAPI(ctx, newClient, common.GetApiLevel(d))
 			groupAttributes := "displayName,members,roles,entitlements,externalId,groups"
-			if newClient.DatabricksClient.Config.HostType() == config.AccountHost {
+			if common.IsAccountLevel(d, newClient) {
 				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")
 				if err != nil {
 					return err

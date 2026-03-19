@@ -65,6 +65,30 @@ func TestAccUserHomeDeleteHasNoEffectInAccount(t *testing.T) {
 	})
 }
 
+func TestMwsAccUserWithApiField(t *testing.T) {
+	username := qa.RandomEmail()
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "` + username + `"
+			api = "account"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_user.this", "api", "account"),
+	})
+}
+
+func TestAccUserWithApiField(t *testing.T) {
+	username := qa.RandomEmail()
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "` + username + `"
+			api = "workspace"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_user.this", "api", "workspace"),
+	})
+}
+
 func TestAccUserHomeDelete(t *testing.T) {
 	username := qa.RandomEmail()
 	template := `

@@ -106,6 +106,7 @@ The following arguments are available:
 * `force_delete_repos` - (Optional) This flag determines whether the user's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
 * `force_delete_home_dir` - (Optional) This flag determines whether the user's home directory is deleted when the user is deleted. It will have not impact when in the accounts SCIM API. False by default.
 * `disable_as_user_deletion` - (Optional) Deactivate the user when deleting the resource, rather than deleting the user entirely. Defaults to `true` when the provider is configured at the account-level and `false` when configured at the workspace-level. This flag is exclusive to force_delete_repos and force_delete_home_dir flags.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

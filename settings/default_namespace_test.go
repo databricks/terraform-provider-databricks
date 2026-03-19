@@ -95,7 +95,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -146,7 +146,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Remove(t *testing.T) {
 		Template: defaultNamespaceSettingTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

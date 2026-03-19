@@ -158,7 +158,7 @@ func TestAccNotebook_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -209,7 +209,7 @@ func TestAccNotebook_ProviderConfig_Remove(t *testing.T) {
 		Template: notebookTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

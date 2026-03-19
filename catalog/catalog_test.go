@@ -305,7 +305,7 @@ func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -335,7 +335,7 @@ func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
 		PlanOnly:           true,
@@ -363,7 +363,7 @@ func TestAccCatalog_ProviderConfig_Remove(t *testing.T) {
 		Template: catalogProviderConfigTemplate(catalogName, ""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

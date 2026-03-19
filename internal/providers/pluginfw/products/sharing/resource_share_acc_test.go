@@ -719,7 +719,7 @@ func TestAccShare_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -775,7 +775,7 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 		Template: preTestTemplateSchema + shareTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
 			},
 		},
 	})

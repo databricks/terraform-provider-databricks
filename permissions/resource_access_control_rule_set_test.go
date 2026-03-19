@@ -353,6 +353,101 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 	})
 }
 
+func TestResourceRuleSetReadAccountLevel(t *testing.T) {
+	accountRuleSetApiPath := fmt.Sprintf("/api/2.0/preview/accounts/%s/access-control/rule-sets", testAccountId)
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("%s?etag=%s&name=%s", accountRuleSetApiPath, "", url.QueryEscape(testServicePrincipalRuleSetName)),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+		},
+		Resource:  ResourceAccessControlRuleSet(),
+		AccountID: testAccountId,
+		New:       true,
+		Read:      true,
+		ID:        testServicePrincipalRuleSetName,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+		"id":   testServicePrincipalRuleSetName,
+	})
+}
+
+func TestResourceRuleSetCreateAccountLevel(t *testing.T) {
+	accountRuleSetApiPath := fmt.Sprintf("/api/2.0/preview/accounts/%s/access-control/rule-sets", testAccountId)
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("%s?etag=%s&name=%s", accountRuleSetApiPath, "", url.QueryEscape(testServicePrincipalRuleSetName)),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: accountRuleSetApiPath,
+				ExpectedRequest: iam.UpdateRuleSetRequest{
+					Name: testServicePrincipalRuleSetName,
+					RuleSet: iam.RuleSetUpdateRequest{
+						Name: testServicePrincipalRuleSetName,
+						Etag: "etagEx=",
+						GrantRules: []iam.GrantRule{
+							{
+								Principals: []string{"users/abc@example.com"},
+								Role:       "roles/servicePrincipal.manager",
+							},
+						},
+					},
+				},
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+		},
+		Resource:  ResourceAccessControlRuleSet(),
+		AccountID: testAccountId,
+		Create:    true,
+		HCL: fmt.Sprintf(`
+		name    = "%s"
+		grant_rules {
+			principals = [
+				"users/abc@example.com"
+			]
+			role = "roles/servicePrincipal.manager"
+		}
+		`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name": testServicePrincipalRuleSetName,
+		"etag": "",
+	})
+}
+
 func TestResourceRuleSetDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

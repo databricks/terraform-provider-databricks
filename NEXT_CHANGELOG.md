@@ -1,11 +1,10 @@
 # NEXT CHANGELOG
 
-## Release v1.112.0
+## Release v1.113.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Add resource and data sources for `databricks_postgres_role`.
 
 ### Bug Fixes
 
@@ -14,3 +13,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Use account host check instead of account ID check in `databricks_access_control_rule_set` to determine client type ([#5484](https://github.com/databricks/terraform-provider-databricks/pull/5484)).

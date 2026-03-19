@@ -110,43 +110,21 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() != config.WorkspaceHost {
-		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
+	// First try to get the workspace client directly.
+	// This works for workspace and spog hosts.
+	// TODO: Once we have the API with host_type, we can use that for branching.
+	w, err := c.getWorkspaceClientDirectly(ctx, workspaceID)
+	if err == nil {
+		return w, nil
 	}
-	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+	// If above fails, try through account.
+	// This is needed for account hosts eg: accounts.cloud.databricks.com.
+	return c.getWorkspaceClientFromAccount(ctx, workspaceID)
 }
 
-// getWorkspaceClientForAccountUnifiedHost gets the workspace client for
-// the workspace ID specified in the resource when the provider is configured
-// at account level.
-func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
-	ctx context.Context, workspaceID string,
-) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
-	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
-	}
-
-	// Parse the workspace ID to int.
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the workspace client for the workspace ID.
-	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-	}
-	return w, nil
-}
-
-// getWorkspaceClientForWorkspaceConfiguredProvider gets the workspace client for
-// the workspace ID specified in the resource when the provider is configured at workspace level.
-func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
+// getWorkspaceClientDirectly gets the workspace client directly from the
+// provider's configured host, validating the workspace ID if provided.
+func (c *DatabricksClient) getWorkspaceClientDirectly(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// Provider is configured at workspace level and we get the
@@ -173,6 +151,32 @@ func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
 	}
 	// The provider is configured at the workspace level and the
 	// workspace ID matches
+	return w, nil
+}
+
+// getWorkspaceClientFromAccount gets the workspace client for
+// the workspace ID specified in the resource through the account API.
+func (c *DatabricksClient) getWorkspaceClientFromAccount(
+	ctx context.Context, workspaceID string,
+) (*databricks.WorkspaceClient, error) {
+	// Workspace ID must be set in a workspace level resource if
+	// the provider is configured at account level.
+	// TODO: Link to the documentation once migration guide is published
+	if workspaceID == "" {
+		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+	}
+
+	// Parse the workspace ID to int.
+	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the workspace client for the workspace ID.
+	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
+	}
 	return w, nil
 }
 
@@ -268,24 +272,6 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 		return client, nil
 	}
 	// Get workspace client via account API.
-	w, err := c.workspaceClientViaAccountAPI(ctx, workspaceId)
-	if err != nil {
-		// Fallback: create workspace client on the same host with workspace_id set.
-		// This works for unified hosts that can route by workspace_id through X-Databricks-Org-Id header.
-		// Note: GetWorkspaceClient(*workspace) supports all host, this is the case when users don't have access to the account
-		w, err = c.tryWorkspaceClientDirect(workspaceId)
-		if err != nil {
-			return nil, err
-		}
-	}
-	w.CurrentUser = newCachedMe(w.CurrentUser)
-	c.cachedWorkspaceClients[workspaceId] = w
-	return w, nil
-}
-
-// workspaceClientViaAccountAPI resolves the workspace deployment URL via the
-// account API and creates a workspace client pointing to it.
-func (c *DatabricksClient) workspaceClientViaAccountAPI(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
 	a, err := c.accountClient()
 	if err != nil {
 		return nil, err
@@ -294,20 +280,13 @@ func (c *DatabricksClient) workspaceClientViaAccountAPI(ctx context.Context, wor
 	if err != nil {
 		return nil, err
 	}
-	return a.GetWorkspaceClient(*workspace)
-}
-
-// tryWorkspaceClientDirect creates a workspace client on the same host with
-// workspace_id set, then validates it with a lightweight API call. This works
-// for unified hosts that can route requests by workspace_id.
-func (c *DatabricksClient) tryWorkspaceClientDirect(workspaceId int64) (*databricks.WorkspaceClient, error) {
-	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
+	w, err := a.GetWorkspaceClient(*workspace)
 	if err != nil {
 		return nil, err
 	}
-	cfg.AccountID = c.Config.AccountID
-	cfg.WorkspaceID = fmt.Sprintf("%d", workspaceId)
-	return databricks.NewWorkspaceClient((*databricks.Config)(cfg))
+	w.CurrentUser = newCachedMe(w.CurrentUser)
+	c.cachedWorkspaceClients[workspaceId] = w
+	return w, nil
 }
 
 // SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.

@@ -251,12 +251,13 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 	mockWorkspaceClient := &databricks.WorkspaceClient{}
 
 	testCases := []struct {
-		name          string
-		resourceData  map[string]interface{}
-		client        *DatabricksClient
-		expectError   bool
-		errorContains string
-		description   string
+		name           string
+		resourceData   map[string]interface{}
+		client         *DatabricksClient
+		expectError    bool
+		errorContains  string
+		expectedClient *databricks.WorkspaceClient
+		description    string
 	}{
 		{
 			name: "workspace_id not set - calls with empty string",
@@ -273,8 +274,9 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     0,
 			},
-			expectError: false,
-			description: "When provider_config is not set, should use cached workspace client",
+			expectError:    false,
+			expectedClient: mockWorkspaceClient,
+			description:    "When provider_config is not set, should use cached workspace client",
 		},
 		{
 			name: "workspace_id set to valid value",
@@ -296,8 +298,9 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     123456,
 			},
-			expectError: false,
-			description: "When workspace_id matches cached ID, should return workspace client",
+			expectError:    false,
+			expectedClient: mockWorkspaceClient,
+			description:    "When workspace_id matches cached ID, should return workspace client",
 		},
 		{
 			name: "workspace_id set to empty string",
@@ -319,11 +322,12 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     0,
 			},
-			expectError: false,
-			description: "When workspace_id is explicitly empty, should use cached workspace client",
+			expectError:    false,
+			expectedClient: mockWorkspaceClient,
+			description:    "When workspace_id is explicitly empty, should use cached workspace client",
 		},
 		{
-			name: "workspace_id with different numeric value",
+			name: "workspace_id with different numeric value - falls through to account path",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -332,22 +336,33 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			client: &DatabricksClient{
-				DatabricksClient: &client.DatabricksClient{
+			client: func() *DatabricksClient {
+				c := &DatabricksClient{
+					DatabricksClient: &client.DatabricksClient{
+						Config: &config.Config{
+							Host:  "https://test.cloud.databricks.com",
+							Token: "test-token",
+						},
+					},
+					cachedWorkspaceClient: mockWorkspaceClient,
+					cachedWorkspaceID:     1234,
+				}
+				// Pre-cache a workspace client for workspace 789012 so the account
+				// fallback path returns it.
+				mockWS789012 := &databricks.WorkspaceClient{
 					Config: &config.Config{
-						Host:  "https://test.cloud.databricks.com",
+						Host:  "https://ws-789012.cloud.databricks.com",
 						Token: "test-token",
 					},
-				},
-				cachedWorkspaceClient: mockWorkspaceClient,
-				cachedWorkspaceID:     1234,
-			},
-			expectError:   true,
-			errorContains: "failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 1234 but got 789012 in provider_config",
-			description:   "Should handle different workspace IDs correctly",
+				}
+				c.SetWorkspaceClientForWorkspace(789012, mockWS789012)
+				return c
+			}(),
+			expectError: false,
+			description: "When workspace_id doesn't match, falls through to account path",
 		},
 		{
-			name: "account level provider without workspace_id - returns error",
+			name: "account level provider without provider_config - returns error",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -362,7 +377,30 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			},
 			expectError:   true,
 			errorContains: "workspace_id is not set, please set the workspace_id in the provider_config",
-			description:   "Account-level provider requires workspace_id to be set",
+			description:   "Account-level provider without workspace_id falls through to account path which requires workspace_id",
+		},
+		{
+			name: "account level provider with empty workspace_id - returns error",
+			resourceData: map[string]interface{}{
+				"name": "test",
+				"provider_config": []interface{}{
+					map[string]interface{}{
+						"workspace_id": "",
+					},
+				},
+			},
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:      "https://accounts.cloud.databricks.com",
+						AccountID: "test-account-id",
+						Token:     "test-token",
+					},
+				},
+			},
+			expectError:   true,
+			errorContains: "workspace_id is not set, please set the workspace_id in the provider_config",
+			description:   "Account-level provider with empty workspace_id falls through to account path which requires workspace_id",
 		},
 	}
 
@@ -383,7 +421,9 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err, tc.description)
 				assert.NotNil(t, result)
-				assert.Equal(t, mockWorkspaceClient, result)
+				if tc.expectedClient != nil {
+					assert.Equal(t, tc.expectedClient, result)
+				}
 			}
 		})
 	}
@@ -572,7 +612,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:      "Account-level provider without workspace_id should return current client",
 		},
 		{
-			name: "workspace_id mismatch - returns error",
+			name: "workspace_id mismatch - falls through to account path",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -600,11 +640,21 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 				mockWorkspaceClient.Config = mockWorkspaceClient.Config.WithTesting()
 				c.SetWorkspaceClient(mockWorkspaceClient)
 				c.cachedWorkspaceID = 200
+				// Pre-cache a workspace client for workspace 100 so the account
+				// fallback path returns it via getDatabricksClientForUnifiedProvider.
+				mockWS100 := &databricks.WorkspaceClient{
+					Config: &config.Config{
+						Host:  cachedWorkspaceHost,
+						Token: "test-token",
+					},
+				}
+				mockWS100.Config = mockWS100.Config.WithTesting()
+				c.SetWorkspaceClientForWorkspace(100, mockWS100)
 				return c
 			}(),
-			expectError:   true,
-			errorContains: "workspace_id mismatch",
-			description:   "Should return error when workspace_id doesn't match configured workspace",
+			expectError:      false,
+			expectSameClient: false,
+			description:      "When workspace_id doesn't match, falls through to account path (hostless)",
 		},
 	}
 
@@ -717,11 +767,17 @@ func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
 	assert.Nil(t, diff)
 }
 
-func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
+func TestNamespaceCustomizeDiff_MismatchedWorkspaceID_FallsThrough(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
 		Config: &config.Config{
 			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	mockWS123 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-123.cloud.databricks.com",
 			Token: "test-token",
 		},
 	}
@@ -735,6 +791,8 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 		cachedWorkspaceClient: mockWS,
 		cachedWorkspaceID:     999999,
 	}
+	// Pre-cache workspace client for workspace 123 so the account fallback succeeds.
+	c.SetWorkspaceClientForWorkspace(123, mockWS123)
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{
@@ -743,9 +801,7 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 			},
 		},
 	}, c)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "workspace_id mismatch")
-	assert.Contains(t, err.Error(), "please check the workspace_id provided in provider_config")
+	assert.NoError(t, err)
 }
 
 func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {
@@ -925,6 +981,12 @@ func TestNamespaceCustomizeDiff_UnifiedHost_ForceNewOnChange(t *testing.T) {
 
 func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
+	mockWS999 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-999.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -934,9 +996,8 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 			},
 		},
 	}
-	// No cached workspace client — WorkspaceClientForWorkspace falls back to
-	// tryWorkspaceClientDirect which succeeds for unified hosts (routes via
-	// X-Databricks-Org-Id header). Actual workspace validation happens at apply time.
+	// Pre-cache workspace client for workspace 999 so the account fallback succeeds.
+	c.SetWorkspaceClientForWorkspace(999, mockWS999)
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{

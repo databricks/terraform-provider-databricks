@@ -342,7 +342,7 @@ func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	assert.Equal(t, 1, mock.count)
 }
 
-func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testing.T) {
+func TestWorkspaceClientForWorkspace_AccountAPIFails_ReturnsError(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
 
@@ -361,17 +361,11 @@ func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testin
 	}
 	dc.SetAccountClient(mockAcc.AccountClient)
 
-	// When account API fails, fallback creates a direct workspace client
+	// When account API fails, error is returned.
 	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-	assert.NoError(t, err)
-	assert.NotNil(t, workspaceClient)
-
-	// Verify the client is cached
-	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
-	dc.mu.Unlock()
-	assert.True(t, exists)
-	assert.Equal(t, workspaceClient, cachedClient)
+	assert.Error(t, err)
+	assert.Nil(t, workspaceClient)
+	assert.Contains(t, err.Error(), "workspace not found")
 }
 
 func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {

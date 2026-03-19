@@ -46,15 +46,12 @@ func GetApiLevel(d *schema.ResourceData) string {
 // It checks the `api` field first. If set, it takes precedence. Otherwise, it
 // falls back to the provider's host type.
 func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
-	if apiLevel, ok := d.GetOk("api"); ok {
-		switch apiLevel.(string) {
-		case ApiLevelAccount:
-			return true
-		case ApiLevelWorkspace:
-			return false
-		default:
-			return c.Config.HostType() == config.AccountHost
-		}
+	switch GetApiLevel(d) {
+	case ApiLevelAccount:
+		return true
+	case ApiLevelWorkspace:
+		return false
+	default:
+		return c.Config.HostType() == config.AccountHost
 	}
-	return c.Config.HostType() == config.AccountHost
 }

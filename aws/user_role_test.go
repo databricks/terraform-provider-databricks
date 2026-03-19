@@ -21,3 +21,21 @@ func TestAccUserRole(t *testing.T) {
 		}`,
 	})
 }
+
+func TestMwsAccUserRoleWithApiField(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestMwsAccUserRoleWithApiField is only valid on AWS.")
+	}
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "{var.RANDOM}@example.com"
+			api = "account"
+		}
+		resource "databricks_user_role" "this" {
+			user_id = databricks_user.this.id
+			role = "arn:aws:iam::999999999999:role/foo"
+			api = "account"
+		}`,
+	})
+}

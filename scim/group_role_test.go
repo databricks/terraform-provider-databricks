@@ -21,3 +21,21 @@ func TestAccGroupRole(t *testing.T) {
 		}`,
 	})
 }
+
+func TestMwsAccGroupRoleWithApiField(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestMwsAccGroupRoleWithApiField is only valid on AWS.")
+	}
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_group" "this" {
+			display_name = "tf-{var.RANDOM}"
+			api = "account"
+		}
+		resource "databricks_group_role" "this" {
+			group_id = databricks_group.this.id
+			role = "arn:aws:iam::999999999999:role/foo"
+			api = "account"
+		}`,
+	})
+}

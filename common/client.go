@@ -483,7 +483,7 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 			// Explicit api field takes precedence over host-based inference
 			isAccount = apiLevel == ApiLevelAccount
 		} else {
-			isAccount = c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+			isAccount = c.Config.HostType() == config.AccountHost
 		}
 		if isAccount {
 			// until `/preview` is there for workspace scim,

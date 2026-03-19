@@ -625,7 +625,7 @@ func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedUser(
 		fmt.Errorf("nonsense"), d,
-		NewUsersAPI(context.Background(), &common.DatabricksClient{}), User{})
+		NewUsersAPI(context.Background(), &common.DatabricksClient{}, ""), User{})
 	assert.EqualError(t, rerr, "nonsense")
 }
 
@@ -644,7 +644,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			errors.New(userExistsErrorMessage("me@example.com", false)),
-			d, NewUsersAPI(ctx, client), User{
+			d, NewUsersAPI(ctx, client, ""), User{
 				UserName: "me@example.com",
 			})
 		assert.EqualError(t, err, "cannot find user")
@@ -665,7 +665,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			errors.New(userExistsErrorMessage("me@example.com", true)),
-			d, NewUsersAPI(ctx, client), User{
+			d, NewUsersAPI(ctx, client, ""), User{
 				UserName: "me@example.com",
 			})
 		assert.EqualError(t, err, "cannot find me@example.com for force import")
@@ -706,7 +706,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
 			errors.New(userExistsErrorMessage("Me@Example.Com", false)),
-			d, NewUsersAPI(ctx, client), User{
+			d, NewUsersAPI(ctx, client, ""), User{
 				UserName: "me@example.com",
 			})
 		assert.NoError(t, err)
@@ -748,7 +748,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
 			errors.New(userExistsErrorMessage("me@example.com", true)),
-			d, NewUsersAPI(ctx, client), User{
+			d, NewUsersAPI(ctx, client, ""), User{
 				UserName: "me@example.com",
 			})
 		assert.NoError(t, err)

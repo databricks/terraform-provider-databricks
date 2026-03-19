@@ -65,6 +65,63 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.T) {
+	// When api is NOT set, account host routes to account SCIM (backwards compatible)
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups",
+				Response: Group{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: Group{
+					ID:          "abc",
+					DisplayName: "test-group",
+				},
+			},
+		},
+		Resource:  ResourceGroup(),
+		AccountID: "acc-123",
+		HCL: `
+			display_name = "test-group"
+		`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGroupCreate_ApiFieldNotSet_WorkspaceHost(t *testing.T) {
+	// When api is NOT set and provider is workspace-level, routes to workspace SCIM (backwards compatible)
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/scim/v2/Groups",
+				Response: Group{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: Group{
+					ID:          "abc",
+					DisplayName: "test-group",
+				},
+			},
+		},
+		Resource: ResourceGroup(),
+		HCL: `
+			display_name = "test-group"
+		`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceGroupRead_ApiFieldAccount(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

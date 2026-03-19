@@ -43,8 +43,7 @@ func ResourceGroup() common.Resource {
 				Entitlements: readEntitlementsFromData(d),
 				ExternalID:   d.Get("external_id").(string),
 			}
-			groupsAPI := NewGroupsAPI(ctx, c)
-			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			group, err := groupsAPI.Create(g)
 			if err != nil {
 				return createForceOverridesManuallyAddedGroup(err, d, groupsAPI, g)
@@ -53,8 +52,7 @@ func ResourceGroup() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			groupsAPI := NewGroupsAPI(ctx, c)
-			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			group, err := groupsAPI.Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
 				return err
@@ -70,15 +68,13 @@ func ResourceGroup() common.Resource {
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			groupsAPI := NewGroupsAPI(ctx, c)
-			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			groupName := d.Get("display_name").(string)
 			return groupsAPI.UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			groupsAPI := NewGroupsAPI(ctx, c)
-			groupsAPI.ApiLevel = common.GetApiLevel(d)
+			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			return groupsAPI.Delete(d.Id())
 		},
 		Schema: groupSchema,

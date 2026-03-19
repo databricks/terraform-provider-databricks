@@ -8,11 +8,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// NewGroupsAPI creates GroupsAPI instance from provider meta
-func NewGroupsAPI(ctx context.Context, m any) GroupsAPI {
+// NewGroupsAPI creates GroupsAPI instance from provider meta.
+// apiLevel controls whether account-level or workspace-level SCIM endpoints are used.
+// Pass "" to infer from the provider host.
+func NewGroupsAPI(ctx context.Context, m any, apiLevel string) GroupsAPI {
 	return GroupsAPI{
-		client:  m.(*common.DatabricksClient),
-		context: ctx,
+		client:   m.(*common.DatabricksClient),
+		context:  ctx,
+		ApiLevel: apiLevel,
 	}
 }
 

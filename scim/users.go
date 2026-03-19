@@ -8,11 +8,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// NewUsersAPI creates UsersAPI instance from provider meta
-func NewUsersAPI(ctx context.Context, m any) UsersAPI {
+// NewUsersAPI creates UsersAPI instance from provider meta.
+// apiLevel controls whether account-level or workspace-level SCIM endpoints are used.
+// Pass "" to infer from the provider host.
+func NewUsersAPI(ctx context.Context, m any, apiLevel string) UsersAPI {
 	return UsersAPI{
-		client:  m.(*common.DatabricksClient),
-		context: ctx,
+		client:   m.(*common.DatabricksClient),
+		context:  ctx,
+		ApiLevel: apiLevel,
 	}
 }
 

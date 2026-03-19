@@ -557,7 +557,7 @@ func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *tes
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedServicePrincipal(
 		fmt.Errorf("nonsense"), d,
-		NewServicePrincipalsAPI(context.Background(), &common.DatabricksClient{}), User{})
+		NewServicePrincipalsAPI(context.Background(), &common.DatabricksClient{}, ""), User{})
 	assert.EqualError(t, rerr, "nonsense")
 }
 
@@ -577,7 +577,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
-			d, NewServicePrincipalsAPI(ctx, client), User{
+			d, NewServicePrincipalsAPI(ctx, client, ""), User{
 				ApplicationID: appID,
 			})
 		assert.EqualError(t, err, "cannot find service principal")
@@ -599,7 +599,7 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
-			d, NewServicePrincipalsAPI(ctx, client), User{
+			d, NewServicePrincipalsAPI(ctx, client, ""), User{
 				ApplicationID: appID,
 			})
 		assert.EqualError(t, err, fmt.Sprintf("cannot find SP with ID %s for force import", appID))
@@ -641,7 +641,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 		d.Set("application_id", appID)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
-			d, NewServicePrincipalsAPI(ctx, client), User{
+			d, NewServicePrincipalsAPI(ctx, client, ""), User{
 				ApplicationID: appID,
 			})
 		assert.NoError(t, err)

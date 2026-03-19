@@ -120,10 +120,10 @@ var globalGroupsCache = newGroupCache()
 func ResourceGroupMember() common.Resource {
 	return common.NewPairID("group_id", "member_id").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c), groupID, memberID)
+			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c, ""), groupID, memberID)
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			members, err := globalGroupsCache.getMembers(NewGroupsAPI(ctx, c), groupID)
+			members, err := globalGroupsCache.getMembers(NewGroupsAPI(ctx, c, ""), groupID)
 			if err == nil && !hasMember(members, memberID) {
 				return &apierr.APIError{
 					ErrorCode:  "NOT_FOUND",
@@ -134,7 +134,7 @@ func ResourceGroupMember() common.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return globalGroupsCache.removeMember(NewGroupsAPI(ctx, c), groupID, memberID)
+			return globalGroupsCache.removeMember(NewGroupsAPI(ctx, c, ""), groupID, memberID)
 		},
 	})
 }

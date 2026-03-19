@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -22,11 +21,12 @@ func ResourceAccessControlRuleSet() common.Resource {
 			m["grant_rules"].Type = schema.TypeSet
 			common.MustSchemaPath(m, "grant_rules", "principals").Type = schema.TypeSet
 			m["name"].ForceNew = true
+			common.AddApiField(m)
 
 			return m
 		})
-	readFromWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config.HostType() == config.AccountHost {
+	readFromWsOrAcc := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
+		if common.IsAccountLevel(d, c) {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err
@@ -39,8 +39,8 @@ func ResourceAccessControlRuleSet() common.Resource {
 		}
 		return workspaceClient.AccountAccessControlProxy.GetRuleSet(ctx, getRuleSetReq)
 	}
-	updateThroughWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, updateRuleSetReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config.HostType() == config.AccountHost {
+	updateThroughWsOrAcc := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, updateRuleSetReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
+		if common.IsAccountLevel(d, c) {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err
@@ -53,8 +53,8 @@ func ResourceAccessControlRuleSet() common.Resource {
 		}
 		return workspaceClient.AccountAccessControlProxy.UpdateRuleSet(ctx, updateRuleSetReq)
 	}
-	fetchLatestEtag := func(ctx context.Context, c *common.DatabricksClient, name string) (string, error) {
-		ruleSetGetRes, err := readFromWsOrAcc(ctx, c, iam.GetRuleSetRequest{
+	fetchLatestEtag := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, name string) (string, error) {
+		ruleSetGetRes, err := readFromWsOrAcc(ctx, d, c, iam.GetRuleSetRequest{
 			Name: name,
 			Etag: "",
 		})
@@ -63,22 +63,22 @@ func ResourceAccessControlRuleSet() common.Resource {
 		}
 		return ruleSetGetRes.Etag, nil
 	}
-	updateRuleSet := func(ctx context.Context, c *common.DatabricksClient,
+	updateRuleSet := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient,
 		ruleSetUpdateReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
-		latestEtag, err := fetchLatestEtag(ctx, c, ruleSetUpdateReq.Name)
+		latestEtag, err := fetchLatestEtag(ctx, d, c, ruleSetUpdateReq.Name)
 		if err != nil {
 			return nil, err
 		}
 		ruleSetUpdateReq.RuleSet.Etag = latestEtag
-		ruleSetUpdateRes, err := updateThroughWsOrAcc(ctx, c, ruleSetUpdateReq)
+		ruleSetUpdateRes, err := updateThroughWsOrAcc(ctx, d, c, ruleSetUpdateReq)
 		if err != nil {
 			return nil, err
 		}
 		return ruleSetUpdateRes, nil
 	}
-	handleConflictAndUpdate := func(ctx context.Context, c *common.DatabricksClient,
+	handleConflictAndUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient,
 		ruleSetUpdateReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
-		ruleSetUpdateRes, err := updateThroughWsOrAcc(ctx, c, ruleSetUpdateReq)
+		ruleSetUpdateRes, err := updateThroughWsOrAcc(ctx, d, c, ruleSetUpdateReq)
 		if err != nil {
 			var aerr *apierr.APIError
 			if !errors.As(err, &aerr) {
@@ -87,7 +87,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			if aerr.StatusCode == http.StatusConflict {
 				if aerr.ErrorCode == "RESOURCE_CONFLICT" {
 					// we need to get and update
-					etag, err := updateRuleSet(ctx, c, ruleSetUpdateReq)
+					etag, err := updateRuleSet(ctx, d, c, ruleSetUpdateReq)
 					return etag, err
 				}
 			}
@@ -104,7 +104,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			var ruleSetUpdateReq iam.UpdateRuleSetRequest
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
-			response, err := updateRuleSet(ctx, c, ruleSetUpdateReq)
+			response, err := updateRuleSet(ctx, d, c, ruleSetUpdateReq)
 			if err != nil {
 				return err
 			}
@@ -118,7 +118,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			data, err := readFromWsOrAcc(ctx, c, iam.GetRuleSetRequest{
+			data, err := readFromWsOrAcc(ctx, d, c, iam.GetRuleSetRequest{
 				Name: d.Id(),
 				Etag: "",
 			})
@@ -131,7 +131,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			// Fetch the latest Etag
-			latestEtag, err := fetchLatestEtag(ctx, c, d.Id())
+			latestEtag, err := fetchLatestEtag(ctx, d, c, d.Id())
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
 			ruleSetUpdateReq.RuleSet.Etag = latestEtag
-			response, err := handleConflictAndUpdate(ctx, c, ruleSetUpdateReq)
+			response, err := handleConflictAndUpdate(ctx, d, c, ruleSetUpdateReq)
 			if err != nil {
 				return err
 			}
@@ -155,13 +155,13 @@ func ResourceAccessControlRuleSet() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			// Fetch the latest Etag
-			latestEtag, err := fetchLatestEtag(ctx, c, d.Id())
+			latestEtag, err := fetchLatestEtag(ctx, d, c, d.Id())
 			if err != nil {
 				return err
 			}
 
 			// we remove all grant rules. Account admins will still be able to update rule set
-			_, err = handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
+			_, err = handleConflictAndUpdate(ctx, d, c, iam.UpdateRuleSetRequest{
 				Name: d.Id(),
 				RuleSet: iam.RuleSetUpdateRequest{
 					Name: d.Id(),

@@ -49,7 +49,7 @@ func DataSourceGroup() common.Resource {
 			var this entity
 			var group Group
 			common.DataToStructPointer(d, s, &this)
-			groupsAPI := NewGroupsAPI(ctx, newClient)
+			groupsAPI := NewGroupsAPI(ctx, newClient, "")
 			groupAttributes := "displayName,members,roles,entitlements,externalId,groups"
 			if newClient.DatabricksClient.Config.HostType() == config.AccountHost {
 				group, err = groupsAPI.ReadByDisplayName(this.DisplayName, "id")

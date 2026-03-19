@@ -14,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
-func NewServicePrincipalsAPI(ctx context.Context, m any) ServicePrincipalsAPI {
-	return ServicePrincipalsAPI{client: m.(*common.DatabricksClient), context: ctx}
+// NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta.
+// apiLevel controls whether account-level or workspace-level SCIM endpoints are used.
+// Pass "" to infer from the provider host.
+func NewServicePrincipalsAPI(ctx context.Context, m any, apiLevel string) ServicePrincipalsAPI {
+	return ServicePrincipalsAPI{client: m.(*common.DatabricksClient), context: ctx, ApiLevel: apiLevel}
 }
 
 // ServicePrincipalsAPI exposes the scim servicePrincipal API
@@ -158,8 +160,7 @@ func ResourceServicePrincipal() common.Resource {
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
-			spAPI := NewServicePrincipalsAPI(ctx, c)
-			spAPI.ApiLevel = common.GetApiLevel(d)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {
 				return createForceOverridesManuallyAddedServicePrincipal(err, d, spAPI, sp)
@@ -168,8 +169,7 @@ func ResourceServicePrincipal() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			spAPI := NewServicePrincipalsAPI(ctx, c)
-			spAPI.ApiLevel = common.GetApiLevel(d)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			sp, err := spAPI.Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
@@ -184,8 +184,7 @@ func ResourceServicePrincipal() common.Resource {
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
 			}
-			spAPI := NewServicePrincipalsAPI(ctx, c)
-			spAPI.ApiLevel = common.GetApiLevel(d)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			return spAPI.Update(d.Id(), User{
 				DisplayName:   d.Get("display_name").(string),
 				Active:        d.Get("active").(bool),
@@ -195,8 +194,7 @@ func ResourceServicePrincipal() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			spAPI := NewServicePrincipalsAPI(ctx, c)
-			spAPI.ApiLevel = common.GetApiLevel(d)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			appId := d.Get("application_id").(string)
 			var err error = nil
 			isAccount := common.IsAccountLevel(d, c)

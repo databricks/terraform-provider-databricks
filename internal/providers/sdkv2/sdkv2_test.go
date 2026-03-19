@@ -43,6 +43,8 @@ func TestConfigureDatabricksClient(t *testing.T) {
 		{
 			name: "workspace_id can be set in provider config",
 			config: map[string]interface{}{
+				"host":         "https://accounts.cloud.databricks.com",
+				"account_id":   "00000000-0000-0000-0000-000000000001",
 				"workspace_id": "1234567890",
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {

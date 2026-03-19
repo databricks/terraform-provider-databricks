@@ -112,7 +112,6 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 ) (*databricks.WorkspaceClient, error) {
 	// First try to get the workspace client directly.
 	// This works for workspace and spog hosts.
-	// TODO: Once we have the API with host_type, we can use that for branching.
 	w, err := c.getWorkspaceClientDirectly(ctx, workspaceID)
 	if err == nil {
 		return w, nil

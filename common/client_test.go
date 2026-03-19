@@ -436,3 +436,184 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
 }
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_NoWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// Empty workspace_id with workspace host returns the cached workspace client.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MatchingWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     12345,
+	}
+
+	// Workspace ID matches the cached workspace ID — returns workspace client directly.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MismatchedWorkspaceID_FallsToAccount(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	mockWS99999 := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://ws-99999.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     12345,
+	}
+	// Pre-cache a workspace client for workspace 99999 so the account fallback returns it.
+	dc.SetWorkspaceClientForWorkspace(99999, mockWS99999)
+
+	// Mismatched workspace ID — direct path fails, falls through to account path.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS99999, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WithWorkspaceID(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
+		Token: "dapi123",
+	}
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: 12345,
+	}).Return(&provisioning.Workspace{
+		WorkspaceId:    12345,
+		WorkspaceName:  "test-workspace",
+		DeploymentName: "test-deployment",
+	}, nil)
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Account host with workspace_id: direct path fails (account host can't create
+	// workspace client), falls through to account path which resolves via API.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
+	assert.NoError(t, err)
+	assert.NotNil(t, w)
+	assert.Equal(t, "https://test-deployment.cloud.databricks.com", w.Config.Host)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_NoWorkspaceID_ReturnsError(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+
+	// Account host without workspace_id: direct path fails, account fallback
+	// errors because workspace_id is required.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "workspace_id is not set")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_InvalidWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// Non-numeric workspace_id — fails parsing in direct path, also fails in account path.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "not-a-number")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to parse workspace_id")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WorkspaceNotFound(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: 99999,
+	}).Return(nil, fmt.Errorf("workspace 99999 not found"))
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Account host, workspace not found via API — both paths fail.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
+}

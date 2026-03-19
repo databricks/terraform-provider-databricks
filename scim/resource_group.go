@@ -36,8 +36,17 @@ func ResourceGroup() common.Resource {
 			return m
 		})
 	addEntitlementsToSchema(groupSchema)
+	common.AddNamespaceInSchema(groupSchema)
+	common.NamespaceCustomizeSchemaMap(groupSchema)
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
@@ -52,6 +61,10 @@ func ResourceGroup() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			group, err := groupsAPI.Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
@@ -68,12 +81,20 @@ func ResourceGroup() common.Resource {
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			groupName := d.Get("display_name").(string)
 			return groupsAPI.UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			return groupsAPI.Delete(d.Id())
 		},

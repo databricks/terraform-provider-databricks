@@ -145,6 +145,8 @@ func ResourceServicePrincipal() common.Resource {
 			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
 			return m
 		})
+	common.AddNamespaceInSchema(servicePrincipalSchema)
+	common.NamespaceCustomizeSchemaMap(servicePrincipalSchema)
 	spFromData := func(d *schema.ResourceData) User {
 		var u entity
 		common.DataToStructPointer(d, servicePrincipalSchema, &u)
@@ -158,7 +160,14 @@ func ResourceServicePrincipal() common.Resource {
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			sp := spFromData(d)
 			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			servicePrincipal, err := spAPI.Create(sp)
@@ -169,6 +178,10 @@ func ResourceServicePrincipal() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			sp, err := spAPI.Read(d.Id(), userAttributes)
 			if err != nil {
@@ -180,6 +193,10 @@ func ResourceServicePrincipal() common.Resource {
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var applicationId string
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
@@ -194,9 +211,12 @@ func ResourceServicePrincipal() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			appId := d.Get("application_id").(string)
-			var err error = nil
 			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)

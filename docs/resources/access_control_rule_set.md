@@ -315,6 +315,8 @@ resource "databricks_access_control_rule_set" "tag_policy_usage" {
   * `accounts/{account_id}/tagPolicies/{tag_policy_id}/ruleSets/default` - access control for a specific [tag policy](tag_policy.md).
 
 * `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 * `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 

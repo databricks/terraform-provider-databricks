@@ -79,6 +79,7 @@ The following arguments are required:
 * `delta_sharing_organization_name` - (Optional) The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once this is set it cannot be removed and can only be modified to another valid value. To delete this value please taint and recreate the resource.
 * `external_access_enabled` - (Optional) Whether to allow non-DBR clients to directly access entities under the metastore.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

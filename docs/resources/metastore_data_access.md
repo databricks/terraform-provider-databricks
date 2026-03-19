@@ -58,6 +58,7 @@ resource "databricks_metastore_data_access" "this" {
 The arguments are the same as of [databricks_storage_credential](storage_credential.md). Additionally
 
 * `is_default` -  whether to set this credential as the default for the metastore. In practice, this should always be true.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

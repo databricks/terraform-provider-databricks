@@ -33,12 +33,14 @@ type UsersList struct {
 	Filter          types.String `tfsdk:"filter"`
 	ExtraAttributes types.String `tfsdk:"extra_attributes"`
 	Users           types.List   `tfsdk:"users"`
+	Api             types.String `tfsdk:"api"`
 }
 
 func (UsersList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["users"] = attrs["users"].SetComputed().SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["extra_attributes"] = attrs["extra_attributes"].SetOptional()
+	attrs["api"] = attrs["api"].SetOptional()
 
 	return attrs
 }
@@ -84,7 +86,16 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var users []iam.User
 	var err error
 
-	if d.Client.Config.HostType() == config.AccountHost {
+	isAccount := d.Client.Config.HostType() == config.AccountHost
+	if !usersInfo.Api.IsNull() && !usersInfo.Api.IsUnknown() {
+		apiLevel := usersInfo.Api.ValueString()
+		if apiLevel != "account" && apiLevel != "workspace" {
+			resp.Diagnostics.AddError("Invalid api value", "api must be either \"account\" or \"workspace\"")
+			return
+		}
+		isAccount = apiLevel == "account"
+	}
+	if isAccount {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {

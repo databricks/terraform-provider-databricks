@@ -31,6 +31,7 @@ The following arguments are required:
 * `metastore_id` - Unique identifier of the parent Metastore
 * `workspace_id` - id of the workspace for the assignment
 * `default_catalog_name` - (Deprecated) Default catalog used for this assignment. Please use [databricks_default_namespace_setting](default_namespace_setting.md) instead.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

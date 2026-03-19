@@ -18,7 +18,7 @@ func DataSourceServicePrincipals() common.Resource {
 	}
 	return common.DataResource(spnsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnsData)
-		spnAPI := NewServicePrincipalsAPI(ctx, c)
+		spnAPI := NewServicePrincipalsAPI(ctx, c, "")
 
 		var filter string
 

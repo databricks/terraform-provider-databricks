@@ -59,7 +59,7 @@ func ResourceEntitlements() common.Resource {
 			}
 			switch strings.ToLower(split[0]) {
 			case "group":
-				group, err := NewGroupsAPI(ctx, newClient).Read(split[1], "entitlements")
+				group, err := NewGroupsAPI(ctx, newClient, "").Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
@@ -67,7 +67,7 @@ func ResourceEntitlements() common.Resource {
 				group.Entitlements.generateEmpty(d)
 				return group.Entitlements.readIntoData(d)
 			case "user":
-				user, err := NewUsersAPI(ctx, newClient).Read(split[1], "entitlements")
+				user, err := NewUsersAPI(ctx, newClient, "").Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
@@ -75,7 +75,7 @@ func ResourceEntitlements() common.Resource {
 				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
-				spn, err := NewServicePrincipalsAPI(ctx, newClient).Read(split[1], "entitlements")
+				spn, err := NewServicePrincipalsAPI(ctx, newClient, "").Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
@@ -137,21 +137,21 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 		},
 	})
 	if groupId != "" {
-		groupsAPI := NewGroupsAPI(ctx, c)
+		groupsAPI := NewGroupsAPI(ctx, c, "")
 		err := groupsAPI.UpdateEntitlements(groupId, request)
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 	}
 	if userId != "" {
-		usersAPI := NewUsersAPI(ctx, c)
+		usersAPI := NewUsersAPI(ctx, c, "")
 		err := usersAPI.UpdateEntitlements(userId, request)
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 	}
 	if spnId != "" {
-		spnAPI := NewServicePrincipalsAPI(ctx, c)
+		spnAPI := NewServicePrincipalsAPI(ctx, c, "")
 		err := spnAPI.UpdateEntitlements(spnId, request)
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err

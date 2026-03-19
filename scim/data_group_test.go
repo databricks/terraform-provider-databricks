@@ -95,6 +95,75 @@ func TestDataSourceGroup(t *testing.T) {
 	})
 }
 
+func TestDataSourceGroup_ApiFieldAccount(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: `/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
+				Response: GroupList{
+					Resources: []Group{
+						{
+							DisplayName: "ds",
+							ID:          "eerste",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Response: Group{
+					DisplayName: "ds",
+					ID:          "eerste",
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceGroup(),
+		AccountID:   "acc-123",
+		ID:          ".",
+		State: map[string]any{
+			"display_name": "ds",
+			"api":          "account",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "eerste",
+	})
+}
+
+func TestDataSourceGroup_ApiFieldWorkspace(t *testing.T) {
+	// api = "workspace" routes to workspace SCIM even with AccountID set
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: `/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22ds%22`,
+				Response: GroupList{
+					Resources: []Group{
+						{
+							DisplayName: "ds",
+							ID:          "eerste",
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceGroup(),
+		AccountID:   "acc-123",
+		ID:          ".",
+		State: map[string]any{
+			"display_name": "ds",
+			"api":          "workspace",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "eerste",
+	})
+}
+
 func TestDataSourceGroupAccountClient(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -80,13 +80,14 @@ func ResourceMetastore() common.Resource {
 				validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false),
 			)
 
+			common.AddApiField(m)
 			return m
 		})
 
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var create catalog.CreateAccountsMetastore
 				var update catalog.UpdateAccountsMetastore
 				common.DataToStructPointer(d, s, &create)
@@ -142,7 +143,7 @@ func ResourceMetastore() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.GetByMetastoreId(ctx, d.Id())
 				if err != nil {
 					return err
@@ -158,7 +159,7 @@ func ResourceMetastore() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var update catalog.UpdateAccountsMetastore
 				common.DataToStructPointer(d, s, &update)
 				updateForceSendFieldsAccountLevel(&update)
@@ -242,7 +243,7 @@ func ResourceMetastore() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				_, err := acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
 				return err
 			}, func(w *databricks.WorkspaceClient) error {

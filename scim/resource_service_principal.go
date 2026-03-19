@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/slices"
 
@@ -15,15 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
-func NewServicePrincipalsAPI(ctx context.Context, m any) ServicePrincipalsAPI {
-	return ServicePrincipalsAPI{m.(*common.DatabricksClient), ctx}
+// NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta.
+// apiLevel controls whether account-level or workspace-level SCIM endpoints are used.
+// Pass "" to infer from the provider host.
+func NewServicePrincipalsAPI(ctx context.Context, m any, apiLevel string) ServicePrincipalsAPI {
+	return ServicePrincipalsAPI{client: m.(*common.DatabricksClient), context: ctx, ApiLevel: apiLevel}
 }
 
 // ServicePrincipalsAPI exposes the scim servicePrincipal API
 type ServicePrincipalsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
+	client   *common.DatabricksClient
+	context  context.Context
+	ApiLevel string
 }
 
 // CreateR ..
@@ -31,7 +33,7 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	if rsp.Schemas == nil {
 		rsp.Schemas = []URN{ServicePrincipalSchema}
 	}
-	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp, &sp)
+	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp, &sp, a.ApiLevel)
 	return sp, err
 }
 
@@ -41,7 +43,7 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string, attributes string)
 		attrs = "?attributes=" + attributes
 	}
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v%s", servicePrincipalID, attrs)
-	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
+	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp, a.ApiLevel)
 	return
 }
 
@@ -55,7 +57,7 @@ func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User
 	if excludeRoles {
 		req["excludedAttributes"] = "roles"
 	}
-	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps)
+	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps, a.ApiLevel)
 	if err != nil {
 		return
 	}
@@ -65,7 +67,7 @@ func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User
 
 // Patch updates resource-friendly entity
 func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) error {
-	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil, a.ApiLevel)
 }
 
 // Update replaces resource-friendly-entity
@@ -81,18 +83,18 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 	updateRequest.Roles = servicePrincipal.Roles
 	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
-		updateRequest, nil)
+		updateRequest, nil, a.ApiLevel)
 }
 
 func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, entitlements patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch,
-		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), entitlements, nil)
+		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), entitlements, nil, a.ApiLevel)
 }
 
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
-	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil)
+	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil, a.ApiLevel)
 }
 
 // ResourceServicePrincipal manages service principals within workspace
@@ -106,6 +108,7 @@ func ResourceServicePrincipal() common.Resource {
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
+			common.AddApiField(m)
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -157,7 +160,7 @@ func ResourceServicePrincipal() common.Resource {
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
-			spAPI := NewServicePrincipalsAPI(ctx, c)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {
 				return createForceOverridesManuallyAddedServicePrincipal(err, d, spAPI, sp)
@@ -166,7 +169,8 @@ func ResourceServicePrincipal() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id(), userAttributes)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
+			sp, err := spAPI.Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
@@ -180,7 +184,8 @@ func ResourceServicePrincipal() common.Resource {
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
 			}
-			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
+			return spAPI.Update(d.Id(), User{
 				DisplayName:   d.Get("display_name").(string),
 				Active:        d.Get("active").(bool),
 				Entitlements:  readEntitlementsFromData(d),
@@ -189,10 +194,10 @@ func ResourceServicePrincipal() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			spAPI := NewServicePrincipalsAPI(ctx, c)
+			spAPI := NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d))
 			appId := d.Get("application_id").(string)
 			var err error = nil
-			isAccount := c.Config.HostType() == config.AccountHost && c.Config.AccountID != ""
+			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

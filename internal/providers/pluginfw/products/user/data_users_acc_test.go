@@ -1,6 +1,8 @@
 package user_test
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -162,5 +164,61 @@ func TestWorkspaceDataSourceUsers_WithGroups(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),
+	})
+}
+
+func dataUsersProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	data "databricks_users" "this" {
+		filter = "userName co \"testuser\""
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestAccDataSourceUsers_ProviderConfig_Invalid(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: dataUsersProviderConfigTemplate(`
+			provider_config {
+				workspace_id = "invalid"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id must be a valid integer`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccDataSourceUsers_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: dataUsersProviderConfigTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccDataSourceUsers_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: dataUsersProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`Attribute workspace_id string length must be at least 1`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccDataSourceUsers_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: dataUsersProviderConfigTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }

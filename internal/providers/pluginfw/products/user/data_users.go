@@ -34,6 +34,7 @@ type UsersList struct {
 	ExtraAttributes types.String `tfsdk:"extra_attributes"`
 	Users           types.List   `tfsdk:"users"`
 	Api             types.String `tfsdk:"api"`
+	tfschema.Namespace
 }
 
 func (UsersList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -41,13 +42,15 @@ func (UsersList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["extra_attributes"] = attrs["extra_attributes"].SetOptional()
 	attrs["api"] = attrs["api"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
 func (UsersList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"users": reflect.TypeOf(iam_tf.User{}),
+		"users":           reflect.TypeOf(iam_tf.User{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -107,7 +110,12 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			resp.Diagnostics.AddError("Error listing account users", err.Error())
 		}
 	} else {
-		w, diags := d.Client.GetWorkspaceClient()
+		workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, usersInfo.ProviderConfig)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return

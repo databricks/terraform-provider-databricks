@@ -112,13 +112,11 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// First try to get the workspace client directly.
-	// This works for workspace and spog hosts.
 	w, err := c.getWorkspaceClientDirectly(ctx, workspaceID)
 	if err == nil {
 		return w, nil
 	}
 	// If above fails, try through account.
-	// This is needed for account hosts eg: accounts.cloud.databricks.com.
 	return c.getWorkspaceClientFromAccount(ctx, workspaceID)
 }
 
@@ -138,19 +136,18 @@ func (c *DatabricksClient) getWorkspaceClientDirectly(
 		return nil, err
 	}
 
-	// Check if the workspace ID specified in the resource matches
-	// the workspace ID of the provider configured workspace client.
-	w, err := c.WorkspaceClient()
+	// Create a new workspace client with WorkspaceID set on the config.
+	// This allows unified hosts to route requests to the correct workspace
+	// via the X-Databricks-Org-Id header.
+	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
 	if err != nil {
 		return nil, err
 	}
-
-	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	cfg.WorkspaceID = fmt.Sprintf("%d", workspaceIDInt)
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(cfg))
 	if err != nil {
 		return nil, err
 	}
-	// The provider is configured at the workspace level and the
-	// workspace ID matches
 	return w, nil
 }
 

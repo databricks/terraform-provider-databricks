@@ -462,13 +462,7 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_NoWorkspaceID(t *tes
 	assert.Equal(t, mockWS, w)
 }
 
-func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MatchingWorkspaceID(t *testing.T) {
-	mockWS := &databricks.WorkspaceClient{
-		Config: &config.Config{
-			Host:  "https://test.cloud.databricks.com",
-			Token: "test-token",
-		},
-	}
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_WithWorkspaceID(t *testing.T) {
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -476,23 +470,16 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MatchingWorkspaceID(
 				Token: "test-token",
 			},
 		},
-		cachedWorkspaceClient: mockWS,
-		cachedWorkspaceID:     12345,
 	}
 
-	// Workspace ID matches the cached workspace ID — returns workspace client directly.
+	// Creates a new workspace client with WorkspaceID set on the config.
 	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
 	assert.NoError(t, err)
-	assert.Equal(t, mockWS, w)
+	assert.NotNil(t, w)
+	assert.Equal(t, "12345", w.Config.WorkspaceID)
 }
 
-func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MismatchedWorkspaceID_FallsToAccount(t *testing.T) {
-	mockWS := &databricks.WorkspaceClient{
-		Config: &config.Config{
-			Host:  "https://test.cloud.databricks.com",
-			Token: "test-token",
-		},
-	}
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_DifferentWorkspaceID(t *testing.T) {
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -500,15 +487,13 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_MismatchedWorkspaceI
 				Token: "test-token",
 			},
 		},
-		cachedWorkspaceClient: mockWS,
-		cachedWorkspaceID:     12345,
 	}
 
-	// Mismatched workspace ID — direct path fails, falls through to account path which also fails.
+	// Different workspace ID — creates a new client targeting that workspace.
 	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
-	assert.Error(t, err)
-	assert.Nil(t, w)
-	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
+	assert.NoError(t, err)
+	assert.NotNil(t, w)
+	assert.Equal(t, "99999", w.Config.WorkspaceID)
 }
 
 func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WithWorkspaceID(t *testing.T) {

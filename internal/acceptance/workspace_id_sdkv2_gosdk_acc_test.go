@@ -184,8 +184,7 @@ func TestAccWorkspaceID_AccountNewSetup(t *testing.T) {
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			"",
 		),
-		Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-
+		Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 	})
 }
 
@@ -199,8 +198,7 @@ func TestAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
 				workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 			}`,
 		),
-		Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
-
+		Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
 	})
 }
 
@@ -224,8 +222,7 @@ func TestAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -237,8 +234,7 @@ func TestAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -260,8 +256,7 @@ func TestAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -273,8 +268,7 @@ func TestAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -294,8 +288,7 @@ func TestAccWorkspaceID_AddOverrideSame(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -309,8 +302,7 @@ func TestAccWorkspaceID_AddOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -330,8 +322,7 @@ func TestAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -345,8 +336,7 @@ func TestAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -369,8 +359,7 @@ func TestAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -382,8 +371,7 @@ func TestAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -408,8 +396,7 @@ func TestAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -421,8 +408,7 @@ func TestAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -442,8 +428,7 @@ func TestAccWorkspaceID_ChangeDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -455,8 +440,7 @@ func TestAccWorkspaceID_ChangeDefault(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -479,8 +463,7 @@ func TestAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock(
@@ -494,8 +477,7 @@ func TestAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -528,7 +510,6 @@ func TestAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in provider_config or the provider configuration`,
 		),
-
 	})
 }
 
@@ -579,15 +560,13 @@ func TestAccWorkspaceID_RemoveDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: directoryWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
 				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
 			),
-	
 		},
 	)
 }

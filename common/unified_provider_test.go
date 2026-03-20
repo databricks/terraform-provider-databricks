@@ -556,7 +556,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:   "When workspace_id is invalid, should return error",
 		},
 		{
-			name: "account level provider without workspace_id - returns error",
+			name: "account level provider without workspace_id - returns current client",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -569,9 +569,9 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id",
-			description:   "Account-level provider without workspace_id should return error",
+			expectError:      false,
+			expectSameClient: true,
+			description:      "Account-level provider without workspace_id returns current client for AccountOrWorkspaceRequest routing",
 		},
 		{
 			name: "workspace_id mismatch - returns error",

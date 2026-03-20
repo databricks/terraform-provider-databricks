@@ -181,8 +181,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			"",
 		),
-		Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-
+		Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 	})
 }
 
@@ -196,8 +195,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 				workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 			}`,
 		),
-		Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-
+		Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
 	})
 }
 
@@ -221,8 +219,7 @@ func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -234,8 +231,7 @@ func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -257,8 +253,7 @@ func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -270,8 +265,7 @@ func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -291,8 +285,7 @@ func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -306,8 +299,7 @@ func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -327,8 +319,7 @@ func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -342,8 +333,7 @@ func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -366,8 +356,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -379,8 +368,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -405,8 +393,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -418,8 +405,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -439,8 +425,7 @@ func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -452,8 +437,7 @@ func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -476,8 +460,7 @@ func TestAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -491,8 +474,7 @@ func TestAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -525,7 +507,6 @@ func TestAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in provider_config or the provider configuration`,
 		),
-
 	})
 }
 
@@ -576,15 +557,13 @@ func TestAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-	
+			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tokenWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
 				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
 			),
-	
 		},
 	)
 }

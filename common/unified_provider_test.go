@@ -1023,3 +1023,82 @@ func TestNamespaceCustomizeDiff_ForceNewOnChange(t *testing.T) {
 	require.True(t, ok, "workspace_id should be in diff attributes")
 	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
 }
+
+func TestGetDatabricksClientForUnifiedProvider_CopiesCommandFactory(t *testing.T) {
+	// Setup: parent client with commandFactory set via WithCommandMock
+	parentClient := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+	}
+	parentClient.WithCommandMock(func(commandStr string) CommandResults {
+		return CommandResults{ResultType: "text", Data: "mock"}
+	})
+
+	// Verify parent's CommandExecutor works
+	assert.NotPanics(t, func() {
+		parentClient.CommandExecutor(context.Background())
+	}, "parent client should have a working CommandExecutor")
+
+	// Pre-cache an inner client for workspace ID 123456
+	innerClient := &client.DatabricksClient{
+		Config: &config.Config{
+			Host:  "https://workspace-123456.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	parentClient.cachedDatabricksClients = map[int64]*client.DatabricksClient{
+		123456: innerClient,
+	}
+
+	// Call getDatabricksClientForUnifiedProvider — returned client must have
+	// commandFactory copied from the parent so CommandExecutor works.
+	result, err := parentClient.getDatabricksClientForUnifiedProvider(
+		context.Background(), "123456",
+	)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.NotPanics(t, func() {
+		result.CommandExecutor(context.Background())
+	}, "returned client should have commandFactory copied from parent")
+
+	// Also verify via the public entry point DatabricksClientForUnifiedProvider
+	testSchema := map[string]*schema.Schema{
+		"provider_config": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workspace_id": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+	d := schema.TestResourceDataRaw(t, testSchema, map[string]any{
+		"name": "test",
+		"provider_config": []any{
+			map[string]any{
+				"workspace_id": "123456",
+			},
+		},
+	})
+	result2, err := parentClient.DatabricksClientForUnifiedProvider(
+		context.Background(), d,
+	)
+	require.NoError(t, err)
+	require.NotNil(t, result2)
+	assert.NotPanics(t, func() {
+		result2.CommandExecutor(context.Background())
+	}, "client from DatabricksClientForUnifiedProvider should have commandFactory")
+}

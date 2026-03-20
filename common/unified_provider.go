@@ -272,6 +272,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
 			return &DatabricksClient{
 				DatabricksClient: client,
+				commandFactory:   c.commandFactory,
 			}, nil
 		}
 	}
@@ -286,6 +287,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	// Return the Databricks Client.
 	return &DatabricksClient{
 		DatabricksClient: c.cachedDatabricksClients[workspaceIDInt],
+		commandFactory:   c.commandFactory,
 	}, nil
 }
 

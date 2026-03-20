@@ -29,7 +29,7 @@ func jobClusterTemplate(provider_config string) string {
 	}
 
 	resource "databricks_notebook" "this" {
-		path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+		path     = "${data.databricks_current_user.me.home}/Terraform{var.STICKY_RANDOM}"
 		language = "PYTHON"
 		content_base64 = base64encode(<<-EOT
 			# created from ${abspath(path.module)}
@@ -39,7 +39,7 @@ func jobClusterTemplate(provider_config string) string {
 	}
 
 	resource "databricks_job" "this" {
-		name = "{var.RANDOM}"
+		name = "{var.STICKY_RANDOM}"
 
 		%s
 

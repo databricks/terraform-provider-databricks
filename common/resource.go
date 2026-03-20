@@ -6,12 +6,56 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// populateProviderConfigInState writes the effective workspace ID into
+// provider_config in the resource state.
+//
+// During refresh reads (terraform plan), the prior state value must be preserved
+// so that CustomizeDiff can compare the old effective workspace ID against the
+// new one and trigger ForceNew when they differ. If this hook resolved the "new
+// effective" workspace ID and wrote it during refresh, it would overwrite the old
+// value before CustomizeDiff runs, making workspace-change detection impossible.
+//
+// Therefore this hook only resolves from provider-level sources (workspace_id,
+// host) on the first time — when no workspace ID exists in state yet (after Create).
+// On subsequent reads, it preserves whatever is already in state.
+func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	// If provider_config.workspace_id already exists in state, preserve it.
+	// During refresh reads the state value reflects the workspace the Read
+	// actually targeted. Overwriting it would prevent CustomizeDiff from
+	// detecting workspace changes.
+	if existing := d.Get(workspaceIDSchemaKey); existing != nil {
+		if existingStr, ok := existing.(string); ok && existingStr != "" {
+			d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}})
+			return nil
+		}
+	}
+
+	// No workspace ID in state yet (first time — after Create/Import).
+	// Resolve from provider config to populate state for the first time:
+	// 1. provider_config.workspace_id from raw config
+	// 2. workspace_id from provider
+	// 3. cachedWorkspaceID (workspace host, primed during provider init)
+	wsID, _ := workspaceIDFromRawConfig(d)
+	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
+		wsID = c.Config.WorkspaceID
+	}
+	if wsID == "" && c.cachedWorkspaceID != 0 {
+		wsID = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	}
+
+	if wsID != "" {
+		d.Set("provider_config", []map[string]any{{"workspace_id": wsID}})
+	}
+	return nil
+}
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {

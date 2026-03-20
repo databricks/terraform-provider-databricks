@@ -26,8 +26,9 @@ import (
 // TEST_WORKSPACE_URL must correspond to TEST_WORKSPACE_ID.
 // Account credentials (OAuth) must work against TEST_WORKSPACE_URL directly.
 //
-// These tests use databricks_directory (Go SDK resource via WorkspaceClientUnifiedProvider)
-// to validate the unified provider plumbing. It has no dependencies and is fast to create.
+// These tests use databricks_directory (SDKv2 resource using Go SDK via
+// WorkspaceClientUnifiedProvider) to validate the unified provider plumbing.
+// It has no dependencies and is fast to create.
 
 // ==========================================
 // State Check Helpers
@@ -171,13 +172,13 @@ func TestAccWorkspaceID_WS_ChangeProviderConfig(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 1: New unified provider setup
+// Account-Level: New Setup
 // ==========================================
 //
 // Account provider + workspace_id → create workspace-level resource.
 // Verifies: resource created, state has correct provider_config.0.workspace_id.
 
-func TestAccWorkspaceID_CUJ1_NewSetup(t *testing.T) {
+func TestAccWorkspaceID_AccountNewSetup(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -188,10 +189,9 @@ func TestAccWorkspaceID_CUJ1_NewSetup(t *testing.T) {
 	})
 }
 
-// TestAccWorkspaceID_CUJ1_NewSetupWithOverride tests the second half of CUJ 1:
-// one resource uses the default, another overrides with provider_config.
-// We test the override path: provider_config.workspace_id takes precedence.
-func TestAccWorkspaceID_CUJ1_NewSetupWithOverride(t *testing.T) {
+// TestAccWorkspaceID_AccountNewSetupWithOverride tests that provider_config.workspace_id
+// takes precedence over the provider-level workspace_id.
+func TestAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -205,7 +205,7 @@ func TestAccWorkspaceID_CUJ1_NewSetupWithOverride(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 2: Migration — same workspace
+// Migration: Same Workspace
 // ==========================================
 //
 // Existing resource on workspace-level provider. Switch to account provider
@@ -217,7 +217,7 @@ func TestAccWorkspaceID_CUJ1_NewSetupWithOverride(t *testing.T) {
 //
 // Requires: account-level OAuth credentials that also work against the workspace host.
 
-func TestAccWorkspaceID_CUJ2_MigrationSameWorkspace(t *testing.T) {
+func TestAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -244,16 +244,16 @@ func TestAccWorkspaceID_CUJ2_MigrationSameWorkspace(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 3: Migration — different workspace
+// Migration: Different Workspace
 // ==========================================
 //
-// Same as CUJ 2, but workspace_id points to a DIFFERENT workspace.
+// Same as MigrationSameWorkspace, but workspace_id points to a DIFFERENT workspace.
 // Expected: ForceNew (destroy in old workspace, recreate in new).
 //
 // Step 1: provider { host = TEST_WORKSPACE_URL } → create in workspace 1.
 // Step 2: provider { workspace_id = TEST_WORKSPACE_ID_2 } → ForceNew.
 
-func TestAccWorkspaceID_CUJ3_MigrationDiffWorkspace(t *testing.T) {
+func TestAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -280,14 +280,14 @@ func TestAccWorkspaceID_CUJ3_MigrationDiffWorkspace(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 4: Add provider_config override (same workspace)
+// Add provider_config Override (Same Workspace)
 // ==========================================
 //
 // Resource was created using workspace_id. User adds explicit
 // provider_config with the SAME workspace ID.
 // Expected: Noop. State already has the same value from the default; no diff.
 
-func TestAccWorkspaceID_CUJ4_AddOverrideSame(t *testing.T) {
+func TestAccWorkspaceID_AddOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -316,14 +316,14 @@ func TestAccWorkspaceID_CUJ4_AddOverrideSame(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 5: Add provider_config override (different workspace)
+// Add provider_config Override (Different Workspace)
 // ==========================================
 //
 // Resource was created using workspace_id = TEST_WORKSPACE_ID.
 // User adds provider_config { workspace_id = TEST_WORKSPACE_ID_2 }.
 // Expected: ForceNew (effective workspace changes).
 
-func TestAccWorkspaceID_CUJ5_AddOverrideDiff(t *testing.T) {
+func TestAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -352,7 +352,7 @@ func TestAccWorkspaceID_CUJ5_AddOverrideDiff(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 6: Remove provider_config override (falls back to same default)
+// Remove provider_config Override (Falls Back to Same Default)
 // ==========================================
 //
 // Resource has provider_config { workspace_id = X }. User removes it.
@@ -360,7 +360,7 @@ func TestAccWorkspaceID_CUJ5_AddOverrideDiff(t *testing.T) {
 // Expected: Noop. Optional+Computed preserves state value, and effective
 // workspace is unchanged (default fallback is the same value).
 
-func TestAccWorkspaceID_CUJ6_RemoveOverrideSame(t *testing.T) {
+func TestAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -389,7 +389,7 @@ func TestAccWorkspaceID_CUJ6_RemoveOverrideSame(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 7: Remove provider_config override (falls back to different default)
+// Remove provider_config Override (Falls Back to Different Default)
 // ==========================================
 //
 // Resource has provider_config { workspace_id = TEST_WORKSPACE_ID_2 }.
@@ -399,7 +399,7 @@ func TestAccWorkspaceID_CUJ6_RemoveOverrideSame(t *testing.T) {
 // Step 1: Create in TEST_WORKSPACE_ID_2 (override wins over default).
 // Step 2: Remove override → falls back to TEST_WORKSPACE_ID → ForceNew.
 
-func TestAccWorkspaceID_CUJ7_RemoveOverrideDiff(t *testing.T) {
+func TestAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -428,14 +428,14 @@ func TestAccWorkspaceID_CUJ7_RemoveOverrideDiff(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 8: Change workspace_id (no provider_config)
+// Change workspace_id (No provider_config)
 // ==========================================
 //
 // User changes workspace_id from TEST_WORKSPACE_ID to TEST_WORKSPACE_ID_2.
 // Resources have no explicit provider_config.
 // Expected: ForceNew for all affected resources.
 
-func TestAccWorkspaceID_CUJ8_ChangeDefault(t *testing.T) {
+func TestAccWorkspaceID_ChangeDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -462,7 +462,7 @@ func TestAccWorkspaceID_CUJ8_ChangeDefault(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 9: Change workspace_id (resource has explicit override)
+// Change workspace_id (Resource Has Explicit Override)
 // ==========================================
 //
 // User changes workspace_id from TEST_WORKSPACE_ID to TEST_WORKSPACE_ID_2.
@@ -470,7 +470,7 @@ func TestAccWorkspaceID_CUJ8_ChangeDefault(t *testing.T) {
 // Expected: Noop. The explicit override is the same value in both steps;
 // the default changed but the override shields the resource from any diff.
 
-func TestAccWorkspaceID_CUJ9_ChangeDefaultWithOverride(t *testing.T) {
+func TestAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -501,13 +501,13 @@ func TestAccWorkspaceID_CUJ9_ChangeDefaultWithOverride(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 10: Set workspace_id on workspace-level provider
+// Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
 // User accidentally sets workspace_id on a workspace-level provider.
 // Expected: configuration error at provider initialization.
 
-func TestAccWorkspaceID_CUJ10_DefaultOnWorkspaceProvider(t *testing.T) {
+func TestAccWorkspaceID_DefaultOnWorkspaceProvider(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template:    directoryWithProviderBlock(`workspace_id = "12345"`, ""),
 		ExpectError: regexp.MustCompile(`workspace_id cannot be used with a workspace-level provider; it is only supported when the provider is configured at the account level`),
@@ -516,13 +516,13 @@ func TestAccWorkspaceID_CUJ10_DefaultOnWorkspaceProvider(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 11: Account provider without workspace_id or provider_config
+// Account Provider Without workspace_id or provider_config
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during CRUD — no workspace_id available for routing.
 
-func TestAccWorkspaceID_CUJ11_NoDefaultNoOverride(t *testing.T) {
+func TestAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
@@ -533,7 +533,7 @@ func TestAccWorkspaceID_CUJ11_NoDefaultNoOverride(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 13: Provider upgrade (existing resources, no config changes)
+// Provider Upgrade (Existing Resources, No Config Changes)
 // ==========================================
 //
 // Approximation: create a resource at workspace level without any unified
@@ -542,7 +542,7 @@ func TestAccWorkspaceID_CUJ11_NoDefaultNoOverride(t *testing.T) {
 // This validates backward compatibility — the new provider_config schema
 // field doesn't cause unexpected diffs on existing resources.
 
-func TestAccWorkspaceID_CUJ13_ProviderUpgrade(t *testing.T) {
+func TestAccWorkspaceID_ProviderUpgrade(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
 			Template: directoryTemplate(""),
@@ -561,7 +561,7 @@ func TestAccWorkspaceID_CUJ13_ProviderUpgrade(t *testing.T) {
 }
 
 // ==========================================
-// CUJ 14: Remove workspace_id from provider config
+// Remove workspace_id from Provider Config
 // ==========================================
 //
 // User had workspace_id and resources relying on it (no explicit provider_config).
@@ -572,7 +572,7 @@ func TestAccWorkspaceID_CUJ13_ProviderUpgrade(t *testing.T) {
 // Step 1: Create with workspace_id.
 // Step 2: Remove workspace_id → plan error.
 
-func TestAccWorkspaceID_CUJ14_RemoveDefault(t *testing.T) {
+func TestAccWorkspaceID_RemoveDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -591,12 +591,3 @@ func TestAccWorkspaceID_CUJ14_RemoveDefault(t *testing.T) {
 		},
 	)
 }
-
-// ==========================================
-// CUJ 15: Provider downgrade
-// ==========================================
-//
-// Cannot be tested in acceptance tests. Provider downgrade to a version without
-// workspace_id support relies on standard Terraform behavior: unknown
-// attributes in state are silently dropped when the schema no longer includes them.
-// This is Terraform core behavior, not provider logic.

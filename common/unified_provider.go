@@ -125,7 +125,7 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		newEffective = strconv.FormatInt(c.cachedWorkspaceID, 10)
 	}
 
-	// CUJ-14: If a resource has a workspace ID in state but the new effective
+	// If a resource has a workspace ID in state but the new effective
 	// workspace ID is empty (user removed workspace_id and there's no
 	// explicit provider_config), error out. This prevents silently continuing
 	// to operate against a workspace the user thought they disconnected from.
@@ -244,9 +244,16 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	// If the workspace_id is not passed in the resource configuration, we don't need to create a new client
-	// and can return the current client.
+	// If the workspace_id is not passed in the resource configuration,
+	// fall back to workspace_id for account-level providers.
 	if workspaceID == "" {
+		if c.DatabricksClient != nil && c.Config.HostType() == config.AccountHost {
+			if c.Config.WorkspaceID != "" {
+				return c.getDatabricksClientForUnifiedProvider(ctx, c.Config.WorkspaceID)
+			}
+			return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+				"but none was found in provider_config or the provider configuration")
+		}
 		return c, nil
 	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
@@ -297,49 +304,6 @@ func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 		return rawValue.AsString(), true
 	}
 	return "", false
-}
-
-// populateProviderConfigInState writes the effective workspace ID into
-// provider_config in the resource state.
-//
-// During refresh reads (terraform plan), the prior state value must be preserved
-// so that CustomizeDiff can compare the old effective workspace ID against the
-// new one and trigger ForceNew when they differ. If this hook resolved the "new
-// effective" workspace ID and wrote it during refresh, it would overwrite the old
-// value before CustomizeDiff runs, making workspace-change detection impossible.
-//
-// Therefore this hook only resolves from provider-level sources (workspace_id,
-// host) on the first time — when no workspace ID exists in state yet (after Create).
-// On subsequent reads, it preserves whatever is already in state.
-func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	// If provider_config.workspace_id already exists in state, preserve it.
-	// During refresh reads the state value reflects the workspace the Read
-	// actually targeted. Overwriting it would prevent CustomizeDiff from
-	// detecting workspace changes.
-	if existing := d.Get(workspaceIDSchemaKey); existing != nil {
-		if existingStr, ok := existing.(string); ok && existingStr != "" {
-			d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}})
-			return nil
-		}
-	}
-
-	// No workspace ID in state yet (first time — after Create/Import).
-	// Resolve from provider config to populate state for the first time:
-	// 1. provider_config.workspace_id from raw config
-	// 2. workspace_id from provider
-	// 3. cachedWorkspaceID (workspace host, primed during provider init)
-	wsID, _ := workspaceIDFromRawConfig(d)
-	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
-		wsID = c.Config.WorkspaceID
-	}
-	if wsID == "" && c.cachedWorkspaceID != 0 {
-		wsID = strconv.FormatInt(c.cachedWorkspaceID, 10)
-	}
-
-	if wsID != "" {
-		d.Set("provider_config", []map[string]any{{"workspace_id": wsID}})
-	}
-	return nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.

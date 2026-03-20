@@ -158,7 +158,7 @@ func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -209,7 +209,7 @@ func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
 		Template: jobClusterTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

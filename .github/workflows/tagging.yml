@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.DECO_SDK_TAGGING_APP_ID }}
           private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}

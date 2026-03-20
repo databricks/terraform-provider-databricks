@@ -287,6 +287,7 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
@@ -523,7 +524,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("initial_endpoint_spec,spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
 	}
 
 	var namespace ProviderConfig

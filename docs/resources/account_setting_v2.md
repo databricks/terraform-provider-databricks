@@ -79,6 +79,8 @@ The following arguments are supported:
 
 ### RestrictWorkspaceAdminsMessage
 * `status` (string, required) - Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
+* `disable_gov_tag_creation` (boolean, optional) - When true, workspace admins cannot create governance tags.
+  ALLOW_ALL status does not override this; they are independent
 
 ### StringMessage
 * `value` (string, optional) - Represents a generic string value

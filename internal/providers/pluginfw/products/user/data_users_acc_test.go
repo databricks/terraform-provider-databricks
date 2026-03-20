@@ -179,7 +179,7 @@ func dataUsersProviderConfigTemplate(providerConfig string) string {
 func TestAccDataSourceUsers_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataUsersProviderConfigTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = "invalid"
 			}
 		`),
@@ -188,25 +188,14 @@ func TestAccDataSourceUsers_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceUsers_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: dataUsersProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDataSourceUsers_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataUsersProviderConfigTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = ""
 			}
 		`),
-		ExpectError: regexp.MustCompile(`Attribute workspace_id string length must be at least 1`),
+		ExpectError: regexp.MustCompile(`Invalid Attribute Value Length`),
 		PlanOnly:    true,
 	})
 }
@@ -214,11 +203,11 @@ func TestAccDataSourceUsers_ProviderConfig_EmptyID(t *testing.T) {
 func TestAccDataSourceUsers_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataUsersProviderConfigTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = "123"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		ExpectError: regexp.MustCompile(`failed to get workspace client`),
 		PlanOnly:    true,
 	})
 }

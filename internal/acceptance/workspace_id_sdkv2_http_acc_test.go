@@ -182,7 +182,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
 			"",
 		),
 		Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+
 	})
 }
 
@@ -197,7 +197,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 			}`,
 		),
 		Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+
 	})
 }
 
@@ -222,7 +222,7 @@ func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -235,7 +235,7 @@ func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -258,7 +258,7 @@ func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -271,7 +271,7 @@ func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -292,7 +292,7 @@ func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -307,7 +307,7 @@ func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -328,7 +328,7 @@ func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -343,7 +343,7 @@ func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -367,7 +367,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 				}`,
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -380,7 +380,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -406,7 +406,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 				}`,
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -419,7 +419,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -440,7 +440,7 @@ func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -453,7 +453,7 @@ func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -477,7 +477,7 @@ func TestAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 				}`,
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock(
@@ -492,7 +492,7 @@ func TestAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 				},
 			},
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }
@@ -525,7 +525,7 @@ func TestAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in provider_config or the provider configuration`,
 		),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+
 	})
 }
 
@@ -577,14 +577,14 @@ func TestAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 				"",
 			),
 			Check:                    checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 		Step{
 			Template: tokenWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
 				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
 			),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+	
 		},
 	)
 }

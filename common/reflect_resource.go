@@ -568,7 +568,8 @@ func isGoSdk(v reflect.Value) bool {
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,
-	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
+	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error,
+) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
 		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
@@ -639,7 +640,8 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			v = v.Elem()
 		}
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema,
-			path []string, valueField *reflect.Value) error {
+			path []string, valueField *reflect.Value,
+		) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.Interface()
 			fieldPath := strings.Join(path, ".")
@@ -695,8 +697,9 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	return iterFields(v, []string{}, s, aliases, func(
-		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	err := iterFields(v, []string{}, s, aliases, func(
+		fieldSchema *schema.Schema, path []string, valueField *reflect.Value,
+	) error {
 		fieldValue := valueField.Interface()
 		if fieldValue == nil {
 			return nil
@@ -705,11 +708,17 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
 			return nil
 		}
-		_, configured := d.GetOk(fieldPath)
-		if !d.IsNewResource() && !fieldSchema.Computed && !configured {
-			log.Printf("[TRACE] Removing default fields sent back by server: %s - %#v",
-				fieldPath, fieldValue)
-			return nil
+		// For optional boolean fields, always set them even if not configured to enable drift detection.
+		// GetOk returns false for unconfigured bools, which prevents detecting changes made outside
+		// of Terraform (see https://github.com/databricks/terraform-provider-databricks/issues/4018).
+		// For non-boolean fields, skip setting if not configured to avoid setting defaults.
+		if !d.IsNewResource() && !fieldSchema.Computed && fieldSchema.Type != schema.TypeBool {
+			_, configured := d.GetOk(fieldPath)
+			if !configured {
+				log.Printf("[TRACE] Removing default fields sent back by server: %s - %#v",
+					fieldPath, fieldValue)
+				return nil
+			}
 		}
 		switch fieldSchema.Type {
 		case schema.TypeList, schema.TypeSet:
@@ -734,6 +743,24 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			return d.Set(fieldPath, fieldValue)
 		}
 	})
+	if err != nil {
+		return err
+	}
+	// Materialize defaults for optional, non-computed fields not backed by the
+	// struct (e.g. force_destroy). iterFields only visits struct fields, so
+	// schema-only fields stay null in state after import. During planning SDKv2
+	// resolves null to the schema Default (usually false for bools, "" for
+	// strings, 0 for ints), creating a state/plan mismatch that triggers
+	// "inconsistent final plan" errors. Re-setting them here collapses null to
+	// the concrete default so state and plan agree.
+	for name, fieldSchema := range s {
+		if fieldSchema.Optional && !fieldSchema.Computed && fieldSchema.Default != nil {
+			if _, ok := d.GetOk(name); !ok {
+				d.Set(name, d.Get(name))
+			}
+		}
+	}
+	return nil
 }
 
 // attributeGetter is a generalization between schema.ResourceDiff & schema.ResourceData
@@ -792,9 +819,11 @@ func getAliasesMapFromStruct(s any) map[string]map[string]string {
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,
-	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
+	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string,
+) error {
 	return iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema,
-		path []string, valueField *reflect.Value) error {
+		path []string, valueField *reflect.Value,
+	) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
@@ -847,7 +876,8 @@ func readReflectValueFromData(path []string, d attributeGetter,
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,
-	ivalue any, fieldPath, key string) (rv reflect.Value, err error) {
+	ivalue any, fieldPath, key string,
+) (rv reflect.Value, err error) {
 	switch rk {
 	case reflect.String:
 		return reflect.ValueOf(fmt.Sprintf("%v", ivalue)), nil
@@ -892,7 +922,8 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 
 func readListFromData(path []string, d attributeGetter,
 	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]map[string]string,
-	offsetConverter func(i int) string) error {
+	offsetConverter func(i int) string,
+) error {
 	if len(rawList) == 0 {
 		return nil
 	}
@@ -952,7 +983,8 @@ func readListFromData(path []string, d attributeGetter,
 }
 
 func setPrimitiveValueOfKind(
-	fieldPath string, k reflect.Kind, item reflect.Value, elem any) error {
+	fieldPath string, k reflect.Kind, item reflect.Value, elem any,
+) error {
 	switch k {
 	case reflect.String:
 		v, ok := elem.(string)

@@ -82,6 +82,8 @@ The following attributes are exported:
 * `value` (string) - Possible values are: `DELEGATE`, `ON`
 
 ### RestrictWorkspaceAdminsMessage
+* `disable_gov_tag_creation` (boolean) - When true, workspace admins cannot create governance tags.
+  ALLOW_ALL status does not override this; they are independent
 * `status` (string) - Possible values are: `ALLOW_ALL`, `RESTRICT_TOKENS_AND_JOB_RUN_AS`
 
 ### StringMessage

@@ -15,6 +15,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUcAccCatalogForceDestroyConsistentAfterImport(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	template := `
+		resource "databricks_catalog" "test" {
+			name          = "sandbox{var.STICKY_RANDOM}"
+			comment       = "test force_destroy import consistency"
+		}`
+	acceptance.UnityWorkspaceLevel(t,
+		acceptance.Step{
+			Template: template,
+		},
+		acceptance.Step{
+			ImportState:       true,
+			ResourceName:      "databricks_catalog.test",
+			ImportStateVerify: true,
+		},
+	)
+}
+
 func TestUcAccCatalog(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{

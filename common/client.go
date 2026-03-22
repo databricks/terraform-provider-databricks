@@ -131,7 +131,7 @@ func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	}
 	if workspaceID == "" {
 		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
-			"but none was found in provider_config or the provider configuration")
+			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
 	}
 
 	// Parse the workspace ID to int.

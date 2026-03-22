@@ -132,7 +132,7 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	if oldEffective != "" && newEffective == "" && c.Config.HostType() != config.WorkspaceHost {
 		return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
 			"but managing workspace-level resources requires a workspace_id and "+
-			"none was found in provider_config or the provider configuration", oldEffective)
+			"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)
 	}
 
 	if oldEffective != "" && newEffective != "" && oldEffective != newEffective {

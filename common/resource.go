@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,13 +45,21 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	// Resolve from provider config to populate state for the first time:
 	// 1. provider_config.workspace_id from raw config
 	// 2. workspace_id from provider
-	// 3. cachedWorkspaceID (workspace host, primed during provider init)
+	// 3. CurrentWorkspaceID (lazily resolved from workspace host via API call, then cached)
 	wsID, _ := workspaceIDFromRawConfig(d)
 	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
 		wsID = c.Config.WorkspaceID
 	}
-	if wsID == "" && c.cachedWorkspaceID != 0 {
-		wsID = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	if wsID == "" {
+		resolvedID, err := c.CurrentWorkspaceID(ctx)
+		if err == nil && resolvedID != 0 {
+			wsID = strconv.FormatInt(resolvedID, 10)
+		} else if err != nil && c.Config != nil && c.Config.HostType() == config.WorkspaceHost {
+			// Only error for workspace-level providers. For account-level (and
+			// unified) providers, this path is reached by account-scoped resources
+			// that don't need a workspace ID, so a resolution failure is expected.
+			return fmt.Errorf("failed to resolve workspace ID from host: %w", err)
+		}
 	}
 
 	if wsID != "" {

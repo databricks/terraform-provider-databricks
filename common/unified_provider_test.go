@@ -1516,6 +1516,7 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 		providerWSID      string // provider-level workspace_id (Config.WorkspaceID)
 		cachedWorkspaceID int64
 		expectedWSID      string
+		expectError       bool
 	}{
 		// --- First time (no state) scenarios: resolve from provider ---
 		{
@@ -1538,9 +1539,10 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 			expectedWSID:      "1111111111",
 		},
 		{
-			name:         "first time - no sources available",
+			name:         "first time - no sources available (workspace provider errors)",
 			existingWSID: "",
 			expectedWSID: "",
+			expectError:  true,
 		},
 		// --- Subsequent reads (has state) scenarios: preserve state ---
 		{
@@ -1583,6 +1585,10 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 			}
 
 			err := populateProviderConfigInState(context.Background(), d, c)
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			wsID := d.Get("provider_config.0.workspace_id")

@@ -33,7 +33,9 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	// detecting workspace changes.
 	if existing := d.Get(workspaceIDSchemaKey); existing != nil {
 		if existingStr, ok := existing.(string); ok && existingStr != "" {
-			d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}})
+			if err := d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}}); err != nil {
+				return fmt.Errorf("failed to set provider_config in state: %w", err)
+			}
 			return nil
 		}
 	}
@@ -52,7 +54,9 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if wsID != "" {
-		d.Set("provider_config", []map[string]any{{"workspace_id": wsID}})
+		if err := d.Set("provider_config", []map[string]any{{"workspace_id": wsID}}); err != nil {
+			return fmt.Errorf("failed to set provider_config in state: %w", err)
+		}
 	}
 	return nil
 }

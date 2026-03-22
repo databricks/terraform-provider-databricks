@@ -83,7 +83,7 @@ func directoryWithProviderBlock(providerAttrs, providerConfig string) string {
 // invalid workspace_id values in the provider block are rejected.
 // The SDK's workspace_id field does not have schema-level validation,
 // so invalid values are caught during workspace client creation.
-func TestAccWorkspaceID_InvalidWorkspaceID(t *testing.T) {
+func TestMwsAccWorkspaceID_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    directoryWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
@@ -178,7 +178,7 @@ func TestAccWorkspaceID_WS_ChangeProviderConfig(t *testing.T) {
 // Account provider + workspace_id → create workspace-level resource.
 // Verifies: resource created, state has correct provider_config.0.workspace_id.
 
-func TestAccWorkspaceID_AccountNewSetup(t *testing.T) {
+func TestMwsAccWorkspaceID_AccountNewSetup(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -190,7 +190,7 @@ func TestAccWorkspaceID_AccountNewSetup(t *testing.T) {
 
 // TestAccWorkspaceID_AccountNewSetupWithOverride tests that provider_config.workspace_id
 // takes precedence over the provider-level workspace_id.
-func TestAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
+func TestMwsAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -215,7 +215,7 @@ func TestAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
 //
 // Requires: account-level OAuth credentials that also work against the workspace host.
 
-func TestAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
+func TestMwsAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -249,7 +249,7 @@ func TestAccWorkspaceID_MigrationSameWorkspace(t *testing.T) {
 // Step 1: provider { host = TEST_WORKSPACE_URL } → create in workspace 1.
 // Step 2: provider { workspace_id = TEST_WORKSPACE_ID_2 } → ForceNew.
 
-func TestAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
+func TestMwsAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -281,7 +281,7 @@ func TestAccWorkspaceID_MigrationDiffWorkspace(t *testing.T) {
 // provider_config with the SAME workspace ID.
 // Expected: Noop. State already has the same value from the default; no diff.
 
-func TestAccWorkspaceID_AddOverrideSame(t *testing.T) {
+func TestMwsAccWorkspaceID_AddOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -315,7 +315,7 @@ func TestAccWorkspaceID_AddOverrideSame(t *testing.T) {
 // User adds provider_config { workspace_id = TEST_WORKSPACE_ID_2 }.
 // Expected: ForceNew (effective workspace changes).
 
-func TestAccWorkspaceID_AddOverrideDiff(t *testing.T) {
+func TestMwsAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -350,7 +350,7 @@ func TestAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 // Expected: Noop. Optional+Computed preserves state value, and effective
 // workspace is unchanged (default fallback is the same value).
 
-func TestAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
+func TestMwsAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -387,7 +387,7 @@ func TestAccWorkspaceID_RemoveOverrideSame(t *testing.T) {
 // Step 1: Create in TEST_WORKSPACE_ID_2 (override wins over default).
 // Step 2: Remove override → falls back to TEST_WORKSPACE_ID → ForceNew.
 
-func TestAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
+func TestMwsAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -421,7 +421,7 @@ func TestAccWorkspaceID_RemoveOverrideDiff(t *testing.T) {
 // Resources have no explicit provider_config.
 // Expected: ForceNew for all affected resources.
 
-func TestAccWorkspaceID_ChangeDefault(t *testing.T) {
+func TestMwsAccWorkspaceID_ChangeDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -454,7 +454,7 @@ func TestAccWorkspaceID_ChangeDefault(t *testing.T) {
 // Expected: Noop. The explicit override is the same value in both steps;
 // the default changed but the override shields the resource from any diff.
 
-func TestAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
+func TestMwsAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(
@@ -504,7 +504,7 @@ func TestAccWorkspaceID_DefaultOnWorkspaceProvider(t *testing.T) {
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during CRUD — no workspace_id available for routing.
 
-func TestAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
+func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
@@ -553,7 +553,7 @@ func TestAccWorkspaceID_ProviderUpgrade(t *testing.T) {
 // Step 1: Create with workspace_id.
 // Step 2: Remove workspace_id → plan error.
 
-func TestAccWorkspaceID_RemoveDefault(t *testing.T) {
+func TestMwsAccWorkspaceID_RemoveDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: directoryWithProviderBlock(

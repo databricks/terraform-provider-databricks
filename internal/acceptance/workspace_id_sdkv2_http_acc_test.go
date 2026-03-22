@@ -80,7 +80,7 @@ func tokenWithProviderBlock(providerAttrs, providerConfig string) string {
 
 // TestAccWorkspaceIDHttp_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
-func TestAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    tokenWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
@@ -175,7 +175,7 @@ func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 // Account provider + workspace_id → create workspace-level resource.
 // Verifies: resource created, state has correct provider_config.0.workspace_id.
 
-func TestAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tokenWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -187,7 +187,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
 
 // TestAccWorkspaceIDHttp_AccountNewSetupWithOverride tests that provider_config.workspace_id
 // takes precedence over the provider-level workspace_id.
-func TestAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tokenWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -212,7 +212,7 @@ func TestAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 //
 // Requires: account-level OAuth credentials that also work against the workspace host.
 
-func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -246,7 +246,7 @@ func TestAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 // Step 1: provider { host = TEST_WORKSPACE_URL } → create in workspace 1.
 // Step 2: provider { workspace_id = TEST_WORKSPACE_ID_2 } → ForceNew.
 
-func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -278,7 +278,7 @@ func TestAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 // provider_config with the SAME workspace ID.
 // Expected: Noop. State already has the same value from the default; no diff.
 
-func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -312,7 +312,7 @@ func TestAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 // User adds provider_config { workspace_id = TEST_WORKSPACE_ID_2 }.
 // Expected: ForceNew (effective workspace changes).
 
-func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -347,7 +347,7 @@ func TestAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 // Expected: Noop. Optional+Computed preserves state value, and effective
 // workspace is unchanged (default fallback is the same value).
 
-func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -384,7 +384,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 // Step 1: Create in TEST_WORKSPACE_ID_2 (override wins over default).
 // Step 2: Remove override → falls back to TEST_WORKSPACE_ID → ForceNew.
 
-func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -418,7 +418,7 @@ func TestAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 // Resources have no explicit provider_config.
 // Expected: ForceNew for all affected resources.
 
-func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -451,7 +451,7 @@ func TestAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 // Expected: Noop. The explicit override is the same value in both steps;
 // the default changed but the override shields the resource from any diff.
 
-func TestAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(
@@ -501,7 +501,7 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider(t *testing.T) {
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during CRUD — no workspace_id available for routing.
 
-func TestAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tokenWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
@@ -550,7 +550,7 @@ func TestAccWorkspaceIDHttp_ProviderUpgrade(t *testing.T) {
 // Step 1: Create with workspace_id.
 // Step 2: Remove workspace_id → plan error.
 
-func TestAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
+func TestMwsAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
 			Template: tokenWithProviderBlock(

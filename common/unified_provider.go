@@ -245,12 +245,14 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
 	// If the workspace_id is not passed in the resource configuration,
-	// fall back to workspace_id for account-level providers.
-	// We don't error here when no workspace_id is found because the caller may
+	// fall back to the provider-level workspace_id. This is safe for all host
+	// types: workspace hosts with workspace_id are rejected at provider init,
+	// so Config.WorkspaceID being set here implies a non-workspace host.
+	// We don't error when no workspace_id is found because the caller may
 	// use AccountOrWorkspaceRequest to route to account APIs, which doesn't need
 	// a workspace-scoped client.
 	if workspaceID == "" {
-		if c.DatabricksClient != nil && c.Config.HostType() == config.AccountHost && c.Config.WorkspaceID != "" {
+		if c.DatabricksClient != nil && c.Config.WorkspaceID != "" {
 			return c.getDatabricksClientForUnifiedProvider(ctx, c.Config.WorkspaceID)
 		}
 		return c, nil

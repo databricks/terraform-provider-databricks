@@ -500,12 +500,19 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider(t *testing.T) {
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during CRUD — no workspace_id available for routing.
+//
+// Unlike the Go SDK path (TestMwsAccWorkspaceID_NoDefaultNoOverride), which
+// returns a clear "no workspace_id" error via GetWorkspaceClientForUnifiedProvider,
+// the HTTP path (DatabricksClientForUnifiedProvider) cannot validate early because
+// it doesn't know whether the caller needs a workspace-scoped or account-scoped
+// client. It returns the account-level client, which then fails at the API layer
+// with an OAuth error when the resource attempts a workspace-level operation.
 
 func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tokenWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`managing workspace-level resources requires a workspace_id, but none was found in provider_config or the provider configuration`,
+			`Unable to load OAuth Config`,
 		),
 	})
 }

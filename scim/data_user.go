@@ -80,7 +80,7 @@ func DataSourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, newClient)
+			usersAPI := NewUsersAPI(ctx, newClient, "")
 			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
 				return err

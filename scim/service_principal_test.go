@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -128,5 +129,25 @@ func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 		Template: awsSpn,
 	}, acceptance.Step{
 		Template: awsSpnRenamed,
+	})
+}
+
+func TestMwsAccServicePrincipalWithApiField(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `resource "databricks_service_principal" "this" {
+			display_name = "SPN {var.RANDOM}"
+			api = "account"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_service_principal.this", "api", "account"),
+	})
+}
+
+func TestAccServicePrincipalWithApiField(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `resource "databricks_service_principal" "this" {
+			display_name = "SPN {var.RANDOM}"
+			api = "workspace"
+		}`,
+		Check: resource.TestCheckResourceAttr("databricks_service_principal.this", "api", "workspace"),
 	})
 }

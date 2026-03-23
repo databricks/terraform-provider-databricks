@@ -366,7 +366,7 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedGroup(
 			fmt.Errorf("Group with name abc already exists."),
-			d, NewGroupsAPI(ctx, client), Group{
+			d, NewGroupsAPI(ctx, client, ""), Group{
 				DisplayName: "abc",
 			})
 		assert.EqualError(t, err, "cannot find group")
@@ -407,7 +407,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 		d.Set("display_name", "abc")
 		err := createForceOverridesManuallyAddedGroup(
 			fmt.Errorf("Group with name abc already exists."),
-			d, NewGroupsAPI(ctx, client), Group{
+			d, NewGroupsAPI(ctx, client, ""), Group{
 				DisplayName: "abc",
 			})
 		assert.NoError(t, err)

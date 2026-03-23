@@ -8344,7 +8344,7 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
 	DataAccessConfig types.List `tfsdk:"data_access_config"`
-	// Enable Serverless compute for SQL warehouses
+	// Deprecated: only setting this to true is allowed.
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
@@ -11089,8 +11089,9 @@ type ListWarehousesRequest struct {
 	// When paginating, all other parameters provided to `ListWarehouses` must
 	// match the call that provided the page token.
 	PageToken types.String `tfsdk:"-"`
-	// Service Principal which will be used to fetch the list of endpoints. If
-	// not specified, SQL Gateway will use the user from the session header.
+	// Deprecated: this field is ignored by the server. Service Principal which
+	// will be used to fetch the list of endpoints. If not specified, SQL
+	// Gateway will use the user from the session header.
 	RunAsUserId types.Int64 `tfsdk:"-"`
 }
 
@@ -14643,7 +14644,7 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
 	DataAccessConfig types.List `tfsdk:"data_access_config"`
-	// Enable Serverless compute for SQL warehouses
+	// Deprecated: only setting this to true is allowed.
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types

@@ -1,29 +1,23 @@
 # NEXT CHANGELOG
 
-## Release v1.111.0
+## Release v1.113.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add resource and data sources for `databricks_environments_workspace_base_environment`.
+* Add resource and data source for `databricks_environments_default_workspace_base_environment`.
 
-* Added `databricks_postgres_database` resource and data source.
-* Renamed `databricks_apps_space` to `databricks_app_space`.
-* Added `databricks_data_classification_catalog_config` resource and data source.
-* Added `databricks_knowledge_assistant` resource and data source.
-* Added `databricks_knowledge_assistant_knowledge_source` resource and data source.
+* Added `api` field to dual account/workspace resources (`databricks_user`, `databricks_service_principal`, `databricks_group`, `databricks_group_role`, `databricks_group_member`, `databricks_user_role`, `databricks_service_principal_role`, `databricks_user_instance_profile`, `databricks_group_instance_profile`, `databricks_metastore`, `databricks_metastore_assignment`, `databricks_metastore_data_access`, `databricks_storage_credential`, `databricks_service_principal_secret`, `databricks_access_control_rule_set`) to explicitly control whether account-level or workspace-level APIs are used. This enables support for unified hosts like `api.databricks.com` where the API level cannot be inferred from the host ([#5483](https://github.com/databricks/terraform-provider-databricks/pull/5483)).
 
 ### Bug Fixes
 
-### Documentation
+* Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
-* Added documentation note about whitespace handling in `MAP` column types for `databricks_sql_table`.
+### Documentation
 
 ### Exporter
 
 ### Internal Changes
 
-* Host-agnostic cloud detection via node type patterns, replacing host-URL-based `IsAws()`/`IsAzure()`/`IsGcp()` checks.
-* Use workspace `GetStatus` API to check parent folder existence before creating Lakeview dashboards, replacing fragile error string matching.
-* Use workspace `GetStatus` API to check parent folder existence before uploading workspace files, replacing fragile error string matching.
-* Skip `TestMwsAccNetworkConnectivityConfig` test to unblock merging PRs in the repository
-* Use workspace `GetStatus` API to check parent folder existence before importing notebooks, replacing fragile error string matching.
+* Use account host check instead of account ID check in `databricks_access_control_rule_set` to determine client type ([#5484](https://github.com/databricks/terraform-provider-databricks/pull/5484)).

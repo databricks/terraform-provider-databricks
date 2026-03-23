@@ -1716,6 +1716,10 @@ func (m PersonalComputeMessage_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RestrictWorkspaceAdminsMessage_SdkV2 struct {
+	// When true, workspace admins cannot create governance tags. ALLOW_ALL
+	// status does not override this; they are independent.
+	DisableGovTagCreation types.Bool `tfsdk:"disable_gov_tag_creation"`
+
 	Status types.String `tfsdk:"status"`
 }
 
@@ -1726,6 +1730,7 @@ func (to *RestrictWorkspaceAdminsMessage_SdkV2) SyncFieldsDuringRead(ctx context
 }
 
 func (m RestrictWorkspaceAdminsMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disable_gov_tag_creation"] = attrs["disable_gov_tag_creation"].SetOptional()
 	attrs["status"] = attrs["status"].SetRequired()
 
 	return attrs
@@ -1749,7 +1754,8 @@ func (m RestrictWorkspaceAdminsMessage_SdkV2) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"status": m.Status,
+			"disable_gov_tag_creation": m.DisableGovTagCreation,
+			"status":                   m.Status,
 		})
 }
 
@@ -1757,7 +1763,8 @@ func (m RestrictWorkspaceAdminsMessage_SdkV2) ToObjectValue(ctx context.Context)
 func (m RestrictWorkspaceAdminsMessage_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"status": types.StringType,
+			"disable_gov_tag_creation": types.BoolType,
+			"status":                   types.StringType,
 		},
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // groupMembersInfo is the set of members that belong to a group. Read and write access
@@ -118,12 +119,25 @@ var globalGroupsCache = newGroupCache()
 
 // ResourceGroupMember bind group with member
 func ResourceGroupMember() common.Resource {
-	return common.NewPairID("group_id", "member_id").BindResource(common.BindResource{
-		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c), groupID, memberID)
+	r := common.NewPairID("group_id", "member_id").Schema(func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		common.AddApiField(m)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
+		return m
+	}).BindResource(common.BindResource{
+		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c, common.GetApiLevel(d)), groupID, memberID)
 		},
-		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			members, err := globalGroupsCache.getMembers(NewGroupsAPI(ctx, c), groupID)
+		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			members, err := globalGroupsCache.getMembers(NewGroupsAPI(ctx, c, common.GetApiLevel(d)), groupID)
 			if err == nil && !hasMember(members, memberID) {
 				return &apierr.APIError{
 					ErrorCode:  "NOT_FOUND",
@@ -133,8 +147,16 @@ func ResourceGroupMember() common.Resource {
 			}
 			return err
 		},
-		DeleteContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			return globalGroupsCache.removeMember(NewGroupsAPI(ctx, c), groupID, memberID)
+		DeleteContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return globalGroupsCache.removeMember(NewGroupsAPI(ctx, c, common.GetApiLevel(d)), groupID, memberID)
 		},
 	})
+	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+		return common.NamespaceCustomizeDiff(ctx, d, c)
+	}
+	return r
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type cachedMe struct {
@@ -398,20 +399,23 @@ func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.Resource
 	return a, resourceId, nil
 }
 
-func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	if c.Config.HostType() == config.AccountHost {
+// AccountOrWorkspaceRequest routes the request to account or workspace callbacks.
+// It checks the `api` field in the resource data first. If set, it takes precedence
+// over host-based inference. When `api` is not set, it falls back to the provider's
+// host type (the original behavior).
+func (c *DatabricksClient) AccountOrWorkspaceRequest(d *schema.ResourceData, accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if IsAccountLevel(d, c) {
 		a, err := c.AccountClient()
 		if err != nil {
 			return err
 		}
 		return accCallback(a)
-	} else {
-		ws, err := c.WorkspaceClient()
-		if err != nil {
-			return err
-		}
-		return wsCallback(ws)
 	}
+	ws, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	return wsCallback(ws)
 }
 
 // Get on path
@@ -449,6 +453,56 @@ func (c *DatabricksClient) Put(ctx context.Context, path string, request any) er
 	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
+const (
+	// ApiLevelAccount indicates the resource should use account-level APIs.
+	ApiLevelAccount = "account"
+	// ApiLevelWorkspace indicates the resource should use workspace-level APIs.
+	ApiLevelWorkspace = "workspace"
+)
+
+// AddApiField adds the `api` field to a resource schema. This field allows users
+// to explicitly specify whether the resource should use account-level or
+// workspace-level APIs. When set, it takes precedence over host-based inference.
+func AddApiField(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s["api"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ValidateFunc: validation.StringInSlice(
+			[]string{ApiLevelAccount, ApiLevelWorkspace}, false,
+		),
+		Description: "Specifies whether to use account-level or workspace-level API. " +
+			"Valid values are `account` and `workspace`. When not set, the API level " +
+			"is inferred from the provider host.",
+	}
+	return s
+}
+
+// GetApiLevel returns the value of the `api` field from resource data,
+// or empty string if not set.
+func GetApiLevel(d *schema.ResourceData) string {
+	if v, ok := d.GetOk("api"); ok {
+		level := v.(string)
+		if level == ApiLevelAccount || level == ApiLevelWorkspace {
+			return level
+		}
+	}
+	return ""
+}
+
+// IsAccountLevel determines whether a resource should use account-level APIs.
+// It checks the `api` field first. If set, it takes precedence. Otherwise, it
+// falls back to the provider's host type.
+func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
+	switch GetApiLevel(d) {
+	case ApiLevelAccount:
+		return true
+	case ApiLevelWorkspace:
+		return false
+	default:
+		return c.Config.HostType() == config.AccountHost
+	}
+}
+
 type ApiVersion string
 
 const (
@@ -470,22 +524,34 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 	return nil
 }
 
-// scimVisitor is a separate method for the sake of unit tests
-func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config.HostType() == config.AccountHost && c.Config.AccountID != "" {
-		// until `/preview` is there for workspace scim,
-		// `/api/2.0` is added by completeUrl visitor
-		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
-			fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+// scimVisitorForLevel returns a request visitor that rewrites SCIM URL paths
+// for account-level requests. The apiLevel parameter takes precedence over
+// host-based inference when non-empty.
+func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Request) error {
+	return func(r *http.Request) error {
+		var isAccount bool
+		if apiLevel != "" {
+			// Explicit api field takes precedence over host-based inference
+			isAccount = apiLevel == ApiLevelAccount
+		} else {
+			isAccount = c.Config.HostType() == config.AccountHost
+		}
+		if isAccount {
+			// until `/preview` is there for workspace scim,
+			// `/api/2.0` is added by completeUrl visitor
+			r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
+				fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+		}
+		return nil
 	}
-	return nil
 }
 
-// Scim sets SCIM headers
-func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
+// Scim sets SCIM headers. The apiLevel parameter controls whether account-level
+// or workspace-level SCIM endpoints are used. Pass "" to infer from the provider host.
+func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any, apiLevel string) error {
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
-	}, nil, request, response, c.addApiPrefix, c.scimVisitor)
+	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel))
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

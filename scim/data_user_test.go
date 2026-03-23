@@ -68,7 +68,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 			Response: UserList{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		usersAPI := NewUsersAPI(ctx, client)
+		usersAPI := NewUsersAPI(ctx, client, "")
 		user, err := getUser(usersAPI, "a", "")
 		assert.NoError(t, err)
 		assert.Equal(t, "a", user.ID)

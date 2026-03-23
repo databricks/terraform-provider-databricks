@@ -8,18 +8,22 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// NewUsersAPI creates UsersAPI instance from provider meta
-func NewUsersAPI(ctx context.Context, m any) UsersAPI {
+// NewUsersAPI creates UsersAPI instance from provider meta.
+// apiLevel controls whether account-level or workspace-level SCIM endpoints are used.
+// Pass "" to infer from the provider host.
+func NewUsersAPI(ctx context.Context, m any, apiLevel string) UsersAPI {
 	return UsersAPI{
-		client:  m.(*common.DatabricksClient),
-		context: ctx,
+		client:   m.(*common.DatabricksClient),
+		context:  ctx,
+		ApiLevel: apiLevel,
 	}
 }
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
+	client   *common.DatabricksClient
+	context  context.Context
+	ApiLevel string
 }
 
 // Create user in the backend
@@ -27,7 +31,7 @@ func (a UsersAPI) Create(ru User) (user User, err error) {
 	if ru.Schemas == nil {
 		ru.Schemas = []URN{UserSchema}
 	}
-	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru, &user)
+	err = a.client.Scim(a.context, http.MethodPost, "/preview/scim/v2/Users", ru, &user, a.ApiLevel)
 	return user, err
 }
 
@@ -42,7 +46,7 @@ func (a UsersAPI) Filter(filter string, excludeRoles bool) (u []User, err error)
 	if excludeRoles {
 		req["excludedAttributes"] = "roles"
 	}
-	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &users)
+	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &users, a.ApiLevel)
 	if err != nil {
 		return
 	}
@@ -61,7 +65,7 @@ func (a UsersAPI) Me() (User, error) {
 }
 
 func (a UsersAPI) readByPath(userPath string) (user User, err error) {
-	err = a.client.Scim(a.context, http.MethodGet, userPath, nil, &user)
+	err = a.client.Scim(a.context, http.MethodGet, userPath, nil, &user, a.ApiLevel)
 	return
 }
 
@@ -78,21 +82,21 @@ func (a UsersAPI) Update(userID string, updateRequest User) error {
 	}
 	return a.client.Scim(a.context, http.MethodPut,
 		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
-		updateRequest, nil)
+		updateRequest, nil, a.ApiLevel)
 }
 
 // Patch updates resource-friendly entity
 func (a UsersAPI) Patch(userID string, r patchRequest) error {
-	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
+	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil, a.ApiLevel)
 }
 
 // Delete will delete the user given the user id
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
-	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
+	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil, a.ApiLevel)
 }
 
 func (a UsersAPI) UpdateEntitlements(userID string, entitlements patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch,
-		fmt.Sprintf("/preview/scim/v2/Users/%v", userID), entitlements, nil)
+		fmt.Sprintf("/preview/scim/v2/Users/%v", userID), entitlements, nil, a.ApiLevel)
 }

@@ -693,6 +693,52 @@ func TestCreateExternalLocationWithEffectiveEnableFileEvents(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: catalog.CreateExternalLocation{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					Owner:          "efg",
+					MetastoreId:    "fgh",
+					EffectiveFileEventQueue: &catalog.FileEventQueue{
+						ManagedSqs: &catalog.AwsSqsQueue{},
+					},
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateExternalLocationForce(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

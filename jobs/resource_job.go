@@ -211,7 +211,6 @@ type JobHealth struct {
 type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key"`
 	Description string                `json:"description,omitempty"`
-	Disabled    bool                  `json:"disabled,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty"`
 

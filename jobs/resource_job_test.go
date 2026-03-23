@@ -299,60 +299,69 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 
 func TestResourceJobCreate_DisabledTask(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/create",
-				ExpectedRequest: JobSettings{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "DisabledTaskJob",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey:           "disabled_task",
+						Disabled:          true,
+						ExistingClusterId: "abc",
+						DependsOn: []jobs.TaskDependency{
+							{
+								TaskKey: "enabled_task",
+							},
+						},
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Inactive",
+						},
+					},
+					{
+						TaskKey:           "enabled_task",
+						ExistingClusterId: "abc",
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Active",
+						},
+					},
+				},
+			}).Return(&jobs.CreateResponse{
+				JobId: 123,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 123,
+			}).Return(&jobs.Job{
+				JobId: 123,
+				Settings: &jobs.JobSettings{
 					Name: "DisabledTaskJob",
-					Tasks: []JobTaskSettings{
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "enabled_task",
+							ExistingClusterId: "abc",
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/Active",
+							},
+						},
 						{
 							TaskKey:           "disabled_task",
 							Disabled:          true,
-							ExistingClusterID: "abc",
+							ExistingClusterId: "abc",
 							DependsOn: []jobs.TaskDependency{
 								{
 									TaskKey: "enabled_task",
 								},
 							},
-							NotebookTask: &NotebookTask{
+							NotebookTask: &jobs.NotebookTask{
 								NotebookPath: "/Inactive",
 							},
 						},
-						{
-							TaskKey:           "enabled_task",
-							ExistingClusterID: "abc",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/Active",
-							},
-						},
-					},
-					Queue: &jobs.QueueSettings{
-						Enabled: false,
-					},
-					MaxConcurrentRuns: 1,
-				},
-				Response: Job{
-					JobID: 123,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=123",
-				Response: Job{
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "enabled_task",
-							},
-							{
-								TaskKey:  "disabled_task",
-								Disabled: true,
-							},
-						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Create:   true,
 		Resource: ResourceJob(),
@@ -386,6 +395,8 @@ func TestResourceJobCreate_DisabledTask(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "123", d.Id())
+	assert.Equal(t, true, d.Get("task.0.disabled"))
+	assert.Equal(t, false, d.Get("task.1.disabled"))
 }
 
 func TestResourceJobCreate_TaskOrder(t *testing.T) {

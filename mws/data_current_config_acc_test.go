@@ -22,6 +22,20 @@ func checkCurrentConfig(t *testing.T, cloudType string, isAccount string) func(s
 	}
 }
 
+func checkCurrentConfigWithCloud(t *testing.T, cloudType string, isAccount string, cloud string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		r, ok := s.Modules[0].Resources["data.databricks_current_config.this"]
+		require.True(t, ok, "data.databricks_current_config.this has to be there")
+
+		attr := r.Primary.Attributes
+
+		assert.Equal(t, attr["cloud_type"], cloudType)
+		assert.Equal(t, attr["is_account"], isAccount)
+		assert.Equal(t, attr["cloud"], cloud)
+		return nil
+	}
+}
+
 func TestAccDataCurrentConfig(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if acceptance.IsAws(t) {
@@ -60,4 +74,44 @@ func TestMwsAccDataCurrentConfig(t *testing.T) {
 			Check:    checkCurrentConfig(t, "gcp", "true"),
 		})
 	}
+}
+
+func TestAccDataCurrentConfigCloudOverride(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			cloud = "aws"
+		}`,
+		Check: checkCurrentConfigWithCloud(t, "aws", "false", "aws"),
+	})
+}
+
+func TestAccDataCurrentConfigCloudOverrideAzure(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			cloud = "azure"
+		}`,
+		Check: checkCurrentConfigWithCloud(t, "azure", "false", "azure"),
+	})
+}
+
+func TestAccDataCurrentConfigCloudOverrideGcp(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			cloud = "gcp"
+		}`,
+		Check: checkCurrentConfigWithCloud(t, "gcp", "false", "gcp"),
+	})
+}
+
+func TestMwsAccDataCurrentConfigCloudOverride(t *testing.T) {
+	acceptance.LoadAccountEnv(t)
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			cloud = "aws"
+		}`,
+		Check: checkCurrentConfigWithCloud(t, "aws", "true", "aws"),
+	})
 }

@@ -73,6 +73,8 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 		}
 
 		common.AddApiField(m)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return adjustDataAccessSchema(m)
 	})
 
@@ -117,7 +119,14 @@ func ResourceMetastoreDataAccess() common.Resource {
 				Upgrade: dacMigrateV0,
 			},
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId := d.Get("metastore_id").(string)
 
 			var create catalog.CreateStorageCredential
@@ -165,6 +174,10 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -204,6 +217,10 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId, dacName, err := p.Unpack(d)
 			force := d.Get("force_destroy").(bool)
 			if err != nil {

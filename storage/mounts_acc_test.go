@@ -45,6 +45,50 @@ func TestAccCreateDatabricksMount(t *testing.T) {
 		})
 }
 
+// TestAccCreateDatabricksMountWithProviderConfig creates a mount using
+// provider_config { workspace_id } pointing at the same workspace the provider
+// is configured for. This exercises getDatabricksClientForUnifiedProvider which
+// creates a new DatabricksClient — verifying that commandFactory (needed by
+// mount's CommandExecutor) is correctly copied to the new client.
+func TestAccCreateDatabricksMountWithProviderConfig(t *testing.T) {
+	workspaceID := acceptance.GetEnvOrSkipTest(t, "THIS_WORKSPACE_ID")
+	mountHclWithProviderConfig := `
+data "databricks_spark_version" "latest" {}
+
+resource "databricks_cluster" "this" {
+	cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
+	spark_version = data.databricks_spark_version.latest.id
+	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+	num_workers = 1
+
+	aws_attributes {
+		instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
+	}
+
+	provider_config {
+		workspace_id = "` + workspaceID + `"
+	}
+}
+
+resource "databricks_mount" "my_mount" {
+	name = "test-mount-pc-{var.STICKY_RANDOM}"
+	cluster_id = databricks_cluster.this.id
+
+	s3 {
+		bucket_name = "{env.TEST_S3_BUCKET_NAME}"
+	}
+
+	provider_config {
+		workspace_id = "` + workspaceID + `"
+	}
+}`
+
+	acceptance.WorkspaceLevel(t,
+		acceptance.Step{
+			Template: mountHclWithProviderConfig,
+		})
+}
+
 func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 	clusterId1 := ""
 	clusterId2 := ""

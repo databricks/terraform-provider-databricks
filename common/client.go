@@ -122,6 +122,10 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 
 // getWorkspaceClientDirectly gets the workspace client directly from the
 // provider's configured host, validating the workspace ID if provided.
+// When a workspace_id is specified, it creates a new workspace client on the
+// same host with the X-Databricks-Org-Id header set, then validates the
+// workspace is reachable by calling CurrentWorkspaceID and checking the
+// response matches. This works for all provider types without host-type checks.
 func (c *DatabricksClient) getWorkspaceClientDirectly(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
@@ -137,7 +141,7 @@ func (c *DatabricksClient) getWorkspaceClientDirectly(
 	}
 
 	// Create a new workspace client with WorkspaceID set on the config.
-	// This allows unified hosts to route requests to the correct workspace
+	// This allows hosts to route requests to the correct workspace
 	// via the X-Databricks-Org-Id header.
 	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
 	if err != nil {
@@ -148,6 +152,22 @@ func (c *DatabricksClient) getWorkspaceClientDirectly(
 	if err != nil {
 		return nil, err
 	}
+
+	// Validate that the workspace is reachable and the request was actually
+	// routed to the correct workspace. CurrentWorkspaceID makes a lightweight
+	// API call and reads the X-Databricks-Org-Id response header to determine
+	// which workspace handled the request.
+	actualID, err := w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
+	}
+	if actualID != workspaceIDInt {
+		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: "+
+			"workspace_id mismatch: provider is configured for workspace %d but got %d in provider_config. "+
+			"please check the workspace_id provided in provider_config",
+			workspaceIDInt, actualID, workspaceIDInt)
+	}
+
 	return w, nil
 }
 

@@ -108,21 +108,10 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if !ok || newWSID == "" {
 		return nil
 	}
-	workspaceIDInt, err := parseWorkspaceID(newWSID)
-	if err != nil {
-		return err
-	}
-	// First try to validate as workspace-configured provider.
-	_, err = c.getWorkspaceClientDirectly(ctx, newWSID)
-	if err == nil {
-		return nil
-	}
-	// If that fails, try through account.
-	_, err = c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-	if err != nil {
-		return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-	}
-	return nil
+	// Delegate to GetWorkspaceClientForUnifiedProvider which handles
+	// validation for all provider types (workspace, account, unified host).
+	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
+	return err
 }
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration

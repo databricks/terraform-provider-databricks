@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,6 +22,17 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+// newWorkspaceIDServer creates a test HTTP server that responds to
+// GET /api/2.0/preview/scim/v2/Me with the given workspace ID in the
+// X-Databricks-Org-Id response header.
+func newWorkspaceIDServer(workspaceID string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Databricks-Org-Id", workspaceID)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{}`))
+	}))
+}
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
@@ -463,37 +475,43 @@ func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_NoWorkspaceID(t *tes
 }
 
 func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_WithWorkspaceID(t *testing.T) {
+	// Mock server that responds with workspace ID 12345
+	srv := newWorkspaceIDServer("12345")
+	defer srv.Close()
+
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host:  "https://test.cloud.databricks.com",
+				Host:  srv.URL,
 				Token: "test-token",
 			},
 		},
 	}
 
-	// Creates a new workspace client with WorkspaceID set on the config.
+	// Workspace ID matches the server's response — validation passes.
 	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
 	assert.NoError(t, err)
 	assert.NotNil(t, w)
-	assert.Equal(t, "12345", w.Config.WorkspaceID)
 }
 
 func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_DifferentWorkspaceID(t *testing.T) {
+	// Mock server that responds with workspace ID 12345
+	srv := newWorkspaceIDServer("12345")
+	defer srv.Close()
+
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host:  "https://test.cloud.databricks.com",
+				Host:  srv.URL,
 				Token: "test-token",
 			},
 		},
 	}
 
-	// Different workspace ID — creates a new client targeting that workspace.
-	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
-	assert.NoError(t, err)
-	assert.NotNil(t, w)
-	assert.Equal(t, "99999", w.Config.WorkspaceID)
+	// Different workspace ID — should fail validation.
+	_, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
 }
 
 func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WithWorkspaceID(t *testing.T) {

@@ -76,6 +76,17 @@ func TestDataSourceCurrentConfigCloudInvalidValue(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. [cloud] expected cloud to be one of [aws azure gcp], got invalid")
 }
 
+func TestDataSourceCurrentConfigCloudEmptyValue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		HCL:         `cloud = ""`,
+	}.ExpectError(t, "invalid config supplied. [cloud] expected cloud to be one of [aws azure gcp], got ")
+}
+
 func TestDataSourceCurrentConfigCloudOverrideAccountLevel(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    []qa.HTTPFixture{},

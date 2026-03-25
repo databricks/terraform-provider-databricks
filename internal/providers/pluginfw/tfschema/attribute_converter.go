@@ -1,6 +1,8 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package tfschema
 
+import "maps"
+
 // Blockable is an interface that can be implemented by an AttributeBuilder to convert it to a BlockBuilder.
 type Blockable interface {
 	// ToBlock converts the AttributeBuilder to a BlockBuilder.
@@ -19,9 +21,7 @@ func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks ma
 			newAttributes[name] = attr
 		}
 	}
-	for name, block := range blocks {
-		newBlocks[name] = block
-	}
+	maps.Copy(newBlocks, blocks)
 	if len(newAttributes) == 0 {
 		newAttributes = nil
 	}

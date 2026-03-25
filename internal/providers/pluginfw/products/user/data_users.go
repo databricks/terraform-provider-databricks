@@ -33,19 +33,24 @@ type UsersList struct {
 	Filter          types.String `tfsdk:"filter"`
 	ExtraAttributes types.String `tfsdk:"extra_attributes"`
 	Users           types.List   `tfsdk:"users"`
+	Api             types.String `tfsdk:"api"`
+	tfschema.Namespace
 }
 
 func (UsersList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["users"] = attrs["users"].SetComputed().SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
 	attrs["extra_attributes"] = attrs["extra_attributes"].SetOptional()
+	attrs["api"] = attrs["api"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
 func (UsersList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"users": reflect.TypeOf(iam_tf.User{}),
+		"users":           reflect.TypeOf(iam_tf.User{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -84,7 +89,16 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var users []iam.User
 	var err error
 
-	if d.Client.Config.HostType() == config.AccountHost {
+	isAccount := d.Client.Config.HostType() == config.AccountHost
+	if !usersInfo.Api.IsNull() && !usersInfo.Api.IsUnknown() {
+		apiLevel := usersInfo.Api.ValueString()
+		if apiLevel != "account" && apiLevel != "workspace" {
+			resp.Diagnostics.AddError("Invalid api value", "api must be either \"account\" or \"workspace\"")
+			return
+		}
+		isAccount = apiLevel == "account"
+	}
+	if isAccount {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
@@ -96,7 +110,12 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			resp.Diagnostics.AddError("Error listing account users", err.Error())
 		}
 	} else {
-		w, diags := d.Client.GetWorkspaceClient()
+		workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, usersInfo.ProviderConfig)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return

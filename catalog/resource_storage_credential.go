@@ -36,6 +36,9 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		}
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
 		common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
+		common.AddApiField(m)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return adjustDataAccessSchema(m)
 	})
 
@@ -75,7 +78,14 @@ func parseStorageCredentialId(d *schema.ResourceData) (metastoreId, storageCrede
 func ResourceStorageCredential() common.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId := d.Get("metastore_id").(string)
 
 			var create catalog.CreateStorageCredential
@@ -87,7 +97,7 @@ func ResourceStorageCredential() common.Resource {
 				update.DatabricksGcpServiceAccount = nil
 			}
 
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
@@ -139,13 +149,17 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// Parse the ID to handle both composite and simple formats
 			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
 			if err != nil {
 				return err
 			}
 
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
 					StorageCredentialName: storageCredentialName,
@@ -199,6 +213,10 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// Parse the ID to handle both composite and simple formats
 			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
 			if err != nil {
@@ -213,7 +231,7 @@ func ResourceStorageCredential() common.Resource {
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
 					ownerUpdate := catalog.UpdateStorageCredential{
 						Name:  update.Name,
@@ -311,6 +329,10 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			// Parse the ID to handle both composite and simple formats
 			metastoreId, storageCredentialName, err := parseStorageCredentialId(d)
 			if err != nil {
@@ -318,7 +340,7 @@ func ResourceStorageCredential() common.Resource {
 			}
 
 			force := d.Get("force_destroy").(bool)
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					Force:                 force,
 					StorageCredentialName: storageCredentialName,

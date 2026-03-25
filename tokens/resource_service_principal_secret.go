@@ -27,6 +27,7 @@ func createFailedToConvertServicePrincipalIdToNumericError(err error) error {
 func ResourceServicePrincipalSecret() common.Resource {
 	spnSecretSchema := common.StructToSchema(ServicePrincipalSecret{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			common.AddApiField(m)
 			m["time_rotating"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,7 +66,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			lifetime := d.Get("lifetime").(string)
 			var res *oauth2.CreateServicePrincipalSecretResponse
 
-			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var err error
 				res, err = acc.ServicePrincipalSecrets.Create(ctx, oauth2.CreateServicePrincipalSecretRequest{
 					ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),
@@ -99,7 +100,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			}
 			spId := d.Get("service_principal_id").(string)
 			var secrets []oauth2.SecretInfo
-			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var err error
 				secrets, err = acc.ServicePrincipalSecrets.ListAll(ctx, oauth2.ListServicePrincipalSecretsRequest{
 					ServicePrincipalId: spId,
@@ -155,7 +156,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			if err != nil {
 				return fmt.Errorf("failed to convert service principal ID to numeric: %w", err)
 			}
-			err = newClient.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			err = newClient.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				return acc.ServicePrincipalSecrets.Delete(ctx, oauth2.DeleteServicePrincipalSecretRequest{
 					SecretId:           d.Id(),
 					ServicePrincipalId: strconv.FormatInt(spIdNumeric, 10),

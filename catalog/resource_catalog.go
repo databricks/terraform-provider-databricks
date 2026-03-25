@@ -58,8 +58,10 @@ func ResourceCatalog() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
-			for _, v := range []string{"catalog_type", "created_at", "created_by",
-				"updated_at", "updated_by", "securable_type", "full_name", "storage_location"} {
+			for _, v := range []string{
+				"catalog_type", "created_at", "created_by",
+				"updated_at", "updated_by", "securable_type", "full_name", "storage_location",
+			} {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
@@ -125,10 +127,12 @@ func ResourceCatalog() common.Resource {
 			}
 			var origCatalogData catalog.CatalogInfo
 			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
-			if origCatalogData.CatalogType != "MANAGED_CATALOG" &&
+			// CatalogType can be empty in imports, so we need to skip this validation.
+			if origCatalogData.CatalogType != "MANAGED_CATALOG" && origCatalogData.CatalogType != "" &&
 				string(origCatalogData.EnablePredictiveOptimization) == "" {
 				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
 			}
+
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -181,7 +185,6 @@ func ResourceCatalog() common.Resource {
 				updateCatalogRequest.EnablePredictiveOptimization = ""
 			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback

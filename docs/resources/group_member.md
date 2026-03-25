@@ -43,6 +43,7 @@ The following arguments are supported:
 
 * `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
 * `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

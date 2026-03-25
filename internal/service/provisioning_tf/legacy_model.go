@@ -5147,9 +5147,9 @@ type VpcEndpoint_SdkV2 struct {
 	// that was used when creating this VPC endpoint. If the VPC endpoint
 	// connects to the Databricks control plane for either the front-end
 	// connection or the back-end REST API connection, the value is
-	// WORKSPACE_ACCESS. If the VPC endpoint connects to the Databricks
-	// workspace for the back-end secure cluster connectivity relay, the value
-	// is DATAPLANE_RELAY_ACCESS.
+	// GENERAL_ACCESS. If the VPC endpoint connects to the Databricks workspace
+	// for the back-end secure cluster connectivity relay, the value is
+	// DATAPLANE_RELAY_ACCESS.
 	UseCase types.String `tfsdk:"use_case"`
 	// Databricks VPC endpoint ID. This is the Databricks-specific name of the
 	// VPC endpoint. Do not confuse this with the `aws_vpc_endpoint_id`, which

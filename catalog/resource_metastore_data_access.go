@@ -72,6 +72,9 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 			Optional: true,
 		}
 
+		common.AddApiField(m)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return adjustDataAccessSchema(m)
 	})
 
@@ -116,13 +119,20 @@ func ResourceMetastoreDataAccess() common.Resource {
 				Upgrade: dacMigrateV0,
 			},
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId := d.Get("metastore_id").(string)
 
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, dacSchema, &create)
 
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				dac, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
@@ -164,13 +174,17 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			var metastore *catalog.MetastoreInfo
 
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
@@ -203,12 +217,16 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			metastoreId, dacName, err := p.Unpack(d)
 			force := d.Get("force_destroy").(bool)
 			if err != nil {
 				return err
 			}
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					MetastoreId:           metastoreId,
 					StorageCredentialName: dacName,

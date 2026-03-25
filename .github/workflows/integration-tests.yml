@@ -47,7 +47,7 @@ jobs:
 
     - name: Generate GitHub App Token for Workflow Trigger
       id: generate-token
-      uses: actions/create-github-app-token@v1
+      uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
       with:
         app-id: ${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}
         private-key: ${{ secrets.DECO_WORKFLOW_TRIGGER_PRIVATE_KEY }}
@@ -85,7 +85,7 @@ jobs:
 
     steps:
       - name: Auto-approve Check for Merge Queue
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             await github.rest.checks.create({

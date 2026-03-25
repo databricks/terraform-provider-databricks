@@ -120,11 +120,11 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 		}
 		return nil
 	}
-	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
-	return nil
+	return c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
 }
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration

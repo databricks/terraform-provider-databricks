@@ -115,7 +115,7 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	if c.Config.HostType() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
-	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+	return c.WorkspaceClient()
 }
 
 // getWorkspaceClientForAccountUnifiedHost gets the workspace client for
@@ -142,38 +142,6 @@ func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
 	}
-	return w, nil
-}
-
-// getWorkspaceClientForWorkspaceConfiguredProvider gets the workspace client for
-// the workspace ID specified in the resource when the provider is configured at workspace level.
-func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
-	ctx context.Context, workspaceID string,
-) (*databricks.WorkspaceClient, error) {
-	// Provider is configured at workspace level and we get the
-	// workspace client from the provider.
-	if workspaceID == "" {
-		return c.WorkspaceClient()
-	}
-
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if the workspace ID specified in the resource matches
-	// the workspace ID of the provider configured workspace client.
-	w, err := c.WorkspaceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
-	if err != nil {
-		return nil, fmt.Errorf("failed to validate workspace_id: %w", err)
-	}
-	// The provider is configured at the workspace level and the
-	// workspace ID matches
 	return w, nil
 }
 

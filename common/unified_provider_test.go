@@ -323,7 +323,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			description: "When workspace_id is explicitly empty, should use cached workspace client",
 		},
 		{
-			name: "workspace_id with different numeric value",
+			name: "workspace_id with different numeric value - no error at CRUD time, validated at plan time",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -342,9 +342,8 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     1234,
 			},
-			expectError:   true,
-			errorContains: "failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 1234 but got 789012 in provider_config",
-			description:   "Should handle different workspace IDs correctly",
+			expectError: false,
+			description: "Workspace ID mismatch is validated at plan time via NamespaceValidateWorkspaceID, not at CRUD time",
 		},
 		{
 			name: "account level provider without workspace_id - returns error",
@@ -572,7 +571,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:      "Account-level provider without workspace_id should return current client",
 		},
 		{
-			name: "workspace_id mismatch - returns error",
+			name: "workspace_id mismatch - no error at CRUD time, validated at plan time",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -602,9 +601,8 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 				c.cachedWorkspaceID = 200
 				return c
 			}(),
-			expectError:   true,
-			errorContains: "workspace_id mismatch",
-			description:   "Should return error when workspace_id doesn't match configured workspace",
+			expectError: false,
+			description: "Workspace ID mismatch is validated at plan time via NamespaceValidateWorkspaceID, not at CRUD time",
 		},
 	}
 

@@ -97,14 +97,14 @@ func checkUsersDataSourceWithGroups(t *testing.T) func(s *terraform.State) error
 	}
 }
 
-func TestAccDataSourceDataUsers(t *testing.T) {
+func TestMwsAccDataSourceDataUsers(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
 	})
 }
 
-func TestWorkspaceDataSourceDataUsers(t *testing.T) {
+func TestAccDataSourceDataUsers(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
@@ -139,28 +139,28 @@ func checkUsersDataSourceActive(t *testing.T) func(s *terraform.State) error {
 	}
 }
 
-func TestAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
+func TestMwsAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplateSingleExtraAttribute,
 		Check:    checkUsersDataSourceActive(t),
 	})
 }
 
-func TestWorkspaceDataSourceUsers_SingleExtraAttribute(t *testing.T) {
+func TestAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplateSingleExtraAttribute,
 		Check:    checkUsersDataSourceActive(t),
 	})
 }
 
-func TestAccDataSourceUsers_WithGroups(t *testing.T) {
+func TestMwsAccDataSourceUsers_WithGroups(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),
 	})
 }
 
-func TestWorkspaceDataSourceUsers_WithGroups(t *testing.T) {
+func TestAccDataSourceUsers_WithGroups(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),

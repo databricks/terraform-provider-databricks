@@ -627,7 +627,7 @@ func shareTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -642,7 +642,7 @@ func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -656,7 +656,7 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Multiple(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -673,7 +673,7 @@ func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Required(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Required(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -684,7 +684,7 @@ func TestAccShare_ProviderConfig_Required(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
+func TestUcAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
 			provider_config {
@@ -696,13 +696,13 @@ func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_NotProvided(t *testing.T) {
+func TestUcAccShare_ProviderConfig_NotProvided(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	})
 }
 
-func TestAccShare_ProviderConfig_Match(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Match(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
@@ -725,7 +725,7 @@ func TestAccShare_ProviderConfig_Match(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Recreate(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
@@ -756,7 +756,7 @@ func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Remove(t *testing.T) {
+func TestUcAccShare_ProviderConfig_Remove(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())

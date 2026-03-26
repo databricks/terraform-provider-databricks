@@ -25,10 +25,10 @@ jobs:
         run: |
             if [ -z "${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}" ] || [ -z "${{ secrets.DECO_TEST_APPROVAL_APP_ID }}" ]; then
               echo "Required secrets are missing. User has no access to secrets."
-              echo "::set-output name=has_token::false"
+              echo "has_token=false" >> $GITHUB_OUTPUT
             else
               echo "All required secrets are set. User has access to secrets."
-              echo "::set-output name=has_token::true"
+              echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
   trigger-tests:

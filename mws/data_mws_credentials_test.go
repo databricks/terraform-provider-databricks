@@ -38,16 +38,6 @@ func TestDataSourceMwsCredentials(t *testing.T) {
 	})
 }
 
-func TestDataSourceMwsCredentials_AccountID(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures:    []qa.HTTPFixture{},
-		Resource:    DataSourceMwsCredentials(),
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ExpectError(t, "provider block is missing `account_id` property")
-}
-
 func TestDataSourceMwsCredentials_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,

@@ -34,3 +34,72 @@ func TestDataSourceCurrentConfigAccAzure(t *testing.T) {
 		"cloud_type": "azure",
 	})
 }
+
+func TestDataSourceCurrentConfigCloudOverride(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		HCL:         `cloud = "gcp"`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"is_account": false,
+		"cloud_type": "gcp",
+		"cloud":      "gcp",
+	})
+}
+
+func TestDataSourceCurrentConfigCloudOverrideAzure(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		HCL:         `cloud = "azure"`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"is_account": false,
+		"cloud_type": "azure",
+		"cloud":      "azure",
+	})
+}
+
+func TestDataSourceCurrentConfigCloudInvalidValue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		HCL:         `cloud = "invalid"`,
+	}.ExpectError(t, "invalid config supplied. [cloud] expected cloud to be one of [aws azure gcp], got invalid")
+}
+
+func TestDataSourceCurrentConfigCloudEmptyValue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		HCL:         `cloud = ""`,
+	}.ExpectError(t, "invalid config supplied. [cloud] expected cloud to be one of [aws azure gcp], got ")
+}
+
+func TestDataSourceCurrentConfigCloudOverrideAccountLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceCurrentConfiguration(),
+		ID:          ".",
+		AccountID:   "acc-123",
+		HCL:         `cloud = "aws"`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"is_account": true,
+		"account_id": "acc-123",
+		"cloud_type": "aws",
+		"cloud":      "aws",
+	})
+}

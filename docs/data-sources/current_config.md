@@ -41,6 +41,7 @@ resource "databricks_storage_credential" "external" {
 
 ## Argument Reference
 
+* `cloud` - (Optional) Explicitly set the cloud type. Must be one of `aws`, `azure`, or `gcp`. If not set, the cloud type is determined automatically from the provider configuration. It is recommended to set this explicitly to avoid relying on host-based detection.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
@@ -51,7 +52,7 @@ Data source exposes the following attributes:
 * `is_account` - Whether the provider is configured at account-level
 * `account_id` - Account Id if provider is configured at account-level
 * `host` - Host of the Databricks workspace or account console
-* `cloud_type` - Cloud type specified in the provider
+* `cloud_type` - Cloud type of the provider. If `cloud` argument is set, this will match that value. Otherwise, it is determined from the provider configuration.
 * `auth_type` - Auth type used by the provider
 
 ## Related Resources

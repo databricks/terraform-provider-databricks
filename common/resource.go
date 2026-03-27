@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,13 +45,17 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	// Resolve from provider config to populate state for the first time:
 	// 1. provider_config.workspace_id from raw config
 	// 2. workspace_id from provider
-	// 3. cachedWorkspaceID (eagerly resolved from workspace host during provider init)
+	// 3. Lazy resolution from workspace host via CurrentWorkspaceID API call
 	wsID, _ := workspaceIDFromRawConfig(d)
 	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
 		wsID = c.Config.WorkspaceID
 	}
-	if wsID == "" && c.cachedWorkspaceID != 0 {
-		wsID = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	if wsID == "" && c.DatabricksClient != nil && c.Config != nil && c.Config.HostType() == config.WorkspaceHost {
+		resolvedID, err := c.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to resolve workspace_id from workspace host: %w", err)
+		}
+		wsID = strconv.FormatInt(resolvedID, 10)
 	}
 
 	if wsID != "" {
@@ -232,21 +237,29 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
 			}
-			// Post-Create hook: populate provider_config in state for the first time.
-			// Must run before CanSkipReadAfterCreateAndUpdate check — resources that
-			// skip Read after Create (e.g. notebooks with SOURCE format) still need
-			// provider_config populated for CustomizeDiff to detect workspace changes.
-			if hasProviderConfig && d.Id() != "" {
-				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
-					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
-				}
-			}
 			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				// Resources that skip Read after Create (e.g. notebooks with SOURCE
+				// format) still need provider_config populated for CustomizeDiff to
+				// detect workspace changes. Populate it here since Read won't run.
+				if hasProviderConfig && d.Id() != "" {
+					if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
+						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+					}
+				}
 				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
+			}
+			// Post-Create hook: populate provider_config in state after Read.
+			// Must run after Read so that Read's DatabricksClientForUnifiedProvider
+			// sees an empty workspace_id and uses the original provider client
+			// (which has the cached workspace ID) rather than creating a new client.
+			if hasProviderConfig && d.Id() != "" {
+				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
+					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
 			}
 			return nil
 		}

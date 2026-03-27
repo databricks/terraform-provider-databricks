@@ -1228,6 +1228,8 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 		defaultWSID    string
 		cachedWSID     int64
 		expectForceNew bool
+		expectError    bool
+		errorContains  string
 	}{
 		{
 			name: "workspace_id changes A to B - ForceNew",
@@ -1273,7 +1275,10 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			expectForceNew: false,
 		},
 		{
-			name: "workspace_id removed A to empty no default - no ForceNew",
+			// Workspace host with old state value but no provider_config, no default,
+			// and no cached ID: lazy resolution attempts CurrentWorkspaceID which fails
+			// because the test client has no reachable workspace server.
+			name: "workspace_id removed A to empty no default workspace host - error",
 			instanceState: map[string]string{
 				"name":                           "test",
 				"provider_config.#":              "1",
@@ -1282,7 +1287,8 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			newConfig: map[string]any{
 				"name": "test",
 			},
-			expectForceNew: false,
+			expectError:   true,
+			errorContains: "failed to resolve workspace_id from workspace host",
 		},
 		{
 			name: "workspace_id removed A to empty default=A - no ForceNew same effective",
@@ -1390,7 +1396,9 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			expectForceNew: false,
 		},
 		{
-			name: "no provider_config no default cachedWSID=0 - no ForceNew",
+			// Same as "workspace_id removed" above but explicitly sets cachedWSID=0.
+			// Lazy resolution fails on workspace host without a reachable server.
+			name: "no provider_config no default cachedWSID=0 workspace host - error",
 			instanceState: map[string]string{
 				"name":                           "test",
 				"provider_config.#":              "1",
@@ -1399,8 +1407,9 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			newConfig: map[string]any{
 				"name": "test",
 			},
-			cachedWSID:     0,
-			expectForceNew: false,
+			cachedWSID:    0,
+			expectError:   true,
+			errorContains: "failed to resolve workspace_id from workspace host",
 		},
 		{
 			name: "default takes precedence over cachedWSID - ForceNew from default",
@@ -1436,6 +1445,13 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			c := makeClient(tc.defaultWSID, tc.cachedWSID)
 			forceNew, err := testCustomizeDiffForceNew(t, tc.instanceState, tc.newConfig, c)
+			if tc.expectError {
+				require.Error(t, err)
+				if tc.errorContains != "" {
+					assert.Contains(t, err.Error(), tc.errorContains)
+				}
+				return
+			}
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectForceNew, forceNew,
 				"ForceNew mismatch: expected %v, got %v", tc.expectForceNew, forceNew)
@@ -1515,6 +1531,7 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 		existingWSID      string // workspace_id already in state (simulates prior state)
 		providerWSID      string // provider-level workspace_id (Config.WorkspaceID)
 		cachedWorkspaceID int64
+		host              string // defaults to workspace host if empty
 		expectedWSID      string
 	}{
 		// --- First time (no state) scenarios: resolve from provider ---
@@ -1538,8 +1555,12 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 			expectedWSID:      "1111111111",
 		},
 		{
-			name:         "first time - no sources available",
+			// For account-level providers without workspace_id or provider_config,
+			// the workspace_id in state remains empty. Lazy resolution only triggers
+			// for workspace hosts, so account hosts correctly skip resolution.
+			name:         "first time - no sources available (account host)",
 			existingWSID: "",
+			host:         "https://accounts.cloud.databricks.com",
 			expectedWSID: "",
 		},
 		// --- Subsequent reads (has state) scenarios: preserve state ---
@@ -1572,10 +1593,14 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			d := makeResourceData(t, tc.existingWSID)
+			host := tc.host
+			if host == "" {
+				host = "https://my-workspace.databricks.com"
+			}
 			c := &DatabricksClient{
 				DatabricksClient: &client.DatabricksClient{
 					Config: &config.Config{
-						Host:        "https://my-workspace.databricks.com",
+						Host:        host,
 						WorkspaceID: tc.providerWSID,
 					},
 				},

@@ -118,11 +118,16 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		// Config does not have provider_config; use workspace_id
 		newEffective = c.Config.WorkspaceID
 	}
-	// Fallback to cachedWorkspaceID (resolved from provider host during init).
-	// This handles workspace host changes: if the user switches from
-	// host=ws-A to host=ws-B, the cached ID reflects the new workspace.
-	if newEffective == "" && c.cachedWorkspaceID != 0 {
-		newEffective = strconv.FormatInt(c.cachedWorkspaceID, 10)
+	// Lazy resolution from workspace host: if newEffective is still empty and
+	// there's an old value in state to compare against, resolve the workspace ID
+	// from the host. The oldEffective guard prevents unnecessary API calls when
+	// both sides are empty (fresh resource with no provider_config).
+	if newEffective == "" && oldEffective != "" && c.Config != nil && c.Config.HostType() == config.WorkspaceHost {
+		resolvedID, err := c.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to resolve workspace_id from workspace host: %w", err)
+		}
+		newEffective = strconv.FormatInt(resolvedID, 10)
 	}
 
 	// If a resource has a workspace ID in state but the new effective

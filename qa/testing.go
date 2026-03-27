@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -229,6 +230,11 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
 		if err == nil && f.ProviderWorkspaceID != "" {
 			client.Config.WorkspaceID = f.ProviderWorkspaceID
+			// Override default cached workspace ID (12345) to match ProviderWorkspaceID
+			// so that validateWorkspaceIDFromProvider sees a consistent value.
+			if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+				client.SetCachedWorkspaceID(wsID)
+			}
 		}
 		ss := server{
 			Close: s.Close,
@@ -255,6 +261,16 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	if f.ProviderWorkspaceID != "" {
 		c.Config.WorkspaceID = f.ProviderWorkspaceID
 	}
+	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
+	// API calls in unit tests. When ProviderWorkspaceID is set, use that
+	// value so validateWorkspaceIDFromProvider sees a consistent ID.
+	cachedWsID := int64(12345)
+	if f.ProviderWorkspaceID != "" {
+		if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+			cachedWsID = wsID
+		}
+	}
+	c.SetCachedWorkspaceID(cachedWsID)
 	return c, server{
 		Close: func() {},
 		URL:   "does-not-matter",
@@ -629,9 +645,13 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 	if err != nil {
 		return nil, nil, err
 	}
-	return &common.DatabricksClient{
+	dc := &common.DatabricksClient{
 		DatabricksClient: c,
-	}, server, nil
+	}
+	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
+	// API calls in unit tests.
+	dc.SetCachedWorkspaceID(12345)
+	return dc, server, nil
 }
 
 // HTTPFixturesApply is a helper method
@@ -651,6 +671,7 @@ func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorksp
 		},
 	}
 	client.SetWorkspaceClient(mw.WorkspaceClient)
+	client.SetCachedWorkspaceID(12345)
 	callback(context.Background(), client)
 }
 

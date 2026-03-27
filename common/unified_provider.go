@@ -28,7 +28,7 @@ type Namespace struct {
 // ProviderConfig is used to store the provider configurations for unified terraform provider
 // across resources onboarded to SDKv2.
 type ProviderConfig struct {
-	WorkspaceID string `json:"workspace_id"`
+	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
 // workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration
@@ -56,7 +56,8 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 			Schema: map[string]*schema.Schema{
 				"workspace_id": {
 					Type:     schema.TypeString,
-					Required: true,
+					Optional: true,
+					Computed: true,
 				},
 			},
 		},
@@ -68,7 +69,7 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 // for a single schema.
 func NamespaceCustomizeSchema(s *CustomizableSchema) {
 	s.SchemaPath("provider_config").SetComputed()
-	s.SchemaPath("provider_config", "workspace_id").SetValidateFunc(workspaceIDValidateFunc())
+	s.SchemaPath("provider_config", "workspace_id").SetOptional().SetComputed().SetValidateFunc(workspaceIDValidateFunc())
 }
 
 // NamespaceCustomizeSchemaMap is used to customize the schema for the provider configuration
@@ -84,6 +85,9 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 		panic("provider_config.Elem is not a *schema.Resource")
 	}
 	if workspaceID, ok := elem.Schema["workspace_id"]; ok {
+		workspaceID.Optional = true
+		workspaceID.Required = false
+		workspaceID.Computed = true
 		workspaceID.ValidateFunc = workspaceIDValidateFunc()
 	}
 	return m

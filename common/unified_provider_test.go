@@ -205,7 +205,8 @@ func TestAddNamespaceInSchema(t *testing.T) {
 		assert.True(t, exists, "workspace_id should exist")
 		require.NotNil(t, workspaceID)
 		assert.Equal(t, schema.TypeString, workspaceID.Type)
-		assert.True(t, workspaceID.Required)
+		assert.True(t, workspaceID.Optional)
+		assert.True(t, workspaceID.Computed)
 
 		// Verify existing fields are preserved
 		assert.Len(t, result, 3, "Should have 3 fields: name, description, provider_config")

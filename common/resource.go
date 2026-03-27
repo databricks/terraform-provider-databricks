@@ -232,22 +232,21 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
 			}
+			// Post-Create hook: populate provider_config in state for the first time.
+			// Must run before CanSkipReadAfterCreateAndUpdate check — resources that
+			// skip Read after Create (e.g. notebooks with SOURCE format) still need
+			// provider_config populated for CustomizeDiff to detect workspace changes.
+			if hasProviderConfig && d.Id() != "" {
+				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
+					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
+			}
 			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
 				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
-			}
-			// Post-Read hook for Create: populate provider_config in state for the first time.
-			// If the user set provider_config.workspace_id in config, it's already in d and
-			// the hook preserves it. If the user relies on workspace_id (no provider_config
-			// in config), this is the only place where the effective workspace ID gets written
-			// into state — critical for CustomizeDiff to detect workspace changes on the next plan.
-			if hasProviderConfig && d.Id() != "" {
-				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
-					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
-				}
 			}
 			return nil
 		}

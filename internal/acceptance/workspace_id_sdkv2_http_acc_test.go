@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
@@ -23,17 +24,17 @@ import (
 //   - TEST_WORKSPACE_ID_2: second workspace ID (for ForceNew / change tests)
 //   - TEST_WORKSPACE_URL:  deploy URL of the primary workspace (for migration tests)
 //
-// These tests use databricks_token (SDKv2 resource using HTTP paths via
+// These tests use databricks_notebook (SDKv2 resource using HTTP paths via
 // DatabricksClientForUnifiedProvider, NOT Go SDK) to validate the unified
 // provider plumbing for non-Go-SDK resources.
-// It has no dependencies and is fast to create.
+// It has no dependencies, is strictly workspace-level, and requires no special entitlements.
 
 // ==========================================
 // State Check Helpers
 // ==========================================
 
-// checkTokenProviderConfigWSIDFromEnv verifies provider_config.0.workspace_id matches the given env var.
-func checkTokenProviderConfigWSIDFromEnv(resourceAddr, envVar string) func(*terraform.State) error {
+// checkNotebookProviderConfigWSIDFromEnv verifies provider_config.0.workspace_id matches the given env var.
+func checkNotebookProviderConfigWSIDFromEnv(resourceAddr, envVar string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		expected := os.Getenv(envVar)
 		if expected == "" {
@@ -47,42 +48,46 @@ func checkTokenProviderConfigWSIDFromEnv(resourceAddr, envVar string) func(*terr
 // Template Generators
 // ==========================================
 
-const tokenResource = "databricks_token.test"
+const notebookResource = "databricks_notebook.test"
 
-// tokenTemplate generates HCL for a databricks_token without a provider block.
-func tokenTemplate(providerConfig string) string {
+var notebookContent = base64.StdEncoding.EncodeToString([]byte("# Databricks notebook source\nprint('hello')"))
+
+// notebookTemplate generates HCL for a databricks_notebook without a provider block.
+func notebookTemplate(providerConfig string) string {
 	return fmt.Sprintf(`
-	resource "databricks_token" "test" {
-		comment          = "dwsid-test-{var.STICKY_RANDOM}"
-		lifetime_seconds = 3600
+	resource "databricks_notebook" "test" {
+		path           = "/Shared/dwsid-test-{var.STICKY_RANDOM}"
+		content_base64 = "%s"
+		language       = "PYTHON"
 		%s
 	}
-	`, providerConfig)
+	`, notebookContent, providerConfig)
 }
 
-// tokenWithProviderBlock generates HCL for a databricks_token with an explicit provider block.
-func tokenWithProviderBlock(providerAttrs, providerConfig string) string {
+// notebookWithProviderBlock generates HCL for a databricks_notebook with an explicit provider block.
+func notebookWithProviderBlock(providerAttrs, providerConfig string) string {
 	return fmt.Sprintf(`
 	provider "databricks" {
 		%s
 	}
-	resource "databricks_token" "test" {
-		comment          = "dwsid-test-{var.STICKY_RANDOM}"
-		lifetime_seconds = 3600
+	resource "databricks_notebook" "test" {
+		path           = "/Shared/dwsid-test-{var.STICKY_RANDOM}"
+		content_base64 = "%s"
+		language       = "PYTHON"
 		%s
 	}
-	`, providerAttrs, providerConfig)
+	`, providerAttrs, notebookContent, providerConfig)
 }
 
 // ==========================================
 // Validation Tests
 // ==========================================
 
-// TestAccWorkspaceIDHttp_InvalidWorkspaceID tests that
+// TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
 func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
-		Template:    tokenWithProviderBlock(`workspace_id = "invalid"`, ""),
+		Template:    notebookWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
@@ -97,21 +102,21 @@ func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
 func TestAccWorkspaceIDHttp_WS_AddProviderConfig(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
-			Template: tokenTemplate(""),
-			Check:    checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Template: notebookTemplate(""),
+			Check:    checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenTemplate(`
+			Template: notebookTemplate(`
 				provider_config {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 	)
 }
@@ -123,21 +128,21 @@ func TestAccWorkspaceIDHttp_WS_AddProviderConfig(t *testing.T) {
 func TestAccWorkspaceIDHttp_WS_RemoveProviderConfig(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
-			Template: tokenTemplate(`
+			Template: notebookTemplate(`
 				provider_config {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenTemplate(""),
+			Template: notebookTemplate(""),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 	)
 }
@@ -150,15 +155,15 @@ func TestAccWorkspaceIDHttp_WS_RemoveProviderConfig(t *testing.T) {
 func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
-			Template: tokenTemplate(`
+			Template: notebookTemplate(`
 				provider_config {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenTemplate(`
+			Template: notebookTemplate(`
 				provider_config {
 					workspace_id = "123"
 				}
@@ -177,25 +182,25 @@ func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 
 func TestMwsAccWorkspaceIDHttp_AccountNewSetup(t *testing.T) {
 	AccountLevel(t, Step{
-		Template: tokenWithProviderBlock(
+		Template: notebookWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			"",
 		),
-		Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+		Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 	})
 }
 
-// TestAccWorkspaceIDHttp_AccountNewSetupWithOverride tests that provider_config.workspace_id
+// TestMwsAccWorkspaceIDHttp_AccountNewSetupWithOverride tests that provider_config.workspace_id
 // takes precedence over the provider-level workspace_id.
 func TestMwsAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 	AccountLevel(t, Step{
-		Template: tokenWithProviderBlock(
+		Template: notebookWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			`provider_config {
 				workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 			}`,
 		),
-		Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
+		Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID_2"),
 	})
 }
 
@@ -215,23 +220,23 @@ func TestMwsAccWorkspaceIDHttp_AccountNewSetupWithOverride(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -249,23 +254,23 @@ func TestMwsAccWorkspaceIDHttp_MigrationSameWorkspace(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
 				"",
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -281,14 +286,14 @@ func TestMwsAccWorkspaceIDHttp_MigrationDiffWorkspace(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
@@ -296,10 +301,10 @@ func TestMwsAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -315,14 +320,14 @@ func TestMwsAccWorkspaceIDHttp_AddOverrideSame(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
@@ -330,10 +335,10 @@ func TestMwsAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -350,25 +355,25 @@ func TestMwsAccWorkspaceIDHttp_AddOverrideDiff(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -387,25 +392,25 @@ func TestMwsAccWorkspaceIDHttp_RemoveOverrideSame(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID_2"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -421,23 +426,23 @@ func TestMwsAccWorkspaceIDHttp_RemoveOverrideDiff(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
 				"",
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionDestroyBeforeCreate),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID_2"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -454,16 +459,16 @@ func TestMwsAccWorkspaceIDHttp_ChangeDefault(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
 				`provider_config {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
@@ -471,10 +476,10 @@ func TestMwsAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -488,7 +493,7 @@ func TestMwsAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 
 func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    tokenWithProviderBlock(`workspace_id = "12345"`, ""),
+		Template:    notebookWithProviderBlock(`workspace_id = "12345"`, ""),
 		ExpectError: regexp.MustCompile(`workspace_id cannot be used with a workspace-level provider; it is only supported when the provider is configured at the account level`),
 		PlanOnly:    true,
 	})
@@ -506,13 +511,13 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider(t *testing.T) {
 // the HTTP path (DatabricksClientForUnifiedProvider) cannot validate early because
 // it doesn't know whether the caller needs a workspace-scoped or account-scoped
 // client. It returns the account-level client, which then fails at the API layer
-// with an OAuth error when the resource attempts a workspace-level operation.
+// when the resource attempts a workspace-level operation.
 
 func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
-		Template: tokenWithProviderBlock("", ""),
+		Template: notebookWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`Unable to load OAuth Config`,
+			`cannot create notebook`,
 		),
 	})
 }
@@ -530,17 +535,17 @@ func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 func TestAccWorkspaceIDHttp_ProviderUpgrade(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
-			Template: tokenTemplate(""),
-			Check:    checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Template: notebookTemplate(""),
+			Check:    checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenTemplate(""),
+			Template: notebookTemplate(""),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(tokenResource, plancheck.ResourceActionNoop),
+					plancheck.ExpectResourceAction(notebookResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "THIS_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "THIS_WORKSPACE_ID"),
 		},
 	)
 }
@@ -560,14 +565,14 @@ func TestAccWorkspaceIDHttp_ProviderUpgrade(t *testing.T) {
 func TestMwsAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 	AccountLevel(t,
 		Step{
-			Template: tokenWithProviderBlock(
+			Template: notebookWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check: checkTokenProviderConfigWSIDFromEnv(tokenResource, "TEST_WORKSPACE_ID"),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tokenWithProviderBlock("", ""),
+			Template: notebookWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
 				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
 			),

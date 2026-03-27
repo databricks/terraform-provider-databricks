@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Install conftest
-        run: |
+        run: |-
           curl -fsSL "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" \
             -o conftest.tar.gz
           echo "${CONFTEST_SHA256}  conftest.tar.gz" | sha256sum --check --strict
@@ -31,7 +31,7 @@ jobs:
 
       - name: Run conftest
         shell: bash
-        run: |
+        run: |-
           shopt -s nullglob
           conftest test \
             .github/workflows/*.yml \

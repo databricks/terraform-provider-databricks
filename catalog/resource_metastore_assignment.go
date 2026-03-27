@@ -18,6 +18,8 @@ func ResourceMetastoreAssignment() common.Resource {
 			m["workspace_id"].ForceNew = true
 			m["metastore_id"].ForceNew = true
 			common.AddApiField(m)
+			common.AddNamespaceInSchema(m)
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	pi := common.NewPairID("workspace_id", "metastore_id").Schema(
@@ -26,7 +28,14 @@ func ResourceMetastoreAssignment() common.Resource {
 		})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			workspaceId := int64(d.Get("workspace_id").(int))
 			metastoreId := d.Get("metastore_id").(string)
 			var create catalog.CreateMetastoreAssignment
@@ -55,6 +64,10 @@ func ResourceMetastoreAssignment() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			first, _, err := pi.Unpack(d)
 			if err != nil {
 				return err
@@ -84,6 +97,10 @@ func ResourceMetastoreAssignment() common.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			workspaceId := int64(d.Get("workspace_id").(int))
 			metastoreId := d.Get("metastore_id").(string)
 			var update catalog.UpdateMetastoreAssignment
@@ -103,6 +120,10 @@ func ResourceMetastoreAssignment() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			first, metastoreId, err := pi.Unpack(d)
 			if err != nil {
 				return err

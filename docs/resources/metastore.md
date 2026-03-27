@@ -80,6 +80,8 @@ The following arguments are required:
 * `external_access_enabled` - (Optional) Whether to allow non-DBR clients to directly access entities under the metastore.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
 * `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

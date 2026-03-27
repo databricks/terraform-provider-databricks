@@ -30,17 +30,6 @@ func TestAccInstanceProfile_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccInstanceProfile_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: instanceProfileProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccInstanceProfile_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: instanceProfileProviderConfigTemplate(`

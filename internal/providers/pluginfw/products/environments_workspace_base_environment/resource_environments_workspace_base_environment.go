@@ -32,6 +32,7 @@ import (
 const resourceName = "environments_workspace_base_environment"
 
 var _ resource.ResourceWithConfigure = &WorkspaceBaseEnvironmentResource{}
+var _ resource.ResourceWithModifyPlan = &WorkspaceBaseEnvironmentResource{}
 
 func ResourceWorkspaceBaseEnvironment() resource.Resource {
 	return &WorkspaceBaseEnvironmentResource{}
@@ -208,7 +209,9 @@ func (m WorkspaceBaseEnvironment) Type(ctx context.Context) attr.Type {
 func (to *WorkspaceBaseEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceBaseEnvironment) {
 	to.EffectiveBaseEnvironmentType = to.BaseEnvironmentType
 	to.BaseEnvironmentType = from.BaseEnvironmentType
-	to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
+		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -221,7 +224,9 @@ func (to *WorkspaceBaseEnvironment) SyncFieldsDuringRead(ctx context.Context, fr
 	if from.EffectiveBaseEnvironmentType.ValueString() == to.BaseEnvironmentType.ValueString() {
 		to.BaseEnvironmentType = from.BaseEnvironmentType
 	}
-	to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
+		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -265,6 +270,31 @@ func (r *WorkspaceBaseEnvironmentResource) Schema(ctx context.Context, req resou
 
 func (r *WorkspaceBaseEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *WorkspaceBaseEnvironmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan WorkspaceBaseEnvironment
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *WorkspaceBaseEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -43,7 +43,7 @@ const tfSdkToGoSdkFieldConversionFailureMessage = "tfsdk to gosdk field conversi
 // types.list and types.map are not supported
 // map keys should always be a string
 // tfsdk structs use types.String for all enum values
-func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{}) (d diag.Diagnostics) {
+func TfSdkToGoSdkStruct(ctx context.Context, tfsdk any, gosdk any) (d diag.Diagnostics) {
 	srcVal := reflect.ValueOf(tfsdk)
 	destVal := reflect.ValueOf(gosdk)
 

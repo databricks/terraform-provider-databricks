@@ -35,6 +35,7 @@ import (
 const resourceName = "knowledge_assistant_knowledge_source"
 
 var _ resource.ResourceWithConfigure = &KnowledgeSourceResource{}
+var _ resource.ResourceWithModifyPlan = &KnowledgeSourceResource{}
 
 func ResourceKnowledgeSource() resource.Resource {
 	return &KnowledgeSourceResource{}
@@ -243,7 +244,9 @@ func (to *KnowledgeSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -276,7 +279,9 @@ func (to *KnowledgeSource) SyncFieldsDuringRead(ctx context.Context, from Knowle
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -392,6 +397,31 @@ func (r *KnowledgeSourceResource) Schema(ctx context.Context, req resource.Schem
 
 func (r *KnowledgeSourceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *KnowledgeSourceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan KnowledgeSource
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *KnowledgeSourceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

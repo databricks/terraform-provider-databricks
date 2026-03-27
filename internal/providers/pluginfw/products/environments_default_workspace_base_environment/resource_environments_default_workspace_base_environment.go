@@ -32,6 +32,7 @@ import (
 const resourceName = "environments_default_workspace_base_environment"
 
 var _ resource.ResourceWithConfigure = &DefaultWorkspaceBaseEnvironmentResource{}
+var _ resource.ResourceWithModifyPlan = &DefaultWorkspaceBaseEnvironmentResource{}
 
 func ResourceDefaultWorkspaceBaseEnvironment() resource.Resource {
 	return &DefaultWorkspaceBaseEnvironmentResource{}
@@ -207,6 +208,31 @@ func (r *DefaultWorkspaceBaseEnvironmentResource) Schema(ctx context.Context, re
 
 func (r *DefaultWorkspaceBaseEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *DefaultWorkspaceBaseEnvironmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan DefaultWorkspaceBaseEnvironment
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *DefaultWorkspaceBaseEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

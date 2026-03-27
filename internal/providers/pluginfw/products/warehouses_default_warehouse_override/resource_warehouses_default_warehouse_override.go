@@ -32,6 +32,7 @@ import (
 const resourceName = "warehouses_default_warehouse_override"
 
 var _ resource.ResourceWithConfigure = &DefaultWarehouseOverrideResource{}
+var _ resource.ResourceWithModifyPlan = &DefaultWarehouseOverrideResource{}
 
 func ResourceDefaultWarehouseOverride() resource.Resource {
 	return &DefaultWarehouseOverrideResource{}
@@ -212,6 +213,31 @@ func (r *DefaultWarehouseOverrideResource) Schema(ctx context.Context, req resou
 
 func (r *DefaultWarehouseOverrideResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *DefaultWarehouseOverrideResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan DefaultWarehouseOverride
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

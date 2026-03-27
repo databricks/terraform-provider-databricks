@@ -46,7 +46,7 @@ const (
 // Map keys must always be strings.
 // TF SDK structs use types.String for all enum values.
 // Non-JSON fields will be omitted.
-func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{}) (d diag.Diagnostics) {
+func GoSdkToTfSdkStruct(ctx context.Context, gosdk any, tfsdk any) (d diag.Diagnostics) {
 	srcVal := reflect.ValueOf(gosdk)
 	destVal := reflect.ValueOf(tfsdk)
 

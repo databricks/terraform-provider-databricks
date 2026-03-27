@@ -349,8 +349,8 @@ func handleSuppressDiff(typeField reflect.StructField, fieldName string, v *sche
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
-		if strings.HasPrefix(tag, "alias:") {
-			return strings.TrimPrefix(tag, "alias:")
+		if after, ok := strings.CutPrefix(tag, "alias:"); ok {
+			return after
 		}
 	}
 	return ""

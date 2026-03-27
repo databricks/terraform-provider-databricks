@@ -21,7 +21,7 @@ const dataSourceTemplate = `
 	}
 
 	data "databricks_users" "this" {
-		filter = "userName co \"testuser\""
+		filter = "userName co \"tf-{var.STICKY_RANDOM}\""
 		depends_on = [databricks_user.user1, databricks_user.user2]
 	}
 `
@@ -41,7 +41,7 @@ const dataSourceTemplateExtraAttributes = `
 	}
 
 	data "databricks_users" "this" {
-		filter = "userName eq \"me-{var.STICKY_RANDOM}@example.com\""
+		filter = "userName eq \"tf-{var.STICKY_RANDOM}-1@databricks.com\""
 		extra_attributes = "groups"
 		depends_on = [databricks_group_member.membership]
 	}
@@ -97,14 +97,14 @@ func checkUsersDataSourceWithGroups(t *testing.T) func(s *terraform.State) error
 	}
 }
 
-func TestAccDataSourceDataUsers(t *testing.T) {
+func TestMwsAccDataSourceDataUsers(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
 	})
 }
 
-func TestWorkspaceDataSourceDataUsers(t *testing.T) {
+func TestAccDataSourceDataUsers(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
@@ -139,28 +139,28 @@ func checkUsersDataSourceActive(t *testing.T) func(s *terraform.State) error {
 	}
 }
 
-func TestAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
+func TestMwsAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplateSingleExtraAttribute,
 		Check:    checkUsersDataSourceActive(t),
 	})
 }
 
-func TestWorkspaceDataSourceUsers_SingleExtraAttribute(t *testing.T) {
+func TestAccDataSourceUsers_SingleExtraAttribute(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplateSingleExtraAttribute,
 		Check:    checkUsersDataSourceActive(t),
 	})
 }
 
-func TestAccDataSourceUsers_WithGroups(t *testing.T) {
+func TestMwsAccDataSourceUsers_WithGroups(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),
 	})
 }
 
-func TestWorkspaceDataSourceUsers_WithGroups(t *testing.T) {
+func TestAccDataSourceUsers_WithGroups(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),

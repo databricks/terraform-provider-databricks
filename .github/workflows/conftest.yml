@@ -15,9 +15,7 @@ env:
 
 jobs:
   conftest:
-    runs-on:
-      group: databricks-eng-protected-runner-group
-      labels: linux-ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout

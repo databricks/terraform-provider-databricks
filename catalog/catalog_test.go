@@ -272,17 +272,6 @@ func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `

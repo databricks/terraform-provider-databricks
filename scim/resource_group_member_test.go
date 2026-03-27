@@ -22,17 +22,17 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Members: []ComplexValue{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
 						{
-							Value: "bcd",
+							ID:      "abc",
+							Members: []ComplexValue{{Value: "bcd"}},
 						},
 					},
-					ID: "abc",
 				},
 			},
 		},
@@ -86,17 +86,17 @@ func TestResourceGroupMemberRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Members: []ComplexValue{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
 						{
-							Value: "bcd",
+							ID:      "abc",
+							Members: []ComplexValue{{Value: "bcd"}},
 						},
 					},
-					ID: "abc",
 				},
 			},
 		},
@@ -118,15 +118,18 @@ func TestResourceGroupMemberRead(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_NoMember(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					ID:          "abc",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{ID: "abc"},
+					},
 				},
 			},
 		},
@@ -138,16 +141,18 @@ func TestResourceGroupMemberRead_NoMember(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_NotFound(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Status:       404,
 				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
-				Status: 404,
 			},
 		},
 		Resource: ResourceGroupMember(),
@@ -158,16 +163,18 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_Error(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Status:       400,
 				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
-				Status: 400,
 			},
 		},
 		Resource: ResourceGroupMember(),

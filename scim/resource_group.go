@@ -4,11 +4,116 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/singleflight"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+// groupListAttrs are the SCIM attributes fetched when bulk-listing groups for the read cache.
+const groupListAttrs = "id,displayName,externalId,entitlements"
+
+type groupsEntryItem struct {
+	mu          sync.RWMutex
+	initialized bool
+	byID        map[string]Group
+	sg          singleflight.Group
+}
+
+// groupsListCache caches a ListAll result per (host, apiLevel) so that
+// N concurrent reads for N distinct databricks_group resources only issue
+// one SCIM list call instead of N individual GET-by-ID calls.
+type groupsListCache struct {
+	mu    sync.Mutex
+	cache map[string]*groupsEntryItem
+}
+
+func newGroupsListCache() *groupsListCache {
+	return &groupsListCache{cache: make(map[string]*groupsEntryItem)}
+}
+
+func (c *groupsListCache) entry(key string) *groupsEntryItem {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if e, ok := c.cache[key]; ok {
+		return e
+	}
+	e := &groupsEntryItem{byID: make(map[string]Group)}
+	c.cache[key] = e
+	return e
+}
+
+func (c *groupsListCache) lookup(api GroupsAPI, groupID string) (Group, error) {
+	key := api.client.Config.Host + "|" + api.ApiLevel
+	e := c.entry(key)
+
+	// Fast path: warm cache, concurrent readers proceed simultaneously.
+	e.mu.RLock()
+	if e.initialized {
+		if g, ok := e.byID[groupID]; ok {
+			e.mu.RUnlock()
+			return g, nil
+		}
+		e.mu.RUnlock()
+		// Cache populated but group absent (created externally); fall through to direct read.
+		return api.Read(groupID, "displayName,externalId,entitlements")
+	}
+	e.mu.RUnlock()
+
+	// Slow path: populate cache via singleflight — at most one ListAll in-flight
+	// per (host, apiLevel); all other goroutines join and wake simultaneously.
+	_, err, _ := e.sg.Do("list", func() (interface{}, error) {
+		// Double-check after acquiring the singleflight slot.
+		e.mu.RLock()
+		if e.initialized {
+			e.mu.RUnlock()
+			return nil, nil
+		}
+		e.mu.RUnlock()
+
+		groups, err := api.ListAll(groupListAttrs)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[string]Group, len(groups))
+		for _, g := range groups {
+			m[g.ID] = g
+		}
+		e.mu.Lock()
+		e.byID = m
+		e.initialized = true
+		e.mu.Unlock()
+		return nil, nil
+	})
+	if err != nil {
+		return Group{}, err
+	}
+
+	e.mu.RLock()
+	g, ok := e.byID[groupID]
+	e.mu.RUnlock()
+	if !ok {
+		return api.Read(groupID, "displayName,externalId,entitlements")
+	}
+	return g, nil
+}
+
+func (c *groupsListCache) invalidate(key string) {
+	c.mu.Lock()
+	e, ok := c.cache[key]
+	c.mu.Unlock()
+	if ok {
+		e.mu.Lock()
+		e.initialized = false
+		e.byID = make(map[string]Group)
+		e.mu.Unlock()
+	}
+}
+
+var globalGroupsListCache = newGroupsListCache()
 
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
@@ -48,6 +153,7 @@ func ResourceGroup() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalGroupsListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
@@ -67,7 +173,7 @@ func ResourceGroup() common.Resource {
 				return err
 			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
-			group, err := groupsAPI.Read(d.Id(), "displayName,externalId,entitlements")
+			group, err := globalGroupsListCache.lookup(groupsAPI, d.Id())
 			if err != nil {
 				return err
 			}
@@ -86,6 +192,7 @@ func ResourceGroup() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalGroupsListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			groupName := d.Get("display_name").(string)
 			return groupsAPI.UpdateNameAndEntitlements(d.Id(), groupName,
@@ -96,6 +203,7 @@ func ResourceGroup() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalGroupsListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			return groupsAPI.Delete(d.Id())
 		},

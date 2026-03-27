@@ -13,8 +13,28 @@ import (
 )
 
 func TestResourceGroupCreate(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{
+							ID:          "abc",
+							DisplayName: "Data Scientists",
+							Entitlements: entitlements{
+								{Value: "allow-cluster-create"},
+								{Value: "databricks-sql-access"},
+								{Value: "allow-instance-pool-create"},
+							},
+						},
+					},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
@@ -98,8 +118,28 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 }
 
 func TestResourceGroupRead(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{
+							ID:          "abc",
+							DisplayName: "Data Scientists",
+							Entitlements: entitlements{
+								{Value: "databricks-sql-access"},
+								{Value: "allow-cluster-create"},
+								{Value: "allow-instance-pool-create"},
+							},
+						},
+					},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
@@ -134,8 +174,20 @@ func TestResourceGroupRead(t *testing.T) {
 }
 
 func TestResourceGroupRead_NoEntitlements(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{ID: "abc", DisplayName: "Data Scientists"},
+					},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
@@ -159,8 +211,15 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 }
 
 func TestResourceGroupRead_NotFound(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response:     GroupList{},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
@@ -179,8 +238,15 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupRead_Error(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response:     GroupList{},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
@@ -198,8 +264,28 @@ func TestResourceGroupRead_Error(t *testing.T) {
 }
 
 func TestResourceGroupUpdate(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{
+							ID:          "abc",
+							DisplayName: "Data Ninjas",
+							Entitlements: entitlements{
+								{Value: "allow-cluster-create"},
+								{Value: "allow-instance-pool-create"},
+								{Value: "databricks-sql-access"},
+							},
+						},
+					},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",

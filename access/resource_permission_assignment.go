@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"sync"
+
+	"golang.org/x/sync/singleflight"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -17,6 +20,98 @@ import (
 func NewPermissionAssignmentAPI(ctx context.Context, m any) PermissionAssignmentAPI {
 	return PermissionAssignmentAPI{m.(*common.DatabricksClient), ctx}
 }
+
+// permAssignmentEntry holds the cached list result for one workspace.
+type permAssignmentEntry struct {
+	mu          sync.RWMutex
+	initialized bool
+	list        permissionAssignmentResponse
+	// sg deduplicates concurrent in-flight API calls when the cache is cold.
+	// All goroutines that arrive while a fetch is in-flight join the same call
+	// and are woken simultaneously when it completes, rather than serialising
+	// through a write lock.
+	sg singleflight.Group
+}
+
+// permAssignmentCache caches the permission assignments list per workspace host
+// so that N databricks_permission_assignment resources in the same workspace
+// only issue a single API call during a terraform plan/apply cycle.
+type permAssignmentCache struct {
+	mu    sync.Mutex
+	cache map[string]*permAssignmentEntry
+}
+
+func newPermAssignmentCache() *permAssignmentCache {
+	return &permAssignmentCache{
+		cache: make(map[string]*permAssignmentEntry),
+	}
+}
+
+func (c *permAssignmentCache) getOrCreate(host string) *permAssignmentEntry {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if entry, ok := c.cache[host]; ok {
+		return entry
+	}
+	entry := &permAssignmentEntry{}
+	c.cache[host] = entry
+	return entry
+}
+
+func (c *permAssignmentCache) list(api PermissionAssignmentAPI) (permissionAssignmentResponse, error) {
+	host := api.client.Config.Host
+	entry := c.getOrCreate(host)
+
+	// Fast path: warm cache. Many goroutines can hold a read-lock simultaneously.
+	entry.mu.RLock()
+	if entry.initialized {
+		l := entry.list
+		entry.mu.RUnlock()
+		return l, nil
+	}
+	entry.mu.RUnlock()
+
+	// Slow path: cache is cold. Use singleflight so exactly one API call is made
+	// regardless of how many goroutines arrive concurrently; all share the result.
+	v, err, _ := entry.sg.Do("fetch", func() (interface{}, error) {
+		// Double-check now that we are the singleflight leader.
+		entry.mu.RLock()
+		if entry.initialized {
+			l := entry.list
+			entry.mu.RUnlock()
+			return &l, nil
+		}
+		entry.mu.RUnlock()
+
+		l, err := api.List()
+		if err != nil {
+			return nil, err
+		}
+		entry.mu.Lock()
+		entry.list = l
+		entry.initialized = true
+		entry.mu.Unlock()
+		return &l, nil
+	})
+	if err != nil {
+		return permissionAssignmentResponse{}, err
+	}
+	return *v.(*permissionAssignmentResponse), nil
+}
+
+func (c *permAssignmentCache) invalidate(host string) {
+	c.mu.Lock()
+	entry, ok := c.cache[host]
+	c.mu.Unlock()
+	if ok {
+		entry.mu.Lock()
+		entry.initialized = false
+		entry.list = permissionAssignmentResponse{}
+		entry.mu.Unlock()
+	}
+}
+
+var globalPermAssignmentCache = newPermAssignmentCache()
 
 type PermissionAssignmentAPI struct {
 	client  *common.DatabricksClient
@@ -156,6 +251,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.invalidate(c.Config.Host)
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -188,7 +284,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
-			list, err := NewPermissionAssignmentAPI(ctx, c).List()
+			list, err := globalPermAssignmentCache.list(NewPermissionAssignmentAPI(ctx, c))
 			if err != nil {
 				return err
 			}
@@ -203,6 +299,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.invalidate(c.Config.Host)
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -214,6 +311,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.invalidate(c.Config.Host)
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())
 		},
 	}

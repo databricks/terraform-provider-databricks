@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 )
@@ -53,6 +54,32 @@ func (a GroupsAPI) Filter(filter string, attributes string) (GroupList, error) {
 	}
 	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups, a.ApiLevel)
 	return groups, err
+}
+
+// ListAll retrieves all groups with the given attributes, handling SCIM pagination.
+func (a GroupsAPI) ListAll(attributes string) ([]Group, error) {
+	startIndex := 1
+	var result []Group
+	for {
+		req := map[string]string{
+			"count":      "10000",
+			"startIndex": strconv.Itoa(startIndex),
+		}
+		if attributes != "" {
+			req["attributes"] = attributes
+		}
+		var page GroupList
+		err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &page, a.ApiLevel)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, page.Resources...)
+		if len(page.Resources) == 0 || int32(len(result)) >= page.TotalResults {
+			break
+		}
+		startIndex += len(page.Resources)
+	}
+	return result, nil
 }
 
 func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Group, err error) {

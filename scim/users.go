@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 )
@@ -52,6 +53,32 @@ func (a UsersAPI) Filter(filter string, excludeRoles bool) (u []User, err error)
 	}
 	u = users.Resources
 	return
+}
+
+// ListAll retrieves all users with the given attributes, handling SCIM pagination.
+func (a UsersAPI) ListAll(attributes string) ([]User, error) {
+	startIndex := 1
+	var result []User
+	for {
+		req := map[string]string{
+			"count":      "10000",
+			"startIndex": strconv.Itoa(startIndex),
+		}
+		if attributes != "" {
+			req["attributes"] = attributes
+		}
+		var page UserList
+		err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &page, a.ApiLevel)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, page.Resources...)
+		if len(page.Resources) == 0 || int32(len(result)) >= page.TotalResults {
+			break
+		}
+		startIndex += len(page.Resources)
+	}
+	return result, nil
 }
 
 func (a UsersAPI) Read(userID, attributes string) (User, error) {

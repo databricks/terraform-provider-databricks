@@ -11,7 +11,7 @@
             "go"
         ],
         "post_generate": [
-            "make test"
+            "make lint"
         ]
     }
 }

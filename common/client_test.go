@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,6 +22,17 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+// newWorkspaceIDServer creates a test HTTP server that responds to
+// GET /api/2.0/preview/scim/v2/Me with the given workspace ID in the
+// X-Databricks-Org-Id response header.
+func newWorkspaceIDServer(workspaceID string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Databricks-Org-Id", workspaceID)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{}`))
+	}))
+}
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
@@ -344,7 +356,7 @@ func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	assert.Equal(t, 1, mock.count)
 }
 
-func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testing.T) {
+func TestWorkspaceClientForWorkspace_AccountAPIFails_ReturnsError(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
 
@@ -363,17 +375,11 @@ func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testin
 	}
 	dc.SetAccountClient(mockAcc.AccountClient)
 
-	// When account API fails, fallback creates a direct workspace client
+	// When account API fails, error is returned.
 	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-	assert.NoError(t, err)
-	assert.NotNil(t, workspaceClient)
-
-	// Verify the client is cached
-	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
-	dc.mu.Unlock()
-	assert.True(t, exists)
-	assert.Equal(t, workspaceClient, cachedClient)
+	assert.Error(t, err)
+	assert.Nil(t, workspaceClient)
+	assert.Contains(t, err.Error(), "workspace not found")
 }
 
 func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
@@ -443,6 +449,171 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	// Verify no error and the cached client is returned
 	assert.NoError(t, err)
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_NoWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// Empty workspace_id with workspace host returns the cached workspace client.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_WithWorkspaceID(t *testing.T) {
+	// Mock server that responds with workspace ID 12345
+	srv := newWorkspaceIDServer("12345")
+	defer srv.Close()
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  srv.URL,
+				Token: "test-token",
+			},
+		},
+	}
+
+	// Workspace ID matches the server's response — validation passes.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
+	assert.NoError(t, err)
+	assert.NotNil(t, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceHost_DifferentWorkspaceID(t *testing.T) {
+	// Mock server that responds with workspace ID 12345
+	srv := newWorkspaceIDServer("12345")
+	defer srv.Close()
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  srv.URL,
+				Token: "test-token",
+			},
+		},
+	}
+
+	// Different workspace ID — should fail validation.
+	_, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WithWorkspaceID(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
+		Token: "dapi123",
+	}
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: 12345,
+	}).Return(&provisioning.Workspace{
+		WorkspaceId:    12345,
+		WorkspaceName:  "test-workspace",
+		DeploymentName: "test-deployment",
+	}, nil)
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Account host with workspace_id: direct path fails (account host can't create
+	// workspace client), falls through to account path which resolves via API.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "12345")
+	assert.NoError(t, err)
+	assert.NotNil(t, w)
+	assert.Equal(t, "https://test-deployment.cloud.databricks.com", w.Config.Host)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_NoWorkspaceID_ReturnsError(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+
+	// Account host without workspace_id: direct path fails, account fallback
+	// errors because workspace_id is required.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "workspace_id is not set")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_InvalidWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// Non-numeric workspace_id — fails parsing in direct path, also fails in account path.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "not-a-number")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to parse workspace_id")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountHost_WorkspaceNotFound(t *testing.T) {
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
+	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+		WorkspaceId: 99999,
+	}).Return(nil, fmt.Errorf("workspace 99999 not found"))
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "dapi123",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Account host, workspace not found via API — both paths fail.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "99999")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 99999")
 }
 
 func TestAddApiField_ValidValues(t *testing.T) {

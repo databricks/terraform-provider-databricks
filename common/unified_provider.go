@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -97,8 +96,8 @@ func namespaceForceNew(d *schema.ResourceDiff) error {
 
 // NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
 // is reachable during the plan phase.
-// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
-// For account-level providers, it checks that the workspace is accessible from the account.
+// First tries to validate as a workspace-configured provider, and if that fails,
+// falls back to validating through the account API.
 // This is a no-op when provider_config is not set.
 func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
@@ -109,22 +108,10 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if !ok || newWSID == "" {
 		return nil
 	}
-	workspaceIDInt, err := parseWorkspaceID(newWSID)
-	if err != nil {
-		return err
-	}
-	if c.Config.HostType() != config.WorkspaceHost {
-		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-		if err != nil {
-			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-		}
-		return nil
-	}
-	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
-	if err != nil {
-		return err
-	}
-	return nil
+	// Delegate to GetWorkspaceClientForUnifiedProvider which handles
+	// validation for all provider types (workspace, account, unified host).
+	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
+	return err
 }
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
@@ -139,41 +126,38 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data
 // This is used by resources and data sources that are developed over SDKv2.
 func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
-	workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the resource data
-	if workspaceIDFromSchema == nil {
+	workspaceIDProviderConfigRaw := d.Get(workspaceIDSchemaKey)
+	if workspaceIDProviderConfigRaw == nil {
+		// provider_config is not part of resource schema.
 		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
 	}
-	var workspaceID string
-	workspaceID, ok := workspaceIDFromSchema.(string)
+	workspaceIDProviderConfig, ok := workspaceIDProviderConfigRaw.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceIDProviderConfig)
 }
 
 // DatabricksClientForUnifiedProvider returns a new Databricks Client for the workspace ID from the resource data
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
-	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the resource data
-	// so we don't need to create a new client
-	// and can return the current client.
-	if workspaceIDFromResourceData == nil {
+	workspaceIDProviderConfigRaw := d.Get(workspaceIDSchemaKey)
+	if workspaceIDProviderConfigRaw == nil {
+		// provider_config is not part of resource schema.
+		// We return the current client.
 		return c, nil
 	}
-	var workspaceID string
-	workspaceID, ok := workspaceIDFromResourceData.(string)
+	workspaceIDProviderConfig, ok := workspaceIDProviderConfigRaw.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	// If the workspace_id is not passed in the resource configuration, we don't need to create a new client
-	// and can return the current client.
-	if workspaceID == "" {
+	// If the workspace_id is not passed in the resource configuration,
+	// we don't need to create a new client and can return the current client.
+	if workspaceIDProviderConfig == "" {
 		return c, nil
 	}
-	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
+	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceIDProviderConfig)
 }
 
 // getDatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data

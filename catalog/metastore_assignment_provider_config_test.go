@@ -30,14 +30,15 @@ func TestAccMetastoreAssignment_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccMetastoreAssignment_ProviderConfig_Required(t *testing.T) {
+// Empty provider_config {} is valid since workspace_id is Optional+Computed.
+func TestAccMetastoreAssignment_ProviderConfig_EmptyBlock(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: metastoreAssignmentProviderConfigTemplate(`
 			provider_config {
 			}
 		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 

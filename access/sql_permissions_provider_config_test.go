@@ -29,14 +29,16 @@ func TestAccSqlPermissions_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccSqlPermissions_ProviderConfig_Required(t *testing.T) {
+// TestAccSqlPermissions_ProviderConfig_EmptyBlock verifies that an empty
+// provider_config {} block is valid (workspace_id is Optional+Computed).
+func TestAccSqlPermissions_ProviderConfig_EmptyBlock(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlPermissionsProviderConfigTemplate(`
 			provider_config {
 			}
 		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 

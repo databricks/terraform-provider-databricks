@@ -32,14 +32,15 @@ func TestAccStorageCredential_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccStorageCredential_ProviderConfig_Required(t *testing.T) {
+// Empty provider_config {} is valid since workspace_id is Optional+Computed.
+func TestAccStorageCredential_ProviderConfig_EmptyBlock(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: storageCredentialProviderConfigTemplate("tf-test-sc-{var.STICKY_RANDOM}", `
 			provider_config {
 			}
 		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 

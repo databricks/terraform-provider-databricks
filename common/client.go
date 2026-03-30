@@ -103,77 +103,43 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 	return w, nil
 }
 
-// GetWorkspaceClientForUnifiedProvider returns the Databricks
-// WorkspaceClient for workspace level resources or diagnostics if that fails
-// for terraform provider, the provider can be configured at account level or workspace level.
-// This implementation will be used by resources and data sources that are developed
-// over SDKv2.
+// GetWorkspaceClientForUnifiedProvider returns the Databricks WorkspaceClient
+// for workspace-level resources. The provider can be configured at the account
+// level, workspace level, or with a unified host. This function uses a single
+// flow regardless of host type: it first tries the workspace path (return the
+// provider's own workspace client when no workspace_id is given, or validate
+// the workspace_id against the provider), then falls through to account-level
+// workspace client creation when the provider's workspace ID is unknown.
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() != config.WorkspaceHost {
-		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
-	}
-	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
-}
-
-// getWorkspaceClientForAccountUnifiedHost gets the workspace client for
-// the workspace ID specified in the resource when the provider is configured
-// at account level.
-func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
-	ctx context.Context, workspaceID string,
-) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
-	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
-	}
-
-	// Parse the workspace ID to int.
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the workspace client for the workspace ID.
-	w, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-	}
-	return w, nil
-}
-
-// getWorkspaceClientForWorkspaceConfiguredProvider gets the workspace client for
-// the workspace ID specified in the resource when the provider is configured at workspace level.
-func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
-	ctx context.Context, workspaceID string,
-) (*databricks.WorkspaceClient, error) {
-	// Provider is configured at workspace level and we get the
-	// workspace client from the provider.
 	if workspaceID == "" {
 		return c.WorkspaceClient()
 	}
-
 	workspaceIDInt, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if the workspace ID specified in the resource matches
-	// the workspace ID of the provider configured workspace client.
+	// Try to validate workspace_id against the provider's workspace client.
 	w, err := c.WorkspaceClient()
-	if err != nil {
-		return nil, err
+	if err == nil {
+		validationErr := c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+		if validationErr == nil {
+			return w, nil
+		}
+		// If we successfully determined the provider's workspace ID but it
+		// doesn't match, that's a configuration error — hard error.
+		if c.cachedWorkspaceID != 0 {
+			return nil, fmt.Errorf("failed to validate workspace_id: %w", validationErr)
+		}
+		// Otherwise we couldn't determine the workspace ID (e.g. account or
+		// unified host). Fall through to resolve via account API.
 	}
-
-	err = c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
+	// Resolve workspace client by workspace ID (via account API or direct fallback).
+	w, err = c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate workspace_id: %w", err)
+		return nil, fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
 	}
-	// The provider is configured at the workspace level and the
-	// workspace ID matches
 	return w, nil
 }
 

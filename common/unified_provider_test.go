@@ -323,7 +323,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			description: "When workspace_id is explicitly empty, should use cached workspace client",
 		},
 		{
-			name: "workspace_id with different numeric value",
+			name: "workspace_id with different numeric value - hard error on mismatch",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -344,10 +344,10 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			},
 			expectError:   true,
 			errorContains: "failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 1234 but got 789012 in provider_config",
-			description:   "Should handle different workspace IDs correctly",
+			description:   "Known workspace ID mismatch is a hard error",
 		},
 		{
-			name: "account level provider without workspace_id - returns error",
+			name: "account level provider without workspace_id - returns workspace client",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -359,10 +359,10 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 						Token:     "test-token",
 					},
 				},
+				cachedWorkspaceClient: mockWorkspaceClient,
 			},
-			expectError:   true,
-			errorContains: "workspace_id is not set, please set the workspace_id in the provider_config",
-			description:   "Account-level provider requires workspace_id to be set",
+			expectError: false,
+			description: "Account-level provider without workspace_id returns the provider's workspace client",
 		},
 	}
 
@@ -572,7 +572,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:      "Account-level provider without workspace_id should return current client",
 		},
 		{
-			name: "workspace_id mismatch - returns error",
+			name: "workspace_id mismatch - hard error",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
@@ -604,7 +604,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			}(),
 			expectError:   true,
 			errorContains: "workspace_id mismatch",
-			description:   "Should return error when workspace_id doesn't match configured workspace",
+			description:   "Known workspace ID mismatch is a hard error",
 		},
 	}
 
@@ -717,7 +717,7 @@ func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
 	assert.Nil(t, diff)
 }
 
-func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
+func TestNamespaceCustomizeDiff_MismatchedWorkspaceID_HardError(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
 		Config: &config.Config{
@@ -735,6 +735,7 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 		cachedWorkspaceClient: mockWS,
 		cachedWorkspaceID:     999999,
 	}
+	// Known workspace ID mismatch is a hard error.
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{

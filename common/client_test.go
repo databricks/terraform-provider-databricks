@@ -445,6 +445,228 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
 }
 
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceLevel_NoWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_WorkspaceLevel_MatchingWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     123456,
+	}
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "123456")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_MismatchedWorkspaceID_HardError(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     999,
+	}
+
+	// When the provider's workspace ID is known and doesn't match, it's a hard error.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "123456")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "workspace_id mismatch")
+	assert.Contains(t, err.Error(), "provider is configured for workspace 999 but got 123456")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountLevel_WithWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+	}
+	// Pre-cache the workspace client so WorkspaceClientForWorkspace returns it
+	dc.SetWorkspaceClientForWorkspace(123456, mockWS)
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "123456")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_AccountLevel_WithoutWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// With unified flow, empty workspace_id returns the provider's workspace client.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_InvalidWorkspaceID(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: &databricks.WorkspaceClient{},
+	}
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "not-a-number")
+	assert.Error(t, err)
+	assert.Nil(t, w)
+	assert.Contains(t, err.Error(), "failed to parse workspace_id")
+}
+
+func TestGetWorkspaceClientForUnifiedProviderWithDiagnostics_Success(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	w, diags := dc.GetWorkspaceClientForUnifiedProviderWithDiagnostics(context.Background(), "")
+	assert.False(t, diags.HasError())
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProviderWithDiagnostics_AccountLevelNoWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	// With unified flow, empty workspace_id returns the provider's workspace client.
+	w, diags := dc.GetWorkspaceClientForUnifiedProviderWithDiagnostics(context.Background(), "")
+	assert.False(t, diags.HasError())
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProviderWithDiagnostics_Error(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		cachedWorkspaceClient: &databricks.WorkspaceClient{},
+	}
+
+	w, diags := dc.GetWorkspaceClientForUnifiedProviderWithDiagnostics(context.Background(), "not-a-number")
+	assert.True(t, diags.HasError())
+	assert.Nil(t, w)
+	assert.Contains(t, diags[0].Detail(), "failed to parse workspace_id")
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_UnifiedHost_NoWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:                       "https://unified.cloud.databricks.com",
+				Token:                      "test-token",
+				Experimental_IsUnifiedHost: true,
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+	}
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_UnifiedHost_WithWorkspaceID(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:                       "https://unified.cloud.databricks.com",
+				Token:                      "test-token",
+				Experimental_IsUnifiedHost: true,
+			},
+		},
+	}
+	// Pre-cache the workspace client so WorkspaceClientForWorkspace returns it.
+	dc.SetWorkspaceClientForWorkspace(123456, mockWS)
+
+	// Unified host with workspace_id set falls through to WorkspaceClientForWorkspace.
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "123456")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
+func TestGetWorkspaceClientForUnifiedProvider_FallsThrough_WhenWorkspaceIDUnknown(t *testing.T) {
+	mockWS := &databricks.WorkspaceClient{}
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "test-account-id",
+				Token:     "test-token",
+			},
+		},
+		// cachedWorkspaceID is 0 (unknown), so validation can't determine
+		// the provider's workspace ID and falls through.
+	}
+	dc.SetWorkspaceClientForWorkspace(789, mockWS)
+
+	w, err := dc.GetWorkspaceClientForUnifiedProvider(context.Background(), "789")
+	assert.NoError(t, err)
+	assert.Equal(t, mockWS, w)
+}
+
 func TestAddApiField_ValidValues(t *testing.T) {
 	s := AddApiField(map[string]*schema.Schema{})
 	apiSchema := s["api"]

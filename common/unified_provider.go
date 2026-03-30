@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -96,10 +95,9 @@ func namespaceForceNew(d *schema.ResourceDiff) error {
 }
 
 // NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
-// is reachable during the plan phase.
-// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
-// For account-level providers, it checks that the workspace is accessible from the account.
-// This is a no-op when provider_config is not set.
+// is reachable during the plan phase. It delegates to the unified
+// GetWorkspaceClientForUnifiedProvider flow. This is a no-op when
+// provider_config is not set.
 func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
 	if newWorkspaceID == nil {
@@ -109,22 +107,8 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if !ok || newWSID == "" {
 		return nil
 	}
-	workspaceIDInt, err := parseWorkspaceID(newWSID)
-	if err != nil {
-		return err
-	}
-	if c.Config.HostType() != config.WorkspaceHost {
-		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-		if err != nil {
-			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-		}
-		return nil
-	}
-	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
+	return err
 }
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration

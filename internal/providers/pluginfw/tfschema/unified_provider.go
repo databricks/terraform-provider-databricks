@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -269,86 +268,6 @@ func PopulateProviderConfigInState(ctx context.Context, client *common.Databrick
 	if wsID != "" {
 		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
 			ProviderConfig{WorkspaceID: types.StringValue(wsID)}.ToObjectValue(ctx))...)
-	}
-	return diags
-}
-
-// ProviderConfigToList creates a types.List containing a single ProviderConfig
-// element with the given workspace ID. This is used by SdkV2-compatible resources
-// that represent provider_config as a ListNestedBlock.
-func ProviderConfigToList(ctx context.Context, workspaceID string) types.List {
-	pc := ProviderConfig{WorkspaceID: types.StringValue(workspaceID)}
-	return types.ListValueMust(
-		pc.Type(ctx),
-		[]attr.Value{pc.ToObjectValue(ctx)},
-	)
-}
-
-// PromoteProviderConfigToAttribute ensures provider_config is a SingleNestedAttribute
-// with Optional+Computed and the ProviderConfigPlanModifier.
-//
-// For resources using Namespace (types.Object), ConfigureAsSdkV2Compatible() preserves
-// provider_config as an attribute. This function adds the required Optional+Computed
-// flags and plan modifier.
-//
-// For resources using Namespace_SdkV2 (types.List), ConfigureAsSdkV2Compatible() converts
-// provider_config to a ListNestedBlock. This function promotes it back to a
-// ListNestedAttribute with Optional+Computed to prevent perpetual diffs.
-func PromoteProviderConfigToAttribute(attrs map[string]schema.Attribute, blocks map[string]schema.Block) {
-	// Case 1: provider_config is already an attribute (Namespace with types.Object).
-	// ConfigureAsSdkV2Compatible() skips SingleNestedAttribute, so it stays in attrs.
-	if existingAttr, ok := attrs["provider_config"]; ok {
-		if sna, ok := existingAttr.(schema.SingleNestedAttribute); ok {
-			sna.Optional = true
-			sna.Computed = true
-			sna.PlanModifiers = []planmodifier.Object{
-				ProviderConfigPlanModifier{},
-			}
-			attrs["provider_config"] = sna
-			return
-		}
-	}
-	// Case 2: provider_config is a block (Namespace_SdkV2 with types.List).
-	pcBlock, ok := blocks["provider_config"]
-	if !ok {
-		return
-	}
-	delete(blocks, "provider_config")
-	if lnb, ok := pcBlock.(schema.ListNestedBlock); ok {
-		attrs["provider_config"] = schema.ListNestedAttribute{
-			Optional: true,
-			Computed: true,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: lnb.NestedObject.Attributes,
-			},
-		}
-	}
-}
-
-// PopulateProviderConfigListInState resolves the effective workspace ID and sets it
-// in the response state as a types.List. Call this at the end of every Create and
-// Read method for unified-provider SDKv2-migrated Plugin Framework resources that
-// use PromoteProviderConfigToAttribute.
-func PopulateProviderConfigListInState(ctx context.Context, client *common.DatabricksClient,
-	providerConfig types.List, state *tfsdk.State) diag.Diagnostics {
-	wsID, diags := GetWorkspaceID_SdkV2(ctx, providerConfig)
-	if diags.HasError() {
-		return diags
-	}
-	if wsID == "" {
-		wsID = client.Config.WorkspaceID
-	}
-	if wsID == "" && client.Config.HostType() != config.AccountHost {
-		id, err := client.CurrentWorkspaceID(ctx)
-		if err != nil {
-			return diag.Diagnostics{diag.NewErrorDiagnostic(
-				"failed to resolve workspace ID for provider_config state population", err.Error())}
-		}
-		wsID = strconv.FormatInt(id, 10)
-	}
-	if wsID != "" {
-		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
-			ProviderConfigToList(ctx, wsID))...)
 	}
 	return diags
 }

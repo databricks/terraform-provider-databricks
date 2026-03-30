@@ -525,20 +525,6 @@ func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	}
 }
 
-// noOidcProviderFactories creates provider factories that skip the OidcConfigCustomizer.
-// This is needed for unified host tests where the auth is handled via client credentials,
-// not github-oidc.
-func noOidcProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
-	return map[string]func() (tfprotov6.ProviderServer, error){
-		"databricks": func() (tfprotov6.ProviderServer, error) {
-			ctx := context.Background()
-			sdkPluginProvider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
-			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
-			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
-		},
-	}
-}
-
 func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	user, err := w.CurrentUser.Me(ctx)

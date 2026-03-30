@@ -89,9 +89,8 @@ func appWithProviderBlock(providerAttrs, providerConfig string) string {
 // invalid workspace_id values in the provider block are rejected.
 func TestMwsAccWorkspaceIDApp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
-		Template:                 appWithProviderBlock(`workspace_id = "invalid"`, ""),
-		ExpectError:              regexp.MustCompile(`failed to parse workspace_id`),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+		Template:    appWithProviderBlock(`workspace_id = "invalid"`, ""),
+		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
 
@@ -186,8 +185,7 @@ func TestMwsAccWorkspaceIDApp_AccountNewSetup(t *testing.T) {
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			"",
 		),
-		Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+		Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 	})
 }
 
@@ -201,8 +199,7 @@ func TestMwsAccWorkspaceIDApp_AccountNewSetupWithOverride(t *testing.T) {
 				workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 			}`,
 		),
-		Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
+		Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 	})
 }
 
@@ -221,8 +218,7 @@ func TestMwsAccWorkspaceIDApp_ImplicitFromProviderDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			// Same config — should be a noop (no perpetual diff).
@@ -235,8 +231,7 @@ func TestMwsAccWorkspaceIDApp_ImplicitFromProviderDefault(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -261,8 +256,7 @@ func TestMwsAccWorkspaceIDApp_MigrationSameWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -274,8 +268,7 @@ func TestMwsAccWorkspaceIDApp_MigrationSameWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -297,8 +290,7 @@ func TestMwsAccWorkspaceIDApp_MigrationDiffWorkspace(t *testing.T) {
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -310,8 +302,7 @@ func TestMwsAccWorkspaceIDApp_MigrationDiffWorkspace(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -331,8 +322,7 @@ func TestMwsAccWorkspaceIDApp_AddOverrideSame(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -346,8 +336,7 @@ func TestMwsAccWorkspaceIDApp_AddOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -367,8 +356,7 @@ func TestMwsAccWorkspaceIDApp_AddOverrideDiff(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -382,8 +370,7 @@ func TestMwsAccWorkspaceIDApp_AddOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -405,8 +392,7 @@ func TestMwsAccWorkspaceIDApp_ChangeOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -420,8 +406,7 @@ func TestMwsAccWorkspaceIDApp_ChangeOverride(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -444,8 +429,7 @@ func TestMwsAccWorkspaceIDApp_RemoveOverrideSame(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -457,8 +441,7 @@ func TestMwsAccWorkspaceIDApp_RemoveOverrideSame(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -483,8 +466,7 @@ func TestMwsAccWorkspaceIDApp_RemoveOverrideDiff(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -496,8 +478,7 @@ func TestMwsAccWorkspaceIDApp_RemoveOverrideDiff(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -517,8 +498,7 @@ func TestMwsAccWorkspaceIDApp_ChangeDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -530,8 +510,7 @@ func TestMwsAccWorkspaceIDApp_ChangeDefault(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionDestroyBeforeCreate),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID_2"),
 		},
 	)
 }
@@ -554,8 +533,7 @@ func TestMwsAccWorkspaceIDApp_ChangeDefaultWithOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock(
@@ -569,8 +547,7 @@ func TestMwsAccWorkspaceIDApp_ChangeDefaultWithOverride(t *testing.T) {
 					plancheck.ExpectResourceAction(appResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -609,7 +586,6 @@ func TestMwsAccWorkspaceIDApp_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
-		ProtoV6ProviderFactories: noOidcProviderFactories(),
 	})
 }
 
@@ -660,15 +636,13 @@ func TestMwsAccWorkspaceIDApp_RemoveDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			Check:                    checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: appWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
 				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
 			),
-			ProtoV6ProviderFactories: noOidcProviderFactories(),
 		},
 	)
 }

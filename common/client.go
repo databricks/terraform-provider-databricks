@@ -124,11 +124,15 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
+	// If workspace_id is not provided in provider_config, use the provider-level
+	// workspace_id from SDK config as fallback
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+		workspaceID = c.Config.WorkspaceID
+	}
+	if workspaceID == "" {
+		return nil, fmt.Errorf("workspace_id is not set in provider_config and workspace_id " +
+			"is not configured at the provider level. Set workspace_id in the resource's provider_config " +
+			"block, or set workspace_id in the provider configuration")
 	}
 
 	// Parse the workspace ID to int.

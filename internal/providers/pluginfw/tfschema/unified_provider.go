@@ -4,12 +4,18 @@ import (
 	"context"
 	"reflect"
 	"regexp"
+	"strconv"
 
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -39,7 +45,8 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
@@ -195,4 +202,154 @@ func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) 
 	workspaceID = namespace.WorkspaceID.ValueString()
 
 	return workspaceID, diags
+}
+
+// ProviderConfigPlanModifier handles provider_config during plan:
+//   - On Create (no prior state): if config doesn't set provider_config, sets plan
+//     to unknown so the provider can populate it during apply.
+//   - On Update: copies prior state to plan (like UseStateForUnknown) to avoid
+//     perpetual diffs when provider_config is absent from config.
+type ProviderConfigPlanModifier struct{}
+
+func (m ProviderConfigPlanModifier) Description(ctx context.Context) string {
+	return "Handles provider_config for create and update lifecycle."
+}
+
+func (m ProviderConfigPlanModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	// If config has a value, let it through (user explicitly set provider_config).
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+	// Config is null (user didn't set provider_config).
+	if req.StateValue.IsNull() || req.State.Raw.IsNull() {
+		// Create: no prior state. Set plan to unknown so TC allows
+		// the provider to populate it during apply.
+		resp.PlanValue = types.ObjectUnknown(ProviderConfig{}.Type(ctx).(types.ObjectType).AttrTypes)
+	} else {
+		// Update: copy prior state to plan (like UseStateForUnknown).
+		resp.PlanValue = req.StateValue
+	}
+}
+
+// PopulateProviderConfigInState resolves the effective workspace ID and sets it
+// in the response state. Call this at the end of every Read method for
+// unified-provider Plugin Framework resources.
+//
+// During refresh reads (terraform plan), providerConfig comes from the prior
+// state (req.State). If it already contains a workspace ID, that value is
+// preserved — the fallback to workspace_id / host is only used on the
+// first time (after Create/Import) when no workspace ID is in state yet.
+// Preserving the prior state value is critical: CustomizeDiff compares the old
+// effective workspace ID against the new one to trigger ForceNew when they
+// differ. Overwriting it here would make that detection impossible.
+func PopulateProviderConfigInState(ctx context.Context, client *common.DatabricksClient,
+	providerConfig types.Object, state *tfsdk.State) diag.Diagnostics {
+	// GetWorkspaceIDResource reads from providerConfig, which during Read
+	// comes from the prior state. If the state already has a workspace ID,
+	// it is returned here and the fallbacks below are skipped — preserving
+	// the old value for CustomizeDiff.
+	wsID, diags := GetWorkspaceIDResource(ctx, providerConfig)
+	if diags.HasError() {
+		return diags
+	}
+	if wsID == "" {
+		wsID = client.Config.WorkspaceID
+	}
+	if wsID == "" && client.Config.HostType() != config.AccountHost {
+		id, err := client.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return diag.Diagnostics{diag.NewErrorDiagnostic(
+				"failed to resolve workspace ID for provider_config state population", err.Error())}
+		}
+		wsID = strconv.FormatInt(id, 10)
+	}
+	if wsID != "" {
+		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
+			ProviderConfig{WorkspaceID: types.StringValue(wsID)}.ToObjectValue(ctx))...)
+	}
+	return diags
+}
+
+// ProviderConfigToList creates a types.List containing a single ProviderConfig
+// element with the given workspace ID. This is used by SdkV2-compatible resources
+// that represent provider_config as a ListNestedBlock.
+func ProviderConfigToList(ctx context.Context, workspaceID string) types.List {
+	pc := ProviderConfig{WorkspaceID: types.StringValue(workspaceID)}
+	return types.ListValueMust(
+		pc.Type(ctx),
+		[]attr.Value{pc.ToObjectValue(ctx)},
+	)
+}
+
+// PromoteProviderConfigToAttribute ensures provider_config is a SingleNestedAttribute
+// with Optional+Computed and the ProviderConfigPlanModifier.
+//
+// For resources using Namespace (types.Object), ConfigureAsSdkV2Compatible() preserves
+// provider_config as an attribute. This function adds the required Optional+Computed
+// flags and plan modifier.
+//
+// For resources using Namespace_SdkV2 (types.List), ConfigureAsSdkV2Compatible() converts
+// provider_config to a ListNestedBlock. This function promotes it back to a
+// ListNestedAttribute with Optional+Computed to prevent perpetual diffs.
+func PromoteProviderConfigToAttribute(attrs map[string]schema.Attribute, blocks map[string]schema.Block) {
+	// Case 1: provider_config is already an attribute (Namespace with types.Object).
+	// ConfigureAsSdkV2Compatible() skips SingleNestedAttribute, so it stays in attrs.
+	if existingAttr, ok := attrs["provider_config"]; ok {
+		if sna, ok := existingAttr.(schema.SingleNestedAttribute); ok {
+			sna.Optional = true
+			sna.Computed = true
+			sna.PlanModifiers = []planmodifier.Object{
+				ProviderConfigPlanModifier{},
+			}
+			attrs["provider_config"] = sna
+			return
+		}
+	}
+	// Case 2: provider_config is a block (Namespace_SdkV2 with types.List).
+	pcBlock, ok := blocks["provider_config"]
+	if !ok {
+		return
+	}
+	delete(blocks, "provider_config")
+	if lnb, ok := pcBlock.(schema.ListNestedBlock); ok {
+		attrs["provider_config"] = schema.ListNestedAttribute{
+			Optional: true,
+			Computed: true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: lnb.NestedObject.Attributes,
+			},
+		}
+	}
+}
+
+// PopulateProviderConfigListInState resolves the effective workspace ID and sets it
+// in the response state as a types.List. Call this at the end of every Create and
+// Read method for unified-provider SDKv2-migrated Plugin Framework resources that
+// use PromoteProviderConfigToAttribute.
+func PopulateProviderConfigListInState(ctx context.Context, client *common.DatabricksClient,
+	providerConfig types.List, state *tfsdk.State) diag.Diagnostics {
+	wsID, diags := GetWorkspaceID_SdkV2(ctx, providerConfig)
+	if diags.HasError() {
+		return diags
+	}
+	if wsID == "" {
+		wsID = client.Config.WorkspaceID
+	}
+	if wsID == "" && client.Config.HostType() != config.AccountHost {
+		id, err := client.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return diag.Diagnostics{diag.NewErrorDiagnostic(
+				"failed to resolve workspace ID for provider_config state population", err.Error())}
+		}
+		wsID = strconv.FormatInt(id, 10)
+	}
+	if wsID != "" {
+		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
+			ProviderConfigToList(ctx, wsID))...)
+	}
+	return diags
 }

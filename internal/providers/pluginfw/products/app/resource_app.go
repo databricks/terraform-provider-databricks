@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -38,6 +40,8 @@ type AppResource struct {
 func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetOptional()
+	s["provider_config"] = s["provider_config"].SetComputed()
+	s["provider_config"] = s["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{}).(tfschema.AttributeBuilder)
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s
@@ -101,19 +105,88 @@ func (a *resourceApp) Configure(ctx context.Context, req resource.ConfigureReque
 }
 
 func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip validation on destroy plans (plan is null).
+	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if a.client == nil {
 		return
 	}
-	var app AppResource
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
+	a.workspaceDriftDetection(ctx, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, app.ProviderConfig)
+	a.validateWorkspaceID(ctx, req, resp)
+}
+
+// workspaceDriftDetection compares the old (state) and new (config/provider)
+// effective workspace IDs and triggers RequiresReplace when they differ.
+// Only runs for updates — during create there is no prior state to compare.
+func (a *resourceApp) workspaceDriftDetection(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// No prior state means create — nothing to compare.
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	// Get old effective workspace ID from state.
+	var state AppResource
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	oldWsID, _ := tfschema.GetWorkspaceIDResource(ctx, state.ProviderConfig)
+	if oldWsID == "" {
+		oldWsID = a.client.Config.WorkspaceID
+	}
+
+	// Get new effective workspace ID from config (the raw user config, NOT
+	// the plan which may contain the preserved state value).
+	var cfg AppResource
+	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var newWsID string
+	if !cfg.ProviderConfig.IsNull() && !cfg.ProviderConfig.IsUnknown() {
+		newWsID, _ = tfschema.GetWorkspaceIDResource(ctx, cfg.ProviderConfig)
+	}
+	if newWsID == "" {
+		// Config does not have provider_config; use provider-level workspace_id.
+		newWsID = a.client.Config.WorkspaceID
+	}
+	// Fallback to cached workspace ID for workspace-level providers.
+	if newWsID == "" && a.client.Config.HostType() != config.AccountHost {
+		if cachedID, err := a.client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
+			newWsID = strconv.FormatInt(cachedID, 10)
+		}
+	}
+
+	if oldWsID != "" && newWsID == "" {
+		resp.Diagnostics.AddError("Missing workspace_id",
+			fmt.Sprintf("resource has provider_config.workspace_id = %s in state but no workspace_id is configured. "+
+				"Set workspace_id in the provider configuration or in the resource's provider_config block", oldWsID))
+		return
+	}
+
+	if oldWsID != "" && newWsID != "" && oldWsID != newWsID {
+		resp.RequiresReplace = append(resp.RequiresReplace,
+			path.Root("provider_config").AtName("workspace_id"))
+		// Update the planned provider_config to reflect the new effective
+		// workspace ID, so the plan output shows the change clearly.
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("provider_config"),
+			tfschema.ProviderConfig{WorkspaceID: types.StringValue(newWsID)}.ToObjectValue(ctx))...)
+	}
+}
+
+// validateWorkspaceID validates that the workspace client for the planned
+// workspace_id is reachable. Runs for both create and update.
+func (a *resourceApp) validateWorkspaceID(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var plan AppResource
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,6 +267,11 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Populate provider_config in state after Create.
+	// If the user set provider_config.workspace_id, it's already copied above.
+	// If the user relies on the provider-level workspace_id, this resolves the
+	// unknown value to the effective workspace ID.
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, a.client, app.ProviderConfig, &resp.State)...)
 }
 
 // This is copied from the retries package of the databricks-sdk-go. It should be made public,
@@ -275,6 +353,10 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Populate provider_config in state after Read.
+	// During normal refresh, provider_config is in prior state and was copied above.
+	// During import (no prior state), this resolves the effective workspace ID.
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, a.client, app.ProviderConfig, &resp.State)...)
 }
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -320,9 +402,10 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
+	// is already in state from a previous Create, and if the workspace ID had changed,
+	// ModifyPlan would have triggered RequiresReplace (destroy+create), so Update only
+	// runs when it's unchanged.
 }
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

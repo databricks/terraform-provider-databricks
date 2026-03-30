@@ -211,13 +211,5 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 				"it is only supported when the provider is configured at the account level")
 		return nil
 	}
-	// For workspace-level providers, eagerly resolve and cache the workspace ID
-	// so it's available for PopulateProviderConfigInState in the post-Read hook.
-	// This ensures the workspace ID from the host is stored in state.
-	if databricksClient.Config.HostType() != config.AccountHost {
-		if _, err := databricksClient.CurrentWorkspaceID(ctx); err != nil {
-			tflog.Warn(ctx, fmt.Sprintf("(plugin framework) Could not eagerly resolve workspace ID: %v", err))
-		}
-	}
 	return databricksClient
 }

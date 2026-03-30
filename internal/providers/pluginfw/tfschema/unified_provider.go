@@ -45,8 +45,7 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))

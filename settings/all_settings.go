@@ -25,5 +25,6 @@ func AllSettingsResources() map[string]common.Resource {
 		"disable_legacy_access":                     makeSettingResource[settings.DisableLegacyAccess, *databricks.WorkspaceClient](disableLegacyAccess),
 		"disable_legacy_dbfs":                       makeSettingResource[settings.DisableLegacyDbfs, *databricks.WorkspaceClient](disableLegacyDbfs),
 		"disable_legacy_features":                   makeSettingResource[settings.DisableLegacyFeatures, *databricks.AccountClient](disableLegacyFeatures),
+        "sql_results_download":                      makeSettingResource[settings.SqlResultsDownload, *databricks.WorkspaceClient](sqlResultsDownloadSetting),
 	}
 }

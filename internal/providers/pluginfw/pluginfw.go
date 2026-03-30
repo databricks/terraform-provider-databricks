@@ -204,12 +204,5 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 		resp.Diagnostics.AddError("Failed to configure Databricks client", err.Error())
 		return nil
 	}
-	// Validate workspace_id is not used with workspace-level providers
-	if databricksClient.Config.WorkspaceID != "" && databricksClient.Config.HostType() == config.WorkspaceHost {
-		resp.Diagnostics.AddError("Invalid provider configuration",
-			"workspace_id cannot be used with a workspace-level provider; "+
-				"it is only supported when the provider is configured at the account level")
-		return nil
-	}
 	return databricksClient
 }

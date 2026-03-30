@@ -191,6 +191,13 @@ func (a *resourceApp) validateWorkspaceID(ctx context.Context, req resource.Modi
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Fall back to provider-level workspace_id when the resource's
+	// provider_config is empty/unknown (e.g. during create without explicit
+	// provider_config). This ensures the provider's workspace_id is validated
+	// against the actual workspace host.
+	if workspaceID == "" {
+		workspaceID = a.client.Config.WorkspaceID
+	}
 	_, validateDiags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	resp.Diagnostics.Append(validateDiags...)
 }

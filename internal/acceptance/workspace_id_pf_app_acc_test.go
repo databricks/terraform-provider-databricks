@@ -579,14 +579,20 @@ func TestMwsAccWorkspaceIDApp_ChangeDefaultWithOverride(t *testing.T) {
 // Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
-// User accidentally sets workspace_id on a workspace-level provider.
-// Expected: configuration error at provider initialization.
+// workspace_id on a workspace-level provider is validated during ModifyPlan.
+// If it matches the host's workspace ID, no error. If it doesn't, workspace_id mismatch.
 
-func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider(t *testing.T) {
+func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template: appWithProviderBlock(`workspace_id = "{env.THIS_WORKSPACE_ID}"`, ""),
+		Check:    checkAppProviderConfigWSIDFromEnv(appResource, "THIS_WORKSPACE_ID"),
+	})
+}
+
+func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template:    appWithProviderBlock(`workspace_id = "12345"`, ""),
-		ExpectError: regexp.MustCompile(`(?s)workspace_id cannot be used with a workspace-level provider`),
-		PlanOnly:    true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
 

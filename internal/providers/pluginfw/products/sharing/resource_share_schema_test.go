@@ -62,7 +62,8 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "workspace_id must exist in provider_config")
 	wsStr, ok := wsAttr.(schema.StringAttribute)
 	require.True(t, ok, "workspace_id must be string")
-	assert.True(t, wsStr.Required, "workspace_id should be required")
+	assert.True(t, wsStr.Optional, "workspace_id should be optional")
+	assert.True(t, wsStr.Computed, "workspace_id should be computed")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
 	assert.Len(t, wsStr.Validators, 2, "workspace_id should have 2 validators")
 }

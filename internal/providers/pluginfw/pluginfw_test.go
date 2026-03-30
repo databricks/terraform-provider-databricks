@@ -45,6 +45,8 @@ func TestConfigure(t *testing.T) {
 		{
 			name: "workspace_id can be set in provider config",
 			config: map[string]tftypes.Value{
+				"host":         tftypes.NewValue(tftypes.String, "https://accounts.cloud.databricks.com"),
+				"account_id":   tftypes.NewValue(tftypes.String, "00000000-0000-0000-0000-000000000001"),
 				"workspace_id": tftypes.NewValue(tftypes.String, "1234567890"),
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {

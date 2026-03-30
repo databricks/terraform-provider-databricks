@@ -41,7 +41,7 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["no_compute"] = s["no_compute"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetComputed()
-	s["provider_config"] = s["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{}).(tfschema.AttributeBuilder)
+	s["provider_config"] = s["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s

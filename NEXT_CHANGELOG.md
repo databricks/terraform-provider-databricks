@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add resource for `databricks_sql_results_download_setting`.
 * Add resource and data sources for `databricks_environments_workspace_base_environment`.
 * Add resource and data source for `databricks_environments_default_workspace_base_environment`.
 

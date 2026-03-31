@@ -36,7 +36,7 @@ func TestAccShareData_ProviderConfig_Invalid(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(
-			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a positive integer without leading zeros`,
 		),
 		PlanOnly: true,
 	})

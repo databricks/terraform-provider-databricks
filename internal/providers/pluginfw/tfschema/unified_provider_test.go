@@ -2,14 +2,142 @@ package tfschema
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestWorkspaceIDRegexValidation(t *testing.T) {
+	// This regex must match the one used in ProviderConfig.ApplySchemaCustomizations
+	// and ProviderConfigData.ApplySchemaCustomizations.
+	workspaceIDRegex := regexp.MustCompile(`^[1-9]\d*$`)
+
+	reject := []struct {
+		name  string
+		input string
+	}{
+		{"single zero", "0"},
+		{"double zero", "00"},
+		{"leading zero short", "007"},
+		{"leading zero long", "0123"},
+		{"alphabetic", "abc"},
+		{"negative number", "-1"},
+		{"decimal number", "123.456"},
+		{"empty string", ""},
+		{"string with spaces", "123 456"},
+		{"string with hyphens", "123-456"},
+	}
+	for _, tc := range reject {
+		t.Run("reject_"+tc.name, func(t *testing.T) {
+			assert.False(t, workspaceIDRegex.MatchString(tc.input),
+				"expected regex to reject %q", tc.input)
+		})
+	}
+
+	accept := []struct {
+		name  string
+		input string
+	}{
+		{"single digit", "1"},
+		{"two digits", "42"},
+		{"three digits", "100"},
+		{"large number", "123456789"},
+		{"very large number", "999999999999999"},
+	}
+	for _, tc := range accept {
+		t.Run("accept_"+tc.name, func(t *testing.T) {
+			assert.True(t, workspaceIDRegex.MatchString(tc.input),
+				"expected regex to accept %q", tc.input)
+		})
+	}
+}
+
+// TestWorkspaceIDValidatorPlanTime tests the validators configured by
+// ApplySchemaCustomizations — the same validators that run during terraform plan.
+// This invokes each validator's ValidateString method directly with test inputs,
+// simulating what the Plugin Framework does at plan time.
+func TestWorkspaceIDValidatorPlanTime(t *testing.T) {
+	// Build the schema attrs through ApplySchemaCustomizations for ProviderConfig (resources)
+	resourceAttrs := map[string]AttributeBuilder{
+		"workspace_id": StringAttributeBuilder{},
+	}
+	resourceAttrs = ProviderConfig{}.ApplySchemaCustomizations(resourceAttrs)
+	resourceValidators := resourceAttrs["workspace_id"].(StringAttributeBuilder).Validators
+
+	// Build the schema attrs through ApplySchemaCustomizations for ProviderConfigData (data sources)
+	dataSourceAttrs := map[string]AttributeBuilder{
+		"workspace_id": StringAttributeBuilder{},
+	}
+	dataSourceAttrs = ProviderConfigData{}.ApplySchemaCustomizations(dataSourceAttrs)
+	dataSourceValidators := dataSourceAttrs["workspace_id"].(StringAttributeBuilder).Validators
+
+	tests := []struct {
+		name        string
+		input       string
+		expectError bool
+	}{
+		// Should reject
+		{"reject single zero", "0", true},
+		{"reject double zero", "00", true},
+		{"reject leading zero short", "007", true},
+		{"reject leading zero long", "0123", true},
+		{"reject alphabetic", "abc", true},
+		{"reject negative number", "-1", true},
+		{"reject decimal number", "123.456", true},
+		{"reject string with spaces", "123 456", true},
+		{"reject string with hyphens", "123-456", true},
+		// Should accept
+		{"accept single digit", "1", false},
+		{"accept two digits", "42", false},
+		{"accept three digits", "100", false},
+		{"accept large number", "123456789", false},
+		{"accept very large number", "999999999999999", false},
+	}
+
+	for _, tc := range tests {
+		t.Run("resource_"+tc.name, func(t *testing.T) {
+			hasError := runStringValidators(t, resourceValidators, tc.input)
+			if tc.expectError {
+				assert.True(t, hasError, "expected resource validators to reject %q", tc.input)
+			} else {
+				assert.False(t, hasError, "expected resource validators to accept %q", tc.input)
+			}
+		})
+		t.Run("data_source_"+tc.name, func(t *testing.T) {
+			hasError := runStringValidators(t, dataSourceValidators, tc.input)
+			if tc.expectError {
+				assert.True(t, hasError, "expected data source validators to reject %q", tc.input)
+			} else {
+				assert.False(t, hasError, "expected data source validators to accept %q", tc.input)
+			}
+		})
+	}
+}
+
+// runStringValidators invokes all validators on the given input and returns true if any produced errors.
+func runStringValidators(t *testing.T, validators []validator.String, input string) bool {
+	t.Helper()
+	ctx := context.Background()
+	for _, v := range validators {
+		req := validator.StringRequest{
+			Path:        path.Root("workspace_id"),
+			ConfigValue: types.StringValue(input),
+		}
+		resp := &validator.StringResponse{}
+		v.ValidateString(ctx, req, resp)
+		if resp.Diagnostics.HasError() {
+			return true
+		}
+	}
+	return false
+}
 
 func TestWorkspaceIDPlanModifier(t *testing.T) {
 	tests := []struct {

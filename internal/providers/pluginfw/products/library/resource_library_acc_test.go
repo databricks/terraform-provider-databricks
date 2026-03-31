@@ -3,6 +3,7 @@ package library_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"testing"
 	"time"
@@ -178,6 +179,77 @@ func TestAccLibrary_ProviderConfig_Mismatched(t *testing.T) {
 			`(?s)failed to get workspace client`,
 		),
 		PlanOnly: true,
+	})
+}
+
+func libraryProviderConfigTemplate(workspaceID string) string {
+	return fmt.Sprintf(`
+		resource "databricks_library" "this" {
+			cluster_id = "fake-cluster-id"
+			pypi {
+				package = "networkx"
+			}
+			provider_config {
+				workspace_id = "%s"
+			}
+		}
+	`, workspaceID)
+}
+
+func TestAccLibrary_ProviderConfig_InvalidLeadingZero(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template:    libraryProviderConfigTemplate("007"),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccLibrary_ProviderConfig_InvalidZero(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template:    libraryProviderConfigTemplate("0"),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccLibrary_ProviderConfig_InvalidNonNumeric(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template:    libraryProviderConfigTemplate("abc"),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccLibrary_ProviderConfig_InvalidNegative(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template:    libraryProviderConfigTemplate("-1"),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccLibrary_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template:    libraryProviderConfigTemplate(""),
+		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccLibrary_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+			resource "databricks_library" "this" {
+				cluster_id = "fake-cluster-id"
+				pypi {
+					package = "networkx"
+				}
+				provider_config {
+				}
+			}
+		`,
+		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
+		PlanOnly:    true,
 	})
 }
 

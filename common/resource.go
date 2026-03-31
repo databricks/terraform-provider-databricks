@@ -11,9 +11,26 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
+	path := cty.Path{
+		cty.GetAttrStep{Name: "provider_config"},
+		cty.IndexStep{Key: cty.NumberIntVal(0)},
+		cty.GetAttrStep{Name: "workspace_id"},
+	}
+	rawValue, diags := d.GetRawConfigAt(path)
+	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
+		return "", false
+	}
+	if rawValue.Type() == cty.String {
+		return rawValue.AsString(), true
+	}
+	return "", false
+}
 
 // populateProviderConfigInState writes the effective workspace ID into
 // provider_config in the resource state.

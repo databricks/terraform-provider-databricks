@@ -169,6 +169,7 @@ func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 				}
 			`),
 			ExpectError: regexp.MustCompile(`workspace_id mismatch`),
+			PlanOnly:    true,
 		},
 	)
 }
@@ -576,6 +577,39 @@ func TestMwsAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 			ExpectError: regexp.MustCompile(
 				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
 			),
+			PlanOnly: true,
+		},
+	)
+}
+
+// ==========================================
+// Remove provider_config Override (No Provider Fallback)
+// ==========================================
+//
+// Resource has explicit provider_config { workspace_id = TEST_WORKSPACE_ID },
+// but provider has NO workspace_id set.
+// User removes provider_config → no fallback → plan error.
+//
+// Complements RemoveDefault (which tests removing the provider-level workspace_id
+// when resources have no explicit provider_config).
+
+func TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback(t *testing.T) {
+	AccountLevel(t,
+		Step{
+			Template: notebookWithProviderBlock(
+				"",
+				`provider_config {
+					workspace_id = "{env.TEST_WORKSPACE_ID}"
+				}`,
+			),
+			Check: checkNotebookProviderConfigWSIDFromEnv(notebookResource, "TEST_WORKSPACE_ID"),
+		},
+		Step{
+			Template: notebookWithProviderBlock("", ""),
+			ExpectError: regexp.MustCompile(
+				`resource has provider_config.workspace_id = .* in state, but managing workspace-level resources requires a workspace_id`,
+			),
+			PlanOnly: true,
 		},
 	)
 }

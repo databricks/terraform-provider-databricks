@@ -302,22 +302,6 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}, nil
 }
 
-func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
-	path := cty.Path{
-		cty.GetAttrStep{Name: "provider_config"},
-		cty.IndexStep{Key: cty.NumberIntVal(0)},
-		cty.GetAttrStep{Name: "workspace_id"},
-	}
-	rawValue, diags := d.GetRawConfigAt(path)
-	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
-		return "", false
-	}
-	if rawValue.Type() == cty.String {
-		return rawValue.AsString(), true
-	}
-	return "", false
-}
-
 // setCachedDatabricksClient sets the cached Databricks Client.
 func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
 	// Acquire the lock to avoid race conditions.

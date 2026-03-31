@@ -34,7 +34,7 @@ func DataSourceCurrentConfiguration() common.Resource {
 	r := common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*currentConfig)
 		data.IsAccount = false
-		if c.Config.HostType() == config.AccountHost {
+		if c.HostTypeForTerraform() == config.AccountHost {
 			data.AccountId = c.Config.AccountID
 			data.IsAccount = true
 		}

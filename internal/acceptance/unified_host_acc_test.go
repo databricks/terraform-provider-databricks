@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -17,10 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
-func unifiedHostProviderFactories(unifiedHost string) map[string]func() (tfprotov6.ProviderServer, error) {
+func unifiedHostProviderFactories(unifiedHost string, accountID string) map[string]func() (tfprotov6.ProviderServer, error) {
 	customizer := func(cfg *config.Config) error {
 		cfg.Host = unifiedHost
 		cfg.Experimental_IsUnifiedHost = true
+		if accountID != "" {
+			cfg.AccountID = accountID
+		}
 		return nil
 	}
 	return map[string]func() (tfprotov6.ProviderServer, error){
@@ -33,6 +35,21 @@ func unifiedHostProviderFactories(unifiedHost string) map[string]func() (tfproto
 			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
 				pluginfw.WithConfigCustomizer(DefaultConfigCustomizer),
 				pluginfw.WithConfigCustomizer(customizer),
+			)
+			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
+		},
+	}
+}
+
+func accountHostProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+			sdkPluginProvider := sdkv2.DatabricksProvider(
+				sdkv2.WithConfigCustomizer(DefaultConfigCustomizer),
+			)
+			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
+				pluginfw.WithConfigCustomizer(DefaultConfigCustomizer),
 			)
 			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
 		},
@@ -103,30 +120,23 @@ func createJobWithProviderConfig(t *testing.T, workspaceID string, providerFacto
 	run(t, []Step{step})
 }
 
-func TestMwsAccUnifiedHostCreateJobs(t *testing.T) {
+func TestMwsAccUnifiedHostAccountCreateJobs(t *testing.T) {
 	initUnifiedHostAccountEnv(t)
-	unifiedHost := os.Getenv("UNIFIED_HOST")
+	unifiedHost := GetEnvOrSkipTest(t, "UNIFIED_HOST")
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
-	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost))
+	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, ""))
 }
 
 func TestAccUnifiedHostWorkspaceCreateJobs(t *testing.T) {
 	initUnifiedHostWorkspaceEnv(t)
-	if !IsAzure(t) {
-		Skipf(t)("This test is only running on Azure until ACCOUNT_ID is exported in our workspace test environments")
-	}
-	unifiedHost := os.Getenv("UNIFIED_HOST")
-	ctx := context.Background()
-	w := databricks.Must(databricks.NewWorkspaceClient())
-	workspaceID, err := w.CurrentWorkspaceID(ctx)
-	if err != nil {
-		t.Fatalf("failed to get current workspace ID: %s", err)
-	}
-	createJobWithProviderConfig(t, strconv.FormatInt(workspaceID, 10), unifiedHostProviderFactories(unifiedHost))
+	unifiedHost := GetEnvOrSkipTest(t, "UNIFIED_HOST")
+	workspaceID := GetEnvOrSkipTest(t, "THIS_WORKSPACE_ID")
+	accountID := GetEnvOrSkipTest(t, "TEST_ACCOUNT_ID")
+	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
 func TestMwsAccAccountHostCreateJobs(t *testing.T) {
 	LoadAccountEnv(t)
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
-	createJobWithProviderConfig(t, workspaceID, nil)
+	createJobWithProviderConfig(t, workspaceID, accountHostProviderFactories())
 }

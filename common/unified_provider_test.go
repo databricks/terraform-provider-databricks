@@ -936,8 +936,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 		},
 	}
 	// No cached workspace client — WorkspaceClientForWorkspace falls back to
-	// tryWorkspaceClientDirect which succeeds for unified hosts (routes via
-	// X-Databricks-Org-Id header). Actual workspace validation happens at apply time.
+	// tryWorkspaceClientDirect which succeeds.
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{
@@ -946,7 +945,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 			},
 		},
 	}, c)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {

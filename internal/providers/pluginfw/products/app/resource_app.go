@@ -9,7 +9,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -163,7 +162,7 @@ func (a *resourceApp) workspaceDriftDetection(ctx context.Context, req resource.
 		newWsID = a.client.Config.WorkspaceID
 	}
 	// Fallback to cached workspace ID for workspace-level providers.
-	if newWsID == "" && a.client.Config.HostType() != config.AccountHost {
+	if newWsID == "" {
 		if cachedID, err := a.client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
 			newWsID = strconv.FormatInt(cachedID, 10)
 		}

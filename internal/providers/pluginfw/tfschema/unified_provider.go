@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -257,7 +256,7 @@ func PopulateProviderConfigInState(ctx context.Context, client *common.Databrick
 	if wsID == "" {
 		wsID = client.Config.WorkspaceID
 	}
-	if wsID == "" && client.Config.HostType() != config.AccountHost {
+	if wsID == "" {
 		id, err := client.CurrentWorkspaceID(ctx)
 		if err != nil {
 			return diag.Diagnostics{diag.NewErrorDiagnostic(

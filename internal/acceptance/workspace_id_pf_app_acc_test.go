@@ -90,6 +90,7 @@ func appWithProviderBlock(providerAttrs, providerConfig string) string {
 func TestMwsAccWorkspaceIDApp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    appWithProviderBlock(`workspace_id = "invalid"`, ""),
+		PlanOnly:    true,
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
@@ -167,6 +168,7 @@ func TestAccWorkspaceIDApp_WS_ChangeProviderConfig(t *testing.T) {
 					workspace_id = "123"
 				}
 			`),
+			PlanOnly:    true,
 			ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 		},
 	)
@@ -569,6 +571,7 @@ func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template:    appWithProviderBlock(`workspace_id = "12345"`, ""),
+		PlanOnly:    true,
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -583,6 +586,7 @@ func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 func TestMwsAccWorkspaceIDApp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: appWithProviderBlock("", ""),
+		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
@@ -640,6 +644,32 @@ func TestMwsAccWorkspaceIDApp_RemoveDefault(t *testing.T) {
 		},
 		Step{
 			Template: appWithProviderBlock("", ""),
+			PlanOnly: true,
+			ExpectError: regexp.MustCompile(
+				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
+			),
+		},
+	)
+}
+
+// TestMwsAccWorkspaceIDApp_RemoveOverrideNoFallback tests removing an explicit
+// provider_config when there is no provider-level workspace_id to fall back to.
+// Step 1: Create with explicit provider_config.workspace_id (no provider-level workspace_id).
+// Step 2: Remove provider_config → plan error (workspace_id in state but no source).
+func TestMwsAccWorkspaceIDApp_RemoveOverrideNoFallback(t *testing.T) {
+	AccountLevel(t,
+		Step{
+			Template: appWithProviderBlock(
+				"",
+				`provider_config = {
+					workspace_id = "{env.TEST_WORKSPACE_ID}"
+				}`,
+			),
+			Check: checkAppProviderConfigWSIDFromEnv(appResource, "TEST_WORKSPACE_ID"),
+		},
+		Step{
+			Template: appWithProviderBlock("", ""),
+			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
 				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
 			),

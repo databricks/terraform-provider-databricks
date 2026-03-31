@@ -15,6 +15,13 @@ import (
 // workspaceIDSchemaKey is the key for the workspace ID in schema
 const workspaceIDSchemaKey = "provider_config.0.workspace_id"
 
+// WorkspaceIDRegex is the regex pattern for validating workspace IDs.
+// Workspace IDs must be positive integers without leading zeros.
+const WorkspaceIDRegex = `^[1-9]\d*$`
+
+// WorkspaceIDRegexMessage is the error message shown when workspace_id fails regex validation.
+const WorkspaceIDRegexMessage = "workspace_id must be a positive integer without leading zeros"
+
 // Namespace stores the provider configurations for unified terraform provider
 // This should be kept in sync with Namespace for plugin framework resources and data sources
 // defined in internal/providers/pluginfw/tfschema/unified_provider.go
@@ -33,7 +40,7 @@ type ProviderConfig struct {
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
 	return validation.All(
 		validation.StringIsNotEmpty,
-		validation.StringMatch(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"),
+		validation.StringMatch(regexp.MustCompile(WorkspaceIDRegex), WorkspaceIDRegexMessage),
 	)
 }
 

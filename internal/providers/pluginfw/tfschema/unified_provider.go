@@ -223,7 +223,7 @@ func (m ProviderConfigPlanModifier) MarkdownDescription(ctx context.Context) str
 
 func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
 	// If config has a value, let it through (user explicitly set provider_config).
-	if !req.ConfigValue.IsNull() {
+	if !req.ConfigValue.IsNull() && !req.ConfigValue.IsUnknown() {
 		return
 	}
 	// Config is null (user didn't set provider_config).

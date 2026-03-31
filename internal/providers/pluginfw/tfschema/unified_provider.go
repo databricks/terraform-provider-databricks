@@ -2,6 +2,7 @@ package tfschema
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -230,6 +232,87 @@ func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req pl
 		// Update: copy prior state to plan (like UseStateForUnknown).
 		resp.PlanValue = req.StateValue
 	}
+}
+
+// WorkspaceDriftDetection compares the old (state) and new (config/provider)
+// effective workspace IDs and triggers RequiresReplace when they differ.
+// Only runs for updates — during create there is no prior state to compare.
+func WorkspaceDriftDetection(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// No prior state means create — nothing to compare.
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	// Get old effective workspace ID from state.
+	var statePC types.Object
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("provider_config"), &statePC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	oldWsID, diags := GetWorkspaceIDResource(ctx, statePC)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if oldWsID == "" {
+		oldWsID = client.Config.WorkspaceID
+	}
+
+	// Get new effective workspace ID from config (the raw user config, NOT
+	// the plan which may contain the preserved state value).
+	var cfgPC types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("provider_config"), &cfgPC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var newWsID string
+	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
+		newWsID, _ = GetWorkspaceIDResource(ctx, cfgPC)
+	}
+	if newWsID == "" {
+		newWsID = client.Config.WorkspaceID
+	}
+	// Fallback to cached workspace ID for workspace-level providers.
+	if newWsID == "" {
+		if cachedID, err := client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
+			newWsID = strconv.FormatInt(cachedID, 10)
+		}
+	}
+
+	if oldWsID != "" && newWsID == "" {
+		resp.Diagnostics.AddError("Missing workspace_id",
+			fmt.Sprintf("resource has provider_config.workspace_id = %s in state but no workspace_id is configured. "+
+				"Set workspace_id in the provider configuration or in the resource's provider_config block", oldWsID))
+		return
+	}
+
+	if oldWsID != "" && newWsID != "" && oldWsID != newWsID {
+		resp.RequiresReplace = append(resp.RequiresReplace,
+			path.Root("provider_config").AtName("workspace_id"))
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("provider_config"),
+			ProviderConfig{WorkspaceID: types.StringValue(newWsID)}.ToObjectValue(ctx))...)
+	}
+}
+
+// ValidateWorkspaceID validates that the workspace client for the planned
+// workspace_id is reachable. Runs for both create and update.
+// Call this from any PF resource's ModifyPlan that has a provider_config block.
+func ValidateWorkspaceID(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var planPC types.Object
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("provider_config"), &planPC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	workspaceID, diags := GetWorkspaceIDResource(ctx, planPC)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if workspaceID == "" {
+		workspaceID = client.Config.WorkspaceID
+	}
+	_, validateDiags := client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 // PopulateProviderConfigInState resolves the effective workspace ID and sets it

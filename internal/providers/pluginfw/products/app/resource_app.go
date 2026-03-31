@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
-	"strconv"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -119,94 +118,11 @@ func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 	if a.client == nil {
 		return
 	}
-	a.workspaceDriftDetection(ctx, req, resp)
+	tfschema.WorkspaceDriftDetection(ctx, a.client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	a.validateWorkspaceID(ctx, req, resp)
-}
-
-// workspaceDriftDetection compares the old (state) and new (config/provider)
-// effective workspace IDs and triggers RequiresReplace when they differ.
-// Only runs for updates — during create there is no prior state to compare.
-func (a *resourceApp) workspaceDriftDetection(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// No prior state means create — nothing to compare.
-	if req.State.Raw.IsNull() {
-		return
-	}
-
-	// Get old effective workspace ID from state.
-	var state AppResource
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	oldWsID, _ := tfschema.GetWorkspaceIDResource(ctx, state.ProviderConfig)
-	if oldWsID == "" {
-		oldWsID = a.client.Config.WorkspaceID
-	}
-
-	// Get new effective workspace ID from config (the raw user config, NOT
-	// the plan which may contain the preserved state value).
-	var cfg AppResource
-	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var newWsID string
-	if !cfg.ProviderConfig.IsNull() && !cfg.ProviderConfig.IsUnknown() {
-		newWsID, _ = tfschema.GetWorkspaceIDResource(ctx, cfg.ProviderConfig)
-	}
-	if newWsID == "" {
-		// Config does not have provider_config; use provider-level workspace_id.
-		newWsID = a.client.Config.WorkspaceID
-	}
-	// Fallback to cached workspace ID for workspace-level providers.
-	if newWsID == "" {
-		if cachedID, err := a.client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
-			newWsID = strconv.FormatInt(cachedID, 10)
-		}
-	}
-
-	if oldWsID != "" && newWsID == "" {
-		resp.Diagnostics.AddError("Missing workspace_id",
-			fmt.Sprintf("resource has provider_config.workspace_id = %s in state but no workspace_id is configured. "+
-				"Set workspace_id in the provider configuration or in the resource's provider_config block", oldWsID))
-		return
-	}
-
-	if oldWsID != "" && newWsID != "" && oldWsID != newWsID {
-		resp.RequiresReplace = append(resp.RequiresReplace,
-			path.Root("provider_config").AtName("workspace_id"))
-		// Update the planned provider_config to reflect the new effective
-		// workspace ID, so the plan output shows the change clearly.
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("provider_config"),
-			tfschema.ProviderConfig{WorkspaceID: types.StringValue(newWsID)}.ToObjectValue(ctx))...)
-	}
-}
-
-// validateWorkspaceID validates that the workspace client for the planned
-// workspace_id is reachable. Runs for both create and update.
-func (a *resourceApp) validateWorkspaceID(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	var plan AppResource
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	// Fall back to provider-level workspace_id when the resource's
-	// provider_config is empty/unknown (e.g. during create without explicit
-	// provider_config). This ensures the provider's workspace_id is validated
-	// against the actual workspace host.
-	if workspaceID == "" {
-		workspaceID = a.client.Config.WorkspaceID
-	}
-	_, validateDiags := a.client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, a.client, req, resp)
 }
 
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

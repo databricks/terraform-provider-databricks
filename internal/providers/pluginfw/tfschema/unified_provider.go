@@ -39,6 +39,9 @@ type Namespace_SdkV2 struct {
 
 // ProviderConfig is used to store the provider configurations for unified terraform provider
 // across resources onboarded to plugin framework.
+// When adding new fields, update ToObjectValue, Type, and all functions that
+// construct or inspect ProviderConfig (e.g. PopulateProviderConfigInState,
+// WorkspaceDriftDetection, ValidateWorkspaceID).
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
@@ -160,7 +163,7 @@ func GetWorkspaceIDResource(ctx context.Context, providerConfig types.Object) (s
 	var diags diag.Diagnostics
 	var workspaceID string
 
-	if providerConfig.IsNull() {
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
 		return workspaceID, diags
 	}
 
@@ -185,7 +188,7 @@ func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) 
 	var diags diag.Diagnostics
 	var workspaceID string
 
-	if providerConfig.IsNull() {
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
 		return workspaceID, diags
 	}
 
@@ -323,7 +326,7 @@ func ValidateWorkspaceID(ctx context.Context, client *common.DatabricksClient, r
 // state (req.State). If it already contains a workspace ID, that value is
 // preserved — the fallback to workspace_id / host is only used on the
 // first time (after Create/Import) when no workspace ID is in state yet.
-// Preserving the prior state value is critical: CustomizeDiff compares the old
+// Preserving the prior state value is critical: ModifyPlan compares the old
 // effective workspace ID against the new one to trigger ForceNew when they
 // differ. Overwriting it here would make that detection impossible.
 func PopulateProviderConfigInState(ctx context.Context, client *common.DatabricksClient,
@@ -331,7 +334,7 @@ func PopulateProviderConfigInState(ctx context.Context, client *common.Databrick
 	// GetWorkspaceIDResource reads from providerConfig, which during Read
 	// comes from the prior state. If the state already has a workspace ID,
 	// it is returned here and the fallbacks below are skipped — preserving
-	// the old value for CustomizeDiff.
+	// the old value for ModifyPlan.
 	wsID, diags := GetWorkspaceIDResource(ctx, providerConfig)
 	if diags.HasError() {
 		return diags

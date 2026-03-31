@@ -130,9 +130,8 @@ func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 		workspaceID = c.Config.WorkspaceID
 	}
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set in provider_config and workspace_id " +
-			"is not configured at the provider level. Set workspace_id in the resource's provider_config " +
-			"block, or set workspace_id in the provider configuration")
+		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
 	}
 
 	// Parse the workspace ID to int.
@@ -189,6 +188,23 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 
 	}
 	return workspaceIDInt, nil
+}
+
+// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
+// It uses the cached value if available, otherwise makes an API call to resolve it.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.cachedWorkspaceID != 0 {
+		return c.cachedWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	err = c.setCachedWorkspaceID(ctx, w)
+	if err != nil {
+		return 0, err
+	}
+	return c.cachedWorkspaceID, nil
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
@@ -330,6 +346,15 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cachedAccountClient = a
+}
+
+// SetCachedWorkspaceID sets the cached workspace ID directly.
+// This is used by test infrastructure to pre-populate the cache and prevent
+// lazy CurrentWorkspaceID API calls during unit tests.
+func (c *DatabricksClient) SetCachedWorkspaceID(id int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceID = id
 }
 
 func (c *DatabricksClient) setAccountId(accountId string) error {

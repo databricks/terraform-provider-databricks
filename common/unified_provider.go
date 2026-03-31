@@ -61,23 +61,6 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 	return m
 }
 
-// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
-// It uses the cached value if available, otherwise makes an API call to resolve it.
-func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
-	if c.cachedWorkspaceID != 0 {
-		return c.cachedWorkspaceID, nil
-	}
-	w, err := c.WorkspaceClient()
-	if err != nil {
-		return 0, err
-	}
-	err = c.setCachedWorkspaceID(ctx, w)
-	if err != nil {
-		return 0, err
-	}
-	return c.cachedWorkspaceID, nil
-}
-
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
 // for a single schema.
 func NamespaceCustomizeSchema(s *CustomizableSchema) {

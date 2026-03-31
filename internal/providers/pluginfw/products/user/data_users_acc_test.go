@@ -188,6 +188,18 @@ func TestAccDataSourceUsers_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceUsers_ProviderConfig_InvalidZero(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: dataUsersProviderConfigTemplate(`
+			provider_config = {
+				workspace_id = "0"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
+		PlanOnly:    true,
+	})
+}
+
 func TestAccDataSourceUsers_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataUsersProviderConfigTemplate(`

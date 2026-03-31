@@ -294,6 +294,20 @@ func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
+func TestAccApp_ProviderConfig_InvalidZero(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: appTemplate(`
+			provider_config = {
+				workspace_id = "0"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a positive integer without leading zeros`,
+		),
+		PlanOnly: true,
+	})
+}
+
 func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`

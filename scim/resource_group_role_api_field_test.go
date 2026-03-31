@@ -21,8 +21,9 @@ func TestResourceGroupRoleCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroupRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroupRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			group_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"
@@ -48,8 +49,9 @@ func TestResourceGroupRoleCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroupRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroupRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			group_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"
@@ -70,8 +72,9 @@ func TestResourceGroupRoleRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroupRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroupRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			group_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"

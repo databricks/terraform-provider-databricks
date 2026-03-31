@@ -27,6 +27,7 @@ func TestDataSourceCurrentConfigAccAzure(t *testing.T) {
 		Resource:    DataSourceCurrentConfiguration(),
 		ID:          ".",
 		AccountID:   "123456",
+		AccountTest: true,
 		Azure:       true,
 	}.ApplyAndExpectData(t, map[string]any{
 		"account_id": "123456",
@@ -95,6 +96,7 @@ func TestDataSourceCurrentConfigCloudOverrideAccountLevel(t *testing.T) {
 		Resource:    DataSourceCurrentConfiguration(),
 		ID:          ".",
 		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL:         `cloud = "aws"`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"is_account": true,

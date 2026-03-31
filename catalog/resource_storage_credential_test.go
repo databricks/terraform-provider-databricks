@@ -260,9 +260,10 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceStorageCredential(),
-		AccountID: "account_id",
-		Create:    true,
+		Resource:    ResourceStorageCredential(),
+		AccountID:   "account_id",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		name = "storage_credential_name"
 		metastore_id = "metastore_id"
@@ -920,10 +921,11 @@ func TestStorageCredentialImportAccountLevel(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceStorageCredential(),
-		AccountID: "account_id",
-		Read:      true,
-		ID:        "metastore_id|storage_credential_name",
+		Resource:    ResourceStorageCredential(),
+		AccountID:   "account_id",
+		AccountTest: true,
+		Read:        true,
+		ID:          "metastore_id|storage_credential_name",
 	}.ApplyAndExpectData(t, map[string]any{
 		"metastore_id":          "metastore_id",
 		"storage_credential_id": "1234-5678",

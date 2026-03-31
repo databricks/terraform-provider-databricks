@@ -34,9 +34,10 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMwsPermissionAssignment(),
-		Create:    true,
-		AccountID: "abc",
+		Resource:    ResourceMwsPermissionAssignment(),
+		Create:      true,
+		AccountID:   "abc",
+		AccountTest: true,
 		HCL: `
 		workspace_id = 123
 		principal_id = 345
@@ -66,11 +67,12 @@ func TestPermissionAssignmentRead(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMwsPermissionAssignment(),
-		Read:      true,
-		New:       true,
-		AccountID: "abc",
-		ID:        "123|456",
+		Resource:    ResourceMwsPermissionAssignment(),
+		Read:        true,
+		New:         true,
+		AccountID:   "abc",
+		AccountTest: true,
+		ID:          "123|456",
 	}.ApplyAndExpectData(t, map[string]any{
 		"workspace_id": 123,
 		"principal_id": 456,
@@ -93,11 +95,12 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMwsPermissionAssignment(),
-		Read:      true,
-		Removed:   true,
-		AccountID: "abc",
-		ID:        "123|456",
+		Resource:    ResourceMwsPermissionAssignment(),
+		Read:        true,
+		Removed:     true,
+		AccountID:   "abc",
+		AccountTest: true,
+		ID:          "123|456",
 	}.ApplyNoError(t)
 }
 
@@ -107,10 +110,11 @@ func TestPermissionAssignmentDelete(t *testing.T) {
 			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
 			e.DeleteByWorkspaceIdAndPrincipalId(mock.Anything, int64(123), int64(456)).Return(nil)
 		},
-		Resource:  ResourceMwsPermissionAssignment(),
-		Delete:    true,
-		ID:        "123|456",
-		AccountID: "abc",
+		Resource:    ResourceMwsPermissionAssignment(),
+		Delete:      true,
+		ID:          "123|456",
+		AccountID:   "abc",
+		AccountTest: true,
 	}.ApplyNoError(t)
 }
 

@@ -23,7 +23,8 @@ var expectedUserDisablePatchRequest = patchRequest{
 
 func TestResourceUserDeleteAsDisableInAccount_NoError(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -43,7 +44,8 @@ func TestResourceUserDeleteAsDisableInAccount_NoError(t *testing.T) {
 
 func TestResourceUserDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -62,7 +64,8 @@ func TestResourceUserDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 
 func TestResourceUserDeleteAsDisableInAccount_HardDelete(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",

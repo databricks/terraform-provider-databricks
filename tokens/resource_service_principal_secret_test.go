@@ -29,9 +29,10 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 				SecretHash: "abc",
 			}, nil)
 		},
-		Resource:  ResourceServicePrincipalSecret(),
-		Create:    true,
-		AccountID: "xyz",
+		Resource:    ResourceServicePrincipalSecret(),
+		Create:      true,
+		AccountID:   "xyz",
+		AccountTest: true,
 		HCL: `
 		service_principal_id = "123"
 		lifetime  	  		 = "20s"
@@ -59,10 +60,11 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 				SecretId:           "003",
 			}).Return(nil)
 		},
-		Resource:  ResourceServicePrincipalSecret(),
-		ID:        "003",
-		Delete:    true,
-		AccountID: "xyz",
+		Resource:    ResourceServicePrincipalSecret(),
+		ID:          "003",
+		Delete:      true,
+		AccountID:   "xyz",
+		AccountTest: true,
 		HCL: `
 		service_principal_id = "123"
 		`,
@@ -83,10 +85,11 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceServicePrincipalSecret(),
-		ID:        "003",
-		Read:      true,
-		AccountID: "xyz",
+		Resource:    ResourceServicePrincipalSecret(),
+		ID:          "003",
+		Read:        true,
+		AccountID:   "xyz",
+		AccountTest: true,
 		HCL: `
 		service_principal_id = "123"
 		`,
@@ -110,11 +113,12 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceServicePrincipalSecret(),
-		ID:        "003",
-		Read:      true,
-		Removed:   true,
-		AccountID: "xyz",
+		Resource:    ResourceServicePrincipalSecret(),
+		ID:          "003",
+		Read:        true,
+		Removed:     true,
+		AccountID:   "xyz",
+		AccountTest: true,
 		HCL: `
 		service_principal_id = "123"
 		`,

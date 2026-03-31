@@ -229,9 +229,10 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				},
 			},
 		},
-		Create:    true,
-		AccountID: "100",
-		Resource:  ResourceMetastoreDataAccess(),
+		Create:      true,
+		AccountID:   "100",
+		AccountTest: true,
+		Resource:    ResourceMetastoreDataAccess(),
 		HCL: `
 		metastore_id = "abc"
 		name = "bcd"
@@ -296,9 +297,10 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				},
 			},
 		},
-		Create:    true,
-		AccountID: "100",
-		Resource:  ResourceMetastoreDataAccess(),
+		Create:      true,
+		AccountID:   "100",
+		AccountTest: true,
+		Resource:    ResourceMetastoreDataAccess(),
 		HCL: `
 		metastore_id = "abc"
 		name = "bcd"
@@ -364,9 +366,10 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				},
 			},
 		},
-		Create:    true,
-		AccountID: "100",
-		Resource:  ResourceMetastoreDataAccess(),
+		Create:      true,
+		AccountID:   "100",
+		AccountTest: true,
+		Resource:    ResourceMetastoreDataAccess(),
 		HCL: `
 		metastore_id = "abc"
 		name = "bcd"

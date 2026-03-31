@@ -73,9 +73,10 @@ func TestCreateMetastore_ApiFieldWorkspace(t *testing.T) {
 				Name:        "a",
 			}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Create:    true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"

@@ -769,10 +769,11 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 
 func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource:  ResourceEntitlements(),
-		HCL:       `group_id = "abc"`,
-		Create:    true,
-		AccountID: "abc-123",
+		Resource:    ResourceEntitlements(),
+		HCL:         `group_id = "abc"`,
+		Create:      true,
+		AccountID:   "abc-123",
+		AccountTest: true,
 	}.Apply(t)
 	assert.Contains(t, "entitlements can only be managed with a provider configured at the workspace-level", err.Error())
 }

@@ -78,8 +78,9 @@ func TestResourceBudgetCreate(t *testing.T) {
 				&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil,
 			)
 		},
-		Create:    true,
-		AccountID: "account_id",
+		Create:      true,
+		AccountID:   "account_id",
+		AccountTest: true,
 		HCL: `
 		display_name = "budget_name"
 
@@ -128,11 +129,12 @@ func TestResourceBudgetRead(t *testing.T) {
 				GetByBudgetId(mock.Anything, "budget_configuration_id").
 				Return(&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil)
 		},
-		Resource:  ResourceBudget(),
-		Read:      true,
-		New:       true,
-		AccountID: "account_id",
-		ID:        "account_id|budget_configuration_id",
+		Resource:    ResourceBudget(),
+		Read:        true,
+		New:         true,
+		AccountID:   "account_id",
+		AccountTest: true,
+		ID:          "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_name":           "budget_name",
 		"id":                     "account_id|budget_configuration_id",
@@ -143,11 +145,12 @@ func TestResourceBudgetRead(t *testing.T) {
 
 func TestResourceBudgetRead_UnpackError(t *testing.T) {
 	qa.ResourceFixture{
-		Resource:  ResourceBudget(),
-		Read:      true,
-		New:       true,
-		AccountID: "account_id",
-		ID:        "budget_configuration_id",
+		Resource:    ResourceBudget(),
+		Read:        true,
+		New:         true,
+		AccountID:   "account_id",
+		AccountTest: true,
+		ID:          "budget_configuration_id",
 	}.ExpectError(t, "invalid ID: budget_configuration_id")
 }
 
@@ -222,8 +225,9 @@ func TestResourceBudgetUpdate(t *testing.T) {
 			}
 		}
 		`,
-		AccountID: "account_id",
-		ID:        "account_id|budget_configuration_id",
+		AccountID:   "account_id",
+		AccountTest: true,
+		ID:          "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_name": "budget_name_update",
 		"id":           "account_id|budget_configuration_id",
@@ -235,9 +239,10 @@ func TestResourceBudgetDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockBudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
 		},
-		Resource:  ResourceBudget(),
-		AccountID: "account_id",
-		Delete:    true,
-		ID:        "account_id|budget_configuration_id",
+		Resource:    ResourceBudget(),
+		AccountID:   "account_id",
+		AccountTest: true,
+		Delete:      true,
+		ID:          "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, nil)
 }

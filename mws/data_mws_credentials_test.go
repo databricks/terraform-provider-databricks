@@ -26,6 +26,7 @@ func TestDataSourceMwsCredentials(t *testing.T) {
 			},
 		},
 		AccountID:   "abc",
+		AccountTest: true,
 		Resource:    DataSourceMwsCredentials(),
 		Read:        true,
 		NonWritable: true,
@@ -42,6 +43,7 @@ func TestDataSourceMwsCredentials_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,
 		AccountID:   "abc",
+		AccountTest: true,
 		Resource:    DataSourceMwsCredentials(),
 		Read:        true,
 		NonWritable: true,

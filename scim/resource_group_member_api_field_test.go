@@ -21,8 +21,9 @@ func TestResourceGroupMemberCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroupMember(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroupMember(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			group_id = "abc"
 			member_id = "def"
@@ -43,8 +44,9 @@ func TestResourceGroupMemberRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroupMember(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroupMember(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			group_id = "abc"
 			member_id = "def"

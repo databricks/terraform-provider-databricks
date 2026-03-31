@@ -23,7 +23,8 @@ var expectedServicePrincipalDisablePatchRequest = patchRequest{
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -43,7 +44,8 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) 
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -62,7 +64,8 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_HardDelete(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID: "00000000-0000-0000-0000-000000000001",
+		AccountID:   "00000000-0000-0000-0000-000000000001",
+		AccountTest: true,
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",

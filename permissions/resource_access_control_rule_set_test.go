@@ -372,11 +372,12 @@ func TestResourceRuleSetReadAccountLevel(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceAccessControlRuleSet(),
-		AccountID: testAccountId,
-		New:       true,
-		Read:      true,
-		ID:        testServicePrincipalRuleSetName,
+		Resource:    ResourceAccessControlRuleSet(),
+		AccountID:   testAccountId,
+		AccountTest: true,
+		New:         true,
+		Read:        true,
+		ID:          testServicePrincipalRuleSetName,
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
 		"etag": "",
@@ -430,9 +431,10 @@ func TestResourceRuleSetCreateAccountLevel(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceAccessControlRuleSet(),
-		AccountID: testAccountId,
-		Create:    true,
+		Resource:    ResourceAccessControlRuleSet(),
+		AccountID:   testAccountId,
+		AccountTest: true,
+		Create:      true,
 		HCL: fmt.Sprintf(`
 		name    = "%s"
 		grant_rules {
@@ -527,11 +529,12 @@ func TestResourceRuleSetRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceAccessControlRuleSet(),
-		AccountID: testAccountId,
-		New:       true,
-		Read:      true,
-		ID:        testServicePrincipalRuleSetName,
+		Resource:    ResourceAccessControlRuleSet(),
+		AccountID:   testAccountId,
+		AccountTest: true,
+		New:         true,
+		Read:        true,
+		ID:          testServicePrincipalRuleSetName,
 		HCL: fmt.Sprintf(`
 		name = "%s"
 		api  = "account"
@@ -589,9 +592,10 @@ func TestResourceRuleSetCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceAccessControlRuleSet(),
-		AccountID: testAccountId,
-		Create:    true,
+		Resource:    ResourceAccessControlRuleSet(),
+		AccountID:   testAccountId,
+		AccountTest: true,
+		Create:      true,
 		HCL: fmt.Sprintf(`
 		name = "%s"
 		api  = "account"

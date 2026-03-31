@@ -86,9 +86,10 @@ func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceMetastoreAssignment(),
-		AccountID: "100",
-		Create:    true,
+		Resource:    ResourceMetastoreAssignment(),
+		AccountID:   "100",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		workspace_id = 123
 		metastore_id = "a"
@@ -122,6 +123,7 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 		},
 		Resource:    ResourceMetastoreAssignment(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "123|a",
 		Update:      true,
 		RequiresNew: true,
@@ -162,6 +164,7 @@ func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
 		},
 		Resource:    ResourceMetastoreAssignment(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "123|a",
 		Update:      true,
 		RequiresNew: true,

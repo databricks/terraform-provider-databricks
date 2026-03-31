@@ -400,9 +400,10 @@ func TestCreateAccountMetastore(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Create:    true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
@@ -444,9 +445,10 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Create:    true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
@@ -495,9 +497,10 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Create:    true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		Create:      true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
@@ -516,10 +519,11 @@ func TestDeleteAccountMetastore(t *testing.T) {
 				MetastoreId: "abc",
 			}).Return(&catalog.AccountsDeleteMetastoreResponse{}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Delete:    true,
-		ID:        "abc",
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		Delete:      true,
+		ID:          "abc",
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
@@ -541,6 +545,7 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -586,6 +591,7 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -643,6 +649,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -694,6 +701,7 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		AccountTest: true,
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -725,11 +733,12 @@ func TestReadAccountMetastore(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		ID:        "abc",
-		Read:      true,
-		New:       true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		ID:          "abc",
+		Read:        true,
+		New:         true,
 	}.ApplyAndExpectData(t,
 		map[string]any{
 			"id":           "abc",
@@ -746,10 +755,11 @@ func TestReadAccountMetastore_Error(t *testing.T) {
 				StatusCode: http.StatusNotFound,
 			})
 		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		ID:        "abc",
-		Read:      true,
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		AccountTest: true,
+		ID:          "abc",
+		Read:        true,
 	}.ExpectError(t, "resource is not expected to be removed")
 }
 

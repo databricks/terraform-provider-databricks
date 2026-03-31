@@ -22,8 +22,9 @@ func TestResourceServicePrincipalRoleCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceServicePrincipalRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceServicePrincipalRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			service_principal_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"
@@ -44,8 +45,9 @@ func TestResourceServicePrincipalRoleRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceServicePrincipalRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceServicePrincipalRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			service_principal_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"

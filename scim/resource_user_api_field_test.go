@@ -27,8 +27,9 @@ func TestResourceUserCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceUser(),
-		AccountID: "acc-123",
+		Resource:    ResourceUser(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_name = "me@example.com"
 			api = "account"
@@ -59,8 +60,9 @@ func TestResourceUserCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceUser(),
-		AccountID: "acc-123",
+		Resource:    ResourceUser(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_name = "ws@example.com"
 			api = "workspace"
@@ -78,8 +80,9 @@ func TestResourceUserDelete_ApiFieldAccount(t *testing.T) {
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc",
 			},
 		},
-		Resource:  ResourceUser(),
-		AccountID: "acc-123",
+		Resource:    ResourceUser(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_name = "me@example.com"
 			api = "account"
@@ -98,8 +101,9 @@ func TestResourceUserDelete_ApiFieldWorkspace(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 			},
 		},
-		Resource:  ResourceUser(),
-		AccountID: "acc-123",
+		Resource:    ResourceUser(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_name = "me@example.com"
 			api = "workspace"

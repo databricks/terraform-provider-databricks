@@ -22,8 +22,9 @@ func TestResourceUserRoleCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceUserRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceUserRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"
@@ -44,8 +45,9 @@ func TestResourceUserRoleRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceUserRole(),
-		AccountID: "acc-123",
+		Resource:    ResourceUserRole(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			user_id = "abc"
 			role = "arn:aws:iam::999999999999:role/foo"

@@ -121,6 +121,7 @@ type ResourceFixture struct {
 	AzureSPN    bool
 	Gcp         bool
 	AccountID   string
+	AccountTest bool
 	Token       string
 	// new resource
 	New bool
@@ -280,6 +281,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.AccountID != "" {
 		config.AccountID = f.AccountID
+	}
+	if f.AccountTest {
+		client.SetAccountTest()
 	}
 	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
@@ -652,6 +656,7 @@ func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountCl
 			Config: &config.Config{},
 		},
 	}
+	client.SetAccountTest()
 	client.SetAccountClient(ma.AccountClient)
 	callback(context.Background(), client)
 }

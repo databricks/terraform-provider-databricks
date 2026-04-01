@@ -361,9 +361,8 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				},
 				cachedWorkspaceClient: mockWorkspaceClient,
 			},
-			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute",
-			description:   "Account-level provider requires workspace_id to be set",
+			expectError: false,
+			description: "Account-level provider without workspace_id returns cached workspace client",
 		},
 	}
 

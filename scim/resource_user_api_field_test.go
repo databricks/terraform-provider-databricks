@@ -27,9 +27,8 @@ func TestResourceUserCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceUser(),
-		AccountID:   "acc-123",
-		AccountTest: true,
+		Resource:  ResourceUser(),
+		AccountID: "acc-123",
 		HCL: `
 			user_name = "me@example.com"
 			api = "account"
@@ -80,9 +79,8 @@ func TestResourceUserDelete_ApiFieldAccount(t *testing.T) {
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc",
 			},
 		},
-		Resource:    ResourceUser(),
-		AccountID:   "acc-123",
-		AccountTest: true,
+		Resource:  ResourceUser(),
+		AccountID: "acc-123",
 		HCL: `
 			user_name = "me@example.com"
 			api = "account"

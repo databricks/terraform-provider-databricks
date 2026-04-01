@@ -27,9 +27,8 @@ func TestResourceServicePrincipalCreate_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceServicePrincipal(),
-		AccountID:   "acc-123",
-		AccountTest: true,
+		Resource:  ResourceServicePrincipal(),
+		AccountID: "acc-123",
 		HCL: `
 			display_name = "Example SP"
 			api = "account"
@@ -86,9 +85,8 @@ func TestResourceServicePrincipalRead_ApiFieldAccount(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceServicePrincipal(),
-		AccountID:   "acc-123",
-		AccountTest: true,
+		Resource:  ResourceServicePrincipal(),
+		AccountID: "acc-123",
 		HCL: `
 			display_name = "SP Account"
 			api = "account"
@@ -111,9 +109,8 @@ func TestResourceServicePrincipalDelete_ApiFieldAccount(t *testing.T) {
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/ServicePrincipals/abc",
 			},
 		},
-		Resource:    ResourceServicePrincipal(),
-		AccountID:   "acc-123",
-		AccountTest: true,
+		Resource:  ResourceServicePrincipal(),
+		AccountID: "acc-123",
 		HCL: `
 			display_name = "SP Account"
 			api = "account"

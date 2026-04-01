@@ -62,9 +62,8 @@ func TestResourcePASCreateWithoutAccountId(t *testing.T) {
 				PrivateAccessSettingsName: "pas_name",
 			}, nil)
 		},
-		Resource:    ResourceMwsPrivateAccessSettings(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsPrivateAccessSettings(),
+		AccountID: "abc",
 		HCL: `
 		private_access_settings_name = "pas_name"
 		region = "ar"
@@ -96,9 +95,8 @@ func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 				ForceSendFields:           []string{"PublicAccessEnabled"},
 			}, nil)
 		},
-		Resource:    ResourceMwsPrivateAccessSettings(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsPrivateAccessSettings(),
+		AccountID: "abc",
 		HCL: `
 		account_id = "abc"
 		private_access_settings_name = "pas_name"

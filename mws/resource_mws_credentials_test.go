@@ -47,9 +47,8 @@ func TestResourceCredentialsCreate(t *testing.T) {
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
 		},
-		Create:      true,
-		AccountID:   "abc",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":       "abc/cid",
 		"role_arn": "arn:aws:iam::098765:role/cross-account",
@@ -138,9 +137,8 @@ func TestCredentialsAccountIdOnlyInConfig(t *testing.T) {
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
 		},
-		Create:      true,
-		AccountID:   "abc",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":       "abc/cid",
 		"role_arn": "arn:aws:iam::098765:role/cross-account",
@@ -155,9 +153,8 @@ func TestFailIfDifferentAccountIds(t *testing.T) {
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
 		},
-		Create:      true,
-		AccountID:   "abc",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "abc",
 	}.ExpectError(t, "account ID is already set to abc")
 }
 
@@ -198,9 +195,8 @@ func TestResourceCredentialsCreateWithoutAccId(t *testing.T) {
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
 		},
-		Create:      true,
-		AccountID:   "abc",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":       "abc/cid",
 		"role_arn": "arn:aws:iam::098765:role/cross-account",
@@ -226,9 +222,8 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 			"credentials_name": "Cross-account ARN",
 			"role_arn":         "arn:aws:iam::098765:role/cross-account",
 		},
-		Create:      true,
-		AccountID:   "abc",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "abc",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
@@ -251,11 +246,10 @@ func TestResourceCredentialsRead(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMwsCredentials(),
-		Read:        true,
-		ID:          "abc/cid",
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsCredentials(),
+		Read:      true,
+		ID:        "abc/cid",
+		AccountID: "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":               "abc/cid",
 		"role_arn":         "arn:aws:iam::098765:role/cross-account",
@@ -278,12 +272,11 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource:    ResourceMwsCredentials(),
-		Read:        true,
-		Removed:     true,
-		ID:          "abc/cid",
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsCredentials(),
+		Read:      true,
+		Removed:   true,
+		ID:        "abc/cid",
+		AccountID: "abc",
 	}.ApplyNoError(t)
 }
 
@@ -300,11 +293,10 @@ func TestResourceCredentialsRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource:    ResourceMwsCredentials(),
-		Read:        true,
-		ID:          "abc/cid",
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsCredentials(),
+		Read:      true,
+		ID:        "abc/cid",
+		AccountID: "abc",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty for error reads")
@@ -318,11 +310,10 @@ func TestResourceCredentialsDelete(t *testing.T) {
 				Resource: "/api/2.0/accounts/abc/credentials/cid?",
 			},
 		},
-		Resource:    ResourceMwsCredentials(),
-		Delete:      true,
-		ID:          "abc/cid",
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsCredentials(),
+		Delete:    true,
+		ID:        "abc/cid",
+		AccountID: "abc",
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id())
@@ -341,11 +332,10 @@ func TestResourceCredentialsDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource:    ResourceMwsCredentials(),
-		Delete:      true,
-		ID:          "abc/cid",
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsCredentials(),
+		Delete:    true,
+		ID:        "abc/cid",
+		AccountID: "abc",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/cid", d.Id())

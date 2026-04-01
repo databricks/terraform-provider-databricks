@@ -33,9 +33,8 @@ func TestResourceNccCreate(t *testing.T) {
 			}).Return(getTestNcc(), nil)
 			e.GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
 		HCL: `
 		name = "ncc_name"
 		region = "ar"
@@ -55,9 +54,8 @@ func TestResourceNccCreate_Error(t *testing.T) {
 				},
 			}).Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
 		HCL: `
 		name = "ncc_name"
 		region = "ar"
@@ -73,12 +71,11 @@ func TestResourceNccRead(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Read:        true,
-		New:         true,
-		ID:          "abc/ncc_id",
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
+		Read:      true,
+		New:       true,
+		ID:        "abc/ncc_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                             "abc/ncc_id",
 		"account_id":                     "abc",
@@ -93,11 +90,10 @@ func TestResourceNccRead_Error(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Read:        true,
-		ID:          "abc/ncc_id",
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
+		Read:      true,
+		ID:        "abc/ncc_id",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
 	assert.Equal(t, "abc/ncc_id", d.Id())
@@ -108,11 +104,10 @@ func TestResourceNccDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil)
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Delete:      true,
-		ID:          "abc/ncc_id",
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
+		Delete:    true,
+		ID:        "abc/ncc_id",
 	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
 }
 
@@ -121,10 +116,9 @@ func TestResourceNccDelete_Error(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(&apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNetworkConnectivityConfig(),
-		AccountID:   "abc",
-		AccountTest: true,
-		ID:          "abc/ncc_id",
+		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		AccountID: "abc",
+		ID:        "abc/ncc_id",
 		HCL: `
 		name = "ncc_name"
 		region = "ar"

@@ -30,9 +30,8 @@ func TestResourceNccBindingCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMwsNccBinding(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsNccBinding(),
+		AccountID: "abc",
 		HCL: `
 		workspace_id                   = 123456789
 		network_connectivity_config_id = "ncc_id"
@@ -65,10 +64,9 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMwsNccBinding(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Update:      true,
+		Resource:  ResourceMwsNccBinding(),
+		AccountID: "abc",
+		Update:    true,
 		InstanceState: map[string]string{
 			"id":                             "123456789/old_ncc_id",
 			"workspace_id":                   "123456789",

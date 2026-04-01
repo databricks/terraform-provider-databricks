@@ -37,7 +37,6 @@ func TestMetastoresDataContainsName(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
-		AccountTest: true,
 	}.ApplyAndExpectData(t, map[string]any{
 		"ids": map[string]interface{}{"a": "abc", "b": "ded"},
 	})
@@ -58,6 +57,5 @@ func TestMetastoresData_Error(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
-		AccountTest: true,
 	}.ExpectError(t, "Bad request: unable to list metastores")
 }

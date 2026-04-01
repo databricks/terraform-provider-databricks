@@ -36,9 +36,8 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 			}).Return(getTestNccRule(), nil)
 			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(getTestNccRule(), nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -60,9 +59,8 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testin
 				},
 			}).Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -81,12 +79,11 @@ func TestResourceNccPrivateEndpointRuleRead(t *testing.T) {
 				GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
 				Return(getTestNccRule(), nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Read:        true,
-		New:         true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Read:      true,
+		New:       true,
+		ID:        "ncc_id/rule_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                             "ncc_id/rule_id",
 		"network_connectivity_config_id": "ncc_id",
@@ -104,11 +101,10 @@ func TestResourceNccPrivateEndpointRuleRead_Error(t *testing.T) {
 				GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
 				Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Read:        true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Read:      true,
+		ID:        "ncc_id/rule_id",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
 	assert.Equal(t, "ncc_id/rule_id", d.Id())
@@ -137,10 +133,9 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateDomainName(t *te
 					DomainNames:                 []string{"my-new-example.exampledomain.com", "my-new-example2.exampledomain.com"},
 				}, nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
 			"resource_id":                    "resource_id",
@@ -185,10 +180,9 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 					ResourceNames:               []string{"bucket1", "bucket2"},
 				}, nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
 			"resource_id":                    "resource_id",
@@ -231,10 +225,9 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateEnabled(t *testi
 					ResourceNames:               []string{"bucket1"},
 				}, nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
 			"resource_id":                    "resource_id",
@@ -265,11 +258,10 @@ func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
 				Return(&settings.NccPrivateEndpointRule{}, nil)
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		Delete:      true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Delete:    true,
+		ID:        "ncc_id/rule_id",
 	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
 }
 
@@ -280,10 +272,9 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
 				Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:    ResourceMwsNccPrivateEndpointRule(),
-		AccountID:   "abc",
-		AccountTest: true,
-		ID:          "ncc_id/rule_id",
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		ID:        "ncc_id/rule_id",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"

@@ -74,7 +74,6 @@ func TestDataSourceMwsNetworkConnectivityConfigs_All(t *testing.T) {
 			)
 		},
 		AccountID:   "abc",
-		AccountTest: true,
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfigs(),
@@ -118,7 +117,6 @@ func TestDataSourceMwsNetworkConnectivityConfigs_Filter(t *testing.T) {
 			)
 		},
 		AccountID:   "abc",
-		AccountTest: true,
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfigs(),
@@ -135,7 +133,6 @@ func TestDataSourceMwsNetworkConnectivityConfigs_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,
 		AccountID:   "abc",
-		AccountTest: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfigs(),
 		Read:        true,
 		NonWritable: true,

@@ -49,9 +49,8 @@ func TestResourceCustomAppIntegrationCreate(t *testing.T) {
 				}, nil,
 			)
 		},
-		Create:      true,
-		AccountID:   "account_id",
-		AccountTest: true,
+		Create:    true,
+		AccountID: "account_id",
 		HCL: `
 		name = "custom_integration_name"
 		redirect_urls = ["https://example.com"]
@@ -90,12 +89,11 @@ func TestResourceCustomAppIntegrationRead(t *testing.T) {
 				}, nil,
 			)
 		},
-		Resource:    ResourceCustomAppIntegration(),
-		Read:        true,
-		New:         true,
-		AccountID:   "account_id",
-		AccountTest: true,
-		ID:          "integration_id",
+		Resource:  ResourceCustomAppIntegration(),
+		Read:      true,
+		New:       true,
+		AccountID: "account_id",
+		ID:        "integration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"name":           "custom_integration_name",
 		"integration_id": "integration_id",
@@ -159,9 +157,8 @@ func TestResourceCustomAppIntegrationUpdate(t *testing.T) {
 			"token_access_policy.access_token_ttl_in_minutes":  "30",
 			"token_access_policy.refresh_token_ttl_in_minutes": "30",
 		},
-		AccountID:   "account_id",
-		AccountTest: true,
-		ID:          "integration_id",
+		AccountID: "account_id",
+		ID:        "integration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": "custom_integration_name",
 		"token_access_policy.0.access_token_ttl_in_minutes": 30,
@@ -173,10 +170,9 @@ func TestResourceCustomAppIntegrationDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockCustomAppIntegrationAPI().EXPECT().DeleteByIntegrationId(mock.Anything, "integration_id").Return(nil)
 		},
-		Resource:    ResourceCustomAppIntegration(),
-		AccountID:   "account_id",
-		AccountTest: true,
-		Delete:      true,
-		ID:          "integration_id",
+		Resource:  ResourceCustomAppIntegration(),
+		AccountID: "account_id",
+		Delete:    true,
+		ID:        "integration_id",
 	}.ApplyAndExpectData(t, nil)
 }

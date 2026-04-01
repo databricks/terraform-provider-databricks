@@ -23,8 +23,7 @@ var expectedServicePrincipalDisablePatchRequest = patchRequest{
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID:   "00000000-0000-0000-0000-000000000001",
-		AccountTest: true,
+		AccountID: "00000000-0000-0000-0000-000000000001",
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -36,6 +35,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) 
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			api = "account"
 			application_id    = "abc"
 			disable_as_user_deletion = true
 		`,
@@ -44,8 +44,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) 
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID:   "00000000-0000-0000-0000-000000000001",
-		AccountTest: true,
+		AccountID: "00000000-0000-0000-0000-000000000001",
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -57,6 +56,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			api = "account"
 			application_id    = "abc"
 		`,
 	}.ApplyNoError(t)
@@ -64,8 +64,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *
 
 func TestResourceServicePrincipalDeleteAsDisableInAccount_HardDelete(t *testing.T) {
 	qa.ResourceFixture{
-		AccountID:   "00000000-0000-0000-0000-000000000001",
-		AccountTest: true,
+		AccountID: "00000000-0000-0000-0000-000000000001",
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -76,6 +75,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_HardDelete(t *testing.
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			api = "account"
 			application_id    = "abc"
 			disable_as_user_deletion = false
 		`,

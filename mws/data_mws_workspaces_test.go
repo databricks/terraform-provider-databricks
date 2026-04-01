@@ -26,7 +26,6 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 			},
 		},
 		AccountID:   "abc",
-		AccountTest: true,
 		Resource:    DataSourceMwsWorkspaces(),
 		Read:        true,
 		NonWritable: true,
@@ -42,7 +41,6 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 func TestCatalogsData_Error(t *testing.T) {
 	qa.ResourceFixture{
 		AccountID:   "abc",
-		AccountTest: true,
 		Fixtures:    qa.HTTPFailures,
 		Resource:    DataSourceMwsWorkspaces(),
 		Read:        true,
@@ -62,7 +60,6 @@ func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
 			},
 		},
 		AccountID:   "abc",
-		AccountTest: true,
 		Resource:    DataSourceMwsWorkspaces(),
 		Read:        true,
 		NonWritable: true,

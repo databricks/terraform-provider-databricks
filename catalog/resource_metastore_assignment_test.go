@@ -86,11 +86,11 @@ func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceMetastoreAssignment(),
-		AccountID:   "100",
-		AccountTest: true,
-		Create:      true,
+		Resource:  ResourceMetastoreAssignment(),
+		AccountID: "100",
+		Create:    true,
 		HCL: `
+		api = "account"
 		workspace_id = 123
 		metastore_id = "a"
 		`,
@@ -123,15 +123,16 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 		},
 		Resource:    ResourceMetastoreAssignment(),
 		AccountID:   "100",
-		AccountTest: true,
 		ID:          "123|a",
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
 			"workspace_id": "123",
 			"metastore_id": "a",
+			"api":          "account",
 		},
 		HCL: `
+		api = "account"
 		workspace_id = 123
 		metastore_id = "b"
 		`,
@@ -164,15 +165,16 @@ func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
 		},
 		Resource:    ResourceMetastoreAssignment(),
 		AccountID:   "100",
-		AccountTest: true,
 		ID:          "123|a",
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
 			"workspace_id": "123",
 			"metastore_id": "a",
+			"api":          "account",
 		},
 		HCL: `
+		api = "account"
 		workspace_id = 124
 		metastore_id = "a"
 		`,

@@ -315,10 +315,12 @@ func TestStructToSchemaNamespace(t *testing.T) {
 	data_scm := DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
 	assert.True(t, data_scm.Attributes["provider_config"].IsOptional())
 
-	// Test that workspace_id is a required field.
+	// Test that workspace_id is a required field (for resources, at ProviderConfig level).
+	// Individual resources like app override this to Optional+Computed in their own ApplySchemaCustomizations.
 	scm = ResourceStructToSchema(context.Background(), TestNamespaceResourceTfSdk{}, nil)
 	assert.True(t, scm.Attributes["provider_config"].(resource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
 
+	// Test that workspace_id is a required field (for data sources).
 	data_scm = DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
 	assert.True(t, data_scm.Attributes["provider_config"].(datasource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
 }

@@ -144,6 +144,23 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 	return workspaceIDInt, nil
 }
 
+// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
+// It uses the cached value if available, otherwise makes an API call to resolve it.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.cachedWorkspaceID != 0 {
+		return c.cachedWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	err = c.setCachedWorkspaceID(ctx, w)
+	if err != nil {
+		return 0, err
+	}
+	return c.cachedWorkspaceID, nil
+}
+
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
 // resource or data soruce matches the workspace ID of the provider configured workspace client.
 func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, workspaceID int64,

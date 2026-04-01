@@ -113,8 +113,11 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	if workspaceID == "" {
+	if workspaceID == "" && c.Config.WorkspaceID == "" {
 		return c.WorkspaceClient()
+	}
+	if workspaceID == "" {
+		workspaceID = c.Config.WorkspaceID
 	}
 	workspaceIDInt, err := parseWorkspaceID(workspaceID)
 	if err != nil {

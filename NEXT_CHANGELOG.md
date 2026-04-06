@@ -16,6 +16,8 @@
 
 * Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
+* Fixed `databricks_grants` failing with "Privilege USE CONNECTION is not applicable" when privilege names contain spaces (e.g. `USE CONNECTION`). Privilege names are now normalized (spaces replaced with underscores, uppercased) consistently with `databricks_grant` ([#5398](https://github.com/databricks/terraform-provider-databricks/issues/5398)).
+
 ### Documentation
 
 ### Exporter

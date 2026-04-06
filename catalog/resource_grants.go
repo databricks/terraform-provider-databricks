@@ -99,7 +99,7 @@ func (pl PermissionsList) toSdkPermissionsList() (out catalog.GetPermissionsResp
 	for _, v := range pl.Assignments {
 		privileges := []catalog.Privilege{}
 		for _, p := range v.Privileges {
-			privileges = append(privileges, catalog.Privilege(p))
+			privileges = append(privileges, catalog.Privilege(permissions.NormalizePrivilege(p)))
 		}
 		out.PrivilegeAssignments = append(out.PrivilegeAssignments, catalog.PrivilegeAssignment{
 			Principal:  v.Principal,

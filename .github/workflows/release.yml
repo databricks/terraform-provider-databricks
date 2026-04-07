@@ -37,7 +37,15 @@ jobs:
             .goreleaser.yml
 
       - name: Download Go modules
-        run: go mod download
+        run: |
+          jf go mod download
+
+          # Point native go commands at the local module cache instead of
+          # the network. go run pkg@version needs module lookups even when
+          # cached; file:// satisfies these from disk without network access.
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+          echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+          echo "GONOSUMDB=*" >> $GITHUB_ENV
 
       - name: Import GPG key
         id: import_gpg

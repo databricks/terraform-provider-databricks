@@ -1,9 +1,5 @@
 version: 2
 
-before:
-  hooks:
-    - go mod download
-
 builds:
 - env:
     - CGO_ENABLED=0

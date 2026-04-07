@@ -23,9 +23,6 @@ import (
 )
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
-	dc.Config.HostMetadataResolver = func(ctx context.Context, host string) (*config.HostMetadata, error) {
-		return nil, nil
-	}
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
 	if err != nil {
 		return dc, err
@@ -110,6 +107,10 @@ func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 				Host:       "foo",
 				Token:      "connfigured",
 				ConfigFile: "testdata/.databrickscfg",
+				// Skip host-metadata resolution to avoid DNS hang on non-existent host.
+				HostMetadataResolver: func(ctx context.Context, host string) (*config.HostMetadata, error) {
+					return nil, nil
+				},
 			},
 		},
 	})

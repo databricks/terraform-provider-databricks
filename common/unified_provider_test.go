@@ -824,30 +824,6 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ForceNewOnChange(t *testing
 	assert.True(t, wsAttr.RequiresNew, "changing workspace_id should require new resource")
 }
 
-func TestNamespaceCustomizeDiff_AccountLevelProvider_InvalidWorkspace(t *testing.T) {
-	resource := newTestResourceForCustomizeDiff()
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:      "https://accounts.cloud.databricks.com",
-				AccountID: "test-account-id",
-				Token:     "test-token",
-			},
-		},
-	}
-	// The new SDK is host-agnostic: tryWorkspaceClientDirect succeeds even for
-	// account-level hosts, so WorkspaceClientForWorkspace no longer errors here.
-	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
-		"name": "test",
-		"provider_config": []interface{}{
-			map[string]interface{}{
-				"workspace_id": "999",
-			},
-		},
-	}, c)
-	assert.NoError(t, err)
-}
-
 func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{

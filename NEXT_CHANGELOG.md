@@ -17,6 +17,7 @@
 * Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
 ### Documentation
+* Fixed the formatting of databricks mws_network_connectivity_config terraform resource
 
 ### Exporter
 

@@ -393,9 +393,6 @@ func (c *DatabricksClient) accountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
 	}
-	if c.Config.AccountID == "" && !c.Config.IsAccountClient() {
-		return nil, fmt.Errorf("invalid Databricks Account configuration")
-	}
 	acc, err := databricks.NewAccountClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {
 		return nil, err

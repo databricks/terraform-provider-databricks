@@ -348,6 +348,15 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.cachedAccountClient = a
 }
 
+// SetCachedWorkspaceID sets the cached workspace ID directly.
+// This is used by test infrastructure to pre-populate the cache and prevent
+// lazy CurrentWorkspaceID API calls during unit tests.
+func (c *DatabricksClient) SetCachedWorkspaceID(id int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceID = id
+}
+
 func (c *DatabricksClient) setAccountId(accountId string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -383,6 +392,9 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 func (c *DatabricksClient) accountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
+	}
+	if c.Config.AccountID == "" && !c.Config.IsAccountClient() {
+		return nil, fmt.Errorf("invalid Databricks Account configuration")
 	}
 	acc, err := databricks.NewAccountClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {

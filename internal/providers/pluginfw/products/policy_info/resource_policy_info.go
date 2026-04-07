@@ -33,6 +33,7 @@ import (
 const resourceName = "policy_info"
 
 var _ resource.ResourceWithConfigure = &PolicyInfoResource{}
+var _ resource.ResourceWithModifyPlan = &PolicyInfoResource{}
 
 func ResourcePolicyInfo() resource.Resource {
 	return &PolicyInfoResource{}
@@ -489,6 +490,31 @@ func (r *PolicyInfoResource) Schema(ctx context.Context, req resource.SchemaRequ
 
 func (r *PolicyInfoResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *PolicyInfoResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan PolicyInfo
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

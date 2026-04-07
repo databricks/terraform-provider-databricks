@@ -835,7 +835,8 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_InvalidWorkspace(t *testing
 			},
 		},
 	}
-	// No cached workspace client — WorkspaceClientForWorkspace will fail
+	// The new SDK is host-agnostic: tryWorkspaceClientDirect succeeds even for
+	// account-level hosts, so WorkspaceClientForWorkspace no longer errors here.
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
 		"provider_config": []interface{}{
@@ -844,8 +845,7 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_InvalidWorkspace(t *testing
 			},
 		},
 	}, c)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to get workspace client with workspace_id 999")
+	assert.NoError(t, err)
 }
 
 func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {

@@ -45,6 +45,12 @@ type AccountNetworkPolicy struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// The network policies applying for egress traffic.
 	Egress types.Object `tfsdk:"egress"`
+	// The network policies applying for ingress traffic.
+	Ingress types.Object `tfsdk:"ingress"`
+	// The ingress policy for dry run mode. Dry run will always run even if the
+	// request is allowed by the ingress policy. When this field is set, the
+	// policy will be evaluated and emit logs only without blocking requests.
+	IngressDryRun types.Object `tfsdk:"ingress_dry_run"`
 	// The unique identifier for the network policy.
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
 }
@@ -58,7 +64,9 @@ type AccountNetworkPolicy struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccountNetworkPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"egress": reflect.TypeOf(settings_tf.NetworkPolicyEgress{}),
+		"egress":          reflect.TypeOf(settings_tf.NetworkPolicyEgress{}),
+		"ingress":         reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
+		"ingress_dry_run": reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
 	}
 }
 
@@ -73,6 +81,8 @@ func (m AccountNetworkPolicy) ToObjectValue(ctx context.Context) basetypes.Objec
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"account_id": m.AccountId,
 			"egress":            m.Egress,
+			"ingress":           m.Ingress,
+			"ingress_dry_run":   m.IngressDryRun,
 			"network_policy_id": m.NetworkPolicyId,
 		},
 	)
@@ -84,6 +94,8 @@ func (m AccountNetworkPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"account_id": types.StringType,
 			"egress":            settings_tf.NetworkPolicyEgress{}.Type(ctx),
+			"ingress":           settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
+			"ingress_dry_run":   settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
 			"network_policy_id": types.StringType,
 		},
 	}
@@ -102,6 +114,24 @@ func (to *AccountNetworkPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 			}
 		}
 	}
+	if !from.Ingress.IsNull() && !from.Ingress.IsUnknown() {
+		if toIngress, ok := to.GetIngress(ctx); ok {
+			if fromIngress, ok := from.GetIngress(ctx); ok {
+				// Recursively sync the fields of Ingress
+				toIngress.SyncFieldsDuringCreateOrUpdate(ctx, fromIngress)
+				to.SetIngress(ctx, toIngress)
+			}
+		}
+	}
+	if !from.IngressDryRun.IsNull() && !from.IngressDryRun.IsUnknown() {
+		if toIngressDryRun, ok := to.GetIngressDryRun(ctx); ok {
+			if fromIngressDryRun, ok := from.GetIngressDryRun(ctx); ok {
+				// Recursively sync the fields of IngressDryRun
+				toIngressDryRun.SyncFieldsDuringCreateOrUpdate(ctx, fromIngressDryRun)
+				to.SetIngressDryRun(ctx, toIngressDryRun)
+			}
+		}
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -116,11 +146,29 @@ func (to *AccountNetworkPolicy) SyncFieldsDuringRead(ctx context.Context, from A
 			}
 		}
 	}
+	if !from.Ingress.IsNull() && !from.Ingress.IsUnknown() {
+		if toIngress, ok := to.GetIngress(ctx); ok {
+			if fromIngress, ok := from.GetIngress(ctx); ok {
+				toIngress.SyncFieldsDuringRead(ctx, fromIngress)
+				to.SetIngress(ctx, toIngress)
+			}
+		}
+	}
+	if !from.IngressDryRun.IsNull() && !from.IngressDryRun.IsUnknown() {
+		if toIngressDryRun, ok := to.GetIngressDryRun(ctx); ok {
+			if fromIngressDryRun, ok := from.GetIngressDryRun(ctx); ok {
+				toIngressDryRun.SyncFieldsDuringRead(ctx, fromIngressDryRun)
+				to.SetIngressDryRun(ctx, toIngressDryRun)
+			}
+		}
+	}
 }
 
 func (m AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["egress"] = attrs["egress"].SetOptional()
+	attrs["ingress"] = attrs["ingress"].SetOptional()
+	attrs["ingress_dry_run"] = attrs["ingress_dry_run"].SetOptional()
 	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
 
 	attrs["network_policy_id"] = attrs["network_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -150,6 +198,56 @@ func (m *AccountNetworkPolicy) GetEgress(ctx context.Context) (settings_tf.Netwo
 func (m *AccountNetworkPolicy) SetEgress(ctx context.Context, v settings_tf.NetworkPolicyEgress) {
 	vs := v.ToObjectValue(ctx)
 	m.Egress = vs
+}
+
+// GetIngress returns the value of the Ingress field in AccountNetworkPolicy as
+// a settings_tf.CustomerFacingIngressNetworkPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AccountNetworkPolicy) GetIngress(ctx context.Context) (settings_tf.CustomerFacingIngressNetworkPolicy, bool) {
+	var e settings_tf.CustomerFacingIngressNetworkPolicy
+	if m.Ingress.IsNull() || m.Ingress.IsUnknown() {
+		return e, false
+	}
+	var v settings_tf.CustomerFacingIngressNetworkPolicy
+	d := m.Ingress.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIngress sets the value of the Ingress field in AccountNetworkPolicy.
+func (m *AccountNetworkPolicy) SetIngress(ctx context.Context, v settings_tf.CustomerFacingIngressNetworkPolicy) {
+	vs := v.ToObjectValue(ctx)
+	m.Ingress = vs
+}
+
+// GetIngressDryRun returns the value of the IngressDryRun field in AccountNetworkPolicy as
+// a settings_tf.CustomerFacingIngressNetworkPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AccountNetworkPolicy) GetIngressDryRun(ctx context.Context) (settings_tf.CustomerFacingIngressNetworkPolicy, bool) {
+	var e settings_tf.CustomerFacingIngressNetworkPolicy
+	if m.IngressDryRun.IsNull() || m.IngressDryRun.IsUnknown() {
+		return e, false
+	}
+	var v settings_tf.CustomerFacingIngressNetworkPolicy
+	d := m.IngressDryRun.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIngressDryRun sets the value of the IngressDryRun field in AccountNetworkPolicy.
+func (m *AccountNetworkPolicy) SetIngressDryRun(ctx context.Context, v settings_tf.CustomerFacingIngressNetworkPolicy) {
+	vs := v.ToObjectValue(ctx)
+	m.IngressDryRun = vs
 }
 
 func (r *AccountNetworkPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

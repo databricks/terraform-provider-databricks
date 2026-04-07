@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package postgres_database
+package postgres_synced_table
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -21,28 +20,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "postgres_database"
+const resourceName = "postgres_synced_table"
 
-var _ resource.ResourceWithConfigure = &DatabaseResource{}
-var _ resource.ResourceWithModifyPlan = &DatabaseResource{}
+var _ resource.ResourceWithConfigure = &SyncedTableResource{}
+var _ resource.ResourceWithModifyPlan = &SyncedTableResource{}
 
-func ResourceDatabase() resource.Resource {
-	return &DatabaseResource{}
+func ResourceSyncedTable() resource.Resource {
+	return &SyncedTableResource{}
 }
 
-type DatabaseResource struct {
+type SyncedTableResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -111,46 +108,52 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Database extends the main model with additional fields.
-type Database struct {
-	// A timestamp indicating when the database was created.
+// SyncedTable extends the main model with additional fields.
+type SyncedTable struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The ID to use for the Database, which will become the final component of
-	// the database's resource name. This ID becomes the database name in
-	// postgres.
+	// Output only. The Full resource name of the synced table in Postgres where
+	// (catalog, schema, table) are the UC entity names.
 	//
-	// This value should be 4-63 characters, and only use characters available
-	// in DNS names, as defined by RFC-1123
+	// Format "synced_tables/{catalog}.{schema}.{table}"
 	//
-	// If database_id is not specified in the request, it is generated
-	// automatically.
-	DatabaseId types.String `tfsdk:"database_id"`
-	// The resource name of the database. Format:
-	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	// For the corresponding source table in the Unity catalog look for the
+	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
-	// The branch containing this database. Format:
-	// projects/{project_id}/branches/{branch_id}
-	Parent types.String `tfsdk:"parent"`
-	// The desired state of the Database.
+	// Configuration details of the synced table, such as the source table,
+	// scheduling policy, etc. This attribute is specified at creation time and
+	// most fields are returned as is on subsequent queries.
 	Spec types.Object `tfsdk:"spec"`
-	// The observed state of the Database.
+	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
-	// A timestamp indicating when the database was last updated.
-	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
-	ProviderConfig types.Object      `tfsdk:"provider_config"`
+	// The ID to use for the Synced Table. This becomes the final component of
+	// the SyncedTable's resource name. ID is required and is the synced table
+	// name, containing (catalog, schema, table) tuple. Elements of the tuple
+	// are the UC entity names.
+	//
+	// Example: "{catalog}.{schema}.{table}"
+	//
+	// synced_table_id represents both of the following:
+	//
+	// 1. An online VIEW virtual table in the Unity Catalog accessible via the
+	// Lakehouse Federation. 2. Postgres table named "{table}" in schema
+	// "{schema}" in the connected Postgres database
+	SyncedTableId types.String `tfsdk:"synced_table_id"`
+	// The Unity Catalog table ID for this synced table.
+	Uid            types.String `tfsdk:"uid"`
+	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Database struct. Container types (types.Map, types.List, types.Set) and
+// SyncedTable struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m Database) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m SyncedTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":            reflect.TypeOf(postgres_tf.DatabaseDatabaseSpec{}),
-		"status":          reflect.TypeOf(postgres_tf.DatabaseDatabaseStatus{}),
+		"spec":            reflect.TypeOf(postgres_tf.SyncedTableSyncedTableSpec{}),
+		"status":          reflect.TypeOf(postgres_tf.SyncedTableSyncedTableStatus{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -159,18 +162,17 @@ func (m Database) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Database
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTable
 // only implements ToObjectValue() and Type().
-func (m Database) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m SyncedTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"database_id": m.DatabaseId,
-			"name":        m.Name,
-			"parent":      m.Parent,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"update_time": m.UpdateTime,
+			"name":            m.Name,
+			"spec":            m.Spec,
+			"status":          m.Status,
+			"synced_table_id": m.SyncedTableId,
+			"uid":             m.Uid,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -179,15 +181,14 @@ func (m Database) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m Database) Type(ctx context.Context) attr.Type {
+func (m SyncedTable) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"database_id": types.StringType,
-			"name":        types.StringType,
-			"parent":      types.StringType,
-			"spec":        postgres_tf.DatabaseDatabaseSpec{}.Type(ctx),
-			"status":      postgres_tf.DatabaseDatabaseStatus{}.Type(ctx),
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"name":            types.StringType,
+			"spec":            postgres_tf.SyncedTableSyncedTableSpec{}.Type(ctx),
+			"status":          postgres_tf.SyncedTableSyncedTableStatus{}.Type(ctx),
+			"synced_table_id": types.StringType,
+			"uid":             types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -197,10 +198,7 @@ func (m Database) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
-	}
+func (to *SyncedTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTable) {
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -223,6 +221,9 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 			}
 		}
 	}
+	if !from.SyncedTableId.IsUnknown() {
+		to.SyncedTableId = from.SyncedTableId
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -230,10 +231,7 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
-	}
+func (to *SyncedTable) SyncFieldsDuringRead(ctx context.Context, from SyncedTable) {
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -254,24 +252,29 @@ func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
 			}
 		}
 	}
+	if !from.SyncedTableId.IsUnknown() {
+		to.SyncedTableId = from.SyncedTableId
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
-func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m SyncedTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
-	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
-	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetOptional()
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["synced_table_id"] = attrs["synced_table_id"].SetRequired()
+	attrs["synced_table_id"] = attrs["synced_table_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["synced_table_id"] = attrs["synced_table_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -279,15 +282,15 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	return attrs
 }
 
-// GetSpec returns the value of the Spec field in Database as
-// a postgres_tf.DatabaseDatabaseSpec value.
+// GetSpec returns the value of the Spec field in SyncedTable as
+// a postgres_tf.SyncedTableSyncedTableSpec value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Database) GetSpec(ctx context.Context) (postgres_tf.DatabaseDatabaseSpec, bool) {
-	var e postgres_tf.DatabaseDatabaseSpec
+func (m *SyncedTable) GetSpec(ctx context.Context) (postgres_tf.SyncedTableSyncedTableSpec, bool) {
+	var e postgres_tf.SyncedTableSyncedTableSpec
 	if m.Spec.IsNull() || m.Spec.IsUnknown() {
 		return e, false
 	}
-	var v postgres_tf.DatabaseDatabaseSpec
+	var v postgres_tf.SyncedTableSyncedTableSpec
 	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -298,21 +301,21 @@ func (m *Database) GetSpec(ctx context.Context) (postgres_tf.DatabaseDatabaseSpe
 	return v, true
 }
 
-// SetSpec sets the value of the Spec field in Database.
-func (m *Database) SetSpec(ctx context.Context, v postgres_tf.DatabaseDatabaseSpec) {
+// SetSpec sets the value of the Spec field in SyncedTable.
+func (m *SyncedTable) SetSpec(ctx context.Context, v postgres_tf.SyncedTableSyncedTableSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.Spec = vs
 }
 
-// GetStatus returns the value of the Status field in Database as
-// a postgres_tf.DatabaseDatabaseStatus value.
+// GetStatus returns the value of the Status field in SyncedTable as
+// a postgres_tf.SyncedTableSyncedTableStatus value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Database) GetStatus(ctx context.Context) (postgres_tf.DatabaseDatabaseStatus, bool) {
-	var e postgres_tf.DatabaseDatabaseStatus
+func (m *SyncedTable) GetStatus(ctx context.Context) (postgres_tf.SyncedTableSyncedTableStatus, bool) {
+	var e postgres_tf.SyncedTableSyncedTableStatus
 	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
-	var v postgres_tf.DatabaseDatabaseStatus
+	var v postgres_tf.SyncedTableSyncedTableStatus
 	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -323,30 +326,30 @@ func (m *Database) GetStatus(ctx context.Context) (postgres_tf.DatabaseDatabaseS
 	return v, true
 }
 
-// SetStatus sets the value of the Status field in Database.
-func (m *Database) SetStatus(ctx context.Context, v postgres_tf.DatabaseDatabaseStatus) {
+// SetStatus sets the value of the Status field in SyncedTable.
+func (m *SyncedTable) SetStatus(ctx context.Context, v postgres_tf.SyncedTableSyncedTableStatus) {
 	vs := v.ToObjectValue(ctx)
 	m.Status = vs
 }
 
-func (r *DatabaseResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *SyncedTableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *DatabaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Database{}, nil)
+func (r *SyncedTableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, SyncedTable{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks postgres_database",
+		Description: "Terraform schema for Databricks postgres_synced_table",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *DatabaseResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *SyncedTableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *SyncedTableResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// Skip validation on destroy plans (plan is null).
 	if req.Plan.Raw.IsNull() {
 		return
@@ -354,7 +357,7 @@ func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 	if r.Client == nil {
 		return
 	}
-	var plan Database
+	var plan SyncedTable
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -371,25 +374,24 @@ func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 	resp.Diagnostics.Append(validateDiags...)
 }
 
-func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Database
+	var plan SyncedTable
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var database postgres.Database
+	var synced_table postgres.SyncedTable
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &synced_table)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := postgres.CreateDatabaseRequest{
-		Database:   database,
-		Parent:     plan.Parent.ValueString(),
-		DatabaseId: plan.DatabaseId.ValueString(),
+	createRequest := postgres.CreateSyncedTableRequest{
+		SyncedTable:   synced_table,
+		SyncedTableId: plan.SyncedTableId.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -407,17 +409,17 @@ func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	response, err := client.Postgres.CreateDatabase(ctx, createRequest)
+	response, err := client.Postgres.CreateSyncedTable(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create postgres_database", err.Error())
+		resp.Diagnostics.AddError("failed to create postgres_synced_table", err.Error())
 		return
 	}
 
-	var newState Database
+	var newState SyncedTable
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("error waiting for postgres_database to be ready", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_synced_table to be ready", err.Error())
 		return
 	}
 
@@ -435,16 +437,16 @@ func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateReques
 	}
 }
 
-func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState Database
+	var existingState SyncedTable
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest postgres.GetDatabaseRequest
+	var readRequest postgres.GetSyncedTableRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -464,18 +466,18 @@ func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.Postgres.GetDatabase(ctx, readRequest)
+	response, err := client.Postgres.GetSyncedTable(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get postgres_database", err.Error())
+		resp.Diagnostics.AddError("failed to get postgres_synced_table", err.Error())
 		return
 	}
 
-	var newState Database
+	var newState SyncedTable
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -486,80 +488,21 @@ func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *DatabaseResource) update(ctx context.Context, plan Database, diags *diag.Diagnostics, state *tfsdk.State) {
-	var database postgres.Database
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := postgres.UpdateDatabaseRequest{
-		Database:   database,
-		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
-	}
-
-	var namespace ProviderConfig
-	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if diags.HasError() {
-		return
-	}
-	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Postgres.UpdateDatabase(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update postgres_database", err.Error())
-		return
-	}
-
-	var newState Database
-
-	waitResponse, err := response.Wait(ctx)
-	if err != nil {
-		diags.AddError("error waiting for postgres_database update", err.Error())
-		return
-	}
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
+func (r *SyncedTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
+	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }
 
-func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *SyncedTableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Database
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
-}
-
-func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
-	var state Database
+	var state SyncedTable
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest postgres.DeleteDatabaseRequest
+	var deleteRequest postgres.DeleteSyncedTableRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -580,23 +523,23 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	response, err := client.Postgres.DeleteDatabase(ctx, deleteRequest)
+	response, err := client.Postgres.DeleteSyncedTable(ctx, deleteRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete postgres_database", err.Error())
+		resp.Diagnostics.AddError("failed to delete postgres_synced_table", err.Error())
 		return
 	}
 
 	err = response.Wait(ctx)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("error waiting for postgres_database delete", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_synced_table delete", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &DatabaseResource{}
+var _ resource.ResourceWithImportState = &SyncedTableResource{}
 
-func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *SyncedTableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {

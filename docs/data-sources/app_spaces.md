@@ -53,6 +53,8 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `uc_securable` (AppResourceUcSecurable)
 
 ### AppResourceApp
+* `name` (string)
+* `permission` (string) - Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
 * `database_name` (string)

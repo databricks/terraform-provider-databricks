@@ -2911,6 +2911,9 @@ func (m *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcS
 }
 
 type AppResourceApp_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+
+	Permission types.String `tfsdk:"permission"`
 }
 
 func (to *AppResourceApp_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppResourceApp_SdkV2) {
@@ -2920,6 +2923,8 @@ func (to *AppResourceApp_SdkV2) SyncFieldsDuringRead(ctx context.Context, from A
 }
 
 func (m AppResourceApp_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["permission"] = attrs["permission"].SetOptional()
 
 	return attrs
 }
@@ -2941,13 +2946,19 @@ func (m AppResourceApp_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 func (m AppResourceApp_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"name":       m.Name,
+			"permission": m.Permission,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AppResourceApp_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"name":       types.StringType,
+			"permission": types.StringType,
+		},
 	}
 }
 

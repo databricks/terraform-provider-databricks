@@ -10,10 +10,10 @@ The list can be accessed via the data object's `workspace_base_environments` fie
 
 ## Example Usage
 ```hcl
-data "databricks_workspace_base_environments" "all" {}
+data "databricks_environments_workspace_base_environments" "all" {}
 
 output "all_environments" {
-  value = data.databricks_workspace_base_environments.all.workspace_base_environments
+  value = data.databricks_environments_workspace_base_environments.all.workspace_base_environments
 }
 ```
 

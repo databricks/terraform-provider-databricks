@@ -540,7 +540,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 		}
 	}
 	if !hasMetadata {
-		fixtures = append(fixtures, HTTPFixture{
+		fixtures = append([]HTTPFixture{{
 			Method:       "GET",
 			Resource:     "/.well-known/databricks-config",
 			ReuseRequest: true,
@@ -549,7 +549,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 				StatusCode: 404,
 				Message:    "Not Found",
 			},
-		})
+		}}, fixtures...)
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false

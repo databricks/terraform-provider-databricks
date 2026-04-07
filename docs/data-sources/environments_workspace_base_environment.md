@@ -9,7 +9,7 @@ This data source retrieves a single Workspace Base Environment by its resource n
 
 ## Example Usage
 ```hcl
-data "databricks_workspace_base_environment" "my_env" {
+data "databricks_environments_workspace_base_environment" "my_env" {
   name = "workspace-base-environments/my-environment"
 }
 ```

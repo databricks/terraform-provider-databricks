@@ -8,6 +8,62 @@ subcategory: "Postgres"
 
 ## Example Usage
 
+### User role with superuser privileges
+
+```hcl
+resource "databricks_postgres_role" "my_admin_role" {
+  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  role_id = "my-admin-role"
+
+  spec = {
+    identity_type    = "USER"
+    postgres_role    = "admin@example.com"
+    membership_roles = ["DATABRICKS_SUPERUSER"]
+
+    attributes = {
+      bypassrls  = true
+      createdb   = true
+      createrole = true
+    }
+  }
+}
+```
+
+-> **Note** `membership_roles` is a field on `spec`, not on `spec.attributes`. Placing it inside the `attributes` block will silently have no effect.
+
+### Group role
+
+```hcl
+resource "databricks_postgres_role" "my_team_role" {
+  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  role_id = "my-team-role"
+
+  spec = {
+    identity_type = "GROUP"
+    postgres_role = "my-databricks-group"
+
+    attributes = {
+      createdb   = false
+      createrole = false
+      bypassrls  = false
+    }
+  }
+}
+```
+
+### Service principal role
+
+```hcl
+resource "databricks_postgres_role" "my_app_role" {
+  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  role_id = "my-app-sp"
+
+  spec = {
+    identity_type = "SERVICE_PRINCIPAL"
+    postgres_role = "00000000-0000-0000-0000-000000000000"
+  }
+}
+```
 
 ## Arguments
 The following arguments are supported:

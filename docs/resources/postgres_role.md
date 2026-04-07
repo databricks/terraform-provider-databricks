@@ -12,7 +12,7 @@ subcategory: "Postgres"
 
 ```hcl
 resource "databricks_postgres_role" "my_admin_role" {
-  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  parent  = databricks_postgres_branch.production.name
   role_id = "my-admin-role"
 
   spec = {
@@ -35,7 +35,7 @@ resource "databricks_postgres_role" "my_admin_role" {
 
 ```hcl
 resource "databricks_postgres_role" "my_team_role" {
-  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  parent  = databricks_postgres_branch.production.name
   role_id = "my-team-role"
 
   spec = {
@@ -55,7 +55,7 @@ resource "databricks_postgres_role" "my_team_role" {
 
 ```hcl
 resource "databricks_postgres_role" "my_app_role" {
-  parent  = "projects/${databricks_postgres_project.this.status[0].project_id}/branches/production"
+  parent  = databricks_postgres_branch.production.name
   role_id = "my-app-sp"
 
   spec = {

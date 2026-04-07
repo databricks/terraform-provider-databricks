@@ -351,3 +351,6 @@ common/testdata/.azure
 CLAUDE.local.md
 *.orig
 *.rej
+
+# JFrog CLI config
+.jfrog/

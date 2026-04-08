@@ -302,7 +302,9 @@ func WorkspaceDriftDetection(ctx context.Context, client *common.DatabricksClien
 // Call this from any PF resource's ModifyPlan that has a provider_config block.
 func ValidateWorkspaceID(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var planPC types.Object
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("provider_config"), &planPC)...)
+	// Read from resp.Plan (not req.Plan) because WorkspaceDriftDetection may
+	// have updated provider_config in the plan to reflect a new workspace_id.
+	resp.Diagnostics.Append(resp.Plan.GetAttribute(ctx, path.Root("provider_config"), &planPC)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

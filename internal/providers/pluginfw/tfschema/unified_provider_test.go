@@ -2,12 +2,20 @@ package tfschema
 
 import (
 	"context"
+	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	resource_schema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -310,6 +318,128 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 				assert.False(t, diags.HasError(), "Expected no diagnostics error")
 			}
 			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
+		})
+	}
+}
+
+// TestValidateWorkspaceID verifies that ValidateWorkspaceID reads the workspace_id
+// from resp.Plan (which WorkspaceDriftDetection may have updated) rather than
+// req.Plan (which still has the old value preserved by the plan modifier).
+func TestValidateWorkspaceID(t *testing.T) {
+	ctx := context.Background()
+
+	testSchema := resource_schema.Schema{
+		Attributes: map[string]resource_schema.Attribute{
+			"provider_config": resource_schema.SingleNestedAttribute{
+				Optional: true,
+				Computed: true,
+				Attributes: map[string]resource_schema.Attribute{
+					"workspace_id": resource_schema.StringAttribute{
+						Required: true,
+					},
+				},
+			},
+		},
+	}
+
+	pcObjectType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"workspace_id": tftypes.String,
+		},
+	}
+	rootType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"provider_config": pcObjectType,
+		},
+	}
+	makePC := func(wsID string) tftypes.Value {
+		return tftypes.NewValue(pcObjectType, map[string]tftypes.Value{
+			"workspace_id": tftypes.NewValue(tftypes.String, wsID),
+		})
+	}
+	makeRoot := func(pc tftypes.Value) tftypes.Value {
+		return tftypes.NewValue(rootType, map[string]tftypes.Value{
+			"provider_config": pc,
+		})
+	}
+	nullPC := tftypes.NewValue(pcObjectType, nil)
+
+	newMockClient := func(t *testing.T) *common.DatabricksClient {
+		cfg := &config.Config{
+			Host:      "https://accounts.cloud.databricks.com",
+			AccountID: "test-account",
+			Token:     "test-token",
+		}
+		c, err := client.New(cfg)
+		assert.NoError(t, err)
+		return &common.DatabricksClient{DatabricksClient: c}
+	}
+
+	tests := []struct {
+		name                     string
+		reqPlanWSID              string
+		respPlanWSID             string
+		stateWSID                string
+		expectError              bool
+		expectedErrorContains    string
+		expectedErrorNotContains string
+	}{
+		{
+			name:                     "reads resp.Plan not req.Plan when they differ",
+			reqPlanWSID:              "111",
+			respPlanWSID:             "999",
+			stateWSID:                "111",
+			expectError:              true,
+			expectedErrorContains:    "999",
+			expectedErrorNotContains: "111",
+		},
+		{
+			name:                  "validates workspace_id when both plans agree",
+			reqPlanWSID:           "555",
+			respPlanWSID:          "555",
+			stateWSID:             "555",
+			expectError:           true,
+			expectedErrorContains: "555",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := resource.ModifyPlanRequest{
+				Plan:   tfsdk.Plan{Schema: testSchema, Raw: makeRoot(makePC(tt.reqPlanWSID))},
+				State:  tfsdk.State{Schema: testSchema, Raw: makeRoot(makePC(tt.stateWSID))},
+				Config: tfsdk.Config{Schema: testSchema, Raw: makeRoot(nullPC)},
+			}
+			resp := &resource.ModifyPlanResponse{
+				Plan: tfsdk.Plan{Schema: testSchema, Raw: makeRoot(makePC(tt.respPlanWSID))},
+			}
+
+			ValidateWorkspaceID(ctx, newMockClient(t), req, resp)
+
+			if tt.expectError {
+				assert.True(t, resp.Diagnostics.HasError(), "Expected error from ValidateWorkspaceID")
+			} else {
+				assert.False(t, resp.Diagnostics.HasError(), "Expected no error from ValidateWorkspaceID")
+			}
+
+			if tt.expectedErrorContains != "" {
+				found := false
+				for _, d := range resp.Diagnostics.Errors() {
+					if strings.Contains(d.Detail(), tt.expectedErrorContains) {
+						found = true
+						break
+					}
+				}
+				assert.True(t, found,
+					"Expected error containing %q, got: %v", tt.expectedErrorContains, resp.Diagnostics.Errors())
+			}
+
+			if tt.expectedErrorNotContains != "" {
+				for _, d := range resp.Diagnostics.Errors() {
+					assert.False(t, strings.Contains(d.Detail(), tt.expectedErrorNotContains),
+						"Error should not contain %q, got: %s", tt.expectedErrorNotContains, d.Detail())
+				}
+			}
 		})
 	}
 }

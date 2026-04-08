@@ -1,0 +1,39 @@
+name: Setup Go build environment
+description: Set up Go toolchain and dependencies for CI
+
+inputs:
+  go-version:
+    description: "Go version to install (mutually exclusive with go-version-file)"
+    required: false
+  go-version-file:
+    description: "Path to go.mod to read Go version from (mutually exclusive with go-version)"
+    required: false
+  go-cache:
+    description: "Enable Go module caching in setup-go"
+    required: false
+    default: "true"
+  cache-dependency-path:
+    description: "Path to go.sum for caching"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Setup JFrog CLI with OIDC
+      uses: jfrog/setup-jfrog-cli@279b1f629f43dd5bc658d8361ac4802a7ef8d2d5 # v4.9.1
+      env:
+        JF_URL: https://databricks.jfrog.io
+      with:
+        oidc-provider-name: github-actions
+
+    - name: Setup Go
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version: ${{ inputs.go-version }}
+        go-version-file: ${{ inputs.go-version-file }}
+        cache: ${{ inputs.go-cache }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Configure Go module proxy via JFrog
+      shell: bash
+      run: jf goc --repo-resolve=db-golang

@@ -8,21 +8,44 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Setup Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - name: Setup Go build environment
+        uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
 
       - name: Pull external libraries
-        run: make vendor
+        shell: bash
+        run: |
+          jf go mod vendor
+
+          # Point native go commands at the local module cache instead of
+          # the network. go run pkg@version needs module lookups even when
+          # cached; file:// satisfies these from disk without network access.
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+          echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+          echo "GONOSUMDB=*" >> $GITHUB_ENV
 
       - name: Run tests
-        run: make test
+        shell: bash
+        run: |
+          # Unset OIDC token env vars injected by the id-token: write permission.
+          # The Terraform provider detects these and attempts GitHub OIDC auth,
+          # which interferes with the test suite.
+          unset ACTIONS_ID_TOKEN_REQUEST_URL
+          unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
+          make test
 
       - name: Publish test coverage
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0

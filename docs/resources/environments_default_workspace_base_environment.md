@@ -22,40 +22,35 @@ Only workspace admins can configure the default workspace base environment.
 ### Set Default for CPU Compute
 
 ```hcl
-resource "databricks_workspace_base_environment" "cpu_env" {
-  display_name = "my-cpu-environment"
-  filepath     = "/Volumes/catalog/schema/volume/cpu-environment.yaml"
-}
-
-resource "databricks_default_workspace_base_environment" "this" {
-  cpu_workspace_base_environment = databricks_workspace_base_environment.cpu_env.name
+resource "databricks_environments_default_workspace_base_environment" "this" {
+  cpu_workspace_base_environment = "workspace-base-environments/my-base-env-12345"
 }
 ```
 
 ### Set Defaults for Both CPU and GPU Compute
 
 ```hcl
-resource "databricks_workspace_base_environment" "cpu_env" {
+resource "databricks_environments_workspace_base_environment" "cpu_env" {
   display_name = "my-cpu-environment"
   filepath     = "/Volumes/catalog/schema/volume/cpu-environment.yaml"
 }
 
-resource "databricks_workspace_base_environment" "gpu_env" {
+resource "databricks_environments_workspace_base_environment" "gpu_env" {
   display_name          = "my-gpu-environment"
   filepath              = "/Volumes/catalog/schema/volume/gpu-environment.yaml"
-  base_environment_type = "GPU_LARGE"
+  base_environment_type = "GPU"
 }
 
-resource "databricks_default_workspace_base_environment" "this" {
-  cpu_workspace_base_environment = databricks_workspace_base_environment.cpu_env.name
-  gpu_workspace_base_environment = databricks_workspace_base_environment.gpu_env.name
+resource "databricks_environments_default_workspace_base_environment" "this" {
+  cpu_workspace_base_environment = databricks_environments_workspace_base_environment.cpu_env.name
+  gpu_workspace_base_environment = databricks_environments_workspace_base_environment.gpu_env.name
 }
 ```
 
 ### Unset Both Defaults
 
 ```hcl
-resource "databricks_default_workspace_base_environment" "this" {}
+resource "databricks_environments_default_workspace_base_environment" "this" {}
 ```
 
 

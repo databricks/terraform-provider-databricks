@@ -9,10 +9,12 @@ This data source retrieves the current default Workspace Base Environment config
 
 ## Example Usage
 ```hcl
-data "databricks_default_workspace_base_environment" "current" {}
+data "databricks_environments_default_workspace_base_environment" "current" {
+  name = "default-workspace-base-environment"
+}
 
 output "default_cpu_environment" {
-  value = data.databricks_default_workspace_base_environment.current.cpu_workspace_base_environment
+  value = data.databricks_environments_default_workspace_base_environment.current.cpu_workspace_base_environment
 }
 ```
 

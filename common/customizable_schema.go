@@ -243,12 +243,12 @@ func (s *CustomizableSchema) SetDeprecated(reason string) *CustomizableSchema {
 	return s
 }
 
-func (s *CustomizableSchema) SetValidateFunc(validate func(interface{}, string) ([]string, []error)) *CustomizableSchema {
+func (s *CustomizableSchema) SetValidateFunc(validate func(any, string) ([]string, []error)) *CustomizableSchema {
 	s.Schema.ValidateFunc = validate
 	return s
 }
 
-func (s *CustomizableSchema) SetValidateDiagFunc(validate func(interface{}, cty.Path) diag.Diagnostics) *CustomizableSchema {
+func (s *CustomizableSchema) SetValidateDiagFunc(validate func(any, cty.Path) diag.Diagnostics) *CustomizableSchema {
 	s.Schema.ValidateDiagFunc = validate
 	return s
 }

@@ -34,6 +34,7 @@ import (
 const resourceName = "data_classification_catalog_config"
 
 var _ resource.ResourceWithConfigure = &CatalogConfigResource{}
+var _ resource.ResourceWithModifyPlan = &CatalogConfigResource{}
 
 func ResourceCatalogConfig() resource.Resource {
 	return &CatalogConfigResource{}
@@ -193,7 +194,9 @@ func (to *CatalogConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -216,7 +219,9 @@ func (to *CatalogConfig) SyncFieldsDuringRead(ctx context.Context, from CatalogC
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -300,6 +305,31 @@ func (r *CatalogConfigResource) Schema(ctx context.Context, req resource.SchemaR
 
 func (r *CatalogConfigResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *CatalogConfigResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan CatalogConfig
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *CatalogConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

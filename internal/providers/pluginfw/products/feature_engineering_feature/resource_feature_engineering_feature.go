@@ -35,6 +35,7 @@ import (
 const resourceName = "feature_engineering_feature"
 
 var _ resource.ResourceWithConfigure = &FeatureResource{}
+var _ resource.ResourceWithModifyPlan = &FeatureResource{}
 
 func ResourceFeature() resource.Resource {
 	return &FeatureResource{}
@@ -556,6 +557,31 @@ func (r *FeatureResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 func (r *FeatureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *FeatureResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan Feature
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *FeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

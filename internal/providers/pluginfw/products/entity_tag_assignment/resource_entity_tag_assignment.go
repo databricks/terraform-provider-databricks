@@ -32,6 +32,7 @@ import (
 const resourceName = "entity_tag_assignment"
 
 var _ resource.ResourceWithConfigure = &EntityTagAssignmentResource{}
+var _ resource.ResourceWithModifyPlan = &EntityTagAssignmentResource{}
 
 func ResourceEntityTagAssignment() resource.Resource {
 	return &EntityTagAssignmentResource{}
@@ -230,6 +231,31 @@ func (r *EntityTagAssignmentResource) Schema(ctx context.Context, req resource.S
 
 func (r *EntityTagAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *EntityTagAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan EntityTagAssignment
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

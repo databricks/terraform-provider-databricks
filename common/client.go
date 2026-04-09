@@ -579,8 +579,8 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 // can customize host type detection independently from the SDK in the future.
 func (c *DatabricksClient) HostTypeForTerraform() config.HostType {
 	// If host metadata resolved a known host type, use it.
-	if c.Config.ResolvedHostType != config.HostTypeUnknown {
-		return c.Config.ResolvedHostType
+	if c.Config.GetResolvedHostType() != config.HostTypeUnknown {
+		return c.Config.GetResolvedHostType()
 	}
 
 	// Normalize the host to ensure the scheme is present before checking

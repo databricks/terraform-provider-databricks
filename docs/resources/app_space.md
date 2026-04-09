@@ -36,6 +36,10 @@ The following arguments are supported:
 * `sql_warehouse` (AppResourceSqlWarehouse, optional)
 * `uc_securable` (AppResourceUcSecurable, optional)
 
+### AppResourceApp
+* `name` (string, optional)
+* `permission` (string, optional) - Possible values are: `CAN_USE`
+
 ### AppResourceDatabase
 * `database_name` (string, required)
 * `instance_name` (string, required)

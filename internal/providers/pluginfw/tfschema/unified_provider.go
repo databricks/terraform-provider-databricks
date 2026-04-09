@@ -2,14 +2,20 @@ package tfschema
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -33,6 +39,9 @@ type Namespace_SdkV2 struct {
 
 // ProviderConfig is used to store the provider configurations for unified terraform provider
 // across resources onboarded to plugin framework.
+// When adding new fields, update ToObjectValue, Type, and all functions that
+// construct or inspect ProviderConfig (e.g. PopulateProviderConfigInState,
+// WorkspaceDriftDetection, ValidateWorkspaceID).
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
@@ -154,7 +163,7 @@ func GetWorkspaceIDResource(ctx context.Context, providerConfig types.Object) (s
 	var diags diag.Diagnostics
 	var workspaceID string
 
-	if providerConfig.IsNull() {
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
 		return workspaceID, diags
 	}
 
@@ -179,7 +188,7 @@ func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) 
 	var diags diag.Diagnostics
 	var workspaceID string
 
-	if providerConfig.IsNull() {
+	if providerConfig.IsNull() || providerConfig.IsUnknown() {
 		return workspaceID, diags
 	}
 
@@ -195,4 +204,155 @@ func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) 
 	workspaceID = namespace.WorkspaceID.ValueString()
 
 	return workspaceID, diags
+}
+
+// ProviderConfigPlanModifier handles provider_config during plan:
+//   - On Create (no prior state): if config doesn't set provider_config, sets plan
+//     to unknown so the provider can populate it during apply.
+//   - On Update: copies prior state to plan (like UseStateForUnknown) to avoid
+//     perpetual diffs when provider_config is absent from config.
+type ProviderConfigPlanModifier struct{}
+
+func (m ProviderConfigPlanModifier) Description(ctx context.Context) string {
+	return "Handles provider_config for create and update lifecycle."
+}
+
+func (m ProviderConfigPlanModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	// If config has a value, let it through (user explicitly set provider_config).
+	if !req.ConfigValue.IsNull() && !req.ConfigValue.IsUnknown() {
+		return
+	}
+	// Config is null (user didn't set provider_config).
+	if req.StateValue.IsNull() || req.State.Raw.IsNull() {
+		// Create: no prior state. Set plan to unknown so TC allows
+		// the provider to populate it during apply.
+		resp.PlanValue = types.ObjectUnknown(ProviderConfig{}.Type(ctx).(types.ObjectType).AttrTypes)
+	} else {
+		// Update: copy prior state to plan (like UseStateForUnknown).
+		resp.PlanValue = req.StateValue
+	}
+}
+
+// WorkspaceDriftDetection compares the old (state) and new (config/provider)
+// effective workspace IDs and triggers RequiresReplace when they differ.
+// Only runs for updates — during create there is no prior state to compare.
+func WorkspaceDriftDetection(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// No prior state means create — nothing to compare.
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	// Get old effective workspace ID from state.
+	var statePC types.Object
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("provider_config"), &statePC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	oldWsID, diags := GetWorkspaceIDResource(ctx, statePC)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if oldWsID == "" {
+		oldWsID = client.Config.WorkspaceID
+	}
+
+	// Get new effective workspace ID from config (the raw user config, NOT
+	// the plan which may contain the preserved state value).
+	var cfgPC types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("provider_config"), &cfgPC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var newWsID string
+	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
+		newWsID, _ = GetWorkspaceIDResource(ctx, cfgPC)
+	}
+	if newWsID == "" {
+		newWsID = client.Config.WorkspaceID
+	}
+	// Fallback to cached workspace ID for workspace-level providers.
+	if newWsID == "" {
+		if cachedID, err := client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
+			newWsID = strconv.FormatInt(cachedID, 10)
+		}
+	}
+
+	if oldWsID != "" && newWsID == "" {
+		resp.Diagnostics.AddError("Missing workspace_id",
+			fmt.Sprintf("resource has provider_config.workspace_id = %s in state but no workspace_id is configured. "+
+				"Set workspace_id in the provider configuration or in the resource's provider_config block", oldWsID))
+		return
+	}
+
+	if oldWsID != "" && newWsID != "" && oldWsID != newWsID {
+		resp.RequiresReplace = append(resp.RequiresReplace,
+			path.Root("provider_config").AtName("workspace_id"))
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("provider_config"),
+			ProviderConfig{WorkspaceID: types.StringValue(newWsID)}.ToObjectValue(ctx))...)
+	}
+}
+
+// ValidateWorkspaceID validates that the workspace client for the planned
+// workspace_id is reachable. Runs for both create and update.
+// Call this from any PF resource's ModifyPlan that has a provider_config block.
+func ValidateWorkspaceID(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var planPC types.Object
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("provider_config"), &planPC)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	workspaceID, diags := GetWorkspaceIDResource(ctx, planPC)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if workspaceID == "" {
+		workspaceID = client.Config.WorkspaceID
+	}
+	_, validateDiags := client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
+}
+
+// PopulateProviderConfigInState resolves the effective workspace ID and sets it
+// in the response state. Call this at the end of every Read method for
+// unified-provider Plugin Framework resources.
+//
+// During refresh reads (terraform plan), providerConfig comes from the prior
+// state (req.State). If it already contains a workspace ID, that value is
+// preserved — the fallback to workspace_id / host is only used on the
+// first time (after Create/Import) when no workspace ID is in state yet.
+// Preserving the prior state value is critical: ModifyPlan compares the old
+// effective workspace ID against the new one to trigger ForceNew when they
+// differ. Overwriting it here would make that detection impossible.
+func PopulateProviderConfigInState(ctx context.Context, client *common.DatabricksClient,
+	providerConfig types.Object, state *tfsdk.State) diag.Diagnostics {
+	// GetWorkspaceIDResource reads from providerConfig, which during Read
+	// comes from the prior state. If the state already has a workspace ID,
+	// it is returned here and the fallbacks below are skipped — preserving
+	// the old value for ModifyPlan.
+	wsID, diags := GetWorkspaceIDResource(ctx, providerConfig)
+	if diags.HasError() {
+		return diags
+	}
+	if wsID == "" {
+		wsID = client.Config.WorkspaceID
+	}
+	if wsID == "" {
+		id, err := client.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return diag.Diagnostics{diag.NewErrorDiagnostic(
+				"failed to resolve workspace ID for provider_config state population", err.Error())}
+		}
+		wsID = strconv.FormatInt(id, 10)
+	}
+	if wsID != "" {
+		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
+			ProviderConfig{WorkspaceID: types.StringValue(wsID)}.ToObjectValue(ctx))...)
+	}
+	return diags
 }

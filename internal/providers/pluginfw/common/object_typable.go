@@ -104,10 +104,10 @@ func (o ObjectTyper) Type(ctx context.Context) attr.Type {
 }
 
 var simpleTypeMap = map[reflect.Type]attr.Type{
-	reflect.TypeOf(types.Bool{}):    types.BoolType,
-	reflect.TypeOf(types.Int64{}):   types.Int64Type,
-	reflect.TypeOf(types.Float64{}): types.Float64Type,
-	reflect.TypeOf(types.String{}):  types.StringType,
+	reflect.TypeFor[types.Bool]():    types.BoolType,
+	reflect.TypeFor[types.Int64]():   types.Int64Type,
+	reflect.TypeFor[types.Float64](): types.Float64Type,
+	reflect.TypeFor[types.String]():  types.StringType,
 }
 
 // getAttrType returns the attr.Type for the given value. The value can be a

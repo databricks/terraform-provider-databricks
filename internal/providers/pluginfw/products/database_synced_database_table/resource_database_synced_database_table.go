@@ -33,6 +33,7 @@ import (
 const resourceName = "database_synced_database_table"
 
 var _ resource.ResourceWithConfigure = &SyncedDatabaseTableResource{}
+var _ resource.ResourceWithModifyPlan = &SyncedDatabaseTableResource{}
 
 func ResourceSyncedDatabaseTable() resource.Resource {
 	return &SyncedDatabaseTableResource{}
@@ -362,6 +363,31 @@ func (r *SyncedDatabaseTableResource) Schema(ctx context.Context, req resource.S
 
 func (r *SyncedDatabaseTableResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *SyncedDatabaseTableResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan SyncedDatabaseTable
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *SyncedDatabaseTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -140,7 +140,9 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -155,7 +157,9 @@ func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 }
 
 func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

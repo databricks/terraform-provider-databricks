@@ -1250,7 +1250,11 @@ func (m AuthConfig_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Computes the average of values.
 type AvgFunction_SdkV2 struct {
-	// The input column from which the average is computed.
+	// The input column from which the average is computed. For Kafka sources,
+	// use dot-prefixed path notation (e.g., "value.amount"). For nested fields,
+	// the leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// "value:amount") is supported for backwards compatibility but is
+	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -1564,10 +1568,11 @@ func (m *BatchCreateMaterializedFeaturesResponse_SdkV2) SetMaterializedFeatures(
 }
 
 type ColumnIdentifier_SdkV2 struct {
-	// String representation of the column name or variant expression path. For
-	// nested fields, the leaf value is what will be present in materialized
-	// tables and expected to match at query time. For example, the leaf node of
-	// value:trip_details.location_details.pickup_zip is pickup_zip.
+	// String representation of the column name using dot-prefixed path
+	// notation. For nested fields, the leaf value is what will be present in
+	// materialized tables and expected to match at query time. For example, the
+	// leaf node of value.trip_details.location_details.pickup_zip is
+	// pickup_zip.
 	VariantExprPath types.String `tfsdk:"variant_expr_path"`
 }
 
@@ -1610,6 +1615,56 @@ func (m ColumnIdentifier_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"variant_expr_path": types.StringType,
+		},
+	}
+}
+
+// A ColumnSelection function, equivalent to the LAST() record of an entity over
+// a lifetime ContinuousWindow
+type ColumnSelection_SdkV2 struct {
+	// Column name from source to select as the feature value.
+	Column types.String `tfsdk:"column"`
+}
+
+func (to *ColumnSelection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnSelection_SdkV2) {
+}
+
+func (to *ColumnSelection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnSelection_SdkV2) {
+}
+
+func (m ColumnSelection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column"] = attrs["column"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnSelection.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ColumnSelection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnSelection_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ColumnSelection_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column": m.Column,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ColumnSelection_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column": types.StringType,
 		},
 	}
 }
@@ -1788,7 +1843,11 @@ func (m ContinuousWindow_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Computes the count of values.
 type CountFunction_SdkV2 struct {
-	// The input column from which the count is computed.
+	// The input column from which the count is computed. For Kafka sources, use
+	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
+	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// "value:amount") is supported for backwards compatibility but is
+	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -6461,7 +6520,14 @@ func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types
 }
 
 type EntityColumn_SdkV2 struct {
-	// The name of the entity column.
+	// The name of the entity column. For Kafka sources, use dot-prefixed path
+	// notation to reference fields within the key or value schema (e.g.,
+	// "value.user_id", "key.partition_key"). For nested fields, the leaf node
+	// name (e.g., "user_id" from "value.trip_details.user_id") is what will be
+	// present in materialized tables and expected to match at query time.
+	// TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -8431,6 +8497,8 @@ func (m ForecastingExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 type Function_SdkV2 struct {
 	// An aggregation function applied over a time window.
 	AggregationFunction types.List `tfsdk:"aggregation_function"`
+	// Selects the latest value of a single column in a data source
+	ColumnSelection types.List `tfsdk:"column_selection"`
 	// Deprecated: Use the function oneof with AggregationFunction instead. Kept
 	// for backwards compatibility. Extra parameters for parameterized
 	// functions.
@@ -8447,6 +8515,15 @@ func (to *Function_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 				// Recursively sync the fields of AggregationFunction
 				toAggregationFunction.SyncFieldsDuringCreateOrUpdate(ctx, fromAggregationFunction)
 				to.SetAggregationFunction(ctx, toAggregationFunction)
+			}
+		}
+	}
+	if !from.ColumnSelection.IsNull() && !from.ColumnSelection.IsUnknown() {
+		if toColumnSelection, ok := to.GetColumnSelection(ctx); ok {
+			if fromColumnSelection, ok := from.GetColumnSelection(ctx); ok {
+				// Recursively sync the fields of ColumnSelection
+				toColumnSelection.SyncFieldsDuringCreateOrUpdate(ctx, fromColumnSelection)
+				to.SetColumnSelection(ctx, toColumnSelection)
 			}
 		}
 	}
@@ -8467,6 +8544,14 @@ func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Functio
 			}
 		}
 	}
+	if !from.ColumnSelection.IsNull() && !from.ColumnSelection.IsUnknown() {
+		if toColumnSelection, ok := to.GetColumnSelection(ctx); ok {
+			if fromColumnSelection, ok := from.GetColumnSelection(ctx); ok {
+				toColumnSelection.SyncFieldsDuringRead(ctx, fromColumnSelection)
+				to.SetColumnSelection(ctx, toColumnSelection)
+			}
+		}
+	}
 	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() && to.ExtraParameters.IsNull() && len(from.ExtraParameters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExtraParameters, and the deserialized field value is Null,
@@ -8478,6 +8563,8 @@ func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Functio
 func (m Function_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aggregation_function"] = attrs["aggregation_function"].SetOptional()
 	attrs["aggregation_function"] = attrs["aggregation_function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["column_selection"] = attrs["column_selection"].SetOptional()
+	attrs["column_selection"] = attrs["column_selection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["extra_parameters"] = attrs["extra_parameters"].SetOptional()
 	attrs["function_type"] = attrs["function_type"].SetOptional()
 
@@ -8494,6 +8581,7 @@ func (m Function_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 func (m Function_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"aggregation_function": reflect.TypeOf(AggregationFunction_SdkV2{}),
+		"column_selection":     reflect.TypeOf(ColumnSelection_SdkV2{}),
 		"extra_parameters":     reflect.TypeOf(FunctionExtraParameter_SdkV2{}),
 	}
 }
@@ -8506,6 +8594,7 @@ func (m Function_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"aggregation_function": m.AggregationFunction,
+			"column_selection":     m.ColumnSelection,
 			"extra_parameters":     m.ExtraParameters,
 			"function_type":        m.FunctionType,
 		})
@@ -8517,6 +8606,9 @@ func (m Function_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"aggregation_function": basetypes.ListType{
 				ElemType: AggregationFunction_SdkV2{}.Type(ctx),
+			},
+			"column_selection": basetypes.ListType{
+				ElemType: ColumnSelection_SdkV2{}.Type(ctx),
 			},
 			"extra_parameters": basetypes.ListType{
 				ElemType: FunctionExtraParameter_SdkV2{}.Type(ctx),
@@ -8550,6 +8642,32 @@ func (m *Function_SdkV2) SetAggregationFunction(ctx context.Context, v Aggregati
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["aggregation_function"]
 	m.AggregationFunction = types.ListValueMust(t, vs)
+}
+
+// GetColumnSelection returns the value of the ColumnSelection field in Function_SdkV2 as
+// a ColumnSelection_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Function_SdkV2) GetColumnSelection(ctx context.Context) (ColumnSelection_SdkV2, bool) {
+	var e ColumnSelection_SdkV2
+	if m.ColumnSelection.IsNull() || m.ColumnSelection.IsUnknown() {
+		return e, false
+	}
+	var v []ColumnSelection_SdkV2
+	d := m.ColumnSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumnSelection sets the value of the ColumnSelection field in Function_SdkV2.
+func (m *Function_SdkV2) SetColumnSelection(ctx context.Context, v ColumnSelection_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["column_selection"]
+	m.ColumnSelection = types.ListValueMust(t, vs)
 }
 
 // GetExtraParameters returns the value of the ExtraParameters field in Function_SdkV2 as
@@ -20768,7 +20886,10 @@ func (m SlidingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 // Computes the population standard deviation.
 type StddevPopFunction_SdkV2 struct {
 	// The input column from which the population standard deviation is
-	// computed.
+	// computed. For Kafka sources, use dot-prefixed path notation (e.g.,
+	// "value.amount"). For nested fields, the leaf node name is used.
+	// TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported
+	// for backwards compatibility but is deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -20928,7 +21049,11 @@ func (m SubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Computes the sum of values.
 type SumFunction_SdkV2 struct {
-	// The input column from which the sum is computed.
+	// The input column from which the sum is computed. For Kafka sources, use
+	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
+	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// "value:amount") is supported for backwards compatibility but is
+	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -21284,7 +21409,14 @@ func (m *TimeWindow_SdkV2) SetTumbling(ctx context.Context, v TumblingWindow_Sdk
 }
 
 type TimeseriesColumn_SdkV2 struct {
-	// The name of the timeseries column.
+	// The name of the timeseries column. For Kafka sources, use dot-prefixed
+	// path notation to reference fields within the key or value schema (e.g.,
+	// "value.event_timestamp"). For nested fields, the leaf node name (e.g.,
+	// "event_timestamp" from "value.event_details.event_timestamp") is what
+	// will be present in materialized tables and expected to match at query
+	// time. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// "value:event_timestamp") is supported for backwards compatibility but is
+	// deprecated; migrate to dot notation.
 	Name types.String `tfsdk:"name"`
 }
 

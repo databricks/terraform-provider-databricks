@@ -33,6 +33,7 @@ import (
 const resourceName = "knowledge_assistant"
 
 var _ resource.ResourceWithConfigure = &KnowledgeAssistantResource{}
+var _ resource.ResourceWithModifyPlan = &KnowledgeAssistantResource{}
 
 func ResourceKnowledgeAssistant() resource.Resource {
 	return &KnowledgeAssistantResource{}
@@ -251,6 +252,31 @@ func (r *KnowledgeAssistantResource) Schema(ctx context.Context, req resource.Sc
 
 func (r *KnowledgeAssistantResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *KnowledgeAssistantResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan KnowledgeAssistant
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *KnowledgeAssistantResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

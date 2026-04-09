@@ -5723,6 +5723,11 @@ type CreateExternalLocation_SdkV2 struct {
 	// The effective value of `enable_file_events` after applying server-side
 	// defaults.
 	EffectiveEnableFileEvents types.Bool `tfsdk:"effective_enable_file_events"`
+	// The effective file event queue configuration after applying server-side
+	// defaults. Always populated when a queue is provisioned, regardless of
+	// whether the user explicitly set `enable_file_events`. Use this field
+	// instead of `file_event_queue` for reading the actual queue state.
+	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
 	// Whether to enable file events on this external location. Default to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
@@ -5749,6 +5754,15 @@ type CreateExternalLocation_SdkV2 struct {
 }
 
 func (to *CreateExternalLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExternalLocation_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				// Recursively sync the fields of EffectiveFileEventQueue
+				toEffectiveFileEventQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -5770,6 +5784,14 @@ func (to *CreateExternalLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 }
 
 func (to *CreateExternalLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateExternalLocation_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				toEffectiveFileEventQueue.SyncFieldsDuringRead(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -5792,6 +5814,8 @@ func (m CreateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["credential_name"] = attrs["credential_name"].SetRequired()
 	attrs["effective_enable_file_events"] = attrs["effective_enable_file_events"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5815,8 +5839,9 @@ func (m CreateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (m CreateExternalLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"encryption_details": reflect.TypeOf(EncryptionDetails_SdkV2{}),
-		"file_event_queue":   reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"effective_file_event_queue": reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"encryption_details":         reflect.TypeOf(EncryptionDetails_SdkV2{}),
+		"file_event_queue":           reflect.TypeOf(FileEventQueue_SdkV2{}),
 	}
 }
 
@@ -5830,6 +5855,7 @@ func (m CreateExternalLocation_SdkV2) ToObjectValue(ctx context.Context) basetyp
 			"comment":                      m.Comment,
 			"credential_name":              m.CredentialName,
 			"effective_enable_file_events": m.EffectiveEnableFileEvents,
+			"effective_file_event_queue":   m.EffectiveFileEventQueue,
 			"enable_file_events":           m.EnableFileEvents,
 			"encryption_details":           m.EncryptionDetails,
 			"fallback":                     m.Fallback,
@@ -5848,7 +5874,10 @@ func (m CreateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":                      types.StringType,
 			"credential_name":              types.StringType,
 			"effective_enable_file_events": types.BoolType,
-			"enable_file_events":           types.BoolType,
+			"effective_file_event_queue": basetypes.ListType{
+				ElemType: FileEventQueue_SdkV2{}.Type(ctx),
+			},
+			"enable_file_events": types.BoolType,
 			"encryption_details": basetypes.ListType{
 				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
@@ -5862,6 +5891,32 @@ func (m CreateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"url":             types.StringType,
 		},
 	}
+}
+
+// GetEffectiveFileEventQueue returns the value of the EffectiveFileEventQueue field in CreateExternalLocation_SdkV2 as
+// a FileEventQueue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExternalLocation_SdkV2) GetEffectiveFileEventQueue(ctx context.Context) (FileEventQueue_SdkV2, bool) {
+	var e FileEventQueue_SdkV2
+	if m.EffectiveFileEventQueue.IsNull() || m.EffectiveFileEventQueue.IsUnknown() {
+		return e, false
+	}
+	var v []FileEventQueue_SdkV2
+	d := m.EffectiveFileEventQueue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveFileEventQueue sets the value of the EffectiveFileEventQueue field in CreateExternalLocation_SdkV2.
+func (m *CreateExternalLocation_SdkV2) SetEffectiveFileEventQueue(ctx context.Context, v FileEventQueue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_file_event_queue"]
+	m.EffectiveFileEventQueue = types.ListValueMust(t, vs)
 }
 
 // GetEncryptionDetails returns the value of the EncryptionDetails field in CreateExternalLocation_SdkV2 as
@@ -13262,6 +13317,11 @@ type ExternalLocationInfo_SdkV2 struct {
 	// The effective value of `enable_file_events` after applying server-side
 	// defaults.
 	EffectiveEnableFileEvents types.Bool `tfsdk:"effective_enable_file_events"`
+	// The effective file event queue configuration after applying server-side
+	// defaults. Always populated when a queue is provisioned, regardless of
+	// whether the user explicitly set `enable_file_events`. Use this field
+	// instead of `file_event_queue` for reading the actual queue state.
+	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
 	// Whether to enable file events on this external location. Default to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
@@ -13296,6 +13356,15 @@ type ExternalLocationInfo_SdkV2 struct {
 }
 
 func (to *ExternalLocationInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalLocationInfo_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				// Recursively sync the fields of EffectiveFileEventQueue
+				toEffectiveFileEventQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -13317,6 +13386,14 @@ func (to *ExternalLocationInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 }
 
 func (to *ExternalLocationInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExternalLocationInfo_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				toEffectiveFileEventQueue.SyncFieldsDuringRead(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -13343,6 +13420,8 @@ func (m ExternalLocationInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["credential_id"] = attrs["credential_id"].SetOptional()
 	attrs["credential_name"] = attrs["credential_name"].SetOptional()
 	attrs["effective_enable_file_events"] = attrs["effective_enable_file_events"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -13370,8 +13449,9 @@ func (m ExternalLocationInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (m ExternalLocationInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"encryption_details": reflect.TypeOf(EncryptionDetails_SdkV2{}),
-		"file_event_queue":   reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"effective_file_event_queue": reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"encryption_details":         reflect.TypeOf(EncryptionDetails_SdkV2{}),
+		"file_event_queue":           reflect.TypeOf(FileEventQueue_SdkV2{}),
 	}
 }
 
@@ -13389,6 +13469,7 @@ func (m ExternalLocationInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"credential_id":                m.CredentialId,
 			"credential_name":              m.CredentialName,
 			"effective_enable_file_events": m.EffectiveEnableFileEvents,
+			"effective_file_event_queue":   m.EffectiveFileEventQueue,
 			"enable_file_events":           m.EnableFileEvents,
 			"encryption_details":           m.EncryptionDetails,
 			"fallback":                     m.Fallback,
@@ -13415,7 +13496,10 @@ func (m ExternalLocationInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"credential_id":                types.StringType,
 			"credential_name":              types.StringType,
 			"effective_enable_file_events": types.BoolType,
-			"enable_file_events":           types.BoolType,
+			"effective_file_event_queue": basetypes.ListType{
+				ElemType: FileEventQueue_SdkV2{}.Type(ctx),
+			},
+			"enable_file_events": types.BoolType,
 			"encryption_details": basetypes.ListType{
 				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
@@ -13433,6 +13517,32 @@ func (m ExternalLocationInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"url":            types.StringType,
 		},
 	}
+}
+
+// GetEffectiveFileEventQueue returns the value of the EffectiveFileEventQueue field in ExternalLocationInfo_SdkV2 as
+// a FileEventQueue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ExternalLocationInfo_SdkV2) GetEffectiveFileEventQueue(ctx context.Context) (FileEventQueue_SdkV2, bool) {
+	var e FileEventQueue_SdkV2
+	if m.EffectiveFileEventQueue.IsNull() || m.EffectiveFileEventQueue.IsUnknown() {
+		return e, false
+	}
+	var v []FileEventQueue_SdkV2
+	d := m.EffectiveFileEventQueue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveFileEventQueue sets the value of the EffectiveFileEventQueue field in ExternalLocationInfo_SdkV2.
+func (m *ExternalLocationInfo_SdkV2) SetEffectiveFileEventQueue(ctx context.Context, v FileEventQueue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_file_event_queue"]
+	m.EffectiveFileEventQueue = types.ListValueMust(t, vs)
 }
 
 // GetEncryptionDetails returns the value of the EncryptionDetails field in ExternalLocationInfo_SdkV2 as
@@ -30661,6 +30771,11 @@ type UpdateExternalLocation_SdkV2 struct {
 	// The effective value of `enable_file_events` after applying server-side
 	// defaults.
 	EffectiveEnableFileEvents types.Bool `tfsdk:"effective_enable_file_events"`
+	// The effective file event queue configuration after applying server-side
+	// defaults. Always populated when a queue is provisioned, regardless of
+	// whether the user explicitly set `enable_file_events`. Use this field
+	// instead of `file_event_queue` for reading the actual queue state.
+	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
 	// Whether to enable file events on this external location. Default to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
@@ -30696,6 +30811,15 @@ type UpdateExternalLocation_SdkV2 struct {
 }
 
 func (to *UpdateExternalLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateExternalLocation_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				// Recursively sync the fields of EffectiveFileEventQueue
+				toEffectiveFileEventQueue.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -30717,6 +30841,14 @@ func (to *UpdateExternalLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 }
 
 func (to *UpdateExternalLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateExternalLocation_SdkV2) {
+	if !from.EffectiveFileEventQueue.IsNull() && !from.EffectiveFileEventQueue.IsUnknown() {
+		if toEffectiveFileEventQueue, ok := to.GetEffectiveFileEventQueue(ctx); ok {
+			if fromEffectiveFileEventQueue, ok := from.GetEffectiveFileEventQueue(ctx); ok {
+				toEffectiveFileEventQueue.SyncFieldsDuringRead(ctx, fromEffectiveFileEventQueue)
+				to.SetEffectiveFileEventQueue(ctx, toEffectiveFileEventQueue)
+			}
+		}
+	}
 	if !from.EncryptionDetails.IsNull() && !from.EncryptionDetails.IsUnknown() {
 		if toEncryptionDetails, ok := to.GetEncryptionDetails(ctx); ok {
 			if fromEncryptionDetails, ok := from.GetEncryptionDetails(ctx); ok {
@@ -30739,6 +30871,8 @@ func (m UpdateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["credential_name"] = attrs["credential_name"].SetOptional()
 	attrs["effective_enable_file_events"] = attrs["effective_enable_file_events"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].SetComputed()
+	attrs["effective_file_event_queue"] = attrs["effective_file_event_queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["enable_file_events"] = attrs["enable_file_events"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].SetOptional()
 	attrs["encryption_details"] = attrs["encryption_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -30766,8 +30900,9 @@ func (m UpdateExternalLocation_SdkV2) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (m UpdateExternalLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"encryption_details": reflect.TypeOf(EncryptionDetails_SdkV2{}),
-		"file_event_queue":   reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"effective_file_event_queue": reflect.TypeOf(FileEventQueue_SdkV2{}),
+		"encryption_details":         reflect.TypeOf(EncryptionDetails_SdkV2{}),
+		"file_event_queue":           reflect.TypeOf(FileEventQueue_SdkV2{}),
 	}
 }
 
@@ -30781,6 +30916,7 @@ func (m UpdateExternalLocation_SdkV2) ToObjectValue(ctx context.Context) basetyp
 			"comment":                      m.Comment,
 			"credential_name":              m.CredentialName,
 			"effective_enable_file_events": m.EffectiveEnableFileEvents,
+			"effective_file_event_queue":   m.EffectiveFileEventQueue,
 			"enable_file_events":           m.EnableFileEvents,
 			"encryption_details":           m.EncryptionDetails,
 			"fallback":                     m.Fallback,
@@ -30803,7 +30939,10 @@ func (m UpdateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":                      types.StringType,
 			"credential_name":              types.StringType,
 			"effective_enable_file_events": types.BoolType,
-			"enable_file_events":           types.BoolType,
+			"effective_file_event_queue": basetypes.ListType{
+				ElemType: FileEventQueue_SdkV2{}.Type(ctx),
+			},
+			"enable_file_events": types.BoolType,
 			"encryption_details": basetypes.ListType{
 				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
@@ -30821,6 +30960,32 @@ func (m UpdateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"url":             types.StringType,
 		},
 	}
+}
+
+// GetEffectiveFileEventQueue returns the value of the EffectiveFileEventQueue field in UpdateExternalLocation_SdkV2 as
+// a FileEventQueue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateExternalLocation_SdkV2) GetEffectiveFileEventQueue(ctx context.Context) (FileEventQueue_SdkV2, bool) {
+	var e FileEventQueue_SdkV2
+	if m.EffectiveFileEventQueue.IsNull() || m.EffectiveFileEventQueue.IsUnknown() {
+		return e, false
+	}
+	var v []FileEventQueue_SdkV2
+	d := m.EffectiveFileEventQueue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveFileEventQueue sets the value of the EffectiveFileEventQueue field in UpdateExternalLocation_SdkV2.
+func (m *UpdateExternalLocation_SdkV2) SetEffectiveFileEventQueue(ctx context.Context, v FileEventQueue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_file_event_queue"]
+	m.EffectiveFileEventQueue = types.ListValueMust(t, vs)
 }
 
 // GetEncryptionDetails returns the value of the EncryptionDetails field in UpdateExternalLocation_SdkV2 as

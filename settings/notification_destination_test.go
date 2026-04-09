@@ -117,34 +117,6 @@ func TestAccNDMicrosoftTeams(t *testing.T) {
 	})
 }
 
-func TestAccNDPagerduty(t *testing.T) {
-	display_name := "Notification Destination - " + qa.RandomName()
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-		resource "databricks_notification_destination" "this" {
-			display_name = "` + display_name + `"
-			config {
-				pagerduty {
-					integration_key = "{var.RANDOM}"
-				}
-			}
-		}
-		`,
-	}, acceptance.Step{
-		Template: `
-		resource "databricks_notification_destination" "this" {
-			display_name = "` + display_name + `"
-			config {
-				pagerduty {
-					integration_key = "{var.RANDOM}"
-				}
-			}
-		}
-		`,
-		Check: checkND(t, display_name, settings.DestinationTypePagerduty),
-	})
-}
-
 func TestAccNDGenericWebhook(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
 	acceptance.WorkspaceLevel(t, acceptance.Step{

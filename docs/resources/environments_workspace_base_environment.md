@@ -39,7 +39,7 @@ Workspace admins can create and manage workspace base environments. All workspac
 This example creates a Workspace Base Environment referencing an environment YAML file stored in a UC Volume.
 
 ```hcl
-resource "databricks_workspace_base_environment" "this" {
+resource "databricks_environments_workspace_base_environment" "this" {
   display_name = "my-environment"
   filepath     = "/Volumes/catalog/schema/volume/environment.yaml"
 }
@@ -50,10 +50,10 @@ resource "databricks_workspace_base_environment" "this" {
 This example creates a GPU-specific Workspace Base Environment.
 
 ```hcl
-resource "databricks_workspace_base_environment" "gpu_env" {
+resource "databricks_environments_workspace_base_environment" "gpu_env" {
   display_name          = "my-gpu-environment"
   filepath              = "/Volumes/catalog/schema/volume/gpu-environment.yaml"
-  base_environment_type = "GPU_LARGE"
+  base_environment_type = "GPU"
 }
 ```
 

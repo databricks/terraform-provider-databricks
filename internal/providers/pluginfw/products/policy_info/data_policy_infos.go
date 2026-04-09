@@ -132,4 +132,8 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	config.Policies = types.ListValueMust(PolicyInfoData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

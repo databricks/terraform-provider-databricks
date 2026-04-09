@@ -85,6 +85,7 @@ Resources are being migrated from SDKv2 to Plugin Framework. When migrating:
 - `common.DatabricksClient` - Core client wrapper
 - Access workspace client via `client.GetWorkspaceClient()`
 - Access account client via `client.GetAccountClient()`
+- **Always use `c.WorkspaceClientUnifiedProvider()` instead of `c.WorkspaceClient()`** when contributing new or modified resources.
 - Client automatically handles authentication and retries
 
 ### Testing Structure

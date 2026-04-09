@@ -160,7 +160,7 @@ func TestAccWorkspaceIDTagPolicy_WS_RemoveProviderConfig(t *testing.T) {
 			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template: tagPolicyTemplate(""),
+			Template:                 tagPolicyTemplate(""),
 			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{

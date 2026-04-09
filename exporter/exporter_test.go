@@ -3397,6 +3397,7 @@ func TestAlertsV2Export(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = "123456789"
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

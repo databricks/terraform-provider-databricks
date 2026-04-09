@@ -487,14 +487,16 @@ func TestMwsAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 // Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
-// User accidentally sets workspace_id on a workspace-level provider.
-// Expected: configuration error at provider initialization.
+// User sets workspace_id on a workspace-level provider matching the provider's workspace.
+// Expected: resource created successfully with provider_config populated.
 
 func TestAccWorkspaceID_DefaultOnWorkspaceProvider(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    directoryWithProviderBlock(`workspace_id = "12345"`, ""),
-		ExpectError: regexp.MustCompile(`workspace_id cannot be used with a workspace-level provider; it is only supported when the provider is configured at the account level`),
-		PlanOnly:    true,
+		Template: directoryWithProviderBlock(
+			fmt.Sprintf(`workspace_id = "%s"`, os.Getenv("THIS_WORKSPACE_ID")),
+			"",
+		),
+		Check: checkProviderConfigWSIDFromEnv(directoryResource, "THIS_WORKSPACE_ID"),
 	})
 }
 

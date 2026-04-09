@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package environments_workspace_base_environment
+package postgres_catalog
 
 import (
 	"context"
@@ -10,35 +10,36 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/environments"
+	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "environments_workspace_base_environment"
+const resourceName = "postgres_catalog"
 
-var _ resource.ResourceWithConfigure = &WorkspaceBaseEnvironmentResource{}
-var _ resource.ResourceWithModifyPlan = &WorkspaceBaseEnvironmentResource{}
+var _ resource.ResourceWithConfigure = &CatalogResource{}
+var _ resource.ResourceWithModifyPlan = &CatalogResource{}
 
-func ResourceWorkspaceBaseEnvironment() resource.Resource {
-	return &WorkspaceBaseEnvironmentResource{}
+func ResourceCatalog() resource.Resource {
+	return &CatalogResource{}
 }
 
-type WorkspaceBaseEnvironmentResource struct {
+type CatalogResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -107,48 +108,39 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// WorkspaceBaseEnvironment extends the main model with additional fields.
-type WorkspaceBaseEnvironment struct {
-	// The type of base environment (CPU or GPU).
-	BaseEnvironmentType          types.String `tfsdk:"base_environment_type"`
-	EffectiveBaseEnvironmentType types.String `tfsdk:"effective_base_environment_type"`
-	// Timestamp when the environment was created.
+// Catalog extends the main model with additional fields.
+type Catalog struct {
+	// The ID in the Unity Catalog. It becomes the full resource name, for
+	// example "my_catalog" becomes "catalogs/my_catalog".
+	CatalogId types.String `tfsdk:"catalog_id"`
+	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// User ID of the creator.
-	CreatorUserId types.String `tfsdk:"creator_user_id"`
-	// Human-readable display name for the workspace base environment.
-	DisplayName types.String `tfsdk:"display_name"`
-	// The WSFS or UC Volumes path to the environment YAML file.
-	Filepath types.String `tfsdk:"filepath"`
-	// Whether this is the default environment for the workspace.
-	IsDefault types.Bool `tfsdk:"is_default"`
-	// User ID of the last user who updated the environment.
-	LastUpdatedUserId types.String `tfsdk:"last_updated_user_id"`
-	// Status message providing additional details about the environment status.
-	Message types.String `tfsdk:"message"`
-	// The resource name of the workspace base environment. Format:
-	// workspace-base-environments/{workspace-base-environment}
+	// Output only. The full resource path of the catalog.
+	//
+	// Format: "catalogs/{catalog_id}".
 	Name types.String `tfsdk:"name"`
-	// The status of the materialized workspace base environment.
-	Status types.String `tfsdk:"status"`
-	// Timestamp when the environment was last updated.
-	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The ID to use for the workspace base environment, which will become the
-	// final component of the resource name. This value should be 4-63
-	// characters, and valid characters are /[a-z][0-9]-/.
-	WorkspaceBaseEnvironmentId types.String `tfsdk:"workspace_base_environment_id"`
-	ProviderConfig             types.Object `tfsdk:"provider_config"`
+	// The desired state of the Catalog.
+	Spec types.Object `tfsdk:"spec"`
+	// The observed state of the Catalog.
+	Status types.Object `tfsdk:"status"`
+	// System-generated unique identifier for the catalog.
+	Uid types.String `tfsdk:"uid"`
+	// A timestamp indicating when the catalog was last updated.
+	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
+	ProviderConfig types.Object      `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// WorkspaceBaseEnvironment struct. Container types (types.Map, types.List, types.Set) and
+// Catalog struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m WorkspaceBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m Catalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"spec":            reflect.TypeOf(postgres_tf.CatalogCatalogSpec{}),
+		"status":          reflect.TypeOf(postgres_tf.CatalogCatalogStatus{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -157,23 +149,18 @@ func (m WorkspaceBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceBaseEnvironment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Catalog
 // only implements ToObjectValue() and Type().
-func (m WorkspaceBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m Catalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"base_environment_type": m.BaseEnvironmentType, "effective_base_environment_type": m.EffectiveBaseEnvironmentType,
-			"create_time":                   m.CreateTime,
-			"creator_user_id":               m.CreatorUserId,
-			"display_name":                  m.DisplayName,
-			"filepath":                      m.Filepath,
-			"is_default":                    m.IsDefault,
-			"last_updated_user_id":          m.LastUpdatedUserId,
-			"message":                       m.Message,
-			"name":                          m.Name,
-			"status":                        m.Status,
-			"update_time":                   m.UpdateTime,
-			"workspace_base_environment_id": m.WorkspaceBaseEnvironmentId,
+		map[string]attr.Value{"catalog_id": m.CatalogId,
+			"create_time": m.CreateTime,
+			"name":        m.Name,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"uid":         m.Uid,
+			"update_time": m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -182,21 +169,15 @@ func (m WorkspaceBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.O
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m WorkspaceBaseEnvironment) Type(ctx context.Context) attr.Type {
+func (m Catalog) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"base_environment_type": types.StringType,
-			"effective_base_environment_type": types.StringType,
-			"create_time":                     timetypes.RFC3339{}.Type(ctx),
-			"creator_user_id":                 types.StringType,
-			"display_name":                    types.StringType,
-			"filepath":                        types.StringType,
-			"is_default":                      types.BoolType,
-			"last_updated_user_id":            types.StringType,
-			"message":                         types.StringType,
-			"name":                            types.StringType,
-			"status":                          types.StringType,
-			"update_time":                     timetypes.RFC3339{}.Type(ctx),
-			"workspace_base_environment_id":   types.StringType,
+		AttrTypes: map[string]attr.Type{"catalog_id": types.StringType,
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"spec":        postgres_tf.CatalogCatalogSpec{}.Type(ctx),
+			"status":      postgres_tf.CatalogCatalogStatus{}.Type(ctx),
+			"uid":         types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -206,11 +187,31 @@ func (m WorkspaceBaseEnvironment) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *WorkspaceBaseEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceBaseEnvironment) {
-	to.EffectiveBaseEnvironmentType = to.BaseEnvironmentType
-	to.BaseEnvironmentType = from.BaseEnvironmentType
-	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
-		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+func (to *Catalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Catalog) {
+	if !from.CatalogId.IsUnknown() {
+		to.CatalogId = from.CatalogId
+	}
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
 	}
 	to.ProviderConfig = from.ProviderConfig
 
@@ -219,35 +220,52 @@ func (to *WorkspaceBaseEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.C
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *WorkspaceBaseEnvironment) SyncFieldsDuringRead(ctx context.Context, from WorkspaceBaseEnvironment) {
-	to.EffectiveBaseEnvironmentType = from.EffectiveBaseEnvironmentType
-	if from.EffectiveBaseEnvironmentType.ValueString() == to.BaseEnvironmentType.ValueString() {
-		to.BaseEnvironmentType = from.BaseEnvironmentType
+func (to *Catalog) SyncFieldsDuringRead(ctx context.Context, from Catalog) {
+	if !from.CatalogId.IsUnknown() {
+		to.CatalogId = from.CatalogId
 	}
-	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
-		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
 	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
-func (m WorkspaceBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["base_environment_type"] = attrs["base_environment_type"].SetOptional()
-	attrs["effective_base_environment_type"] = attrs["effective_base_environment_type"].SetComputed()
+func (m Catalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["creator_user_id"] = attrs["creator_user_id"].SetComputed()
-	attrs["display_name"] = attrs["display_name"].SetRequired()
-	attrs["filepath"] = attrs["filepath"].SetOptional()
-	attrs["is_default"] = attrs["is_default"].SetComputed()
-	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetComputed()
-	attrs["message"] = attrs["message"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].SetComputed()
-	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].SetOptional()
-	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["catalog_id"] = attrs["catalog_id"].SetRequired()
+	attrs["catalog_id"] = attrs["catalog_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["catalog_id"] = attrs["catalog_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -255,24 +273,74 @@ func (m WorkspaceBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfs
 	return attrs
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+// GetSpec returns the value of the Spec field in Catalog as
+// a postgres_tf.CatalogCatalogSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Catalog) GetSpec(ctx context.Context) (postgres_tf.CatalogCatalogSpec, bool) {
+	var e postgres_tf.CatalogCatalogSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.CatalogCatalogSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in Catalog.
+func (m *Catalog) SetSpec(ctx context.Context, v postgres_tf.CatalogCatalogSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// GetStatus returns the value of the Status field in Catalog as
+// a postgres_tf.CatalogCatalogStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Catalog) GetStatus(ctx context.Context) (postgres_tf.CatalogCatalogStatus, bool) {
+	var e postgres_tf.CatalogCatalogStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.CatalogCatalogStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in Catalog.
+func (m *Catalog) SetStatus(ctx context.Context, v postgres_tf.CatalogCatalogStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+func (r *CatalogResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, WorkspaceBaseEnvironment{}, nil)
+func (r *CatalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Catalog{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks environments_workspace_base_environment",
+		Description: "Terraform schema for Databricks postgres_catalog",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CatalogResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *WorkspaceBaseEnvironmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *CatalogResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// Skip validation on destroy plans (plan is null).
 	if req.Plan.Raw.IsNull() {
 		return
@@ -280,7 +348,7 @@ func (r *WorkspaceBaseEnvironmentResource) ModifyPlan(ctx context.Context, req r
 	if r.Client == nil {
 		return
 	}
-	var plan WorkspaceBaseEnvironment
+	var plan Catalog
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -297,24 +365,24 @@ func (r *WorkspaceBaseEnvironmentResource) ModifyPlan(ctx context.Context, req r
 	resp.Diagnostics.Append(validateDiags...)
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CatalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan WorkspaceBaseEnvironment
+	var plan Catalog
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var workspace_base_environment environments.WorkspaceBaseEnvironment
+	var catalog postgres.Catalog
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_base_environment)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &catalog)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := environments.CreateWorkspaceBaseEnvironmentRequest{
-		WorkspaceBaseEnvironment:   workspace_base_environment,
-		WorkspaceBaseEnvironmentId: plan.WorkspaceBaseEnvironmentId.ValueString(),
+	createRequest := postgres.CreateCatalogRequest{
+		Catalog:   catalog,
+		CatalogId: plan.CatalogId.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -332,17 +400,17 @@ func (r *WorkspaceBaseEnvironmentResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	response, err := client.Environments.CreateWorkspaceBaseEnvironment(ctx, createRequest)
+	response, err := client.Postgres.CreateCatalog(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create environments_workspace_base_environment", err.Error())
+		resp.Diagnostics.AddError("failed to create postgres_catalog", err.Error())
 		return
 	}
 
-	var newState WorkspaceBaseEnvironment
+	var newState Catalog
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("error waiting for environments_workspace_base_environment to be ready", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_catalog to be ready", err.Error())
 		return
 	}
 
@@ -360,16 +428,16 @@ func (r *WorkspaceBaseEnvironmentResource) Create(ctx context.Context, req resou
 	}
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CatalogResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState WorkspaceBaseEnvironment
+	var existingState Catalog
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest environments.GetWorkspaceBaseEnvironmentRequest
+	var readRequest postgres.GetCatalogRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -389,18 +457,18 @@ func (r *WorkspaceBaseEnvironmentResource) Read(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.Environments.GetWorkspaceBaseEnvironment(ctx, readRequest)
+	response, err := client.Postgres.GetCatalog(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get environments_workspace_base_environment", err.Error())
+		resp.Diagnostics.AddError("failed to get postgres_catalog", err.Error())
 		return
 	}
 
-	var newState WorkspaceBaseEnvironment
+	var newState Catalog
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -411,79 +479,21 @@ func (r *WorkspaceBaseEnvironmentResource) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *WorkspaceBaseEnvironmentResource) update(ctx context.Context, plan WorkspaceBaseEnvironment, diags *diag.Diagnostics, state *tfsdk.State) {
-	var workspace_base_environment environments.WorkspaceBaseEnvironment
-
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_base_environment)...)
-	if diags.HasError() {
-		return
-	}
-
-	updateRequest := environments.UpdateWorkspaceBaseEnvironmentRequest{
-		WorkspaceBaseEnvironment: workspace_base_environment,
-		Name:                     plan.Name.ValueString(),
-	}
-
-	var namespace ProviderConfig
-	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if diags.HasError() {
-		return
-	}
-	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
-	diags.Append(clientDiags...)
-	if diags.HasError() {
-		return
-	}
-	response, err := client.Environments.UpdateWorkspaceBaseEnvironment(ctx, updateRequest)
-	if err != nil {
-		diags.AddError("failed to update environments_workspace_base_environment", err.Error())
-		return
-	}
-
-	var newState WorkspaceBaseEnvironment
-
-	waitResponse, err := response.Wait(ctx)
-	if err != nil {
-		diags.AddError("error waiting for environments_workspace_base_environment update", err.Error())
-		return
-	}
-
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
-
-	if diags.HasError() {
-		return
-	}
-
-	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
-	diags.Append(state.Set(ctx, newState)...)
+func (r *CatalogResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
+	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }
 
-func (r *WorkspaceBaseEnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CatalogResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan WorkspaceBaseEnvironment
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
-}
-
-func (r *WorkspaceBaseEnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
-	var state WorkspaceBaseEnvironment
+	var state Catalog
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest environments.DeleteWorkspaceBaseEnvironmentRequest
+	var deleteRequest postgres.DeleteCatalogRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -504,17 +514,23 @@ func (r *WorkspaceBaseEnvironmentResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	err := client.Environments.DeleteWorkspaceBaseEnvironment(ctx, deleteRequest)
+	response, err := client.Postgres.DeleteCatalog(ctx, deleteRequest)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to delete postgres_catalog", err.Error())
+		return
+	}
+
+	err = response.Wait(ctx)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete environments_workspace_base_environment", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_catalog delete", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &WorkspaceBaseEnvironmentResource{}
+var _ resource.ResourceWithImportState = &CatalogResource{}
 
-func (r *WorkspaceBaseEnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *CatalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {

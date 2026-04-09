@@ -23,6 +23,12 @@ import (
 )
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
+	// Skip host-metadata resolution to avoid DNS/connection hangs on non-real hosts.
+	if dc.Config.HostMetadataResolver == nil {
+		dc.Config.HostMetadataResolver = func(ctx context.Context, host string) (*config.HostMetadata, error) {
+			return nil, nil
+		}
+	}
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
 	if err != nil {
 		return dc, err

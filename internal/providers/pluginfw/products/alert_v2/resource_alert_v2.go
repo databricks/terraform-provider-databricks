@@ -33,6 +33,7 @@ import (
 const resourceName = "alert_v2"
 
 var _ resource.ResourceWithConfigure = &AlertV2Resource{}
+var _ resource.ResourceWithModifyPlan = &AlertV2Resource{}
 
 func ResourceAlertV2() resource.Resource {
 	return &AlertV2Resource{}
@@ -258,7 +259,9 @@ func (to *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Aler
 			}
 		}
 	}
-	to.PurgeOnDelete = from.PurgeOnDelete
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
+	}
 	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
 		if toRunAs, ok := to.GetRunAs(ctx); ok {
 			if fromRunAs, ok := from.GetRunAs(ctx); ok {
@@ -301,7 +304,9 @@ func (to *AlertV2) SyncFieldsDuringRead(ctx context.Context, from AlertV2) {
 			}
 		}
 	}
-	to.PurgeOnDelete = from.PurgeOnDelete
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
+	}
 	if !from.RunAs.IsNull() && !from.RunAs.IsUnknown() {
 		if toRunAs, ok := to.GetRunAs(ctx); ok {
 			if fromRunAs, ok := from.GetRunAs(ctx); ok {
@@ -462,6 +467,31 @@ func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest
 
 func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *AlertV2Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan AlertV2
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

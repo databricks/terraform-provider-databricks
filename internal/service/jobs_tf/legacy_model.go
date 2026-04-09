@@ -16380,7 +16380,8 @@ func (m *RunStatus_SdkV2) SetTerminationDetails(ctx context.Context, v Terminati
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask_SdkV2 struct {
-	// New alert v2 task
+	// The task evaluates a Databricks alert and sends notifications to
+	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
 	// The sequence number of this run attempt for a triggered job run. The
 	// initial attempt of a run has an attempt_number of 0. If the initial run
@@ -20681,7 +20682,8 @@ func (m SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask_SdkV2 struct {
-	// New alert v2 task
+	// The task evaluates a Databricks alert and sends notifications to
+	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.
@@ -22574,7 +22576,8 @@ func (m *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Contex
 }
 
 type Task_SdkV2 struct {
-	// New alert v2 task
+	// The task evaluates a Databricks alert and sends notifications to
+	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.

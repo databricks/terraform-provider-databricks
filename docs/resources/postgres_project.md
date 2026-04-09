@@ -137,6 +137,8 @@ The following arguments are supported:
   To update tags, provide the new tag list and include "spec.custom_tags" in the update_mask.
   To clear all tags, provide an empty list and include "spec.custom_tags" in the update_mask.
   To preserve existing tags, omit this field from the update_mask (or use wildcard "*" which auto-excludes empty tags)
+* `default_branch` (string, optional) - The full resource path for the default branch of the project
+  Format: projects/{project_id}/branches/{branch_id}
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional)
 * `display_name` (string, optional) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
@@ -156,6 +158,7 @@ In addition to the above arguments, the following attributes are exported:
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch
 * `budget_policy_id` (string) - The budget policy that is applied to the project
 * `custom_tags` (list of ProjectCustomTag) - The effective custom tags associated with the project
+* `default_branch` (string) - The full resource path of the default branch of the project
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings
 * `display_name` (string) - The effective human-readable project name
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project

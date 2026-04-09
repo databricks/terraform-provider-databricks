@@ -53,6 +53,8 @@ The following attributes are exported:
 * `uc_securable` (AppResourceUcSecurable)
 
 ### AppResourceApp
+* `name` (string)
+* `permission` (string) - Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
 * `database_name` (string)

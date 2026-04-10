@@ -205,6 +205,39 @@ func TestMwsAccWorkspaceID_AccountNewSetupWithOverride(t *testing.T) {
 }
 
 // ==========================================
+// Implicit From Provider Default
+// ==========================================
+//
+// Account provider with workspace_id. Resource has NO provider_config.
+// Provider's workspace_id is used implicitly.
+// Step 2 re-applies the same config to verify no perpetual diff (noop).
+
+func TestMwsAccWorkspaceID_ImplicitFromProviderDefault(t *testing.T) {
+	AccountLevel(t,
+		Step{
+			Template: directoryWithProviderBlock(
+				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
+				"",
+			),
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
+		},
+		Step{
+			// Same config — should be a noop (no perpetual diff).
+			Template: directoryWithProviderBlock(
+				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
+				"",
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionNoop),
+				},
+			},
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
+		},
+	)
+}
+
+// ==========================================
 // Migration: Same Workspace
 // ==========================================
 //
@@ -323,6 +356,41 @@ func TestMwsAccWorkspaceID_AddOverrideDiff(t *testing.T) {
 			Template: directoryWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
+			),
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
+		},
+		Step{
+			Template: directoryWithProviderBlock(
+				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
+				`provider_config {
+					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
+				}`,
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(directoryResource, plancheck.ResourceActionDestroyBeforeCreate),
+				},
+			},
+			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID_2"),
+		},
+	)
+}
+
+// ==========================================
+// Change provider_config Override
+// ==========================================
+//
+// Resource has provider_config { workspace_id = X }. User changes it to Y.
+// Expected: ForceNew (effective workspace changes).
+
+func TestMwsAccWorkspaceID_ChangeOverride(t *testing.T) {
+	AccountLevel(t,
+		Step{
+			Template: directoryWithProviderBlock(
+				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
+				`provider_config {
+					workspace_id = "{env.TEST_WORKSPACE_ID}"
+				}`,
 			),
 			Check: checkProviderConfigWSIDFromEnv(directoryResource, "TEST_WORKSPACE_ID"),
 		},

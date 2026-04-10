@@ -2,6 +2,7 @@ package tfschema
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -10,6 +11,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestWorkspaceIDRegexValidation(t *testing.T) {
+	// This regex must match the one used in ProviderConfig.ApplySchemaCustomizations
+	// and ProviderConfigData.ApplySchemaCustomizations.
+	workspaceIDRegex := regexp.MustCompile(`^[1-9]\d*$`)
+
+	reject := []struct {
+		name  string
+		input string
+	}{
+		{"single zero", "0"},
+		{"double zero", "00"},
+		{"leading zero short", "007"},
+		{"leading zero long", "0123"},
+		{"alphabetic", "abc"},
+		{"negative number", "-1"},
+		{"decimal number", "123.456"},
+		{"empty string", ""},
+		{"string with spaces", "123 456"},
+		{"string with hyphens", "123-456"},
+	}
+	for _, tc := range reject {
+		t.Run("reject_"+tc.name, func(t *testing.T) {
+			assert.False(t, workspaceIDRegex.MatchString(tc.input),
+				"expected regex to reject %q", tc.input)
+		})
+	}
+
+	accept := []struct {
+		name  string
+		input string
+	}{
+		{"single digit", "1"},
+		{"two digits", "42"},
+		{"three digits", "100"},
+		{"large number", "123456789"},
+		{"very large number", "999999999999999"},
+	}
+	for _, tc := range accept {
+		t.Run("accept_"+tc.name, func(t *testing.T) {
+			assert.True(t, workspaceIDRegex.MatchString(tc.input),
+				"expected regex to accept %q", tc.input)
+		})
+	}
+}
 
 func TestWorkspaceIDPlanModifier(t *testing.T) {
 	tests := []struct {

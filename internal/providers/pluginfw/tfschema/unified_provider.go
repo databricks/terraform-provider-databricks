@@ -46,14 +46,19 @@ type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 }
 
-// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
-func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+// applyWorkspaceIDValidators adds standard workspace_id validators to the attrs map.
+func applyWorkspaceIDValidators(attrs map[string]AttributeBuilder) {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
-		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
+		stringvalidator.RegexMatches(regexp.MustCompile(common.WorkspaceIDRegex), common.WorkspaceIDRegexMessage))
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
+		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
+	applyWorkspaceIDValidators(attrs)
 	return attrs
 }
 
@@ -101,10 +106,7 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfigData type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
+	applyWorkspaceIDValidators(attrs)
 	return attrs
 }
 

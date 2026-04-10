@@ -115,7 +115,21 @@ func TestAccSharesData_ProviderConfig_Invalid(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(
-			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a positive integer without leading zeros`,
+		),
+		PlanOnly: true,
+	})
+}
+
+func TestAccSharesData_ProviderConfig_InvalidZero(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + dataSourceSharesTemplate(`
+			provider_config = {
+				workspace_id = "0"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config\.workspace_id\s+workspace_id must be a positive integer without leading zeros`,
 		),
 		PlanOnly: true,
 	})

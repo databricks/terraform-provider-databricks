@@ -218,7 +218,7 @@ resource "databricks_grant" "customers_data_analysts" {
 
 ## Function grants
 
-See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to Registered models.
+See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to functions.
 
 ```hcl
 resource "databricks_grant" "udf_data_engineers" {

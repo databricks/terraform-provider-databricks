@@ -18,6 +18,8 @@
 
 * Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
+* Fixed `databricks_grants` and `databricks_grant` to use the workspace client from `provider_config` (unified account provider) for Unity Catalog permissions API calls, not only for metastore validation ([#5571](https://github.com/databricks/terraform-provider-databricks/pull/5571)).
+
 ### Documentation
 
 ### Exporter

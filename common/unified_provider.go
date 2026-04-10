@@ -138,7 +138,7 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	// workspace ID is empty (user removed workspace_id and there's no
 	// explicit provider_config), error out. This prevents silently continuing
 	// to operate against a workspace the user thought they disconnected from.
-	if oldEffective != "" && newEffective == "" && c.Config.HostType() != config.WorkspaceHost {
+	if oldEffective != "" && newEffective == "" {
 		return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
 			"but managing workspace-level resources requires a workspace_id and "+
 			"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)

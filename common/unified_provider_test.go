@@ -1254,7 +1254,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 		{
 			// Workspace host with old state value but no provider_config, no default,
 			// and no cached ID: lazy resolution attempts CurrentWorkspaceID which fails
-			// because the test client has no reachable workspace server.
+			// silently, then falls through to the "missing workspace_id" error.
 			name: "workspace_id removed A to empty no default workspace host - error",
 			instanceState: map[string]string{
 				"name":                           "test",
@@ -1265,7 +1265,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 				"name": "test",
 			},
 			expectError:   true,
-			errorContains: "failed to resolve workspace_id from workspace host",
+			errorContains: "managing workspace-level resources requires a workspace_id",
 		},
 		{
 			name: "workspace_id removed A to empty default=A - no ForceNew same effective",
@@ -1374,7 +1374,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 		},
 		{
 			// Same as "workspace_id removed" above but explicitly sets cachedWSID=0.
-			// Lazy resolution fails on workspace host without a reachable server.
+			// Lazy resolution fails silently, falls through to "missing workspace_id" error.
 			name: "no provider_config no default cachedWSID=0 workspace host - error",
 			instanceState: map[string]string{
 				"name":                           "test",
@@ -1386,7 +1386,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			},
 			cachedWSID:    0,
 			expectError:   true,
-			errorContains: "failed to resolve workspace_id from workspace host",
+			errorContains: "managing workspace-level resources requires a workspace_id",
 		},
 		{
 			name: "default takes precedence over cachedWSID - ForceNew from default",

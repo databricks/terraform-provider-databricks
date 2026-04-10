@@ -8,7 +8,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -128,14 +127,13 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	}
 	// Lazy resolution from workspace host: if newEffective is still empty and
 	// there's an old value in state to compare against, resolve the workspace ID
-	// from the host. The oldEffective guard prevents unnecessary API calls when
-	// both sides are empty (fresh resource with no provider_config).
-	if newEffective == "" && oldEffective != "" && c.Config != nil && c.Config.HostType() == config.WorkspaceHost {
-		resolvedID, err := c.CurrentWorkspaceID(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to resolve workspace_id from workspace host: %w", err)
+	// via the cached workspace ID or SCIM /Me API call. Errors are swallowed so
+	// that on account hosts (where /Me doesn't work) the flow falls through to
+	// the "missing workspace_id" error below, which gives a more actionable message.
+	if newEffective == "" && oldEffective != "" {
+		if resolvedID, err := c.CurrentWorkspaceID(ctx); err == nil && resolvedID != 0 {
+			newEffective = strconv.FormatInt(resolvedID, 10)
 		}
-		newEffective = strconv.FormatInt(resolvedID, 10)
 	}
 
 	// If a resource has a workspace ID in state but the new effective

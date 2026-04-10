@@ -154,6 +154,7 @@ func TestDataSourceGroup_ApiFieldWorkspace(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceGroup(),
 		AccountID:   "acc-123",
+		AccountTest: true,
 		ID:          ".",
 		State: map[string]any{
 			"display_name": "ds",
@@ -227,6 +228,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 		ID:          ".",
 		State: map[string]any{
 			"display_name": "ds",
+			"api":          "account",
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"acl_principal_id":   "groups/ds",

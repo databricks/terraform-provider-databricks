@@ -33,6 +33,7 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 		Create:    true,
 		AccountID: "xyz",
 		HCL: `
+		api = "account"
 		service_principal_id = "123"
 		lifetime  	  		 = "20s"
 		`,
@@ -64,6 +65,7 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 		Delete:    true,
 		AccountID: "xyz",
 		HCL: `
+		api = "account"
 		service_principal_id = "123"
 		`,
 	}.ApplyNoError(t)
@@ -88,6 +90,7 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 		Read:      true,
 		AccountID: "xyz",
 		HCL: `
+		api = "account"
 		service_principal_id = "123"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
@@ -116,6 +119,7 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 		Removed:   true,
 		AccountID: "xyz",
 		HCL: `
+		api = "account"
 		service_principal_id = "123"
 		`,
 	}.ApplyNoError(t)

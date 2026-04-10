@@ -264,6 +264,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 		AccountID: "account_id",
 		Create:    true,
 		HCL: `
+		api = "account"
 		name = "storage_credential_name"
 		metastore_id = "metastore_id"
 		aws_iam_role {
@@ -924,6 +925,9 @@ func TestStorageCredentialImportAccountLevel(t *testing.T) {
 		AccountID: "account_id",
 		Read:      true,
 		ID:        "metastore_id|storage_credential_name",
+		HCL: `
+		api = "account"
+		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"metastore_id":          "metastore_id",
 		"storage_credential_id": "1234-5678",

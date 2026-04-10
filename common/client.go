@@ -86,6 +86,12 @@ type DatabricksClient struct {
 	// This is used by legacy SDKv2 resources and data sources not using Go SDK where
 	// a new client is created.
 	muLegacy sync.Mutex
+
+	// isAccountTest indicates this client is used in an account-level test.
+	// When true, HostTypeForTerraform() returns AccountHost even if the host
+	// URL is not an accounts endpoint. Set by the test framework via
+	// SetAccountTest().
+	isAccountTest bool
 }
 
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks
@@ -572,6 +578,12 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
 	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel))
+}
+
+// SetAccountTest marks this client as being used in an account-level test.
+// HostTypeForTerraform() will return AccountHost regardless of the host URL.
+func (c *DatabricksClient) SetAccountTest() {
+	c.isAccountTest = true
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

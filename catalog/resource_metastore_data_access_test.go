@@ -233,6 +233,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 		AccountID: "100",
 		Resource:  ResourceMetastoreDataAccess(),
 		HCL: `
+		api = "account"
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
@@ -300,6 +301,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 		AccountID: "100",
 		Resource:  ResourceMetastoreDataAccess(),
 		HCL: `
+		api = "account"
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
@@ -368,6 +370,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 		AccountID: "100",
 		Resource:  ResourceMetastoreDataAccess(),
 		HCL: `
+		api = "account"
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true

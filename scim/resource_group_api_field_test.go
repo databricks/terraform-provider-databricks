@@ -55,8 +55,9 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceGroup(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroup(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			display_name = "ws-group"
 			api = "workspace"
@@ -85,8 +86,9 @@ func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.
 				},
 			},
 		},
-		Resource:  ResourceGroup(),
-		AccountID: "acc-123",
+		Resource:    ResourceGroup(),
+		AccountID:   "acc-123",
+		AccountTest: true,
 		HCL: `
 			display_name = "test-group"
 		`,

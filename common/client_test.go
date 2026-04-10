@@ -498,3 +498,109 @@ func TestGetApiLevel_ReturnsEmptyWhenNotSet(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, testSchemaWithApiField(), map[string]any{})
 	assert.Equal(t, "", GetApiLevel(d))
 }
+
+func newClientWithResolvedHostType(t *testing.T, host string, hostType config.HostType) *DatabricksClient {
+	t.Helper()
+	cfg := &config.Config{
+		Host:  host,
+		Token: "test-token",
+		Loaders: []config.Loader{},
+		HostMetadataResolver: func(ctx context.Context, h string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: hostType}, nil
+		},
+	}
+	err := cfg.EnsureResolved()
+	require.NoError(t, err)
+	return &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: cfg,
+		},
+	}
+}
+
+func TestHostTypeForTerraform_ResolvedAccountHost(t *testing.T) {
+	c := newClientWithResolvedHostType(t, "https://my-workspace.cloud.databricks.com", config.AccountHost)
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_ResolvedUnifiedHost(t *testing.T) {
+	c := newClientWithResolvedHostType(t, "https://unified.cloud.databricks.com", config.UnifiedHost)
+	assert.Equal(t, config.UnifiedHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_ResolvedWorkspaceHost(t *testing.T) {
+	c := newClientWithResolvedHostType(t, "https://my-workspace.cloud.databricks.com", config.WorkspaceHost)
+	assert.Equal(t, config.WorkspaceHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_FallbackAccountsPrefix(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://accounts.cloud.databricks.com",
+			},
+		},
+	}
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_FallbackAccountsDodPrefix(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://accounts-dod.cloud.databricks.com",
+			},
+		},
+	}
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_FallbackWorkspaceHost(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://my-workspace.cloud.databricks.com",
+			},
+		},
+	}
+	assert.Equal(t, config.WorkspaceHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_NoSchemeAccountsHost(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "accounts.cloud.databricks.com",
+			},
+		},
+	}
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_EmptyHost(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "",
+			},
+		},
+	}
+	assert.Equal(t, config.WorkspaceHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_Localhost(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "http://localhost:5000",
+			},
+		},
+	}
+	assert.Equal(t, config.WorkspaceHost, c.HostTypeForTerraform())
+}
+
+func TestHostTypeForTerraform_ResolvedTakesPrecedenceOverURL(t *testing.T) {
+	// Host URL looks like a workspace, but metadata resolved it as account
+	c := newClientWithResolvedHostType(t, "https://my-workspace.cloud.databricks.com", config.AccountHost)
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+}

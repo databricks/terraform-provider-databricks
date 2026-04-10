@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,6 +44,10 @@ func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 // host) on the first time — when no workspace ID exists in state yet (after Create).
 // On subsequent reads, it preserves whatever is already in state.
 func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	// Dual resources operating at account level have no workspace to track.
+	if d.Get("api") != nil && IsAccountLevel(d, c) {
+		return nil
+	}
 	// If provider_config.workspace_id already exists in state, preserve it.
 	// During refresh reads the state value reflects the workspace the Read
 	// actually targeted. Overwriting it would prevent CustomizeDiff from
@@ -62,15 +65,19 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	// Resolve from provider config to populate state for the first time:
 	// 1. provider_config.workspace_id from raw config
 	// 2. workspace_id from provider
-	// 3. Lazy resolution from workspace host via CurrentWorkspaceID API call
+	// 3. Lazy resolution via CurrentWorkspaceID API call (GET /api/2.0/preview/scim/v2/Me)
+	//
+	// Account hosts without workspace_id never reach here: plan-time validation
+	// rejects them, and dual resources at account level are guarded by the api
+	// field early return above.
 	wsID, _ := workspaceIDFromRawConfig(d)
 	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
 		wsID = c.Config.WorkspaceID
 	}
-	if wsID == "" && c.DatabricksClient != nil && c.Config != nil && c.Config.HostType() == config.WorkspaceHost {
+	if wsID == "" && c.DatabricksClient != nil {
 		resolvedID, err := c.CurrentWorkspaceID(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to resolve workspace_id from workspace host: %w", err)
+			return fmt.Errorf("failed to resolve workspace_id: %w", err)
 		}
 		wsID = strconv.FormatInt(resolvedID, 10)
 	}

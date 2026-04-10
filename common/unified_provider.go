@@ -103,6 +103,10 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
 func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	// Dual resources operating at account level have no workspace to track.
+	if d.Get("api") != nil && IsAccountLevelFromDiff(d, c) {
+		return nil
+	}
 	workspaceIDKey := workspaceIDSchemaKey
 
 	// Get the old (state) workspace ID.

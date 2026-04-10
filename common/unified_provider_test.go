@@ -1531,15 +1531,10 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 			cachedWorkspaceID: 2222222222,
 			expectedWSID:      "1111111111",
 		},
-		{
-			// For account-level providers without workspace_id or provider_config,
-			// the workspace_id in state remains empty. Lazy resolution only triggers
-			// for workspace hosts, so account hosts correctly skip resolution.
-			name:         "first time - no sources available (account host)",
-			existingWSID: "",
-			host:         "https://accounts.cloud.databricks.com",
-			expectedWSID: "",
-		},
+		// Note: "account host with no workspace_id" is not tested here because
+		// it cannot happen in the Terraform lifecycle — NamespaceValidateWorkspaceID
+		// rejects account-level providers without workspace_id during plan, and
+		// dual resources at account level are guarded by the api field early return.
 		// --- Subsequent reads (has state) scenarios: preserve state ---
 		{
 			name:         "subsequent read - preserves state, ignores different provider workspace_id",

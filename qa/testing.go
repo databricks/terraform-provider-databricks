@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/common/environment"
@@ -234,6 +235,18 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 			// so that validateWorkspaceIDFromProvider sees a consistent value.
 			if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
 				client.SetCachedWorkspaceID(wsID)
+				// Pre-populate workspace client cache so that NamespaceValidateWorkspaceID
+				// and getDatabricksClientForUnifiedProvider find it without making API calls.
+				// Create a workspace-scoped config (no AccountID) so NewWorkspaceClient
+				// accepts it without treating the host as an account host.
+				wsCfg, cfgErr := client.Config.NewWithWorkspaceHost(s.URL)
+				if cfgErr == nil {
+					wsCfg.WorkspaceID = f.ProviderWorkspaceID
+					wsClient, wsErr := databricks.NewWorkspaceClient((*databricks.Config)(wsCfg))
+					if wsErr == nil {
+						client.SetWorkspaceClientForWorkspace(wsID, wsClient)
+					}
+				}
 			}
 		}
 		ss := server{
@@ -260,6 +273,13 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	c.Config.Credentials = testCredentialsProvider{token: token}
 	if f.ProviderWorkspaceID != "" {
 		c.Config.WorkspaceID = f.ProviderWorkspaceID
+		// Pre-populate the workspace client cache for this workspace ID so that
+		// NamespaceValidateWorkspaceID and getDatabricksClientForUnifiedProvider
+		// find the mock workspace client without making API calls.
+		if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+			mw.WorkspaceClient.Config = (*config.Config)(c.DatabricksClient.Config)
+			c.SetWorkspaceClientForWorkspace(wsID, mw.WorkspaceClient)
+		}
 	}
 	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
 	// API calls in unit tests. When ProviderWorkspaceID is set, use that

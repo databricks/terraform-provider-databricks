@@ -87,6 +87,7 @@ func TestMwsAccWorkspaceID_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    directoryWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
+		PlanOnly:    true,
 	})
 }
 
@@ -487,16 +488,24 @@ func TestMwsAccWorkspaceID_ChangeDefaultWithOverride(t *testing.T) {
 // Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
-// User sets workspace_id on a workspace-level provider matching the provider's workspace.
-// Expected: resource created successfully with provider_config populated.
+// workspace_id on a workspace-level provider is validated during CustomizeDiff.
+// If it matches the host's workspace ID, no error. If it doesn't, workspace_id mismatch.
 
-func TestAccWorkspaceID_DefaultOnWorkspaceProvider(t *testing.T) {
+func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: directoryWithProviderBlock(
 			fmt.Sprintf(`workspace_id = "%s"`, os.Getenv("THIS_WORKSPACE_ID")),
 			"",
 		),
 		Check: checkProviderConfigWSIDFromEnv(directoryResource, "THIS_WORKSPACE_ID"),
+	})
+}
+
+func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template:    directoryWithProviderBlock(`workspace_id = "12345"`, ""),
+		PlanOnly:    true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
 
@@ -513,6 +522,7 @@ func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
 		),
+		PlanOnly: true,
 	})
 }
 

@@ -171,22 +171,16 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if newWorkspaceID == nil {
 		return nil
 	}
-	newWSID, ok := newWorkspaceID.(string)
-	if !ok || newWSID == "" {
+	// Skip validation for dual resources (api field in schema) operating at account level.
+	if d.Get("api") != nil && IsAccountLevelFromDiff(d, c) {
 		return nil
 	}
-	workspaceIDInt, err := parseWorkspaceID(newWSID)
-	if err != nil {
-		return err
+	newWSID := newWorkspaceID.(string)
+	// Fall back to provider-level workspace_id only if not set on the resource.
+	if newWSID == "" {
+		newWSID = c.Config.WorkspaceID
 	}
-	if c.Config.HostType() != config.WorkspaceHost {
-		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
-		if err != nil {
-			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)
-		}
-		return nil
-	}
-	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
+	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
 	if err != nil {
 		return err
 	}
@@ -237,33 +231,36 @@ func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d
 	return c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
 }
 
-// DatabricksClientForUnifiedProvider returns a new Databricks Client for the workspace ID from the resource data
-// This is used by resources and data sources that are developed
-// over SDKv2 and are not using Go SDK.
+// DatabricksClientForUnifiedProvider returns a new Databricks Client for the workspace ID from the resource data.
+// This is used by resources and data sources that are developed over SDKv2 and are not using Go SDK.
+//
+// Routing logic:
+//  1. No provider_config in schema → not a unified provider resource, return current client.
+//  2. api field exists in schema (dual resource):
+//     a. api = "account" → return current client (account-level operation).
+//     b. api = "workspace"s → resolve workspace_id, return workspace-scoped client.
+//  3. api field not in schema (pure workspace resource) → resolve workspace_id, return workspace-scoped client.
 func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
 	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the resource data
-	// so we don't need to create a new client
-	// and can return the current client.
+	// provider_config doesn't exist in schema — not a unified provider resource.
 	if workspaceIDFromResourceData == nil {
 		return c, nil
 	}
-	var workspaceID string
+
+	// Dual resource (api field in schema) operating at account level: return current client.
+	if d.Get("api") != nil && IsAccountLevel(d, c) {
+		return c, nil
+	}
+
+	// Workspace routing: resolve workspace_id and get a workspace-scoped client.
 	workspaceID, ok := workspaceIDFromResourceData.(string)
 	if !ok {
 		return nil, fmt.Errorf("workspace_id must be a string")
 	}
-	// If the workspace_id is not passed in the resource configuration,
-	// fall back to the provider-level workspace_id. This is safe for all host
-	// types: workspace hosts with workspace_id are rejected at provider init,
-	// so Config.WorkspaceID being set here implies a non-workspace host.
-	// We don't error when no workspace_id is found because the caller may
-	// use AccountOrWorkspaceRequest to route to account APIs, which doesn't need
-	// a workspace-scoped client.
+	if workspaceID == "" && c.DatabricksClient != nil && c.Config != nil {
+		workspaceID = c.Config.WorkspaceID
+	}
 	if workspaceID == "" {
-		if c.DatabricksClient != nil && c.Config.WorkspaceID != "" {
-			return c.getDatabricksClientForUnifiedProvider(ctx, c.Config.WorkspaceID)
-		}
 		return c, nil
 	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
@@ -278,13 +275,24 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		return nil, err
 	}
 
+	// newDatabricksClient wraps a cached client.DatabricksClient and propagates
+	// any already-resolved workspace client for this workspace ID so that
+	// WorkspaceClient() returns it without recreating.
+	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
+		result := &DatabricksClient{
+			DatabricksClient: dc,
+			commandFactory:   c.commandFactory,
+		}
+		if wc, ok := c.cachedWorkspaceClients[workspaceIDInt]; ok {
+			result.cachedWorkspaceClient = wc
+		}
+		return result
+	}
+
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClients != nil {
 		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
-			return &DatabricksClient{
-				DatabricksClient: client,
-				commandFactory:   c.commandFactory,
-			}, nil
+			return newDatabricksClient(client), nil
 		}
 	}
 
@@ -296,10 +304,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// Return the Databricks Client.
-	return &DatabricksClient{
-		DatabricksClient: c.cachedDatabricksClients[workspaceIDInt],
-		commandFactory:   c.commandFactory,
-	}, nil
+	return newDatabricksClient(c.cachedDatabricksClients[workspaceIDInt]), nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.

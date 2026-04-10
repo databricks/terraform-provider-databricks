@@ -159,6 +159,7 @@ func TestResourceTokenCreate(t *testing.T) {
 				ExpectedRequest: TokenRequest{
 					LifetimeSeconds: 300,
 					Comment:         "Hello world!",
+					Scopes:          []string{"scope1", "scope2"},
 				},
 				Response: TokenResponse{
 					TokenValue: "dapi...",
@@ -187,12 +188,15 @@ func TestResourceTokenCreate(t *testing.T) {
 		State: map[string]any{
 			"comment":          "Hello world!",
 			"lifetime_seconds": 300,
+			"scopes":           []any{"scope1", "scope2"},
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "dapi...", d.Get("token_value"))
+	scopes := d.Get("scopes").([]any)
+	assert.Equal(t, []any{"scope1", "scope2"}, scopes)
 }
 
 func TestResourceTokenCreate_Error(t *testing.T) {

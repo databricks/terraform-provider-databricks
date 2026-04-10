@@ -14,8 +14,9 @@ import (
 
 // TokenRequest asks for a token
 type TokenRequest struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
-	Comment         string `json:"comment,omitempty"`
+	LifetimeSeconds int32    `json:"lifetime_seconds,omitempty"`
+	Comment         string   `json:"comment,omitempty"`
+	Scopes          []string `json:"scopes,omitempty"`
 }
 
 // TokenResponse is a struct that contains information about token that is created from the create tokens api
@@ -48,17 +49,8 @@ type TokensAPI struct {
 	context context.Context
 }
 
-// Create creates a api token given a expiration duration and a comment
-func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenResponse, err error) {
-	request := TokenRequest{}
-	seconds := int32(tokenLifetime.Seconds())
-	if seconds > 0 {
-		request.LifetimeSeconds = seconds
-	}
-	if comment != "" {
-		request.Comment = comment
-	}
-
+// Create creates a api token given a token request
+func (a TokensAPI) Create(request TokenRequest) (r TokenResponse, err error) {
 	err = a.client.Post(a.context, "/token/create", request, &r, a.client.AddWorkspaceIdHeader)
 	return
 }
@@ -110,6 +102,12 @@ func ResourceToken() common.Resource {
 			Optional: true,
 			ForceNew: true,
 		},
+		"scopes": {
+			Type:     schema.TypeList,
+			Optional: true,
+			ForceNew: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
 		"token_value": {
 			Type:      schema.TypeString,
 			Computed:  true,
@@ -143,10 +141,9 @@ func ResourceToken() common.Resource {
 			if err != nil {
 				return err
 			}
-			comment := d.Get("comment").(string)
-			lifeTimeSeconds := d.Get("lifetime_seconds").(int)
-			tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
-			tokenResp, err := NewTokensAPI(ctx, newClient).Create(tokenDuration, comment)
+			var request TokenRequest
+			common.DataToStructPointer(d, s, &request)
+			tokenResp, err := NewTokensAPI(ctx, newClient).Create(request)
 			if err != nil {
 				return err
 			}
@@ -168,10 +165,13 @@ func ResourceToken() common.Resource {
 				d.SetId("")
 				return nil
 			}
+			// we need to set the scopes back to the resource data
+			scopes := d.Get("scopes")
 			err = common.StructToData(tokenInfo, s, d)
 			if err != nil {
 				return err
 			}
+			d.Set("scopes", scopes)
 			if tokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > tokenInfo.ExpiryTime {
 				log.Printf("[INFO] token with id %s is expired, recreating it", d.Id())
 				d.SetId("")

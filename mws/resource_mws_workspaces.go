@@ -426,8 +426,10 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 		return err
 	}
 	tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
-	lifetime := time.Duration(wsToken.Token.LifetimeSeconds) * time.Second
-	token, err := tokensAPI.Create(lifetime, wsToken.Token.Comment)
+	token, err := tokensAPI.Create(tokens.TokenRequest{
+		LifetimeSeconds: wsToken.Token.LifetimeSeconds,
+		Comment:         wsToken.Token.Comment,
+	})
 	if isInvalidClient(err) {
 		return fmt.Errorf("cannot create token: the principal used by Databricks (client ID %s) is not authorized to create a token in this workspace. "+
 			"If this is a UC-enabled workspace, add this client to the workspace, either using databricks_mws_permission_assignment or manually (see https://docs.databricks.com/en/admin/users-groups/service-principals.html#assign-a-service-principal-to-a-workspace-using-the-account-console for instructions). "+

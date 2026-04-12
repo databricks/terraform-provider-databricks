@@ -70,7 +70,13 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 			return libraryExtended, d
 		}
 	}
-	d.AddError("failed to find the installed library", fmt.Sprintf("failed to find %s on %s", libraryRep, waitParams.ClusterID))
+	if waitParams.IsRefresh {
+		// During Read, the library may have been removed outside of Terraform (e.g. via UI).
+		// Return nil without error so the caller can remove it from state and trigger re-creation.
+		d.AddWarning("library not found", fmt.Sprintf("library %s not found on cluster %s", libraryRep, waitParams.ClusterID))
+	} else {
+		d.AddError("failed to find the installed library", fmt.Sprintf("failed to find %s on %s", libraryRep, waitParams.ClusterID))
+	}
 	return nil, d
 }
 

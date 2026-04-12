@@ -10,6 +10,7 @@
 
 * Fix `databricks_metastore` so that updating `external_access_enabled` from `true` to `false` is sent in the PATCH request. Previously the field was silently dropped from the request body, so the change never reached the API.
 * Fixed destroying of UC objects when workspace binding removed before actual destroy ([#5581](https://github.com/databricks/terraform-provider-databricks/pull/5581)).
+* Fixed handling of the case when library is removed outside of Terraform ([#5678](https://github.com/databricks/terraform-provider-databricks/pull/5678)).
 
 ### Documentation
 

@@ -17,6 +17,7 @@
 ### Bug Fixes
 
 * Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
+* Fixed `lifecycle { ignore_changes }` not working for `spark_conf`, `spark_env_vars`, `custom_tags`, and `use_ml_runtime` on `databricks_cluster`. Externally-set values (via cluster policies or UI) were silently wiped on update ([#1238](https://github.com/databricks/terraform-provider-databricks/issues/1238)).
 
 ### Documentation
 

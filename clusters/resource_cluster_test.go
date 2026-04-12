@@ -2085,3 +2085,153 @@ func TestResourceClusterAliasAutoNoDrift_DataSecurityMode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, d.HasChanges("data_security_mode"))
 }
+
+func TestResourceClusterRead_ExternallySetComputedFields(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+					SparkEnvVars: map[string]string{
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+					},
+					CustomTags: map[string]string{
+						"Department": "Engineering",
+					},
+					SparkConf: map[string]string{
+						"spark.speculation": "true",
+					},
+					UseMlRuntime: true,
+				},
+			},
+			nothingPinned,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		ID:       "abc",
+		Read:     true,
+		Resource: ResourceCluster(),
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "/databricks/python3/bin/python3", d.Get("spark_env_vars.PYSPARK_PYTHON"))
+	assert.Equal(t, "Engineering", d.Get("custom_tags.Department"))
+	sparkConf := d.Get("spark_conf").(map[string]interface{})
+	assert.Equal(t, "true", sparkConf["spark.speculation"])
+	assert.Equal(t, true, d.Get("use_ml_runtime"))
+}
+
+func TestResourceClusterUpdate_PreservesExternallySetComputedFields(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+					SparkEnvVars: map[string]string{
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+					},
+					CustomTags: map[string]string{
+						"Department": "Engineering",
+					},
+					SparkConf: map[string]string{
+						"spark.speculation": "true",
+					},
+					UseMlRuntime: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/start",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/edit",
+				ExpectedRequest: compute.ClusterDetails{
+					AutoterminationMinutes: 15,
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					SparkEnvVars: map[string]string{
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+					},
+					CustomTags: map[string]string{
+						"Department": "Engineering",
+					},
+					SparkConf: map[string]string{
+						"spark.speculation": "true",
+					},
+					UseMlRuntime: true,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+			"spark_env_vars": map[string]any{
+				"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
+			},
+			"custom_tags": map[string]any{
+				"Department": "Engineering",
+			},
+			"spark_conf": map[string]any{
+				"spark.speculation": "true",
+			},
+			"use_ml_runtime": true,
+		},
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "/databricks/python3/bin/python3", d.Get("spark_env_vars.PYSPARK_PYTHON"))
+	assert.Equal(t, "Engineering", d.Get("custom_tags.Department"))
+	sparkConf := d.Get("spark_conf").(map[string]interface{})
+	assert.Equal(t, "true", sparkConf["spark.speculation"])
+	assert.Equal(t, true, d.Get("use_ml_runtime"))
+}

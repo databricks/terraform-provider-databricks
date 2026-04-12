@@ -2872,7 +2872,7 @@ func (to *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncFieldsDuringRead(ctx c
 }
 
 func (m CreateCleanRoomOutputCatalogResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["output_catalog"] = attrs["output_catalog"].SetOptional()
+	attrs["output_catalog"] = attrs["output_catalog"].SetRequired()
 	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs

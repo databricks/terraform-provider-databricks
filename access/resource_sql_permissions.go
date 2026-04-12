@@ -280,7 +280,10 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 		Latest:          true,
 		LongTermSupport: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	nodeType, err := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	if err != nil {
+		return "", err
+	}
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terraform-table-acl", clusters.Cluster{
 			ClusterName:            "terraform-table-acl",
@@ -332,11 +335,20 @@ func ResourceSqlPermissions() common.Resource {
 			return false
 		}
 		s["cluster_id"].Computed = true
+		common.AddNamespaceInSchema(s)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
@@ -348,6 +360,10 @@ func ResourceSqlPermissions() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err
@@ -363,6 +379,10 @@ func ResourceSqlPermissions() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
@@ -373,6 +393,10 @@ func ResourceSqlPermissions() common.Resource {
 			return ta.enforce()
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err

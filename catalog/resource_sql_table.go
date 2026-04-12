@@ -189,7 +189,10 @@ func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clust
 	sparkVersion := clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
 		Latest: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	nodeType, err := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{NodeTypeRequest: compute.NodeTypeRequest{LocalDisk: true}})
+	if err != nil {
+		return "", err
+	}
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		clusterName, clusters.Cluster{
 			ClusterName:            clusterName,

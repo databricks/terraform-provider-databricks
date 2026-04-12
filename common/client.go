@@ -18,6 +18,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type cachedMe struct {
@@ -111,23 +112,26 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() == config.AccountHost {
-		return c.getWorkspaceClientForAccountConfiguredProvider(ctx, workspaceID)
+	if c.Config.HostType() != config.WorkspaceHost {
+		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
 }
 
-// getWorkspaceClientForAccountConfiguredProvider gets the workspace client for
+// getWorkspaceClientForAccountUnifiedHost gets the workspace client for
 // the workspace ID specified in the resource when the provider is configured
 // at account level.
-func (c *DatabricksClient) getWorkspaceClientForAccountConfiguredProvider(
+func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
+	// If workspace_id is not provided in provider_config, use the provider-level
+	// workspace_id from SDK config as fallback
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+		workspaceID = c.Config.WorkspaceID
+	}
+	if workspaceID == "" {
+		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
 	}
 
 	// Parse the workspace ID to int.
@@ -184,6 +188,23 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 
 	}
 	return workspaceIDInt, nil
+}
+
+// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
+// It uses the cached value if available, otherwise makes an API call to resolve it.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.cachedWorkspaceID != 0 {
+		return c.cachedWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	err = c.setCachedWorkspaceID(ctx, w)
+	if err != nil {
+		return 0, err
+	}
+	return c.cachedWorkspaceID, nil
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
@@ -267,6 +288,25 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return client, nil
 	}
+	// Get workspace client via account API.
+	w, err := c.workspaceClientViaAccountAPI(ctx, workspaceId)
+	if err != nil {
+		// Fallback: create workspace client on the same host with workspace_id set.
+		// This works for unified hosts that can route by workspace_id through X-Databricks-Org-Id header.
+		// Note: GetWorkspaceClient(*workspace) supports all host, this is the case when users don't have access to the account
+		w, err = c.tryWorkspaceClientDirect(workspaceId)
+		if err != nil {
+			return nil, err
+		}
+	}
+	w.CurrentUser = newCachedMe(w.CurrentUser)
+	c.cachedWorkspaceClients[workspaceId] = w
+	return w, nil
+}
+
+// workspaceClientViaAccountAPI resolves the workspace deployment URL via the
+// account API and creates a workspace client pointing to it.
+func (c *DatabricksClient) workspaceClientViaAccountAPI(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
 	a, err := c.accountClient()
 	if err != nil {
 		return nil, err
@@ -275,13 +315,20 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 	if err != nil {
 		return nil, err
 	}
-	w, err := a.GetWorkspaceClient(*workspace)
+	return a.GetWorkspaceClient(*workspace)
+}
+
+// tryWorkspaceClientDirect creates a workspace client on the same host with
+// workspace_id set, then validates it with a lightweight API call. This works
+// for unified hosts that can route requests by workspace_id.
+func (c *DatabricksClient) tryWorkspaceClientDirect(workspaceId int64) (*databricks.WorkspaceClient, error) {
+	cfg, err := c.Config.NewWithWorkspaceHost(c.Config.Host)
 	if err != nil {
 		return nil, err
 	}
-	w.CurrentUser = newCachedMe(w.CurrentUser)
-	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
-	return w, nil
+	cfg.AccountID = c.Config.AccountID
+	cfg.WorkspaceID = fmt.Sprintf("%d", workspaceId)
+	return databricks.NewWorkspaceClient((*databricks.Config)(cfg))
 }
 
 // SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.
@@ -372,20 +419,23 @@ func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.Resource
 	return a, resourceId, nil
 }
 
-func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	if c.Config.HostType() == config.AccountHost {
+// AccountOrWorkspaceRequest routes the request to account or workspace callbacks.
+// It checks the `api` field in the resource data first. If set, it takes precedence
+// over host-based inference. When `api` is not set, it falls back to the provider's
+// host type (the original behavior).
+func (c *DatabricksClient) AccountOrWorkspaceRequest(d *schema.ResourceData, accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if IsAccountLevel(d, c) {
 		a, err := c.AccountClient()
 		if err != nil {
 			return err
 		}
 		return accCallback(a)
-	} else {
-		ws, err := c.WorkspaceClient()
-		if err != nil {
-			return err
-		}
-		return wsCallback(ws)
 	}
+	ws, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	return wsCallback(ws)
 }
 
 // Get on path
@@ -423,6 +473,56 @@ func (c *DatabricksClient) Put(ctx context.Context, path string, request any) er
 	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
+const (
+	// ApiLevelAccount indicates the resource should use account-level APIs.
+	ApiLevelAccount = "account"
+	// ApiLevelWorkspace indicates the resource should use workspace-level APIs.
+	ApiLevelWorkspace = "workspace"
+)
+
+// AddApiField adds the `api` field to a resource schema. This field allows users
+// to explicitly specify whether the resource should use account-level or
+// workspace-level APIs. When set, it takes precedence over host-based inference.
+func AddApiField(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s["api"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ValidateFunc: validation.StringInSlice(
+			[]string{ApiLevelAccount, ApiLevelWorkspace}, false,
+		),
+		Description: "Specifies whether to use account-level or workspace-level API. " +
+			"Valid values are `account` and `workspace`. When not set, the API level " +
+			"is inferred from the provider host.",
+	}
+	return s
+}
+
+// GetApiLevel returns the value of the `api` field from resource data,
+// or empty string if not set.
+func GetApiLevel(d *schema.ResourceData) string {
+	if v, ok := d.GetOk("api"); ok {
+		level := v.(string)
+		if level == ApiLevelAccount || level == ApiLevelWorkspace {
+			return level
+		}
+	}
+	return ""
+}
+
+// IsAccountLevel determines whether a resource should use account-level APIs.
+// It checks the `api` field first. If set, it takes precedence. Otherwise, it
+// falls back to the provider's host type.
+func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
+	switch GetApiLevel(d) {
+	case ApiLevelAccount:
+		return true
+	case ApiLevelWorkspace:
+		return false
+	default:
+		return c.Config.HostType() == config.AccountHost
+	}
+}
+
 type ApiVersion string
 
 const (
@@ -444,22 +544,34 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 	return nil
 }
 
-// scimVisitor is a separate method for the sake of unit tests
-func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config.HostType() == config.AccountHost && c.Config.AccountID != "" {
-		// until `/preview` is there for workspace scim,
-		// `/api/2.0` is added by completeUrl visitor
-		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
-			fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+// scimVisitorForLevel returns a request visitor that rewrites SCIM URL paths
+// for account-level requests. The apiLevel parameter takes precedence over
+// host-based inference when non-empty.
+func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Request) error {
+	return func(r *http.Request) error {
+		var isAccount bool
+		if apiLevel != "" {
+			// Explicit api field takes precedence over host-based inference
+			isAccount = apiLevel == ApiLevelAccount
+		} else {
+			isAccount = c.Config.HostType() == config.AccountHost
+		}
+		if isAccount {
+			// until `/preview` is there for workspace scim,
+			// `/api/2.0` is added by completeUrl visitor
+			r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
+				fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+		}
+		return nil
 	}
-	return nil
 }
 
-// Scim sets SCIM headers
-func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
+// Scim sets SCIM headers. The apiLevel parameter controls whether account-level
+// or workspace-level SCIM endpoints are used. Pass "" to infer from the provider host.
+func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any, apiLevel string) error {
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
-	}, nil, request, response, c.addApiPrefix, c.scimVisitor)
+	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel))
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

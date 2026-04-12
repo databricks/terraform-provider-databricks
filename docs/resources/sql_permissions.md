@@ -88,6 +88,9 @@ You must specify one or many `privilege_assignments` configuration blocks to dec
 
 -> Even though the value `ALL PRIVILEGES` is mentioned in Table ACL documentation, it's not recommended to use it from Terraform, as it may result in unnecessary state updates.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Import
 
 The resource can be imported using a synthetic identifier. Examples of valid synthetic identifiers are:

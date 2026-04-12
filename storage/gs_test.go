@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -26,10 +27,10 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().ToResource().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "a", "")
-		assert.EqualError(t, err, "cannot re-create mounting cluster: nope")
+		assert.EqualError(t, err, "cannot re-create mounting cluster: cannot determine smallest node type: nope")
 
 		err = createOrValidateClusterForGoogleStorage(ctx, client, d, "", "b")
-		assert.EqualError(t, err, "cannot create mounting cluster: nope")
+		assert.EqualError(t, err, "cannot create mounting cluster: cannot determine smallest node type: nope")
 	})
 }
 
@@ -61,6 +62,16 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 			ReuseRequest: true,
 			Method:       "GET",
 			Resource:     "/api/2.1/clusters/list-node-types",
+			Response: compute.ListNodeTypesResponse{
+				NodeTypes: []compute.NodeType{
+					{
+						NodeTypeId:     "n1-standard-4",
+						InstanceTypeId: "n1-standard-4",
+						MemoryMb:       15360,
+						NumCores:       4,
+					},
+				},
+			},
 		},
 		{
 			Method:   "POST",
@@ -75,7 +86,7 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 				},
 				SparkVersion:           "11.3.x-scala2.12",
 				NumWorkers:             0,
-				NodeTypeID:             "i3.xlarge",
+				NodeTypeID:             "n1-standard-4",
 				AutoterminationMinutes: 10,
 				SparkConf: map[string]string{
 					"spark.databricks.cluster.profile": "singleNode",

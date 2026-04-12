@@ -20,7 +20,7 @@ This example retrieves the default warehouse override for a specific user.
 The name format is `default-warehouse-overrides/{default_warehouse_override_id}`:
 
 ```hcl
-data "databricks_default_warehouse_override" "user" {
+data "databricks_warehouses_default_warehouse_override" "user" {
   # default_warehouse_override_id represents a user ID
   name = "default-warehouse-overrides/${data.databricks_user.example.id}"
 }

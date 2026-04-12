@@ -14,7 +14,7 @@ Endpoint datasource retrieves information about a single network connectivity en
 This is an example for getting an endpoint in Azure cloud:
 ```hcl
 data "databricks_endpoint" "this" {
-  account_id  = "eae3abf6-1496-494e-9983-4660a5ad5aab"
+  parent      = "accounts/123e4567-e89b-12d3-a456-426614174000"
   endpoint_id = "endpoint-123"
 }
 ```

@@ -37,6 +37,7 @@ import (
 const resourceName = "database_instance"
 
 var _ resource.ResourceWithConfigure = &DatabaseInstanceResource{}
+var _ resource.ResourceWithModifyPlan = &DatabaseInstanceResource{}
 
 func ResourceDatabaseInstance() resource.Resource {
 	return &DatabaseInstanceResource{}
@@ -358,7 +359,9 @@ func (to *DatabaseInstance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
-	to.PurgeOnDelete = from.PurgeOnDelete
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
+	}
 	if !from.RetentionWindowInDays.IsUnknown() && !from.RetentionWindowInDays.IsNull() {
 		// RetentionWindowInDays is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.RetentionWindowInDays = from.RetentionWindowInDays
@@ -421,7 +424,9 @@ func (to *DatabaseInstance) SyncFieldsDuringRead(ctx context.Context, from Datab
 			}
 		}
 	}
-	to.PurgeOnDelete = from.PurgeOnDelete
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
+	}
 	if !from.RetentionWindowInDays.IsUnknown() && !from.RetentionWindowInDays.IsNull() {
 		// RetentionWindowInDays is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.RetentionWindowInDays = from.RetentionWindowInDays
@@ -606,6 +611,31 @@ func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.Sche
 
 func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *DatabaseInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan DatabaseInstance
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -530,6 +530,27 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 
 // HttpFixtureClientWithToken creates client for emulated HTTP server
 func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (*common.DatabricksClient, *httptest.Server, error) {
+	// Auto-inject a 404 stub for /.well-known/databricks-config so that
+	// the SDK's host-metadata resolution doesn't cause "Missing stub" failures.
+	hasMetadata := false
+	for _, f := range fixtures {
+		if f.Method == "GET" && f.Resource == "/.well-known/databricks-config" {
+			hasMetadata = true
+			break
+		}
+	}
+	if !hasMetadata {
+		fixtures = append([]HTTPFixture{{
+			Method:       "GET",
+			Resource:     "/.well-known/databricks-config",
+			ReuseRequest: true,
+			Status:       404,
+			Response: apierr.APIError{
+				StatusCode: 404,
+				Message:    "Not Found",
+			},
+		}}, fixtures...)
+	}
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {

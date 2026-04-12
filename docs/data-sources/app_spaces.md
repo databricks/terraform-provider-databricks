@@ -1,7 +1,7 @@
 ---
 subcategory: "Apps"
 ---
-# databricks_apps_space Data Source
+# databricks_app_spaces Data Source
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 
@@ -11,15 +11,15 @@ subcategory: "Apps"
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
-  It must be unique within the workspace
+* `page_size` (integer, optional) - Upper bound for items returned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
+
 ## Attributes
-The following attributes are exported:
+This data source exports a single attribute, `spaces`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 6801
 * `creator` (string) - The email of the user that created the app space
 * `description` (string) - The description of the app space
@@ -28,8 +28,6 @@ The following attributes are exported:
 * `id` (string) - The unique identifier of the app space
 * `name` (string) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
   It must be unique within the workspace
-* `oauth2_app_client_id` (string) - The OAuth2 app client ID for the app space
-* `oauth2_app_integration_id` (string) - The OAuth2 app integration ID for the app space
 * `resources` (list of AppResource) - Resources for the app space. Resources configured at the space level are available to all apps in the space
 * `service_principal_client_id` (string) - The service principal client ID for the app space
 * `service_principal_id` (integer) - The service principal ID for the app space
@@ -48,12 +46,15 @@ The following attributes are exported:
 * `genie_space` (AppResourceGenieSpace)
 * `job` (AppResourceJob)
 * `name` (string) - Name of the App Resource
+* `postgres` (AppResourcePostgres)
 * `secret` (AppResourceSecret)
 * `serving_endpoint` (AppResourceServingEndpoint)
 * `sql_warehouse` (AppResourceSqlWarehouse)
 * `uc_securable` (AppResourceUcSecurable)
 
 ### AppResourceApp
+* `name` (string)
+* `permission` (string) - Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
 * `database_name` (string)
@@ -72,6 +73,11 @@ The following attributes are exported:
 ### AppResourceJob
 * `id` (string) - Id of the job to grant permission on
 * `permission` (string) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
+
+### AppResourcePostgres
+* `branch` (string)
+* `database` (string)
+* `permission` (string) - Possible values are: `CAN_CONNECT_AND_CREATE`
 
 ### AppResourceSecret
 * `key` (string) - Key of the secret to grant permission on

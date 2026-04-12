@@ -45,7 +45,7 @@ func DataSourceServicePrincipal() common.Resource {
 			var spList []User
 
 			common.DataToStructPointer(d, s, &response)
-			spnAPI := NewServicePrincipalsAPI(ctx, newClient)
+			spnAPI := NewServicePrincipalsAPI(ctx, newClient, "")
 
 			if response.ApplicationID != "" {
 				spList, err = spnAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, response.ApplicationID), true)

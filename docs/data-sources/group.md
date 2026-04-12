@@ -32,6 +32,7 @@ Data source allows you to pick groups by the following attributes
 
 * `display_name` - (Required) Display name of the group. The group must exist before this resource can be planned.
 * `recursive` - (Optional) Collect information for all nested groups. *Defaults to true.*
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

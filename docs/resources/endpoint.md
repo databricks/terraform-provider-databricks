@@ -17,9 +17,9 @@ This resource manages Azure Private Endpoints that connect to Databricks workspa
 This is an example for creating an endpoint in Azure cloud:
 ```hcl
 resource "databricks_endpoint" "this" {
-  account_id    = "eae3abf6-1496-494e-9983-4660a5ad5aab"
-  endpoint_name = "my-private-endpoint"
-  region        = "westus"
+  parent       = "accounts/123e4567-e89b-12d3-a456-426614174000"
+  display_name = "my-private-endpoint"
+  region       = "westus"
   azure_private_endpoint_info {
     private_endpoint_name          = "my-pe"
     private_endpoint_resource_guid = "12345678-1234-1234-1234-123456789abc"
@@ -33,7 +33,8 @@ The following arguments are supported:
 * `display_name` (string, required) - The human-readable display name of this endpoint.
   The input should conform to RFC-1034, which restricts to letters, numbers, and hyphens,
   with the first character a letter, the last a letter or a number, and a 63 character maximum
-* `parent` (string, required)
+* `parent` (string, required) - The parent resource name of the account under which the endpoint is created.
+  Format: `accounts/{account_id}`
 * `region` (string, required) - The cloud provider region where this endpoint is located
 * `azure_private_endpoint_info` (AzurePrivateEndpointInfo, optional) - Info for an Azure private endpoint
 

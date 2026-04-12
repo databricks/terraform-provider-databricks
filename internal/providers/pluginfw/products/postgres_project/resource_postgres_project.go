@@ -36,6 +36,7 @@ import (
 const resourceName = "postgres_project"
 
 var _ resource.ResourceWithConfigure = &ProjectResource{}
+var _ resource.ResourceWithModifyPlan = &ProjectResource{}
 
 func ResourceProject() resource.Resource {
 	return &ProjectResource{}
@@ -216,7 +217,9 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 			}
 		}
 	}
-	to.ProjectId = from.ProjectId
+	if !from.ProjectId.IsUnknown() {
+		to.ProjectId = from.ProjectId
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -259,7 +262,9 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	to.ProjectId = from.ProjectId
+	if !from.ProjectId.IsUnknown() {
+		to.ProjectId = from.ProjectId
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -287,6 +292,7 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
@@ -396,6 +402,31 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *ProjectResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan Project
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -523,7 +554,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("initial_endpoint_spec,spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
 	}
 
 	var namespace ProviderConfig

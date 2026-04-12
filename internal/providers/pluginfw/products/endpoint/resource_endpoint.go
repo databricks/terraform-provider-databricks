@@ -59,7 +59,8 @@ type Endpoint struct {
 	// The resource name of the endpoint, which uniquely identifies the
 	// endpoint.
 	Name types.String `tfsdk:"name"`
-
+	// The parent resource name of the account under which the endpoint is
+	// created. Format: `accounts/{account_id}`.
 	Parent types.String `tfsdk:"parent"`
 	// The cloud provider region where this endpoint is located.
 	Region types.String `tfsdk:"region"`
@@ -139,7 +140,9 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -154,7 +157,9 @@ func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
 			}
 		}
 	}
-	to.Parent = from.Parent
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 }
 
 func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {

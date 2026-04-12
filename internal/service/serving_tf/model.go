@@ -4184,6 +4184,12 @@ type ExternalFunctionRequest struct {
 	Params types.String `tfsdk:"params"`
 	// The relative path for the API endpoint. This is required.
 	Path types.String `tfsdk:"path"`
+	// Optional subdomain to prepend to the connection URL's host. If provided,
+	// this will be added as a prefix to the connection URL's host. For example,
+	// if the connection URL is `https://api.example.com/v1` and `sub_domain` is
+	// `"custom"`, the resulting URL will be
+	// `https://custom.api.example.com/v1`.
+	SubDomain types.String `tfsdk:"sub_domain"`
 }
 
 func (to *ExternalFunctionRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalFunctionRequest) {
@@ -4199,6 +4205,7 @@ func (m ExternalFunctionRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["method"] = attrs["method"].SetRequired()
 	attrs["params"] = attrs["params"].SetOptional()
 	attrs["path"] = attrs["path"].SetRequired()
+	attrs["sub_domain"] = attrs["sub_domain"].SetOptional()
 
 	return attrs
 }
@@ -4227,6 +4234,7 @@ func (m ExternalFunctionRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 			"method":          m.Method,
 			"params":          m.Params,
 			"path":            m.Path,
+			"sub_domain":      m.SubDomain,
 		})
 }
 
@@ -4240,6 +4248,7 @@ func (m ExternalFunctionRequest) Type(ctx context.Context) attr.Type {
 			"method":          types.StringType,
 			"params":          types.StringType,
 			"path":            types.StringType,
+			"sub_domain":      types.StringType,
 		},
 	}
 }

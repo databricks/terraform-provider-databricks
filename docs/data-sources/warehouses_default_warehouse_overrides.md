@@ -20,7 +20,7 @@ This data source can be used to list all default warehouse overrides in the work
 Returns a list of all default warehouse overrides in the workspace:
 
 ```hcl
-data "databricks_default_warehouse_overrides" "all" {
+data "databricks_warehouses_default_warehouse_overrides" "all" {
 }
 ```
 

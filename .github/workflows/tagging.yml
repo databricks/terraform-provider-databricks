@@ -6,10 +6,12 @@ on:
   workflow_dispatch:
     # No inputs are required for the manual dispatch.
 
+  # NOTE: Temporarily disable automated releases.
+  #
   # Runs at 8:00 UTC on Monday, Tuesday, Wednesday, and Thursday. To enable automated
   # tagging for a repository, simply add it to the if block of the tag job.
-  schedule:
-    - cron: '0 8 * * MON,TUE,WED,THU'
+  # schedule:
+  #   - cron: '0 8 * * MON,TUE,WED,THU'
 
 # Ensure that only a single instance of the workflow is running at a time.
 concurrency:
@@ -35,13 +37,13 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         with:
           app-id: ${{ secrets.DECO_SDK_TAGGING_APP_ID }}
           private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
@@ -52,14 +54,11 @@ jobs:
           git config user.name "Databricks SDK Release Bot"
           git config user.email "DECO-SDK-Tagging[bot]@users.noreply.github.com"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyGithub
+      - name: Install uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
 
       - name: Run script
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          python tagging.py
+        run: uv run --locked tagging.py

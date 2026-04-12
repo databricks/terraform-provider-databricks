@@ -36,6 +36,7 @@ import (
 const resourceName = "postgres_endpoint"
 
 var _ resource.ResourceWithConfigure = &EndpointResource{}
+var _ resource.ResourceWithModifyPlan = &EndpointResource{}
 
 func ResourceEndpoint() resource.Resource {
 	return &EndpointResource{}
@@ -198,7 +199,9 @@ func (m Endpoint) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
-	to.EndpointId = from.EndpointId
+	if !from.EndpointId.IsUnknown() {
+		to.EndpointId = from.EndpointId
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -229,7 +232,9 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
-	to.EndpointId = from.EndpointId
+	if !from.EndpointId.IsUnknown() {
+		to.EndpointId = from.EndpointId
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -340,6 +345,31 @@ func (r *EndpointResource) Schema(ctx context.Context, req resource.SchemaReques
 
 func (r *EndpointResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *EndpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan Endpoint
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *EndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

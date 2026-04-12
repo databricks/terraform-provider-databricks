@@ -219,7 +219,7 @@ type DeleteTagAssignmentRequest_SdkV2 struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"-"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
@@ -327,7 +327,7 @@ type GetTagAssignmentRequest_SdkV2 struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"-"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
@@ -435,7 +435,7 @@ type ListTagAssignmentsRequest_SdkV2 struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"-"`
 	// Optional. Maximum number of tag assignments to return in a single page
 	PageSize types.Int64 `tfsdk:"-"`
@@ -746,7 +746,7 @@ type TagAssignment_SdkV2 struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"entity_id"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"entity_type"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
@@ -931,7 +931,7 @@ type UpdateTagAssignmentRequest_SdkV2 struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"-"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"-"`
 
 	TagAssignment types.List `tfsdk:"tag_assignment"`

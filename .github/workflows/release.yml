@@ -1,4 +1,4 @@
-name: goreleaser
+name: release-build
 
 on:
   push:
@@ -13,14 +13,19 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
 
@@ -31,9 +36,20 @@ jobs:
             go.sum
             .goreleaser.yml
 
+      - name: Download Go modules
+        run: |
+          jf go mod download
+
+          # Point native go commands at the local module cache instead of
+          # the network. go run pkg@version needs module lookups even when
+          # cached; file:// satisfies these from disk without network access.
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+          echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+          echo "GONOSUMDB=*" >> $GITHUB_ENV
+
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v2
+        uses: crazy-max/ghaction-import-gpg@4c65c687307523ba52326ed829da04bc892ce413 # v2.3.0
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
@@ -53,13 +69,11 @@ jobs:
           fi
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: ~> v2
-          # Arguments cannot reference environment variables, so we write the release notes
-          # to a well-known location and use that in the goreleaser command.
-          args: release --clean --release-notes=/tmp/release-notes/release-notes.md
+          args: release --clean --skip=publish
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
@@ -67,7 +81,7 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
       - name: Run GoReleaser (snapshot)
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: ${{ ! startsWith(github.ref , 'refs/tags/v') }}
         with:
           version: ~> v2
@@ -77,3 +91,18 @@ jobs:
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: terraform-provider-databricks
+          path: |
+            dist/*.zip
+            dist/*SHA256SUMS*
+
+      - name: Upload release notes
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-notes
+          path: /tmp/release-notes/release-notes.md

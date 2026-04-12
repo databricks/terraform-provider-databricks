@@ -124,8 +124,10 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
 				mock.AnythingOfType("func(*workspace.Import)")).Return(
 				errors.New("The parent folder (/foo) does not exist.")).Once()
+			workspaceAPI.GetStatusByPath(mock.Anything, "/foo").Return(nil, apierr.ErrNotFound)
 			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").Return(nil)
-			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath, bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
 				mock.AnythingOfType("func(*workspace.Import)")).Return(nil)
 			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
 				Return(&ws_api.ObjectInfo{
@@ -149,9 +151,11 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
-			workspaceAPI.Upload(mock.Anything, "/foo/path.py",
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
 				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
-				mock.AnythingOfType("func(*workspace.Import)")).Return(errors.New("The parent folder (/foo) does not exist."))
+				mock.AnythingOfType("func(*workspace.Import)")).Return(
+				errors.New("The parent folder (/foo) does not exist."))
+			workspaceAPI.GetStatusByPath(mock.Anything, "/foo").Return(nil, apierr.ErrNotFound)
 			workspaceAPI.MkdirsByPath(mock.Anything, "/foo").
 				Return(errors.New("INVALID_REQUEST: Internal error happened"))
 		},
@@ -229,10 +233,11 @@ func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
 func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockWorkspaceAPI().EXPECT().
-				Upload(mock.Anything, "/path.py",
-					bytes.NewReader(dummyWorkspaceFilePayloadBinary),
-					mock.AnythingOfType("func(*workspace.Import)")).Return(errors.New("Internal error happened"))
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Upload(mock.Anything, "/path.py",
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(errors.New("Internal error happened"))
+			workspaceAPI.GetStatusByPath(mock.Anything, "/").Return(&ws_api.ObjectInfo{}, nil)
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{

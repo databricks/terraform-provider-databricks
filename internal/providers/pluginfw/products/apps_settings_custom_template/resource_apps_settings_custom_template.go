@@ -33,6 +33,7 @@ import (
 const resourceName = "apps_settings_custom_template"
 
 var _ resource.ResourceWithConfigure = &CustomTemplateResource{}
+var _ resource.ResourceWithModifyPlan = &CustomTemplateResource{}
 
 func ResourceCustomTemplate() resource.Resource {
 	return &CustomTemplateResource{}
@@ -269,6 +270,31 @@ func (r *CustomTemplateResource) Schema(ctx context.Context, req resource.Schema
 
 func (r *CustomTemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *CustomTemplateResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan CustomTemplate
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *CustomTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

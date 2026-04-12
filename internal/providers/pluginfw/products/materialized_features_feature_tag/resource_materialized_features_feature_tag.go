@@ -31,6 +31,7 @@ import (
 const resourceName = "materialized_features_feature_tag"
 
 var _ resource.ResourceWithConfigure = &FeatureTagResource{}
+var _ resource.ResourceWithModifyPlan = &FeatureTagResource{}
 
 func ResourceFeatureTag() resource.Resource {
 	return &FeatureTagResource{}
@@ -196,6 +197,31 @@ func (r *FeatureTagResource) Schema(ctx context.Context, req resource.SchemaRequ
 
 func (r *FeatureTagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *FeatureTagResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan FeatureTag
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *FeatureTagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

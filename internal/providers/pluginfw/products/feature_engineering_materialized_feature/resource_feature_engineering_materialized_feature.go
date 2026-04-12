@@ -33,6 +33,7 @@ import (
 const resourceName = "feature_engineering_materialized_feature"
 
 var _ resource.ResourceWithConfigure = &MaterializedFeatureResource{}
+var _ resource.ResourceWithModifyPlan = &MaterializedFeatureResource{}
 
 func ResourceMaterializedFeature() resource.Resource {
 	return &MaterializedFeatureResource{}
@@ -241,7 +242,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
-	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
@@ -318,6 +319,31 @@ func (r *MaterializedFeatureResource) Schema(ctx context.Context, req resource.S
 
 func (r *MaterializedFeatureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *MaterializedFeatureResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan MaterializedFeature
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *MaterializedFeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -31,6 +31,7 @@ import (
 const resourceName = "workspace_entity_tag_assignment"
 
 var _ resource.ResourceWithConfigure = &TagAssignmentResource{}
+var _ resource.ResourceWithModifyPlan = &TagAssignmentResource{}
 
 func ResourceTagAssignment() resource.Resource {
 	return &TagAssignmentResource{}
@@ -111,7 +112,7 @@ type TagAssignment struct {
 	// entity_id is the app name
 	EntityId types.String `tfsdk:"entity_id"`
 	// The type of entity to which the tag is assigned. Allowed values are apps,
-	// dashboards, geniespaces
+	// dashboards, geniespaces, notebooks
 	EntityType types.String `tfsdk:"entity_type"`
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
@@ -215,6 +216,31 @@ func (r *TagAssignmentResource) Schema(ctx context.Context, req resource.SchemaR
 
 func (r *TagAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *TagAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan TagAssignment
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *TagAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

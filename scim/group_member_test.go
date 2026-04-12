@@ -34,7 +34,7 @@ func TestMwsAccGroupMemberResource(t *testing.T) {
 		Template: groupMemberTest,
 		Check: acceptance.ResourceCheck("databricks_group.root",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
+				g, err := scim.NewGroupsAPI(ctx, client, "").Read(id, "members")
 				if err != nil {
 					return err
 				}
@@ -49,11 +49,41 @@ func TestAccGroupMemberResource(t *testing.T) {
 		Template: groupMemberTest,
 		Check: acceptance.ResourceCheck("databricks_group.root",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
+				g, err := scim.NewGroupsAPI(ctx, client, "").Read(id, "members")
 				if err != nil {
 					return err
 				}
 				assert.Len(t, g.Members, 2)
+				return nil
+			}),
+	})
+}
+
+const groupMemberTestWithApi = `
+resource "databricks_group" "root" {
+	display_name = "tf-{var.RANDOM}"
+	api = "account"
+}
+resource "databricks_group" "first" {
+	display_name = "tf-{var.RANDOM}-first"
+	api = "account"
+}
+resource "databricks_group_member" "rf" {
+	group_id = databricks_group.root.id
+	member_id = databricks_group.first.id
+	api = "account"
+}`
+
+func TestMwsAccGroupMemberWithApiField(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: groupMemberTestWithApi,
+		Check: acceptance.ResourceCheck("databricks_group.root",
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				g, err := scim.NewGroupsAPI(ctx, client, "").Read(id, "members")
+				if err != nil {
+					return err
+				}
+				assert.Len(t, g.Members, 1)
 				return nil
 			}),
 	})

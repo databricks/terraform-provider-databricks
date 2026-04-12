@@ -2796,7 +2796,7 @@ func (to *CreateCleanRoomOutputCatalogResponse) SyncFieldsDuringRead(ctx context
 }
 
 func (m CreateCleanRoomOutputCatalogResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["output_catalog"] = attrs["output_catalog"].SetOptional()
+	attrs["output_catalog"] = attrs["output_catalog"].SetRequired()
 
 	return attrs
 }

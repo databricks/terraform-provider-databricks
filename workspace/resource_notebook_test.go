@@ -139,13 +139,6 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/foo",
-				},
-			},
-			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
@@ -179,13 +172,6 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/mkdirs",
-				ExpectedRequest: map[string]string{
-					"path": "/foo",
-				},
-			},
-			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
@@ -195,11 +181,27 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 					Overwrite: true,
 					Format:    "SOURCE",
 				},
-				Response: map[string]string{
-					"error_code": "RESOURCE_DOES_NOT_EXIST",
-					"message":    "The parent folder (/foo) does not exist.",
+				Response: apierr.APIError{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "The parent folder (/foo) does not exist.",
 				},
 				Status: 404,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Item not found",
+				},
+				Status: 404,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
 			},
 			{
 				Method:   http.MethodPost,
@@ -234,6 +236,31 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: apierr.APIError{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Item not found",
+				},
+				Status: 404,
+			},
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/mkdirs",
 				ExpectedRequest: map[string]string{
@@ -244,22 +271,6 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 					Message:   "Internal error happened",
 				},
 				Status: 400,
-			},
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportPath{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
-					Language:  "PYTHON",
-					Overwrite: true,
-					Format:    "SOURCE",
-				},
-				Response: map[string]string{
-					"error_code": "RESOURCE_DOES_NOT_EXIST",
-					"message":    "The parent folder (/foo) does not exist.",
-				},
-				Status: 404,
 			},
 		},
 		Resource: ResourceNotebook(),
@@ -370,6 +381,14 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 func TestResourceNotebookCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2F",
+				Response: ObjectStatus{
+					ObjectType: Directory,
+					Path:       "/",
+				},
+			},
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",

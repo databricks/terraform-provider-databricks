@@ -29,7 +29,7 @@ func jobClusterTemplate(provider_config string) string {
 	}
 
 	resource "databricks_notebook" "this" {
-		path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+		path     = "${data.databricks_current_user.me.home}/Terraform{var.STICKY_RANDOM}"
 		language = "PYTHON"
 		content_base64 = base64encode(<<-EOT
 			# created from ${abspath(path.module)}
@@ -39,7 +39,7 @@ func jobClusterTemplate(provider_config string) string {
 	}
 
 	resource "databricks_job" "this" {
-		name = "{var.RANDOM}"
+		name = "{var.STICKY_RANDOM}"
 
 		%s
 
@@ -114,6 +114,7 @@ func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 
@@ -124,6 +125,7 @@ func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
 	})
 }
 
@@ -135,6 +137,7 @@ func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
 	})
 }
 
@@ -182,13 +185,8 @@ func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
 				workspace_id = "123"
 			}
 		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionDestroyBeforeCreate),
-			},
-		},
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
 	})
 }
 

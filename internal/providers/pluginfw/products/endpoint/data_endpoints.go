@@ -30,7 +30,8 @@ type EndpointsData struct {
 	Endpoints types.List `tfsdk:"items"`
 
 	PageSize types.Int64 `tfsdk:"page_size"`
-
+	// The parent resource name of the account to list endpoints for. Format:
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"parent"`
 }
 

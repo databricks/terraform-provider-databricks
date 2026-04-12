@@ -650,10 +650,9 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(
-			`(?s)failed to get workspace client.*workspace_id mismatch` +
-				`.*please check the workspace_id provided in ` +
-				`provider_config`,
+			`(?s)failed to get workspace client`,
 		),
+		PlanOnly: true,
 	})
 }
 
@@ -681,6 +680,7 @@ func TestAccShare_ProviderConfig_Required(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
+		PlanOnly:    true,
 	})
 }
 

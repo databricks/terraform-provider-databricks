@@ -18,11 +18,14 @@ import (
 )
 
 func TestConfig_NoParams(t *testing.T) {
-	if f, err := os.Stat("~/.databrickscfg"); err == nil && !f.IsDir() {
-		// the provider should fail to configure if no configuration options are available,
-		// either through environment or config file. However, many developers have a
-		// ~/.databrickscfg file, so we skip this test if that file exists.
-		t.Skip("Skipping no-params auth test because ~/.databrickscfg exists")
+	homeDir, err := os.UserHomeDir()
+	if err == nil {
+		if f, err := os.Stat(filepath.Join(homeDir, ".databrickscfg")); err == nil && !f.IsDir() {
+			// the provider should fail to configure if no configuration options are available,
+			// either through environment or config file. However, many developers have a
+			// ~/.databrickscfg file, so we skip this test if that file exists.
+			t.Skip("Skipping no-params auth test because ~/.databrickscfg exists")
+		}
 	}
 	providerFixture{
 		assertError: common.NoAuth,
@@ -229,7 +232,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		// this test will skip ensureWorkspaceUrl
-		host:            "x",
+		host:            "adb-12345.azuredatabricks.net",
 		azureResourceID: azResourceID,
 		env: map[string]string{
 			// // these may fail on windows. use docker container for testing.
@@ -237,7 +240,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 			"HOME": p,
 		},
 		assertAzure:   true,
-		assertHost:    "https://x",
+		assertHost:    "https://adb-12345.azuredatabricks.net",
 		assertAuth:    "azure-cli",
 		azureTenantID: "tenant-id",
 	}.apply(t)
@@ -288,7 +291,7 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 	providerFixture{
 		// omit request to management endpoint to get workspace properties
 		azureResourceID: azResourceID,
-		host:            "x",
+		host:            "adb-12345.azuredatabricks.net",
 		env: map[string]string{
 			// these may fail on windows. use docker container for testing.
 			"PATH": p,
@@ -296,7 +299,7 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 		},
 		assertAzure:   true,
 		azureTenantID: "tenant-id",
-		assertHost:    "https://x",
+		assertHost:    "https://adb-12345.azuredatabricks.net",
 		assertAuth:    "azure-cli",
 	}.apply(t)
 }

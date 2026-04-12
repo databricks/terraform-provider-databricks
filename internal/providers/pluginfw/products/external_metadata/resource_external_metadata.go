@@ -32,6 +32,7 @@ import (
 const resourceName = "external_metadata"
 
 var _ resource.ResourceWithConfigure = &ExternalMetadataResource{}
+var _ resource.ResourceWithModifyPlan = &ExternalMetadataResource{}
 
 func ResourceExternalMetadata() resource.Resource {
 	return &ExternalMetadataResource{}
@@ -328,6 +329,31 @@ func (r *ExternalMetadataResource) Schema(ctx context.Context, req resource.Sche
 
 func (r *ExternalMetadataResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *ExternalMetadataResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on destroy plans (plan is null).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	var plan ExternalMetadata
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *ExternalMetadataResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

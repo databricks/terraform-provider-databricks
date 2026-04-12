@@ -17,10 +17,9 @@
 ### Bug Fixes
 
 * Fixed `databricks_share` creation failing with "no fields to update" when no `object` blocks are specified ([#5443](https://github.com/databricks/terraform-provider-databricks/pull/5443)).
+* Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
 ### Documentation
-
-* Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
 
 ### Exporter
 

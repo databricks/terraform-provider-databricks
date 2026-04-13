@@ -183,6 +183,11 @@ func ResourceCredential() common.Resource {
 			if err != nil {
 				return err
 			}
+			// If the credential is isolated, re-bind the current workspace so it's accessible for deletion.
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, d.Id(), bindings.BindingsSecurableTypeCredential)
+			if err != nil {
+				return err
+			}
 			return w.Credentials.DeleteCredential(ctx, catalog.DeleteCredentialRequest{
 				NameArg: d.Id(),
 				Force:   force,

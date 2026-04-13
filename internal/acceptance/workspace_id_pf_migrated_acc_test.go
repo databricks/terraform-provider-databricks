@@ -139,9 +139,9 @@ func shareWithProviderBlockNoPrereqs(providerAttrs, providerConfig string) strin
 // Validation Tests
 // ==========================================
 
-// TestMwsUcAccWorkspaceIDShare_InvalidWorkspaceID tests that
+// TestUcAccWorkspaceIDShare_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
-func TestMwsUcAccWorkspaceIDShare_InvalidWorkspaceID(t *testing.T) {
+func TestUcAccWorkspaceIDShare_InvalidWorkspaceID(t *testing.T) {
 	UnityAccountLevel(t, Step{
 		Template:    shareWithProviderBlock(`workspace_id = "invalid"`, ""),
 		PlanOnly:    true,
@@ -235,7 +235,7 @@ func TestUcAccWorkspaceIDShare_WS_ChangeProviderConfig(t *testing.T) {
 // Account provider + workspace_id → create workspace-level resource.
 // Verifies: resource created, state has correct provider_config.workspace_id.
 
-func TestMwsUcAccWorkspaceIDShare_AccountNewSetup(t *testing.T) {
+func TestUcAccWorkspaceIDShare_AccountNewSetup(t *testing.T) {
 	UnityAccountLevel(t, Step{
 		Template: shareWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -245,13 +245,13 @@ func TestMwsUcAccWorkspaceIDShare_AccountNewSetup(t *testing.T) {
 	})
 }
 
-// TestMwsUcAccWorkspaceIDShare_AccountNewSetupWithOverride tests that provider_config.workspace_id
+// TestUcAccWorkspaceIDShare_AccountNewSetupWithOverride tests that provider_config.workspace_id
 // takes precedence over the provider-level workspace_id.
 //
 // Uses no-prereqs template because the provider targets TEST_WORKSPACE_ID_2 (may lack UC).
 // Direction is inverted from the app test (provider WS2, override WS1) so the share
 // is created on WS1 (which has UC). The precedence logic is the same: override wins.
-func TestMwsUcAccWorkspaceIDShare_AccountNewSetupWithOverride(t *testing.T) {
+func TestUcAccWorkspaceIDShare_AccountNewSetupWithOverride(t *testing.T) {
 	UnityAccountLevel(t, Step{
 		Template: shareWithProviderBlockNoPrereqs(
 			`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
@@ -271,7 +271,7 @@ func TestMwsUcAccWorkspaceIDShare_AccountNewSetupWithOverride(t *testing.T) {
 // Step 1: Create → PopulateProviderConfigInState resolves effective workspace ID.
 // Step 2: Same config → Noop (ProviderConfigPlanModifier preserves state value).
 
-func TestMwsUcAccWorkspaceIDShare_ImplicitFromProviderDefault(t *testing.T) {
+func TestUcAccWorkspaceIDShare_ImplicitFromProviderDefault(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -309,7 +309,7 @@ func TestMwsUcAccWorkspaceIDShare_ImplicitFromProviderDefault(t *testing.T) {
 //
 // Requires: account-level OAuth credentials that also work against the workspace host.
 
-func TestMwsUcAccWorkspaceIDShare_MigrationSameWorkspace(t *testing.T) {
+func TestUcAccWorkspaceIDShare_MigrationSameWorkspace(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -346,7 +346,7 @@ func TestMwsUcAccWorkspaceIDShare_MigrationSameWorkspace(t *testing.T) {
 // Uses no-prereqs because step 2's provider targets TEST_WORKSPACE_ID_2 (may lack UC),
 // causing SDKv2 prereqs to fail refresh. Step 2 is PlanOnly to avoid creating on WS2.
 
-func TestMwsUcAccWorkspaceIDShare_MigrationDiffWorkspace(t *testing.T) {
+func TestUcAccWorkspaceIDShare_MigrationDiffWorkspace(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(
@@ -379,7 +379,7 @@ func TestMwsUcAccWorkspaceIDShare_MigrationDiffWorkspace(t *testing.T) {
 // provider_config with the SAME workspace ID.
 // Expected: Noop. State already has the same value from the default; no diff.
 
-func TestMwsUcAccWorkspaceIDShare_AddOverrideSame(t *testing.T) {
+func TestUcAccWorkspaceIDShare_AddOverrideSame(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -416,7 +416,7 @@ func TestMwsUcAccWorkspaceIDShare_AddOverrideSame(t *testing.T) {
 // Provider stays WS1 in both steps (SDKv2 prereqs refresh on WS1 → OK).
 // Step 2 is PlanOnly because ForceNew would create on WS2 (no UC).
 
-func TestMwsUcAccWorkspaceIDShare_AddOverrideDiff(t *testing.T) {
+func TestUcAccWorkspaceIDShare_AddOverrideDiff(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -454,7 +454,7 @@ func TestMwsUcAccWorkspaceIDShare_AddOverrideDiff(t *testing.T) {
 // Provider stays WS1 in both steps (SDKv2 prereqs refresh on WS1 → OK).
 // Step 2 is PlanOnly because ForceNew would create on WS2 (no UC).
 
-func TestMwsUcAccWorkspaceIDShare_ChangeOverride(t *testing.T) {
+func TestUcAccWorkspaceIDShare_ChangeOverride(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -492,7 +492,7 @@ func TestMwsUcAccWorkspaceIDShare_ChangeOverride(t *testing.T) {
 // Expected: Noop. ProviderConfigPlanModifier preserves state value, and effective
 // workspace is unchanged (default fallback is the same value).
 
-func TestMwsUcAccWorkspaceIDShare_RemoveOverrideSame(t *testing.T) {
+func TestUcAccWorkspaceIDShare_RemoveOverrideSame(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlock(
@@ -532,7 +532,7 @@ func TestMwsUcAccWorkspaceIDShare_RemoveOverrideSame(t *testing.T) {
 // Uses no-prereqs because provider targets WS2 (may lack UC for SDKv2 refresh).
 // Step 2 is PlanOnly to avoid creating on WS2.
 
-func TestMwsUcAccWorkspaceIDShare_RemoveOverrideDiff(t *testing.T) {
+func TestUcAccWorkspaceIDShare_RemoveOverrideDiff(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(
@@ -570,7 +570,7 @@ func TestMwsUcAccWorkspaceIDShare_RemoveOverrideDiff(t *testing.T) {
 // Uses no-prereqs because step 2's provider targets WS2 (SDKv2 refresh would fail).
 // Step 2 is PlanOnly to avoid creating on WS2 (no UC).
 
-func TestMwsUcAccWorkspaceIDShare_ChangeDefault(t *testing.T) {
+func TestUcAccWorkspaceIDShare_ChangeDefault(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(
@@ -606,7 +606,7 @@ func TestMwsUcAccWorkspaceIDShare_ChangeDefault(t *testing.T) {
 //
 // Uses no-prereqs because step 2's provider targets WS2 (SDKv2 refresh would fail).
 
-func TestMwsUcAccWorkspaceIDShare_ChangeDefaultWithOverride(t *testing.T) {
+func TestUcAccWorkspaceIDShare_ChangeDefaultWithOverride(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(
@@ -663,7 +663,7 @@ func TestUcAccWorkspaceIDShare_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during plan — no workspace_id available for routing.
 
-func TestMwsUcAccWorkspaceIDShare_NoDefaultNoOverride(t *testing.T) {
+func TestUcAccWorkspaceIDShare_NoDefaultNoOverride(t *testing.T) {
 	UnityAccountLevel(t, Step{
 		Template: shareWithProviderBlock("", ""),
 		PlanOnly: true,
@@ -716,7 +716,7 @@ func TestUcAccWorkspaceIDShare_ProviderUpgrade(t *testing.T) {
 // Uses no-prereqs because step 2's provider has no workspace_id (SDKv2 resources
 // in state would fail to refresh without a workspace client).
 
-func TestMwsUcAccWorkspaceIDShare_RemoveDefault(t *testing.T) {
+func TestUcAccWorkspaceIDShare_RemoveDefault(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(
@@ -745,7 +745,7 @@ func TestMwsUcAccWorkspaceIDShare_RemoveDefault(t *testing.T) {
 // Uses no-prereqs because step 2's provider has no workspace_id (SDKv2 resources
 // in state would fail to refresh without a workspace client).
 
-func TestMwsUcAccWorkspaceIDShare_RemoveOverrideNoFallback(t *testing.T) {
+func TestUcAccWorkspaceIDShare_RemoveOverrideNoFallback(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
 			Template: shareWithProviderBlockNoPrereqs(

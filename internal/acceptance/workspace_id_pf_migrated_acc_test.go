@@ -34,8 +34,8 @@ import (
 //   - shareTemplate / shareWithProviderBlock:
 //     Include managed SDKv2 prereqs (catalog + schema). Use when the provider-level
 //     workspace_id stays on TEST_WORKSPACE_ID across ALL steps.
-//   - shareTemplateNoPrereqs / shareWithProviderBlockNoPrereqs:
-//     Reference the pre-existing main.default schema. Use when the provider-level
+//   - shareWithProviderBlockNoPrereqs:
+//     References the pre-existing main.default schema. Use when the provider-level
 //     workspace_id changes between steps (SDKv2 resources would fail to refresh on
 //     a workspace without UC metastore).
 
@@ -116,21 +116,6 @@ func shareWithProviderBlock(providerAttrs, providerConfig string) string {
 //
 // Reference the pre-existing main.default schema. No SDKv2 resources are created,
 // so plan refresh succeeds even when the provider targets a workspace without UC.
-
-// shareTemplateNoPrereqs generates HCL for a databricks_share without a provider block
-// and without managed SDKv2 prereqs.
-func shareTemplateNoPrereqs(providerConfig string) string {
-	return fmt.Sprintf(`
-	resource "databricks_share" "test" {
-		name = "dwsid-share-{var.STICKY_RANDOM}"
-		object {
-			name             = "main.default"
-			data_object_type = "SCHEMA"
-		}
-		%s
-	}
-	`, providerConfig)
-}
 
 // shareWithProviderBlockNoPrereqs generates HCL for a databricks_share with a provider block
 // but without managed SDKv2 prereqs.

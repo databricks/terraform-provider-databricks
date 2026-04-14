@@ -17,6 +17,9 @@
 ### Bug Fixes
 
 * Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
+* Fixed `databricks_grant` and `databricks_grants` to honor `provider_config` when using account-level providers ([#5557](https://github.com/databricks/terraform-provider-databricks/pull/5557)).
+
+  Fixes [#5530](https://github.com/databricks/terraform-provider-databricks/issues/5530).
 
 ### Documentation
 

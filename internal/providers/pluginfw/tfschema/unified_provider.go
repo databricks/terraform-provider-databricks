@@ -22,7 +22,7 @@ import (
 )
 
 // Namespace is used to store the namespace for unified terraform provider
-// across resources and data sources onboarded to plugin framework.
+// across PF-native resources (types.Object / SingleNestedAttribute).
 // Resources and data sources will use the underlying ProviderConfig and ProviderConfigData
 // type respectively to store the provider configurations.
 // This needs to be kept in sync with Namespace for resources and data sources on SDKv2

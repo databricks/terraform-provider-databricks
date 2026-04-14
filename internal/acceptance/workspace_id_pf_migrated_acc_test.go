@@ -45,7 +45,7 @@ import (
 
 // checkShareProviderConfigWSIDFromEnv verifies provider_config.workspace_id matches the given env var.
 // The env var lookup is deferred to check time (after LoadUcwsEnv/LoadUcacctEnv runs).
-// PF uses provider_config.workspace_id (object), not provider_config.0.workspace_id (list).
+// PF uses provider_config.workspace_id (SingleNestedAttribute / types.Object).
 func checkShareProviderConfigWSIDFromEnv(resourceAddr, envVar string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		expected := os.Getenv(envVar)

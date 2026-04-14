@@ -22,6 +22,8 @@ func TestResourceLibrary_SchemaPreserved(t *testing.T) {
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 	s := resp.Schema
 
+	assert.Equal(t, int64(0), s.Version, "schema version should be 0 (bidirectional migration with SDKv2)")
+
 	// Verify cluster_id exists and is required
 	clusterAttr, ok := s.Attributes["cluster_id"]
 	require.True(t, ok, "cluster_id attribute must exist")
@@ -50,17 +52,17 @@ func TestResourceLibrary_SchemaPreserved(t *testing.T) {
 	assert.True(t, idStr.Computed, "id should be computed")
 	assert.True(t, idStr.Optional, "id should be optional")
 
-	// Verify provider_config attribute (SingleNestedAttribute)
+	// Verify provider_config is a SingleNestedAttribute (types.Object)
 	pcAttr, ok := s.Attributes["provider_config"]
 	require.True(t, ok, "provider_config attribute must exist")
-	pcSingle, ok := pcAttr.(schema.SingleNestedAttribute)
-	require.True(t, ok, "provider_config must be a single nested attribute")
-	assert.True(t, pcSingle.Optional, "provider_config should be optional")
-	assert.True(t, pcSingle.Computed, "provider_config should be computed")
-	assert.Len(t, pcSingle.PlanModifiers, 1, "provider_config should have ProviderConfigPlanModifier")
+	pcSNA, ok := pcAttr.(schema.SingleNestedAttribute)
+	require.True(t, ok, "provider_config must be a SingleNestedAttribute")
+	assert.True(t, pcSNA.Optional, "provider_config should be optional")
+	assert.True(t, pcSNA.Computed, "provider_config should be computed")
+	assert.Len(t, pcSNA.PlanModifiers, 1, "provider_config should have ProviderConfigPlanModifier")
 
 	// Verify workspace_id inside provider_config
-	wsAttr, ok := pcSingle.Attributes["workspace_id"]
+	wsAttr, ok := pcSNA.Attributes["workspace_id"]
 	require.True(t, ok, "workspace_id must exist in provider_config")
 	wsStr, ok := wsAttr.(schema.StringAttribute)
 	require.True(t, ok, "workspace_id must be a string attribute")

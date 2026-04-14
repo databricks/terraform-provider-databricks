@@ -106,6 +106,48 @@ func TestVectorSearchEndpointCreateTimeoutError(t *testing.T) {
 
 }
 
+func TestVectorSearchEndpointUpdateMinQps(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockVectorSearchEndpointsAPI().EXPECT()
+			e.PatchEndpoint(mock.Anything, vectorsearch.PatchEndpointRequest{
+				EndpointName: "abc",
+				MinQps:       10,
+			}).Return(&vectorsearch.EndpointInfo{
+				Id:             "1234-5678",
+				EndpointStatus: &vectorsearch.EndpointStatus{State: "ONLINE"},
+				EndpointType:   "STANDARD",
+				Name:           "abc",
+				ScalingInfo:    &vectorsearch.EndpointScalingInfo{RequestedMinQps: 10},
+			}, nil)
+			e.GetEndpointByEndpointName(mock.Anything, "abc").Return(&vectorsearch.EndpointInfo{
+				Id:             "1234-5678",
+				EndpointStatus: &vectorsearch.EndpointStatus{State: "ONLINE"},
+				EndpointType:   "STANDARD",
+				Name:           "abc",
+				ScalingInfo:    &vectorsearch.EndpointScalingInfo{RequestedMinQps: 10},
+			}, nil)
+		},
+		Resource: ResourceVectorSearchEndpoint(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"endpoint_id":   "1234-5678",
+			"name":          "abc",
+			"endpoint_type": "STANDARD",
+			"min_qps":       "5",
+		},
+		HCL: `
+		name          = "abc"
+		endpoint_type = "STANDARD"
+		min_qps       = 10
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":      "abc",
+		"min_qps": 10,
+	})
+}
+
 func TestVectorSearchEndpointUpdateBudgetPolicy(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

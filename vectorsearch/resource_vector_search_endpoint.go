@@ -28,7 +28,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			delete(s, "id")
 			delete(s, "custom_tags")
 			for _, field := range []string{"creator", "creation_timestamp", "last_updated_timestamp",
-				"last_updated_user", "endpoint_status", "num_indexes", "effective_budget_policy_id"} {
+				"last_updated_user", "endpoint_status", "num_indexes", "effective_budget_policy_id", "scaling_info"} {
 				common.CustomizeSchemaPath(s, field).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s).AddNewField("endpoint_id", &schema.Schema{
@@ -37,6 +37,11 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			})
 			common.CustomizeSchemaPath(s).AddNewField("budget_policy_id", &schema.Schema{
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			})
+			common.CustomizeSchemaPath(s).AddNewField("min_qps", &schema.Schema{
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			})
@@ -87,6 +92,9 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			}
 			d.Set("budget_policy_id", endpoint.EffectiveBudgetPolicyId)
 			d.Set("endpoint_id", endpoint.Id)
+			if endpoint.ScalingInfo != nil {
+				d.Set("min_qps", endpoint.ScalingInfo.RequestedMinQps)
+			}
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -98,6 +106,15 @@ func ResourceVectorSearchEndpoint() common.Resource {
 				_, err := w.VectorSearchEndpoints.UpdateEndpointBudgetPolicy(ctx, vectorsearch.PatchEndpointBudgetPolicyRequest{
 					EndpointName:   d.Id(),
 					BudgetPolicyId: d.Get("budget_policy_id").(string),
+				})
+				if err != nil {
+					return err
+				}
+			}
+			if d.HasChange("min_qps") {
+				_, err := w.VectorSearchEndpoints.PatchEndpoint(ctx, vectorsearch.PatchEndpointRequest{
+					EndpointName: d.Id(),
+					MinQps:       int64(d.Get("min_qps").(int)),
 				})
 				if err != nil {
 					return err

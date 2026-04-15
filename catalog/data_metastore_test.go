@@ -28,6 +28,7 @@ func TestMetastoreDataById(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		metastore_id = "abc"
 		`,
@@ -47,6 +48,7 @@ func TestMetastoreDataErrorNoParams(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
+		Host:        "https://accounts.cloud.databricks.com",
 	}.ExpectError(t, "one of metastore_id, name or region must be provided")
 }
 
@@ -57,6 +59,7 @@ func TestMetastoreDataErrorMultipleParams(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		metastore_id = "abc"
 		name         = "abc"
@@ -96,6 +99,7 @@ func TestMetastoreByName(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "xyz"
 		`,
@@ -126,6 +130,7 @@ func TestMetastoreByRegion(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		region = "westus"
 		`,
@@ -150,6 +155,7 @@ func TestMetastoreByNameNoData(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "test"
 		`,
@@ -167,6 +173,7 @@ func TestMetastoreByNameListError(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "test"
 		`,
@@ -197,6 +204,7 @@ func TestMetastoreByRegionMultipleEntries(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL: `
 		region = "westus"
 		`,

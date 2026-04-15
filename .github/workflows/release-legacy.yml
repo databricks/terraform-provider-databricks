@@ -1,10 +1,9 @@
-name: release-build
+name: release-legacy
 
 on:
-  # Enable when disabling the legacy release workflow
-  #push:
-  #  tags:
-  #    - "*"
+  push:
+    tags:
+      - "*"
   merge_group:
     types: [checks_requested]
 
@@ -16,7 +15,7 @@ jobs:
 
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout
@@ -74,7 +73,9 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: ~> v2
-          args: release --clean --skip=publish
+          # Arguments cannot reference environment variables, so we write the release notes
+          # to a well-known location and use that in the goreleaser command.
+          args: release --clean --release-notes=/tmp/release-notes/release-notes.md
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
@@ -92,18 +93,3 @@ jobs:
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: terraform-provider-databricks
-          path: |
-            dist/*.zip
-            dist/*SHA256SUMS*
-
-      - name: Upload release notes
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: release-notes
-          path: /tmp/release-notes/release-notes.md

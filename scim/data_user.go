@@ -71,6 +71,7 @@ func DataSourceUser() common.Resource {
 			Computed: true,
 		},
 	}
+	common.AddApiField(s)
 	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
@@ -80,7 +81,7 @@ func DataSourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, newClient, "")
+			usersAPI := NewUsersAPI(ctx, newClient, common.GetApiLevel(d))
 			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
 				return err

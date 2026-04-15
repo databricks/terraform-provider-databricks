@@ -35,11 +35,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			})
-			common.CustomizeSchemaPath(s).AddNewField("budget_policy_id", &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			})
+			common.CustomizeSchemaPath(s, "budget_policy_id").SetComputed()
 
 			common.NamespaceCustomizeSchemaMap(s)
 			return s

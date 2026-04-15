@@ -1,0 +1,29 @@
+name: update-sdk
+
+on:
+  push:
+    branches:
+      - get-latest-go-sum
+
+
+jobs:
+  update-sdk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+
+      - name: Update SDK
+        run: |
+          go get github.com/databricks/databricks-sdk-go@v0.127.0
+          go mod tidy
+          go mod vendor
+
+      - name: Print diff
+        run: git diff

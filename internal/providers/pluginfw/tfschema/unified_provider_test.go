@@ -2,13 +2,23 @@ package tfschema
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWorkspaceIDPlanModifier(t *testing.T) {
@@ -312,4 +322,82 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
 		})
 	}
+}
+
+func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
+	ctx := context.Background()
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.RequestURI {
+		case "/.well-known/databricks-config":
+			rw.WriteHeader(404)
+		case "/api/2.0/preview/scim/v2/Me":
+			rw.Header().Set("X-Databricks-Org-Id", "999")
+			rw.WriteHeader(200)
+			rw.Write([]byte("{}"))
+		default:
+			rw.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		Host:  server.URL,
+		Token: "test-token",
+	}
+	c, err := client.New(cfg)
+	require.NoError(t, err)
+	databricksClient := &common.DatabricksClient{DatabricksClient: c}
+
+	testSchema := resourceschema.Schema{
+		Attributes: map[string]resourceschema.Attribute{
+			"provider_config": resourceschema.SingleNestedAttribute{
+				Optional: true,
+				Computed: true,
+				Attributes: map[string]resourceschema.Attribute{
+					"workspace_id": resourceschema.StringAttribute{
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+	}
+
+	providerConfigTfType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"workspace_id": tftypes.String,
+		},
+	}
+	rootTfType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"provider_config": providerConfigTfType,
+		},
+	}
+
+	makePlan := func(workspaceID string) tfsdk.Plan {
+		return tfsdk.Plan{
+			Schema: testSchema,
+			Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+				"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+					"workspace_id": tftypes.NewValue(tftypes.String, workspaceID),
+				}),
+			}),
+		}
+	}
+
+	modifyReq := resource.ModifyPlanRequest{
+		Plan: makePlan("111"),
+	}
+	resp := &resource.ModifyPlanResponse{
+		Plan: makePlan("999"),
+	}
+
+	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
+
+	// resp.Plan has "999" (as if WorkspaceDriftDetection updated it), req.Plan has stale "111".
+	// Server workspace is 999, so reading from resp.Plan succeeds; reading req.Plan would fail
+	// with "workspace_id mismatch: provider is configured for workspace 999 but got 111".
+	assert.False(t, resp.Diagnostics.HasError(),
+		"expected no error, got: %v", resp.Diagnostics.Errors())
 }

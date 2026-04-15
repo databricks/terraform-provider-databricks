@@ -24,4 +24,5 @@
 
 ### Internal Changes
 
+* Update Go SDK to v0.127.0.
 * Use account host check instead of account ID check in `databricks_access_control_rule_set` to determine client type ([#5484](https://github.com/databricks/terraform-provider-databricks/pull/5484)).

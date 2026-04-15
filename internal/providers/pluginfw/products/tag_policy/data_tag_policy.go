@@ -4,36 +4,23 @@ package tag_policy
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/tags_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "tag_policy"
@@ -48,11 +35,9 @@ type TagPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +62,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,55 +79,52 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // TagPolicyData extends the main model with additional fields.
 type TagPolicyData struct {
-    // Timestamp when the tag policy was created
+	// Timestamp when the tag policy was created
 	CreateTime types.String `tfsdk:"create_time"`
-    
+
 	Description types.String `tfsdk:"description"`
-    
+
 	Id types.String `tfsdk:"id"`
-    
+
 	TagKey types.String `tfsdk:"tag_key"`
-    // Timestamp when the tag policy was last updated
+	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
-    
-	Values types.Set `tfsdk:"values"`
+
+	Values             types.Set    `tfsdk:"values"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// TagPolicyData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// TagPolicyData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m TagPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "values": reflect.TypeOf(tags_tf.Value{}),
+		"values":          reflect.TypeOf(tags_tf.Value{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
@@ -157,14 +139,13 @@ func (m TagPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
-      "description": m.Description,
-      "id": m.Id,
-      "tag_key": m.TagKey,
-      "update_time": m.UpdateTime,
-      "values": m.Values,
-      
+			"description": m.Description,
+			"id":          m.Id,
+			"tag_key":     m.TagKey,
+			"update_time": m.UpdateTime,
+			"values":      m.Values,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -175,29 +156,29 @@ func (m TagPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
-      "description": types.StringType,
-      "id": types.StringType,
-      "tag_key": types.StringType,
-      "update_time": types.StringType,
-      "values": basetypes.SetType{
-ElemType: tags_tf.Value{}.Type(ctx),
-},
-      
+			"description": types.StringType,
+			"id":          types.StringType,
+			"tag_key":     types.StringType,
+			"update_time": types.StringType,
+			"values": basetypes.SetType{
+				ElemType: tags_tf.Value{}.Type(ctx),
+			},
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m TagPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["create_time"] = attrs["create_time"].SetComputed()
-attrs["description"] = attrs["description"].SetComputed()
-attrs["id"] = attrs["id"].SetComputed()
-attrs["tag_key"] = attrs["tag_key"].SetRequired()
-attrs["update_time"] = attrs["update_time"].SetComputed()
-attrs["values"] = attrs["values"].SetComputed()
+func (m TagPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["values"] = attrs["values"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -219,7 +200,7 @@ func (r *TagPolicyDataSource) Configure(ctx context.Context, req datasource.Conf
 }
 
 func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config TagPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -227,14 +208,12 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	
 	var readRequest tags.GetTagPolicyRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -244,7 +223,7 @@ func (r *TagPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

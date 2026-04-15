@@ -4,41 +4,29 @@ package entity_tag_assignment
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "entity_tag_assignment"
@@ -54,19 +42,17 @@ type EntityTagAssignmentResource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-	
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -86,14 +72,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -103,57 +89,54 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // EntityTagAssignment extends the main model with additional fields.
 type EntityTagAssignment struct {
-    // The fully qualified name of the entity to which the tag is assigned
+	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"entity_name"`
-    // The type of the entity to which the tag is assigned.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"entity_type"`
-    // The source type of the tag assignment, e.g., user-assigned or
-    // system-assigned
+	// The source type of the tag assignment, e.g., user-assigned or
+	// system-assigned
 	SourceType types.String `tfsdk:"source_type"`
-    // The key of the tag
+	// The key of the tag
 	TagKey types.String `tfsdk:"tag_key"`
-    // The value of the tag
+	// The value of the tag
 	TagValue types.String `tfsdk:"tag_value"`
-    // The timestamp when the tag assignment was last updated
+	// The timestamp when the tag assignment was last updated
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-    // The user or principal who updated the tag assignment
-	UpdatedBy types.String `tfsdk:"updated_by"`
+	// The user or principal who updated the tag assignment
+	UpdatedBy      types.String `tfsdk:"updated_by"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// EntityTagAssignment struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// EntityTagAssignment struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m EntityTagAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
-		
 	}
 }
 
@@ -167,15 +150,14 @@ func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"entity_name": m.EntityName,
-      "entity_type": m.EntityType,
-      "source_type": m.SourceType,
-      "tag_key": m.TagKey,
-      "tag_value": m.TagValue,
-      "update_time": m.UpdateTime,
-      "updated_by": m.UpdatedBy,
-      
+			"entity_type": m.EntityType,
+			"source_type": m.SourceType,
+			"tag_key":     m.TagKey,
+			"tag_value":   m.TagValue,
+			"update_time": m.UpdateTime,
+			"updated_by":  m.UpdatedBy,
+
 			"provider_config": m.ProviderConfig,
-			
 		},
 	)
 }
@@ -183,19 +165,18 @@ func (m EntityTagAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{"entity_name": types.StringType,
-      "entity_type": types.StringType,
-      "source_type": types.StringType,
-      "tag_key": types.StringType,
-      "tag_value": types.StringType,
-      "update_time": timetypes.RFC3339{}.Type(ctx),
-      "updated_by": types.StringType,
-      
-	  "provider_config": ProviderConfig{}.Type(ctx),
-	  
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"entity_name": types.StringType,
+			"entity_type": types.StringType,
+			"source_type": types.StringType,
+			"tag_key":     types.StringType,
+			"tag_value":   types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"updated_by":  types.StringType,
+
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
@@ -203,7 +184,7 @@ func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (to *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EntityTagAssignment) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -211,45 +192,28 @@ func (to *EntityTagAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 // during read.
 func (to *EntityTagAssignment) SyncFieldsDuringRead(ctx context.Context, from EntityTagAssignment) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
-func (m EntityTagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["entity_name"] = attrs["entity_name"].SetRequired()
-attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-attrs["entity_type"] = attrs["entity_type"].SetRequired()
-attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-attrs["source_type"] = attrs["source_type"].SetComputed()
-attrs["tag_key"] = attrs["tag_key"].SetRequired()
-attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-attrs["tag_value"] = attrs["tag_value"].SetOptional()
-attrs["update_time"] = attrs["update_time"].SetComputed()
-attrs["updated_by"] = attrs["updated_by"].SetComputed()
+func (m EntityTagAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_type"] = attrs["source_type"].SetComputed()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	attrs["entity_type"] = attrs["entity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["entity_name"] = attrs["entity_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -258,9 +222,9 @@ func (r *EntityTagAssignmentResource) Metadata(ctx context.Context, req resource
 func (r *EntityTagAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, EntityTagAssignment{}, nil)
 	resp.Schema = schema.Schema{
-		Description:	"Terraform schema for Databricks entity_tag_assignment",
-		Attributes:		attrs,
-		Blocks:			blocks,
+		Description: "Terraform schema for Databricks entity_tag_assignment",
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -302,18 +266,16 @@ func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.C
 		return
 	}
 	var entity_tag_assignment catalog.EntityTagAssignment
-	
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &entity_tag_assignment)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	
+
 	createRequest := catalog.CreateEntityTagAssignmentRequest{
 		TagAssignment: entity_tag_assignment,
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -323,7 +285,7 @@ func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.C
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -337,9 +299,8 @@ func (r *EntityTagAssignmentResource) Create(ctx context.Context, req resource.C
 
 	var newState EntityTagAssignment
 
-	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -361,14 +322,12 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	
 	var readRequest catalog.GetEntityTagAssignmentRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -378,7 +337,7 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -402,7 +361,7 @@ func (r *EntityTagAssignmentResource) Read(ctx context.Context, req resource.Rea
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTagAssignment, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -413,16 +372,14 @@ func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTag
 		return
 	}
 
-	
 	updateRequest := catalog.UpdateEntityTagAssignmentRequest{
 		TagAssignment: entity_tag_assignment,
-		EntityName: plan.EntityName.ValueString(),
-		EntityType: plan.EntityType.ValueString(),
-		TagKey: plan.TagKey.ValueString(),
-		UpdateMask: "tag_value",
+		EntityName:    plan.EntityName.ValueString(),
+		EntityType:    plan.EntityType.ValueString(),
+		TagKey:        plan.TagKey.ValueString(),
+		UpdateMask:    "tag_value",
 	}
 
-	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -432,7 +389,7 @@ func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTag
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -445,9 +402,8 @@ func (r *EntityTagAssignmentResource) update(ctx context.Context, plan EntityTag
 
 	var newState EntityTagAssignment
 
-	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if diags.HasError() {
 		return
 	}
@@ -477,14 +433,12 @@ func (r *EntityTagAssignmentResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	
 	var deleteRequest catalog.DeleteEntityTagAssignmentRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -494,18 +448,18 @@ func (r *EntityTagAssignmentResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	err := client.EntityTagAssignments.Delete(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete entity_tag_assignment", err.Error())
 		return
 	}
-	
+
 }
 
 var _ resource.ResourceWithImportState = &EntityTagAssignmentResource{}
@@ -524,10 +478,10 @@ func (r *EntityTagAssignmentResource) ImportState(ctx context.Context, req resou
 		return
 	}
 
-entityType := parts[0]
+	entityType := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_type"), entityType)...)
 	entityName := parts[1]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_name"), entityName)...)
 	tagKey := parts[2]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("tag_key"), tagKey)...)
-	}
+}

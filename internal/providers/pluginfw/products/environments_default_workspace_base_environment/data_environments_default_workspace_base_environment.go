@@ -4,36 +4,22 @@ package environments_default_workspace_base_environment
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "environments_default_workspace_base_environment"
@@ -48,11 +34,9 @@ type DefaultWorkspaceBaseEnvironmentDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +61,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,51 +78,48 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // DefaultWorkspaceBaseEnvironmentData extends the main model with additional fields.
 type DefaultWorkspaceBaseEnvironmentData struct {
-    // The default workspace base environment for CPU compute. Format:
-    // workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for CPU compute. Format:
+	// workspace-base-environments/{workspace_base_environment}
 	CpuWorkspaceBaseEnvironment types.String `tfsdk:"cpu_workspace_base_environment"`
-    // The default workspace base environment for GPU compute. Format:
-    // workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for GPU compute. Format:
+	// workspace-base-environments/{workspace_base_environment}
 	GpuWorkspaceBaseEnvironment types.String `tfsdk:"gpu_workspace_base_environment"`
-    // The resource name of this singleton resource. Format:
-    // default-workspace-base-environment
-	Name types.String `tfsdk:"name"`
+	// The resource name of this singleton resource. Format:
+	// default-workspace-base-environment
+	Name               types.String `tfsdk:"name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// DefaultWorkspaceBaseEnvironmentData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// DefaultWorkspaceBaseEnvironmentData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DefaultWorkspaceBaseEnvironmentData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
@@ -153,11 +134,10 @@ func (m DefaultWorkspaceBaseEnvironmentData) ToObjectValue(ctx context.Context) 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cpu_workspace_base_environment": m.CpuWorkspaceBaseEnvironment,
-      "gpu_workspace_base_environment": m.GpuWorkspaceBaseEnvironment,
-      "name": m.Name,
-      
+			"gpu_workspace_base_environment": m.GpuWorkspaceBaseEnvironment,
+			"name":                           m.Name,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -168,21 +148,21 @@ func (m DefaultWorkspaceBaseEnvironmentData) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cpu_workspace_base_environment": types.StringType,
-      "gpu_workspace_base_environment": types.StringType,
-      "name": types.StringType,
-      
+			"gpu_workspace_base_environment": types.StringType,
+			"name":                           types.StringType,
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m DefaultWorkspaceBaseEnvironmentData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["cpu_workspace_base_environment"] = attrs["cpu_workspace_base_environment"].SetComputed()
-attrs["gpu_workspace_base_environment"] = attrs["gpu_workspace_base_environment"].SetComputed()
-attrs["name"] = attrs["name"].SetRequired()
+func (m DefaultWorkspaceBaseEnvironmentData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cpu_workspace_base_environment"] = attrs["cpu_workspace_base_environment"].SetComputed()
+	attrs["gpu_workspace_base_environment"] = attrs["gpu_workspace_base_environment"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -204,7 +184,7 @@ func (r *DefaultWorkspaceBaseEnvironmentDataSource) Configure(ctx context.Contex
 }
 
 func (r *DefaultWorkspaceBaseEnvironmentDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config DefaultWorkspaceBaseEnvironmentData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -212,14 +192,12 @@ func (r *DefaultWorkspaceBaseEnvironmentDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	
 	var readRequest environments.GetDefaultWorkspaceBaseEnvironmentRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -229,7 +207,7 @@ func (r *DefaultWorkspaceBaseEnvironmentDataSource) Read(ctx context.Context, re
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

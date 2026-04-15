@@ -4,34 +4,17 @@ package endpoint
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/networking"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/networking_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "endpoints"
@@ -45,10 +28,10 @@ func DataSourceEndpoints() datasource.DataSource {
 // EndpointsData extends the main model with additional fields.
 type EndpointsData struct {
 	Endpoints types.List `tfsdk:"items"`
-    
+
 	PageSize types.Int64 `tfsdk:"page_size"`
-    // The parent resource name of the account to list endpoints for. Format:
-    // `accounts/{account_id}`.
+	// The parent resource name of the account to list endpoints for. Format:
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"parent"`
 }
 
@@ -58,8 +41,9 @@ func (EndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Ty
 	}
 }
 
-func (m EndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["parent"] = attrs["parent"].SetRequired()
-attrs["page_size"] = attrs["page_size"].SetOptional()
+func (m EndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["items"] = attrs["items"].SetComputed()
 	return attrs
@@ -87,7 +71,7 @@ func (r *EndpointsDataSource) Configure(ctx context.Context, req datasource.Conf
 }
 
 func (r *EndpointsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config EndpointsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -96,14 +80,13 @@ func (r *EndpointsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var listRequest networking.ListEndpointsRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	client, clientDiags := r.Client.GetAccountClient()
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

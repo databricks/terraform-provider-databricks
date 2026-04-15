@@ -4,41 +4,26 @@ package workspace_network_option
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
+	"strconv"
 	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "workspace_network_option"
@@ -53,30 +38,27 @@ type WorkspaceNetworkOptionResource struct {
 	Client *autogen.DatabricksClient
 }
 
-
-
 // WorkspaceNetworkOption extends the main model with additional fields.
 type WorkspaceNetworkOption struct {
-    // The network policy ID to apply to the workspace. This controls the
-    // network access rules for all serverless compute resources in the
-    // workspace. Each workspace can only be linked to one policy at a time. If
-    // no policy is explicitly assigned, the workspace will use
-    // 'default-policy'.
+	// The network policy ID to apply to the workspace. This controls the
+	// network access rules for all serverless compute resources in the
+	// workspace. Each workspace can only be linked to one policy at a time. If
+	// no policy is explicitly assigned, the workspace will use
+	// 'default-policy'.
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
-    // The workspace ID.
+	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// WorkspaceNetworkOption struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// WorkspaceNetworkOption struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m WorkspaceNetworkOption) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-	}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -89,8 +71,7 @@ func (m WorkspaceNetworkOption) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"network_policy_id": m.NetworkPolicyId,
-      "workspace_id": m.WorkspaceId,
-      
+			"workspace_id": m.WorkspaceId,
 		},
 	)
 }
@@ -98,12 +79,11 @@ func (m WorkspaceNetworkOption) ToObjectValue(ctx context.Context) basetypes.Obj
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m WorkspaceNetworkOption) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{"network_policy_id": types.StringType,
-      "workspace_id": types.Int64Type,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"network_policy_id": types.StringType,
+			"workspace_id": types.Int64Type,
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
@@ -118,20 +98,13 @@ func (to *WorkspaceNetworkOption) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 func (to *WorkspaceNetworkOption) SyncFieldsDuringRead(ctx context.Context, from WorkspaceNetworkOption) {
 }
 
-func (m WorkspaceNetworkOption) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
-attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+func (m WorkspaceNetworkOption) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
-
-
-
-
-
-
-
-
 
 func (r *WorkspaceNetworkOptionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -140,9 +113,9 @@ func (r *WorkspaceNetworkOptionResource) Metadata(ctx context.Context, req resou
 func (r *WorkspaceNetworkOptionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, WorkspaceNetworkOption{}, nil)
 	resp.Schema = schema.Schema{
-		Description:	"Terraform schema for Databricks workspace_network_option",
-		Attributes:		attrs,
-		Blocks:			blocks,
+		Description: "Terraform schema for Databricks workspace_network_option",
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -158,7 +131,7 @@ func (r *WorkspaceNetworkOptionResource) Create(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
@@ -171,16 +144,14 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	
 	var readRequest settings.GetWorkspaceNetworkOptionRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	client, clientDiags := r.Client.GetAccountClient()
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -204,7 +175,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan WorkspaceNetworkOption, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -215,15 +186,13 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan Worksp
 		return
 	}
 
-	
 	updateRequest := settings.UpdateWorkspaceNetworkOptionRequest{
 		WorkspaceNetworkOption: workspace_network_option,
-		WorkspaceId: plan.WorkspaceId.ValueInt64(),
+		WorkspaceId:            plan.WorkspaceId.ValueInt64(),
 	}
 
-	
 	client, clientDiags := r.Client.GetAccountClient()
-	
+
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -236,9 +205,8 @@ func (r *WorkspaceNetworkOptionResource) update(ctx context.Context, plan Worksp
 
 	var newState WorkspaceNetworkOption
 
-	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if diags.HasError() {
 		return
 	}
@@ -278,10 +246,10 @@ func (r *WorkspaceNetworkOptionResource) ImportState(ctx context.Context, req re
 		return
 	}
 
-workspaceId, err := strconv.ParseInt(parts[0], 10, 64)
+	workspaceId, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
 		return
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workspace_id"), workspaceId)...)
-	}
+}

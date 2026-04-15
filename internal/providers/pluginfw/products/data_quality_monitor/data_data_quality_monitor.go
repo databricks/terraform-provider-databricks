@@ -4,36 +4,23 @@ package data_quality_monitor
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/dataquality_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "data_quality_monitor"
@@ -48,11 +35,9 @@ type MonitorDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +62,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,67 +79,64 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // MonitorData extends the main model with additional fields.
 type MonitorData struct {
-    // Anomaly Detection Configuration, applicable to `schema` object types.
+	// Anomaly Detection Configuration, applicable to `schema` object types.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-    // Data Profiling Configuration, applicable to `table` object types. Exactly
-    // one `Analysis Configuration` must be present.
+	// Data Profiling Configuration, applicable to `table` object types. Exactly
+	// one `Analysis Configuration` must be present.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
-    // The UUID of the request object. It is `schema_id` for `schema`, and
-    // `table_id` for `table`.
-    // 
-    // Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
-    // resource. 2. In [Catalog Explorer] > select the `schema` > go to the
-    // `Details` tab > the `Schema ID` field.
-    // 
-    // Find the `table_id` from either: 1. The [table_id] of the `Tables`
-    // resource. 2. In [Catalog Explorer] > select the `table` > go to the
-    // `Details` tab > the `Table ID` field.
-    // 
-    // [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
-    // [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
-    // [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
+	// The UUID of the request object. It is `schema_id` for `schema`, and
+	// `table_id` for `table`.
+	//
+	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+	// `Details` tab > the `Schema ID` field.
+	//
+	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
+	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
+	// `Details` tab > the `Table ID` field.
+	//
+	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
-    // The type of the monitored object. Can be one of the following: `schema`
-    // or `table`.
-	ObjectType types.String `tfsdk:"object_type"`
+	// The type of the monitored object. Can be one of the following: `schema`
+	// or `table`.
+	ObjectType         types.String `tfsdk:"object_type"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// MonitorData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// MonitorData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m MonitorData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "anomaly_detection_config": reflect.TypeOf(dataquality_tf.AnomalyDetectionConfig{}),
-    "data_profiling_config": reflect.TypeOf(dataquality_tf.DataProfilingConfig{}),
-		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
+		"anomaly_detection_config": reflect.TypeOf(dataquality_tf.AnomalyDetectionConfig{}),
+		"data_profiling_config":    reflect.TypeOf(dataquality_tf.DataProfilingConfig{}),
+		"provider_config":          reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -169,12 +151,11 @@ func (m MonitorData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"anomaly_detection_config": m.AnomalyDetectionConfig,
-      "data_profiling_config": m.DataProfilingConfig,
-      "object_id": m.ObjectId,
-      "object_type": m.ObjectType,
-      
+			"data_profiling_config":    m.DataProfilingConfig,
+			"object_id":                m.ObjectId,
+			"object_type":              m.ObjectType,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -185,23 +166,23 @@ func (m MonitorData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"anomaly_detection_config": dataquality_tf.AnomalyDetectionConfig{}.Type(ctx),
-      "data_profiling_config": dataquality_tf.DataProfilingConfig{}.Type(ctx),
-      "object_id": types.StringType,
-      "object_type": types.StringType,
-      
+			"data_profiling_config":    dataquality_tf.DataProfilingConfig{}.Type(ctx),
+			"object_id":                types.StringType,
+			"object_type":              types.StringType,
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m MonitorData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
-attrs["data_profiling_config"] = attrs["data_profiling_config"].SetComputed()
-attrs["object_id"] = attrs["object_id"].SetRequired()
-attrs["object_type"] = attrs["object_type"].SetRequired()
+func (m MonitorData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetComputed()
+	attrs["data_profiling_config"] = attrs["data_profiling_config"].SetComputed()
+	attrs["object_id"] = attrs["object_id"].SetRequired()
+	attrs["object_type"] = attrs["object_type"].SetRequired()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -223,7 +204,7 @@ func (r *MonitorDataSource) Configure(ctx context.Context, req datasource.Config
 }
 
 func (r *MonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config MonitorData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -231,14 +212,12 @@ func (r *MonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	
 	var readRequest dataquality.GetMonitorRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -248,7 +227,7 @@ func (r *MonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

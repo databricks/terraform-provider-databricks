@@ -4,36 +4,24 @@ package postgres_project
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "postgres_project"
@@ -48,11 +36,9 @@ type ProjectDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +63,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,67 +80,64 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // ProjectData extends the main model with additional fields.
 type ProjectData struct {
-    // A timestamp indicating when the project was created.
+	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-    // Configuration settings for the initial Read/Write endpoint created inside
-    // the default branch for a newly created project. If omitted, the initial
-    // endpoint created will have default settings, without high availability
-    // configured. This field does not apply to any endpoints created after
-    // project creation. Use spec.default_endpoint_settings to configure default
-    // settings for endpoints created after project creation.
+	// Configuration settings for the initial Read/Write endpoint created inside
+	// the default branch for a newly created project. If omitted, the initial
+	// endpoint created will have default settings, without high availability
+	// configured. This field does not apply to any endpoints created after
+	// project creation. Use spec.default_endpoint_settings to configure default
+	// settings for endpoints created after project creation.
 	InitialEndpointSpec types.Object `tfsdk:"initial_endpoint_spec"`
-    // Output only. The full resource path of the project. Format:
-    // projects/{project_id}
+	// Output only. The full resource path of the project. Format:
+	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-    // The spec contains the project configuration, including display_name,
-    // pg_version (Postgres version), history_retention_duration, and
-    // default_endpoint_settings.
+	// The spec contains the project configuration, including display_name,
+	// pg_version (Postgres version), history_retention_duration, and
+	// default_endpoint_settings.
 	Spec types.Object `tfsdk:"spec"`
-    // The current status of a Project.
+	// The current status of a Project.
 	Status types.Object `tfsdk:"status"`
-    // System-generated unique ID for the project.
+	// System-generated unique ID for the project.
 	Uid types.String `tfsdk:"uid"`
-    // A timestamp indicating when the project was last updated.
-	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
+	// A timestamp indicating when the project was last updated.
+	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`
+	ProviderConfigData types.Object      `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProjectData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProjectData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m ProjectData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
-    "spec": reflect.TypeOf(postgres_tf.ProjectSpec{}),
-    "status": reflect.TypeOf(postgres_tf.ProjectStatus{}),
-		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
+		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
+		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
+		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
+		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -168,16 +151,15 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-      "initial_endpoint_spec": m.InitialEndpointSpec,
-      "name": m.Name,
-      "spec": m.Spec,
-      "status": m.Status,
-      "uid": m.Uid,
-      "update_time": m.UpdateTime,
-      
+			"create_time":           m.CreateTime,
+			"initial_endpoint_spec": m.InitialEndpointSpec,
+			"name":                  m.Name,
+			"spec":                  m.Spec,
+			"status":                m.Status,
+			"uid":                   m.Uid,
+			"update_time":           m.UpdateTime,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -187,30 +169,30 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m ProjectData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-      "initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
-      "name": types.StringType,
-      "spec": postgres_tf.ProjectSpec{}.Type(ctx),
-      "status": postgres_tf.ProjectStatus{}.Type(ctx),
-      "uid": types.StringType,
-      "update_time": timetypes.RFC3339{}.Type(ctx),
-      
+			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
+			"name":                  types.StringType,
+			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
+			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
+			"uid":                   types.StringType,
+			"update_time":           timetypes.RFC3339{}.Type(ctx),
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m ProjectData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["create_time"] = attrs["create_time"].SetComputed()
-attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
-attrs["name"] = attrs["name"].SetRequired()
-attrs["spec"] = attrs["spec"].SetComputed()
-attrs["status"] = attrs["status"].SetComputed()
-attrs["uid"] = attrs["uid"].SetComputed()
-attrs["update_time"] = attrs["update_time"].SetComputed()
+func (m ProjectData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -232,7 +214,7 @@ func (r *ProjectDataSource) Configure(ctx context.Context, req datasource.Config
 }
 
 func (r *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config ProjectData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -240,14 +222,12 @@ func (r *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	
 	var readRequest postgres.GetProjectRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -257,7 +237,7 @@ func (r *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

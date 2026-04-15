@@ -4,36 +4,19 @@ package account_network_policy
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "account_network_policy"
@@ -48,36 +31,34 @@ type AccountNetworkPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
-
 // AccountNetworkPolicyData extends the main model with additional fields.
 type AccountNetworkPolicyData struct {
-    // The associated account ID for this Network Policy object.
+	// The associated account ID for this Network Policy object.
 	AccountId types.String `tfsdk:"account_id"`
-    // The network policies applying for egress traffic.
+	// The network policies applying for egress traffic.
 	Egress types.Object `tfsdk:"egress"`
-    // The network policies applying for ingress traffic.
+	// The network policies applying for ingress traffic.
 	Ingress types.Object `tfsdk:"ingress"`
-    // The ingress policy for dry run mode. Dry run will always run even if the
-    // request is allowed by the ingress policy. When this field is set, the
-    // policy will be evaluated and emit logs only without blocking requests.
+	// The ingress policy for dry run mode. Dry run will always run even if the
+	// request is allowed by the ingress policy. When this field is set, the
+	// policy will be evaluated and emit logs only without blocking requests.
 	IngressDryRun types.Object `tfsdk:"ingress_dry_run"`
-    // The unique identifier for the network policy.
+	// The unique identifier for the network policy.
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AccountNetworkPolicyData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// AccountNetworkPolicyData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccountNetworkPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "egress": reflect.TypeOf(settings_tf.NetworkPolicyEgress{}),
-    "ingress": reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
-    "ingress_dry_run": reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
+		"egress":          reflect.TypeOf(settings_tf.NetworkPolicyEgress{}),
+		"ingress":         reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
+		"ingress_dry_run": reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
 	}
 }
 
@@ -91,12 +72,11 @@ func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id": m.AccountId,
-      "egress": m.Egress,
-      "ingress": m.Ingress,
-      "ingress_dry_run": m.IngressDryRun,
-      "network_policy_id": m.NetworkPolicyId,
-      
+			"account_id":        m.AccountId,
+			"egress":            m.Egress,
+			"ingress":           m.Ingress,
+			"ingress_dry_run":   m.IngressDryRun,
+			"network_policy_id": m.NetworkPolicyId,
 		},
 	)
 }
@@ -106,21 +86,21 @@ func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.O
 func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id": types.StringType,
-      "egress": settings_tf.NetworkPolicyEgress{}.Type(ctx),
-      "ingress": settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
-      "ingress_dry_run": settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
-      "network_policy_id": types.StringType,
-      
+			"account_id":        types.StringType,
+			"egress":            settings_tf.NetworkPolicyEgress{}.Type(ctx),
+			"ingress":           settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
+			"ingress_dry_run":   settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
+			"network_policy_id": types.StringType,
 		},
 	}
 }
 
-func (m AccountNetworkPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["account_id"] = attrs["account_id"].SetComputed()
-attrs["egress"] = attrs["egress"].SetComputed()
-attrs["ingress"] = attrs["ingress"].SetComputed()
-attrs["ingress_dry_run"] = attrs["ingress_dry_run"].SetComputed()
-attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
+func (m AccountNetworkPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["egress"] = attrs["egress"].SetComputed()
+	attrs["ingress"] = attrs["ingress"].SetComputed()
+	attrs["ingress_dry_run"] = attrs["ingress_dry_run"].SetComputed()
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
 
 	return attrs
 }
@@ -143,7 +123,7 @@ func (r *AccountNetworkPolicyDataSource) Configure(ctx context.Context, req data
 }
 
 func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config AccountNetworkPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -151,16 +131,14 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	
 	var readRequest settings.GetNetworkPolicyRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	client, clientDiags := r.Client.GetAccountClient()
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

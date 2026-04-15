@@ -6,7 +6,8 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 )
 
-type DatabricksClient = common.DatabricksClient 
+type DatabricksClient = common.DatabricksClient
+
 var ConfigureDataSource = pluginfwcommon.ConfigureDataSource
 var ConfigureResource = pluginfwcommon.ConfigureResource
 var GetDatabricksProductionName = pluginfwcommon.GetDatabricksProductionName

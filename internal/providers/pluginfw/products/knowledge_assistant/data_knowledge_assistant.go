@@ -4,36 +4,23 @@ package knowledge_assistant
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "knowledge_assistant"
@@ -48,11 +35,9 @@ type KnowledgeAssistantDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +62,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,71 +79,68 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // KnowledgeAssistantData extends the main model with additional fields.
 type KnowledgeAssistantData struct {
-    // Creation timestamp.
+	// Creation timestamp.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-    // The creator of the Knowledge Assistant.
+	// The creator of the Knowledge Assistant.
 	Creator types.String `tfsdk:"creator"`
-    // Description of what this agent can do (user-facing). Required when
-    // creating a Knowledge Assistant. When updating a Knowledge Assistant,
-    // optional unless included in update_mask.
+	// Description of what this agent can do (user-facing). Required when
+	// creating a Knowledge Assistant. When updating a Knowledge Assistant,
+	// optional unless included in update_mask.
 	Description types.String `tfsdk:"description"`
-    // The display name of the Knowledge Assistant, unique at workspace level.
-    // Required when creating a Knowledge Assistant. When updating a Knowledge
-    // Assistant, optional unless included in update_mask.
+	// The display name of the Knowledge Assistant, unique at workspace level.
+	// Required when creating a Knowledge Assistant. When updating a Knowledge
+	// Assistant, optional unless included in update_mask.
 	DisplayName types.String `tfsdk:"display_name"`
-    // The name of the knowledge assistant agent endpoint.
+	// The name of the knowledge assistant agent endpoint.
 	EndpointName types.String `tfsdk:"endpoint_name"`
-    // Error details when the Knowledge Assistant is in FAILED state.
+	// Error details when the Knowledge Assistant is in FAILED state.
 	ErrorInfo types.String `tfsdk:"error_info"`
-    // The MLflow experiment ID.
+	// The MLflow experiment ID.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-    // The universally unique identifier (UUID) of the Knowledge Assistant.
+	// The universally unique identifier (UUID) of the Knowledge Assistant.
 	Id types.String `tfsdk:"id"`
-    // Additional global instructions on how the agent should generate answers.
-    // Optional on create and update. When updating a Knowledge Assistant,
-    // include this field in update_mask to modify it.
+	// Additional global instructions on how the agent should generate answers.
+	// Optional on create and update. When updating a Knowledge Assistant,
+	// include this field in update_mask to modify it.
 	Instructions types.String `tfsdk:"instructions"`
-    // The resource name of the Knowledge Assistant. Format:
-    // knowledge-assistants/{knowledge_assistant_id}
+	// The resource name of the Knowledge Assistant. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
 	Name types.String `tfsdk:"name"`
-    // State of the Knowledge Assistant. Not returned in List responses.
-	State types.String `tfsdk:"state"`
+	// State of the Knowledge Assistant. Not returned in List responses.
+	State              types.String `tfsdk:"state"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// KnowledgeAssistantData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// KnowledgeAssistantData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m KnowledgeAssistantData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
@@ -172,20 +154,19 @@ func (m KnowledgeAssistantData) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-      "creator": m.Creator,
-      "description": m.Description,
-      "display_name": m.DisplayName,
-      "endpoint_name": m.EndpointName,
-      "error_info": m.ErrorInfo,
-      "experiment_id": m.ExperimentId,
-      "id": m.Id,
-      "instructions": m.Instructions,
-      "name": m.Name,
-      "state": m.State,
-      
+			"create_time":   m.CreateTime,
+			"creator":       m.Creator,
+			"description":   m.Description,
+			"display_name":  m.DisplayName,
+			"endpoint_name": m.EndpointName,
+			"error_info":    m.ErrorInfo,
+			"experiment_id": m.ExperimentId,
+			"id":            m.Id,
+			"instructions":  m.Instructions,
+			"name":          m.Name,
+			"state":         m.State,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -195,38 +176,38 @@ func (m KnowledgeAssistantData) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m KnowledgeAssistantData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-      "creator": types.StringType,
-      "description": types.StringType,
-      "display_name": types.StringType,
-      "endpoint_name": types.StringType,
-      "error_info": types.StringType,
-      "experiment_id": types.StringType,
-      "id": types.StringType,
-      "instructions": types.StringType,
-      "name": types.StringType,
-      "state": types.StringType,
-      
+			"create_time":   timetypes.RFC3339{}.Type(ctx),
+			"creator":       types.StringType,
+			"description":   types.StringType,
+			"display_name":  types.StringType,
+			"endpoint_name": types.StringType,
+			"error_info":    types.StringType,
+			"experiment_id": types.StringType,
+			"id":            types.StringType,
+			"instructions":  types.StringType,
+			"name":          types.StringType,
+			"state":         types.StringType,
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m KnowledgeAssistantData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["create_time"] = attrs["create_time"].SetComputed()
-attrs["creator"] = attrs["creator"].SetComputed()
-attrs["description"] = attrs["description"].SetComputed()
-attrs["display_name"] = attrs["display_name"].SetComputed()
-attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
-attrs["error_info"] = attrs["error_info"].SetComputed()
-attrs["experiment_id"] = attrs["experiment_id"].SetComputed()
-attrs["id"] = attrs["id"].SetComputed()
-attrs["instructions"] = attrs["instructions"].SetComputed()
-attrs["name"] = attrs["name"].SetRequired()
-attrs["state"] = attrs["state"].SetComputed()
+func (m KnowledgeAssistantData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
+	attrs["error_info"] = attrs["error_info"].SetComputed()
+	attrs["experiment_id"] = attrs["experiment_id"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["instructions"] = attrs["instructions"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["state"] = attrs["state"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -248,7 +229,7 @@ func (r *KnowledgeAssistantDataSource) Configure(ctx context.Context, req dataso
 }
 
 func (r *KnowledgeAssistantDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config KnowledgeAssistantData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -256,14 +237,12 @@ func (r *KnowledgeAssistantDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	
 	var readRequest knowledgeassistants.GetKnowledgeAssistantRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -273,7 +252,7 @@ func (r *KnowledgeAssistantDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

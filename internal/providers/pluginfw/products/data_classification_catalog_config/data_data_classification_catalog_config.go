@@ -4,36 +4,23 @@ package data_classification_catalog_config
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/dataclassification"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/dataclassification_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "data_classification_catalog_config"
@@ -48,11 +35,9 @@ type CatalogConfigDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +62,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,53 +79,50 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // CatalogConfigData extends the main model with additional fields.
 type CatalogConfigData struct {
-    // List of auto-tagging configurations for this catalog. Empty list means no
-    // auto-tagging is enabled.
+	// List of auto-tagging configurations for this catalog. Empty list means no
+	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
-    // Schemas to include in the scan. Empty list is not supported as it results
-    // in a no-op scan. If `included_schemas` is not set, all schemas are
-    // scanned.
+	// Schemas to include in the scan. Empty list is not supported as it results
+	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// scanned.
 	IncludedSchemas types.Object `tfsdk:"included_schemas"`
-    // Resource name in the format: catalogs/{catalog_name}/config.
-	Name types.String `tfsdk:"name"`
+	// Resource name in the format: catalogs/{catalog_name}/config.
+	Name               types.String `tfsdk:"name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CatalogConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// CatalogConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m CatalogConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
-    "included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
-		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
+		"auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
+		"included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
+		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -155,11 +137,10 @@ func (m CatalogConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auto_tag_configs": m.AutoTagConfigs,
-      "included_schemas": m.IncludedSchemas,
-      "name": m.Name,
-      
+			"included_schemas": m.IncludedSchemas,
+			"name":             m.Name,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -170,23 +151,23 @@ func (m CatalogConfigData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auto_tag_configs": basetypes.ListType{
-ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
-},
-      "included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
-      "name": types.StringType,
-      
+				ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
+			},
+			"included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
+			"name":             types.StringType,
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m CatalogConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetComputed()
-attrs["included_schemas"] = attrs["included_schemas"].SetComputed()
-attrs["name"] = attrs["name"].SetRequired()
+func (m CatalogConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetComputed()
+	attrs["included_schemas"] = attrs["included_schemas"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -208,7 +189,7 @@ func (r *CatalogConfigDataSource) Configure(ctx context.Context, req datasource.
 }
 
 func (r *CatalogConfigDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config CatalogConfigData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -216,14 +197,12 @@ func (r *CatalogConfigDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	
 	var readRequest dataclassification.GetCatalogConfigRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -233,7 +212,7 @@ func (r *CatalogConfigDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

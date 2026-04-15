@@ -4,34 +4,18 @@ package policy_info
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "policy_infos"
@@ -45,36 +29,35 @@ func DataSourcePolicyInfos() datasource.DataSource {
 // PolicyInfosData extends the main model with additional fields.
 type PolicyInfosData struct {
 	Policies types.List `tfsdk:"policies"`
-    // Optional. Whether to include policies defined on parent securables. By
-    // default, the inherited policies are not included.
+	// Optional. Whether to include policies defined on parent securables. By
+	// default, the inherited policies are not included.
 	IncludeInherited types.Bool `tfsdk:"include_inherited"`
-    // Optional. Maximum number of policies to return on a single page (page
-    // length). - When not set or set to 0, the page length is set to a server
-    // configured value (recommended); - When set to a value greater than 0, the
-    // page length is the minimum of this value and a server configured value;
-	MaxResults types.Int64 `tfsdk:"max_results"`
-	OnSecurableType types.String `tfsdk:"on_securable_type"`
+	// Optional. Maximum number of policies to return on a single page (page
+	// length). - When not set or set to 0, the page length is set to a server
+	// configured value (recommended); - When set to a value greater than 0, the
+	// page length is the minimum of this value and a server configured value;
+	MaxResults          types.Int64  `tfsdk:"max_results"`
+	OnSecurableType     types.String `tfsdk:"on_securable_type"`
 	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
-	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
+	ProviderConfigData  types.Object `tfsdk:"provider_config"`
 }
 
 func (PolicyInfosData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(PolicyInfoData{}),
+		"policies":        reflect.TypeOf(PolicyInfoData{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
-func (m PolicyInfosData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["include_inherited"] = attrs["include_inherited"].SetOptional()
-attrs["max_results"] = attrs["max_results"].SetOptional()
+func (m PolicyInfosData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include_inherited"] = attrs["include_inherited"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
 
 	attrs["policies"] = attrs["policies"].SetComputed()
 	attrs["on_securable_type"] = attrs["on_securable_type"].SetRequired()
 	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetRequired()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -100,7 +83,7 @@ func (r *PolicyInfosDataSource) Configure(ctx context.Context, req datasource.Co
 }
 
 func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config PolicyInfosData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -109,12 +92,11 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	var listRequest catalog.ListPoliciesRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -124,7 +106,7 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,7 +126,7 @@ func (r *PolicyInfosDataSource) Read(ctx context.Context, req datasource.ReadReq
 			return
 		}
 		policy_info.ProviderConfigData = config.ProviderConfigData
-		
+
 		results = append(results, policy_info.ToObjectValue(ctx))
 	}
 

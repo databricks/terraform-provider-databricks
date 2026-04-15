@@ -4,36 +4,23 @@ package feature_engineering_materialized_feature
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "feature_engineering_materialized_feature"
@@ -48,11 +35,9 @@ type MaterializedFeatureDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -77,14 +62,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -94,66 +79,63 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // MaterializedFeatureData extends the main model with additional fields.
 type MaterializedFeatureData struct {
-    // The quartz cron expression that defines the schedule of the
-    // materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// The quartz cron expression that defines the schedule of the
+	// materialization pipeline. The schedule is evaluated in the UTC timezone.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
-    // The full name of the feature in Unity Catalog.
+	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
-    // True if this is an online materialized feature. False if it is an offline
-    // materialized feature.
+	// True if this is an online materialized feature. False if it is an offline
+	// materialized feature.
 	IsOnline types.Bool `tfsdk:"is_online"`
-    // The timestamp when the pipeline last ran and updated the materialized
-    // feature values. If the pipeline has not run yet, this field will be null.
+	// The timestamp when the pipeline last ran and updated the materialized
+	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
-    // Unique identifier for the materialized feature.
+	// Unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-    
+
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
-    
+
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
-    // The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
-    // The fully qualified Unity Catalog path to the table containing the
-    // materialized feature (Delta table or Lakebase table). Output only.
-	TableName types.String `tfsdk:"table_name"`
+	// The fully qualified Unity Catalog path to the table containing the
+	// materialized feature (Delta table or Lakebase table). Output only.
+	TableName          types.String `tfsdk:"table_name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// MaterializedFeatureData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// MaterializedFeatureData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m MaterializedFeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-    "offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-    "online_store_config": reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
-		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
+		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
+		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
+		"provider_config":      reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -167,18 +149,17 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cron_schedule": m.CronSchedule,
-      "feature_name": m.FeatureName,
-      "is_online": m.IsOnline,
-      "last_materialization_time": m.LastMaterializationTime,
-      "materialized_feature_id": m.MaterializedFeatureId,
-      "offline_store_config": m.OfflineStoreConfig,
-      "online_store_config": m.OnlineStoreConfig,
-      "pipeline_schedule_state": m.PipelineScheduleState,
-      "table_name": m.TableName,
-      
+			"cron_schedule":             m.CronSchedule,
+			"feature_name":              m.FeatureName,
+			"is_online":                 m.IsOnline,
+			"last_materialization_time": m.LastMaterializationTime,
+			"materialized_feature_id":   m.MaterializedFeatureId,
+			"offline_store_config":      m.OfflineStoreConfig,
+			"online_store_config":       m.OnlineStoreConfig,
+			"pipeline_schedule_state":   m.PipelineScheduleState,
+			"table_name":                m.TableName,
+
 			"provider_config": m.ProviderConfigData,
-			
 		},
 	)
 }
@@ -188,34 +169,34 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cron_schedule": types.StringType,
-      "feature_name": types.StringType,
-      "is_online": types.BoolType,
-      "last_materialization_time": types.StringType,
-      "materialized_feature_id": types.StringType,
-      "offline_store_config": ml_tf.OfflineStoreConfig{}.Type(ctx),
-      "online_store_config": ml_tf.OnlineStoreConfig{}.Type(ctx),
-      "pipeline_schedule_state": types.StringType,
-      "table_name": types.StringType,
-      
+			"cron_schedule":             types.StringType,
+			"feature_name":              types.StringType,
+			"is_online":                 types.BoolType,
+			"last_materialization_time": types.StringType,
+			"materialized_feature_id":   types.StringType,
+			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
+			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
+			"pipeline_schedule_state":   types.StringType,
+			"table_name":                types.StringType,
+
 			"provider_config": ProviderConfigData{}.Type(ctx),
-			
 		},
 	}
 }
 
-func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
-attrs["feature_name"] = attrs["feature_name"].SetComputed()
-attrs["is_online"] = attrs["is_online"].SetComputed()
-attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
-attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
-attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
-attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
-attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetComputed()
-attrs["table_name"] = attrs["table_name"].SetComputed()
+func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
+	attrs["feature_name"] = attrs["feature_name"].SetComputed()
+	attrs["is_online"] = attrs["is_online"].SetComputed()
+	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
+	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
+	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
+	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetComputed()
+	attrs["table_name"] = attrs["table_name"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -237,7 +218,7 @@ func (r *MaterializedFeatureDataSource) Configure(ctx context.Context, req datas
 }
 
 func (r *MaterializedFeatureDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config MaterializedFeatureData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -245,14 +226,12 @@ func (r *MaterializedFeatureDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	
 	var readRequest ml.GetMaterializedFeatureRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -262,7 +241,7 @@ func (r *MaterializedFeatureDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

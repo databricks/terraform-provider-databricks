@@ -4,34 +4,18 @@ package database_synced_database_table
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "database_synced_database_tables"
@@ -45,28 +29,27 @@ func DataSourceSyncedDatabaseTables() datasource.DataSource {
 // SyncedDatabaseTablesData extends the main model with additional fields.
 type SyncedDatabaseTablesData struct {
 	Database types.List `tfsdk:"synced_tables"`
-    // Name of the instance to get synced tables for.
+	// Name of the instance to get synced tables for.
 	InstanceName types.String `tfsdk:"instance_name"`
-    // Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"page_size"`
+	// Upper bound for items returned.
+	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 func (SyncedDatabaseTablesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"synced_tables": reflect.TypeOf(SyncedDatabaseTableData{}),
+		"synced_tables":   reflect.TypeOf(SyncedDatabaseTableData{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
-func (m SyncedDatabaseTablesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["instance_name"] = attrs["instance_name"].SetRequired()
-attrs["page_size"] = attrs["page_size"].SetOptional()
+func (m SyncedDatabaseTablesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_name"] = attrs["instance_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["synced_tables"] = attrs["synced_tables"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -92,7 +75,7 @@ func (r *SyncedDatabaseTablesDataSource) Configure(ctx context.Context, req data
 }
 
 func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config SyncedDatabaseTablesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -101,12 +84,11 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var listRequest database.ListSyncedDatabaseTablesRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -116,7 +98,7 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,7 +118,7 @@ func (r *SyncedDatabaseTablesDataSource) Read(ctx context.Context, req datasourc
 			return
 		}
 		synced_database_table.ProviderConfigData = config.ProviderConfigData
-		
+
 		results = append(results, synced_database_table.ToObjectValue(ctx))
 	}
 

@@ -4,36 +4,18 @@ package workspace_network_option
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "workspace_network_option"
@@ -48,30 +30,27 @@ type WorkspaceNetworkOptionDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-
-
 // WorkspaceNetworkOptionData extends the main model with additional fields.
 type WorkspaceNetworkOptionData struct {
-    // The network policy ID to apply to the workspace. This controls the
-    // network access rules for all serverless compute resources in the
-    // workspace. Each workspace can only be linked to one policy at a time. If
-    // no policy is explicitly assigned, the workspace will use
-    // 'default-policy'.
+	// The network policy ID to apply to the workspace. This controls the
+	// network access rules for all serverless compute resources in the
+	// workspace. Each workspace can only be linked to one policy at a time. If
+	// no policy is explicitly assigned, the workspace will use
+	// 'default-policy'.
 	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
-    // The workspace ID.
+	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// WorkspaceNetworkOptionData struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// WorkspaceNetworkOptionData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m WorkspaceNetworkOptionData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-	}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -85,8 +64,7 @@ func (m WorkspaceNetworkOptionData) ToObjectValue(ctx context.Context) basetypes
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"network_policy_id": m.NetworkPolicyId,
-      "workspace_id": m.WorkspaceId,
-      
+			"workspace_id":      m.WorkspaceId,
 		},
 	)
 }
@@ -97,14 +75,14 @@ func (m WorkspaceNetworkOptionData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"network_policy_id": types.StringType,
-      "workspace_id": types.Int64Type,
-      
+			"workspace_id":      types.Int64Type,
 		},
 	}
 }
 
-func (m WorkspaceNetworkOptionData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["network_policy_id"] = attrs["network_policy_id"].SetComputed()
-attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+func (m WorkspaceNetworkOptionData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
 	return attrs
 }
@@ -127,7 +105,7 @@ func (r *WorkspaceNetworkOptionDataSource) Configure(ctx context.Context, req da
 }
 
 func (r *WorkspaceNetworkOptionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config WorkspaceNetworkOptionData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -135,16 +113,14 @@ func (r *WorkspaceNetworkOptionDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	
 	var readRequest settings.GetWorkspaceNetworkOptionRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	client, clientDiags := r.Client.GetAccountClient()
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

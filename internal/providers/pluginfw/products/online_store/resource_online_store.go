@@ -4,41 +4,28 @@ package online_store
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "online_store"
@@ -54,19 +41,17 @@ type OnlineStoreResource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-	
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -86,14 +71,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -103,58 +88,55 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // OnlineStore extends the main model with additional fields.
 type OnlineStore struct {
-    // The capacity of the online store. Valid values are "CU_1", "CU_2",
-    // "CU_4", "CU_8".
+	// The capacity of the online store. Valid values are "CU_1", "CU_2",
+	// "CU_4", "CU_8".
 	Capacity types.String `tfsdk:"capacity"`
-    // The timestamp when the online store was created.
+	// The timestamp when the online store was created.
 	CreationTime types.String `tfsdk:"creation_time"`
-    // The email of the creator of the online store.
+	// The email of the creator of the online store.
 	Creator types.String `tfsdk:"creator"`
-    // The name of the online store. This is the unique identifier for the
-    // online store.
+	// The name of the online store. This is the unique identifier for the
+	// online store.
 	Name types.String `tfsdk:"name"`
-    // The number of read replicas for the online store. Defaults to 0.
+	// The number of read replicas for the online store. Defaults to 0.
 	ReadReplicaCount types.Int64 `tfsdk:"read_replica_count"`
-    // The current state of the online store.
+	// The current state of the online store.
 	State types.String `tfsdk:"state"`
-    // The usage policy applied to the online store to track billing.
-	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
+	// The usage policy applied to the online store to track billing.
+	UsagePolicyId  types.String `tfsdk:"usage_policy_id"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// OnlineStore struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// OnlineStore struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m OnlineStore) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
-		
 	}
 }
 
@@ -168,15 +150,14 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"capacity": m.Capacity,
-      "creation_time": m.CreationTime,
-      "creator": m.Creator,
-      "name": m.Name,
-      "read_replica_count": m.ReadReplicaCount,
-      "state": m.State,
-      "usage_policy_id": m.UsagePolicyId,
-      
+			"creation_time":      m.CreationTime,
+			"creator":            m.Creator,
+			"name":               m.Name,
+			"read_replica_count": m.ReadReplicaCount,
+			"state":              m.State,
+			"usage_policy_id":    m.UsagePolicyId,
+
 			"provider_config": m.ProviderConfig,
-			
 		},
 	)
 }
@@ -184,19 +165,18 @@ func (m OnlineStore) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m OnlineStore) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{"capacity": types.StringType,
-      "creation_time": types.StringType,
-      "creator": types.StringType,
-      "name": types.StringType,
-      "read_replica_count": types.Int64Type,
-      "state": types.StringType,
-      "usage_policy_id": types.StringType,
-      
-	  "provider_config": ProviderConfig{}.Type(ctx),
-	  
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"capacity": types.StringType,
+			"creation_time":      types.StringType,
+			"creator":            types.StringType,
+			"name":               types.StringType,
+			"read_replica_count": types.Int64Type,
+			"state":              types.StringType,
+			"usage_policy_id":    types.StringType,
+
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
@@ -204,7 +184,7 @@ func (m OnlineStore) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStore) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -212,40 +192,23 @@ func (to *OnlineStore) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 // during read.
 func (to *OnlineStore) SyncFieldsDuringRead(ctx context.Context, from OnlineStore) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
-func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["capacity"] = attrs["capacity"].SetRequired()
-attrs["creation_time"] = attrs["creation_time"].SetComputed()
-attrs["creator"] = attrs["creator"].SetComputed()
-attrs["name"] = attrs["name"].SetRequired()
-attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
-attrs["state"] = attrs["state"].SetComputed()
-attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetRequired()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["read_replica_count"] = attrs["read_replica_count"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -254,9 +217,9 @@ func (r *OnlineStoreResource) Metadata(ctx context.Context, req resource.Metadat
 func (r *OnlineStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, OnlineStore{}, nil)
 	resp.Schema = schema.Schema{
-		Description:	"Terraform schema for Databricks online_store",
-		Attributes:		attrs,
-		Blocks:			blocks,
+		Description: "Terraform schema for Databricks online_store",
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -298,18 +261,16 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	var online_store ml.OnlineStore
-	
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &online_store)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	
+
 	createRequest := ml.CreateOnlineStoreRequest{
 		OnlineStore: online_store,
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -319,7 +280,7 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -333,9 +294,8 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 
 	var newState OnlineStore
 
-	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -357,14 +317,12 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	
 	var readRequest ml.GetOnlineStoreRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -374,7 +332,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -398,7 +356,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -409,14 +367,12 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 		return
 	}
 
-	
 	updateRequest := ml.UpdateOnlineStoreRequest{
 		OnlineStore: online_store,
-		Name: plan.Name.ValueString(),
-		UpdateMask: "capacity,read_replica_count,usage_policy_id",
+		Name:        plan.Name.ValueString(),
+		UpdateMask:  "capacity,read_replica_count,usage_policy_id",
 	}
 
-	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -426,7 +382,7 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -439,9 +395,8 @@ func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diag
 
 	var newState OnlineStore
 
-	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if diags.HasError() {
 		return
 	}
@@ -471,14 +426,12 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	
 	var deleteRequest ml.DeleteOnlineStoreRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -488,18 +441,18 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	err := client.FeatureStore.DeleteOnlineStore(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete online_store", err.Error())
 		return
 	}
-	
+
 }
 
 var _ resource.ResourceWithImportState = &OnlineStoreResource{}
@@ -518,6 +471,6 @@ func (r *OnlineStoreResource) ImportState(ctx context.Context, req resource.Impo
 		return
 	}
 
-name := parts[0]
+	name := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
-	}
+}

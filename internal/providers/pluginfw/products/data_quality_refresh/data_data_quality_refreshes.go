@@ -4,34 +4,18 @@ package data_quality_refresh
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"reflect"
-	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/dataquality_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "data_quality_refreshes"
@@ -45,29 +29,28 @@ func DataSourceRefreshes() datasource.DataSource {
 // RefreshesData extends the main model with additional fields.
 type RefreshesData struct {
 	DataQuality types.List `tfsdk:"refreshes"`
-    
-	PageSize types.Int64 `tfsdk:"page_size"`
-	ObjectType types.String `tfsdk:"object_type"`
-	ObjectId types.String `tfsdk:"object_id"`
+
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ObjectType         types.String `tfsdk:"object_type"`
+	ObjectId           types.String `tfsdk:"object_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
-	
 }
 
 func (RefreshesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"refreshes": reflect.TypeOf(RefreshData{}),
+		"refreshes":       reflect.TypeOf(RefreshData{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
-		
 	}
 }
 
-func (m RefreshesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["page_size"] = attrs["page_size"].SetOptional()
+func (m RefreshesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["refreshes"] = attrs["refreshes"].SetComputed()
 	attrs["object_type"] = attrs["object_type"].SetRequired()
 	attrs["object_id"] = attrs["object_id"].SetRequired()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
 
@@ -93,7 +76,7 @@ func (r *RefreshesDataSource) Configure(ctx context.Context, req datasource.Conf
 }
 
 func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config RefreshesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -102,12 +85,11 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var listRequest dataquality.ListRefreshRequest
-    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -117,7 +99,7 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -137,7 +119,7 @@ func (r *RefreshesDataSource) Read(ctx context.Context, req datasource.ReadReque
 			return
 		}
 		refresh.ProviderConfigData = config.ProviderConfigData
-		
+
 		results = append(results, refresh.ToObjectValue(ctx))
 	}
 

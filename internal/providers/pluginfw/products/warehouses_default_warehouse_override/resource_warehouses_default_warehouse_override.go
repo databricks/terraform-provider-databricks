@@ -4,41 +4,29 @@ package warehouses_default_warehouse_override
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "warehouses_default_warehouse_override"
@@ -54,19 +42,17 @@ type DefaultWarehouseOverrideResource struct {
 	Client *autogen.DatabricksClient
 }
 
-
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
-	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-	
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -86,14 +72,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-    return map[string]reflect.Type{}
+	return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -103,52 +89,49 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-    return types.ObjectValueMust(
-        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-        map[string]attr.Value{
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-        },
-    )
+		},
+	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-    return types.ObjectType{
-        AttrTypes: map[string]attr.Type{
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-        },
-    }
+		},
+	}
 }
-
 
 // DefaultWarehouseOverride extends the main model with additional fields.
 type DefaultWarehouseOverride struct {
-    // The ID component of the resource name (user ID).
+	// The ID component of the resource name (user ID).
 	DefaultWarehouseOverrideId types.String `tfsdk:"default_warehouse_override_id"`
-    // The resource name of the default warehouse override. Format:
-    // default-warehouse-overrides/{default_warehouse_override_id}
+	// The resource name of the default warehouse override. Format:
+	// default-warehouse-overrides/{default_warehouse_override_id}
 	Name types.String `tfsdk:"name"`
-    // The type of override behavior.
+	// The type of override behavior.
 	Type_ types.String `tfsdk:"type"`
-    // The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED
-    // type.
-	WarehouseId types.String `tfsdk:"warehouse_id"`
+	// The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED
+	// type.
+	WarehouseId    types.String `tfsdk:"warehouse_id"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
-	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// DefaultWarehouseOverride struct. Container types (types.Map, types.List, types.Set) and 
-// object types (types.Object) do not carry the type information of their elements in the Go 
-// type system. This function provides a way to retrieve the type information of the elements in 
-// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
-// They must be either primitive values from the plugin framework type system 
+// DefaultWarehouseOverride struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DefaultWarehouseOverride) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
-		
 	}
 }
 
@@ -162,12 +145,11 @@ func (m DefaultWarehouseOverride) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"default_warehouse_override_id": m.DefaultWarehouseOverrideId,
-      "name": m.Name,
-      "type": m.Type_,
-      "warehouse_id": m.WarehouseId,
-      
+			"name":         m.Name,
+			"type":         m.Type_,
+			"warehouse_id": m.WarehouseId,
+
 			"provider_config": m.ProviderConfig,
-			
 		},
 	)
 }
@@ -175,16 +157,15 @@ func (m DefaultWarehouseOverride) ToObjectValue(ctx context.Context) basetypes.O
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DefaultWarehouseOverride) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{"default_warehouse_override_id": types.StringType,
-      "name": types.StringType,
-      "type": types.StringType,
-      "warehouse_id": types.StringType,
-      
-	  "provider_config": ProviderConfig{}.Type(ctx),
-	  
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{"default_warehouse_override_id": types.StringType,
+			"name":         types.StringType,
+			"type":         types.StringType,
+			"warehouse_id": types.StringType,
+
+			"provider_config": ProviderConfig{}.Type(ctx),
+		},
+	}
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
@@ -192,7 +173,7 @@ func (m DefaultWarehouseOverride) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (to *DefaultWarehouseOverride) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DefaultWarehouseOverride) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -200,33 +181,22 @@ func (to *DefaultWarehouseOverride) SyncFieldsDuringCreateOrUpdate(ctx context.C
 // during read.
 func (to *DefaultWarehouseOverride) SyncFieldsDuringRead(ctx context.Context, from DefaultWarehouseOverride) {
 	to.ProviderConfig = from.ProviderConfig
-	
+
 }
 
-func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
-attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-attrs["name"] = attrs["name"].SetComputed()
-attrs["type"] = attrs["type"].SetRequired()
-attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["type"] = attrs["type"].SetRequired()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	
+
 	return attrs
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 func (r *DefaultWarehouseOverrideResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -235,9 +205,9 @@ func (r *DefaultWarehouseOverrideResource) Metadata(ctx context.Context, req res
 func (r *DefaultWarehouseOverrideResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DefaultWarehouseOverride{}, nil)
 	resp.Schema = schema.Schema{
-		Description:	"Terraform schema for Databricks warehouses_default_warehouse_override",
-		Attributes:		attrs,
-		Blocks:			blocks,
+		Description: "Terraform schema for Databricks warehouses_default_warehouse_override",
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -279,19 +249,17 @@ func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resou
 		return
 	}
 	var default_warehouse_override sql.DefaultWarehouseOverride
-	
+
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &default_warehouse_override)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
-	
+
 	createRequest := sql.CreateDefaultWarehouseOverrideRequest{
-		DefaultWarehouseOverride: default_warehouse_override,
+		DefaultWarehouseOverride:   default_warehouse_override,
 		DefaultWarehouseOverrideId: plan.DefaultWarehouseOverrideId.ValueString(),
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -301,7 +269,7 @@ func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resou
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -315,9 +283,8 @@ func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resou
 
 	var newState DefaultWarehouseOverride
 
-	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -339,14 +306,12 @@ func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	
 	var readRequest sql.GetDefaultWarehouseOverrideRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -356,7 +321,7 @@ func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resourc
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -380,7 +345,7 @@ func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resourc
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *DefaultWarehouseOverrideResource) update(ctx context.Context, plan DefaultWarehouseOverride, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -391,14 +356,12 @@ func (r *DefaultWarehouseOverrideResource) update(ctx context.Context, plan Defa
 		return
 	}
 
-	
 	updateRequest := sql.UpdateDefaultWarehouseOverrideRequest{
 		DefaultWarehouseOverride: default_warehouse_override,
-		Name: plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("type,warehouse_id", ",")),
+		Name:                     plan.Name.ValueString(),
+		UpdateMask:               *fieldmask.New(strings.Split("type,warehouse_id", ",")),
 	}
 
-	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -408,7 +371,7 @@ func (r *DefaultWarehouseOverrideResource) update(ctx context.Context, plan Defa
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -421,9 +384,8 @@ func (r *DefaultWarehouseOverrideResource) update(ctx context.Context, plan Defa
 
 	var newState DefaultWarehouseOverride
 
-	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-	
+
 	if diags.HasError() {
 		return
 	}
@@ -453,14 +415,12 @@ func (r *DefaultWarehouseOverrideResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	
 	var deleteRequest sql.DeleteDefaultWarehouseOverrideRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -470,18 +430,18 @@ func (r *DefaultWarehouseOverrideResource) Delete(ctx context.Context, req resou
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	
+
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	err := client.Warehouses.DeleteDefaultWarehouseOverride(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete warehouses_default_warehouse_override", err.Error())
 		return
 	}
-	
+
 }
 
 var _ resource.ResourceWithImportState = &DefaultWarehouseOverrideResource{}
@@ -500,6 +460,6 @@ func (r *DefaultWarehouseOverrideResource) ImportState(ctx context.Context, req 
 		return
 	}
 
-name := parts[0]
+	name := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
-	}
+}

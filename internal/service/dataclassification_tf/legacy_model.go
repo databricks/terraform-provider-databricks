@@ -13,31 +13,22 @@ package dataclassification_tf
 import (
 	"context"
 	"reflect"
+
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-  "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 )
-
-
 
 // Auto-tagging configuration for a classification tag. When enabled, detected
 // columns are automatically tagged with Unity Catalog tags.
 type AutoTaggingConfig_SdkV2 struct {
-    // Whether auto-tagging is enabled or disabled for this classification tag.
+	// Whether auto-tagging is enabled or disabled for this classification tag.
 	AutoTaggingMode types.String `tfsdk:"auto_tagging_mode"`
-    // The Classification Tag (e.g., "class.name", "class.location")
+	// The Classification Tag (e.g., "class.name", "class.location")
 	ClassificationTag types.String `tfsdk:"classification_tag"`
 }
 
@@ -48,10 +39,10 @@ func (to *AutoTaggingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m AutoTaggingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["auto_tagging_mode"] = attrs["auto_tagging_mode"].SetRequired()
-attrs["classification_tag"] = attrs["classification_tag"].SetRequired()
+	attrs["auto_tagging_mode"] = attrs["auto_tagging_mode"].SetRequired()
+	attrs["classification_tag"] = attrs["classification_tag"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoTaggingConfig.
@@ -62,8 +53,7 @@ attrs["classification_tag"] = attrs["classification_tag"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AutoTaggingConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-  }
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -73,33 +63,20 @@ func (m AutoTaggingConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"auto_tagging_mode": m.AutoTaggingMode,
-      "classification_tag": m.ClassificationTag,
-      
-    })
+			"auto_tagging_mode":  m.AutoTaggingMode,
+			"classification_tag": m.ClassificationTag,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AutoTaggingConfig_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"auto_tagging_mode": types.StringType,
-      "classification_tag": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auto_tagging_mode":  types.StringType,
+			"classification_tag": types.StringType,
+		},
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
 
 // Data Classification configuration for a Unity Catalog catalog. This message
 // follows the "At Most One Resource" pattern: at most one CatalogConfig exists
@@ -107,59 +84,59 @@ func (m AutoTaggingConfig_SdkV2) Type(ctx context.Context) attr.Type {
 // Classification, Delete disables it - It has no unique identifier of its own
 // and uses its parent catalog's identifier (catalog_name)
 type CatalogConfig_SdkV2 struct {
-    // List of auto-tagging configurations for this catalog. Empty list means no
-    // auto-tagging is enabled.
+	// List of auto-tagging configurations for this catalog. Empty list means no
+	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
-    // Schemas to include in the scan. Empty list is not supported as it results
-    // in a no-op scan. If `included_schemas` is not set, all schemas are
-    // scanned.
+	// Schemas to include in the scan. Empty list is not supported as it results
+	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// scanned.
 	IncludedSchemas types.List `tfsdk:"included_schemas"`
-    // Resource name in the format: catalogs/{catalog_name}/config.
+	// Resource name in the format: catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"name"`
 }
 
 func (to *CatalogConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogConfig_SdkV2) {
-  if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
-    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-    // If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
-    // set the resulting resource state to the empty list to match the planned value.
-    to.AutoTagConfigs = from.AutoTagConfigs
-  }
-  if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
-    if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
-      if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
-        // Recursively sync the fields of IncludedSchemas
-        toIncludedSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromIncludedSchemas)
-        to.SetIncludedSchemas(ctx, toIncludedSchemas)
-      }
-    }
-  }
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
+		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
+			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
+				// Recursively sync the fields of IncludedSchemas
+				toIncludedSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromIncludedSchemas)
+				to.SetIncludedSchemas(ctx, toIncludedSchemas)
+			}
+		}
+	}
 }
 
 func (to *CatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CatalogConfig_SdkV2) {
-  if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
-    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-    // If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
-    // set the resulting resource state to the empty list to match the planned value.
-    to.AutoTagConfigs = from.AutoTagConfigs
-  }
-  if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
-    if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
-      if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
-        toIncludedSchemas.SyncFieldsDuringRead(ctx, fromIncludedSchemas)
-        to.SetIncludedSchemas(ctx, toIncludedSchemas)
-      }
-    }
-  }
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() && to.AutoTagConfigs.IsNull() && len(from.AutoTagConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
+		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
+			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
+				toIncludedSchemas.SyncFieldsDuringRead(ctx, fromIncludedSchemas)
+				to.SetIncludedSchemas(ctx, toIncludedSchemas)
+			}
+		}
+	}
 }
 
 func (m CatalogConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetOptional()
-attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
-attrs["included_schemas"] = attrs["included_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-attrs["name"] = attrs["name"].SetOptional()
+	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetOptional()
+	attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
+	attrs["included_schemas"] = attrs["included_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CatalogConfig.
@@ -170,10 +147,10 @@ attrs["name"] = attrs["name"].SetOptional()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CatalogConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-    "auto_tag_configs": reflect.TypeOf(AutoTaggingConfig_SdkV2{}),
-    "included_schemas": reflect.TypeOf(CatalogConfigSchemaNames_SdkV2{}),
-  }
+	return map[string]reflect.Type{
+		"auto_tag_configs": reflect.TypeOf(AutoTaggingConfig_SdkV2{}),
+		"included_schemas": reflect.TypeOf(CatalogConfigSchemaNames_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -183,99 +160,81 @@ func (m CatalogConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"auto_tag_configs": m.AutoTagConfigs,
-      "included_schemas": m.IncludedSchemas,
-      "name": m.Name,
-      
-    })
+			"auto_tag_configs": m.AutoTagConfigs,
+			"included_schemas": m.IncludedSchemas,
+			"name":             m.Name,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CatalogConfig_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"auto_tag_configs": basetypes.ListType{
-ElemType: AutoTaggingConfig_SdkV2{}.Type(ctx),
-},
-      "included_schemas": basetypes.ListType{
-ElemType: CatalogConfigSchemaNames_SdkV2{}.Type(ctx),
-},
-      "name": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auto_tag_configs": basetypes.ListType{
+				ElemType: AutoTaggingConfig_SdkV2{}.Type(ctx),
+			},
+			"included_schemas": basetypes.ListType{
+				ElemType: CatalogConfigSchemaNames_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
 }
-
-
-
 
 // GetAutoTagConfigs returns the value of the AutoTagConfigs field in CatalogConfig_SdkV2 as
 // a slice of AutoTaggingConfig_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CatalogConfig_SdkV2) GetAutoTagConfigs(ctx context.Context) ([]AutoTaggingConfig_SdkV2, bool) {
-  if m.AutoTagConfigs.IsNull() || m.AutoTagConfigs.IsUnknown() {
-    return nil, false
-  }
-  var v []AutoTaggingConfig_SdkV2
-  d := m.AutoTagConfigs.ElementsAs(ctx, &v, true)
-  if d.HasError() {
-    panic(pluginfwcommon.DiagToString(d))
-  }
-  return v, true
+	if m.AutoTagConfigs.IsNull() || m.AutoTagConfigs.IsUnknown() {
+		return nil, false
+	}
+	var v []AutoTaggingConfig_SdkV2
+	d := m.AutoTagConfigs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
 }
 
 // SetAutoTagConfigs sets the value of the AutoTagConfigs field in CatalogConfig_SdkV2.
 func (m *CatalogConfig_SdkV2) SetAutoTagConfigs(ctx context.Context, v []AutoTaggingConfig_SdkV2) {
-  vs := make([]attr.Value, 0, len(v))
-  for _, e := range v {
-    vs = append(vs, e.ToObjectValue(ctx))
-  }
-  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_tag_configs"]
-  t = t.(attr.TypeWithElementType).ElementType()
-  m.AutoTagConfigs = types.ListValueMust(t, vs)
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_tag_configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AutoTagConfigs = types.ListValueMust(t, vs)
 }
-
-
-
 
 // GetIncludedSchemas returns the value of the IncludedSchemas field in CatalogConfig_SdkV2 as
 // a CatalogConfigSchemaNames_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CatalogConfig_SdkV2) GetIncludedSchemas(ctx context.Context) (CatalogConfigSchemaNames_SdkV2, bool) {
-  var e CatalogConfigSchemaNames_SdkV2
-  if m.IncludedSchemas.IsNull() || m.IncludedSchemas.IsUnknown() {
-    return e, false
-  }
-  var v []CatalogConfigSchemaNames_SdkV2
-  d := m.IncludedSchemas.ElementsAs(ctx, &v, true)
-  if d.HasError() {
-    panic(pluginfwcommon.DiagToString(d))
-  }
-  if len(v) == 0 {
-    return e, false
-  }
-  return v[0], true
+	var e CatalogConfigSchemaNames_SdkV2
+	if m.IncludedSchemas.IsNull() || m.IncludedSchemas.IsUnknown() {
+		return e, false
+	}
+	var v []CatalogConfigSchemaNames_SdkV2
+	d := m.IncludedSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
 }
 
 // SetIncludedSchemas sets the value of the IncludedSchemas field in CatalogConfig_SdkV2.
 func (m *CatalogConfig_SdkV2) SetIncludedSchemas(ctx context.Context, v CatalogConfigSchemaNames_SdkV2) {
-  vs := []attr.Value{v.ToObjectValue(ctx)}
-  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["included_schemas"]
-  m.IncludedSchemas = types.ListValueMust(t, vs)
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["included_schemas"]
+	m.IncludedSchemas = types.ListValueMust(t, vs)
 }
-
-
-
-
-
-
-
-
-
 
 // Wrapper message for a list of schema names.
 type CatalogConfigSchemaNames_SdkV2 struct {
-    
 	Names types.List `tfsdk:"names"`
 }
 
@@ -286,9 +245,9 @@ func (to *CatalogConfigSchemaNames_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 }
 
 func (m CatalogConfigSchemaNames_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["names"] = attrs["names"].SetRequired()
+	attrs["names"] = attrs["names"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CatalogConfigSchemaNames.
@@ -299,9 +258,9 @@ attrs["names"] = attrs["names"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CatalogConfigSchemaNames_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-    "names": reflect.TypeOf(types.String{}),
-  }
+	return map[string]reflect.Type{
+		"names": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -311,96 +270,83 @@ func (m CatalogConfigSchemaNames_SdkV2) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"names": m.Names,
-      
-    })
+			"names": m.Names,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CatalogConfigSchemaNames_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"names": basetypes.ListType{
-ElemType: types.StringType,
-},
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
 }
-
-
-
 
 // GetNames returns the value of the Names field in CatalogConfigSchemaNames_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CatalogConfigSchemaNames_SdkV2) GetNames(ctx context.Context) ([]types.String, bool) {
-  if m.Names.IsNull() || m.Names.IsUnknown() {
-    return nil, false
-  }
-  var v []types.String
-  d := m.Names.ElementsAs(ctx, &v, true)
-  if d.HasError() {
-    panic(pluginfwcommon.DiagToString(d))
-  }
-  return v, true
+	if m.Names.IsNull() || m.Names.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Names.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
 }
 
 // SetNames sets the value of the Names field in CatalogConfigSchemaNames_SdkV2.
 func (m *CatalogConfigSchemaNames_SdkV2) SetNames(ctx context.Context, v []types.String) {
-  vs := make([]attr.Value, 0, len(v))
-  for _, e := range v {
-    vs = append(vs, e)
-  }
-  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["names"]
-  t = t.(attr.TypeWithElementType).ElementType()
-  m.Names = types.ListValueMust(t, vs)
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Names = types.ListValueMust(t, vs)
 }
 
-
-
-
-
-
-
-
-
 type CreateCatalogConfigRequest_SdkV2 struct {
-    // The configuration to create.
+	// The configuration to create.
 	CatalogConfig types.List `tfsdk:"catalog_config"`
-    // Parent resource in the format: catalogs/{catalog_name}
+	// Parent resource in the format: catalogs/{catalog_name}
 	Parent types.String `tfsdk:"-"`
 }
 
 func (to *CreateCatalogConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCatalogConfigRequest_SdkV2) {
-  if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
-    if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
-      if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
-        // Recursively sync the fields of CatalogConfig
-        toCatalogConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogConfig)
-        to.SetCatalogConfig(ctx, toCatalogConfig)
-      }
-    }
-  }
+	if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
+		if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
+			if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
+				// Recursively sync the fields of CatalogConfig
+				toCatalogConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogConfig)
+				to.SetCatalogConfig(ctx, toCatalogConfig)
+			}
+		}
+	}
 }
 
 func (to *CreateCatalogConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCatalogConfigRequest_SdkV2) {
-  if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
-    if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
-      if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
-        toCatalogConfig.SyncFieldsDuringRead(ctx, fromCatalogConfig)
-        to.SetCatalogConfig(ctx, toCatalogConfig)
-      }
-    }
-  }
+	if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
+		if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
+			if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
+				toCatalogConfig.SyncFieldsDuringRead(ctx, fromCatalogConfig)
+				to.SetCatalogConfig(ctx, toCatalogConfig)
+			}
+		}
+	}
 }
 
 func (m CreateCatalogConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["catalog_config"] = attrs["catalog_config"].SetRequired()
-attrs["catalog_config"] = attrs["catalog_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["catalog_config"] = attrs["catalog_config"].SetRequired()
+	attrs["catalog_config"] = attrs["catalog_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCatalogConfigRequest.
@@ -411,9 +357,9 @@ attrs["parent"] = attrs["parent"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateCatalogConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-    "catalog_config": reflect.TypeOf(CatalogConfig_SdkV2{}),
-  }
+	return map[string]reflect.Type{
+		"catalog_config": reflect.TypeOf(CatalogConfig_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -423,66 +369,51 @@ func (m CreateCatalogConfigRequest_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"catalog_config": m.CatalogConfig,
-      "parent": m.Parent,
-      
-    })
+			"catalog_config": m.CatalogConfig,
+			"parent":         m.Parent,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateCatalogConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"catalog_config": basetypes.ListType{
-ElemType: CatalogConfig_SdkV2{}.Type(ctx),
-},
-      "parent": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_config": basetypes.ListType{
+				ElemType: CatalogConfig_SdkV2{}.Type(ctx),
+			},
+			"parent": types.StringType,
+		},
+	}
 }
-
-
-
 
 // GetCatalogConfig returns the value of the CatalogConfig field in CreateCatalogConfigRequest_SdkV2 as
 // a CatalogConfig_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateCatalogConfigRequest_SdkV2) GetCatalogConfig(ctx context.Context) (CatalogConfig_SdkV2, bool) {
-  var e CatalogConfig_SdkV2
-  if m.CatalogConfig.IsNull() || m.CatalogConfig.IsUnknown() {
-    return e, false
-  }
-  var v []CatalogConfig_SdkV2
-  d := m.CatalogConfig.ElementsAs(ctx, &v, true)
-  if d.HasError() {
-    panic(pluginfwcommon.DiagToString(d))
-  }
-  if len(v) == 0 {
-    return e, false
-  }
-  return v[0], true
+	var e CatalogConfig_SdkV2
+	if m.CatalogConfig.IsNull() || m.CatalogConfig.IsUnknown() {
+		return e, false
+	}
+	var v []CatalogConfig_SdkV2
+	d := m.CatalogConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
 }
 
 // SetCatalogConfig sets the value of the CatalogConfig field in CreateCatalogConfigRequest_SdkV2.
 func (m *CreateCatalogConfigRequest_SdkV2) SetCatalogConfig(ctx context.Context, v CatalogConfig_SdkV2) {
-  vs := []attr.Value{v.ToObjectValue(ctx)}
-  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog_config"]
-  m.CatalogConfig = types.ListValueMust(t, vs)
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog_config"]
+	m.CatalogConfig = types.ListValueMust(t, vs)
 }
 
-
-
-
-
-
-
-
-
-
-
 type DeleteCatalogConfigRequest_SdkV2 struct {
-    // Resource name in the format: catalogs/{catalog_name}/config
+	// Resource name in the format: catalogs/{catalog_name}/config
 	Name types.String `tfsdk:"-"`
 }
 
@@ -493,9 +424,9 @@ func (to *DeleteCatalogConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeleteCatalogConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["name"] = attrs["name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCatalogConfigRequest.
@@ -506,8 +437,7 @@ attrs["name"] = attrs["name"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteCatalogConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-  }
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -517,33 +447,21 @@ func (m DeleteCatalogConfigRequest_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"name": m.Name,
-      
-    })
+			"name": m.Name,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteCatalogConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"name": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
-
-
-
-
-
-
-
-
-
-
 type GetCatalogConfigRequest_SdkV2 struct {
-    // Resource name in the format: catalogs/{catalog_name}/config
+	// Resource name in the format: catalogs/{catalog_name}/config
 	Name types.String `tfsdk:"-"`
 }
 
@@ -554,9 +472,9 @@ func (to *GetCatalogConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetCatalogConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["name"] = attrs["name"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCatalogConfigRequest.
@@ -567,8 +485,7 @@ attrs["name"] = attrs["name"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetCatalogConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-  }
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -578,71 +495,59 @@ func (m GetCatalogConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"name": m.Name,
-      
-    })
+			"name": m.Name,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetCatalogConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"name": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
-
-
-
-
-
-
-
-
-
-
 type UpdateCatalogConfigRequest_SdkV2 struct {
-    // The configuration to apply to the catalog. The name field in
-    // catalog_config identifies which resource to update.
+	// The configuration to apply to the catalog. The name field in
+	// catalog_config identifies which resource to update.
 	CatalogConfig types.List `tfsdk:"catalog_config"`
-    // Resource name in the format: catalogs/{catalog_name}/config.
+	// Resource name in the format: catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"-"`
-    // Field mask specifying which fields to update.
+	// Field mask specifying which fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
 func (to *UpdateCatalogConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCatalogConfigRequest_SdkV2) {
-  if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
-    if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
-      if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
-        // Recursively sync the fields of CatalogConfig
-        toCatalogConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogConfig)
-        to.SetCatalogConfig(ctx, toCatalogConfig)
-      }
-    }
-  }
+	if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
+		if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
+			if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
+				// Recursively sync the fields of CatalogConfig
+				toCatalogConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogConfig)
+				to.SetCatalogConfig(ctx, toCatalogConfig)
+			}
+		}
+	}
 }
 
 func (to *UpdateCatalogConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateCatalogConfigRequest_SdkV2) {
-  if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
-    if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
-      if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
-        toCatalogConfig.SyncFieldsDuringRead(ctx, fromCatalogConfig)
-        to.SetCatalogConfig(ctx, toCatalogConfig)
-      }
-    }
-  }
+	if !from.CatalogConfig.IsNull() && !from.CatalogConfig.IsUnknown() {
+		if toCatalogConfig, ok := to.GetCatalogConfig(ctx); ok {
+			if fromCatalogConfig, ok := from.GetCatalogConfig(ctx); ok {
+				toCatalogConfig.SyncFieldsDuringRead(ctx, fromCatalogConfig)
+				to.SetCatalogConfig(ctx, toCatalogConfig)
+			}
+		}
+	}
 }
 
 func (m UpdateCatalogConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-attrs["catalog_config"] = attrs["catalog_config"].SetRequired()
-attrs["catalog_config"] = attrs["catalog_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-attrs["name"] = attrs["name"].SetRequired()
-attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["catalog_config"] = attrs["catalog_config"].SetRequired()
+	attrs["catalog_config"] = attrs["catalog_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
-  return attrs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCatalogConfigRequest.
@@ -653,9 +558,9 @@ attrs["update_mask"] = attrs["update_mask"].SetRequired()
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateCatalogConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-    "catalog_config": reflect.TypeOf(CatalogConfig_SdkV2{}),
-  }
+	return map[string]reflect.Type{
+		"catalog_config": reflect.TypeOf(CatalogConfig_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -665,62 +570,47 @@ func (m UpdateCatalogConfigRequest_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-"catalog_config": m.CatalogConfig,
-      "name": m.Name,
-      "update_mask": m.UpdateMask,
-      
-    })
+			"catalog_config": m.CatalogConfig,
+			"name":           m.Name,
+			"update_mask":    m.UpdateMask,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateCatalogConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
-  return types.ObjectType{
-    AttrTypes: map[string]attr.Type{
-"catalog_config": basetypes.ListType{
-ElemType: CatalogConfig_SdkV2{}.Type(ctx),
-},
-      "name": types.StringType,
-      "update_mask": types.StringType,
-      
-    },
-  }
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_config": basetypes.ListType{
+				ElemType: CatalogConfig_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
 }
-
-
-
 
 // GetCatalogConfig returns the value of the CatalogConfig field in UpdateCatalogConfigRequest_SdkV2 as
 // a CatalogConfig_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateCatalogConfigRequest_SdkV2) GetCatalogConfig(ctx context.Context) (CatalogConfig_SdkV2, bool) {
-  var e CatalogConfig_SdkV2
-  if m.CatalogConfig.IsNull() || m.CatalogConfig.IsUnknown() {
-    return e, false
-  }
-  var v []CatalogConfig_SdkV2
-  d := m.CatalogConfig.ElementsAs(ctx, &v, true)
-  if d.HasError() {
-    panic(pluginfwcommon.DiagToString(d))
-  }
-  if len(v) == 0 {
-    return e, false
-  }
-  return v[0], true
+	var e CatalogConfig_SdkV2
+	if m.CatalogConfig.IsNull() || m.CatalogConfig.IsUnknown() {
+		return e, false
+	}
+	var v []CatalogConfig_SdkV2
+	d := m.CatalogConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
 }
 
 // SetCatalogConfig sets the value of the CatalogConfig field in UpdateCatalogConfigRequest_SdkV2.
 func (m *UpdateCatalogConfigRequest_SdkV2) SetCatalogConfig(ctx context.Context, v CatalogConfig_SdkV2) {
-  vs := []attr.Value{v.ToObjectValue(ctx)}
-  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog_config"]
-  m.CatalogConfig = types.ListValueMust(t, vs)
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog_config"]
+	m.CatalogConfig = types.ListValueMust(t, vs)
 }
-
-
-
-
-
-
-
-
-
-

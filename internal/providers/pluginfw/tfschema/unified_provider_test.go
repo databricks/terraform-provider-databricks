@@ -324,9 +324,15 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 	}
 }
 
+// TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:
+// state has workspace_id "111", provider default changes to "999".
+// WorkspaceDriftDetection detects the drift and updates resp.Plan to "999".
+// ValidateWorkspaceID must read from resp.Plan (not req.Plan) to validate "999".
+// With old code (req.Plan), it would validate stale "111" and get a mismatch error.
 func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	ctx := context.Background()
 
+	// Server simulates a workspace with ID 999.
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch req.RequestURI {
 		case "/.well-known/databricks-config":
@@ -342,8 +348,9 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	defer server.Close()
 
 	cfg := &config.Config{
-		Host:  server.URL,
-		Token: "test-token",
+		Host:        server.URL,
+		Token:       "test-token",
+		WorkspaceID: "999", // provider default changed to 999
 	}
 	c, err := client.New(cfg)
 	require.NoError(t, err)
@@ -375,29 +382,44 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 		},
 	}
 
-	makePlan := func(workspaceID string) tfsdk.Plan {
-		return tfsdk.Plan{
-			Schema: testSchema,
-			Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
-				"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
-					"workspace_id": tftypes.NewValue(tftypes.String, workspaceID),
-				}),
+	makeValue := func(workspaceID string) tftypes.Value {
+		return tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+				"workspace_id": tftypes.NewValue(tftypes.String, workspaceID),
 			}),
-		}
+		})
+	}
+
+	// State has old workspace_id "111".
+	state := tfsdk.State{Schema: testSchema, Raw: makeValue("111")}
+	// Plan initially has "111" (ProviderConfigPlanModifier copied from state).
+	plan := tfsdk.Plan{Schema: testSchema, Raw: makeValue("111")}
+	// Config has null provider_config (user didn't set it in HCL).
+	tfConfig := tfsdk.Config{
+		Schema: testSchema,
+		Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, nil),
+		}),
 	}
 
 	modifyReq := resource.ModifyPlanRequest{
-		Plan: makePlan("111"),
+		State:  state,
+		Plan:   plan,
+		Config: tfConfig,
 	}
 	resp := &resource.ModifyPlanResponse{
-		Plan: makePlan("999"),
+		Plan: plan,
 	}
 
-	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
+	// WorkspaceDriftDetection detects 111→999 drift, updates resp.Plan to "999".
+	WorkspaceDriftDetection(ctx, databricksClient, modifyReq, resp)
+	require.False(t, resp.Diagnostics.HasError(),
+		"WorkspaceDriftDetection failed: %v", resp.Diagnostics.Errors())
 
-	// resp.Plan has "999" (as if WorkspaceDriftDetection updated it), req.Plan has stale "111".
-	// Server workspace is 999, so reading from resp.Plan succeeds; reading req.Plan would fail
-	// with "workspace_id mismatch: provider is configured for workspace 999 but got 111".
+	// ValidateWorkspaceID should read "999" from resp.Plan (updated above),
+	// not "111" from req.Plan. With old code (req.Plan) this would fail with
+	// "workspace_id mismatch: provider is configured for workspace 999 but got 111".
+	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
 	assert.False(t, resp.Diagnostics.HasError(),
 		"expected no error, got: %v", resp.Diagnostics.Errors())
 }

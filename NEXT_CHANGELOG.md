@@ -22,6 +22,8 @@
 
 ### Documentation
 
+* Documented `principal_id` argument for `databricks_git_credential` resource.
+
 ### Exporter
 
 ### Internal Changes

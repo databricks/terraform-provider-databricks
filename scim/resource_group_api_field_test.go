@@ -3,7 +3,11 @@ package scim
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceGroupCreate_ApiFieldAccount(t *testing.T) {
@@ -93,6 +97,26 @@ func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.
 		`,
 		Create: true,
 	}.ApplyNoError(t)
+}
+
+func TestResourceGroupCreate_ApiFieldNotSet_AccountsHostInference(t *testing.T) {
+	// When api is NOT set but the host IS an accounts URL,
+	// HostTypeForTerraform() infers account level from the URL prefix.
+	// This is the production path: users configure host = "https://accounts.cloud.databricks.com"
+	// and IsAccountLevel correctly returns true without needing api = "account".
+	c := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "acc-123",
+			},
+		},
+	}
+	d := ResourceGroup().ToResource().TestResourceData()
+	// api field is NOT set — IsAccountLevel should still return true
+	// because HostTypeForTerraform() detects the accounts URL prefix
+	assert.Equal(t, config.AccountHost, c.HostTypeForTerraform())
+	assert.True(t, common.IsAccountLevel(d, c))
 }
 
 func TestResourceGroupCreate_ApiFieldNotSet_WorkspaceHost(t *testing.T) {

@@ -17,58 +17,56 @@ import (
 // to the underlying members map must be protected by the lock.
 type groupMembersInfo struct {
 	initialized bool
-	members     map[string]struct{}
-	lock        sync.RWMutex
+	// mutatedInBulkGen records the bulk-fetch generation (groupEndpointCache.bulkGen)
+	// that was active when this group was last mutated by addMember/removeMember.
+	// The bulk commit uses this to skip groups that were mutated while the specific
+	// ListAll request was in-flight: if mutatedInBulkGen equals the current bulk
+	// generation the snapshot was captured before the mutation, so committing it
+	// would reintroduce stale data.  Groups flagged this way fall back to the
+	// individual-read path in getMembers to obtain fresh data.
+	mutatedInBulkGen uint64
+	members          map[string]struct{}
+	lock             sync.RWMutex
 	// sg deduplicates concurrent in-flight API calls when the cache is cold.
 	// All goroutines waiting on a cold cache join the single fetch and wake
 	// simultaneously, rather than serialising through a write lock.
 	sg singleflight.Group
 }
 
-// groupCache is a cache of groups to their members by their ID. Access to the cache
-// must be protected by the lock.
-type groupCache struct {
-	// The mapping of cached members for this group. The cache key is the group ID.
-	// TODO: add workspace ID to the cache key when account-level and workspace-level providers are unified.
+// groupEndpointCache is the per-endpoint (host|apiLevel|accountID) member cache.
+// Scoping by endpoint prevents two provider instances targeting different accounts
+// (or different API levels) from sharing cached group-member data.
+type groupEndpointCache struct {
+	lock sync.Mutex
+	// cache maps group ID to its member info for this endpoint.
 	cache map[string]*groupMembersInfo
-	lock  sync.Mutex
-	// bulkInitialized is true once a ListAll("id,members") has populated all entries.
-	// After that, per-group fast-path reads skip any API calls entirely.
+	// bulkMu / bulkGen / bulkInitialized / bulkSg guard the one-time ListAll("id,members") bulk fetch.
+	// bulkGen is monotonically incremented each time a bulk fetch starts; addMember/removeMember
+	// record the current bulkGen so the bulk commit can detect mid-flight mutations.
+	// After the bulk is done, per-group fast-path reads skip any API calls entirely.
 	bulkMu          sync.RWMutex
+	bulkGen         uint64
 	bulkInitialized bool
 	bulkSg          singleflight.Group
 }
 
-func newGroupCache() *groupCache {
-	return &groupCache{
-		cache: make(map[string]*groupMembersInfo),
-	}
+func newGroupEndpointCache() *groupEndpointCache {
+	return &groupEndpointCache{cache: make(map[string]*groupMembersInfo)}
 }
 
-func (gc *groupCache) getOrCreateGroupInfo(groupID string) *groupMembersInfo {
-	gc.lock.Lock()
-	defer gc.lock.Unlock()
-
-	groupInfo, exists := gc.cache[groupID]
-	if !exists {
-		groupInfo = &groupMembersInfo{
-			members: make(map[string]struct{}),
-		}
-		gc.cache[groupID] = groupInfo
+func (ep *groupEndpointCache) getOrCreateGroupInfo(groupID string) *groupMembersInfo {
+	ep.lock.Lock()
+	defer ep.lock.Unlock()
+	if info, ok := ep.cache[groupID]; ok {
+		return info
 	}
-	return groupInfo
+	info := &groupMembersInfo{members: make(map[string]struct{})}
+	ep.cache[groupID] = info
+	return info
 }
 
-func copyGroupMembers(m map[string]struct{}) map[string]struct{} {
-	cp := make(map[string]struct{}, len(m))
-	for k, v := range m {
-		cp[k] = v
-	}
-	return cp
-}
-
-func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
-	groupInfo := gc.getOrCreateGroupInfo(groupID)
+func (ep *groupEndpointCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+	groupInfo := ep.getOrCreateGroupInfo(groupID)
 
 	// Fast path: per-group cache is warm — concurrent readers hold RLock simultaneously.
 	groupInfo.lock.RLock()
@@ -82,18 +80,26 @@ func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 
 	// Bulk path: fetch all groups+members in one ListAll call;
 	// all goroutines share a single in-flight request via singleflight.
-	gc.bulkMu.RLock()
-	bulkDone := gc.bulkInitialized
-	gc.bulkMu.RUnlock()
+	ep.bulkMu.RLock()
+	bulkDone := ep.bulkInitialized
+	ep.bulkMu.RUnlock()
 	if !bulkDone {
-		_, err, _ := gc.bulkSg.Do("bulk", func() (interface{}, error) {
+		_, err, _ := ep.bulkSg.Do("bulk", func() (interface{}, error) {
 			// Double-check after acquiring the singleflight slot.
-			gc.bulkMu.RLock()
-			if gc.bulkInitialized {
-				gc.bulkMu.RUnlock()
+			ep.bulkMu.RLock()
+			if ep.bulkInitialized {
+				ep.bulkMu.RUnlock()
 				return nil, nil
 			}
-			gc.bulkMu.RUnlock()
+			ep.bulkMu.RUnlock()
+
+			// Assign a new bulk generation before starting the API call.
+			// addMember/removeMember that run concurrently will record this
+			// generation so the commit loop below can skip those groups.
+			ep.bulkMu.Lock()
+			ep.bulkGen++
+			myBulkGen := ep.bulkGen
+			ep.bulkMu.Unlock()
 
 			tflog.Debug(api.context, "Fetching all group memberships in bulk")
 			groups, err := api.ListAll("id,members")
@@ -101,9 +107,14 @@ func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 				return nil, err
 			}
 			for _, g := range groups {
-				info := gc.getOrCreateGroupInfo(g.ID)
+				info := ep.getOrCreateGroupInfo(g.ID)
 				info.lock.Lock()
-				if !info.initialized {
+				// Skip groups whose mutatedInBulkGen matches the current bulk
+				// generation: that means addMember/removeMember ran concurrently
+				// with this ListAll, so our snapshot predates the mutation and
+				// committing it would cache stale membership data.  Those groups
+				// will be served by the individual-read fallback instead.
+				if !info.initialized && info.mutatedInBulkGen != myBulkGen {
 					info.members = make(map[string]struct{}, len(g.Members))
 					for _, m := range g.Members {
 						info.members[m.Value] = struct{}{}
@@ -112,9 +123,9 @@ func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 				}
 				info.lock.Unlock()
 			}
-			gc.bulkMu.Lock()
-			gc.bulkInitialized = true
-			gc.bulkMu.Unlock()
+			ep.bulkMu.Lock()
+			ep.bulkInitialized = true
+			ep.bulkMu.Unlock()
 			return nil, nil
 		})
 		if err != nil {
@@ -169,8 +180,8 @@ func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]stru
 	return membersCopy, nil
 }
 
-func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
-	groupInfo := gc.getOrCreateGroupInfo(groupID)
+func (ep *groupEndpointCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
+	groupInfo := ep.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
@@ -179,15 +190,20 @@ func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID strin
 	if err != nil {
 		return err
 	}
-
+	// Record the current bulk generation before updating the map. The bulk
+	// commit skips any group whose mutatedInBulkGen equals the in-flight
+	// generation, preventing stale snapshot data from overwriting this mutation.
+	ep.bulkMu.RLock()
+	groupInfo.mutatedInBulkGen = ep.bulkGen
+	ep.bulkMu.RUnlock()
 	if groupInfo.initialized {
 		delete(groupInfo.members, memberID)
 	}
 	return nil
 }
 
-func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
-	groupInfo := gc.getOrCreateGroupInfo(groupID)
+func (ep *groupEndpointCache) addMember(api GroupsAPI, groupID string, memberID string) error {
+	groupInfo := ep.getOrCreateGroupInfo(groupID)
 	groupInfo.lock.Lock()
 	defer groupInfo.lock.Unlock()
 
@@ -195,10 +211,64 @@ func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) 
 	if err != nil {
 		return err
 	}
+	// Record the current bulk generation before updating the map. The bulk
+	// commit skips any group whose mutatedInBulkGen equals the in-flight
+	// generation, preventing stale snapshot data from overwriting this mutation.
+	ep.bulkMu.RLock()
+	groupInfo.mutatedInBulkGen = ep.bulkGen
+	ep.bulkMu.RUnlock()
 	if groupInfo.initialized {
 		groupInfo.members[memberID] = struct{}{}
 	}
 	return nil
+}
+
+// groupCache maps endpoint keys to per-endpoint caches.
+// Scoping by (host, apiLevel, accountID) prevents two providers targeting
+// different accounts or API levels from sharing cached group-member data.
+type groupCache struct {
+	mu        sync.Mutex
+	endpoints map[string]*groupEndpointCache
+}
+
+func newGroupCache() *groupCache {
+	return &groupCache{endpoints: make(map[string]*groupEndpointCache)}
+}
+
+func groupMembersCacheKey(api GroupsAPI) string {
+	return api.client.Config.Host + "|" + api.ApiLevel + "|" + api.client.Config.AccountID
+}
+
+func (gc *groupCache) endpointFor(api GroupsAPI) *groupEndpointCache {
+	key := groupMembersCacheKey(api)
+	gc.mu.Lock()
+	defer gc.mu.Unlock()
+	if ep, ok := gc.endpoints[key]; ok {
+		return ep
+	}
+	ep := newGroupEndpointCache()
+	gc.endpoints[key] = ep
+	return ep
+}
+
+func (gc *groupCache) getMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
+	return gc.endpointFor(api).getMembers(api, groupID)
+}
+
+func (gc *groupCache) addMember(api GroupsAPI, groupID string, memberID string) error {
+	return gc.endpointFor(api).addMember(api, groupID, memberID)
+}
+
+func (gc *groupCache) removeMember(api GroupsAPI, groupID string, memberID string) error {
+	return gc.endpointFor(api).removeMember(api, groupID, memberID)
+}
+
+func copyGroupMembers(m map[string]struct{}) map[string]struct{} {
+	cp := make(map[string]struct{}, len(m))
+	for k, v := range m {
+		cp[k] = v
+	}
+	return cp
 }
 
 func hasMember(members map[string]struct{}, memberID string) bool {

@@ -210,6 +210,46 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 }
 
+// TestResourceGroupRead_CacheMiss verifies the fallback path: when the bulk
+// ListAll returns data but the target group ID is absent (e.g. created after
+// the cache was populated), Read falls back to a direct GET-by-ID call.
+func TestResourceGroupRead_CacheMiss(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				// Bulk list returns a different group — "abc" is absent.
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "other", DisplayName: "Other Group"}},
+				},
+			},
+			{
+				// Fallback: direct read for the absent group.
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: Group{
+					ID:          "abc",
+					DisplayName: "Data Scientists",
+					Entitlements: entitlements{
+						{Value: "allow-cluster-create"},
+					},
+				},
+			},
+		},
+		Resource: ResourceGroup(),
+		Read:     true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "Data Scientists", d.Get("display_name"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
+}
+
 func TestResourceGroupRead_NotFound(t *testing.T) {
 	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{

@@ -3,9 +3,6 @@ package mws
 import (
 	"context"
 	"fmt"
-	"sync"
-
-	"golang.org/x/sync/singleflight"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -13,96 +10,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// workspaceAssignmentsEntry holds the cached ListByWorkspaceId result for one workspace.
-type workspaceAssignmentsEntry struct {
-	mu          sync.RWMutex
-	initialized bool
-	list        *iam.PermissionAssignments
-	// sg deduplicates concurrent in-flight API calls when the cache is cold.
-	// All goroutines that arrive while a fetch is in-flight join the same call
-	// and are woken simultaneously when it completes, rather than serialising
-	// through a write lock.
-	sg singleflight.Group
+// workspaceAssignmentsCacheKey uniquely identifies a workspace within an account.
+// Workspace IDs are account-scoped, not globally unique, so the accountID is
+// required to prevent two providers targeting different accounts from sharing
+// cached workspace assignments.
+type workspaceAssignmentsCacheKey struct {
+	accountID   string
+	workspaceId int64
 }
 
-// workspaceAssignmentsCache caches ListByWorkspaceId results per workspace ID so
-// that N databricks_mws_permission_assignment resources sharing the same
-// workspace_id only issue a single API call during a terraform plan/apply cycle.
-type workspaceAssignmentsCache struct {
-	mu    sync.Mutex
-	cache map[int64]*workspaceAssignmentsEntry
-}
-
-func newWorkspaceAssignmentsCache() *workspaceAssignmentsCache {
-	return &workspaceAssignmentsCache{
-		cache: make(map[int64]*workspaceAssignmentsEntry),
-	}
-}
-
-func (c *workspaceAssignmentsCache) getOrCreate(workspaceId int64) *workspaceAssignmentsEntry {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if entry, ok := c.cache[workspaceId]; ok {
-		return entry
-	}
-	entry := &workspaceAssignmentsEntry{}
-	c.cache[workspaceId] = entry
-	return entry
-}
-
-func (c *workspaceAssignmentsCache) list(ctx context.Context, api iam.WorkspaceAssignmentInterface, workspaceId int64) (*iam.PermissionAssignments, error) {
-	entry := c.getOrCreate(workspaceId)
-
-	// Fast path: warm cache. Many goroutines can hold a read-lock simultaneously.
-	entry.mu.RLock()
-	if entry.initialized {
-		l := entry.list
-		entry.mu.RUnlock()
-		return l, nil
-	}
-	entry.mu.RUnlock()
-
-	// Slow path: cache is cold. Use singleflight so exactly one API call is made
-	// regardless of how many goroutines arrive concurrently; all share the result.
-	v, err, _ := entry.sg.Do("fetch", func() (interface{}, error) {
-		// Double-check now that we are the singleflight leader.
-		entry.mu.RLock()
-		if entry.initialized {
-			l := entry.list
-			entry.mu.RUnlock()
-			return l, nil
-		}
-		entry.mu.RUnlock()
-
-		list, err := api.ListByWorkspaceId(ctx, workspaceId)
-		if err != nil {
-			return nil, err
-		}
-		entry.mu.Lock()
-		entry.list = list
-		entry.initialized = true
-		entry.mu.Unlock()
-		return list, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return v.(*iam.PermissionAssignments), nil
-}
-
-func (c *workspaceAssignmentsCache) invalidate(workspaceId int64) {
-	c.mu.Lock()
-	entry, ok := c.cache[workspaceId]
-	c.mu.Unlock()
-	if ok {
-		entry.mu.Lock()
-		entry.initialized = false
-		entry.list = nil
-		entry.mu.Unlock()
-	}
-}
-
+// globalWorkspaceAssignmentsCache caches ListByWorkspaceId results per
+// (accountID, workspaceId) so that N databricks_mws_permission_assignment
+// resources sharing the same workspace_id only issue a single API call during
+// a terraform plan/apply cycle.
 var globalWorkspaceAssignmentsCache = newWorkspaceAssignmentsCache()
+
+func newWorkspaceAssignmentsCache() *common.KeyedCache[workspaceAssignmentsCacheKey, *iam.PermissionAssignments] {
+	return common.NewKeyedCache[workspaceAssignmentsCacheKey, *iam.PermissionAssignments]()
+}
 
 func getPermissionsByPrincipal(list iam.PermissionAssignments, principalId int64) (res iam.UpdateWorkspaceAssignments, err error) {
 	for _, v := range list.PermissionAssignments {
@@ -146,11 +71,12 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			common.DataToStructPointer(d, s, &assignment)
 			assignment.PrincipalId = common.GetInt64(d, "principal_id")
 			assignment.WorkspaceId = common.GetInt64(d, "workspace_id")
+			cacheKey := workspaceAssignmentsCacheKey{accountID: c.Config.AccountID, workspaceId: assignment.WorkspaceId}
+			defer globalWorkspaceAssignmentsCache.Invalidate(cacheKey)
 			_, err = acc.WorkspaceAssignment.Update(ctx, assignment)
 			if err != nil {
 				return err
 			}
-			globalWorkspaceAssignmentsCache.invalidate(assignment.WorkspaceId)
 			pair.Pack(d)
 			return nil
 		},
@@ -163,7 +89,11 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			if err != nil {
 				return fmt.Errorf("parse id: %w", err)
 			}
-			list, err := globalWorkspaceAssignmentsCache.list(ctx, acc.WorkspaceAssignment, common.MustInt64(workspaceId))
+			wsID := common.MustInt64(workspaceId)
+			cacheKey := workspaceAssignmentsCacheKey{accountID: c.Config.AccountID, workspaceId: wsID}
+			list, err := globalWorkspaceAssignmentsCache.Get(cacheKey, func() (*iam.PermissionAssignments, error) {
+				return acc.WorkspaceAssignment.ListByWorkspaceId(ctx, wsID)
+			})
 			if err != nil {
 				return err
 			}
@@ -171,7 +101,7 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("workspace_id", common.MustInt64(workspaceId))
+			d.Set("workspace_id", wsID)
 			d.Set("principal_id", common.MustInt64(principalId))
 			return common.StructToData(permissions, s, d)
 		},
@@ -184,9 +114,10 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			if err != nil {
 				return fmt.Errorf("parse id: %w", err)
 			}
-			err = acc.WorkspaceAssignment.DeleteByWorkspaceIdAndPrincipalId(ctx, common.MustInt64(workspaceId), common.MustInt64(principalId))
-			globalWorkspaceAssignmentsCache.invalidate(common.MustInt64(workspaceId))
-			return err
+			wsID := common.MustInt64(workspaceId)
+			cacheKey := workspaceAssignmentsCacheKey{accountID: c.Config.AccountID, workspaceId: wsID}
+			defer globalWorkspaceAssignmentsCache.Invalidate(cacheKey)
+			return acc.WorkspaceAssignment.DeleteByWorkspaceIdAndPrincipalId(ctx, wsID, common.MustInt64(principalId))
 		},
 	}
 }

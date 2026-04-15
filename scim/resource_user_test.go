@@ -72,6 +72,53 @@ func TestResourceUserRead(t *testing.T) {
 	})
 }
 
+// TestResourceUserRead_CacheMiss verifies the fallback path: when the bulk
+// ListAll returns data but the target user ID is absent (e.g. created after
+// the cache was populated), Read falls back to a direct GET-by-ID call.
+func TestResourceUserRead_CacheMiss(t *testing.T) {
+	globalUsersListCache = newUsersListCache()
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName%2CdisplayName%2Cactive%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				// Bulk list returns a different user — "abc" is absent.
+				Response: UserList{
+					TotalResults: 1,
+					Resources:    []User{{ID: "other", UserName: "other@example.com"}},
+				},
+			},
+			{
+				// Fallback: direct read for the absent user.
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Response: User{
+					ID:          "abc",
+					UserName:    "me@example.com",
+					DisplayName: "Example user",
+					Active:      true,
+					ExternalID:  "def",
+					Entitlements: entitlements{
+						{Value: "allow-cluster-create"},
+					},
+				},
+			},
+		},
+		Resource: ResourceUser(),
+		New:      true,
+		Read:     true,
+		ID:       "abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": true,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+		"external_id":          "def",
+	})
+}
+
 func TestResourceUserRead_NotFound(t *testing.T) {
 	globalUsersListCache = newUsersListCache()
 	qa.ResourceFixture{

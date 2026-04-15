@@ -73,7 +73,7 @@ func (a UsersAPI) ListAll(attributes string) ([]User, error) {
 			return nil, err
 		}
 		result = append(result, page.Resources...)
-		if len(page.Resources) == 0 || int32(len(result)) >= page.TotalResults {
+		if len(page.Resources) == 0 || len(result) >= int(page.TotalResults) {
 			break
 		}
 		startIndex += len(page.Resources)

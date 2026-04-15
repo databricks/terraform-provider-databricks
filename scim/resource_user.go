@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
-
-	"golang.org/x/sync/singleflight"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -17,64 +14,24 @@ import (
 // userListAttrs are the SCIM attributes fetched when bulk-listing users for the read cache.
 const userListAttrs = "id,userName,displayName,active,externalId,entitlements"
 
-type usersEntryItem struct {
-	mu          sync.RWMutex
-	initialized bool
-	byID        map[string]User
-	sg          singleflight.Group
+// globalUsersListCache caches a ListAll result per (host, apiLevel, accountID) so
+// that N concurrent reads for N distinct databricks_user resources only issue one
+// SCIM list call instead of N individual GET-by-ID calls.
+//
+// The cache key includes accountID so that two provider instances targeting the
+// same API host but different Databricks accounts never share cached users.
+var globalUsersListCache = newUsersListCache()
+
+func newUsersListCache() *common.KeyedCache[string, map[string]User] {
+	return common.NewKeyedCache[string, map[string]User]()
 }
 
-// usersListCache caches a ListAll result per (host, apiLevel) so that
-// N concurrent reads for N distinct databricks_user resources only issue
-// one SCIM list call instead of N individual GET-by-ID calls.
-type usersListCache struct {
-	mu    sync.Mutex
-	cache map[string]*usersEntryItem
+func usersCacheKey(api UsersAPI) string {
+	return api.client.Config.Host + "|" + api.ApiLevel + "|" + api.client.Config.AccountID
 }
 
-func newUsersListCache() *usersListCache {
-	return &usersListCache{cache: make(map[string]*usersEntryItem)}
-}
-
-func (c *usersListCache) entry(key string) *usersEntryItem {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if e, ok := c.cache[key]; ok {
-		return e
-	}
-	e := &usersEntryItem{byID: make(map[string]User)}
-	c.cache[key] = e
-	return e
-}
-
-func (c *usersListCache) lookup(api UsersAPI, userID string) (User, error) {
-	key := api.client.Config.Host + "|" + api.ApiLevel
-	e := c.entry(key)
-
-	// Fast path: warm cache, concurrent readers proceed simultaneously.
-	e.mu.RLock()
-	if e.initialized {
-		if u, ok := e.byID[userID]; ok {
-			e.mu.RUnlock()
-			return u, nil
-		}
-		e.mu.RUnlock()
-		// Cache populated but user absent (created externally); fall through to direct read.
-		return api.Read(userID, userAttributes)
-	}
-	e.mu.RUnlock()
-
-	// Slow path: populate cache via singleflight — at most one ListAll in-flight
-	// per (host, apiLevel); all other goroutines join and wake simultaneously.
-	_, err, _ := e.sg.Do("list", func() (interface{}, error) {
-		// Double-check after acquiring the singleflight slot.
-		e.mu.RLock()
-		if e.initialized {
-			e.mu.RUnlock()
-			return nil, nil
-		}
-		e.mu.RUnlock()
-
+func usersListCacheLookup(api UsersAPI, userID string) (User, error) {
+	byID, err := globalUsersListCache.Get(usersCacheKey(api), func() (map[string]User, error) {
 		users, err := api.ListAll(userListAttrs)
 		if err != nil {
 			return nil, err
@@ -83,38 +40,17 @@ func (c *usersListCache) lookup(api UsersAPI, userID string) (User, error) {
 		for _, u := range users {
 			m[u.ID] = u
 		}
-		e.mu.Lock()
-		e.byID = m
-		e.initialized = true
-		e.mu.Unlock()
-		return nil, nil
+		return m, nil
 	})
 	if err != nil {
 		return User{}, err
 	}
-
-	e.mu.RLock()
-	u, ok := e.byID[userID]
-	e.mu.RUnlock()
-	if !ok {
-		return api.Read(userID, userAttributes)
+	if u, ok := byID[userID]; ok {
+		return u, nil
 	}
-	return u, nil
+	// Cache populated but user absent (e.g. created concurrently); fall back to a direct read.
+	return api.Read(userID, userAttributes)
 }
-
-func (c *usersListCache) invalidate(key string) {
-	c.mu.Lock()
-	e, ok := c.cache[key]
-	c.mu.Unlock()
-	if ok {
-		e.mu.Lock()
-		e.initialized = false
-		e.byID = make(map[string]User)
-		e.mu.Unlock()
-	}
-}
-
-var globalUsersListCache = newUsersListCache()
 
 func userExistsErrorMessage(userName string, isAccount bool) string {
 	if isAccount {
@@ -208,12 +144,12 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			defer globalUsersListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPI))
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			user, err := usersAPI.Create(u)
 			if err != nil {
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
@@ -227,7 +163,7 @@ func ResourceUser() common.Resource {
 				return err
 			}
 			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
-			user, err := globalUsersListCache.lookup(usersAPI, d.Id())
+			user, err := usersListCacheLookup(usersAPI, d.Id())
 			if err != nil {
 				return err
 			}
@@ -241,12 +177,12 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			defer globalUsersListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPI))
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -254,8 +190,9 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			defer globalUsersListCache.invalidate(c.Config.Host + "|" + common.GetApiLevel(d))
-			user := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			usersAPIForDelete := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPIForDelete))
+			user := usersAPIForDelete
 			userName := d.Get("user_name").(string)
 			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)

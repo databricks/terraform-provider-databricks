@@ -5,30 +5,27 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/settings"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestResourceTokenRead(t *testing.T) {
 	creationTime := time.Now().UnixMilli()
 	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "Hello, world!",
-							CreationTime: creationTime,
-							ExpiryTime:   expiryTime,
-							TokenID:      "abc",
-						},
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					Comment:      "Hello, world!",
+					CreationTime: creationTime,
+					ExpiryTime:   expiryTime,
+					TokenId:      "abc",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		Read:     true,
@@ -46,21 +43,15 @@ func TestResourceTokenRead(t *testing.T) {
 func TestResourceTokenRead_NoExpire(t *testing.T) {
 	creationTime := time.Now().UnixMilli()
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "Hello, world!",
-							CreationTime: creationTime,
-							ExpiryTime:   -1,
-							TokenID:      "abc",
-						},
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					Comment:      "Hello, world!",
+					CreationTime: creationTime,
+					ExpiryTime:   -1,
+					TokenId:      "abc",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		Read:     true,
@@ -77,21 +68,15 @@ func TestResourceTokenRead_NoExpire(t *testing.T) {
 
 func TestResourceTokenRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "Hello, world!",
-							CreationTime: 10,
-							ExpiryTime:   20,
-							TokenID:      "bcd",
-						},
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					Comment:      "Hello, world!",
+					CreationTime: 10,
+					ExpiryTime:   20,
+					TokenId:      "bcd",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		Read:     true,
@@ -103,21 +88,15 @@ func TestResourceTokenRead_NotFound(t *testing.T) {
 
 func TestResourceTokenRead_Expired(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "Hello, world!",
-							CreationTime: 10,
-							ExpiryTime:   20,
-							TokenID:      "abc",
-						},
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					Comment:      "Hello, world!",
+					CreationTime: 10,
+					ExpiryTime:   20,
+					TokenId:      "abc",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		Read:     true,
@@ -129,16 +108,11 @@ func TestResourceTokenRead_Expired(t *testing.T) {
 
 func TestResourceTokenRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: apierr.APIError{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().ListAll(mock.Anything).Return(nil, &apierr.APIError{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			})
 		},
 		Resource: ResourceToken(),
 		Read:     true,
@@ -152,37 +126,26 @@ func TestResourceTokenCreate(t *testing.T) {
 	creationTime := time.Now().UnixMilli()
 	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/token/create",
-				ExpectedRequest: TokenRequest{
-					LifetimeSeconds: 300,
-					Comment:         "Hello world!",
-					Scopes:          []string{"scope1", "scope2"},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockTokensAPI().EXPECT()
+			e.Create(mock.Anything, settings.CreateTokenRequest{
+				LifetimeSeconds: 300,
+				Comment:         "Hello world!",
+				Scopes:          []string{"scope1", "scope2"},
+			}).Return(&settings.CreateTokenResponse{
+				TokenValue: "dapi...",
+				TokenInfo: &settings.PublicTokenInfo{
+					TokenId: "abc",
 				},
-				Response: TokenResponse{
-					TokenValue: "dapi...",
-					TokenInfo: &TokenInfo{
-						TokenID: "abc",
-						// other fields may be irrelevant...
-					},
+			}, nil)
+			e.ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					Comment:      "Hello, world!",
+					CreationTime: creationTime,
+					ExpiryTime:   expiryTime,
+					TokenId:      "abc",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "Hello, world!",
-							CreationTime: creationTime,
-							ExpiryTime:   expiryTime,
-							TokenID:      "abc",
-						},
-					},
-				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		State: map[string]any{
@@ -201,16 +164,11 @@ func TestResourceTokenCreate(t *testing.T) {
 
 func TestResourceTokenCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/token/create",
-				Response: apierr.APIError{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().Create(mock.Anything, mock.Anything).Return(nil, &apierr.APIError{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			})
 		},
 		Resource: ResourceToken(),
 		State: map[string]any{
@@ -227,34 +185,22 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 	creationTime := time.Now().UnixMilli()
 	expiryTime := time.Now().UnixMilli() + 10000
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          "POST",
-				Resource:        "/api/2.0/token/create",
-				ExpectedRequest: TokenRequest{},
-				Response: TokenResponse{
-					TokenValue: "dapi...",
-					TokenInfo: &TokenInfo{
-						TokenID:    "abc",
-						Comment:    "",
-						ExpiryTime: -1,
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockTokensAPI().EXPECT()
+			e.Create(mock.Anything, settings.CreateTokenRequest{}).Return(&settings.CreateTokenResponse{
+				TokenValue: "dapi...",
+				TokenInfo: &settings.PublicTokenInfo{
+					TokenId:    "abc",
+					ExpiryTime: -1,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/token/list",
-				Response: TokenList{
-					TokenInfos: []TokenInfo{
-						{
-							Comment:      "",
-							CreationTime: creationTime,
-							ExpiryTime:   expiryTime,
-							TokenID:      "abc",
-						},
-					},
+			}, nil)
+			e.ListAll(mock.Anything).Return([]settings.PublicTokenInfo{
+				{
+					CreationTime: creationTime,
+					ExpiryTime:   expiryTime,
+					TokenId:      "abc",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceToken(),
 		State:    map[string]any{},
@@ -268,14 +214,10 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 
 func TestResourceTokenDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{ // read log output for better stub url...
-				Method:   "POST",
-				Resource: "/api/2.0/token/delete",
-				ExpectedRequest: map[string]string{
-					"token_id": "abc",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().Delete(mock.Anything, settings.RevokeTokenRequest{
+				TokenId: "abc",
+			}).Return(nil)
 		},
 		Resource: ResourceToken(),
 		Delete:   true,
@@ -287,17 +229,14 @@ func TestResourceTokenDelete(t *testing.T) {
 
 func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/token/delete",
-				Response: apierr.APIError{
-					ErrorCode:  "NOT_FOUND",
-					StatusCode: 404,
-					Message:    "RESOURCE_DOES_NOT_EXIST secret not found",
-				}, // per documentation this is the error response
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().Delete(mock.Anything, settings.RevokeTokenRequest{
+				TokenId: "abc",
+			}).Return(&apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "RESOURCE_DOES_NOT_EXIST secret not found",
+			})
 		},
 		Resource: ResourceToken(),
 		Delete:   true,
@@ -308,16 +247,13 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 
 func TestResourceTokenDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/token/delete",
-				Response: apierr.APIError{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Token does not exist",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockTokensAPI().EXPECT().Delete(mock.Anything, settings.RevokeTokenRequest{
+				TokenId: "abc",
+			}).Return(&apierr.APIError{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			})
 		},
 		Resource: ResourceToken(),
 		Delete:   true,

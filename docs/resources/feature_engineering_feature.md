@@ -82,8 +82,9 @@ The following arguments are supported:
   compatibility but is deprecated; migrate to dot notation
 
 ### DataSource
-* `delta_table_source` (DeltaTableSource, optional)
-* `kafka_source` (KafkaSource, optional)
+* `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
+* `kafka_source` (KafkaSource, optional) - A Kafka stream data source
+* `request_source` (RequestSource, optional) - A request-time data source
 
 ### DeltaTableSource
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
@@ -107,8 +108,15 @@ The following arguments are supported:
   TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
+### FieldDefinition
+* `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
+* `name` (string, required) - The name of the field
+
 ### FirstFunction
 * `input` (string, required) - The input column from which the first value is returned
+
+### FlatSchema
+* `fields` (list of FieldDefinition, required) - The list of fields in this schema
 
 ### Function
 * `aggregation_function` (AggregationFunction, optional) - An aggregation function applied over a time window
@@ -146,6 +154,9 @@ The following arguments are supported:
 
 ### MinFunction
 * `input` (string, required) - The input column from which the minimum is computed
+
+### RequestSource
+* `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)

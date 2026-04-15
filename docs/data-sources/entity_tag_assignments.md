@@ -2,7 +2,7 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_entity_tag_assignments Data Source
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source allows you to retrieve tag assignments that have been applied to a particular entity in Unity Catalog.
 
@@ -39,7 +39,7 @@ data "databricks_entity_tag_assignments" "volume_tags" {
 ## Arguments
 The following arguments are supported:
 * `entity_name` (string, required) - The fully qualified name of the entity to which the tag is assigned
-* `entity_type` (string, required) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
+* `entity_type` (string, required) - The type of the entity to which the tag is assigned
 * `max_results` (integer, optional) - Optional. Maximum number of tag assignments to return in a single page
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `tag_assignments`. It is a list of resources, each with the following attributes:
 * `entity_name` (string) - The fully qualified name of the entity to which the tag is assigned
-* `entity_type` (string) - The type of the entity to which the tag is assigned. Allowed values are: catalogs, schemas, tables, columns, volumes
+* `entity_type` (string) - The type of the entity to which the tag is assigned
 * `source_type` (string) - The source type of the tag assignment, e.g., user-assigned or system-assigned. Possible values are: `TAG_ASSIGNMENT_SOURCE_TYPE_SYSTEM_DATA_CLASSIFICATION`
 * `tag_key` (string) - The key of the tag
 * `tag_value` (string) - The value of the tag

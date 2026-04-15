@@ -4,17 +4,34 @@ package account_network_policy
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "account_network_policies"
@@ -63,7 +80,7 @@ func (r *AccountNetworkPoliciesDataSource) Configure(ctx context.Context, req da
 }
 
 func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config AccountNetworkPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -72,13 +89,14 @@ func (r *AccountNetworkPoliciesDataSource) Read(ctx context.Context, req datasou
 	}
 
 	var listRequest settings.ListNetworkPoliciesRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	client, clientDiags := r.Client.GetAccountClient()
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

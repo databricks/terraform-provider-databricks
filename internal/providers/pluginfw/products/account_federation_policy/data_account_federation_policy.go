@@ -4,19 +4,36 @@ package account_federation_policy
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
+	"regexp"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/oauth2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/oauth2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "account_federation_policy"
@@ -31,43 +48,45 @@ type FederationPolicyDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+
+
 // FederationPolicyData extends the main model with additional fields.
 type FederationPolicyData struct {
-	// Creation time of the federation policy.
+    // Creation time of the federation policy.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Description of the federation policy.
+    // Description of the federation policy.
 	Description types.String `tfsdk:"description"`
-	// Resource name for the federation policy. Example values include
-	// `accounts/<account-id>/federationPolicies/my-federation-policy` for
-	// Account Federation Policies, and
-	// `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
-	// for Service Principal Federation Policies. Typically an output parameter,
-	// which does not need to be specified in create or update requests. If
-	// specified in a request, must match the value in the request URL.
+    // Resource name for the federation policy. Example values include
+    // `accounts/<account-id>/federationPolicies/my-federation-policy` for
+    // Account Federation Policies, and
+    // `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
+    // for Service Principal Federation Policies. Typically an output parameter,
+    // which does not need to be specified in create or update requests. If
+    // specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name"`
-
+    
 	OidcPolicy types.Object `tfsdk:"oidc_policy"`
-	// The ID of the federation policy. Output only.
+    // The ID of the federation policy. Output only.
 	PolicyId types.String `tfsdk:"policy_id"`
-	// The service principal ID that this federation policy applies to. Output
-	// only. Only set for service principal federation policies.
+    // The service principal ID that this federation policy applies to. Output
+    // only. Only set for service principal federation policies.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-	// Unique, immutable id of the federation policy.
+    // Unique, immutable id of the federation policy.
 	Uid types.String `tfsdk:"uid"`
-	// Last update time of the federation policy.
+    // Last update time of the federation policy.
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// FederationPolicyData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// FederationPolicyData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FederationPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"oidc_policy": reflect.TypeOf(oauth2_tf.OidcFederationPolicy{}),
+    "oidc_policy": reflect.TypeOf(oauth2_tf.OidcFederationPolicy{}),
 	}
 }
 
@@ -81,14 +100,15 @@ func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":          m.CreateTime,
-			"description":          m.Description,
-			"name":                 m.Name,
-			"oidc_policy":          m.OidcPolicy,
-			"policy_id":            m.PolicyId,
-			"service_principal_id": m.ServicePrincipalId,
-			"uid":                  m.Uid,
-			"update_time":          m.UpdateTime,
+			"create_time": m.CreateTime,
+      "description": m.Description,
+      "name": m.Name,
+      "oidc_policy": m.OidcPolicy,
+      "policy_id": m.PolicyId,
+      "service_principal_id": m.ServicePrincipalId,
+      "uid": m.Uid,
+      "update_time": m.UpdateTime,
+      
 		},
 	)
 }
@@ -98,27 +118,27 @@ func (m FederationPolicyData) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m FederationPolicyData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":          types.StringType,
-			"description":          types.StringType,
-			"name":                 types.StringType,
-			"oidc_policy":          oauth2_tf.OidcFederationPolicy{}.Type(ctx),
-			"policy_id":            types.StringType,
-			"service_principal_id": types.Int64Type,
-			"uid":                  types.StringType,
-			"update_time":          types.StringType,
+			"create_time": types.StringType,
+      "description": types.StringType,
+      "name": types.StringType,
+      "oidc_policy": oauth2_tf.OidcFederationPolicy{}.Type(ctx),
+      "policy_id": types.StringType,
+      "service_principal_id": types.Int64Type,
+      "uid": types.StringType,
+      "update_time": types.StringType,
+      
 		},
 	}
 }
 
-func (m FederationPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["description"] = attrs["description"].SetComputed()
-	attrs["name"] = attrs["name"].SetComputed()
-	attrs["oidc_policy"] = attrs["oidc_policy"].SetComputed()
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
-	attrs["uid"] = attrs["uid"].SetComputed()
-	attrs["update_time"] = attrs["update_time"].SetComputed()
+func (m FederationPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["create_time"] = attrs["create_time"].SetComputed()
+attrs["description"] = attrs["description"].SetComputed()
+attrs["name"] = attrs["name"].SetComputed()
+attrs["oidc_policy"] = attrs["oidc_policy"].SetComputed()
+attrs["policy_id"] = attrs["policy_id"].SetRequired()
+attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+attrs["uid"] = attrs["uid"].SetComputed()
+attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
 }
@@ -141,7 +161,7 @@ func (r *FederationPolicyDataSource) Configure(ctx context.Context, req datasour
 }
 
 func (r *FederationPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config FederationPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -149,14 +169,16 @@ func (r *FederationPolicyDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
+	
 	var readRequest oauth2.GetAccountFederationPolicyRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	client, clientDiags := r.Client.GetAccountClient()
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

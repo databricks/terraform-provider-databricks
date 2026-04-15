@@ -4,18 +4,34 @@ package quality_monitor_v2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "quality_monitors_v2"
@@ -29,24 +45,25 @@ func DataSourceQualityMonitors() datasource.DataSource {
 // QualityMonitorsData extends the main model with additional fields.
 type QualityMonitorsData struct {
 	QualityMonitorV2 types.List `tfsdk:"quality_monitors"`
-
-	PageSize           types.Int64  `tfsdk:"page_size"`
+    
+	PageSize types.Int64 `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 func (QualityMonitorsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"quality_monitors": reflect.TypeOf(QualityMonitorData{}),
-		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
-func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_size"] = attrs["page_size"].SetOptional()
+func (m QualityMonitorsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["quality_monitors"] = attrs["quality_monitors"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -72,7 +89,7 @@ func (r *QualityMonitorsDataSource) Configure(ctx context.Context, req datasourc
 }
 
 func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config QualityMonitorsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -81,11 +98,12 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	var listRequest qualitymonitorv2.ListQualityMonitorRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -95,7 +113,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -115,7 +133,7 @@ func (r *QualityMonitorsDataSource) Read(ctx context.Context, req datasource.Rea
 			return
 		}
 		quality_monitor.ProviderConfigData = config.ProviderConfigData
-
+		
 		results = append(results, quality_monitor.ToObjectValue(ctx))
 	}
 

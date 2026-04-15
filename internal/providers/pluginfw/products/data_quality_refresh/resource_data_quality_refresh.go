@@ -4,30 +4,41 @@ package data_quality_refresh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/databricks/terraform-provider-databricks/internal/service/dataquality_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "data_quality_refresh"
@@ -43,17 +54,19 @@ type RefreshResource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
+	
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -73,14 +86,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -90,70 +103,73 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // Refresh extends the main model with additional fields.
 type Refresh struct {
-	// Time when the refresh ended (milliseconds since 1/1/1970 UTC).
+    // Time when the refresh ended (milliseconds since 1/1/1970 UTC).
 	EndTimeMs types.Int64 `tfsdk:"end_time_ms"`
-	// An optional message to give insight into the current state of the refresh
-	// (e.g. FAILURE messages).
+    // An optional message to give insight into the current state of the refresh
+    // (e.g. FAILURE messages).
 	Message types.String `tfsdk:"message"`
-	// The UUID of the request object. It is `schema_id` for `schema`, and
-	// `table_id` for `table`.
-	//
-	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
-	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
-	// `Details` tab > the `Schema ID` field.
-	//
-	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
-	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
-	// `Details` tab > the `Table ID` field.
-	//
-	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
-	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
-	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
+    // The UUID of the request object. It is `schema_id` for `schema`, and
+    // `table_id` for `table`.
+    // 
+    // Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+    // resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+    // `Details` tab > the `Schema ID` field.
+    // 
+    // Find the `table_id` from either: 1. The [table_id] of the `Tables`
+    // resource. 2. In [Catalog Explorer] > select the `table` > go to the
+    // `Details` tab > the `Table ID` field.
+    // 
+    // [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+    // [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+    // [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
-	// The type of the monitored object. Can be one of the following: `schema`or
-	// `table`.
+    // The type of the monitored object. Can be one of the following: `schema`or
+    // `table`.
 	ObjectType types.String `tfsdk:"object_type"`
-	// Unique id of the refresh operation.
+    // Unique id of the refresh operation.
 	RefreshId types.Int64 `tfsdk:"refresh_id"`
-	// Time when the refresh started (milliseconds since 1/1/1970 UTC).
+    // Time when the refresh started (milliseconds since 1/1/1970 UTC).
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
-	// The current state of the refresh.
+    // The current state of the refresh.
 	State types.String `tfsdk:"state"`
-	// What triggered the refresh.
-	Trigger        types.String `tfsdk:"trigger"`
+    // What triggered the refresh.
+	Trigger types.String `tfsdk:"trigger"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Refresh struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// Refresh struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Refresh) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		
 	}
 }
 
@@ -167,15 +183,16 @@ func (m Refresh) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"end_time_ms": m.EndTimeMs,
-			"message":       m.Message,
-			"object_id":     m.ObjectId,
-			"object_type":   m.ObjectType,
-			"refresh_id":    m.RefreshId,
-			"start_time_ms": m.StartTimeMs,
-			"state":         m.State,
-			"trigger":       m.Trigger,
-
+      "message": m.Message,
+      "object_id": m.ObjectId,
+      "object_type": m.ObjectType,
+      "refresh_id": m.RefreshId,
+      "start_time_ms": m.StartTimeMs,
+      "state": m.State,
+      "trigger": m.Trigger,
+      
 			"provider_config": m.ProviderConfig,
+			
 		},
 	)
 }
@@ -183,19 +200,20 @@ func (m Refresh) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m Refresh) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"end_time_ms": types.Int64Type,
-			"message":       types.StringType,
-			"object_id":     types.StringType,
-			"object_type":   types.StringType,
-			"refresh_id":    types.Int64Type,
-			"start_time_ms": types.Int64Type,
-			"state":         types.StringType,
-			"trigger":       types.StringType,
-
-			"provider_config": ProviderConfig{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{"end_time_ms": types.Int64Type,
+      "message": types.StringType,
+      "object_id": types.StringType,
+      "object_type": types.StringType,
+      "refresh_id": types.Int64Type,
+      "start_time_ms": types.Int64Type,
+      "state": types.StringType,
+      "trigger": types.StringType,
+      
+	  "provider_config": ProviderConfig{}.Type(ctx),
+	  
+    },
+  }
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
@@ -203,7 +221,7 @@ func (m Refresh) Type(ctx context.Context) attr.Type {
 // during create and update.
 func (to *Refresh) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Refresh) {
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -211,26 +229,45 @@ func (to *Refresh) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Refr
 // during read.
 func (to *Refresh) SyncFieldsDuringRead(ctx context.Context, from Refresh) {
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
-func (m Refresh) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["end_time_ms"] = attrs["end_time_ms"].SetComputed()
-	attrs["message"] = attrs["message"].SetComputed()
-	attrs["object_id"] = attrs["object_id"].SetRequired()
-	attrs["object_type"] = attrs["object_type"].SetRequired()
-	attrs["refresh_id"] = attrs["refresh_id"].SetComputed()
-	attrs["start_time_ms"] = attrs["start_time_ms"].SetComputed()
-	attrs["state"] = attrs["state"].SetComputed()
-	attrs["trigger"] = attrs["trigger"].SetComputed()
+func (m Refresh) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["end_time_ms"] = attrs["end_time_ms"].SetComputed()
+attrs["message"] = attrs["message"].SetComputed()
+attrs["object_id"] = attrs["object_id"].SetRequired()
+attrs["object_type"] = attrs["object_type"].SetRequired()
+attrs["refresh_id"] = attrs["refresh_id"].SetComputed()
+attrs["start_time_ms"] = attrs["start_time_ms"].SetComputed()
+attrs["state"] = attrs["state"].SetComputed()
+attrs["trigger"] = attrs["trigger"].SetComputed()
 
 	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["refresh_id"] = attrs["refresh_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 func (r *RefreshResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -239,9 +276,9 @@ func (r *RefreshResource) Metadata(ctx context.Context, req resource.MetadataReq
 func (r *RefreshResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Refresh{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks data_quality_refresh",
-		Attributes:  attrs,
-		Blocks:      blocks,
+		Description:	"Terraform schema for Databricks data_quality_refresh",
+		Attributes:		attrs,
+		Blocks:			blocks,
 	}
 }
 
@@ -283,18 +320,20 @@ func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	var refresh dataquality.Refresh
-
+	
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &refresh)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
+	
 	createRequest := dataquality.CreateRefreshRequest{
-		Refresh:    refresh,
-		ObjectId:   plan.ObjectId.ValueString(),
+		Refresh: refresh,
+		ObjectId: plan.ObjectId.ValueString(),
 		ObjectType: plan.ObjectType.ValueString(),
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -304,7 +343,7 @@ func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -318,8 +357,9 @@ func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest
 
 	var newState Refresh
 
+	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -341,12 +381,14 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	
 	var readRequest dataquality.GetRefreshRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -356,7 +398,7 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -380,7 +422,7 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
 }
 
 func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -391,14 +433,16 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 		return
 	}
 
+	
 	updateRequest := dataquality.UpdateRefreshRequest{
-		Refresh:    refresh,
-		ObjectId:   plan.ObjectId.ValueString(),
+		Refresh: refresh,
+		ObjectId: plan.ObjectId.ValueString(),
 		ObjectType: plan.ObjectType.ValueString(),
-		RefreshId:  plan.RefreshId.ValueInt64(),
+		RefreshId: plan.RefreshId.ValueInt64(),
 		UpdateMask: "",
 	}
 
+	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -408,7 +452,7 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -421,8 +465,9 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 
 	var newState Refresh
 
+	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if diags.HasError() {
 		return
 	}
@@ -452,12 +497,14 @@ func (r *RefreshResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
+	
 	var deleteRequest dataquality.DeleteRefreshRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -467,18 +514,18 @@ func (r *RefreshResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
 	err := client.DataQuality.DeleteRefresh(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_quality_refresh", err.Error())
 		return
 	}
-
+	
 }
 
 var _ resource.ResourceWithImportState = &RefreshResource{}
@@ -497,7 +544,7 @@ func (r *RefreshResource) ImportState(ctx context.Context, req resource.ImportSt
 		return
 	}
 
-	objectType := parts[0]
+objectType := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), objectType)...)
 	objectId := parts[1]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_id"), objectId)...)
@@ -507,4 +554,4 @@ func (r *RefreshResource) ImportState(ctx context.Context, req resource.ImportSt
 		return
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("refresh_id"), refreshId)...)
-}
+	}

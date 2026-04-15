@@ -69,6 +69,29 @@ resource "databricks_postgres_project" "this" {
 }
 ```
 
+### Project with High Availability Endpoint
+
+Create a project whose initial read-write endpoint is configured with multiple compute instances for high availability. 
+One compute instance acts as the read-write primary. 
+The remaining secondary compute instances are ready for automatic failover if the primary becomes unavailable.
+
+```hcl
+resource "databricks_postgres_project" "ha" {
+  project_id = "ha-project"
+  spec = {
+    pg_version   = 17
+    display_name = "HA Production Project"
+  }
+  initial_endpoint_spec = {
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = false
+    }
+  }
+}
+```
+
 ### Referencing in Other Resources
 
 ```hcl

@@ -4,30 +4,41 @@ package data_quality_monitor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/dataquality_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "data_quality_monitor"
@@ -43,17 +54,19 @@ type MonitorResource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
+	
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -73,14 +86,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -90,64 +103,67 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // Monitor extends the main model with additional fields.
 type Monitor struct {
-	// Anomaly Detection Configuration, applicable to `schema` object types.
+    // Anomaly Detection Configuration, applicable to `schema` object types.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-	// Data Profiling Configuration, applicable to `table` object types. Exactly
-	// one `Analysis Configuration` must be present.
+    // Data Profiling Configuration, applicable to `table` object types. Exactly
+    // one `Analysis Configuration` must be present.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
-	// The UUID of the request object. It is `schema_id` for `schema`, and
-	// `table_id` for `table`.
-	//
-	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
-	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
-	// `Details` tab > the `Schema ID` field.
-	//
-	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
-	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
-	// `Details` tab > the `Table ID` field.
-	//
-	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
-	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
-	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
+    // The UUID of the request object. It is `schema_id` for `schema`, and
+    // `table_id` for `table`.
+    // 
+    // Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
+    // resource. 2. In [Catalog Explorer] > select the `schema` > go to the
+    // `Details` tab > the `Schema ID` field.
+    // 
+    // Find the `table_id` from either: 1. The [table_id] of the `Tables`
+    // resource. 2. In [Catalog Explorer] > select the `table` > go to the
+    // `Details` tab > the `Table ID` field.
+    // 
+    // [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
+    // [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
+    // [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
-	// The type of the monitored object. Can be one of the following: `schema`
-	// or `table`.
-	ObjectType     types.String `tfsdk:"object_type"`
+    // The type of the monitored object. Can be one of the following: `schema`
+    // or `table`.
+	ObjectType types.String `tfsdk:"object_type"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Monitor struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// Monitor struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Monitor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"anomaly_detection_config": reflect.TypeOf(dataquality_tf.AnomalyDetectionConfig{}),
-		"data_profiling_config":    reflect.TypeOf(dataquality_tf.DataProfilingConfig{}),
-		"provider_config":          reflect.TypeOf(ProviderConfig{}),
+    "anomaly_detection_config": reflect.TypeOf(dataquality_tf.AnomalyDetectionConfig{}),
+    "data_profiling_config": reflect.TypeOf(dataquality_tf.DataProfilingConfig{}),
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		
 	}
 }
 
@@ -161,11 +177,12 @@ func (m Monitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"anomaly_detection_config": m.AnomalyDetectionConfig,
-			"data_profiling_config": m.DataProfilingConfig,
-			"object_id":             m.ObjectId,
-			"object_type":           m.ObjectType,
-
+      "data_profiling_config": m.DataProfilingConfig,
+      "object_id": m.ObjectId,
+      "object_type": m.ObjectType,
+      
 			"provider_config": m.ProviderConfig,
+			
 		},
 	)
 }
@@ -173,129 +190,143 @@ func (m Monitor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m Monitor) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"anomaly_detection_config": dataquality_tf.AnomalyDetectionConfig{}.Type(ctx),
-			"data_profiling_config": dataquality_tf.DataProfilingConfig{}.Type(ctx),
-			"object_id":             types.StringType,
-			"object_type":           types.StringType,
-
-			"provider_config": ProviderConfig{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{"anomaly_detection_config": dataquality_tf.AnomalyDetectionConfig{}.Type(ctx),
+      "data_profiling_config": dataquality_tf.DataProfilingConfig{}.Type(ctx),
+      "object_id": types.StringType,
+      "object_type": types.StringType,
+      
+	  "provider_config": ProviderConfig{}.Type(ctx),
+	  
+    },
+  }
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Monitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Monitor) {
-	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
-		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
-			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
-				// Recursively sync the fields of AnomalyDetectionConfig
-				toAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAnomalyDetectionConfig)
-				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
-			}
-		}
-	}
-	if !from.DataProfilingConfig.IsNull() && !from.DataProfilingConfig.IsUnknown() {
-		if toDataProfilingConfig, ok := to.GetDataProfilingConfig(ctx); ok {
-			if fromDataProfilingConfig, ok := from.GetDataProfilingConfig(ctx); ok {
-				// Recursively sync the fields of DataProfilingConfig
-				toDataProfilingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromDataProfilingConfig)
-				to.SetDataProfilingConfig(ctx, toDataProfilingConfig)
-			}
-		}
-	}
+  if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+    if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+      if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+        // Recursively sync the fields of AnomalyDetectionConfig
+        toAnomalyDetectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromAnomalyDetectionConfig)
+        to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
+      }
+    }
+  }
+  if !from.DataProfilingConfig.IsNull() && !from.DataProfilingConfig.IsUnknown() {
+    if toDataProfilingConfig, ok := to.GetDataProfilingConfig(ctx); ok {
+      if fromDataProfilingConfig, ok := from.GetDataProfilingConfig(ctx); ok {
+        // Recursively sync the fields of DataProfilingConfig
+        toDataProfilingConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromDataProfilingConfig)
+        to.SetDataProfilingConfig(ctx, toDataProfilingConfig)
+      }
+    }
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Monitor) SyncFieldsDuringRead(ctx context.Context, from Monitor) {
-	if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
-		if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
-			if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
-				toAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromAnomalyDetectionConfig)
-				to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
-			}
-		}
-	}
-	if !from.DataProfilingConfig.IsNull() && !from.DataProfilingConfig.IsUnknown() {
-		if toDataProfilingConfig, ok := to.GetDataProfilingConfig(ctx); ok {
-			if fromDataProfilingConfig, ok := from.GetDataProfilingConfig(ctx); ok {
-				toDataProfilingConfig.SyncFieldsDuringRead(ctx, fromDataProfilingConfig)
-				to.SetDataProfilingConfig(ctx, toDataProfilingConfig)
-			}
-		}
-	}
+  if !from.AnomalyDetectionConfig.IsNull() && !from.AnomalyDetectionConfig.IsUnknown() {
+    if toAnomalyDetectionConfig, ok := to.GetAnomalyDetectionConfig(ctx); ok {
+      if fromAnomalyDetectionConfig, ok := from.GetAnomalyDetectionConfig(ctx); ok {
+        toAnomalyDetectionConfig.SyncFieldsDuringRead(ctx, fromAnomalyDetectionConfig)
+        to.SetAnomalyDetectionConfig(ctx, toAnomalyDetectionConfig)
+      }
+    }
+  }
+  if !from.DataProfilingConfig.IsNull() && !from.DataProfilingConfig.IsUnknown() {
+    if toDataProfilingConfig, ok := to.GetDataProfilingConfig(ctx); ok {
+      if fromDataProfilingConfig, ok := from.GetDataProfilingConfig(ctx); ok {
+        toDataProfilingConfig.SyncFieldsDuringRead(ctx, fromDataProfilingConfig)
+        to.SetDataProfilingConfig(ctx, toDataProfilingConfig)
+      }
+    }
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
-func (m Monitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetOptional()
-	attrs["data_profiling_config"] = attrs["data_profiling_config"].SetOptional()
-	attrs["object_id"] = attrs["object_id"].SetRequired()
-	attrs["object_type"] = attrs["object_type"].SetRequired()
+func (m Monitor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["anomaly_detection_config"] = attrs["anomaly_detection_config"].SetOptional()
+attrs["data_profiling_config"] = attrs["data_profiling_config"].SetOptional()
+attrs["object_id"] = attrs["object_id"].SetRequired()
+attrs["object_type"] = attrs["object_type"].SetRequired()
 
 	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
+
+
+
 
 // GetAnomalyDetectionConfig returns the value of the AnomalyDetectionConfig field in Monitor as
 // a dataquality_tf.AnomalyDetectionConfig value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Monitor) GetAnomalyDetectionConfig(ctx context.Context) (dataquality_tf.AnomalyDetectionConfig, bool) {
-	var e dataquality_tf.AnomalyDetectionConfig
-	if m.AnomalyDetectionConfig.IsNull() || m.AnomalyDetectionConfig.IsUnknown() {
-		return e, false
-	}
-	var v dataquality_tf.AnomalyDetectionConfig
-	d := m.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e dataquality_tf.AnomalyDetectionConfig
+  if m.AnomalyDetectionConfig.IsNull() || m.AnomalyDetectionConfig.IsUnknown() {
+    return e, false
+  }
+  var v dataquality_tf.AnomalyDetectionConfig
+  d := m.AnomalyDetectionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAnomalyDetectionConfig sets the value of the AnomalyDetectionConfig field in Monitor.
 func (m *Monitor) SetAnomalyDetectionConfig(ctx context.Context, v dataquality_tf.AnomalyDetectionConfig) {
-	vs := v.ToObjectValue(ctx)
-	m.AnomalyDetectionConfig = vs
+  vs := v.ToObjectValue(ctx)
+  m.AnomalyDetectionConfig = vs
 }
+
+
+
 
 // GetDataProfilingConfig returns the value of the DataProfilingConfig field in Monitor as
 // a dataquality_tf.DataProfilingConfig value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Monitor) GetDataProfilingConfig(ctx context.Context) (dataquality_tf.DataProfilingConfig, bool) {
-	var e dataquality_tf.DataProfilingConfig
-	if m.DataProfilingConfig.IsNull() || m.DataProfilingConfig.IsUnknown() {
-		return e, false
-	}
-	var v dataquality_tf.DataProfilingConfig
-	d := m.DataProfilingConfig.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e dataquality_tf.DataProfilingConfig
+  if m.DataProfilingConfig.IsNull() || m.DataProfilingConfig.IsUnknown() {
+    return e, false
+  }
+  var v dataquality_tf.DataProfilingConfig
+  d := m.DataProfilingConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetDataProfilingConfig sets the value of the DataProfilingConfig field in Monitor.
 func (m *Monitor) SetDataProfilingConfig(ctx context.Context, v dataquality_tf.DataProfilingConfig) {
-	vs := v.ToObjectValue(ctx)
-	m.DataProfilingConfig = vs
+  vs := v.ToObjectValue(ctx)
+  m.DataProfilingConfig = vs
 }
+
+
+
+
+
+
+
+
 
 func (r *MonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -304,9 +335,9 @@ func (r *MonitorResource) Metadata(ctx context.Context, req resource.MetadataReq
 func (r *MonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Monitor{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks data_quality_monitor",
-		Attributes:  attrs,
-		Blocks:      blocks,
+		Description:	"Terraform schema for Databricks data_quality_monitor",
+		Attributes:		attrs,
+		Blocks:			blocks,
 	}
 }
 
@@ -348,16 +379,18 @@ func (r *MonitorResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	var monitor dataquality.Monitor
-
+	
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &monitor)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
+	
 	createRequest := dataquality.CreateMonitorRequest{
 		Monitor: monitor,
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -367,7 +400,7 @@ func (r *MonitorResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -381,8 +414,9 @@ func (r *MonitorResource) Create(ctx context.Context, req resource.CreateRequest
 
 	var newState Monitor
 
+	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -404,12 +438,14 @@ func (r *MonitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	
 	var readRequest dataquality.GetMonitorRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -419,7 +455,7 @@ func (r *MonitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -443,7 +479,7 @@ func (r *MonitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
 }
 
 func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -454,13 +490,15 @@ func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.
 		return
 	}
 
+	
 	updateRequest := dataquality.UpdateMonitorRequest{
-		Monitor:    monitor,
-		ObjectId:   plan.ObjectId.ValueString(),
+		Monitor: monitor,
+		ObjectId: plan.ObjectId.ValueString(),
 		ObjectType: plan.ObjectType.ValueString(),
 		UpdateMask: "anomaly_detection_config,data_profiling_config",
 	}
 
+	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -470,7 +508,7 @@ func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -483,8 +521,9 @@ func (r *MonitorResource) update(ctx context.Context, plan Monitor, diags *diag.
 
 	var newState Monitor
 
+	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if diags.HasError() {
 		return
 	}
@@ -514,12 +553,14 @@ func (r *MonitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
+	
 	var deleteRequest dataquality.DeleteMonitorRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -529,18 +570,18 @@ func (r *MonitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
 	err := client.DataQuality.DeleteMonitor(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_quality_monitor", err.Error())
 		return
 	}
-
+	
 }
 
 var _ resource.ResourceWithImportState = &MonitorResource{}
@@ -559,8 +600,8 @@ func (r *MonitorResource) ImportState(ctx context.Context, req resource.ImportSt
 		return
 	}
 
-	objectType := parts[0]
+objectType := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), objectType)...)
 	objectId := parts[1]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_id"), objectId)...)
-}
+	}

@@ -13,20 +13,31 @@ package files_tf
 import (
 	"context"
 	"reflect"
-
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-
+	
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+  
 )
 
+
+
+
 type AddBlock struct {
-	// The base64-encoded data to append to the stream. This has a limit of 1
-	// MB.
+    // The base64-encoded data to append to the stream. This has a limit of 1
+    // MB.
 	Data types.String `tfsdk:"data"`
-	// The handle on an open stream.
+    // The handle on an open stream.
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
@@ -37,10 +48,10 @@ func (to *AddBlock) SyncFieldsDuringRead(ctx context.Context, from AddBlock) {
 }
 
 func (m AddBlock) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data"] = attrs["data"].SetRequired()
-	attrs["handle"] = attrs["handle"].SetRequired()
+attrs["data"] = attrs["data"].SetRequired()
+attrs["handle"] = attrs["handle"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
@@ -51,7 +62,8 @@ func (m AddBlock) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AddBlock) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -61,20 +73,34 @@ func (m AddBlock) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"data":   m.Data,
-			"handle": m.Handle,
-		})
+"data": m.Data,
+      "handle": m.Handle,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AddBlock) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data":   types.StringType,
-			"handle": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"data": types.StringType,
+      "handle": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 type AddBlockResponse struct {
 }
@@ -87,7 +113,7 @@ func (to *AddBlockResponse) SyncFieldsDuringRead(ctx context.Context, from AddBl
 
 func (m AddBlockResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlockResponse.
@@ -98,7 +124,8 @@ func (m AddBlockResponse) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AddBlockResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -107,18 +134,30 @@ func (m AddBlockResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 func (m AddBlockResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AddBlockResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type Close struct {
-	// The handle on an open stream.
+    // The handle on an open stream.
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
@@ -129,9 +168,9 @@ func (to *Close) SyncFieldsDuringRead(ctx context.Context, from Close) {
 }
 
 func (m Close) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["handle"] = attrs["handle"].SetRequired()
+attrs["handle"] = attrs["handle"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
@@ -142,7 +181,8 @@ func (m Close) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Close) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -152,18 +192,30 @@ func (m Close) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"handle": m.Handle,
-		})
+"handle": m.Handle,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Close) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"handle": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"handle": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 type CloseResponse struct {
 }
@@ -176,7 +228,7 @@ func (to *CloseResponse) SyncFieldsDuringRead(ctx context.Context, from CloseRes
 
 func (m CloseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloseResponse.
@@ -187,7 +239,8 @@ func (m CloseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CloseResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -196,20 +249,32 @@ func (m CloseResponse) GetComplexFieldTypes(ctx context.Context) map[string]refl
 func (m CloseResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CloseResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type Create struct {
-	// The flag that specifies whether to overwrite existing file/files.
+    // The flag that specifies whether to overwrite existing file/files.
 	Overwrite types.Bool `tfsdk:"overwrite"`
-	// The path of the new file. The path should be the absolute DBFS path.
+    // The path of the new file. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -220,10 +285,10 @@ func (to *Create) SyncFieldsDuringRead(ctx context.Context, from Create) {
 }
 
 func (m Create) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
+attrs["overwrite"] = attrs["overwrite"].SetOptional()
+attrs["path"] = attrs["path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
@@ -234,7 +299,8 @@ func (m Create) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Create) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -244,23 +310,37 @@ func (m Create) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"overwrite": m.Overwrite,
-			"path":      m.Path,
-		})
+"overwrite": m.Overwrite,
+      "path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Create) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"overwrite": types.BoolType,
-			"path":      types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"overwrite": types.BoolType,
+      "path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type CreateDirectoryRequest struct {
-	// The absolute path of a directory.
+    // The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
@@ -271,9 +351,9 @@ func (to *CreateDirectoryRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m CreateDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+attrs["directory_path"] = attrs["directory_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryRequest.
@@ -284,7 +364,8 @@ func (m CreateDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -294,22 +375,34 @@ func (m CreateDirectoryRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"directory_path": m.DirectoryPath,
-		})
+"directory_path": m.DirectoryPath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateDirectoryRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"directory_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"directory_path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type CreateResponse struct {
-	// Handle which should subsequently be passed into the AddBlock and Close
-	// calls when writing to a file through a stream.
+    // Handle which should subsequently be passed into the AddBlock and Close
+    // calls when writing to a file through a stream.
 	Handle types.Int64 `tfsdk:"handle"`
 }
 
@@ -320,9 +413,9 @@ func (to *CreateResponse) SyncFieldsDuringRead(ctx context.Context, from CreateR
 }
 
 func (m CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["handle"] = attrs["handle"].SetOptional()
+attrs["handle"] = attrs["handle"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
@@ -333,7 +426,8 @@ func (m CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -343,25 +437,37 @@ func (m CreateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"handle": m.Handle,
-		})
+"handle": m.Handle,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"handle": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"handle": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type Delete struct {
-	// The path of the file or directory to delete. The path should be the
-	// absolute DBFS path.
+    // The path of the file or directory to delete. The path should be the
+    // absolute DBFS path.
 	Path types.String `tfsdk:"path"`
-	// Whether or not to recursively delete the directory's contents. Deleting
-	// empty directories can be done without providing the recursive flag.
+    // Whether or not to recursively delete the directory's contents. Deleting
+    // empty directories can be done without providing the recursive flag.
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
@@ -372,10 +478,10 @@ func (to *Delete) SyncFieldsDuringRead(ctx context.Context, from Delete) {
 }
 
 func (m Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-	attrs["recursive"] = attrs["recursive"].SetOptional()
+attrs["path"] = attrs["path"].SetRequired()
+attrs["recursive"] = attrs["recursive"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
@@ -386,7 +492,8 @@ func (m Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Delete) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -396,23 +503,37 @@ func (m Delete) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path":      m.Path,
-			"recursive": m.Recursive,
-		})
+"path": m.Path,
+      "recursive": m.Recursive,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Delete) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"path":      types.StringType,
-			"recursive": types.BoolType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"path": types.StringType,
+      "recursive": types.BoolType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type DeleteDirectoryRequest struct {
-	// The absolute path of a directory.
+    // The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
@@ -423,9 +544,9 @@ func (to *DeleteDirectoryRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m DeleteDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+attrs["directory_path"] = attrs["directory_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDirectoryRequest.
@@ -436,7 +557,8 @@ func (m DeleteDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -446,21 +568,33 @@ func (m DeleteDirectoryRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"directory_path": m.DirectoryPath,
-		})
+"directory_path": m.DirectoryPath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteDirectoryRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"directory_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"directory_path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteFileRequest struct {
-	// The absolute path of the file.
+    // The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
 }
 
@@ -471,9 +605,9 @@ func (to *DeleteFileRequest) SyncFieldsDuringRead(ctx context.Context, from Dele
 }
 
 func (m DeleteFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["file_path"] = attrs["file_path"].SetRequired()
+attrs["file_path"] = attrs["file_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileRequest.
@@ -484,7 +618,8 @@ func (m DeleteFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteFileRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -494,18 +629,30 @@ func (m DeleteFileRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_path": m.FilePath,
-		})
+"file_path": m.FilePath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteFileRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"file_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"file_path": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 type DeleteResponse struct {
 }
@@ -518,7 +665,7 @@ func (to *DeleteResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteR
 
 func (m DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -529,7 +676,8 @@ func (m DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -538,27 +686,39 @@ func (m DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 func (m DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type DirectoryEntry struct {
-	// The length of the file in bytes. This field is omitted for directories.
+    // The length of the file in bytes. This field is omitted for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
-	// True if the path is a directory.
+    // True if the path is a directory.
 	IsDirectory types.Bool `tfsdk:"is_directory"`
-	// Last modification time of given file in milliseconds since unix epoch.
+    // Last modification time of given file in milliseconds since unix epoch.
 	LastModified types.Int64 `tfsdk:"last_modified"`
-	// The name of the file or directory. This is the last component of the
-	// path.
+    // The name of the file or directory. This is the last component of the
+    // path.
 	Name types.String `tfsdk:"name"`
-	// The absolute path of the file or directory.
+    // The absolute path of the file or directory.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -569,13 +729,13 @@ func (to *DirectoryEntry) SyncFieldsDuringRead(ctx context.Context, from Directo
 }
 
 func (m DirectoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["file_size"] = attrs["file_size"].SetOptional()
-	attrs["is_directory"] = attrs["is_directory"].SetOptional()
-	attrs["last_modified"] = attrs["last_modified"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["path"] = attrs["path"].SetOptional()
+attrs["file_size"] = attrs["file_size"].SetOptional()
+attrs["is_directory"] = attrs["is_directory"].SetOptional()
+attrs["last_modified"] = attrs["last_modified"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["path"] = attrs["path"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectoryEntry.
@@ -586,7 +746,8 @@ func (m DirectoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DirectoryEntry) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -596,29 +757,49 @@ func (m DirectoryEntry) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_size":     m.FileSize,
-			"is_directory":  m.IsDirectory,
-			"last_modified": m.LastModified,
-			"name":          m.Name,
-			"path":          m.Path,
-		})
+"file_size": m.FileSize,
+      "is_directory": m.IsDirectory,
+      "last_modified": m.LastModified,
+      "name": m.Name,
+      "path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DirectoryEntry) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"file_size":     types.Int64Type,
-			"is_directory":  types.BoolType,
-			"last_modified": types.Int64Type,
-			"name":          types.StringType,
-			"path":          types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"file_size": types.Int64Type,
+      "is_directory": types.BoolType,
+      "last_modified": types.Int64Type,
+      "name": types.StringType,
+      "path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type DownloadRequest struct {
-	// The absolute path of the file.
+    // The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
 }
 
@@ -629,9 +810,9 @@ func (to *DownloadRequest) SyncFieldsDuringRead(ctx context.Context, from Downlo
 }
 
 func (m DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["file_path"] = attrs["file_path"].SetRequired()
+attrs["file_path"] = attrs["file_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadRequest.
@@ -642,7 +823,8 @@ func (m DownloadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -652,27 +834,39 @@ func (m DownloadRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_path": m.FilePath,
-		})
+"file_path": m.FilePath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DownloadRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"file_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"file_path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DownloadResponse struct {
-	// The length of the HTTP response body in bytes.
+    // The length of the HTTP response body in bytes.
 	ContentLength types.Int64 `tfsdk:"-"`
-
+    
 	ContentType types.String `tfsdk:"-"`
-
+    
 	Contents types.Object `tfsdk:"-"`
-	// The last modified time of the file in HTTP-date (RFC 7231) format.
+    // The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 
@@ -683,12 +877,12 @@ func (to *DownloadResponse) SyncFieldsDuringRead(ctx context.Context, from Downl
 }
 
 func (m DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-	attrs["content_length"] = attrs["content_length"].SetOptional()
-	attrs["content_type"] = attrs["content_type"].SetOptional()
-	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+attrs["contents"] = attrs["contents"].SetOptional()
+attrs["content_length"] = attrs["content_length"].SetOptional()
+attrs["content_type"] = attrs["content_type"].SetOptional()
+attrs["last_modified"] = attrs["last_modified"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadResponse.
@@ -699,7 +893,8 @@ func (m DownloadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -709,33 +904,51 @@ func (m DownloadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content_length": m.ContentLength,
-			"content_type":   m.ContentType,
-			"contents":       m.Contents,
-			"last_modified":  m.LastModified,
-		})
+"content_length": m.ContentLength,
+      "content_type": m.ContentType,
+      "contents": m.Contents,
+      "last_modified": m.LastModified,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DownloadResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"content_length": types.Int64Type,
-			"content_type":   types.StringType,
-			"contents":       types.ObjectType{},
-			"last_modified":  types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"content_length": types.Int64Type,
+      "content_type": types.StringType,
+      "contents": types.ObjectType{},
+      "last_modified": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type FileInfo struct {
-	// The length of the file in bytes. This field is omitted for directories.
+    // The length of the file in bytes. This field is omitted for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
-	// True if the path is a directory.
+    // True if the path is a directory.
 	IsDir types.Bool `tfsdk:"is_dir"`
-	// Last modification time of given file in milliseconds since epoch.
+    // Last modification time of given file in milliseconds since epoch.
 	ModificationTime types.Int64 `tfsdk:"modification_time"`
-	// The absolute path of the file or directory.
+    // The absolute path of the file or directory.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -746,12 +959,12 @@ func (to *FileInfo) SyncFieldsDuringRead(ctx context.Context, from FileInfo) {
 }
 
 func (m FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["file_size"] = attrs["file_size"].SetOptional()
-	attrs["is_dir"] = attrs["is_dir"].SetOptional()
-	attrs["modification_time"] = attrs["modification_time"].SetOptional()
-	attrs["path"] = attrs["path"].SetOptional()
+attrs["file_size"] = attrs["file_size"].SetOptional()
+attrs["is_dir"] = attrs["is_dir"].SetOptional()
+attrs["modification_time"] = attrs["modification_time"].SetOptional()
+attrs["path"] = attrs["path"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
@@ -762,7 +975,8 @@ func (m FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m FileInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -772,27 +986,45 @@ func (m FileInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_size":         m.FileSize,
-			"is_dir":            m.IsDir,
-			"modification_time": m.ModificationTime,
-			"path":              m.Path,
-		})
+"file_size": m.FileSize,
+      "is_dir": m.IsDir,
+      "modification_time": m.ModificationTime,
+      "path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m FileInfo) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"file_size":         types.Int64Type,
-			"is_dir":            types.BoolType,
-			"modification_time": types.Int64Type,
-			"path":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"file_size": types.Int64Type,
+      "is_dir": types.BoolType,
+      "modification_time": types.Int64Type,
+      "path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type GetDirectoryMetadataRequest struct {
-	// The absolute path of a directory.
+    // The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
@@ -803,9 +1035,9 @@ func (to *GetDirectoryMetadataRequest) SyncFieldsDuringRead(ctx context.Context,
 }
 
 func (m GetDirectoryMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["directory_path"] = attrs["directory_path"].SetRequired()
+attrs["directory_path"] = attrs["directory_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDirectoryMetadataRequest.
@@ -816,7 +1048,8 @@ func (m GetDirectoryMetadataRequest) ApplySchemaCustomizations(attrs map[string]
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetDirectoryMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -826,21 +1059,33 @@ func (m GetDirectoryMetadataRequest) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"directory_path": m.DirectoryPath,
-		})
+"directory_path": m.DirectoryPath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetDirectoryMetadataRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"directory_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"directory_path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GetMetadataRequest struct {
-	// The absolute path of the file.
+    // The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
 }
 
@@ -851,9 +1096,9 @@ func (to *GetMetadataRequest) SyncFieldsDuringRead(ctx context.Context, from Get
 }
 
 func (m GetMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["file_path"] = attrs["file_path"].SetRequired()
+attrs["file_path"] = attrs["file_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataRequest.
@@ -864,7 +1109,8 @@ func (m GetMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -874,25 +1120,37 @@ func (m GetMetadataRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_path": m.FilePath,
-		})
+"file_path": m.FilePath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetMetadataRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"file_path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"file_path": types.StringType,
+      
+    },
+  }
 }
 
-type GetMetadataResponse struct {
-	// The length of the HTTP response body in bytes.
-	ContentLength types.Int64 `tfsdk:"-"`
 
+
+
+
+
+
+
+
+
+
+type GetMetadataResponse struct {
+    // The length of the HTTP response body in bytes.
+	ContentLength types.Int64 `tfsdk:"-"`
+    
 	ContentType types.String `tfsdk:"-"`
-	// The last modified time of the file in HTTP-date (RFC 7231) format.
+    // The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 
@@ -903,11 +1161,11 @@ func (to *GetMetadataResponse) SyncFieldsDuringRead(ctx context.Context, from Ge
 }
 
 func (m GetMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["content_length"] = attrs["content_length"].SetOptional()
-	attrs["content_type"] = attrs["content_type"].SetOptional()
-	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+attrs["content_length"] = attrs["content_length"].SetOptional()
+attrs["content_type"] = attrs["content_type"].SetOptional()
+attrs["last_modified"] = attrs["last_modified"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataResponse.
@@ -918,7 +1176,8 @@ func (m GetMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -928,26 +1187,42 @@ func (m GetMetadataResponse) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content_length": m.ContentLength,
-			"content_type":   m.ContentType,
-			"last_modified":  m.LastModified,
-		})
+"content_length": m.ContentLength,
+      "content_type": m.ContentType,
+      "last_modified": m.LastModified,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetMetadataResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"content_length": types.Int64Type,
-			"content_type":   types.StringType,
-			"last_modified":  types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"content_length": types.Int64Type,
+      "content_type": types.StringType,
+      "last_modified": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type GetStatusRequest struct {
-	// The path of the file or directory. The path should be the absolute DBFS
-	// path.
+    // The path of the file or directory. The path should be the absolute DBFS
+    // path.
 	Path types.String `tfsdk:"-"`
 }
 
@@ -958,9 +1233,9 @@ func (to *GetStatusRequest) SyncFieldsDuringRead(ctx context.Context, from GetSt
 }
 
 func (m GetStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
+attrs["path"] = attrs["path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatusRequest.
@@ -971,7 +1246,8 @@ func (m GetStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -981,22 +1257,34 @@ func (m GetStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path": m.Path,
-		})
+"path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetStatusRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type ListDbfsRequest struct {
-	// The path of the file or directory. The path should be the absolute DBFS
-	// path.
+    // The path of the file or directory. The path should be the absolute DBFS
+    // path.
 	Path types.String `tfsdk:"-"`
 }
 
@@ -1007,9 +1295,9 @@ func (to *ListDbfsRequest) SyncFieldsDuringRead(ctx context.Context, from ListDb
 }
 
 func (m ListDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
+attrs["path"] = attrs["path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDbfsRequest.
@@ -1020,7 +1308,8 @@ func (m ListDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1030,41 +1319,53 @@ func (m ListDbfsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path": m.Path,
-		})
+"path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListDbfsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type ListDirectoryContentsRequest struct {
-	// The absolute path of a directory.
+    // The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
-	// The maximum number of directory entries to return. The response may
-	// contain fewer entries. If the response contains a `next_page_token`,
-	// there may be more entries, even if fewer than `page_size` entries are in
-	// the response.
-	//
-	// We recommend not to set this value unless you are intentionally listing
-	// less than the complete directory contents.
-	//
-	// If unspecified, at most 1000 directory entries will be returned. The
-	// maximum value is 1000. Values above 1000 will be coerced to 1000.
+    // The maximum number of directory entries to return. The response may
+    // contain fewer entries. If the response contains a `next_page_token`,
+    // there may be more entries, even if fewer than `page_size` entries are in
+    // the response.
+    // 
+    // We recommend not to set this value unless you are intentionally listing
+    // less than the complete directory contents.
+    // 
+    // If unspecified, at most 1000 directory entries will be returned. The
+    // maximum value is 1000. Values above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-	// An opaque page token which was the `next_page_token` in the response of
-	// the previous request to list the contents of this directory. Provide this
-	// token to retrieve the next page of directory entries. When providing a
-	// `page_token`, all other parameters provided to the request must match the
-	// previous request. To list all of the entries in a directory, it is
-	// necessary to continue requesting pages of entries until the response
-	// contains no `next_page_token`. Note that the number of entries returned
-	// must not be used to determine when the listing is complete.
+    // An opaque page token which was the `next_page_token` in the response of
+    // the previous request to list the contents of this directory. Provide this
+    // token to retrieve the next page of directory entries. When providing a
+    // `page_token`, all other parameters provided to the request must match the
+    // previous request. To list all of the entries in a directory, it is
+    // necessary to continue requesting pages of entries until the response
+    // contains no `next_page_token`. Note that the number of entries returned
+    // must not be used to determine when the listing is complete.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -1075,11 +1376,11 @@ func (to *ListDirectoryContentsRequest) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m ListDirectoryContentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["directory_path"] = attrs["directory_path"].SetRequired()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
+attrs["directory_path"] = attrs["directory_path"].SetRequired()
+attrs["page_size"] = attrs["page_size"].SetOptional()
+attrs["page_token"] = attrs["page_token"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryContentsRequest.
@@ -1090,7 +1391,8 @@ func (m ListDirectoryContentsRequest) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListDirectoryContentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1100,53 +1402,69 @@ func (m ListDirectoryContentsRequest) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"directory_path": m.DirectoryPath,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-		})
+"directory_path": m.DirectoryPath,
+      "page_size": m.PageSize,
+      "page_token": m.PageToken,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListDirectoryContentsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"directory_path": types.StringType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"directory_path": types.StringType,
+      "page_size": types.Int64Type,
+      "page_token": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListDirectoryResponse struct {
-	// Array of DirectoryEntry.
+    // Array of DirectoryEntry.
 	Contents types.List `tfsdk:"contents"`
-	// A token, which can be sent as `page_token` to retrieve the next page.
+    // A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (to *ListDirectoryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectoryResponse) {
-	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Contents = from.Contents
-	}
+  if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Contents = from.Contents
+  }
 }
 
 func (to *ListDirectoryResponse) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryResponse) {
-	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Contents = from.Contents
-	}
+  if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Contents = from.Contents
+  }
 }
 
 func (m ListDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+attrs["contents"] = attrs["contents"].SetOptional()
+attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryResponse.
@@ -1157,9 +1475,9 @@ func (m ListDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfsche
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"contents": reflect.TypeOf(DirectoryEntry{}),
-	}
+  return map[string]reflect.Type{
+    "contents": reflect.TypeOf(DirectoryEntry{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1169,77 +1487,92 @@ func (m ListDirectoryResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"contents":        m.Contents,
-			"next_page_token": m.NextPageToken,
-		})
+"contents": m.Contents,
+      "next_page_token": m.NextPageToken,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListDirectoryResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"contents": basetypes.ListType{
-				ElemType: DirectoryEntry{}.Type(ctx),
-			},
-			"next_page_token": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"contents": basetypes.ListType{
+ElemType: DirectoryEntry{}.Type(ctx),
+},
+      "next_page_token": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetContents returns the value of the Contents field in ListDirectoryResponse as
 // a slice of DirectoryEntry values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListDirectoryResponse) GetContents(ctx context.Context) ([]DirectoryEntry, bool) {
-	if m.Contents.IsNull() || m.Contents.IsUnknown() {
-		return nil, false
-	}
-	var v []DirectoryEntry
-	d := m.Contents.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Contents.IsNull() || m.Contents.IsUnknown() {
+    return nil, false
+  }
+  var v []DirectoryEntry
+  d := m.Contents.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetContents sets the value of the Contents field in ListDirectoryResponse.
 func (m *ListDirectoryResponse) SetContents(ctx context.Context, v []DirectoryEntry) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["contents"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Contents = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["contents"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Contents = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type ListStatusResponse struct {
-	// A list of FileInfo's that describe contents of directory or file. See
-	// example above.
+    // A list of FileInfo's that describe contents of directory or file. See
+    // example above.
 	Files types.List `tfsdk:"files"`
 }
 
 func (to *ListStatusResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListStatusResponse) {
-	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Files = from.Files
-	}
+  if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Files = from.Files
+  }
 }
 
 func (to *ListStatusResponse) SyncFieldsDuringRead(ctx context.Context, from ListStatusResponse) {
-	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Files = from.Files
-	}
+  if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Files = from.Files
+  }
 }
 
 func (m ListStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["files"] = attrs["files"].SetOptional()
+attrs["files"] = attrs["files"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStatusResponse.
@@ -1250,9 +1583,9 @@ func (m ListStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"files": reflect.TypeOf(FileInfo{}),
-	}
+  return map[string]reflect.Type{
+    "files": reflect.TypeOf(FileInfo{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1262,49 +1595,62 @@ func (m ListStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"files": m.Files,
-		})
+"files": m.Files,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListStatusResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"files": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"files": basetypes.ListType{
+ElemType: FileInfo{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetFiles returns the value of the Files field in ListStatusResponse as
 // a slice of FileInfo values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListStatusResponse) GetFiles(ctx context.Context) ([]FileInfo, bool) {
-	if m.Files.IsNull() || m.Files.IsUnknown() {
-		return nil, false
-	}
-	var v []FileInfo
-	d := m.Files.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Files.IsNull() || m.Files.IsUnknown() {
+    return nil, false
+  }
+  var v []FileInfo
+  d := m.Files.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetFiles sets the value of the Files field in ListStatusResponse.
 func (m *ListStatusResponse) SetFiles(ctx context.Context, v []FileInfo) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Files = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Files = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type MkDirs struct {
-	// The path of the new directory. The path should be the absolute DBFS path.
+    // The path of the new directory. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -1315,9 +1661,9 @@ func (to *MkDirs) SyncFieldsDuringRead(ctx context.Context, from MkDirs) {
 }
 
 func (m MkDirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
+attrs["path"] = attrs["path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
@@ -1328,7 +1674,8 @@ func (m MkDirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MkDirs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1338,18 +1685,30 @@ func (m MkDirs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path": m.Path,
-		})
+"path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MkDirs) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"path": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"path": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 type MkDirsResponse struct {
 }
@@ -1362,7 +1721,7 @@ func (to *MkDirsResponse) SyncFieldsDuringRead(ctx context.Context, from MkDirsR
 
 func (m MkDirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirsResponse.
@@ -1373,7 +1732,8 @@ func (m MkDirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MkDirsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1382,22 +1742,34 @@ func (m MkDirsResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 func (m MkDirsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MkDirsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type Move struct {
-	// The destination path of the file or directory. The path should be the
-	// absolute DBFS path.
+    // The destination path of the file or directory. The path should be the
+    // absolute DBFS path.
 	DestinationPath types.String `tfsdk:"destination_path"`
-	// The source path of the file or directory. The path should be the absolute
-	// DBFS path.
+    // The source path of the file or directory. The path should be the absolute
+    // DBFS path.
 	SourcePath types.String `tfsdk:"source_path"`
 }
 
@@ -1408,10 +1780,10 @@ func (to *Move) SyncFieldsDuringRead(ctx context.Context, from Move) {
 }
 
 func (m Move) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_path"] = attrs["destination_path"].SetRequired()
-	attrs["source_path"] = attrs["source_path"].SetRequired()
+attrs["destination_path"] = attrs["destination_path"].SetRequired()
+attrs["source_path"] = attrs["source_path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
@@ -1422,7 +1794,8 @@ func (m Move) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Move) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1432,20 +1805,34 @@ func (m Move) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"destination_path": m.DestinationPath,
-			"source_path":      m.SourcePath,
-		})
+"destination_path": m.DestinationPath,
+      "source_path": m.SourcePath,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Move) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"destination_path": types.StringType,
-			"source_path":      types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"destination_path": types.StringType,
+      "source_path": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 type MoveResponse struct {
 }
@@ -1458,7 +1845,7 @@ func (to *MoveResponse) SyncFieldsDuringRead(ctx context.Context, from MoveRespo
 
 func (m MoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MoveResponse.
@@ -1469,7 +1856,8 @@ func (m MoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MoveResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1478,22 +1866,34 @@ func (m MoveResponse) GetComplexFieldTypes(ctx context.Context) map[string]refle
 func (m MoveResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MoveResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type Put struct {
-	// This parameter might be absent, and instead a posted file will be used.
+    // This parameter might be absent, and instead a posted file will be used.
 	Contents types.String `tfsdk:"contents"`
-	// The flag that specifies whether to overwrite existing file/files.
+    // The flag that specifies whether to overwrite existing file/files.
 	Overwrite types.Bool `tfsdk:"overwrite"`
-	// The path of the new file. The path should be the absolute DBFS path.
+    // The path of the new file. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -1504,11 +1904,11 @@ func (to *Put) SyncFieldsDuringRead(ctx context.Context, from Put) {
 }
 
 func (m Put) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
-	attrs["path"] = attrs["path"].SetRequired()
+attrs["contents"] = attrs["contents"].SetOptional()
+attrs["overwrite"] = attrs["overwrite"].SetOptional()
+attrs["path"] = attrs["path"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.
@@ -1519,7 +1919,8 @@ func (m Put) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Put) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1529,22 +1930,38 @@ func (m Put) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"contents":  m.Contents,
-			"overwrite": m.Overwrite,
-			"path":      m.Path,
-		})
+"contents": m.Contents,
+      "overwrite": m.Overwrite,
+      "path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Put) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"contents":  types.StringType,
-			"overwrite": types.BoolType,
-			"path":      types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"contents": types.StringType,
+      "overwrite": types.BoolType,
+      "path": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 type PutResponse struct {
 }
@@ -1557,7 +1974,7 @@ func (to *PutResponse) SyncFieldsDuringRead(ctx context.Context, from PutRespons
 
 func (m PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
@@ -1568,7 +1985,8 @@ func (m PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PutResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1577,23 +1995,35 @@ func (m PutResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 func (m PutResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PutResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type ReadDbfsRequest struct {
-	// The number of bytes to read starting from the offset. This has a limit of
-	// 1 MB, and a default value of 0.5 MB.
+    // The number of bytes to read starting from the offset. This has a limit of
+    // 1 MB, and a default value of 0.5 MB.
 	Length types.Int64 `tfsdk:"-"`
-	// The offset to read from in bytes.
+    // The offset to read from in bytes.
 	Offset types.Int64 `tfsdk:"-"`
-	// The path of the file to read. The path should be the absolute DBFS path.
+    // The path of the file to read. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"-"`
 }
 
@@ -1604,11 +2034,11 @@ func (to *ReadDbfsRequest) SyncFieldsDuringRead(ctx context.Context, from ReadDb
 }
 
 func (m ReadDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["path"] = attrs["path"].SetRequired()
-	attrs["offset"] = attrs["offset"].SetOptional()
-	attrs["length"] = attrs["length"].SetOptional()
+attrs["path"] = attrs["path"].SetRequired()
+attrs["offset"] = attrs["offset"].SetOptional()
+attrs["length"] = attrs["length"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadDbfsRequest.
@@ -1619,7 +2049,8 @@ func (m ReadDbfsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ReadDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1629,29 +2060,45 @@ func (m ReadDbfsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"length": m.Length,
-			"offset": m.Offset,
-			"path":   m.Path,
-		})
+"length": m.Length,
+      "offset": m.Offset,
+      "path": m.Path,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ReadDbfsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"length": types.Int64Type,
-			"offset": types.Int64Type,
-			"path":   types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"length": types.Int64Type,
+      "offset": types.Int64Type,
+      "path": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ReadResponse struct {
-	// The number of bytes read (could be less than ``length`` if we hit end of
-	// file). This refers to number of bytes read in unencoded version (response
-	// data is base64-encoded).
+    // The number of bytes read (could be less than ``length`` if we hit end of
+    // file). This refers to number of bytes read in unencoded version (response
+    // data is base64-encoded).
 	BytesRead types.Int64 `tfsdk:"bytes_read"`
-	// The base64-encoded contents of the file read.
+    // The base64-encoded contents of the file read.
 	Data types.String `tfsdk:"data"`
 }
 
@@ -1662,10 +2109,10 @@ func (to *ReadResponse) SyncFieldsDuringRead(ctx context.Context, from ReadRespo
 }
 
 func (m ReadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["bytes_read"] = attrs["bytes_read"].SetOptional()
-	attrs["data"] = attrs["data"].SetOptional()
+attrs["bytes_read"] = attrs["bytes_read"].SetOptional()
+attrs["data"] = attrs["data"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadResponse.
@@ -1676,7 +2123,8 @@ func (m ReadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ReadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1686,27 +2134,42 @@ func (m ReadResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"bytes_read": m.BytesRead,
-			"data":       m.Data,
-		})
+"bytes_read": m.BytesRead,
+      "data": m.Data,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ReadResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"bytes_read": types.Int64Type,
-			"data":       types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"bytes_read": types.Int64Type,
+      "data": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type UploadRequest struct {
+    
 	Contents types.Object `tfsdk:"-"`
-	// The absolute path of the file.
+    // The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
-	// If true or unspecified, an existing file will be overwritten. If false,
-	// an error will be returned if the path points to an existing file.
+    // If true or unspecified, an existing file will be overwritten. If false,
+    // an error will be returned if the path points to an existing file.
 	Overwrite types.Bool `tfsdk:"-"`
 }
 
@@ -1717,11 +2180,11 @@ func (to *UploadRequest) SyncFieldsDuringRead(ctx context.Context, from UploadRe
 }
 
 func (m UploadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetRequired()
-	attrs["file_path"] = attrs["file_path"].SetRequired()
-	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+attrs["contents"] = attrs["contents"].SetRequired()
+attrs["file_path"] = attrs["file_path"].SetRequired()
+attrs["overwrite"] = attrs["overwrite"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadRequest.
@@ -1732,7 +2195,8 @@ func (m UploadRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UploadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1742,19 +2206,33 @@ func (m UploadRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"contents":  m.Contents,
-			"file_path": m.FilePath,
-			"overwrite": m.Overwrite,
-		})
+"contents": m.Contents,
+      "file_path": m.FilePath,
+      "overwrite": m.Overwrite,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UploadRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"contents":  types.ObjectType{},
-			"file_path": types.StringType,
-			"overwrite": types.BoolType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"contents": types.ObjectType{},
+      "file_path": types.StringType,
+      "overwrite": types.BoolType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+

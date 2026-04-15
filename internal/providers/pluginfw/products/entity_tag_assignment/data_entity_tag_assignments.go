@@ -4,18 +4,34 @@ package entity_tag_assignment
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "entity_tag_assignments"
@@ -29,28 +45,29 @@ func DataSourceEntityTagAssignments() datasource.DataSource {
 // EntityTagAssignmentsData extends the main model with additional fields.
 type EntityTagAssignmentsData struct {
 	EntityTagAssignments types.List `tfsdk:"tag_assignments"`
-	// Optional. Maximum number of tag assignments to return in a single page
-	MaxResults         types.Int64  `tfsdk:"max_results"`
-	EntityType         types.String `tfsdk:"entity_type"`
-	EntityName         types.String `tfsdk:"entity_name"`
+    // Optional. Maximum number of tag assignments to return in a single page
+	MaxResults types.Int64 `tfsdk:"max_results"`
+	EntityType types.String `tfsdk:"entity_type"`
+	EntityName types.String `tfsdk:"entity_name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 func (EntityTagAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tag_assignments": reflect.TypeOf(EntityTagAssignmentData{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
-func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["max_results"] = attrs["max_results"].SetOptional()
+func (m EntityTagAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["max_results"] = attrs["max_results"].SetOptional()
 
 	attrs["tag_assignments"] = attrs["tag_assignments"].SetComputed()
 	attrs["entity_type"] = attrs["entity_type"].SetRequired()
 	attrs["entity_name"] = attrs["entity_name"].SetRequired()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -76,7 +93,7 @@ func (r *EntityTagAssignmentsDataSource) Configure(ctx context.Context, req data
 }
 
 func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config EntityTagAssignmentsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -85,11 +102,12 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var listRequest catalog.ListEntityTagAssignmentsRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -99,7 +117,7 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,7 +137,7 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 			return
 		}
 		entity_tag_assignment.ProviderConfigData = config.ProviderConfigData
-
+		
 		results = append(results, entity_tag_assignment.ToObjectValue(ctx))
 	}
 

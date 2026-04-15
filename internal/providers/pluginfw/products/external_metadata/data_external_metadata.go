@@ -4,22 +4,36 @@ package external_metadata
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "external_metadata"
@@ -34,9 +48,11 @@ type ExternalMetadataDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -61,14 +77,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -78,69 +94,72 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // ExternalMetadataData extends the main model with additional fields.
 type ExternalMetadataData struct {
-	// List of columns associated with the external metadata object.
+    // List of columns associated with the external metadata object.
 	Columns types.List `tfsdk:"columns"`
-	// Time at which this external metadata object was created.
+    // Time at which this external metadata object was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Username of external metadata object creator.
+    // Username of external metadata object creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// User-provided free-form text description.
+    // User-provided free-form text description.
 	Description types.String `tfsdk:"description"`
-	// Type of entity within the external system.
+    // Type of entity within the external system.
 	EntityType types.String `tfsdk:"entity_type"`
-	// Unique identifier of the external metadata object.
+    // Unique identifier of the external metadata object.
 	Id types.String `tfsdk:"id"`
-	// Unique identifier of parent metastore.
+    // Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name of the external metadata object.
+    // Name of the external metadata object.
 	Name types.String `tfsdk:"name"`
-	// Owner of the external metadata object.
+    // Owner of the external metadata object.
 	Owner types.String `tfsdk:"owner"`
-	// A map of key-value properties attached to the external metadata object.
+    // A map of key-value properties attached to the external metadata object.
 	Properties types.Map `tfsdk:"properties"`
-	// Type of external system.
+    // Type of external system.
 	SystemType types.String `tfsdk:"system_type"`
-	// Time at which this external metadata object was last modified.
+    // Time at which this external metadata object was last modified.
 	UpdateTime types.String `tfsdk:"update_time"`
-	// Username of user who last modified external metadata object.
+    // Username of user who last modified external metadata object.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// URL associated with the external metadata object.
-	Url                types.String `tfsdk:"url"`
+    // URL associated with the external metadata object.
+	Url types.String `tfsdk:"url"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ExternalMetadataData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ExternalMetadataData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m ExternalMetadataData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns":         reflect.TypeOf(types.String{}),
-		"properties":      reflect.TypeOf(types.String{}),
+    "columns": reflect.TypeOf(types.String{}),
+    "properties": reflect.TypeOf(types.String{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
@@ -154,22 +173,23 @@ func (m ExternalMetadataData) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"columns":      m.Columns,
-			"create_time":  m.CreateTime,
-			"created_by":   m.CreatedBy,
-			"description":  m.Description,
-			"entity_type":  m.EntityType,
-			"id":           m.Id,
-			"metastore_id": m.MetastoreId,
-			"name":         m.Name,
-			"owner":        m.Owner,
-			"properties":   m.Properties,
-			"system_type":  m.SystemType,
-			"update_time":  m.UpdateTime,
-			"updated_by":   m.UpdatedBy,
-			"url":          m.Url,
-
+			"columns": m.Columns,
+      "create_time": m.CreateTime,
+      "created_by": m.CreatedBy,
+      "description": m.Description,
+      "entity_type": m.EntityType,
+      "id": m.Id,
+      "metastore_id": m.MetastoreId,
+      "name": m.Name,
+      "owner": m.Owner,
+      "properties": m.Properties,
+      "system_type": m.SystemType,
+      "update_time": m.UpdateTime,
+      "updated_by": m.UpdatedBy,
+      "url": m.Url,
+      
 			"provider_config": m.ProviderConfigData,
+			
 		},
 	)
 }
@@ -180,47 +200,47 @@ func (m ExternalMetadataData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"create_time":  types.StringType,
-			"created_by":   types.StringType,
-			"description":  types.StringType,
-			"entity_type":  types.StringType,
-			"id":           types.StringType,
-			"metastore_id": types.StringType,
-			"name":         types.StringType,
-			"owner":        types.StringType,
-			"properties": basetypes.MapType{
-				ElemType: types.StringType,
-			},
-			"system_type": types.StringType,
-			"update_time": types.StringType,
-			"updated_by":  types.StringType,
-			"url":         types.StringType,
-
+ElemType: types.StringType,
+},
+      "create_time": types.StringType,
+      "created_by": types.StringType,
+      "description": types.StringType,
+      "entity_type": types.StringType,
+      "id": types.StringType,
+      "metastore_id": types.StringType,
+      "name": types.StringType,
+      "owner": types.StringType,
+      "properties": basetypes.MapType{
+ElemType: types.StringType,
+},
+      "system_type": types.StringType,
+      "update_time": types.StringType,
+      "updated_by": types.StringType,
+      "url": types.StringType,
+      
 			"provider_config": ProviderConfigData{}.Type(ctx),
+			
 		},
 	}
 }
 
-func (m ExternalMetadataData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["columns"] = attrs["columns"].SetComputed()
-	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["description"] = attrs["description"].SetComputed()
-	attrs["entity_type"] = attrs["entity_type"].SetComputed()
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["properties"] = attrs["properties"].SetComputed()
-	attrs["system_type"] = attrs["system_type"].SetComputed()
-	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["updated_by"] = attrs["updated_by"].SetComputed()
-	attrs["url"] = attrs["url"].SetComputed()
+func (m ExternalMetadataData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["columns"] = attrs["columns"].SetComputed()
+attrs["create_time"] = attrs["create_time"].SetComputed()
+attrs["created_by"] = attrs["created_by"].SetComputed()
+attrs["description"] = attrs["description"].SetComputed()
+attrs["entity_type"] = attrs["entity_type"].SetComputed()
+attrs["id"] = attrs["id"].SetComputed()
+attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["owner"] = attrs["owner"].SetComputed()
+attrs["properties"] = attrs["properties"].SetComputed()
+attrs["system_type"] = attrs["system_type"].SetComputed()
+attrs["update_time"] = attrs["update_time"].SetComputed()
+attrs["updated_by"] = attrs["updated_by"].SetComputed()
+attrs["url"] = attrs["url"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -242,7 +262,7 @@ func (r *ExternalMetadataDataSource) Configure(ctx context.Context, req datasour
 }
 
 func (r *ExternalMetadataDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config ExternalMetadataData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -250,12 +270,14 @@ func (r *ExternalMetadataDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
+	
 	var readRequest catalog.GetExternalMetadataRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -265,7 +287,7 @@ func (r *ExternalMetadataDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

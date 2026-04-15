@@ -4,23 +4,36 @@ package workspace_setting_v2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/settingsv2_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "workspace_setting_v2"
@@ -35,9 +48,11 @@ type SettingDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -62,14 +77,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -79,114 +94,117 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // SettingData extends the main model with additional fields.
 type SettingData struct {
-	// Setting value for aibi_dashboard_embedding_access_policy setting. This is
-	// the setting value set by consumers, check
-	// effective_aibi_dashboard_embedding_access_policy for final setting value.
+    // Setting value for aibi_dashboard_embedding_access_policy setting. This is
+    // the setting value set by consumers, check
+    // effective_aibi_dashboard_embedding_access_policy for final setting value.
 	AibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"aibi_dashboard_embedding_access_policy"`
-	// Setting value for aibi_dashboard_embedding_approved_domains setting. This
-	// is the setting value set by consumers, check
-	// effective_aibi_dashboard_embedding_approved_domains for final setting
-	// value.
+    // Setting value for aibi_dashboard_embedding_approved_domains setting. This
+    // is the setting value set by consumers, check
+    // effective_aibi_dashboard_embedding_approved_domains for final setting
+    // value.
 	AibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"aibi_dashboard_embedding_approved_domains"`
-	// Setting value for automatic_cluster_update_workspace setting. This is the
-	// setting value set by consumers, check
-	// effective_automatic_cluster_update_workspace for final setting value.
+    // Setting value for automatic_cluster_update_workspace setting. This is the
+    // setting value set by consumers, check
+    // effective_automatic_cluster_update_workspace for final setting value.
 	AutomaticClusterUpdateWorkspace types.Object `tfsdk:"automatic_cluster_update_workspace"`
-	// Setting value for boolean type setting. This is the setting value set by
-	// consumers, check effective_boolean_val for final setting value.
+    // Setting value for boolean type setting. This is the setting value set by
+    // consumers, check effective_boolean_val for final setting value.
 	BooleanVal types.Object `tfsdk:"boolean_val"`
-	// Effective setting value for aibi_dashboard_embedding_access_policy
-	// setting. This is the final effective value of setting. To set a value use
-	// aibi_dashboard_embedding_access_policy.
+    // Effective setting value for aibi_dashboard_embedding_access_policy
+    // setting. This is the final effective value of setting. To set a value use
+    // aibi_dashboard_embedding_access_policy.
 	EffectiveAibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"effective_aibi_dashboard_embedding_access_policy"`
-	// Effective setting value for aibi_dashboard_embedding_approved_domains
-	// setting. This is the final effective value of setting. To set a value use
-	// aibi_dashboard_embedding_approved_domains.
+    // Effective setting value for aibi_dashboard_embedding_approved_domains
+    // setting. This is the final effective value of setting. To set a value use
+    // aibi_dashboard_embedding_approved_domains.
 	EffectiveAibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"effective_aibi_dashboard_embedding_approved_domains"`
-	// Effective setting value for automatic_cluster_update_workspace setting.
-	// This is the final effective value of setting. To set a value use
-	// automatic_cluster_update_workspace.
+    // Effective setting value for automatic_cluster_update_workspace setting.
+    // This is the final effective value of setting. To set a value use
+    // automatic_cluster_update_workspace.
 	EffectiveAutomaticClusterUpdateWorkspace types.Object `tfsdk:"effective_automatic_cluster_update_workspace"`
-	// Effective setting value for boolean type setting. This is the final
-	// effective value of setting. To set a value use boolean_val.
+    // Effective setting value for boolean type setting. This is the final
+    // effective value of setting. To set a value use boolean_val.
 	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
-	// Effective setting value for integer type setting. This is the final
-	// effective value of setting. To set a value use integer_val.
+    // Effective setting value for integer type setting. This is the final
+    // effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
-	// Effective setting value for personal_compute setting. This is the final
-	// effective value of setting. To set a value use personal_compute.
+    // Effective setting value for personal_compute setting. This is the final
+    // effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
-	// Effective setting value for restrict_workspace_admins setting. This is
-	// the final effective value of setting. To set a value use
-	// restrict_workspace_admins.
+    // Effective setting value for restrict_workspace_admins setting. This is
+    // the final effective value of setting. To set a value use
+    // restrict_workspace_admins.
 	EffectiveRestrictWorkspaceAdmins types.Object `tfsdk:"effective_restrict_workspace_admins"`
-	// Effective setting value for string type setting. This is the final
-	// effective value of setting. To set a value use string_val.
+    // Effective setting value for string type setting. This is the final
+    // effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
-	// Setting value for integer type setting. This is the setting value set by
-	// consumers, check effective_integer_val for final setting value.
+    // Setting value for integer type setting. This is the setting value set by
+    // consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
-	// Name of the setting.
+    // Name of the setting.
 	Name types.String `tfsdk:"name"`
-	// Setting value for personal_compute setting. This is the setting value set
-	// by consumers, check effective_personal_compute for final setting value.
+    // Setting value for personal_compute setting. This is the setting value set
+    // by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.Object `tfsdk:"personal_compute"`
-	// Setting value for restrict_workspace_admins setting. This is the setting
-	// value set by consumers, check effective_restrict_workspace_admins for
-	// final setting value.
+    // Setting value for restrict_workspace_admins setting. This is the setting
+    // value set by consumers, check effective_restrict_workspace_admins for
+    // final setting value.
 	RestrictWorkspaceAdmins types.Object `tfsdk:"restrict_workspace_admins"`
-	// Setting value for string type setting. This is the setting value set by
-	// consumers, check effective_string_val for final setting value.
-	StringVal          types.Object `tfsdk:"string_val"`
+    // Setting value for string type setting. This is the setting value set by
+    // consumers, check effective_string_val for final setting value.
+	StringVal types.Object `tfsdk:"string_val"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// SettingData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// SettingData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aibi_dashboard_embedding_access_policy":              reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
-		"aibi_dashboard_embedding_approved_domains":           reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
-		"automatic_cluster_update_workspace":                  reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
-		"boolean_val":                                         reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
-		"effective_aibi_dashboard_embedding_access_policy":    reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
-		"effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
-		"effective_automatic_cluster_update_workspace":        reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
-		"effective_boolean_val":                               reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
-		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
-		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
-		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
-		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
-		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
-		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
-		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
-		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
-		"provider_config":                                     reflect.TypeOf(ProviderConfigData{}),
+    "aibi_dashboard_embedding_access_policy": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
+    "aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+    "automatic_cluster_update_workspace": reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
+    "boolean_val": reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+    "effective_aibi_dashboard_embedding_access_policy": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
+    "effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+    "effective_automatic_cluster_update_workspace": reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
+    "effective_boolean_val": reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+    "effective_integer_val": reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+    "effective_personal_compute": reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+    "effective_restrict_workspace_admins": reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
+    "effective_string_val": reflect.TypeOf(settingsv2_tf.StringMessage{}),
+    "integer_val": reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+    "personal_compute": reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+    "restrict_workspace_admins": reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
+    "string_val": reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
@@ -200,25 +218,26 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aibi_dashboard_embedding_access_policy":              m.AibiDashboardEmbeddingAccessPolicy,
-			"aibi_dashboard_embedding_approved_domains":           m.AibiDashboardEmbeddingApprovedDomains,
-			"automatic_cluster_update_workspace":                  m.AutomaticClusterUpdateWorkspace,
-			"boolean_val":                                         m.BooleanVal,
-			"effective_aibi_dashboard_embedding_access_policy":    m.EffectiveAibiDashboardEmbeddingAccessPolicy,
-			"effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
-			"effective_automatic_cluster_update_workspace":        m.EffectiveAutomaticClusterUpdateWorkspace,
-			"effective_boolean_val":                               m.EffectiveBooleanVal,
-			"effective_integer_val":                               m.EffectiveIntegerVal,
-			"effective_personal_compute":                          m.EffectivePersonalCompute,
-			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
-			"effective_string_val":                                m.EffectiveStringVal,
-			"integer_val":                                         m.IntegerVal,
-			"name":                                                m.Name,
-			"personal_compute":                                    m.PersonalCompute,
-			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
-			"string_val":                                          m.StringVal,
-
+			"aibi_dashboard_embedding_access_policy": m.AibiDashboardEmbeddingAccessPolicy,
+      "aibi_dashboard_embedding_approved_domains": m.AibiDashboardEmbeddingApprovedDomains,
+      "automatic_cluster_update_workspace": m.AutomaticClusterUpdateWorkspace,
+      "boolean_val": m.BooleanVal,
+      "effective_aibi_dashboard_embedding_access_policy": m.EffectiveAibiDashboardEmbeddingAccessPolicy,
+      "effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
+      "effective_automatic_cluster_update_workspace": m.EffectiveAutomaticClusterUpdateWorkspace,
+      "effective_boolean_val": m.EffectiveBooleanVal,
+      "effective_integer_val": m.EffectiveIntegerVal,
+      "effective_personal_compute": m.EffectivePersonalCompute,
+      "effective_restrict_workspace_admins": m.EffectiveRestrictWorkspaceAdmins,
+      "effective_string_val": m.EffectiveStringVal,
+      "integer_val": m.IntegerVal,
+      "name": m.Name,
+      "personal_compute": m.PersonalCompute,
+      "restrict_workspace_admins": m.RestrictWorkspaceAdmins,
+      "string_val": m.StringVal,
+      
 			"provider_config": m.ProviderConfigData,
+			
 		},
 	)
 }
@@ -228,50 +247,50 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m SettingData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aibi_dashboard_embedding_access_policy":              settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
-			"aibi_dashboard_embedding_approved_domains":           settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
-			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
-			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
-			"effective_aibi_dashboard_embedding_access_policy":    settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
-			"effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
-			"effective_automatic_cluster_update_workspace":        settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
-			"effective_boolean_val":                               settingsv2_tf.BooleanMessage{}.Type(ctx),
-			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
-			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
-			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
-			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
-			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
-			"name":                                                types.StringType,
-			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
-			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
-			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
-
+			"aibi_dashboard_embedding_access_policy": settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+      "aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+      "automatic_cluster_update_workspace": settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
+      "boolean_val": settingsv2_tf.BooleanMessage{}.Type(ctx),
+      "effective_aibi_dashboard_embedding_access_policy": settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+      "effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+      "effective_automatic_cluster_update_workspace": settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
+      "effective_boolean_val": settingsv2_tf.BooleanMessage{}.Type(ctx),
+      "effective_integer_val": settingsv2_tf.IntegerMessage{}.Type(ctx),
+      "effective_personal_compute": settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+      "effective_restrict_workspace_admins": settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
+      "effective_string_val": settingsv2_tf.StringMessage{}.Type(ctx),
+      "integer_val": settingsv2_tf.IntegerMessage{}.Type(ctx),
+      "name": types.StringType,
+      "personal_compute": settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+      "restrict_workspace_admins": settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
+      "string_val": settingsv2_tf.StringMessage{}.Type(ctx),
+      
 			"provider_config": ProviderConfigData{}.Type(ctx),
+			
 		},
 	}
 }
 
-func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetComputed()
-	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetComputed()
-	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetComputed()
-	attrs["boolean_val"] = attrs["boolean_val"].SetComputed()
-	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetComputed()
-	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetComputed()
-	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetComputed()
-	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
-	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
-	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
-	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
-	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
-	attrs["integer_val"] = attrs["integer_val"].SetComputed()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
-	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
-	attrs["string_val"] = attrs["string_val"].SetComputed()
+func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetComputed()
+attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetComputed()
+attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetComputed()
+attrs["boolean_val"] = attrs["boolean_val"].SetComputed()
+attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetComputed()
+attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetComputed()
+attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetComputed()
+attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
+attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
+attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
+attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
+attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+attrs["integer_val"] = attrs["integer_val"].SetComputed()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
+attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
+attrs["string_val"] = attrs["string_val"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -293,7 +312,7 @@ func (r *SettingDataSource) Configure(ctx context.Context, req datasource.Config
 }
 
 func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config SettingData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -301,12 +320,14 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	
 	var readRequest settingsv2.GetPublicWorkspaceSettingRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -316,7 +337,7 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

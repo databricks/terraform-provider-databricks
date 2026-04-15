@@ -4,30 +4,41 @@ package apps_settings_custom_template
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "apps_settings_custom_template"
@@ -43,17 +54,19 @@ type CustomTemplateResource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
+	
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -73,14 +86,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -90,56 +103,60 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // CustomTemplate extends the main model with additional fields.
 type CustomTemplate struct {
+    
 	Creator types.String `tfsdk:"creator"`
-	// The description of the template.
+    // The description of the template.
 	Description types.String `tfsdk:"description"`
-	// The Git provider of the template.
+    // The Git provider of the template.
 	GitProvider types.String `tfsdk:"git_provider"`
-	// The Git repository URL that the template resides in.
+    // The Git repository URL that the template resides in.
 	GitRepo types.String `tfsdk:"git_repo"`
-	// The manifest of the template. It defines fields and default values when
-	// installing the template.
+    // The manifest of the template. It defines fields and default values when
+    // installing the template.
 	Manifest types.Object `tfsdk:"manifest"`
-	// The name of the template. It must contain only alphanumeric characters,
-	// hyphens, underscores, and whitespaces. It must be unique within the
-	// workspace.
+    // The name of the template. It must contain only alphanumeric characters,
+    // hyphens, underscores, and whitespaces. It must be unique within the
+    // workspace.
 	Name types.String `tfsdk:"name"`
-	// The path to the template within the Git repository.
-	Path           types.String `tfsdk:"path"`
+    // The path to the template within the Git repository.
+	Path types.String `tfsdk:"path"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// CustomTemplate struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// CustomTemplate struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m CustomTemplate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"manifest":        reflect.TypeOf(apps_tf.AppManifest{}),
+    "manifest": reflect.TypeOf(apps_tf.AppManifest{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		
 	}
 }
 
@@ -153,14 +170,15 @@ func (m CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"creator": m.Creator,
-			"description":  m.Description,
-			"git_provider": m.GitProvider,
-			"git_repo":     m.GitRepo,
-			"manifest":     m.Manifest,
-			"name":         m.Name,
-			"path":         m.Path,
-
+      "description": m.Description,
+      "git_provider": m.GitProvider,
+      "git_repo": m.GitRepo,
+      "manifest": m.Manifest,
+      "name": m.Name,
+      "path": m.Path,
+      
 			"provider_config": m.ProviderConfig,
+			
 		},
 	)
 }
@@ -168,92 +186,111 @@ func (m CustomTemplate) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m CustomTemplate) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"creator": types.StringType,
-			"description":  types.StringType,
-			"git_provider": types.StringType,
-			"git_repo":     types.StringType,
-			"manifest":     apps_tf.AppManifest{}.Type(ctx),
-			"name":         types.StringType,
-			"path":         types.StringType,
-
-			"provider_config": ProviderConfig{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{"creator": types.StringType,
+      "description": types.StringType,
+      "git_provider": types.StringType,
+      "git_repo": types.StringType,
+      "manifest": apps_tf.AppManifest{}.Type(ctx),
+      "name": types.StringType,
+      "path": types.StringType,
+      
+	  "provider_config": ProviderConfig{}.Type(ctx),
+	  
+    },
+  }
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *CustomTemplate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomTemplate) {
-	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
-		if toManifest, ok := to.GetManifest(ctx); ok {
-			if fromManifest, ok := from.GetManifest(ctx); ok {
-				// Recursively sync the fields of Manifest
-				toManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromManifest)
-				to.SetManifest(ctx, toManifest)
-			}
-		}
-	}
+  if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+    if toManifest, ok := to.GetManifest(ctx); ok {
+      if fromManifest, ok := from.GetManifest(ctx); ok {
+        // Recursively sync the fields of Manifest
+        toManifest.SyncFieldsDuringCreateOrUpdate(ctx, fromManifest)
+        to.SetManifest(ctx, toManifest)
+      }
+    }
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *CustomTemplate) SyncFieldsDuringRead(ctx context.Context, from CustomTemplate) {
-	if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
-		if toManifest, ok := to.GetManifest(ctx); ok {
-			if fromManifest, ok := from.GetManifest(ctx); ok {
-				toManifest.SyncFieldsDuringRead(ctx, fromManifest)
-				to.SetManifest(ctx, toManifest)
-			}
-		}
-	}
+  if !from.Manifest.IsNull() && !from.Manifest.IsUnknown() {
+    if toManifest, ok := to.GetManifest(ctx); ok {
+      if fromManifest, ok := from.GetManifest(ctx); ok {
+        toManifest.SyncFieldsDuringRead(ctx, fromManifest)
+        to.SetManifest(ctx, toManifest)
+      }
+    }
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
-func (m CustomTemplate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["git_provider"] = attrs["git_provider"].SetRequired()
-	attrs["git_repo"] = attrs["git_repo"].SetRequired()
-	attrs["manifest"] = attrs["manifest"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["path"] = attrs["path"].SetRequired()
+func (m CustomTemplate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["creator"] = attrs["creator"].SetComputed()
+attrs["description"] = attrs["description"].SetOptional()
+attrs["git_provider"] = attrs["git_provider"].SetRequired()
+attrs["git_repo"] = attrs["git_repo"].SetRequired()
+attrs["manifest"] = attrs["manifest"].SetRequired()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["path"] = attrs["path"].SetRequired()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // GetManifest returns the value of the Manifest field in CustomTemplate as
 // a apps_tf.AppManifest value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CustomTemplate) GetManifest(ctx context.Context) (apps_tf.AppManifest, bool) {
-	var e apps_tf.AppManifest
-	if m.Manifest.IsNull() || m.Manifest.IsUnknown() {
-		return e, false
-	}
-	var v apps_tf.AppManifest
-	d := m.Manifest.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e apps_tf.AppManifest
+  if m.Manifest.IsNull() || m.Manifest.IsUnknown() {
+    return e, false
+  }
+  var v apps_tf.AppManifest
+  d := m.Manifest.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetManifest sets the value of the Manifest field in CustomTemplate.
 func (m *CustomTemplate) SetManifest(ctx context.Context, v apps_tf.AppManifest) {
-	vs := v.ToObjectValue(ctx)
-	m.Manifest = vs
+  vs := v.ToObjectValue(ctx)
+  m.Manifest = vs
 }
+
+
+
+
+
+
+
+
 
 func (r *CustomTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -262,9 +299,9 @@ func (r *CustomTemplateResource) Metadata(ctx context.Context, req resource.Meta
 func (r *CustomTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, CustomTemplate{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks apps_settings_custom_template",
-		Attributes:  attrs,
-		Blocks:      blocks,
+		Description:	"Terraform schema for Databricks apps_settings_custom_template",
+		Attributes:		attrs,
+		Blocks:			blocks,
 	}
 }
 
@@ -306,16 +343,18 @@ func (r *CustomTemplateResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 	var custom_template apps.CustomTemplate
-
+	
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &custom_template)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
+	
 	createRequest := apps.CreateCustomTemplateRequest{
 		Template: custom_template,
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -325,7 +364,7 @@ func (r *CustomTemplateResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -339,8 +378,9 @@ func (r *CustomTemplateResource) Create(ctx context.Context, req resource.Create
 
 	var newState CustomTemplate
 
+	
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -362,12 +402,14 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	
 	var readRequest apps.GetCustomTemplateRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -377,7 +419,7 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -401,7 +443,7 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
 }
 
 func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -412,11 +454,13 @@ func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate
 		return
 	}
 
+	
 	updateRequest := apps.UpdateCustomTemplateRequest{
 		Template: custom_template,
-		Name:     plan.Name.ValueString(),
+		Name: plan.Name.ValueString(),
 	}
 
+	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -426,7 +470,7 @@ func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -439,8 +483,9 @@ func (r *CustomTemplateResource) update(ctx context.Context, plan CustomTemplate
 
 	var newState CustomTemplate
 
+	
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
-
+	
 	if diags.HasError() {
 		return
 	}
@@ -470,12 +515,14 @@ func (r *CustomTemplateResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+	
 	var deleteRequest apps.DeleteCustomTemplateRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -485,18 +532,18 @@ func (r *CustomTemplateResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
 	_, err := client.AppsSettings.DeleteCustomTemplate(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete apps_settings_custom_template", err.Error())
 		return
 	}
-
+	
 }
 
 var _ resource.ResourceWithImportState = &CustomTemplateResource{}
@@ -515,6 +562,6 @@ func (r *CustomTemplateResource) ImportState(ctx context.Context, req resource.I
 		return
 	}
 
-	name := parts[0]
+name := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
-}
+	}

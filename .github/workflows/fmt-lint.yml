@@ -1,0 +1,57 @@
+name: fmt-lint
+
+on:
+  # Delete this workflow after it runs once to avoid loops
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  fmt-lint:
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: ./.github/actions/setup-go-build-environment
+        with:
+          go-version-file: go.mod
+
+      - name: Download Go modules
+        run: |
+          jf go mod download
+
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+          echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+          echo "GONOSUMDB=*" >> $GITHUB_ENV
+
+      - name: Vendor
+        run: go mod vendor
+
+      - name: Format
+        run: make fmt
+
+      - name: Lint
+        run: make lint
+
+      - name: Delete this workflow
+        run: git rm .github/workflows/fmt-lint.yml
+
+      - name: Commit and push if changed
+        run: |
+          git diff --quiet && git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Auto fmt and lint"
+          git push

@@ -13,23 +13,34 @@ package iam_tf
 import (
 	"context"
 	"reflect"
-
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-
+	
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+  
 )
 
-type AccessControlRequest struct {
-	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
 
+
+
+type AccessControlRequest struct {
+    // name of the group
+	GroupName types.String `tfsdk:"group_name"`
+    
 	PermissionLevel types.String `tfsdk:"permission_level"`
-	// application ID of a service principal
+    // application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+    // name of the user
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -40,12 +51,12 @@ func (to *AccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from A
 }
 
 func (m AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["group_name"] = attrs["group_name"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccessControlRequest.
@@ -56,7 +67,8 @@ func (m AccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -66,64 +78,82 @@ func (m AccessControlRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             m.GroupName,
-			"permission_level":       m.PermissionLevel,
-			"service_principal_name": m.ServicePrincipalName,
-			"user_name":              m.UserName,
-		})
+"group_name": m.GroupName,
+      "permission_level": m.PermissionLevel,
+      "service_principal_name": m.ServicePrincipalName,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AccessControlRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"group_name":             types.StringType,
-			"permission_level":       types.StringType,
-			"service_principal_name": types.StringType,
-			"user_name":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"group_name": types.StringType,
+      "permission_level": types.StringType,
+      "service_principal_name": types.StringType,
+      "user_name": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type AccessControlResponse struct {
-	// All permissions.
+    // All permissions.
 	AllPermissions types.List `tfsdk:"all_permissions"`
-	// Display name of the user or service principal.
+    // Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// name of the group
+    // name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Name of the service principal.
+    // Name of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+    // name of the user
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *AccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccessControlResponse) {
-	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AllPermissions = from.AllPermissions
-	}
+  if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AllPermissions = from.AllPermissions
+  }
 }
 
 func (to *AccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from AccessControlResponse) {
-	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AllPermissions = from.AllPermissions
-	}
+  if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AllPermissions = from.AllPermissions
+  }
 }
 
 func (m AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["group_name"] = attrs["group_name"].SetOptional()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccessControlResponse.
@@ -134,9 +164,9 @@ func (m AccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfsche
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"all_permissions": reflect.TypeOf(Permission{}),
-	}
+  return map[string]reflect.Type{
+    "all_permissions": reflect.TypeOf(Permission{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -146,129 +176,150 @@ func (m AccessControlResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        m.AllPermissions,
-			"display_name":           m.DisplayName,
-			"group_name":             m.GroupName,
-			"service_principal_name": m.ServicePrincipalName,
-			"user_name":              m.UserName,
-		})
+"all_permissions": m.AllPermissions,
+      "display_name": m.DisplayName,
+      "group_name": m.GroupName,
+      "service_principal_name": m.ServicePrincipalName,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AccessControlResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: Permission{}.Type(ctx),
-			},
-			"display_name":           types.StringType,
-			"group_name":             types.StringType,
-			"service_principal_name": types.StringType,
-			"user_name":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"all_permissions": basetypes.ListType{
+ElemType: Permission{}.Type(ctx),
+},
+      "display_name": types.StringType,
+      "group_name": types.StringType,
+      "service_principal_name": types.StringType,
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAllPermissions returns the value of the AllPermissions field in AccessControlResponse as
 // a slice of Permission values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccessControlResponse) GetAllPermissions(ctx context.Context) ([]Permission, bool) {
-	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
-		return nil, false
-	}
-	var v []Permission
-	d := m.AllPermissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
+    return nil, false
+  }
+  var v []Permission
+  d := m.AllPermissions.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in AccessControlResponse.
 func (m *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permission) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AllPermissions = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AllPermissions = types.ListValueMust(t, vs)
 }
 
-type AccountGroup struct {
-	// Databricks account ID
-	AccountId types.String `tfsdk:"account_id"`
-	// String that represents a human-readable group name
-	DisplayName types.String `tfsdk:"display_name"`
-	// external_id should be unique for identifying groups
-	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
-	Id types.String `tfsdk:"id"`
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type AccountGroup struct {
+    // Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
+    // String that represents a human-readable group name
+	DisplayName types.String `tfsdk:"display_name"`
+    // external_id should be unique for identifying groups
+	ExternalId types.String `tfsdk:"external_id"`
+    // Databricks group ID
+	Id types.String `tfsdk:"id"`
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *AccountGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccountGroup) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *AccountGroup) SyncFieldsDuringRead(ctx context.Context, from AccountGroup) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountGroup.
@@ -279,11 +330,11 @@ func (m AccountGroup) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AccountGroup) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"members": reflect.TypeOf(ComplexValue{}),
-		"meta":    reflect.TypeOf(ResourceMeta{}),
-		"roles":   reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -293,157 +344,184 @@ func (m AccountGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":   m.AccountId,
-			"display_name": m.DisplayName,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-		})
+"account_id": m.AccountId,
+      "display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AccountGroup) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"account_id":   types.StringType,
-			"display_name": types.StringType,
-			"external_id":  types.StringType,
-			"id":           types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"account_id": types.StringType,
+      "display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in AccountGroup as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountGroup) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in AccountGroup.
 func (m *AccountGroup) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in AccountGroup as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountGroup) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in AccountGroup.
 func (m *AccountGroup) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in AccountGroup as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountGroup) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in AccountGroup.
 func (m *AccountGroup) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type AccountServicePrincipal struct {
-	// Databricks account ID
-	AccountId types.String `tfsdk:"account_id"`
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
-	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
-	DisplayName types.String `tfsdk:"display_name"`
 
+
+
+
+
+
+
+
+type AccountServicePrincipal struct {
+    // Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // UUID relating to the service principal
+	ApplicationId types.String `tfsdk:"application_id"`
+    // String that represents a concatenation of given and family names.
+	DisplayName types.String `tfsdk:"display_name"`
+    
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *AccountServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccountServicePrincipal) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *AccountServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from AccountServicePrincipal) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountServicePrincipal.
@@ -454,9 +532,9 @@ func (m AccountServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfsc
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AccountServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"roles": reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -466,140 +544,165 @@ func (m AccountServicePrincipal) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":     m.AccountId,
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"external_id":    m.ExternalId,
-			"id":             m.Id,
-			"roles":          m.Roles,
-		})
+"account_id": m.AccountId,
+      "active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AccountServicePrincipal) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"account_id":     types.StringType,
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"external_id":    types.StringType,
-			"id":             types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"account_id": types.StringType,
+      "active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in AccountServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in AccountServicePrincipal.
 func (m *AccountServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type AccountUser struct {
-	// Databricks account ID
-	AccountId types.String `tfsdk:"account_id"`
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`.
-	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
-	Emails types.List `tfsdk:"emails"`
-	// External ID is not currently supported. It is reserved for future use.
-	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks user ID.
-	Id types.String `tfsdk:"id"`
 
+
+
+
+
+
+
+
+type AccountUser struct {
+    // Databricks account ID
+	AccountId types.String `tfsdk:"account_id"`
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`.
+	DisplayName types.String `tfsdk:"display_name"`
+    // All the emails associated with the Databricks user.
+	Emails types.List `tfsdk:"emails"`
+    // External ID is not currently supported. It is reserved for future use.
+	ExternalId types.String `tfsdk:"external_id"`
+    // Databricks user ID.
+	Id types.String `tfsdk:"id"`
+    
 	Name types.Object `tfsdk:"name"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *AccountUser) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccountUser) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *AccountUser) SyncFieldsDuringRead(ctx context.Context, from AccountUser) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetOptional()
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccountUser.
@@ -610,11 +713,11 @@ func (m AccountUser) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AccountUser) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails": reflect.TypeOf(ComplexValue{}),
-		"name":   reflect.TypeOf(Name{}),
-		"roles":  reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -624,120 +727,151 @@ func (m AccountUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":   m.AccountId,
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"user_name":    m.UserName,
-		})
+"account_id": m.AccountId,
+      "active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m AccountUser) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"account_id":   types.StringType,
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"id":          types.StringType,
-			"name":        Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"account_id": types.StringType,
+      "active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in AccountUser as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountUser) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in AccountUser.
 func (m *AccountUser) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
 
 // GetName returns the value of the Name field in AccountUser as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountUser) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in AccountUser.
 func (m *AccountUser) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in AccountUser as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *AccountUser) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in AccountUser.
 func (m *AccountUser) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
+
+
 
 // represents an identity trying to access a resource - user or a service
 // principal group can be a principal of a permission set assignment but an
 // actor is always a user or a service principal
 type Actor struct {
+    
 	ActorId types.Int64 `tfsdk:"actor_id"`
 }
 
@@ -748,9 +882,9 @@ func (to *Actor) SyncFieldsDuringRead(ctx context.Context, from Actor) {
 }
 
 func (m Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["actor_id"] = attrs["actor_id"].SetOptional()
+attrs["actor_id"] = attrs["actor_id"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Actor.
@@ -761,7 +895,8 @@ func (m Actor) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Actor) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -771,53 +906,66 @@ func (m Actor) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"actor_id": m.ActorId,
-		})
+"actor_id": m.ActorId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Actor) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"actor_id": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"actor_id": types.Int64Type,
+      
+    },
+  }
 }
 
-type CheckPolicyResponse struct {
-	ConsistencyToken types.Object `tfsdk:"consistency_token"`
 
+
+
+
+
+
+
+
+
+
+type CheckPolicyResponse struct {
+    
+	ConsistencyToken types.Object `tfsdk:"consistency_token"`
+    
 	IsPermitted types.Bool `tfsdk:"is_permitted"`
 }
 
 func (to *CheckPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CheckPolicyResponse) {
-	if !from.ConsistencyToken.IsNull() && !from.ConsistencyToken.IsUnknown() {
-		if toConsistencyToken, ok := to.GetConsistencyToken(ctx); ok {
-			if fromConsistencyToken, ok := from.GetConsistencyToken(ctx); ok {
-				// Recursively sync the fields of ConsistencyToken
-				toConsistencyToken.SyncFieldsDuringCreateOrUpdate(ctx, fromConsistencyToken)
-				to.SetConsistencyToken(ctx, toConsistencyToken)
-			}
-		}
-	}
+  if !from.ConsistencyToken.IsNull() && !from.ConsistencyToken.IsUnknown() {
+    if toConsistencyToken, ok := to.GetConsistencyToken(ctx); ok {
+      if fromConsistencyToken, ok := from.GetConsistencyToken(ctx); ok {
+        // Recursively sync the fields of ConsistencyToken
+        toConsistencyToken.SyncFieldsDuringCreateOrUpdate(ctx, fromConsistencyToken)
+        to.SetConsistencyToken(ctx, toConsistencyToken)
+      }
+    }
+  }
 }
 
 func (to *CheckPolicyResponse) SyncFieldsDuringRead(ctx context.Context, from CheckPolicyResponse) {
-	if !from.ConsistencyToken.IsNull() && !from.ConsistencyToken.IsUnknown() {
-		if toConsistencyToken, ok := to.GetConsistencyToken(ctx); ok {
-			if fromConsistencyToken, ok := from.GetConsistencyToken(ctx); ok {
-				toConsistencyToken.SyncFieldsDuringRead(ctx, fromConsistencyToken)
-				to.SetConsistencyToken(ctx, toConsistencyToken)
-			}
-		}
-	}
+  if !from.ConsistencyToken.IsNull() && !from.ConsistencyToken.IsUnknown() {
+    if toConsistencyToken, ok := to.GetConsistencyToken(ctx); ok {
+      if fromConsistencyToken, ok := from.GetConsistencyToken(ctx); ok {
+        toConsistencyToken.SyncFieldsDuringRead(ctx, fromConsistencyToken)
+        to.SetConsistencyToken(ctx, toConsistencyToken)
+      }
+    }
+  }
 }
 
 func (m CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["consistency_token"] = attrs["consistency_token"].SetRequired()
-	attrs["is_permitted"] = attrs["is_permitted"].SetOptional()
+attrs["consistency_token"] = attrs["consistency_token"].SetRequired()
+attrs["is_permitted"] = attrs["is_permitted"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CheckPolicyResponse.
@@ -828,9 +976,9 @@ func (m CheckPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CheckPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"consistency_token": reflect.TypeOf(ConsistencyToken{}),
-	}
+  return map[string]reflect.Type{
+    "consistency_token": reflect.TypeOf(ConsistencyToken{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -840,55 +988,71 @@ func (m CheckPolicyResponse) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"consistency_token": m.ConsistencyToken,
-			"is_permitted":      m.IsPermitted,
-		})
+"consistency_token": m.ConsistencyToken,
+      "is_permitted": m.IsPermitted,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CheckPolicyResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"consistency_token": ConsistencyToken{}.Type(ctx),
-			"is_permitted":      types.BoolType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"consistency_token": ConsistencyToken{}.Type(ctx),
+      "is_permitted": types.BoolType,
+      
+    },
+  }
 }
+
+
+
 
 // GetConsistencyToken returns the value of the ConsistencyToken field in CheckPolicyResponse as
 // a ConsistencyToken value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CheckPolicyResponse) GetConsistencyToken(ctx context.Context) (ConsistencyToken, bool) {
-	var e ConsistencyToken
-	if m.ConsistencyToken.IsNull() || m.ConsistencyToken.IsUnknown() {
-		return e, false
-	}
-	var v ConsistencyToken
-	d := m.ConsistencyToken.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ConsistencyToken
+  if m.ConsistencyToken.IsNull() || m.ConsistencyToken.IsUnknown() {
+    return e, false
+  }
+  var v ConsistencyToken
+  d := m.ConsistencyToken.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetConsistencyToken sets the value of the ConsistencyToken field in CheckPolicyResponse.
 func (m *CheckPolicyResponse) SetConsistencyToken(ctx context.Context, v ConsistencyToken) {
-	vs := v.ToObjectValue(ctx)
-	m.ConsistencyToken = vs
+  vs := v.ToObjectValue(ctx)
+  m.ConsistencyToken = vs
 }
 
+
+
+
+
+
+
+
+
+
+
 type ComplexValue struct {
+    
 	Display types.String `tfsdk:"display"`
-
+    
 	Primary types.Bool `tfsdk:"primary"`
-
+    
 	Ref types.String `tfsdk:"ref"`
-
+    
 	Type_ types.String `tfsdk:"type"`
-
+    
 	Value types.String `tfsdk:"value"`
 }
 
@@ -899,13 +1063,13 @@ func (to *ComplexValue) SyncFieldsDuringRead(ctx context.Context, from ComplexVa
 }
 
 func (m ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["ref"] = attrs["ref"].SetOptional()
-	attrs["display"] = attrs["display"].SetOptional()
-	attrs["primary"] = attrs["primary"].SetOptional()
-	attrs["type"] = attrs["type"].SetOptional()
-	attrs["value"] = attrs["value"].SetOptional()
+attrs["ref"] = attrs["ref"].SetOptional()
+attrs["display"] = attrs["display"].SetOptional()
+attrs["primary"] = attrs["primary"].SetOptional()
+attrs["type"] = attrs["type"].SetOptional()
+attrs["value"] = attrs["value"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplexValue.
@@ -916,7 +1080,8 @@ func (m ComplexValue) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ComplexValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -926,28 +1091,49 @@ func (m ComplexValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display": m.Display,
-			"primary": m.Primary,
-			"ref":     m.Ref,
-			"type":    m.Type_,
-			"value":   m.Value,
-		})
+"display": m.Display,
+      "primary": m.Primary,
+      "ref": m.Ref,
+      "type": m.Type_,
+      "value": m.Value,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ComplexValue) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display": types.StringType,
-			"primary": types.BoolType,
-			"ref":     types.StringType,
-			"type":    types.StringType,
-			"value":   types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display": types.StringType,
+      "primary": types.BoolType,
+      "ref": types.StringType,
+      "type": types.StringType,
+      "value": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ConsistencyToken struct {
+    
 	Value types.String `tfsdk:"value"`
 }
 
@@ -958,9 +1144,9 @@ func (to *ConsistencyToken) SyncFieldsDuringRead(ctx context.Context, from Consi
 }
 
 func (m ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["value"] = attrs["value"].SetRequired()
+attrs["value"] = attrs["value"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ConsistencyToken.
@@ -971,7 +1157,8 @@ func (m ConsistencyToken) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ConsistencyToken) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -981,91 +1168,103 @@ func (m ConsistencyToken) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"value": m.Value,
-		})
+"value": m.Value,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ConsistencyToken) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"value": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"value": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type CreateAccountGroupRequest struct {
-	// String that represents a human-readable group name
+    // String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+    // Databricks group ID
 	Id types.String `tfsdk:"id"`
-
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *CreateAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAccountGroupRequest) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *CreateAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from CreateAccountGroupRequest) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccountGroupRequest.
@@ -1076,11 +1275,11 @@ func (m CreateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"members": reflect.TypeOf(ComplexValue{}),
-		"meta":    reflect.TypeOf(ResourceMeta{}),
-		"roles":   reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1090,153 +1289,178 @@ func (m CreateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": m.DisplayName,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-		})
+"display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateAccountGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"external_id":  types.StringType,
-			"id":           types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in CreateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in CreateAccountGroupRequest.
 func (m *CreateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in CreateAccountGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in CreateAccountGroupRequest.
 func (m *CreateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountGroupRequest.
 func (m *CreateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type CreateAccountServicePrincipalRequest struct {
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
-	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
-	DisplayName types.String `tfsdk:"display_name"`
 
+
+
+
+
+
+
+
+type CreateAccountServicePrincipalRequest struct {
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // UUID relating to the service principal
+	ApplicationId types.String `tfsdk:"application_id"`
+    // String that represents a concatenation of given and family names.
+	DisplayName types.String `tfsdk:"display_name"`
+    
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *CreateAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAccountServicePrincipalRequest) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *CreateAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from CreateAccountServicePrincipalRequest) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccountServicePrincipalRequest.
@@ -1247,9 +1471,9 @@ func (m CreateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"roles": reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1259,136 +1483,159 @@ func (m CreateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"external_id":    m.ExternalId,
-			"id":             m.Id,
-			"roles":          m.Roles,
-		})
+"active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"external_id":    types.StringType,
-			"id":             types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateAccountServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountServicePrincipalRequest.
 func (m *CreateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type CreateAccountUserRequest struct {
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`.
-	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
-	Emails types.List `tfsdk:"emails"`
-	// External ID is not currently supported. It is reserved for future use.
-	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks user ID.
-	Id types.String `tfsdk:"id"`
 
+
+
+
+
+
+
+
+type CreateAccountUserRequest struct {
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`.
+	DisplayName types.String `tfsdk:"display_name"`
+    // All the emails associated with the Databricks user.
+	Emails types.List `tfsdk:"emails"`
+    // External ID is not currently supported. It is reserved for future use.
+	ExternalId types.String `tfsdk:"external_id"`
+    // Databricks user ID.
+	Id types.String `tfsdk:"id"`
+    
 	Name types.Object `tfsdk:"name"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *CreateAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAccountUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *CreateAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from CreateAccountUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAccountUserRequest.
@@ -1399,11 +1646,11 @@ func (m CreateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails": reflect.TypeOf(ComplexValue{}),
-		"name":   reflect.TypeOf(Name{}),
-		"roles":  reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1413,233 +1660,262 @@ func (m CreateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"user_name":    m.UserName,
-		})
+"active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateAccountUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"id":          types.StringType,
-			"name":        Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in CreateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in CreateAccountUserRequest.
 func (m *CreateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
 
 // GetName returns the value of the Name field in CreateAccountUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in CreateAccountUserRequest.
 func (m *CreateAccountUserRequest) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateAccountUserRequest.
 func (m *CreateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type CreateGroupRequest struct {
-	// String that represents a human-readable group name
+    // String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the group. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the group. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks group ID
+    // Databricks group ID
 	Id types.String `tfsdk:"id"`
-
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the group.
+    // The schema of the group.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *CreateGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGroupRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *CreateGroupRequest) SyncFieldsDuringRead(ctx context.Context, from CreateGroupRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m CreateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateGroupRequest.
@@ -1650,14 +1926,14 @@ func (m CreateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"members":      reflect.TypeOf(ComplexValue{}),
-		"meta":         reflect.TypeOf(ResourceMeta{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1667,290 +1943,324 @@ func (m CreateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": m.DisplayName,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-		})
+"display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in CreateGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in CreateGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in CreateGroupRequest.
 func (m *CreateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type CreateServicePrincipalRequest struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+    // UUID relating to the service principal
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+    // String that represents a concatenation of given and family names.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the service principal. See [assigning
-	// entitlements] for a full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the service principal. See [assigning
+    // entitlements] for a full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"id"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the List response.
+    // The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *CreateServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateServicePrincipalRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *CreateServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from CreateServicePrincipalRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m CreateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalRequest.
@@ -1961,12 +2271,12 @@ func (m CreateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1976,277 +2286,309 @@ func (m CreateServicePrincipalRequest) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"entitlements":   m.Entitlements,
-			"external_id":    m.ExternalId,
-			"groups":         m.Groups,
-			"id":             m.Id,
-			"roles":          m.Roles,
-			"schemas":        m.Schemas,
-		})
+"active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateServicePrincipalRequest.
 func (m *CreateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in CreateServicePrincipalRequest.
 func (m *CreateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateServicePrincipalRequest.
 func (m *CreateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in CreateServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in CreateServicePrincipalRequest.
 func (m *CreateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type CreateUserRequest struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`. This field cannot be updated through the Workspace
-	// SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
-	// update `displayName`.
-	//
-	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`. This field cannot be updated through the Workspace
+    // SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
+    // update `displayName`.
+    // 
+    // [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
 	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
+    // All the emails associated with the Databricks user.
 	Emails types.List `tfsdk:"emails"`
-	// Entitlements assigned to the user. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the user. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-	// External ID is not currently supported. It is reserved for future use.
+    // External ID is not currently supported. It is reserved for future use.
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks user ID.
+    // Databricks user ID.
 	Id types.String `tfsdk:"id"`
-
+    
 	Name types.Object `tfsdk:"name"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the user.
+    // The schema of the user.
 	Schemas types.List `tfsdk:"schemas"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *CreateUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *CreateUserRequest) SyncFieldsDuringRead(ctx context.Context, from CreateUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m CreateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateUserRequest.
@@ -2257,14 +2599,14 @@ func (m CreateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails":       reflect.TypeOf(ComplexValue{}),
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"name":         reflect.TypeOf(Name{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2274,206 +2616,244 @@ func (m CreateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-			"user_name":    m.UserName,
-		})
+"active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m CreateUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id":   types.StringType,
-			"name": Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in CreateUserRequest.
 func (m *CreateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in CreateUserRequest.
 func (m *CreateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in CreateUserRequest.
 func (m *CreateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetName returns the value of the Name field in CreateUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in CreateUserRequest.
 func (m *CreateUserRequest) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in CreateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in CreateUserRequest.
 func (m *CreateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in CreateUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *CreateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in CreateUserRequest.
 func (m *CreateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteAccountGroupRequest struct {
-	// Unique ID for a group in the Databricks account.
+    // Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2484,10 +2864,10 @@ func (to *DeleteAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountGroupRequest.
@@ -2498,7 +2878,8 @@ func (m DeleteAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2508,21 +2889,33 @@ func (m DeleteAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteAccountGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteAccountServicePrincipalRequest struct {
-	// Unique ID for a service principal in the Databricks account.
+    // Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2533,10 +2926,10 @@ func (to *DeleteAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountServicePrincipalRequest.
@@ -2547,7 +2940,8 @@ func (m DeleteAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2557,21 +2951,33 @@ func (m DeleteAccountServicePrincipalRequest) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteAccountUserRequest struct {
-	// Unique ID for a user in the Databricks account.
+    // Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2582,10 +2988,10 @@ func (to *DeleteAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAccountUserRequest.
@@ -2596,7 +3002,8 @@ func (m DeleteAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2606,21 +3013,33 @@ func (m DeleteAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteAccountUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteGroupRequest struct {
-	// Unique ID for a group in the Databricks workspace.
+    // Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2631,9 +3050,9 @@ func (to *DeleteGroupRequest) SyncFieldsDuringRead(ctx context.Context, from Del
 }
 
 func (m DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteGroupRequest.
@@ -2644,7 +3063,8 @@ func (m DeleteGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2654,21 +3074,33 @@ func (m DeleteGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteServicePrincipalRequest struct {
-	// Unique ID for a service principal in the Databricks workspace.
+    // Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2679,9 +3111,9 @@ func (to *DeleteServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServicePrincipalRequest.
@@ -2692,7 +3124,8 @@ func (m DeleteServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2702,21 +3135,33 @@ func (m DeleteServicePrincipalRequest) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteUserRequest struct {
-	// Unique ID for a user in the Databricks workspace.
+    // Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2727,9 +3172,9 @@ func (to *DeleteUserRequest) SyncFieldsDuringRead(ctx context.Context, from Dele
 }
 
 func (m DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteUserRequest.
@@ -2740,7 +3185,8 @@ func (m DeleteUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2750,23 +3196,35 @@ func (m DeleteUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type DeleteWorkspaceAssignmentRequest struct {
-	// The ID of the user, service principal, or group.
+    // The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID for the account.
+    // The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
@@ -2777,11 +3235,11 @@ func (to *DeleteWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+attrs["principal_id"] = attrs["principal_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceAssignmentRequest.
@@ -2792,7 +3250,8 @@ func (m DeleteWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[st
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2802,20 +3261,34 @@ func (m DeleteWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
-			"workspace_id": m.WorkspaceId,
-		})
+"principal_id": m.PrincipalId,
+      "workspace_id": m.WorkspaceId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"workspace_id": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"principal_id": types.Int64Type,
+      "workspace_id": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 type DeleteWorkspacePermissionAssignmentResponse struct {
 }
@@ -2828,7 +3301,7 @@ func (to *DeleteWorkspacePermissionAssignmentResponse) SyncFieldsDuringRead(ctx 
 
 func (m DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspacePermissionAssignmentResponse.
@@ -2839,7 +3312,8 @@ func (m DeleteWorkspacePermissionAssignmentResponse) ApplySchemaCustomizations(a
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2848,18 +3322,30 @@ func (m DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes(ctx co
 func (m DeleteWorkspacePermissionAssignmentResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteWorkspacePermissionAssignmentResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type GetAccountGroupRequest struct {
-	// Unique ID for a group in the Databricks account.
+    // Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2870,10 +3356,10 @@ func (to *GetAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountGroupRequest.
@@ -2884,7 +3370,8 @@ func (m GetAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2894,21 +3381,33 @@ func (m GetAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetAccountGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GetAccountServicePrincipalRequest struct {
-	// Unique ID for a service principal in the Databricks account.
+    // Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2919,10 +3418,10 @@ func (to *GetAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountServicePrincipalRequest.
@@ -2933,7 +3432,8 @@ func (m GetAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[s
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2943,42 +3443,54 @@ func (m GetAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GetAccountUserRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+    // Desired number of results per page. Default is 10000.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Unique ID for a user in the Databricks account.
+    // Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
-	// Attribute to sort the results. Multi-part paths are supported. For
-	// example, `userName`, `name.givenName`, and `emails`.
+    // Attribute to sort the results. Multi-part paths are supported. For
+    // example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -2989,17 +3501,17 @@ func (to *GetAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAccountUserRequest.
@@ -3010,7 +3522,8 @@ func (m GetAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfsche
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3020,43 +3533,69 @@ func (m GetAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"id":                  m.Id,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "id": m.Id,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetAccountUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"id":                  types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "id": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type GetAssignableRolesForResourceRequest struct {
-	// The resource name for which assignable roles will be listed.
-	//
-	// Examples | Summary :--- | :--- `resource=accounts/<ACCOUNT_ID>` | A
-	// resource name for the account.
-	// `resource=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>` | A resource name for
-	// the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
-	// resource name for the service principal.
-	// `resource=accounts/<ACCOUNT_ID>/tagPolicies/<TAG_POLICY_ID>` | A resource
-	// name for the tag policy.
+    // The resource name for which assignable roles will be listed.
+    // 
+    // Examples | Summary :--- | :--- `resource=accounts/<ACCOUNT_ID>` | A
+    // resource name for the account.
+    // `resource=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>` | A resource name for
+    // the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
+    // resource name for the service principal.
+    // `resource=accounts/<ACCOUNT_ID>/tagPolicies/<TAG_POLICY_ID>` | A resource
+    // name for the tag policy.
 	Resource types.String `tfsdk:"-"`
 }
 
@@ -3067,10 +3606,10 @@ func (to *GetAssignableRolesForResourceRequest) SyncFieldsDuringRead(ctx context
 }
 
 func (m GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["resource"] = attrs["resource"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["resource"] = attrs["resource"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAssignableRolesForResourceRequest.
@@ -3081,7 +3620,8 @@ func (m GetAssignableRolesForResourceRequest) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetAssignableRolesForResourceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3091,45 +3631,58 @@ func (m GetAssignableRolesForResourceRequest) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"resource": m.Resource,
-		})
+"resource": m.Resource,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetAssignableRolesForResourceRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"resource": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"resource": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GetAssignableRolesForResourceResponse struct {
+    
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *GetAssignableRolesForResourceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAssignableRolesForResourceResponse) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *GetAssignableRolesForResourceResponse) SyncFieldsDuringRead(ctx context.Context, from GetAssignableRolesForResourceResponse) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["roles"] = attrs["roles"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAssignableRolesForResourceResponse.
@@ -3140,9 +3693,9 @@ func (m GetAssignableRolesForResourceResponse) ApplySchemaCustomizations(attrs m
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetAssignableRolesForResourceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"roles": reflect.TypeOf(Role{}),
-	}
+  return map[string]reflect.Type{
+    "roles": reflect.TypeOf(Role{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3152,49 +3705,62 @@ func (m GetAssignableRolesForResourceResponse) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"roles": m.Roles,
-		})
+"roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"roles": basetypes.ListType{
-				ElemType: Role{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"roles": basetypes.ListType{
+ElemType: Role{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in GetAssignableRolesForResourceResponse as
 // a slice of Role values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *GetAssignableRolesForResourceResponse) GetRoles(ctx context.Context) ([]Role, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []Role
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []Role
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in GetAssignableRolesForResourceResponse.
 func (m *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v []Role) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type GetGroupRequest struct {
-	// Unique ID for a group in the Databricks workspace.
+    // Unique ID for a group in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -3205,9 +3771,9 @@ func (to *GetGroupRequest) SyncFieldsDuringRead(ctx context.Context, from GetGro
 }
 
 func (m GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetGroupRequest.
@@ -3218,7 +3784,8 @@ func (m GetGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3228,18 +3795,30 @@ func (m GetGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 type GetPasswordPermissionLevelsRequest struct {
 }
@@ -3252,7 +3831,7 @@ func (to *GetPasswordPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.C
 
 func (m GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionLevelsRequest.
@@ -3263,7 +3842,8 @@ func (m GetPasswordPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPasswordPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3272,43 +3852,55 @@ func (m GetPasswordPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Con
 func (m GetPasswordPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPasswordPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type GetPasswordPermissionLevelsResponse struct {
-	// Specific permission levels
+    // Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (to *GetPasswordPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPasswordPermissionLevelsResponse) {
-	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionLevels = from.PermissionLevels
-	}
+  if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionLevels = from.PermissionLevels
+  }
 }
 
 func (to *GetPasswordPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetPasswordPermissionLevelsResponse) {
-	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionLevels = from.PermissionLevels
-	}
+  if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionLevels = from.PermissionLevels
+  }
 }
 
 func (m GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionLevelsResponse.
@@ -3319,9 +3911,9 @@ func (m GetPasswordPermissionLevelsResponse) ApplySchemaCustomizations(attrs map
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPasswordPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permission_levels": reflect.TypeOf(PasswordPermissionsDescription{}),
-	}
+  return map[string]reflect.Type{
+    "permission_levels": reflect.TypeOf(PasswordPermissionsDescription{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3331,46 +3923,59 @@ func (m GetPasswordPermissionLevelsResponse) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": m.PermissionLevels,
-		})
+"permission_levels": m.PermissionLevels,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: PasswordPermissionsDescription{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permission_levels": basetypes.ListType{
+ElemType: PasswordPermissionsDescription{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetPermissionLevels returns the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse as
 // a slice of PasswordPermissionsDescription values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *GetPasswordPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PasswordPermissionsDescription, bool) {
-	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
-		return nil, false
-	}
-	var v []PasswordPermissionsDescription
-	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
+    return nil, false
+  }
+  var v []PasswordPermissionsDescription
+  d := m.PermissionLevels.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse.
 func (m *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PasswordPermissionsDescription) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.PermissionLevels = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.PermissionLevels = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
+
 
 type GetPasswordPermissionsRequest struct {
 }
@@ -3383,7 +3988,7 @@ func (to *GetPasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Contex
 
 func (m GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPasswordPermissionsRequest.
@@ -3394,7 +3999,8 @@ func (m GetPasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3403,23 +4009,36 @@ func (m GetPasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context)
 func (m GetPasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type GetPermissionLevelsRequest struct {
+    
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+    // The type of the request object. Can be one of the following: alerts,
+    // alertsv2, authorization, clusters, cluster-policies, dashboards,
+    // database-projects, dbsql-dashboards, directories, experiments, files,
+    // genie, instance-pools, jobs, notebooks, pipelines, queries,
+    // registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -3430,10 +4049,10 @@ func (to *GetPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPermissionLevelsRequest.
@@ -3444,7 +4063,8 @@ func (m GetPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]t
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3454,48 +4074,62 @@ func (m GetPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"request_object_id":   m.RequestObjectId,
-			"request_object_type": m.RequestObjectType,
-		})
+"request_object_id": m.RequestObjectId,
+      "request_object_type": m.RequestObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"request_object_id": types.StringType,
+      "request_object_type": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type GetPermissionLevelsResponse struct {
-	// Specific permission levels
+    // Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (to *GetPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetPermissionLevelsResponse) {
-	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionLevels = from.PermissionLevels
-	}
+  if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionLevels = from.PermissionLevels
+  }
 }
 
 func (to *GetPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetPermissionLevelsResponse) {
-	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionLevels = from.PermissionLevels
-	}
+  if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionLevels = from.PermissionLevels
+  }
 }
 
 func (m GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPermissionLevelsResponse.
@@ -3506,9 +4140,9 @@ func (m GetPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permission_levels": reflect.TypeOf(PermissionsDescription{}),
-	}
+  return map[string]reflect.Type{
+    "permission_levels": reflect.TypeOf(PermissionsDescription{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3518,55 +4152,68 @@ func (m GetPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_levels": m.PermissionLevels,
-		})
+"permission_levels": m.PermissionLevels,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: PermissionsDescription{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permission_levels": basetypes.ListType{
+ElemType: PermissionsDescription{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetPermissionLevels returns the value of the PermissionLevels field in GetPermissionLevelsResponse as
 // a slice of PermissionsDescription values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *GetPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PermissionsDescription, bool) {
-	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
-		return nil, false
-	}
-	var v []PermissionsDescription
-	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
+    return nil, false
+  }
+  var v []PermissionsDescription
+  d := m.PermissionLevels.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissionLevels sets the value of the PermissionLevels field in GetPermissionLevelsResponse.
 func (m *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PermissionsDescription) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.PermissionLevels = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.PermissionLevels = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type GetPermissionRequest struct {
-	// The id of the request object.
+    // The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+    // The type of the request object. Can be one of the following: alerts,
+    // alertsv2, authorization, clusters, cluster-policies, dashboards,
+    // database-projects, dbsql-dashboards, directories, experiments, files,
+    // genie, instance-pools, jobs, notebooks, pipelines, queries,
+    // registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -3577,10 +4224,10 @@ func (to *GetPermissionRequest) SyncFieldsDuringRead(ctx context.Context, from G
 }
 
 func (m GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPermissionRequest.
@@ -3591,7 +4238,8 @@ func (m GetPermissionRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetPermissionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3601,47 +4249,61 @@ func (m GetPermissionRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"request_object_id":   m.RequestObjectId,
-			"request_object_type": m.RequestObjectType,
-		})
+"request_object_id": m.RequestObjectId,
+      "request_object_type": m.RequestObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetPermissionRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"request_object_id": types.StringType,
+      "request_object_type": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type GetRuleSetRequest struct {
-	// Etag used for versioning. The response is at least as fresh as the eTag
-	// provided. Etag is used for optimistic concurrency control as a way to
-	// help prevent simultaneous updates of a rule set from overwriting each
-	// other. It is strongly suggested that systems make use of the etag in the
-	// read -> modify -> write pattern to perform rule set updates in order to
-	// avoid race conditions that is get an etag from a GET rule set request,
-	// and pass it with the PUT update request to identify the rule set version
-	// you are updating.
-	//
-	// Examples | Summary :--- | :--- `etag=` | An empty etag can only be used
-	// in GET to indicate no freshness requirements.
-	// `etag=RENUAAABhSweA4NvVmmUYdiU717H3Tgy0UJdor3gE4a+mq/oj9NjAf8ZsQ==` | An
-	// etag encoded a specific version of the rule set to get or to be updated.
+    // Etag used for versioning. The response is at least as fresh as the eTag
+    // provided. Etag is used for optimistic concurrency control as a way to
+    // help prevent simultaneous updates of a rule set from overwriting each
+    // other. It is strongly suggested that systems make use of the etag in the
+    // read -> modify -> write pattern to perform rule set updates in order to
+    // avoid race conditions that is get an etag from a GET rule set request,
+    // and pass it with the PUT update request to identify the rule set version
+    // you are updating.
+    // 
+    // Examples | Summary :--- | :--- `etag=` | An empty etag can only be used
+    // in GET to indicate no freshness requirements.
+    // `etag=RENUAAABhSweA4NvVmmUYdiU717H3Tgy0UJdor3gE4a+mq/oj9NjAf8ZsQ==` | An
+    // etag encoded a specific version of the rule set to get or to be updated.
 	Etag types.String `tfsdk:"-"`
-	// The ruleset name associated with the request.
-	//
-	// Examples | Summary :--- | :---
-	// `name=accounts/<ACCOUNT_ID>/ruleSets/default` | A name for a rule set on
-	// the account.
-	// `name=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>/ruleSets/default` | A name
-	// for a rule set on the group.
-	// `name=accounts/<ACCOUNT_ID>/servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>/ruleSets/default`
-	// | A name for a rule set on the service principal.
-	// `name=accounts/<ACCOUNT_ID>/tagPolicies/<TAG_POLICY_ID>/ruleSets/default`
-	// | A name for a rule set on the tag policy.
+    // The ruleset name associated with the request.
+    // 
+    // Examples | Summary :--- | :---
+    // `name=accounts/<ACCOUNT_ID>/ruleSets/default` | A name for a rule set on
+    // the account.
+    // `name=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>/ruleSets/default` | A name
+    // for a rule set on the group.
+    // `name=accounts/<ACCOUNT_ID>/servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>/ruleSets/default`
+    // | A name for a rule set on the service principal.
+    // `name=accounts/<ACCOUNT_ID>/tagPolicies/<TAG_POLICY_ID>/ruleSets/default`
+    // | A name for a rule set on the tag policy.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3652,11 +4314,11 @@ func (to *GetRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from GetR
 }
 
 func (m GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["etag"] = attrs["etag"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["etag"] = attrs["etag"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRuleSetRequest.
@@ -3667,7 +4329,8 @@ func (m GetRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3677,23 +4340,37 @@ func (m GetRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag": m.Etag,
-			"name": m.Name,
-		})
+"etag": m.Etag,
+      "name": m.Name,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetRuleSetRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"etag": types.StringType,
-			"name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"etag": types.StringType,
+      "name": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type GetServicePrincipalRequest struct {
-	// Unique ID for a service principal in the Databricks workspace.
+    // Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -3704,9 +4381,9 @@ func (to *GetServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServicePrincipalRequest.
@@ -3717,7 +4394,8 @@ func (m GetServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]t
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3727,42 +4405,54 @@ func (m GetServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id": m.Id,
-		})
+"id": m.Id,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GetUserRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page.
+    // Desired number of results per page.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Unique ID for a user in the Databricks workspace.
+    // Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
-	// Attribute to sort the results. Multi-part paths are supported. For
-	// example, `userName`, `name.givenName`, and `emails`.
+    // Attribute to sort the results. Multi-part paths are supported. For
+    // example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -3773,16 +4463,16 @@ func (to *GetUserRequest) SyncFieldsDuringRead(ctx context.Context, from GetUser
 }
 
 func (m GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUserRequest.
@@ -3793,7 +4483,8 @@ func (m GetUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3803,35 +4494,61 @@ func (m GetUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"id":                  m.Id,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "id": m.Id,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"id":                  types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "id": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type GetWorkspaceAssignmentRequest struct {
-	// The workspace ID.
+    // The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
@@ -3842,10 +4559,10 @@ func (to *GetWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAssignmentRequest.
@@ -3856,7 +4573,8 @@ func (m GetWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GetWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3866,53 +4584,65 @@ func (m GetWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"workspace_id": m.WorkspaceId,
-		})
+"workspace_id": m.WorkspaceId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GetWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"workspace_id": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"workspace_id": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type GrantRule struct {
-	// Principals this grant rule applies to. A principal can be a user (for end
-	// users), a service principal (for applications and compute workloads), or
-	// an account group. Each principal has its own identifier format: *
-	// users/<USERNAME> * groups/<GROUP_NAME> *
-	// servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>
+    // Principals this grant rule applies to. A principal can be a user (for end
+    // users), a service principal (for applications and compute workloads), or
+    // an account group. Each principal has its own identifier format: *
+    // users/<USERNAME> * groups/<GROUP_NAME> *
+    // servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>
 	Principals types.List `tfsdk:"principals"`
-	// Role that is assigned to the list of principals.
+    // Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role"`
 }
 
 func (to *GrantRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantRule) {
-	if !from.Principals.IsNull() && !from.Principals.IsUnknown() && to.Principals.IsNull() && len(from.Principals.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Principals, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Principals = from.Principals
-	}
+  if !from.Principals.IsNull() && !from.Principals.IsUnknown() && to.Principals.IsNull() && len(from.Principals.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Principals, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Principals = from.Principals
+  }
 }
 
 func (to *GrantRule) SyncFieldsDuringRead(ctx context.Context, from GrantRule) {
-	if !from.Principals.IsNull() && !from.Principals.IsUnknown() && to.Principals.IsNull() && len(from.Principals.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Principals, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Principals = from.Principals
-	}
+  if !from.Principals.IsNull() && !from.Principals.IsUnknown() && to.Principals.IsNull() && len(from.Principals.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Principals, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Principals = from.Principals
+  }
 }
 
 func (m GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principals"] = attrs["principals"].SetOptional()
-	attrs["role"] = attrs["role"].SetRequired()
+attrs["principals"] = attrs["principals"].SetOptional()
+attrs["role"] = attrs["role"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantRule.
@@ -3923,9 +4653,9 @@ func (m GrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"principals": reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "principals": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3935,168 +4665,183 @@ func (m GrantRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principals": m.Principals,
-			"role":       m.Role,
-		})
+"principals": m.Principals,
+      "role": m.Role,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m GrantRule) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"principals": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"role": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"principals": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "role": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetPrincipals returns the value of the Principals field in GrantRule as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *GrantRule) GetPrincipals(ctx context.Context) ([]types.String, bool) {
-	if m.Principals.IsNull() || m.Principals.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Principals.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Principals.IsNull() || m.Principals.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Principals.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPrincipals sets the value of the Principals field in GrantRule.
 func (m *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Principals = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Principals = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type Group struct {
-	// String that represents a human-readable group name
+    // String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the group. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the group. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-	// external_id should be unique for identifying groups
+    // external_id should be unique for identifying groups
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks group ID
+    // Databricks group ID
 	Id types.String `tfsdk:"id"`
-
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the group.
+    // The schema of the group.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Group.
@@ -4107,14 +4852,14 @@ func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"members":      reflect.TypeOf(ComplexValue{}),
-		"meta":         reflect.TypeOf(ResourceMeta{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4124,220 +4869,254 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": m.DisplayName,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-		})
+"display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Group) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in Group.
 func (m *Group) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in Group.
 func (m *Group) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in Group.
 func (m *Group) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in Group as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in Group.
 func (m *Group) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in Group as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in Group.
 func (m *Group) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in Group as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Group) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in Group.
 func (m *Group) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type ListAccountGroupsRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+    // Desired number of results per page. Default is 10000.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results.
+    // Attribute to sort the results.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -4348,16 +5127,16 @@ func (to *ListAccountGroupsRequest) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountGroupsRequest.
@@ -4368,7 +5147,8 @@ func (m ListAccountGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4378,68 +5158,92 @@ func (m ListAccountGroupsRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListAccountGroupsResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListAccountGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAccountGroupsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (to *ListAccountGroupsResponse) SyncFieldsDuringRead(ctx context.Context, from ListAccountGroupsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (m ListAccountGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountGroupsResponse.
@@ -4450,9 +5254,9 @@ func (m ListAccountGroupsResponse) ApplySchemaCustomizations(attrs map[string]tf
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(AccountGroup{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(AccountGroup{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4462,73 +5266,92 @@ func (m ListAccountGroupsResponse) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountGroupsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: AccountGroup{}.Type(ctx),
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: AccountGroup{}.Type(ctx),
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListAccountGroupsResponse as
 // a slice of AccountGroup values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListAccountGroupsResponse) GetResources(ctx context.Context) ([]AccountGroup, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []AccountGroup
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []AccountGroup
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListAccountGroupsResponse.
 func (m *ListAccountGroupsResponse) SetResources(ctx context.Context, v []AccountGroup) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListAccountServicePrincipalsRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+    // Desired number of results per page. Default is 10000.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results.
+    // Attribute to sort the results.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -4539,16 +5362,16 @@ func (to *ListAccountServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.
 }
 
 func (m ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountServicePrincipalsRequest.
@@ -4559,7 +5382,8 @@ func (m ListAccountServicePrincipalsRequest) ApplySchemaCustomizations(attrs map
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4569,68 +5393,92 @@ func (m ListAccountServicePrincipalsRequest) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListAccountServicePrincipalsResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListAccountServicePrincipalsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAccountServicePrincipalsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (to *ListAccountServicePrincipalsResponse) SyncFieldsDuringRead(ctx context.Context, from ListAccountServicePrincipalsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (m ListAccountServicePrincipalsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountServicePrincipalsResponse.
@@ -4641,9 +5489,9 @@ func (m ListAccountServicePrincipalsResponse) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountServicePrincipalsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(AccountServicePrincipal{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(AccountServicePrincipal{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4653,74 +5501,93 @@ func (m ListAccountServicePrincipalsResponse) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountServicePrincipalsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: AccountServicePrincipal{}.Type(ctx),
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: AccountServicePrincipal{}.Type(ctx),
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListAccountServicePrincipalsResponse as
 // a slice of AccountServicePrincipal values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListAccountServicePrincipalsResponse) GetResources(ctx context.Context) ([]AccountServicePrincipal, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []AccountServicePrincipal
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []AccountServicePrincipal
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListAccountServicePrincipalsResponse.
 func (m *ListAccountServicePrincipalsResponse) SetResources(ctx context.Context, v []AccountServicePrincipal) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListAccountUsersRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+    // Desired number of results per page. Default is 10000.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results. Multi-part paths are supported. For
-	// example, `userName`, `name.givenName`, and `emails`.
+    // Attribute to sort the results. Multi-part paths are supported. For
+    // example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -4731,16 +5598,16 @@ func (to *ListAccountUsersRequest) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountUsersRequest.
@@ -4751,7 +5618,8 @@ func (m ListAccountUsersRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4761,68 +5629,92 @@ func (m ListAccountUsersRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountUsersRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListAccountUsersResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListAccountUsersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAccountUsersResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (to *ListAccountUsersResponse) SyncFieldsDuringRead(ctx context.Context, from ListAccountUsersResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
 }
 
 func (m ListAccountUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAccountUsersResponse.
@@ -4833,9 +5725,9 @@ func (m ListAccountUsersResponse) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListAccountUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(AccountUser{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(AccountUser{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4845,73 +5737,92 @@ func (m ListAccountUsersResponse) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListAccountUsersResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: AccountUser{}.Type(ctx),
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: AccountUser{}.Type(ctx),
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListAccountUsersResponse as
 // a slice of AccountUser values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListAccountUsersResponse) GetResources(ctx context.Context) ([]AccountUser, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []AccountUser
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []AccountUser
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListAccountUsersResponse.
 func (m *ListAccountUsersResponse) SetResources(ctx context.Context, v []AccountUser) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListGroupsRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page.
+    // Desired number of results per page.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results.
+    // Attribute to sort the results.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -4922,15 +5833,15 @@ func (to *ListGroupsRequest) SyncFieldsDuringRead(ctx context.Context, from List
 }
 
 func (m ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListGroupsRequest.
@@ -4941,7 +5852,8 @@ func (m ListGroupsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -4951,83 +5863,107 @@ func (m ListGroupsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListGroupsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListGroupsResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// The schema of the service principal.
+    // The schema of the service principal.
 	Schemas types.List `tfsdk:"schemas"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListGroupsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *ListGroupsResponse) SyncFieldsDuringRead(ctx context.Context, from ListGroupsResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListGroupsResponse.
@@ -5038,10 +5974,10 @@ func (m ListGroupsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(Group{}),
-		"schemas":   reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(Group{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5051,135 +5987,157 @@ func (m ListGroupsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"schemas":        m.Schemas,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "schemas": m.Schemas,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListGroupsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: Group{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: Group{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListGroupsResponse as
 // a slice of Group values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListGroupsResponse) GetResources(ctx context.Context) ([]Group, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []Group
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []Group
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListGroupsResponse.
 func (m *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in ListGroupsResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListGroupsResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in ListGroupsResponse.
 func (m *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListServicePrincipalResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// The schema of the List response.
+    // The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListServicePrincipalResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListServicePrincipalResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *ListServicePrincipalResponse) SyncFieldsDuringRead(ctx context.Context, from ListServicePrincipalResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalResponse.
@@ -5190,10 +6148,10 @@ func (m ListServicePrincipalResponse) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(ServicePrincipal{}),
-		"schemas":   reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(ServicePrincipal{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5203,103 +6161,125 @@ func (m ListServicePrincipalResponse) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"schemas":        m.Schemas,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "schemas": m.Schemas,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: ServicePrincipal{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: ServicePrincipal{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListServicePrincipalResponse as
 // a slice of ServicePrincipal values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListServicePrincipalResponse) GetResources(ctx context.Context) ([]ServicePrincipal, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []ServicePrincipal
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []ServicePrincipal
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListServicePrincipalResponse.
 func (m *ListServicePrincipalResponse) SetResources(ctx context.Context, v []ServicePrincipal) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in ListServicePrincipalResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListServicePrincipalResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in ListServicePrincipalResponse.
 func (m *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListServicePrincipalsRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page.
+    // Desired number of results per page.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results.
+    // Attribute to sort the results.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -5310,15 +6290,15 @@ func (to *ListServicePrincipalsRequest) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServicePrincipalsRequest.
@@ -5329,7 +6309,8 @@ func (m ListServicePrincipalsRequest) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5339,52 +6320,76 @@ func (m ListServicePrincipalsRequest) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListUsersRequest struct {
-	// Comma-separated list of attributes to return in response.
+    // Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page.
+    // Desired number of results per page.
 	Count types.Int64 `tfsdk:"-"`
-	// Comma-separated list of attributes to exclude in response.
+    // Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
-	// Query by which the results have to be filtered. Supported operators are
-	// equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
-	// Additionally, simple expressions can be formed using logical operators -
-	// `and` and `or`. The [SCIM RFC] has more details but we currently only
-	// support simple expressions.
-	//
-	// [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
+    // Query by which the results have to be filtered. Supported operators are
+    // equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+    // Additionally, simple expressions can be formed using logical operators -
+    // `and` and `or`. The [SCIM RFC] has more details but we currently only
+    // support simple expressions.
+    // 
+    // [SCIM RFC]: https://tools.ietf.org/html/rfc7644#section-3.4.2.2
 	Filter types.String `tfsdk:"-"`
-	// Attribute to sort the results. Multi-part paths are supported. For
-	// example, `userName`, `name.givenName`, and `emails`.
+    // Attribute to sort the results. Multi-part paths are supported. For
+    // example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-"`
-	// The order to sort the results.
+    // The order to sort the results.
 	SortOrder types.String `tfsdk:"-"`
-	// Specifies the index of the first result. First item is number 1.
+    // Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
@@ -5395,15 +6400,15 @@ func (to *ListUsersRequest) SyncFieldsDuringRead(ctx context.Context, from ListU
 }
 
 func (m ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["attributes"] = attrs["attributes"].SetOptional()
-	attrs["count"] = attrs["count"].SetOptional()
-	attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
-	attrs["filter"] = attrs["filter"].SetOptional()
-	attrs["sort_by"] = attrs["sort_by"].SetOptional()
-	attrs["sort_order"] = attrs["sort_order"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["attributes"] = attrs["attributes"].SetOptional()
+attrs["count"] = attrs["count"].SetOptional()
+attrs["excluded_attributes"] = attrs["excluded_attributes"].SetOptional()
+attrs["filter"] = attrs["filter"].SetOptional()
+attrs["sort_by"] = attrs["sort_by"].SetOptional()
+attrs["sort_order"] = attrs["sort_order"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUsersRequest.
@@ -5414,7 +6419,8 @@ func (m ListUsersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5424,83 +6430,107 @@ func (m ListUsersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attributes":          m.Attributes,
-			"count":               m.Count,
-			"excluded_attributes": m.ExcludedAttributes,
-			"filter":              m.Filter,
-			"sort_by":             m.SortBy,
-			"sort_order":          m.SortOrder,
-			"start_index":         m.StartIndex,
-		})
+"attributes": m.Attributes,
+      "count": m.Count,
+      "excluded_attributes": m.ExcludedAttributes,
+      "filter": m.Filter,
+      "sort_by": m.SortBy,
+      "sort_order": m.SortOrder,
+      "start_index": m.StartIndex,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListUsersRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes":          types.StringType,
-			"count":               types.Int64Type,
-			"excluded_attributes": types.StringType,
-			"filter":              types.StringType,
-			"sort_by":             types.StringType,
-			"sort_order":          types.StringType,
-			"start_index":         types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"attributes": types.StringType,
+      "count": types.Int64Type,
+      "excluded_attributes": types.StringType,
+      "filter": types.StringType,
+      "sort_by": types.StringType,
+      "sort_order": types.StringType,
+      "start_index": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ListUsersResponse struct {
-	// Total results returned in the response.
+    // Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+    // User objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
-	// The schema of the List response.
+    // The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
-	// Starting index of all the results that matched the request filters. First
-	// item is number 1.
+    // Starting index of all the results that matched the request filters. First
+    // item is number 1.
 	StartIndex types.Int64 `tfsdk:"start_index"`
-	// Total results that match the request filters.
+    // Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"total_results"`
 }
 
 func (to *ListUsersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListUsersResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *ListUsersResponse) SyncFieldsDuringRead(ctx context.Context, from ListUsersResponse) {
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["start_index"] = attrs["start_index"].SetOptional()
-	attrs["total_results"] = attrs["total_results"].SetOptional()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["items_per_page"] = attrs["items_per_page"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["start_index"] = attrs["start_index"].SetOptional()
+attrs["total_results"] = attrs["total_results"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUsersResponse.
@@ -5511,10 +6541,10 @@ func (m ListUsersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(User{}),
-		"schemas":   reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "resources": reflect.TypeOf(User{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5524,85 +6554,107 @@ func (m ListUsersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"items_per_page": m.ItemsPerPage,
-			"resources":      m.Resources,
-			"schemas":        m.Schemas,
-			"start_index":    m.StartIndex,
-			"total_results":  m.TotalResults,
-		})
+"items_per_page": m.ItemsPerPage,
+      "resources": m.Resources,
+      "schemas": m.Schemas,
+      "start_index": m.StartIndex,
+      "total_results": m.TotalResults,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListUsersResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items_per_page": types.Int64Type,
-			"resources": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"start_index":   types.Int64Type,
-			"total_results": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"items_per_page": types.Int64Type,
+      "resources": basetypes.ListType{
+ElemType: User{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "start_index": types.Int64Type,
+      "total_results": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in ListUsersResponse as
 // a slice of User values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListUsersResponse) GetResources(ctx context.Context) ([]User, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []User
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []User
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in ListUsersResponse.
 func (m *ListUsersResponse) SetResources(ctx context.Context, v []User) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in ListUsersResponse as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ListUsersResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in ListUsersResponse.
 func (m *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ListWorkspaceAssignmentRequest struct {
-	// The workspace ID for the account.
+    // The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
@@ -5613,10 +6665,10 @@ func (to *ListWorkspaceAssignmentRequest) SyncFieldsDuringRead(ctx context.Conte
 }
 
 func (m ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceAssignmentRequest.
@@ -5627,7 +6679,8 @@ func (m ListWorkspaceAssignmentRequest) ApplySchemaCustomizations(attrs map[stri
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ListWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5637,18 +6690,30 @@ func (m ListWorkspaceAssignmentRequest) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"workspace_id": m.WorkspaceId,
-		})
+"workspace_id": m.WorkspaceId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ListWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"workspace_id": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"workspace_id": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 type MeRequest struct {
 }
@@ -5661,7 +6726,7 @@ func (to *MeRequest) SyncFieldsDuringRead(ctx context.Context, from MeRequest) {
 
 func (m MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MeRequest.
@@ -5672,7 +6737,8 @@ func (m MeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MeRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5681,25 +6747,37 @@ func (m MeRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 func (m MeRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MeRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
 type MigratePermissionsRequest struct {
-	// The name of the workspace group that permissions will be migrated from.
+    // The name of the workspace group that permissions will be migrated from.
 	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name"`
-	// The maximum number of permissions that will be migrated.
+    // The maximum number of permissions that will be migrated.
 	Size types.Int64 `tfsdk:"size"`
-	// The name of the account group that permissions will be migrated to.
+    // The name of the account group that permissions will be migrated to.
 	ToAccountGroupName types.String `tfsdk:"to_account_group_name"`
-	// WorkspaceId of the associated workspace where the permission migration
-	// will occur.
+    // WorkspaceId of the associated workspace where the permission migration
+    // will occur.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
@@ -5710,12 +6788,12 @@ func (to *MigratePermissionsRequest) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
-	attrs["size"] = attrs["size"].SetOptional()
-	attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+attrs["from_workspace_group_name"] = attrs["from_workspace_group_name"].SetRequired()
+attrs["size"] = attrs["size"].SetOptional()
+attrs["to_account_group_name"] = attrs["to_account_group_name"].SetRequired()
+attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsRequest.
@@ -5726,7 +6804,8 @@ func (m MigratePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tf
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MigratePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5736,27 +6815,45 @@ func (m MigratePermissionsRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"from_workspace_group_name": m.FromWorkspaceGroupName,
-			"size":                      m.Size,
-			"to_account_group_name":     m.ToAccountGroupName,
-			"workspace_id":              m.WorkspaceId,
-		})
+"from_workspace_group_name": m.FromWorkspaceGroupName,
+      "size": m.Size,
+      "to_account_group_name": m.ToAccountGroupName,
+      "workspace_id": m.WorkspaceId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MigratePermissionsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"from_workspace_group_name": types.StringType,
-			"size":                      types.Int64Type,
-			"to_account_group_name":     types.StringType,
-			"workspace_id":              types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"from_workspace_group_name": types.StringType,
+      "size": types.Int64Type,
+      "to_account_group_name": types.StringType,
+      "workspace_id": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type MigratePermissionsResponse struct {
-	// Number of permissions migrated.
+    // Number of permissions migrated.
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated"`
 }
 
@@ -5767,9 +6864,9 @@ func (to *MigratePermissionsResponse) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions_migrated"] = attrs["permissions_migrated"].SetOptional()
+attrs["permissions_migrated"] = attrs["permissions_migrated"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigratePermissionsResponse.
@@ -5780,7 +6877,8 @@ func (m MigratePermissionsResponse) ApplySchemaCustomizations(attrs map[string]t
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m MigratePermissionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5790,23 +6888,35 @@ func (m MigratePermissionsResponse) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions_migrated": m.PermissionsMigrated,
-		})
+"permissions_migrated": m.PermissionsMigrated,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m MigratePermissionsResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permissions_migrated": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permissions_migrated": types.Int64Type,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type Name struct {
-	// Family name of the Databricks user.
+    // Family name of the Databricks user.
 	FamilyName types.String `tfsdk:"family_name"`
-	// Given name of the Databricks user.
+    // Given name of the Databricks user.
 	GivenName types.String `tfsdk:"given_name"`
 }
 
@@ -5817,10 +6927,10 @@ func (to *Name) SyncFieldsDuringRead(ctx context.Context, from Name) {
 }
 
 func (m Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["family_name"] = attrs["family_name"].SetOptional()
-	attrs["given_name"] = attrs["given_name"].SetOptional()
+attrs["family_name"] = attrs["family_name"].SetOptional()
+attrs["given_name"] = attrs["given_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Name.
@@ -5831,7 +6941,8 @@ func (m Name) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Name) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5841,53 +6952,68 @@ func (m Name) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"family_name": m.FamilyName,
-			"given_name":  m.GivenName,
-		})
+"family_name": m.FamilyName,
+      "given_name": m.GivenName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Name) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"family_name": types.StringType,
-			"given_name":  types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"family_name": types.StringType,
+      "given_name": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type ObjectPermissions struct {
+    
 	AccessControlList types.List `tfsdk:"access_control_list"`
-
+    
 	ObjectId types.String `tfsdk:"object_id"`
-
+    
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (to *ObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (to *ObjectPermissions) SyncFieldsDuringRead(ctx context.Context, from ObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (m ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["object_id"] = attrs["object_id"].SetOptional()
-	attrs["object_type"] = attrs["object_type"].SetOptional()
+attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+attrs["object_id"] = attrs["object_id"].SetOptional()
+attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ObjectPermissions.
@@ -5898,9 +7024,9 @@ func (m ObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(AccessControlResponse{}),
-	}
+  return map[string]reflect.Type{
+    "access_control_list": reflect.TypeOf(AccessControlResponse{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5910,59 +7036,76 @@ func (m ObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": m.AccessControlList,
-			"object_id":           m.ObjectId,
-			"object_type":         m.ObjectType,
-		})
+"access_control_list": m.AccessControlList,
+      "object_id": m.ObjectId,
+      "object_type": m.ObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ObjectPermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"access_control_list": basetypes.ListType{
+ElemType: AccessControlResponse{}.Type(ctx),
+},
+      "object_id": types.StringType,
+      "object_type": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAccessControlList returns the value of the AccessControlList field in ObjectPermissions as
 // a slice of AccessControlResponse values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlResponse, bool) {
-	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessControlResponse
-	d := m.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+    return nil, false
+  }
+  var v []AccessControlResponse
+  d := m.AccessControlList.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in ObjectPermissions.
 func (m *ObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlResponse) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AccessControlList = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AccessControlList = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type PasswordAccessControlRequest struct {
-	// name of the group
+    // name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Permission level
+    // Permission level
 	PermissionLevel types.String `tfsdk:"permission_level"`
-	// application ID of a service principal
+    // application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+    // name of the user
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -5973,12 +7116,12 @@ func (to *PasswordAccessControlRequest) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["group_name"] = attrs["group_name"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordAccessControlRequest.
@@ -5989,7 +7132,8 @@ func (m PasswordAccessControlRequest) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5999,64 +7143,82 @@ func (m PasswordAccessControlRequest) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_name":             m.GroupName,
-			"permission_level":       m.PermissionLevel,
-			"service_principal_name": m.ServicePrincipalName,
-			"user_name":              m.UserName,
-		})
+"group_name": m.GroupName,
+      "permission_level": m.PermissionLevel,
+      "service_principal_name": m.ServicePrincipalName,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordAccessControlRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"group_name":             types.StringType,
-			"permission_level":       types.StringType,
-			"service_principal_name": types.StringType,
-			"user_name":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"group_name": types.StringType,
+      "permission_level": types.StringType,
+      "service_principal_name": types.StringType,
+      "user_name": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type PasswordAccessControlResponse struct {
-	// All permissions.
+    // All permissions.
 	AllPermissions types.List `tfsdk:"all_permissions"`
-	// Display name of the user or service principal.
+    // Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// name of the group
+    // name of the group
 	GroupName types.String `tfsdk:"group_name"`
-	// Name of the service principal.
+    // Name of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+    // name of the user
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *PasswordAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PasswordAccessControlResponse) {
-	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AllPermissions = from.AllPermissions
-	}
+  if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AllPermissions = from.AllPermissions
+  }
 }
 
 func (to *PasswordAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from PasswordAccessControlResponse) {
-	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AllPermissions = from.AllPermissions
-	}
+  if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AllPermissions = from.AllPermissions
+  }
 }
 
 func (m PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["group_name"] = attrs["group_name"].SetOptional()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordAccessControlResponse.
@@ -6067,9 +7229,9 @@ func (m PasswordAccessControlResponse) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"all_permissions": reflect.TypeOf(PasswordPermission{}),
-	}
+  return map[string]reflect.Type{
+    "all_permissions": reflect.TypeOf(PasswordPermission{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6079,87 +7241,109 @@ func (m PasswordAccessControlResponse) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"all_permissions":        m.AllPermissions,
-			"display_name":           m.DisplayName,
-			"group_name":             m.GroupName,
-			"service_principal_name": m.ServicePrincipalName,
-			"user_name":              m.UserName,
-		})
+"all_permissions": m.AllPermissions,
+      "display_name": m.DisplayName,
+      "group_name": m.GroupName,
+      "service_principal_name": m.ServicePrincipalName,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: PasswordPermission{}.Type(ctx),
-			},
-			"display_name":           types.StringType,
-			"group_name":             types.StringType,
-			"service_principal_name": types.StringType,
-			"user_name":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"all_permissions": basetypes.ListType{
+ElemType: PasswordPermission{}.Type(ctx),
+},
+      "display_name": types.StringType,
+      "group_name": types.StringType,
+      "service_principal_name": types.StringType,
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAllPermissions returns the value of the AllPermissions field in PasswordAccessControlResponse as
 // a slice of PasswordPermission values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PasswordAccessControlResponse) GetAllPermissions(ctx context.Context) ([]PasswordPermission, bool) {
-	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
-		return nil, false
-	}
-	var v []PasswordPermission
-	d := m.AllPermissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
+    return nil, false
+  }
+  var v []PasswordPermission
+  d := m.AllPermissions.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAllPermissions sets the value of the AllPermissions field in PasswordAccessControlResponse.
 func (m *PasswordAccessControlResponse) SetAllPermissions(ctx context.Context, v []PasswordPermission) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AllPermissions = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AllPermissions = types.ListValueMust(t, vs)
 }
 
-type PasswordPermission struct {
-	Inherited types.Bool `tfsdk:"inherited"`
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type PasswordPermission struct {
+    
+	Inherited types.Bool `tfsdk:"inherited"`
+    
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-	// Permission level
+    // Permission level
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (to *PasswordPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PasswordPermission) {
-	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.InheritedFromObject = from.InheritedFromObject
-	}
+  if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.InheritedFromObject = from.InheritedFromObject
+  }
 }
 
 func (to *PasswordPermission) SyncFieldsDuringRead(ctx context.Context, from PasswordPermission) {
-	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.InheritedFromObject = from.InheritedFromObject
-	}
+  if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.InheritedFromObject = from.InheritedFromObject
+  }
 }
 
 func (m PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["inherited"] = attrs["inherited"].SetOptional()
-	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["inherited"] = attrs["inherited"].SetOptional()
+attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermission.
@@ -6170,9 +7354,9 @@ func (m PasswordPermission) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "inherited_from_object": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6182,83 +7366,101 @@ func (m PasswordPermission) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             m.Inherited,
-			"inherited_from_object": m.InheritedFromObject,
-			"permission_level":      m.PermissionLevel,
-		})
+"inherited": m.Inherited,
+      "inherited_from_object": m.InheritedFromObject,
+      "permission_level": m.PermissionLevel,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordPermission) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"inherited": types.BoolType,
+      "inherited_from_object": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "permission_level": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetInheritedFromObject returns the value of the InheritedFromObject field in PasswordPermission as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PasswordPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in PasswordPermission.
 func (m *PasswordPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.InheritedFromObject = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type PasswordPermissions struct {
+    
 	AccessControlList types.List `tfsdk:"access_control_list"`
-
+    
 	ObjectId types.String `tfsdk:"object_id"`
-
+    
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (to *PasswordPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PasswordPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (to *PasswordPermissions) SyncFieldsDuringRead(ctx context.Context, from PasswordPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (m PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["object_id"] = attrs["object_id"].SetOptional()
-	attrs["object_type"] = attrs["object_type"].SetOptional()
+attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+attrs["object_id"] = attrs["object_id"].SetOptional()
+attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissions.
@@ -6269,9 +7471,9 @@ func (m PasswordPermissions) ApplySchemaCustomizations(attrs map[string]tfschema
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(PasswordAccessControlResponse{}),
-	}
+  return map[string]reflect.Type{
+    "access_control_list": reflect.TypeOf(PasswordAccessControlResponse{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6281,54 +7483,72 @@ func (m PasswordPermissions) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": m.AccessControlList,
-			"object_id":           m.ObjectId,
-			"object_type":         m.ObjectType,
-		})
+"access_control_list": m.AccessControlList,
+      "object_id": m.ObjectId,
+      "object_type": m.ObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordPermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"access_control_list": basetypes.ListType{
+ElemType: PasswordAccessControlResponse{}.Type(ctx),
+},
+      "object_id": types.StringType,
+      "object_type": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAccessControlList returns the value of the AccessControlList field in PasswordPermissions as
 // a slice of PasswordAccessControlResponse values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PasswordPermissions) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlResponse, bool) {
-	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []PasswordAccessControlResponse
-	d := m.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+    return nil, false
+  }
+  var v []PasswordAccessControlResponse
+  d := m.AccessControlList.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in PasswordPermissions.
 func (m *PasswordPermissions) SetAccessControlList(ctx context.Context, v []PasswordAccessControlResponse) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AccessControlList = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AccessControlList = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type PasswordPermissionsDescription struct {
+    
 	Description types.String `tfsdk:"description"`
-	// Permission level
+    // Permission level
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -6339,10 +7559,10 @@ func (to *PasswordPermissionsDescription) SyncFieldsDuringRead(ctx context.Conte
 }
 
 func (m PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["description"] = attrs["description"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsDescription.
@@ -6353,7 +7573,8 @@ func (m PasswordPermissionsDescription) ApplySchemaCustomizations(attrs map[stri
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6363,47 +7584,62 @@ func (m PasswordPermissionsDescription) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      m.Description,
-			"permission_level": m.PermissionLevel,
-		})
+"description": m.Description,
+      "permission_level": m.PermissionLevel,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordPermissionsDescription) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"description":      types.StringType,
-			"permission_level": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"description": types.StringType,
+      "permission_level": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type PasswordPermissionsRequest struct {
+    
 	AccessControlList types.List `tfsdk:"access_control_list"`
 }
 
 func (to *PasswordPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PasswordPermissionsRequest) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (to *PasswordPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from PasswordPermissionsRequest) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (m PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PasswordPermissionsRequest.
@@ -6414,9 +7650,9 @@ func (m PasswordPermissionsRequest) ApplySchemaCustomizations(attrs map[string]t
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(PasswordAccessControlRequest{}),
-	}
+  return map[string]reflect.Type{
+    "access_control_list": reflect.TypeOf(PasswordAccessControlRequest{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6426,53 +7662,66 @@ func (m PasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": m.AccessControlList,
-		})
+"access_control_list": m.AccessControlList,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlRequest{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"access_control_list": basetypes.ListType{
+ElemType: PasswordAccessControlRequest{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetAccessControlList returns the value of the AccessControlList field in PasswordPermissionsRequest as
 // a slice of PasswordAccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PasswordPermissionsRequest) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlRequest, bool) {
-	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []PasswordAccessControlRequest
-	d := m.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+    return nil, false
+  }
+  var v []PasswordAccessControlRequest
+  d := m.AccessControlList.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in PasswordPermissionsRequest.
 func (m *PasswordPermissionsRequest) SetAccessControlList(ctx context.Context, v []PasswordAccessControlRequest) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AccessControlList = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AccessControlList = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type Patch struct {
-	// Type of patch operation.
+    // Type of patch operation.
 	Op types.String `tfsdk:"op"`
-	// Selection of patch operation
+    // Selection of patch operation
 	Path types.String `tfsdk:"path"`
-	// Value to modify
+    // Value to modify
 	Value types.Object `tfsdk:"value"`
 }
 
@@ -6483,11 +7732,11 @@ func (to *Patch) SyncFieldsDuringRead(ctx context.Context, from Patch) {
 }
 
 func (m Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["op"] = attrs["op"].SetOptional()
-	attrs["path"] = attrs["path"].SetOptional()
-	attrs["value"] = attrs["value"].SetOptional()
+attrs["op"] = attrs["op"].SetOptional()
+attrs["path"] = attrs["path"].SetOptional()
+attrs["value"] = attrs["value"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Patch.
@@ -6498,7 +7747,8 @@ func (m Patch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Patch) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6508,70 +7758,86 @@ func (m Patch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"op":    m.Op,
-			"path":  m.Path,
-			"value": m.Value,
-		})
+"op": m.Op,
+      "path": m.Path,
+      "value": m.Value,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Patch) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"op":    types.StringType,
-			"path":  types.StringType,
-			"value": types.ObjectType{},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"op": types.StringType,
+      "path": types.StringType,
+      "value": types.ObjectType{},
+      
+    },
+  }
 }
 
-type PatchAccountGroupRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+type PatchAccountGroupRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchAccountGroupRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from PatchAccountGroupRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchAccountGroupRequest.
@@ -6582,10 +7848,10 @@ func (m PatchAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6595,126 +7861,144 @@ func (m PatchAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchAccountGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchAccountGroupRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountGroupRequest.
 func (m *PatchAccountGroupRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchAccountGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountGroupRequest.
 func (m *PatchAccountGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
-type PatchAccountServicePrincipalRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type PatchAccountServicePrincipalRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchAccountServicePrincipalRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from PatchAccountServicePrincipalRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchAccountServicePrincipalRequest.
@@ -6725,10 +8009,10 @@ func (m PatchAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6738,126 +8022,144 @@ func (m PatchAccountServicePrincipalRequest) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchAccountServicePrincipalRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountServicePrincipalRequest.
 func (m *PatchAccountServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchAccountServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountServicePrincipalRequest.
 func (m *PatchAccountServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
-type PatchAccountUserRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type PatchAccountUserRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchAccountUserRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from PatchAccountUserRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchAccountUserRequest.
@@ -6868,10 +8170,10 @@ func (m PatchAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfsc
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6881,125 +8183,143 @@ func (m PatchAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchAccountUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchAccountUserRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchAccountUserRequest.
 func (m *PatchAccountUserRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchAccountUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchAccountUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchAccountUserRequest.
 func (m *PatchAccountUserRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
-type PatchGroupRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type PatchGroupRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchGroupRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchGroupRequest) SyncFieldsDuringRead(ctx context.Context, from PatchGroupRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchGroupRequest.
@@ -7010,10 +8330,10 @@ func (m PatchGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7023,125 +8343,143 @@ func (m PatchGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchGroupRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchGroupRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchGroupRequest.
 func (m *PatchGroupRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchGroupRequest.
 func (m *PatchGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
-type PatchServicePrincipalRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type PatchServicePrincipalRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchServicePrincipalRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from PatchServicePrincipalRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchServicePrincipalRequest.
@@ -7152,10 +8490,10 @@ func (m PatchServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7165,125 +8503,143 @@ func (m PatchServicePrincipalRequest) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchServicePrincipalRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchServicePrincipalRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchServicePrincipalRequest.
 func (m *PatchServicePrincipalRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchServicePrincipalRequest.
 func (m *PatchServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
-type PatchUserRequest struct {
-	// Unique ID in the Databricks workspace.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type PatchUserRequest struct {
+    // Unique ID in the Databricks workspace.
+	Id types.String `tfsdk:"-"`
+    
 	Operations types.List `tfsdk:"operations"`
-	// The schema of the patch request. Must be
-	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
+    // The schema of the patch request. Must be
+    // ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *PatchUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchUserRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *PatchUserRequest) SyncFieldsDuringRead(ctx context.Context, from PatchUserRequest) {
-	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Operations = from.Operations
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Operations = from.Operations
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m PatchUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operations"] = attrs["operations"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["operations"] = attrs["operations"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchUserRequest.
@@ -7294,10 +8650,10 @@ func (m PatchUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PatchUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "operations": reflect.TypeOf(Patch{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7307,111 +8663,130 @@ func (m PatchUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":         m.Id,
-			"operations": m.Operations,
-			"schemas":    m.Schemas,
-		})
+"id": m.Id,
+      "operations": m.Operations,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PatchUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"id": types.StringType,
+      "operations": basetypes.ListType{
+ElemType: Patch{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetOperations returns the value of the Operations field in PatchUserRequest as
 // a slice of Patch values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchUserRequest) GetOperations(ctx context.Context) ([]Patch, bool) {
-	if m.Operations.IsNull() || m.Operations.IsUnknown() {
-		return nil, false
-	}
-	var v []Patch
-	d := m.Operations.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Operations.IsNull() || m.Operations.IsUnknown() {
+    return nil, false
+  }
+  var v []Patch
+  d := m.Operations.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetOperations sets the value of the Operations field in PatchUserRequest.
 func (m *PatchUserRequest) SetOperations(ctx context.Context, v []Patch) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Operations = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Operations = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in PatchUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PatchUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in PatchUserRequest.
 func (m *PatchUserRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type Permission struct {
+    
 	Inherited types.Bool `tfsdk:"inherited"`
-
+    
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-
+    
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (to *Permission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Permission) {
-	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.InheritedFromObject = from.InheritedFromObject
-	}
+  if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.InheritedFromObject = from.InheritedFromObject
+  }
 }
 
 func (to *Permission) SyncFieldsDuringRead(ctx context.Context, from Permission) {
-	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.InheritedFromObject = from.InheritedFromObject
-	}
+  if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.InheritedFromObject = from.InheritedFromObject
+  }
 }
 
 func (m Permission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["inherited"] = attrs["inherited"].SetOptional()
-	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["inherited"] = attrs["inherited"].SetOptional()
+attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Permission.
@@ -7422,9 +8797,9 @@ func (m Permission) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "inherited_from_object": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7434,103 +8809,119 @@ func (m Permission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"inherited":             m.Inherited,
-			"inherited_from_object": m.InheritedFromObject,
-			"permission_level":      m.PermissionLevel,
-		})
+"inherited": m.Inherited,
+      "inherited_from_object": m.InheritedFromObject,
+      "permission_level": m.PermissionLevel,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Permission) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"inherited": types.BoolType,
+      "inherited_from_object": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "permission_level": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetInheritedFromObject returns the value of the InheritedFromObject field in Permission as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Permission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
-	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetInheritedFromObject sets the value of the InheritedFromObject field in Permission.
 func (m *Permission) SetInheritedFromObject(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.InheritedFromObject = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.InheritedFromObject = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
+
+
 
 // The output format for existing workspace PermissionAssignment records, which
 // contains some info for user consumption.
 type PermissionAssignment struct {
-	// Error response associated with a workspace permission assignment, if any.
+    // Error response associated with a workspace permission assignment, if any.
 	Error types.String `tfsdk:"error"`
-	// The permissions level of the principal.
+    // The permissions level of the principal.
 	Permissions types.List `tfsdk:"permissions"`
-	// Information about the principal assigned to the workspace.
+    // Information about the principal assigned to the workspace.
 	Principal types.Object `tfsdk:"principal"`
 }
 
 func (to *PermissionAssignment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PermissionAssignment) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
-	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
-		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
-			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
-				// Recursively sync the fields of Principal
-				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
-				to.SetPrincipal(ctx, toPrincipal)
-			}
-		}
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
+  if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+    if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+      if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+        // Recursively sync the fields of Principal
+        toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+        to.SetPrincipal(ctx, toPrincipal)
+      }
+    }
+  }
 }
 
 func (to *PermissionAssignment) SyncFieldsDuringRead(ctx context.Context, from PermissionAssignment) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
-	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
-		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
-			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
-				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
-				to.SetPrincipal(ctx, toPrincipal)
-			}
-		}
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
+  if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+    if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+      if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+        toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+        to.SetPrincipal(ctx, toPrincipal)
+      }
+    }
+  }
 }
 
 func (m PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["error"] = attrs["error"].SetOptional()
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["principal"] = attrs["principal"].SetOptional()
+attrs["error"] = attrs["error"].SetOptional()
+attrs["permissions"] = attrs["permissions"].SetOptional()
+attrs["principal"] = attrs["principal"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionAssignment.
@@ -7541,10 +8932,10 @@ func (m PermissionAssignment) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(types.String{}),
-		"principal":   reflect.TypeOf(PrincipalOutput{}),
-	}
+  return map[string]reflect.Type{
+    "permissions": reflect.TypeOf(types.String{}),
+    "principal": reflect.TypeOf(PrincipalOutput{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7554,103 +8945,121 @@ func (m PermissionAssignment) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"error":       m.Error,
-			"permissions": m.Permissions,
-			"principal":   m.Principal,
-		})
+"error": m.Error,
+      "permissions": m.Permissions,
+      "principal": m.Principal,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PermissionAssignment) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"error": types.StringType,
-			"permissions": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"principal": PrincipalOutput{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"error": types.StringType,
+      "permissions": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "principal": PrincipalOutput{}.Type(ctx),
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetPermissions returns the value of the Permissions field in PermissionAssignment as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PermissionAssignment) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Permissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Permissions.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissions sets the value of the Permissions field in PermissionAssignment.
 func (m *PermissionAssignment) SetPermissions(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Permissions = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Permissions = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetPrincipal returns the value of the Principal field in PermissionAssignment as
 // a PrincipalOutput value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutput, bool) {
-	var e PrincipalOutput
-	if m.Principal.IsNull() || m.Principal.IsUnknown() {
-		return e, false
-	}
-	var v PrincipalOutput
-	d := m.Principal.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e PrincipalOutput
+  if m.Principal.IsNull() || m.Principal.IsUnknown() {
+    return e, false
+  }
+  var v PrincipalOutput
+  d := m.Principal.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPrincipal sets the value of the Principal field in PermissionAssignment.
 func (m *PermissionAssignment) SetPrincipal(ctx context.Context, v PrincipalOutput) {
-	vs := v.ToObjectValue(ctx)
-	m.Principal = vs
+  vs := v.ToObjectValue(ctx)
+  m.Principal = vs
 }
 
+
+
+
+
+
+
+
+
 type PermissionAssignments struct {
-	// Array of permissions assignments defined for a workspace.
+    // Array of permissions assignments defined for a workspace.
 	PermissionAssignments types.List `tfsdk:"permission_assignments"`
 }
 
 func (to *PermissionAssignments) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PermissionAssignments) {
-	if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() && to.PermissionAssignments.IsNull() && len(from.PermissionAssignments.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionAssignments, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionAssignments = from.PermissionAssignments
-	}
+  if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() && to.PermissionAssignments.IsNull() && len(from.PermissionAssignments.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionAssignments, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionAssignments = from.PermissionAssignments
+  }
 }
 
 func (to *PermissionAssignments) SyncFieldsDuringRead(ctx context.Context, from PermissionAssignments) {
-	if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() && to.PermissionAssignments.IsNull() && len(from.PermissionAssignments.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for PermissionAssignments, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.PermissionAssignments = from.PermissionAssignments
-	}
+  if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() && to.PermissionAssignments.IsNull() && len(from.PermissionAssignments.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for PermissionAssignments, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.PermissionAssignments = from.PermissionAssignments
+  }
 }
 
 func (m PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permission_assignments"] = attrs["permission_assignments"].SetOptional()
+attrs["permission_assignments"] = attrs["permission_assignments"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionAssignments.
@@ -7661,9 +9070,9 @@ func (m PermissionAssignments) ApplySchemaCustomizations(attrs map[string]tfsche
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PermissionAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permission_assignments": reflect.TypeOf(PermissionAssignment{}),
-	}
+  return map[string]reflect.Type{
+    "permission_assignments": reflect.TypeOf(PermissionAssignment{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7673,51 +9082,64 @@ func (m PermissionAssignments) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permission_assignments": m.PermissionAssignments,
-		})
+"permission_assignments": m.PermissionAssignments,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PermissionAssignments) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permission_assignments": basetypes.ListType{
-				ElemType: PermissionAssignment{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permission_assignments": basetypes.ListType{
+ElemType: PermissionAssignment{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetPermissionAssignments returns the value of the PermissionAssignments field in PermissionAssignments as
 // a slice of PermissionAssignment values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *PermissionAssignments) GetPermissionAssignments(ctx context.Context) ([]PermissionAssignment, bool) {
-	if m.PermissionAssignments.IsNull() || m.PermissionAssignments.IsUnknown() {
-		return nil, false
-	}
-	var v []PermissionAssignment
-	d := m.PermissionAssignments.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.PermissionAssignments.IsNull() || m.PermissionAssignments.IsUnknown() {
+    return nil, false
+  }
+  var v []PermissionAssignment
+  d := m.PermissionAssignments.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissionAssignments sets the value of the PermissionAssignments field in PermissionAssignments.
 func (m *PermissionAssignments) SetPermissionAssignments(ctx context.Context, v []PermissionAssignment) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.PermissionAssignments = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.PermissionAssignments = types.ListValueMust(t, vs)
 }
 
-type PermissionOutput struct {
-	// The results of a permissions query.
-	Description types.String `tfsdk:"description"`
 
+
+
+
+
+
+
+
+type PermissionOutput struct {
+    // The results of a permissions query.
+	Description types.String `tfsdk:"description"`
+    
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -7728,10 +9150,10 @@ func (to *PermissionOutput) SyncFieldsDuringRead(ctx context.Context, from Permi
 }
 
 func (m PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["description"] = attrs["description"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionOutput.
@@ -7742,7 +9164,8 @@ func (m PermissionOutput) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PermissionOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7752,24 +9175,39 @@ func (m PermissionOutput) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      m.Description,
-			"permission_level": m.PermissionLevel,
-		})
+"description": m.Description,
+      "permission_level": m.PermissionLevel,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PermissionOutput) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"description":      types.StringType,
-			"permission_level": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"description": types.StringType,
+      "permission_level": types.StringType,
+      
+    },
+  }
 }
 
-type PermissionsDescription struct {
-	Description types.String `tfsdk:"description"`
 
+
+
+
+
+
+
+
+
+
+
+
+type PermissionsDescription struct {
+    
+	Description types.String `tfsdk:"description"`
+    
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -7780,10 +9218,10 @@ func (to *PermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+attrs["description"] = attrs["description"].SetOptional()
+attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermissionsDescription.
@@ -7794,7 +9232,8 @@ func (m PermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7804,33 +9243,46 @@ func (m PermissionsDescription) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description":      m.Description,
-			"permission_level": m.PermissionLevel,
-		})
+"description": m.Description,
+      "permission_level": m.PermissionLevel,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PermissionsDescription) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"description":      types.StringType,
-			"permission_level": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"description": types.StringType,
+      "permission_level": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // Information about the principal assigned to the workspace.
 type PrincipalOutput struct {
-	// The display name of the principal.
+    // The display name of the principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The group name of the group. Present only if the principal is a group.
+    // The group name of the group. Present only if the principal is a group.
 	GroupName types.String `tfsdk:"group_name"`
-	// The unique, opaque id of the principal.
+    // The unique, opaque id of the principal.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The name of the service principal. Present only if the principal is a
-	// service principal.
+    // The name of the service principal. Present only if the principal is a
+    // service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// The username of the user. Present only if the principal is a user.
+    // The username of the user. Present only if the principal is a user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -7841,13 +9293,13 @@ func (to *PrincipalOutput) SyncFieldsDuringRead(ctx context.Context, from Princi
 }
 
 func (m PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["principal_id"] = attrs["principal_id"].SetOptional()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["group_name"] = attrs["group_name"].SetOptional()
+attrs["principal_id"] = attrs["principal_id"].SetOptional()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PrincipalOutput.
@@ -7858,7 +9310,8 @@ func (m PrincipalOutput) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PrincipalOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7868,30 +9321,50 @@ func (m PrincipalOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name":           m.DisplayName,
-			"group_name":             m.GroupName,
-			"principal_id":           m.PrincipalId,
-			"service_principal_name": m.ServicePrincipalName,
-			"user_name":              m.UserName,
-		})
+"display_name": m.DisplayName,
+      "group_name": m.GroupName,
+      "principal_id": m.PrincipalId,
+      "service_principal_name": m.ServicePrincipalName,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m PrincipalOutput) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name":           types.StringType,
-			"group_name":             types.StringType,
-			"principal_id":           types.Int64Type,
-			"service_principal_name": types.StringType,
-			"user_name":              types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "group_name": types.StringType,
+      "principal_id": types.Int64Type,
+      "service_principal_name": types.StringType,
+      "user_name": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ResourceMeta struct {
-	// Identifier for group type. Can be local workspace group
-	// (`WorkspaceGroup`) or account group (`Group`).
+    // Identifier for group type. Can be local workspace group
+    // (`WorkspaceGroup`) or account group (`Group`).
 	ResourceType types.String `tfsdk:"resource_type"`
 }
 
@@ -7902,9 +9375,9 @@ func (to *ResourceMeta) SyncFieldsDuringRead(ctx context.Context, from ResourceM
 }
 
 func (m ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["resource_type"] = attrs["resource_type"].SetOptional()
+attrs["resource_type"] = attrs["resource_type"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResourceMeta.
@@ -7915,7 +9388,8 @@ func (m ResourceMeta) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ResourceMeta) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7925,21 +9399,33 @@ func (m ResourceMeta) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"resource_type": m.ResourceType,
-		})
+"resource_type": m.ResourceType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ResourceMeta) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"resource_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"resource_type": types.StringType,
+      
+    },
+  }
 }
 
+
+
+
+
+
+
+
+
+
+
 type Role struct {
-	// Role to assign to a principal or a list of principals on a resource.
+    // Role to assign to a principal or a list of principals on a resource.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -7950,9 +9436,9 @@ func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
 }
 
 func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
+attrs["name"] = attrs["name"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Role.
@@ -7963,7 +9449,8 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Role) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+  return map[string]reflect.Type{
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7973,60 +9460,72 @@ func (m Role) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
-		})
+"name": m.Name,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m Role) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"name": types.StringType,
+      
+    },
+  }
 }
 
-type RuleSetResponse struct {
-	// Identifies the version of the rule set returned. Etag used for
-	// versioning. The response is at least as fresh as the eTag provided. Etag
-	// is used for optimistic concurrency control as a way to help prevent
-	// simultaneous updates of a rule set from overwriting each other. It is
-	// strongly suggested that systems make use of the etag in the read ->
-	// modify -> write pattern to perform rule set updates in order to avoid
-	// race conditions that is get an etag from a GET rule set request, and pass
-	// it with the PUT update request to identify the rule set version you are
-	// updating.
-	Etag types.String `tfsdk:"etag"`
 
+
+
+
+
+
+
+
+
+
+type RuleSetResponse struct {
+    // Identifies the version of the rule set returned. Etag used for
+    // versioning. The response is at least as fresh as the eTag provided. Etag
+    // is used for optimistic concurrency control as a way to help prevent
+    // simultaneous updates of a rule set from overwriting each other. It is
+    // strongly suggested that systems make use of the etag in the read ->
+    // modify -> write pattern to perform rule set updates in order to avoid
+    // race conditions that is get an etag from a GET rule set request, and pass
+    // it with the PUT update request to identify the rule set version you are
+    // updating.
+	Etag types.String `tfsdk:"etag"`
+    
 	GrantRules types.List `tfsdk:"grant_rules"`
-	// Name of the rule set.
+    // Name of the rule set.
 	Name types.String `tfsdk:"name"`
 }
 
 func (to *RuleSetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RuleSetResponse) {
-	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.GrantRules = from.GrantRules
-	}
+  if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.GrantRules = from.GrantRules
+  }
 }
 
 func (to *RuleSetResponse) SyncFieldsDuringRead(ctx context.Context, from RuleSetResponse) {
-	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.GrantRules = from.GrantRules
-	}
+  if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.GrantRules = from.GrantRules
+  }
 }
 
 func (m RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["etag"] = attrs["etag"].SetRequired()
-	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
+attrs["etag"] = attrs["etag"].SetRequired()
+attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
+attrs["name"] = attrs["name"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RuleSetResponse.
@@ -8037,9 +9536,9 @@ func (m RuleSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m RuleSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"grant_rules": reflect.TypeOf(GrantRule{}),
-	}
+  return map[string]reflect.Type{
+    "grant_rules": reflect.TypeOf(GrantRule{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8049,92 +9548,109 @@ func (m RuleSetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":        m.Etag,
-			"grant_rules": m.GrantRules,
-			"name":        m.Name,
-		})
+"etag": m.Etag,
+      "grant_rules": m.GrantRules,
+      "name": m.Name,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m RuleSetResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"etag": types.StringType,
-			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
-			},
-			"name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"etag": types.StringType,
+      "grant_rules": basetypes.ListType{
+ElemType: GrantRule{}.Type(ctx),
+},
+      "name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetGrantRules returns the value of the GrantRules field in RuleSetResponse as
 // a slice of GrantRule values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *RuleSetResponse) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
-	if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
-		return nil, false
-	}
-	var v []GrantRule
-	d := m.GrantRules.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
+    return nil, false
+  }
+  var v []GrantRule
+  d := m.GrantRules.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGrantRules sets the value of the GrantRules field in RuleSetResponse.
 func (m *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.GrantRules = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.GrantRules = types.ListValueMust(t, vs)
 }
 
-type RuleSetUpdateRequest struct {
-	// Identifies the version of the rule set returned. Etag used for
-	// versioning. The response is at least as fresh as the eTag provided. Etag
-	// is used for optimistic concurrency control as a way to help prevent
-	// simultaneous updates of a rule set from overwriting each other. It is
-	// strongly suggested that systems make use of the etag in the read ->
-	// modify -> write pattern to perform rule set updates in order to avoid
-	// race conditions that is get an etag from a GET rule set request, and pass
-	// it with the PUT update request to identify the rule set version you are
-	// updating.
-	Etag types.String `tfsdk:"etag"`
 
+
+
+
+
+
+
+
+
+
+type RuleSetUpdateRequest struct {
+    // Identifies the version of the rule set returned. Etag used for
+    // versioning. The response is at least as fresh as the eTag provided. Etag
+    // is used for optimistic concurrency control as a way to help prevent
+    // simultaneous updates of a rule set from overwriting each other. It is
+    // strongly suggested that systems make use of the etag in the read ->
+    // modify -> write pattern to perform rule set updates in order to avoid
+    // race conditions that is get an etag from a GET rule set request, and pass
+    // it with the PUT update request to identify the rule set version you are
+    // updating.
+	Etag types.String `tfsdk:"etag"`
+    
 	GrantRules types.List `tfsdk:"grant_rules"`
-	// Name of the rule set.
+    // Name of the rule set.
 	Name types.String `tfsdk:"name"`
 }
 
 func (to *RuleSetUpdateRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RuleSetUpdateRequest) {
-	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.GrantRules = from.GrantRules
-	}
+  if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.GrantRules = from.GrantRules
+  }
 }
 
 func (to *RuleSetUpdateRequest) SyncFieldsDuringRead(ctx context.Context, from RuleSetUpdateRequest) {
-	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.GrantRules = from.GrantRules
-	}
+  if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() && to.GrantRules.IsNull() && len(from.GrantRules.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.GrantRules = from.GrantRules
+  }
 }
 
 func (m RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["etag"] = attrs["etag"].SetRequired()
-	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
+attrs["etag"] = attrs["etag"].SetRequired()
+attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
+attrs["name"] = attrs["name"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RuleSetUpdateRequest.
@@ -8145,9 +9661,9 @@ func (m RuleSetUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m RuleSetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"grant_rules": reflect.TypeOf(GrantRule{}),
-	}
+  return map[string]reflect.Type{
+    "grant_rules": reflect.TypeOf(GrantRule{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8157,141 +9673,158 @@ func (m RuleSetUpdateRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":        m.Etag,
-			"grant_rules": m.GrantRules,
-			"name":        m.Name,
-		})
+"etag": m.Etag,
+      "grant_rules": m.GrantRules,
+      "name": m.Name,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"etag": types.StringType,
-			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
-			},
-			"name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"etag": types.StringType,
+      "grant_rules": basetypes.ListType{
+ElemType: GrantRule{}.Type(ctx),
+},
+      "name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetGrantRules returns the value of the GrantRules field in RuleSetUpdateRequest as
 // a slice of GrantRule values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *RuleSetUpdateRequest) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
-	if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
-		return nil, false
-	}
-	var v []GrantRule
-	d := m.GrantRules.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.GrantRules.IsNull() || m.GrantRules.IsUnknown() {
+    return nil, false
+  }
+  var v []GrantRule
+  d := m.GrantRules.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGrantRules sets the value of the GrantRules field in RuleSetUpdateRequest.
 func (m *RuleSetUpdateRequest) SetGrantRules(ctx context.Context, v []GrantRule) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.GrantRules = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.GrantRules = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type ServicePrincipal struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+    // UUID relating to the service principal
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+    // String that represents a concatenation of given and family names.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the service principal. See [assigning
-	// entitlements] for a full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the service principal. See [assigning
+    // entitlements] for a full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"id"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the List response.
+    // The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from ServicePrincipal) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServicePrincipal.
@@ -8302,12 +9835,12 @@ func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8317,183 +9850,216 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"entitlements":   m.Entitlements,
-			"external_id":    m.ExternalId,
-			"groups":         m.Groups,
-			"id":             m.Id,
-			"roles":          m.Roles,
-			"schemas":        m.Schemas,
-		})
+"active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ServicePrincipal) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in ServicePrincipal.
 func (m *ServicePrincipal) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ServicePrincipal) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in ServicePrincipal.
 func (m *ServicePrincipal) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in ServicePrincipal as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in ServicePrincipal.
 func (m *ServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in ServicePrincipal as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *ServicePrincipal) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in ServicePrincipal.
 func (m *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type SetObjectPermissions struct {
+    
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+    // The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+    // The type of the request object. Can be one of the following: alerts,
+    // alertsv2, authorization, clusters, cluster-policies, dashboards,
+    // database-projects, dbsql-dashboards, directories, experiments, files,
+    // genie, instance-pools, jobs, notebooks, pipelines, queries,
+    // registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
 func (to *SetObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SetObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (to *SetObjectPermissions) SyncFieldsDuringRead(ctx context.Context, from SetObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (m SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetObjectPermissions.
@@ -8504,9 +10070,9 @@ func (m SetObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m SetObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
-	}
+  return map[string]reflect.Type{
+    "access_control_list": reflect.TypeOf(AccessControlRequest{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8516,123 +10082,140 @@ func (m SetObjectPermissions) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": m.AccessControlList,
-			"request_object_id":   m.RequestObjectId,
-			"request_object_type": m.RequestObjectType,
-		})
+"access_control_list": m.AccessControlList,
+      "request_object_id": m.RequestObjectId,
+      "request_object_type": m.RequestObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m SetObjectPermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.Type(ctx),
-			},
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"access_control_list": basetypes.ListType{
+ElemType: AccessControlRequest{}.Type(ctx),
+},
+      "request_object_id": types.StringType,
+      "request_object_type": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAccessControlList returns the value of the AccessControlList field in SetObjectPermissions as
 // a slice of AccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *SetObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
-	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessControlRequest
-	d := m.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+    return nil, false
+  }
+  var v []AccessControlRequest
+  d := m.AccessControlList.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in SetObjectPermissions.
 func (m *SetObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AccessControlList = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AccessControlList = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type UpdateAccountGroupRequest struct {
-	// String that represents a human-readable group name
+    // String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+    // Databricks group ID
 	Id types.String `tfsdk:"-"`
-
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *UpdateAccountGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAccountGroupRequest) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *UpdateAccountGroupRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountGroupRequest) {
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccountGroupRequest.
@@ -8643,11 +10226,11 @@ func (m UpdateAccountGroupRequest) ApplySchemaCustomizations(attrs map[string]tf
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"members": reflect.TypeOf(ComplexValue{}),
-		"meta":    reflect.TypeOf(ResourceMeta{}),
-		"roles":   reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8657,153 +10240,178 @@ func (m UpdateAccountGroupRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": m.DisplayName,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-		})
+"display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateAccountGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"external_id":  types.StringType,
-			"id":           types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in UpdateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in UpdateAccountGroupRequest.
 func (m *UpdateAccountGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in UpdateAccountGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in UpdateAccountGroupRequest.
 func (m *UpdateAccountGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateAccountGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountGroupRequest.
 func (m *UpdateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type UpdateAccountServicePrincipalRequest struct {
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
-	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
-	DisplayName types.String `tfsdk:"display_name"`
 
+
+
+
+
+
+
+
+type UpdateAccountServicePrincipalRequest struct {
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // UUID relating to the service principal
+	ApplicationId types.String `tfsdk:"application_id"`
+    // String that represents a concatenation of given and family names.
+	DisplayName types.String `tfsdk:"display_name"`
+    
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"-"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
 }
 
 func (to *UpdateAccountServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAccountServicePrincipalRequest) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *UpdateAccountServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountServicePrincipalRequest) {
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccountServicePrincipalRequest.
@@ -8814,9 +10422,9 @@ func (m UpdateAccountServicePrincipalRequest) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"roles": reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8826,136 +10434,159 @@ func (m UpdateAccountServicePrincipalRequest) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"external_id":    m.ExternalId,
-			"id":             m.Id,
-			"roles":          m.Roles,
-		})
+"active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "roles": m.Roles,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateAccountServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"external_id":    types.StringType,
-			"id":             types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateAccountServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountServicePrincipalRequest.
 func (m *UpdateAccountServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
-type UpdateAccountUserRequest struct {
-	// If this user is active
-	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`.
-	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
-	Emails types.List `tfsdk:"emails"`
-	// External ID is not currently supported. It is reserved for future use.
-	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks user ID.
-	Id types.String `tfsdk:"-"`
 
+
+
+
+
+
+
+
+type UpdateAccountUserRequest struct {
+    // If this user is active
+	Active types.Bool `tfsdk:"active"`
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`.
+	DisplayName types.String `tfsdk:"display_name"`
+    // All the emails associated with the Databricks user.
+	Emails types.List `tfsdk:"emails"`
+    // External ID is not currently supported. It is reserved for future use.
+	ExternalId types.String `tfsdk:"external_id"`
+    // Databricks user ID.
+	Id types.String `tfsdk:"-"`
+    
 	Name types.Object `tfsdk:"name"`
-	// Indicates if the group has the admin role.
+    // Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *UpdateAccountUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAccountUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (to *UpdateAccountUserRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
 }
 
 func (m UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAccountUserRequest.
@@ -8966,11 +10597,11 @@ func (m UpdateAccountUserRequest) ApplySchemaCustomizations(attrs map[string]tfs
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails": reflect.TypeOf(ComplexValue{}),
-		"name":   reflect.TypeOf(Name{}),
-		"roles":  reflect.TypeOf(ComplexValue{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -8980,233 +10611,262 @@ func (m UpdateAccountUserRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"external_id":  m.ExternalId,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"user_name":    m.UserName,
-		})
+"active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "external_id": m.ExternalId,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateAccountUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"id":          types.StringType,
-			"name":        Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in UpdateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in UpdateAccountUserRequest.
 func (m *UpdateAccountUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
 
 // GetName returns the value of the Name field in UpdateAccountUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountUserRequest) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in UpdateAccountUserRequest.
 func (m *UpdateAccountUserRequest) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateAccountUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateAccountUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateAccountUserRequest.
 func (m *UpdateAccountUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type UpdateGroupRequest struct {
-	// String that represents a human-readable group name
+    // String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the group. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the group. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks group ID
+    // Databricks group ID
 	Id types.String `tfsdk:"-"`
-
+    
 	Members types.List `tfsdk:"members"`
-	// Container for the group identifier. Workspace local versus account.
+    // Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the group.
+    // The schema of the group.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *UpdateGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateGroupRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				// Recursively sync the fields of Meta
-				toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        // Recursively sync the fields of Meta
+        toMeta.SyncFieldsDuringCreateOrUpdate(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *UpdateGroupRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateGroupRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Members = from.Members
-	}
-	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
-		if toMeta, ok := to.GetMeta(ctx); ok {
-			if fromMeta, ok := from.GetMeta(ctx); ok {
-				toMeta.SyncFieldsDuringRead(ctx, fromMeta)
-				to.SetMeta(ctx, toMeta)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Members = from.Members
+  }
+  if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
+    if toMeta, ok := to.GetMeta(ctx); ok {
+      if fromMeta, ok := from.GetMeta(ctx); ok {
+        toMeta.SyncFieldsDuringRead(ctx, fromMeta)
+        to.SetMeta(ctx, toMeta)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m UpdateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["members"] = attrs["members"].SetOptional()
-	attrs["meta"] = attrs["meta"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["members"] = attrs["members"].SetOptional()
+attrs["meta"] = attrs["meta"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateGroupRequest.
@@ -9217,14 +10877,14 @@ func (m UpdateGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"members":      reflect.TypeOf(ComplexValue{}),
-		"meta":         reflect.TypeOf(ResourceMeta{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "members": reflect.TypeOf(ComplexValue{}),
+    "meta": reflect.TypeOf(ResourceMeta{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -9234,236 +10894,271 @@ func (m UpdateGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name": m.DisplayName,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"members":      m.Members,
-			"meta":         m.Meta,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-		})
+"display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "members": m.Members,
+      "meta": m.Meta,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateGroupRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": ResourceMeta{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "members": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "meta": ResourceMeta{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetMembers returns the value of the Members field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Members.IsNull() || m.Members.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Members.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Members.IsNull() || m.Members.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Members.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMembers sets the value of the Members field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetMembers(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Members = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Members = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetMeta returns the value of the Meta field in UpdateGroupRequest as
 // a ResourceMeta value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetMeta(ctx context.Context) (ResourceMeta, bool) {
-	var e ResourceMeta
-	if m.Meta.IsNull() || m.Meta.IsUnknown() {
-		return e, false
-	}
-	var v ResourceMeta
-	d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e ResourceMeta
+  if m.Meta.IsNull() || m.Meta.IsUnknown() {
+    return e, false
+  }
+  var v ResourceMeta
+  d := m.Meta.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetMeta sets the value of the Meta field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetMeta(ctx context.Context, v ResourceMeta) {
-	vs := v.ToObjectValue(ctx)
-	m.Meta = vs
+  vs := v.ToObjectValue(ctx)
+  m.Meta = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateGroupRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in UpdateGroupRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateGroupRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateGroupRequest.
 func (m *UpdateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type UpdateObjectPermissions struct {
+    
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+    // The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following: alerts,
-	// alertsv2, authorization, clusters, cluster-policies, dashboards,
-	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+    // The type of the request object. Can be one of the following: alerts,
+    // alertsv2, authorization, clusters, cluster-policies, dashboards,
+    // database-projects, dbsql-dashboards, directories, experiments, files,
+    // genie, instance-pools, jobs, notebooks, pipelines, queries,
+    // registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
 func (to *UpdateObjectPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (to *UpdateObjectPermissions) SyncFieldsDuringRead(ctx context.Context, from UpdateObjectPermissions) {
-	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.AccessControlList = from.AccessControlList
-	}
+  if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.AccessControlList = from.AccessControlList
+  }
 }
 
 func (m UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
-	attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
+attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+attrs["request_object_type"] = attrs["request_object_type"].SetRequired()
+attrs["request_object_id"] = attrs["request_object_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateObjectPermissions.
@@ -9474,9 +11169,9 @@ func (m UpdateObjectPermissions) ApplySchemaCustomizations(attrs map[string]tfsc
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"access_control_list": reflect.TypeOf(AccessControlRequest{}),
-	}
+  return map[string]reflect.Type{
+    "access_control_list": reflect.TypeOf(AccessControlRequest{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -9486,87 +11181,104 @@ func (m UpdateObjectPermissions) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"access_control_list": m.AccessControlList,
-			"request_object_id":   m.RequestObjectId,
-			"request_object_type": m.RequestObjectType,
-		})
+"access_control_list": m.AccessControlList,
+      "request_object_id": m.RequestObjectId,
+      "request_object_type": m.RequestObjectType,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateObjectPermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.Type(ctx),
-			},
-			"request_object_id":   types.StringType,
-			"request_object_type": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"access_control_list": basetypes.ListType{
+ElemType: AccessControlRequest{}.Type(ctx),
+},
+      "request_object_id": types.StringType,
+      "request_object_type": types.StringType,
+      
+    },
+  }
 }
+
+
+
 
 // GetAccessControlList returns the value of the AccessControlList field in UpdateObjectPermissions as
 // a slice of AccessControlRequest values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
-	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
-		return nil, false
-	}
-	var v []AccessControlRequest
-	d := m.AccessControlList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+    return nil, false
+  }
+  var v []AccessControlRequest
+  d := m.AccessControlList.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetAccessControlList sets the value of the AccessControlList field in UpdateObjectPermissions.
 func (m *UpdateObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.AccessControlList = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.AccessControlList = types.ListValueMust(t, vs)
 }
 
-type UpdateRuleSetRequest struct {
-	// Name of the rule set.
-	Name types.String `tfsdk:"name"`
 
+
+
+
+
+
+
+
+
+
+
+
+type UpdateRuleSetRequest struct {
+    // Name of the rule set.
+	Name types.String `tfsdk:"name"`
+    
 	RuleSet types.Object `tfsdk:"rule_set"`
 }
 
 func (to *UpdateRuleSetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateRuleSetRequest) {
-	if !from.RuleSet.IsNull() && !from.RuleSet.IsUnknown() {
-		if toRuleSet, ok := to.GetRuleSet(ctx); ok {
-			if fromRuleSet, ok := from.GetRuleSet(ctx); ok {
-				// Recursively sync the fields of RuleSet
-				toRuleSet.SyncFieldsDuringCreateOrUpdate(ctx, fromRuleSet)
-				to.SetRuleSet(ctx, toRuleSet)
-			}
-		}
-	}
+  if !from.RuleSet.IsNull() && !from.RuleSet.IsUnknown() {
+    if toRuleSet, ok := to.GetRuleSet(ctx); ok {
+      if fromRuleSet, ok := from.GetRuleSet(ctx); ok {
+        // Recursively sync the fields of RuleSet
+        toRuleSet.SyncFieldsDuringCreateOrUpdate(ctx, fromRuleSet)
+        to.SetRuleSet(ctx, toRuleSet)
+      }
+    }
+  }
 }
 
 func (to *UpdateRuleSetRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateRuleSetRequest) {
-	if !from.RuleSet.IsNull() && !from.RuleSet.IsUnknown() {
-		if toRuleSet, ok := to.GetRuleSet(ctx); ok {
-			if fromRuleSet, ok := from.GetRuleSet(ctx); ok {
-				toRuleSet.SyncFieldsDuringRead(ctx, fromRuleSet)
-				to.SetRuleSet(ctx, toRuleSet)
-			}
-		}
-	}
+  if !from.RuleSet.IsNull() && !from.RuleSet.IsUnknown() {
+    if toRuleSet, ok := to.GetRuleSet(ctx); ok {
+      if fromRuleSet, ok := from.GetRuleSet(ctx); ok {
+        toRuleSet.SyncFieldsDuringRead(ctx, fromRuleSet)
+        to.SetRuleSet(ctx, toRuleSet)
+      }
+    }
+  }
 }
 
 func (m UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["rule_set"] = attrs["rule_set"].SetRequired()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["rule_set"] = attrs["rule_set"].SetRequired()
+attrs["account_id"] = attrs["account_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRuleSetRequest.
@@ -9577,9 +11289,9 @@ func (m UpdateRuleSetRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"rule_set": reflect.TypeOf(RuleSetUpdateRequest{}),
-	}
+  return map[string]reflect.Type{
+    "rule_set": reflect.TypeOf(RuleSetUpdateRequest{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -9589,136 +11301,151 @@ func (m UpdateRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     m.Name,
-			"rule_set": m.RuleSet,
-		})
+"name": m.Name,
+      "rule_set": m.RuleSet,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"rule_set": RuleSetUpdateRequest{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"name": types.StringType,
+      "rule_set": RuleSetUpdateRequest{}.Type(ctx),
+      
+    },
+  }
 }
+
+
+
+
+
 
 // GetRuleSet returns the value of the RuleSet field in UpdateRuleSetRequest as
 // a RuleSetUpdateRequest value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateRequest, bool) {
-	var e RuleSetUpdateRequest
-	if m.RuleSet.IsNull() || m.RuleSet.IsUnknown() {
-		return e, false
-	}
-	var v RuleSetUpdateRequest
-	d := m.RuleSet.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e RuleSetUpdateRequest
+  if m.RuleSet.IsNull() || m.RuleSet.IsUnknown() {
+    return e, false
+  }
+  var v RuleSetUpdateRequest
+  d := m.RuleSet.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRuleSet sets the value of the RuleSet field in UpdateRuleSetRequest.
 func (m *UpdateRuleSetRequest) SetRuleSet(ctx context.Context, v RuleSetUpdateRequest) {
-	vs := v.ToObjectValue(ctx)
-	m.RuleSet = vs
+  vs := v.ToObjectValue(ctx)
+  m.RuleSet = vs
 }
 
+
+
+
+
+
+
+
+
 type UpdateServicePrincipalRequest struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+    // UUID relating to the service principal
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+    // String that represents a concatenation of given and family names.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Entitlements assigned to the service principal. See [assigning
-	// entitlements] for a full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the service principal. See [assigning
+    // entitlements] for a full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-
+    
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks service principal ID.
+    // Databricks service principal ID.
 	Id types.String `tfsdk:"-"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the List response.
+    // The schema of the List response.
 	Schemas types.List `tfsdk:"schemas"`
 }
 
 func (to *UpdateServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateServicePrincipalRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *UpdateServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateServicePrincipalRequest) {
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m UpdateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["application_id"] = attrs["application_id"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateServicePrincipalRequest.
@@ -9729,12 +11456,12 @@ func (m UpdateServicePrincipalRequest) ApplySchemaCustomizations(attrs map[strin
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -9744,277 +11471,309 @@ func (m UpdateServicePrincipalRequest) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":         m.Active,
-			"application_id": m.ApplicationId,
-			"display_name":   m.DisplayName,
-			"entitlements":   m.Entitlements,
-			"external_id":    m.ExternalId,
-			"groups":         m.Groups,
-			"id":             m.Id,
-			"roles":          m.Roles,
-			"schemas":        m.Schemas,
-		})
+"active": m.Active,
+      "application_id": m.ApplicationId,
+      "display_name": m.DisplayName,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateServicePrincipalRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":         types.BoolType,
-			"application_id": types.StringType,
-			"display_name":   types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "application_id": types.StringType,
+      "display_name": types.StringType,
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+    },
+  }
 }
+
+
+
+
+
+
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateServicePrincipalRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateServicePrincipalRequest.
 func (m *UpdateServicePrincipalRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateServicePrincipalRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in UpdateServicePrincipalRequest.
 func (m *UpdateServicePrincipalRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateServicePrincipalRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateServicePrincipalRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateServicePrincipalRequest.
 func (m *UpdateServicePrincipalRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in UpdateServicePrincipalRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateServicePrincipalRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateServicePrincipalRequest.
 func (m *UpdateServicePrincipalRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
 type UpdateUserRequest struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`. This field cannot be updated through the Workspace
-	// SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
-	// update `displayName`.
-	//
-	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`. This field cannot be updated through the Workspace
+    // SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
+    // update `displayName`.
+    // 
+    // [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
 	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
+    // All the emails associated with the Databricks user.
 	Emails types.List `tfsdk:"emails"`
-	// Entitlements assigned to the user. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the user. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-	// External ID is not currently supported. It is reserved for future use.
+    // External ID is not currently supported. It is reserved for future use.
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks user ID.
+    // Databricks user ID.
 	Id types.String `tfsdk:"-"`
-
+    
 	Name types.Object `tfsdk:"name"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the user.
+    // The schema of the user.
 	Schemas types.List `tfsdk:"schemas"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *UpdateUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *UpdateUserRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateUserRequest) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m UpdateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
-	attrs["id"] = attrs["id"].SetRequired()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["id"] = attrs["id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateUserRequest.
@@ -10025,14 +11784,14 @@ func (m UpdateUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails":       reflect.TypeOf(ComplexValue{}),
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"name":         reflect.TypeOf(Name{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10042,243 +11801,281 @@ func (m UpdateUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-			"user_name":    m.UserName,
-		})
+"active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateUserRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id":   types.StringType,
-			"name": Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetName returns the value of the Name field in UpdateUserRequest as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in UpdateUserRequest as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in UpdateUserRequest as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateUserRequest) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in UpdateUserRequest.
 func (m *UpdateUserRequest) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type UpdateWorkspaceAssignments struct {
-	// Array of permissions assignments to update on the workspace. Valid values
-	// are "USER" and "ADMIN" (case-sensitive). If both "USER" and "ADMIN" are
-	// provided, "ADMIN" takes precedence. Other values will be ignored. Note
-	// that excluding this field, or providing unsupported values, will have the
-	// same effect as providing an empty list, which will result in the deletion
-	// of all permissions for the principal.
+    // Array of permissions assignments to update on the workspace. Valid values
+    // are "USER" and "ADMIN" (case-sensitive). If both "USER" and "ADMIN" are
+    // provided, "ADMIN" takes precedence. Other values will be ignored. Note
+    // that excluding this field, or providing unsupported values, will have the
+    // same effect as providing an empty list, which will result in the deletion
+    // of all permissions for the principal.
 	Permissions types.List `tfsdk:"permissions"`
-	// The ID of the user, service principal, or group.
+    // The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID.
+    // The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
 func (to *UpdateWorkspaceAssignments) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWorkspaceAssignments) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
 }
 
 func (to *UpdateWorkspaceAssignments) SyncFieldsDuringRead(ctx context.Context, from UpdateWorkspaceAssignments) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
 }
 
 func (m UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+attrs["permissions"] = attrs["permissions"].SetOptional()
+attrs["account_id"] = attrs["account_id"].SetRequired()
+attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+attrs["principal_id"] = attrs["principal_id"].SetRequired()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignments.
@@ -10289,9 +12086,9 @@ func (m UpdateWorkspaceAssignments) ApplySchemaCustomizations(attrs map[string]t
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "permissions": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10301,181 +12098,198 @@ func (m UpdateWorkspaceAssignments) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions":  m.Permissions,
-			"principal_id": m.PrincipalId,
-			"workspace_id": m.WorkspaceId,
-		})
+"permissions": m.Permissions,
+      "principal_id": m.PrincipalId,
+      "workspace_id": m.WorkspaceId,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permissions": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"principal_id": types.Int64Type,
-			"workspace_id": types.Int64Type,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permissions": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "principal_id": types.Int64Type,
+      "workspace_id": types.Int64Type,
+      
+    },
+  }
 }
+
+
+
 
 // GetPermissions returns the value of the Permissions field in UpdateWorkspaceAssignments as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *UpdateWorkspaceAssignments) GetPermissions(ctx context.Context) ([]types.String, bool) {
-	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Permissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Permissions.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissions sets the value of the Permissions field in UpdateWorkspaceAssignments.
 func (m *UpdateWorkspaceAssignments) SetPermissions(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Permissions = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Permissions = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 type User struct {
-	// If this user is active
+    // If this user is active
 	Active types.Bool `tfsdk:"active"`
-	// String that represents a concatenation of given and family names. For
-	// example `John Smith`. This field cannot be updated through the Workspace
-	// SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
-	// update `displayName`.
-	//
-	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
+    // String that represents a concatenation of given and family names. For
+    // example `John Smith`. This field cannot be updated through the Workspace
+    // SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
+    // update `displayName`.
+    // 
+    // [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
 	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
+    // All the emails associated with the Databricks user.
 	Emails types.List `tfsdk:"emails"`
-	// Entitlements assigned to the user. See [assigning entitlements] for a
-	// full list of supported values.
-	//
-	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
+    // Entitlements assigned to the user. See [assigning entitlements] for a
+    // full list of supported values.
+    // 
+    // [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
 	Entitlements types.List `tfsdk:"entitlements"`
-	// External ID is not currently supported. It is reserved for future use.
+    // External ID is not currently supported. It is reserved for future use.
 	ExternalId types.String `tfsdk:"external_id"`
-
+    
 	Groups types.List `tfsdk:"groups"`
-	// Databricks user ID.
+    // Databricks user ID.
 	Id types.String `tfsdk:"id"`
-
+    
 	Name types.Object `tfsdk:"name"`
-	// Corresponds to AWS instance profile/arn role.
+    // Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles"`
-	// The schema of the user.
+    // The schema of the user.
 	Schemas types.List `tfsdk:"schemas"`
-	// Email address of the Databricks user.
+    // Email address of the Databricks user.
 	UserName types.String `tfsdk:"user_name"`
 }
 
 func (to *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from User) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        // Recursively sync the fields of Name
+        toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
-	if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Emails = from.Emails
-	}
-	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Entitlements = from.Entitlements
-	}
-	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Groups = from.Groups
-	}
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
-			}
-		}
-	}
-	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Roles = from.Roles
-	}
-	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Schemas = from.Schemas
-	}
+  if !from.Emails.IsNull() && !from.Emails.IsUnknown() && to.Emails.IsNull() && len(from.Emails.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Emails = from.Emails
+  }
+  if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Entitlements = from.Entitlements
+  }
+  if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Groups = from.Groups
+  }
+  if !from.Name.IsNull() && !from.Name.IsUnknown() {
+    if toName, ok := to.GetName(ctx); ok {
+      if fromName, ok := from.GetName(ctx); ok {
+        toName.SyncFieldsDuringRead(ctx, fromName)
+        to.SetName(ctx, toName)
+      }
+    }
+  }
+  if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Roles = from.Roles
+  }
+  if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Schemas = from.Schemas
+  }
 }
 
 func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["active"] = attrs["active"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["emails"] = attrs["emails"].SetOptional()
-	attrs["entitlements"] = attrs["entitlements"].SetOptional()
-	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["groups"] = attrs["groups"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["roles"] = attrs["roles"].SetOptional()
-	attrs["schemas"] = attrs["schemas"].SetOptional()
-	attrs["user_name"] = attrs["user_name"].SetOptional()
+attrs["active"] = attrs["active"].SetOptional()
+attrs["display_name"] = attrs["display_name"].SetOptional()
+attrs["emails"] = attrs["emails"].SetOptional()
+attrs["entitlements"] = attrs["entitlements"].SetOptional()
+attrs["external_id"] = attrs["external_id"].SetOptional()
+attrs["groups"] = attrs["groups"].SetOptional()
+attrs["id"] = attrs["id"].SetOptional()
+attrs["name"] = attrs["name"].SetOptional()
+attrs["roles"] = attrs["roles"].SetOptional()
+attrs["schemas"] = attrs["schemas"].SetOptional()
+attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in User.
@@ -10486,14 +12300,14 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"emails":       reflect.TypeOf(ComplexValue{}),
-		"entitlements": reflect.TypeOf(ComplexValue{}),
-		"groups":       reflect.TypeOf(ComplexValue{}),
-		"name":         reflect.TypeOf(Name{}),
-		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.String{}),
-	}
+  return map[string]reflect.Type{
+    "emails": reflect.TypeOf(ComplexValue{}),
+    "entitlements": reflect.TypeOf(ComplexValue{}),
+    "groups": reflect.TypeOf(ComplexValue{}),
+    "name": reflect.TypeOf(Name{}),
+    "roles": reflect.TypeOf(ComplexValue{}),
+    "schemas": reflect.TypeOf(types.String{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10503,231 +12317,269 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"active":       m.Active,
-			"display_name": m.DisplayName,
-			"emails":       m.Emails,
-			"entitlements": m.Entitlements,
-			"external_id":  m.ExternalId,
-			"groups":       m.Groups,
-			"id":           m.Id,
-			"name":         m.Name,
-			"roles":        m.Roles,
-			"schemas":      m.Schemas,
-			"user_name":    m.UserName,
-		})
+"active": m.Active,
+      "display_name": m.DisplayName,
+      "emails": m.Emails,
+      "entitlements": m.Entitlements,
+      "external_id": m.ExternalId,
+      "groups": m.Groups,
+      "id": m.Id,
+      "name": m.Name,
+      "roles": m.Roles,
+      "schemas": m.Schemas,
+      "user_name": m.UserName,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m User) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"active":       types.BoolType,
-			"display_name": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"external_id": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id":   types.StringType,
-			"name": Name{}.Type(ctx),
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"user_name": types.StringType,
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"active": types.BoolType,
+      "display_name": types.StringType,
+      "emails": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "entitlements": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "external_id": types.StringType,
+      "groups": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "id": types.StringType,
+      "name": Name{}.Type(ctx),
+      "roles": basetypes.ListType{
+ElemType: ComplexValue{}.Type(ctx),
+},
+      "schemas": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "user_name": types.StringType,
+      
+    },
+  }
 }
+
+
+
+
+
+
+
 
 // GetEmails returns the value of the Emails field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Emails.IsNull() || m.Emails.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Emails.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Emails.IsNull() || m.Emails.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Emails.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEmails sets the value of the Emails field in User.
 func (m *User) SetEmails(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Emails = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Emails = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetEntitlements returns the value of the Entitlements field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Entitlements.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Entitlements.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEntitlements sets the value of the Entitlements field in User.
 func (m *User) SetEntitlements(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Entitlements = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetGroups returns the value of the Groups field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Groups.IsNull() || m.Groups.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Groups.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Groups.IsNull() || m.Groups.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Groups.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetGroups sets the value of the Groups field in User.
 func (m *User) SetGroups(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Groups = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Groups = types.ListValueMust(t, vs)
 }
+
+
+
+
+
 
 // GetName returns the value of the Name field in User as
 // a Name value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetName(ctx context.Context) (Name, bool) {
-	var e Name
-	if m.Name.IsNull() || m.Name.IsUnknown() {
-		return e, false
-	}
-	var v Name
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e Name
+  if m.Name.IsNull() || m.Name.IsUnknown() {
+    return e, false
+  }
+  var v Name
+  d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetName sets the value of the Name field in User.
 func (m *User) SetName(ctx context.Context, v Name) {
-	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+  vs := v.ToObjectValue(ctx)
+  m.Name = vs
 }
+
+
+
 
 // GetRoles returns the value of the Roles field in User as
 // a slice of ComplexValue values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
-	if m.Roles.IsNull() || m.Roles.IsUnknown() {
-		return nil, false
-	}
-	var v []ComplexValue
-	d := m.Roles.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Roles.IsNull() || m.Roles.IsUnknown() {
+    return nil, false
+  }
+  var v []ComplexValue
+  d := m.Roles.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetRoles sets the value of the Roles field in User.
 func (m *User) SetRoles(ctx context.Context, v []ComplexValue) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Roles = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Roles = types.ListValueMust(t, vs)
 }
+
+
+
 
 // GetSchemas returns the value of the Schemas field in User as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *User) GetSchemas(ctx context.Context) ([]types.String, bool) {
-	if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Schemas.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Schemas.IsNull() || m.Schemas.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.Schemas.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetSchemas sets the value of the Schemas field in User.
 func (m *User) SetSchemas(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Schemas = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Schemas = types.ListValueMust(t, vs)
 }
 
+
+
+
+
+
+
+
+
+
+
 type WorkspacePermissions struct {
-	// Array of permissions defined for a workspace.
+    // Array of permissions defined for a workspace.
 	Permissions types.List `tfsdk:"permissions"`
 }
 
 func (to *WorkspacePermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspacePermissions) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
 }
 
 func (to *WorkspacePermissions) SyncFieldsDuringRead(ctx context.Context, from WorkspacePermissions) {
-	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Permissions = from.Permissions
-	}
+  if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() && to.Permissions.IsNull() && len(from.Permissions.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Permissions = from.Permissions
+  }
 }
 
 func (m WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["permissions"] = attrs["permissions"].SetOptional()
+attrs["permissions"] = attrs["permissions"].SetOptional()
 
-	return attrs
+  return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspacePermissions.
@@ -10738,9 +12590,9 @@ func (m WorkspacePermissions) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m WorkspacePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(PermissionOutput{}),
-	}
+  return map[string]reflect.Type{
+    "permissions": reflect.TypeOf(PermissionOutput{}),
+  }
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10750,43 +12602,54 @@ func (m WorkspacePermissions) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"permissions": m.Permissions,
-		})
+"permissions": m.Permissions,
+      
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m WorkspacePermissions) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"permissions": basetypes.ListType{
-				ElemType: PermissionOutput{}.Type(ctx),
-			},
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+"permissions": basetypes.ListType{
+ElemType: PermissionOutput{}.Type(ctx),
+},
+      
+    },
+  }
 }
+
+
+
 
 // GetPermissions returns the value of the Permissions field in WorkspacePermissions as
 // a slice of PermissionOutput values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *WorkspacePermissions) GetPermissions(ctx context.Context) ([]PermissionOutput, bool) {
-	if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
-		return nil, false
-	}
-	var v []PermissionOutput
-	d := m.Permissions.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Permissions.IsNull() || m.Permissions.IsUnknown() {
+    return nil, false
+  }
+  var v []PermissionOutput
+  d := m.Permissions.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetPermissions sets the value of the Permissions field in WorkspacePermissions.
 func (m *WorkspacePermissions) SetPermissions(ctx context.Context, v []PermissionOutput) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Permissions = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Permissions = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+

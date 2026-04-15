@@ -4,32 +4,41 @@ package app_space
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const resourceName = "app_space"
@@ -45,17 +54,19 @@ type SpaceResource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfig contains the fields to configure the provider.
 type ProviderConfig struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
+		attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
+	
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -75,14 +86,14 @@ func ProviderConfigWorkspaceIDPlanModifier(ctx context.Context, req planmodifier
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfig struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -92,78 +103,81 @@ func (r ProviderConfig) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfig
 // only implements ToObjectValue() and Type().
 func (r ProviderConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfig) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // Space extends the main model with additional fields.
 type Space struct {
-	// The creation time of the app space. Formatted timestamp in ISO 6801.
+    // The creation time of the app space. Formatted timestamp in ISO 6801.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The email of the user that created the app space.
+    // The email of the user that created the app space.
 	Creator types.String `tfsdk:"creator"`
-	// The description of the app space.
+    // The description of the app space.
 	Description types.String `tfsdk:"description"`
-	// The effective usage policy ID used by apps in the space.
+    // The effective usage policy ID used by apps in the space.
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
-	// The effective api scopes granted to the user access token.
+    // The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
-	// The unique identifier of the app space.
+    // The unique identifier of the app space.
 	Id types.String `tfsdk:"id"`
-	// The name of the app space. The name must contain only lowercase
-	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+    // The name of the app space. The name must contain only lowercase
+    // alphanumeric characters and hyphens. It must be unique within the
+    // workspace.
 	Name types.String `tfsdk:"name"`
-	// Resources for the app space. Resources configured at the space level are
-	// available to all apps in the space.
+    // Resources for the app space. Resources configured at the space level are
+    // available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
-	// The service principal client ID for the app space.
+    // The service principal client ID for the app space.
 	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
-	// The service principal ID for the app space.
+    // The service principal ID for the app space.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-	// The service principal name for the app space.
+    // The service principal name for the app space.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// The status of the app space.
+    // The status of the app space.
 	Status types.Object `tfsdk:"status"`
-	// The update time of the app space. Formatted timestamp in ISO 6801.
+    // The update time of the app space. Formatted timestamp in ISO 6801.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The email of the user that last updated the app space.
+    // The email of the user that last updated the app space.
 	Updater types.String `tfsdk:"updater"`
-	// The usage policy ID for managing cost at the space level.
+    // The usage policy ID for managing cost at the space level.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-	// OAuth scopes for apps in the space.
-	UserApiScopes  types.List   `tfsdk:"user_api_scopes"`
+    // OAuth scopes for apps in the space.
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Space struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// Space struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Space) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"effective_user_api_scopes": reflect.TypeOf(types.String{}),
-		"resources":                 reflect.TypeOf(apps_tf.AppResource{}),
-		"status":                    reflect.TypeOf(apps_tf.SpaceStatus{}),
-		"user_api_scopes":           reflect.TypeOf(types.String{}),
-		"provider_config":           reflect.TypeOf(ProviderConfig{}),
+    "effective_user_api_scopes": reflect.TypeOf(types.String{}),
+    "resources": reflect.TypeOf(apps_tf.AppResource{}),
+    "status": reflect.TypeOf(apps_tf.SpaceStatus{}),
+    "user_api_scopes": reflect.TypeOf(types.String{}),
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
+		
 	}
 }
 
@@ -177,23 +191,24 @@ func (m Space) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"creator":                     m.Creator,
-			"description":                 m.Description,
-			"effective_usage_policy_id":   m.EffectiveUsagePolicyId,
-			"effective_user_api_scopes":   m.EffectiveUserApiScopes,
-			"id":                          m.Id,
-			"name":                        m.Name,
-			"resources":                   m.Resources,
-			"service_principal_client_id": m.ServicePrincipalClientId,
-			"service_principal_id":        m.ServicePrincipalId,
-			"service_principal_name":      m.ServicePrincipalName,
-			"status":                      m.Status,
-			"update_time":                 m.UpdateTime,
-			"updater":                     m.Updater,
-			"usage_policy_id":             m.UsagePolicyId,
-			"user_api_scopes":             m.UserApiScopes,
-
+      "creator": m.Creator,
+      "description": m.Description,
+      "effective_usage_policy_id": m.EffectiveUsagePolicyId,
+      "effective_user_api_scopes": m.EffectiveUserApiScopes,
+      "id": m.Id,
+      "name": m.Name,
+      "resources": m.Resources,
+      "service_principal_client_id": m.ServicePrincipalClientId,
+      "service_principal_id": m.ServicePrincipalId,
+      "service_principal_name": m.ServicePrincipalName,
+      "status": m.Status,
+      "update_time": m.UpdateTime,
+      "updater": m.Updater,
+      "usage_policy_id": m.UsagePolicyId,
+      "user_api_scopes": m.UserApiScopes,
+      
 			"provider_config": m.ProviderConfig,
+			
 		},
 	)
 }
@@ -201,230 +216,270 @@ func (m Space) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m Space) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"creator":                   types.StringType,
-			"description":               types.StringType,
-			"effective_usage_policy_id": types.StringType,
-			"effective_user_api_scopes": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"id":   types.StringType,
-			"name": types.StringType,
-			"resources": basetypes.ListType{
-				ElemType: apps_tf.AppResource{}.Type(ctx),
-			},
-			"service_principal_client_id": types.StringType,
-			"service_principal_id":        types.Int64Type,
-			"service_principal_name":      types.StringType,
-			"status":                      apps_tf.SpaceStatus{}.Type(ctx),
-			"update_time":                 timetypes.RFC3339{}.Type(ctx),
-			"updater":                     types.StringType,
-			"usage_policy_id":             types.StringType,
-			"user_api_scopes": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-
-			"provider_config": ProviderConfig{}.Type(ctx),
-		},
-	}
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
+      "creator": types.StringType,
+      "description": types.StringType,
+      "effective_usage_policy_id": types.StringType,
+      "effective_user_api_scopes": basetypes.ListType{
+ElemType: types.StringType,
+},
+      "id": types.StringType,
+      "name": types.StringType,
+      "resources": basetypes.ListType{
+ElemType: apps_tf.AppResource{}.Type(ctx),
+},
+      "service_principal_client_id": types.StringType,
+      "service_principal_id": types.Int64Type,
+      "service_principal_name": types.StringType,
+      "status": apps_tf.SpaceStatus{}.Type(ctx),
+      "update_time": timetypes.RFC3339{}.Type(ctx),
+      "updater": types.StringType,
+      "usage_policy_id": types.StringType,
+      "user_api_scopes": basetypes.ListType{
+ElemType: types.StringType,
+},
+      
+	  "provider_config": ProviderConfig{}.Type(ctx),
+	  
+    },
+  }
 }
 
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Space) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Space) {
-	if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
-	}
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Status.IsNull() && !from.Status.IsUnknown() {
-		if toStatus, ok := to.GetStatus(ctx); ok {
-			if fromStatus, ok := from.GetStatus(ctx); ok {
-				// Recursively sync the fields of Status
-				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
-				to.SetStatus(ctx, toStatus)
-			}
-		}
-	}
-	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.UserApiScopes = from.UserApiScopes
-	}
+  if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
+  }
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Status.IsNull() && !from.Status.IsUnknown() {
+    if toStatus, ok := to.GetStatus(ctx); ok {
+      if fromStatus, ok := from.GetStatus(ctx); ok {
+        // Recursively sync the fields of Status
+        toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+        to.SetStatus(ctx, toStatus)
+      }
+    }
+  }
+  if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.UserApiScopes = from.UserApiScopes
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Space) SyncFieldsDuringRead(ctx context.Context, from Space) {
-	if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
-	}
-	if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Resources = from.Resources
-	}
-	if !from.Status.IsNull() && !from.Status.IsUnknown() {
-		if toStatus, ok := to.GetStatus(ctx); ok {
-			if fromStatus, ok := from.GetStatus(ctx); ok {
-				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
-				to.SetStatus(ctx, toStatus)
-			}
-		}
-	}
-	if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.UserApiScopes = from.UserApiScopes
-	}
+  if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.EffectiveUserApiScopes = from.EffectiveUserApiScopes
+  }
+  if !from.Resources.IsNull() && !from.Resources.IsUnknown() && to.Resources.IsNull() && len(from.Resources.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.Resources = from.Resources
+  }
+  if !from.Status.IsNull() && !from.Status.IsUnknown() {
+    if toStatus, ok := to.GetStatus(ctx); ok {
+      if fromStatus, ok := from.GetStatus(ctx); ok {
+        toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+        to.SetStatus(ctx, toStatus)
+      }
+    }
+  }
+  if !from.UserApiScopes.IsNull() && !from.UserApiScopes.IsUnknown() && to.UserApiScopes.IsNull() && len(from.UserApiScopes.Elements()) == 0 {
+    // The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+    // If a user specified a non-Null, empty list for UserApiScopes, and the deserialized field value is Null,
+    // set the resulting resource state to the empty list to match the planned value.
+    to.UserApiScopes = from.UserApiScopes
+  }
 	to.ProviderConfig = from.ProviderConfig
-
+	
 }
 
-func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
-	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["resources"] = attrs["resources"].SetOptional()
-	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
-	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
-	attrs["status"] = attrs["status"].SetComputed()
-	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["updater"] = attrs["updater"].SetComputed()
-	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
-	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
+func (m Space) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["create_time"] = attrs["create_time"].SetComputed()
+attrs["creator"] = attrs["creator"].SetComputed()
+attrs["description"] = attrs["description"].SetOptional()
+attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
+attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
+attrs["id"] = attrs["id"].SetComputed()
+attrs["name"] = attrs["name"].SetRequired()
+attrs["resources"] = attrs["resources"].SetOptional()
+attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
+attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+attrs["status"] = attrs["status"].SetComputed()
+attrs["update_time"] = attrs["update_time"].SetComputed()
+attrs["updater"] = attrs["updater"].SetComputed()
+attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
+attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in Space as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Space) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
-	if m.EffectiveUserApiScopes.IsNull() || m.EffectiveUserApiScopes.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.EffectiveUserApiScopes.IsNull() || m.EffectiveUserApiScopes.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetEffectiveUserApiScopes sets the value of the EffectiveUserApiScopes field in Space.
 func (m *Space) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.EffectiveUserApiScopes = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
 
 // GetResources returns the value of the Resources field in Space as
 // a slice of apps_tf.AppResource values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Space) GetResources(ctx context.Context) ([]apps_tf.AppResource, bool) {
-	if m.Resources.IsNull() || m.Resources.IsUnknown() {
-		return nil, false
-	}
-	var v []apps_tf.AppResource
-	d := m.Resources.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.Resources.IsNull() || m.Resources.IsUnknown() {
+    return nil, false
+  }
+  var v []apps_tf.AppResource
+  d := m.Resources.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetResources sets the value of the Resources field in Space.
 func (m *Space) SetResources(ctx context.Context, v []apps_tf.AppResource) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Resources = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e.ToObjectValue(ctx))
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.Resources = types.ListValueMust(t, vs)
 }
+
+
+
+
+
+
+
+
+
 
 // GetStatus returns the value of the Status field in Space as
 // a apps_tf.SpaceStatus value.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Space) GetStatus(ctx context.Context) (apps_tf.SpaceStatus, bool) {
-	var e apps_tf.SpaceStatus
-	if m.Status.IsNull() || m.Status.IsUnknown() {
-		return e, false
-	}
-	var v apps_tf.SpaceStatus
-	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  var e apps_tf.SpaceStatus
+  if m.Status.IsNull() || m.Status.IsUnknown() {
+    return e, false
+  }
+  var v apps_tf.SpaceStatus
+  d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+    UnhandledNullAsEmpty: true,
+    UnhandledUnknownAsEmpty: true,
+  })
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetStatus sets the value of the Status field in Space.
 func (m *Space) SetStatus(ctx context.Context, v apps_tf.SpaceStatus) {
-	vs := v.ToObjectValue(ctx)
-	m.Status = vs
+  vs := v.ToObjectValue(ctx)
+  m.Status = vs
 }
+
+
+
+
+
+
+
+
+
 
 // GetUserApiScopes returns the value of the UserApiScopes field in Space as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (m *Space) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
-	if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.UserApiScopes.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
+  if m.UserApiScopes.IsNull() || m.UserApiScopes.IsUnknown() {
+    return nil, false
+  }
+  var v []types.String
+  d := m.UserApiScopes.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  return v, true
 }
 
 // SetUserApiScopes sets the value of the UserApiScopes field in Space.
 func (m *Space) SetUserApiScopes(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.UserApiScopes = types.ListValueMust(t, vs)
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e)
+  }
+  t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+  t = t.(attr.TypeWithElementType).ElementType()
+  m.UserApiScopes = types.ListValueMust(t, vs)
 }
+
+
+
+
 
 func (r *SpaceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
@@ -433,9 +488,9 @@ func (r *SpaceResource) Metadata(ctx context.Context, req resource.MetadataReque
 func (r *SpaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Space{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks app_space",
-		Attributes:  attrs,
-		Blocks:      blocks,
+		Description:	"Terraform schema for Databricks app_space",
+		Attributes:		attrs,
+		Blocks:			blocks,
 	}
 }
 
@@ -477,16 +532,18 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 	var space apps.Space
-
+	
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &space)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
+	
 	createRequest := apps.CreateSpaceRequest{
 		Space: space,
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -496,7 +553,7 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -510,6 +567,7 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	var newState Space
 
+	
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("error waiting for app_space to be ready", err.Error())
@@ -517,7 +575,7 @@ func (r *SpaceResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
-
+	
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -539,12 +597,14 @@ func (r *SpaceResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	
 	var readRequest apps.GetSpaceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(existingState.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -554,7 +614,7 @@ func (r *SpaceResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -578,7 +638,7 @@ func (r *SpaceResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...) 
 }
 
 func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -589,12 +649,14 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 		return
 	}
 
+	
 	updateRequest := apps.UpdateSpaceRequest{
-		Space:      space,
-		Name:       plan.Name.ValueString(),
+		Space: space,
+		Name: plan.Name.ValueString(),
 		UpdateMask: *fieldmask.New(strings.Split("description,resources,usage_policy_id,user_api_scopes", ",")),
 	}
 
+	
 	var namespace ProviderConfig
 	diags.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -604,7 +666,7 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
@@ -617,6 +679,7 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 
 	var newState Space
 
+	
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
 		diags.AddError("error waiting for app_space update", err.Error())
@@ -624,7 +687,7 @@ func (r *SpaceResource) update(ctx context.Context, plan Space, diags *diag.Diag
 	}
 
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
-
+	
 	if diags.HasError() {
 		return
 	}
@@ -654,12 +717,14 @@ func (r *SpaceResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
+	
 	var deleteRequest apps.DeleteSpaceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -669,12 +734,12 @@ func (r *SpaceResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	
 	response, err := client.Apps.DeleteSpace(ctx, deleteRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete app_space", err.Error())
@@ -686,7 +751,7 @@ func (r *SpaceResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		resp.Diagnostics.AddError("error waiting for app_space delete", err.Error())
 		return
 	}
-
+	
 }
 
 var _ resource.ResourceWithImportState = &SpaceResource{}
@@ -705,6 +770,6 @@ func (r *SpaceResource) ImportState(ctx context.Context, req resource.ImportStat
 		return
 	}
 
-	name := parts[0]
+name := parts[0]
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
-}
+	}

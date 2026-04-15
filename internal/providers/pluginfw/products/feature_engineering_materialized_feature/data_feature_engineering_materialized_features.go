@@ -4,18 +4,34 @@ package feature_engineering_materialized_feature
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourcesName = "feature_engineering_materialized_features"
@@ -29,29 +45,30 @@ func DataSourceMaterializedFeatures() datasource.DataSource {
 // MaterializedFeaturesData extends the main model with additional fields.
 type MaterializedFeaturesData struct {
 	FeatureEngineering types.List `tfsdk:"materialized_features"`
-	// Filter by feature name. If specified, only materialized features
-	// materialized from this feature will be returned.
+    // Filter by feature name. If specified, only materialized features
+    // materialized from this feature will be returned.
 	FeatureName types.String `tfsdk:"feature_name"`
-	// The maximum number of results to return. Defaults to 100 if not
-	// specified. Cannot be greater than 1000.
-	PageSize           types.Int64  `tfsdk:"page_size"`
+    // The maximum number of results to return. Defaults to 100 if not
+    // specified. Cannot be greater than 1000.
+	PageSize types.Int64 `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 func (MaterializedFeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"materialized_features": reflect.TypeOf(MaterializedFeatureData{}),
-		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
-func (m MaterializedFeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["feature_name"] = attrs["feature_name"].SetOptional()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
+func (m MaterializedFeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["feature_name"] = attrs["feature_name"].SetOptional()
+attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["materialized_features"] = attrs["materialized_features"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -77,7 +94,7 @@ func (r *MaterializedFeaturesDataSource) Configure(ctx context.Context, req data
 }
 
 func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	var config MaterializedFeaturesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -86,11 +103,12 @@ func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var listRequest ml.ListMaterializedFeaturesRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -100,7 +118,7 @@ func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,7 +138,7 @@ func (r *MaterializedFeaturesDataSource) Read(ctx context.Context, req datasourc
 			return
 		}
 		materialized_feature.ProviderConfigData = config.ProviderConfigData
-
+		
 		results = append(results, materialized_feature.ToObjectValue(ctx))
 	}
 

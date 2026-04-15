@@ -4,23 +4,36 @@ package rfa_access_request_destinations
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 )
 
 const dataSourceName = "rfa_access_request_destinations"
@@ -35,9 +48,11 @@ type AccessRequestDestinationDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+
 // ProviderConfigData contains the fields to configure the provider.
 type ProviderConfigData struct {
 	WorkspaceID types.String `tfsdk:"workspace_id"`
+	
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
@@ -62,14 +77,14 @@ func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodi
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+    return map[string]reflect.Type{}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -79,61 +94,64 @@ func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string
 // interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
 // only implements ToObjectValue() and Type().
 func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
+    return types.ObjectValueMust(
+        r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+        map[string]attr.Value{
 			"workspace_id": r.WorkspaceID,
-		},
-	)
+        },
+    )
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
+    return types.ObjectType{
+        AttrTypes: map[string]attr.Type{
 			"workspace_id": types.StringType,
-		},
-	}
+        },
+    }
 }
+
 
 // AccessRequestDestinationsData extends the main model with additional fields.
 type AccessRequestDestinationsData struct {
-	// Indicates whether any destinations are hidden from the caller due to a
-	// lack of permissions. This value is true if the caller does not have
-	// permission to see all destinations.
+    // Indicates whether any destinations are hidden from the caller due to a
+    // lack of permissions. This value is true if the caller does not have
+    // permission to see all destinations.
 	AreAnyDestinationsHidden types.Bool `tfsdk:"are_any_destinations_hidden"`
-	// The source securable from which the destinations are inherited. Either
-	// the same value as securable (if destination is set directly on the
-	// securable) or the nearest parent securable with destinations set.
+    // The source securable from which the destinations are inherited. Either
+    // the same value as securable (if destination is set directly on the
+    // securable) or the nearest parent securable with destinations set.
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
-	// The access request destinations for the securable.
+    // The access request destinations for the securable.
 	Destinations types.List `tfsdk:"destinations"`
-	// The full name of the securable. Redundant with the name in the securable
-	// object, but necessary for Terraform integration
+    // The full name of the securable. Redundant with the name in the securable
+    // object, but necessary for Terraform integration
 	FullName types.String `tfsdk:"full_name"`
-	// The securable for which the access request destinations are being
-	// modified or read.
+    // The securable for which the access request destinations are being
+    // modified or read.
 	Securable types.Object `tfsdk:"securable"`
-	// The type of the securable. Redundant with the type in the securable
-	// object, but necessary for Terraform integration
-	SecurableType      types.String `tfsdk:"securable_type"`
+    // The type of the securable. Redundant with the type in the securable
+    // object, but necessary for Terraform integration
+	SecurableType types.String `tfsdk:"securable_type"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
+	
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// AccessRequestDestinationsData struct. Container types (types.Map, types.List, types.Set) and
-// object types (types.Object) do not carry the type information of their elements in the Go
-// type system. This function provides a way to retrieve the type information of the elements in
-// complex fields at runtime. The values of the map are the reflected types of the contained elements.
-// They must be either primitive values from the plugin framework type system
+// AccessRequestDestinationsData struct. Container types (types.Map, types.List, types.Set) and 
+// object types (types.Object) do not carry the type information of their elements in the Go 
+// type system. This function provides a way to retrieve the type information of the elements in 
+// complex fields at runtime. The values of the map are the reflected types of the contained elements. 
+// They must be either primitive values from the plugin framework type system 
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"destination_source_securable": reflect.TypeOf(catalog_tf.Securable{}),
-		"destinations":                 reflect.TypeOf(catalog_tf.NotificationDestination{}),
-		"securable":                    reflect.TypeOf(catalog_tf.Securable{}),
-		"provider_config":              reflect.TypeOf(ProviderConfigData{}),
+    "destination_source_securable": reflect.TypeOf(catalog_tf.Securable{}),
+    "destinations": reflect.TypeOf(catalog_tf.NotificationDestination{}),
+    "securable": reflect.TypeOf(catalog_tf.Securable{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+		
 	}
 }
 
@@ -147,14 +165,15 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"are_any_destinations_hidden":  m.AreAnyDestinationsHidden,
-			"destination_source_securable": m.DestinationSourceSecurable,
-			"destinations":                 m.Destinations,
-			"full_name":                    m.FullName,
-			"securable":                    m.Securable,
-			"securable_type":               m.SecurableType,
-
+			"are_any_destinations_hidden": m.AreAnyDestinationsHidden,
+      "destination_source_securable": m.DestinationSourceSecurable,
+      "destinations": m.Destinations,
+      "full_name": m.FullName,
+      "securable": m.Securable,
+      "securable_type": m.SecurableType,
+      
 			"provider_config": m.ProviderConfigData,
+			
 		},
 	)
 }
@@ -164,30 +183,30 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"are_any_destinations_hidden":  types.BoolType,
-			"destination_source_securable": catalog_tf.Securable{}.Type(ctx),
-			"destinations": basetypes.ListType{
-				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
-			},
-			"full_name":      types.StringType,
-			"securable":      catalog_tf.Securable{}.Type(ctx),
-			"securable_type": types.StringType,
-
+			"are_any_destinations_hidden": types.BoolType,
+      "destination_source_securable": catalog_tf.Securable{}.Type(ctx),
+      "destinations": basetypes.ListType{
+ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
+},
+      "full_name": types.StringType,
+      "securable": catalog_tf.Securable{}.Type(ctx),
+      "securable_type": types.StringType,
+      
 			"provider_config": ProviderConfigData{}.Type(ctx),
+			
 		},
 	}
 }
 
-func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
-	attrs["destination_source_securable"] = attrs["destination_source_securable"].SetComputed()
-	attrs["destinations"] = attrs["destinations"].SetComputed()
-	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["securable"] = attrs["securable"].SetComputed()
-	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {attrs["are_any_destinations_hidden"] = attrs["are_any_destinations_hidden"].SetComputed()
+attrs["destination_source_securable"] = attrs["destination_source_securable"].SetComputed()
+attrs["destinations"] = attrs["destinations"].SetComputed()
+attrs["full_name"] = attrs["full_name"].SetRequired()
+attrs["securable"] = attrs["securable"].SetComputed()
+attrs["securable_type"] = attrs["securable_type"].SetRequired()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-
+	
 	return attrs
 }
 
@@ -209,7 +228,7 @@ func (r *AccessRequestDestinationDataSource) Configure(ctx context.Context, req 
 }
 
 func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+    ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
 	var config AccessRequestDestinationsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -217,12 +236,14 @@ func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
+	
 	var readRequest catalog.GetAccessRequestDestinationsRequest
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
+	
 	var namespace ProviderConfigData
 	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
@@ -232,7 +253,7 @@ func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datas
 		return
 	}
 	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-
+	
 	resp.Diagnostics.Append(clientDiags...)
 	if resp.Diagnostics.HasError() {
 		return

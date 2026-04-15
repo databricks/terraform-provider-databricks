@@ -40,8 +40,8 @@ The following attributes are exported:
   * For the managed identities, OAUTH is used.
   * For the regular postgres roles, authentication based on postgres passwords is used.
   
-  NOTE: this is ignored for the Databricks identity type GROUP,
-  and NO_LOGIN is implicitly assumed instead for the GROUP identity type. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
+  is the default auth method (group can login as well). Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string) - The type of role.
   When specifying a managed-identity, the chosen role_id must be a valid:
   

@@ -66,19 +66,20 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 }
 
 func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.T) {
-	// When api is NOT set, account host routes to account SCIM (backwards compatible)
+	// When api is NOT set, the host URL determines the SCIM endpoint used.
+	// With a non-accounts host (e.g. test server on localhost), routes to workspace SCIM.
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups",
+				Resource: "/api/2.0/preview/scim/v2/Groups",
 				Response: Group{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					ID:          "abc",
 					DisplayName: "test-group",

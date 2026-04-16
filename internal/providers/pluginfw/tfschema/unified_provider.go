@@ -284,7 +284,12 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 	}
 	var newWsID string
 	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
-		newWsID, _ = GetWorkspaceIDResource(ctx, cfgPC)
+		var wsIDDiags diag.Diagnostics
+		newWsID, wsIDDiags = GetWorkspaceIDResource(ctx, cfgPC)
+		resp.Diagnostics.Append(wsIDDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 	if newWsID == "" {
 		newWsID = client.GetProviderWorkspaceID()

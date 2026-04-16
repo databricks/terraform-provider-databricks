@@ -17,9 +17,10 @@ import (
 )
 
 const defaultIndexProvisionTimeout = 75 * time.Minute
+const defaultIndexDeletionTimeout = 15 * time.Minute
 
 func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
-	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, defaultIndexDeletionTimeout, func() *retry.RetryError {
 		_, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err == nil {
 			return retry.RetryableError(fmt.Errorf("vector search index %s is still not deleted", searchIndexName))

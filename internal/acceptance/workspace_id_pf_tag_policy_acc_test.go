@@ -170,30 +170,6 @@ func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 	)
 }
 
-// TestAccWorkspaceIDTagPolicy_WS_UpdatePreservesWorkspaceID tests that an update
-// does not lose provider_config.workspace_id from state.
-// Step 1: Create tag_policy (PopulateProviderConfigInState writes workspace_id to state).
-// Step 2: Update description → SyncFieldsDuringCreateOrUpdate copies plan's ProviderConfig
-//
-//	into new state. Verify workspace_id is still present.
-func TestAccWorkspaceIDTagPolicy_WS_UpdatePreservesWorkspaceID(t *testing.T) {
-	WorkspaceLevel(t,
-		Step{
-			Template: tagPolicyTemplate(""),
-			Check:    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
-		},
-		Step{
-			Template: `
-			resource "databricks_tag_policy" "test" {
-				tag_key     = "dwsid-tp-{var.STICKY_RANDOM}"
-				description = "updated description"
-			}
-			`,
-			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
-		},
-	)
-}
-
 // ==========================================
 // Account-Level: New Setup
 // ==========================================

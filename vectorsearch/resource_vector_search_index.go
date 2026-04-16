@@ -16,7 +16,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const defaultIndexProvisionTimeout = 15 * time.Minute
+const defaultIndexProvisionTimeout = 75 * time.Minute
 
 func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
 	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {

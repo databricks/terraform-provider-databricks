@@ -1264,6 +1264,69 @@ func (m *GenieCreateEvalRunRequest) SetBenchmarkQuestionIds(ctx context.Context,
 	m.BenchmarkQuestionIds = types.ListValueMust(t, vs)
 }
 
+type GenieCreateMessageCommentRequest struct {
+	// Comment text content.
+	Content types.String `tfsdk:"content"`
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the message.
+	MessageId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (to *GenieCreateMessageCommentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieCreateMessageCommentRequest) {
+}
+
+func (to *GenieCreateMessageCommentRequest) SyncFieldsDuringRead(ctx context.Context, from GenieCreateMessageCommentRequest) {
+}
+
+func (m GenieCreateMessageCommentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateMessageCommentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieCreateMessageCommentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieCreateMessageCommentRequest
+// only implements ToObjectValue() and Type().
+func (m GenieCreateMessageCommentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"content":         m.Content,
+			"conversation_id": m.ConversationId,
+			"message_id":      m.MessageId,
+			"space_id":        m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieCreateMessageCommentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"content":         types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
 type GenieCreateSpaceRequest struct {
 	// Optional description
 	Description types.String `tfsdk:"description"`
@@ -1637,6 +1700,56 @@ type GenieEvalResultDetails struct {
 	// Assessment of the evaluation result: good, bad, or needs review
 	Assessment types.String `tfsdk:"assessment"`
 	// Reasons for the assessment score.
+	//
+	// Assessment reasons describe why a Genie response was scored as BAD.
+	//
+	// Deterministic values (compared against the ground truth result): -
+	// EMPTY_RESULT: Genie's generated SQL results were empty for this benchmark
+	// question. - RESULT_MISSING_ROWS: Genie's generated SQL response is
+	// missing rows from the provided ground truth SQL. - RESULT_EXTRA_ROWS:
+	// Genie's generated SQL response has more rows than the provided ground
+	// truth SQL. - RESULT_MISSING_COLUMNS: Genie's generated SQL response is
+	// missing columns from the provided ground truth SQL. -
+	// RESULT_EXTRA_COLUMNS: Genie's generated SQL response has more columns
+	// than the provided ground truth SQL. - SINGLE_CELL_DIFFERENCE: Single
+	// value result was produced but differs from ground truth result. -
+	// EMPTY_GOOD_SQL: The benchmark SQL returned an empty result. -
+	// COLUMN_TYPE_DIFFERENCE: The values between the results match but the
+	// column type is different.
+	//
+	// LLM judge ratings explain the factors driving BAD results: -
+	// LLM_JUDGE_MISSING_OR_INCORRECT_FILTER: Genie's generated SQL is missing a
+	// WHERE clause condition or has incorrect filter logic that
+	// excludes/includes wrong data. - LLM_JUDGE_INCOMPLETE_OR_PARTIAL_OUTPUT:
+	// Genie's generated SQL returns only some of the requested data or columns,
+	// missing parts of what the ground truth SQL returns. -
+	// LLM_JUDGE_MISINTERPRETATION_OF_USER_REQUEST: Genie's generated SQL
+	// fundamentally misunderstands what the user is asking for, addressing the
+	// wrong question or goal. -
+	// LLM_JUDGE_INSTRUCTION_COMPLIANCE_OR_MISSING_BUSINESS_LOGIC: Genie's
+	// generated SQL fails to apply specified instructions or business logic
+	// that should be followed. - LLM_JUDGE_INCORRECT_METRIC_CALCULATION:
+	// Genie's generated SQL uses incorrect logic or makes wrong assumptions
+	// when calculating metrics. - LLM_JUDGE_INCORRECT_TABLE_OR_FIELD_USAGE:
+	// Genie's generated SQL references wrong tables, columns, or uses fields
+	// that don't match the ground truth SQL's intent. -
+	// LLM_JUDGE_INCORRECT_FUNCTION_USAGE: Genie's generated SQL uses SQL
+	// functions incorrectly or inappropriately (wrong parameters, wrong
+	// function for the task, etc.). - LLM_JUDGE_MISSING_OR_INCORRECT_JOIN:
+	// Genie's generated SQL is missing necessary joins between tables or has
+	// incorrect join conditions/types that produce wrong results. -
+	// LLM_JUDGE_MISSING_OR_INCORRECT_AGGREGATION: Genie's generated SQL is
+	// missing GROUP BY clauses or has incorrect grouping that doesn't match the
+	// requested aggregation level. - LLM_JUDGE_FORMATTING_ERROR: Genie's
+	// generated SQL output has incorrect formatting, ordering (ORDER BY), or
+	// presentation issues that don't match expectations. - LLM_JUDGE_OTHER: LLM
+	// judge identified an error that doesn't fall into other categories.
+	//
+	// Deprecated LLM judge values (kept for backward compatibility, do not
+	// use): - LLM_JUDGE_MISSING_JOIN (deprecated) - LLM_JUDGE_WRONG_FILTER
+	// (deprecated) - LLM_JUDGE_WRONG_AGGREGATION (deprecated) -
+	// LLM_JUDGE_WRONG_COLUMNS (deprecated) - LLM_JUDGE_SYNTAX_ERROR
+	// (deprecated) - LLM_JUDGE_SEMANTIC_ERROR (deprecated)
 	AssessmentReasons types.List `tfsdk:"assessment_reasons"`
 	// The ID of the benchmark question that was evaluated.
 	BenchmarkQuestionId types.String `tfsdk:"benchmark_question_id"`
@@ -2055,6 +2168,8 @@ func (m GenieExecuteMessageQueryRequest) Type(ctx context.Context) attr.Type {
 
 // Feedback containing rating and optional comment
 type GenieFeedback struct {
+	// Optional feedback comment text
+	Comment types.String `tfsdk:"comment"`
 	// The feedback rating
 	Rating types.String `tfsdk:"rating"`
 }
@@ -2066,6 +2181,7 @@ func (to *GenieFeedback) SyncFieldsDuringRead(ctx context.Context, from GenieFee
 }
 
 func (m GenieFeedback) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["rating"] = attrs["rating"].SetOptional()
 
 	return attrs
@@ -2089,7 +2205,8 @@ func (m GenieFeedback) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"rating": m.Rating,
+			"comment": m.Comment,
+			"rating":  m.Rating,
 		})
 }
 
@@ -2097,7 +2214,8 @@ func (m GenieFeedback) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m GenieFeedback) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"rating": types.StringType,
+			"comment": types.StringType,
+			"rating":  types.StringType,
 		},
 	}
 }
@@ -2891,6 +3009,164 @@ func (m GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GenieListConversationCommentsRequest struct {
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// Maximum number of comments to return per page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token for getting the next page of results.
+	PageToken types.String `tfsdk:"-"`
+	// The ID associated with the Genie space.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (to *GenieListConversationCommentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieListConversationCommentsRequest) {
+}
+
+func (to *GenieListConversationCommentsRequest) SyncFieldsDuringRead(ctx context.Context, from GenieListConversationCommentsRequest) {
+}
+
+func (m GenieListConversationCommentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationCommentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieListConversationCommentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationCommentsRequest
+// only implements ToObjectValue() and Type().
+func (m GenieListConversationCommentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": m.ConversationId,
+			"page_size":       m.PageSize,
+			"page_token":      m.PageToken,
+			"space_id":        m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieListConversationCommentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id": types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieListConversationCommentsResponse struct {
+	// List of comments in the conversation.
+	Comments types.List `tfsdk:"comments"`
+	// Token to get the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *GenieListConversationCommentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieListConversationCommentsResponse) {
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() && to.Comments.IsNull() && len(from.Comments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Comments = from.Comments
+	}
+}
+
+func (to *GenieListConversationCommentsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListConversationCommentsResponse) {
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() && to.Comments.IsNull() && len(from.Comments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Comments = from.Comments
+	}
+}
+
+func (m GenieListConversationCommentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comments"] = attrs["comments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListConversationCommentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieListConversationCommentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"comments": reflect.TypeOf(GenieMessageComment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListConversationCommentsResponse
+// only implements ToObjectValue() and Type().
+func (m GenieListConversationCommentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comments":        m.Comments,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieListConversationCommentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comments": basetypes.ListType{
+				ElemType: GenieMessageComment{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetComments returns the value of the Comments field in GenieListConversationCommentsResponse as
+// a slice of GenieMessageComment values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenieListConversationCommentsResponse) GetComments(ctx context.Context) ([]GenieMessageComment, bool) {
+	if m.Comments.IsNull() || m.Comments.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieMessageComment
+	d := m.Comments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComments sets the value of the Comments field in GenieListConversationCommentsResponse.
+func (m *GenieListConversationCommentsResponse) SetComments(ctx context.Context, v []GenieMessageComment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["comments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Comments = types.ListValueMust(t, vs)
+}
+
 type GenieListConversationMessagesRequest struct {
 	// The ID of the conversation to list messages from
 	ConversationId types.String `tfsdk:"-"`
@@ -3521,6 +3797,169 @@ func (m *GenieListEvalRunsResponse) SetEvalRuns(ctx context.Context, v []GenieEv
 	m.EvalRuns = types.ListValueMust(t, vs)
 }
 
+type GenieListMessageCommentsRequest struct {
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the message.
+	MessageId types.String `tfsdk:"-"`
+	// Maximum number of comments to return per page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token for getting the next page of results.
+	PageToken types.String `tfsdk:"-"`
+	// The ID associated with the Genie space.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (to *GenieListMessageCommentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieListMessageCommentsRequest) {
+}
+
+func (to *GenieListMessageCommentsRequest) SyncFieldsDuringRead(ctx context.Context, from GenieListMessageCommentsRequest) {
+}
+
+func (m GenieListMessageCommentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListMessageCommentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieListMessageCommentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListMessageCommentsRequest
+// only implements ToObjectValue() and Type().
+func (m GenieListMessageCommentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"conversation_id": m.ConversationId,
+			"message_id":      m.MessageId,
+			"page_size":       m.PageSize,
+			"page_token":      m.PageToken,
+			"space_id":        m.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieListMessageCommentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieListMessageCommentsResponse struct {
+	// List of comments on the message.
+	Comments types.List `tfsdk:"comments"`
+	// Token to get the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *GenieListMessageCommentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieListMessageCommentsResponse) {
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() && to.Comments.IsNull() && len(from.Comments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Comments = from.Comments
+	}
+}
+
+func (to *GenieListMessageCommentsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListMessageCommentsResponse) {
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() && to.Comments.IsNull() && len(from.Comments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Comments = from.Comments
+	}
+}
+
+func (m GenieListMessageCommentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comments"] = attrs["comments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieListMessageCommentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieListMessageCommentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"comments": reflect.TypeOf(GenieMessageComment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieListMessageCommentsResponse
+// only implements ToObjectValue() and Type().
+func (m GenieListMessageCommentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comments":        m.Comments,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieListMessageCommentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comments": basetypes.ListType{
+				ElemType: GenieMessageComment{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetComments returns the value of the Comments field in GenieListMessageCommentsResponse as
+// a slice of GenieMessageComment values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenieListMessageCommentsResponse) GetComments(ctx context.Context) ([]GenieMessageComment, bool) {
+	if m.Comments.IsNull() || m.Comments.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieMessageComment
+	d := m.Comments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComments sets the value of the Comments field in GenieListMessageCommentsResponse.
+func (m *GenieListMessageCommentsResponse) SetComments(ctx context.Context, v []GenieMessageComment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["comments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Comments = types.ListValueMust(t, vs)
+}
+
 type GenieListSpacesRequest struct {
 	// Maximum number of spaces to return per page
 	PageSize types.Int64 `tfsdk:"-"`
@@ -3950,6 +4389,85 @@ func (m *GenieMessage) SetQueryResult(ctx context.Context, v Result) {
 	m.QueryResult = vs
 }
 
+// A comment on a Genie conversation message.
+type GenieMessageComment struct {
+	// Comment text content
+	Content types.String `tfsdk:"content"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"conversation_id"`
+	// Timestamp when the comment was created
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
+	// Comment ID
+	MessageCommentId types.String `tfsdk:"message_comment_id"`
+	// Message ID
+	MessageId types.String `tfsdk:"message_id"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"space_id"`
+	// ID of the user who created the comment
+	UserId types.Int64 `tfsdk:"user_id"`
+}
+
+func (to *GenieMessageComment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieMessageComment) {
+}
+
+func (to *GenieMessageComment) SyncFieldsDuringRead(ctx context.Context, from GenieMessageComment) {
+}
+
+func (m GenieMessageComment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
+	attrs["message_comment_id"] = attrs["message_comment_id"].SetRequired()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieMessageComment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieMessageComment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieMessageComment
+// only implements ToObjectValue() and Type().
+func (m GenieMessageComment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"content":            m.Content,
+			"conversation_id":    m.ConversationId,
+			"created_timestamp":  m.CreatedTimestamp,
+			"message_comment_id": m.MessageCommentId,
+			"message_id":         m.MessageId,
+			"space_id":           m.SpaceId,
+			"user_id":            m.UserId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieMessageComment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"content":            types.StringType,
+			"conversation_id":    types.StringType,
+			"created_timestamp":  types.Int64Type,
+			"message_comment_id": types.StringType,
+			"message_id":         types.StringType,
+			"space_id":           types.StringType,
+			"user_id":            types.Int64Type,
+		},
+	}
+}
+
 type GenieQueryAttachment struct {
 	// Description of the query
 	Description types.String `tfsdk:"description"`
@@ -3967,6 +4485,8 @@ type GenieQueryAttachment struct {
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
 	StatementId types.String `tfsdk:"statement_id"`
+	// Insights into how Genie came to generate the SQL.
+	Thoughts types.List `tfsdk:"thoughts"`
 	// Name of the query
 	Title types.String `tfsdk:"title"`
 }
@@ -3987,6 +4507,12 @@ func (to *GenieQueryAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 			}
 		}
 	}
+	if !from.Thoughts.IsNull() && !from.Thoughts.IsUnknown() && to.Thoughts.IsNull() && len(from.Thoughts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Thoughts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Thoughts = from.Thoughts
+	}
 }
 
 func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieQueryAttachment) {
@@ -4004,6 +4530,12 @@ func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from G
 			}
 		}
 	}
+	if !from.Thoughts.IsNull() && !from.Thoughts.IsUnknown() && to.Thoughts.IsNull() && len(from.Thoughts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Thoughts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Thoughts = from.Thoughts
+	}
 }
 
 func (m GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4014,6 +4546,7 @@ func (m GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetComputed()
 	attrs["statement_id"] = attrs["statement_id"].SetComputed()
+	attrs["thoughts"] = attrs["thoughts"].SetComputed()
 	attrs["title"] = attrs["title"].SetOptional()
 
 	return attrs
@@ -4030,6 +4563,7 @@ func (m GenieQueryAttachment) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{
 		"parameters":            reflect.TypeOf(QueryAttachmentParameter{}),
 		"query_result_metadata": reflect.TypeOf(GenieResultMetadata{}),
+		"thoughts":              reflect.TypeOf(Thought{}),
 	}
 }
 
@@ -4047,6 +4581,7 @@ func (m GenieQueryAttachment) ToObjectValue(ctx context.Context) basetypes.Objec
 			"query":                  m.Query,
 			"query_result_metadata":  m.QueryResultMetadata,
 			"statement_id":           m.StatementId,
+			"thoughts":               m.Thoughts,
 			"title":                  m.Title,
 		})
 }
@@ -4064,7 +4599,10 @@ func (m GenieQueryAttachment) Type(ctx context.Context) attr.Type {
 			"query":                 types.StringType,
 			"query_result_metadata": GenieResultMetadata{}.Type(ctx),
 			"statement_id":          types.StringType,
-			"title":                 types.StringType,
+			"thoughts": basetypes.ListType{
+				ElemType: Thought{}.Type(ctx),
+			},
+			"title": types.StringType,
 		},
 	}
 }
@@ -4118,6 +4656,32 @@ func (m *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (Geni
 func (m *GenieQueryAttachment) SetQueryResultMetadata(ctx context.Context, v GenieResultMetadata) {
 	vs := v.ToObjectValue(ctx)
 	m.QueryResultMetadata = vs
+}
+
+// GetThoughts returns the value of the Thoughts field in GenieQueryAttachment as
+// a slice of Thought values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenieQueryAttachment) GetThoughts(ctx context.Context) ([]Thought, bool) {
+	if m.Thoughts.IsNull() || m.Thoughts.IsUnknown() {
+		return nil, false
+	}
+	var v []Thought
+	d := m.Thoughts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetThoughts sets the value of the Thoughts field in GenieQueryAttachment.
+func (m *GenieQueryAttachment) SetThoughts(ctx context.Context, v []Thought) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["thoughts"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Thoughts = types.ListValueMust(t, vs)
 }
 
 type GenieResultMetadata struct {
@@ -4174,6 +4738,8 @@ func (m GenieResultMetadata) Type(ctx context.Context) attr.Type {
 }
 
 type GenieSendMessageFeedbackRequest struct {
+	// Optional text feedback that will be stored as a comment.
+	Comment types.String `tfsdk:"comment"`
 	// The ID associated with the conversation.
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the message to provide feedback for.
@@ -4191,6 +4757,7 @@ func (to *GenieSendMessageFeedbackRequest) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m GenieSendMessageFeedbackRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["rating"] = attrs["rating"].SetRequired()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
@@ -4217,6 +4784,7 @@ func (m GenieSendMessageFeedbackRequest) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"comment":         m.Comment,
 			"conversation_id": m.ConversationId,
 			"message_id":      m.MessageId,
 			"rating":          m.Rating,
@@ -4228,6 +4796,7 @@ func (m GenieSendMessageFeedbackRequest) ToObjectValue(ctx context.Context) base
 func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"comment":         types.StringType,
 			"conversation_id": types.StringType,
 			"message_id":      types.StringType,
 			"rating":          types.StringType,
@@ -6503,6 +7072,60 @@ func (m TextAttachment) Type(ctx context.Context) attr.Type {
 			"content": types.StringType,
 			"id":      types.StringType,
 			"purpose": types.StringType,
+		},
+	}
+}
+
+// A single thought in the AI's reasoning process for a query.
+type Thought struct {
+	// The md formatted content for this thought.
+	Content types.String `tfsdk:"content"`
+	// The category of this thought.
+	ThoughtType types.String `tfsdk:"thought_type"`
+}
+
+func (to *Thought) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Thought) {
+}
+
+func (to *Thought) SyncFieldsDuringRead(ctx context.Context, from Thought) {
+}
+
+func (m Thought) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetComputed()
+	attrs["thought_type"] = attrs["thought_type"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Thought.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Thought) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Thought
+// only implements ToObjectValue() and Type().
+func (m Thought) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"content":      m.Content,
+			"thought_type": m.ThoughtType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Thought) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"content":      types.StringType,
+			"thought_type": types.StringType,
 		},
 	}
 }

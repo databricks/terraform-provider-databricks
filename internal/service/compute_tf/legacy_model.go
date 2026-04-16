@@ -10392,14 +10392,16 @@ func (m *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 // and serverless pipelines. In this minimal environment spec, only pip and java
 // dependencies are supported.
 type Environment_SdkV2 struct {
-	// The `base_environment` key refers to an `env.yaml` file that specifies an
-	// environment version and a collection of dependencies required for the
-	// environment setup. This `env.yaml` file may itself include a
-	// `base_environment` reference pointing to another `env_1.yaml` file.
-	// However, when used as a base environment, `env_1.yaml` (or further nested
-	// references) will not be processed or included in the final environment,
-	// meaning that the resolution of `base_environment` references is not
-	// recursive.
+	// The base environment this environment is built on top of. A base
+	// environment defines the environment version and a list of dependencies
+	// for serverless compute. The value can be a file path to a custom
+	// `env.yaml` file (e.g., `/Workspace/path/to/env.yaml`). Support for a
+	// Databricks-provided base environment ID (e.g.,
+	// `workspace-base-environments/databricks_ai_v4`) and workspace base
+	// environment ID (e.g.,
+	// `workspace-base-environments/dbe_b849b66e-b31a-4cb5-b161-1f2b10877fb7`)
+	// is in Beta. Either `environment_version` or `base_environment` can be
+	// provided. For more information, see
 	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`

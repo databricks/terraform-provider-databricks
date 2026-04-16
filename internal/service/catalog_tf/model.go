@@ -2333,6 +2333,63 @@ func (m AzureActiveDirectoryToken) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type AzureEncryptionSettings struct {
+	AzureCmkAccessConnectorId types.String `tfsdk:"azure_cmk_access_connector_id"`
+
+	AzureCmkManagedIdentityId types.String `tfsdk:"azure_cmk_managed_identity_id"`
+
+	AzureTenantId types.String `tfsdk:"azure_tenant_id"`
+}
+
+func (to *AzureEncryptionSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AzureEncryptionSettings) {
+}
+
+func (to *AzureEncryptionSettings) SyncFieldsDuringRead(ctx context.Context, from AzureEncryptionSettings) {
+}
+
+func (m AzureEncryptionSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["azure_cmk_access_connector_id"] = attrs["azure_cmk_access_connector_id"].SetOptional()
+	attrs["azure_cmk_managed_identity_id"] = attrs["azure_cmk_managed_identity_id"].SetOptional()
+	attrs["azure_tenant_id"] = attrs["azure_tenant_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AzureEncryptionSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AzureEncryptionSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AzureEncryptionSettings
+// only implements ToObjectValue() and Type().
+func (m AzureEncryptionSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"azure_cmk_access_connector_id": m.AzureCmkAccessConnectorId,
+			"azure_cmk_managed_identity_id": m.AzureCmkManagedIdentityId,
+			"azure_tenant_id":               m.AzureTenantId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AzureEncryptionSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"azure_cmk_access_connector_id": types.StringType,
+			"azure_cmk_managed_identity_id": types.StringType,
+			"azure_tenant_id":               types.StringType,
+		},
+	}
+}
+
 // The Azure managed identity configuration.
 type AzureManagedIdentity struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
@@ -3012,6 +3069,8 @@ type CatalogInfo struct {
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
+	// Control CMK encryption for managed catalog data
+	ManagedEncryptionSettings types.Object `tfsdk:"managed_encryption_settings"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of catalog.
@@ -3053,6 +3112,15 @@ func (to *CatalogInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				// Recursively sync the fields of ManagedEncryptionSettings
+				toManagedEncryptionSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
+			}
+		}
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -3070,6 +3138,14 @@ func (to *CatalogInfo) SyncFieldsDuringRead(ctx context.Context, from CatalogInf
 			if fromEffectivePredictiveOptimizationFlag, ok := from.GetEffectivePredictiveOptimizationFlag(ctx); ok {
 				toEffectivePredictiveOptimizationFlag.SyncFieldsDuringRead(ctx, fromEffectivePredictiveOptimizationFlag)
 				to.SetEffectivePredictiveOptimizationFlag(ctx, toEffectivePredictiveOptimizationFlag)
+			}
+		}
+	}
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				toManagedEncryptionSettings.SyncFieldsDuringRead(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
 			}
 		}
 	}
@@ -3094,6 +3170,7 @@ func (m CatalogInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
+	attrs["managed_encryption_settings"] = attrs["managed_encryption_settings"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["options"] = attrs["options"].SetOptional()
@@ -3121,6 +3198,7 @@ func (m CatalogInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 func (m CatalogInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"effective_predictive_optimization_flag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
+		"managed_encryption_settings":            reflect.TypeOf(EncryptionSettings{}),
 		"options":                                reflect.TypeOf(types.String{}),
 		"properties":                             reflect.TypeOf(types.String{}),
 		"provisioning_info":                      reflect.TypeOf(ProvisioningInfo{}),
@@ -3144,6 +3222,7 @@ func (m CatalogInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"enable_predictive_optimization":         m.EnablePredictiveOptimization,
 			"full_name":                              m.FullName,
 			"isolation_mode":                         m.IsolationMode,
+			"managed_encryption_settings":            m.ManagedEncryptionSettings,
 			"metastore_id":                           m.MetastoreId,
 			"name":                                   m.Name,
 			"options":                                m.Options,
@@ -3174,6 +3253,7 @@ func (m CatalogInfo) Type(ctx context.Context) attr.Type {
 			"enable_predictive_optimization":         types.StringType,
 			"full_name":                              types.StringType,
 			"isolation_mode":                         types.StringType,
+			"managed_encryption_settings":            EncryptionSettings{}.Type(ctx),
 			"metastore_id":                           types.StringType,
 			"name":                                   types.StringType,
 			"options": basetypes.MapType{
@@ -3218,6 +3298,31 @@ func (m *CatalogInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context
 func (m *CatalogInfo) SetEffectivePredictiveOptimizationFlag(ctx context.Context, v EffectivePredictiveOptimizationFlag) {
 	vs := v.ToObjectValue(ctx)
 	m.EffectivePredictiveOptimizationFlag = vs
+}
+
+// GetManagedEncryptionSettings returns the value of the ManagedEncryptionSettings field in CatalogInfo as
+// a EncryptionSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CatalogInfo) GetManagedEncryptionSettings(ctx context.Context) (EncryptionSettings, bool) {
+	var e EncryptionSettings
+	if m.ManagedEncryptionSettings.IsNull() || m.ManagedEncryptionSettings.IsUnknown() {
+		return e, false
+	}
+	var v EncryptionSettings
+	d := m.ManagedEncryptionSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetManagedEncryptionSettings sets the value of the ManagedEncryptionSettings field in CatalogInfo.
+func (m *CatalogInfo) SetManagedEncryptionSettings(ctx context.Context, v EncryptionSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.ManagedEncryptionSettings = vs
 }
 
 // GetOptions returns the value of the Options field in CatalogInfo as
@@ -3860,7 +3965,7 @@ func (m ConnectionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 24
+// Next ID: 25
 type ConnectionInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -4864,6 +4969,8 @@ type CreateCatalog struct {
 	Comment types.String `tfsdk:"comment"`
 	// The name of the connection to an external data source.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Control CMK encryption for managed catalog data
+	ManagedEncryptionSettings types.Object `tfsdk:"managed_encryption_settings"`
 	// Name of catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
@@ -4882,14 +4989,32 @@ type CreateCatalog struct {
 }
 
 func (to *CreateCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCatalog) {
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				// Recursively sync the fields of ManagedEncryptionSettings
+				toManagedEncryptionSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
+			}
+		}
+	}
 }
 
 func (to *CreateCatalog) SyncFieldsDuringRead(ctx context.Context, from CreateCatalog) {
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				toManagedEncryptionSettings.SyncFieldsDuringRead(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
+			}
+		}
+	}
 }
 
 func (m CreateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["managed_encryption_settings"] = attrs["managed_encryption_settings"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["options"] = attrs["options"].SetOptional()
 	attrs["properties"] = attrs["properties"].SetOptional()
@@ -4909,8 +5034,9 @@ func (m CreateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m CreateCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.String{}),
-		"properties": reflect.TypeOf(types.String{}),
+		"managed_encryption_settings": reflect.TypeOf(EncryptionSettings{}),
+		"options":                     reflect.TypeOf(types.String{}),
+		"properties":                  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4921,14 +5047,15 @@ func (m CreateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":         m.Comment,
-			"connection_name": m.ConnectionName,
-			"name":            m.Name,
-			"options":         m.Options,
-			"properties":      m.Properties,
-			"provider_name":   m.ProviderName,
-			"share_name":      m.ShareName,
-			"storage_root":    m.StorageRoot,
+			"comment":                     m.Comment,
+			"connection_name":             m.ConnectionName,
+			"managed_encryption_settings": m.ManagedEncryptionSettings,
+			"name":                        m.Name,
+			"options":                     m.Options,
+			"properties":                  m.Properties,
+			"provider_name":               m.ProviderName,
+			"share_name":                  m.ShareName,
+			"storage_root":                m.StorageRoot,
 		})
 }
 
@@ -4936,9 +5063,10 @@ func (m CreateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m CreateCatalog) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_name": types.StringType,
-			"name":            types.StringType,
+			"comment":                     types.StringType,
+			"connection_name":             types.StringType,
+			"managed_encryption_settings": EncryptionSettings{}.Type(ctx),
+			"name":                        types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -4950,6 +5078,31 @@ func (m CreateCatalog) Type(ctx context.Context) attr.Type {
 			"storage_root":  types.StringType,
 		},
 	}
+}
+
+// GetManagedEncryptionSettings returns the value of the ManagedEncryptionSettings field in CreateCatalog as
+// a EncryptionSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCatalog) GetManagedEncryptionSettings(ctx context.Context) (EncryptionSettings, bool) {
+	var e EncryptionSettings
+	if m.ManagedEncryptionSettings.IsNull() || m.ManagedEncryptionSettings.IsUnknown() {
+		return e, false
+	}
+	var v EncryptionSettings
+	d := m.ManagedEncryptionSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetManagedEncryptionSettings sets the value of the ManagedEncryptionSettings field in CreateCatalog.
+func (m *CreateCatalog) SetManagedEncryptionSettings(ctx context.Context, v EncryptionSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.ManagedEncryptionSettings = vs
 }
 
 // GetOptions returns the value of the Options field in CreateCatalog as
@@ -9223,8 +9376,7 @@ func (m DeleteCredentialResponse) Type(ctx context.Context) attr.Type {
 type DeleteEntityTagAssignmentRequest struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"-"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"-"`
 	// Required. The key of the tag to delete
 	TagKey types.String `tfsdk:"-"`
@@ -11419,12 +11571,116 @@ func (m *EncryptionDetails) SetSseEncryptionDetails(ctx context.Context, v SseEn
 	m.SseEncryptionDetails = vs
 }
 
+// Encryption Settings are used to carry metadata for securable encryption at
+// rest. Currently used for catalogs, we can use the information supplied here
+// to interact with a CMK.
+type EncryptionSettings struct {
+	// optional Azure settings - only required if an Azure CMK is used.
+	AzureEncryptionSettings types.Object `tfsdk:"azure_encryption_settings"`
+	// the AKV URL in Azure, null otherwise.
+	AzureKeyVaultKeyId types.String `tfsdk:"azure_key_vault_key_id"`
+	// the CMK uuid in AWS and GCP, null otherwise.
+	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id"`
+}
+
+func (to *EncryptionSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EncryptionSettings) {
+	if !from.AzureEncryptionSettings.IsNull() && !from.AzureEncryptionSettings.IsUnknown() {
+		if toAzureEncryptionSettings, ok := to.GetAzureEncryptionSettings(ctx); ok {
+			if fromAzureEncryptionSettings, ok := from.GetAzureEncryptionSettings(ctx); ok {
+				// Recursively sync the fields of AzureEncryptionSettings
+				toAzureEncryptionSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureEncryptionSettings)
+				to.SetAzureEncryptionSettings(ctx, toAzureEncryptionSettings)
+			}
+		}
+	}
+}
+
+func (to *EncryptionSettings) SyncFieldsDuringRead(ctx context.Context, from EncryptionSettings) {
+	if !from.AzureEncryptionSettings.IsNull() && !from.AzureEncryptionSettings.IsUnknown() {
+		if toAzureEncryptionSettings, ok := to.GetAzureEncryptionSettings(ctx); ok {
+			if fromAzureEncryptionSettings, ok := from.GetAzureEncryptionSettings(ctx); ok {
+				toAzureEncryptionSettings.SyncFieldsDuringRead(ctx, fromAzureEncryptionSettings)
+				to.SetAzureEncryptionSettings(ctx, toAzureEncryptionSettings)
+			}
+		}
+	}
+}
+
+func (m EncryptionSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["azure_encryption_settings"] = attrs["azure_encryption_settings"].SetOptional()
+	attrs["azure_key_vault_key_id"] = attrs["azure_key_vault_key_id"].SetOptional()
+	attrs["customer_managed_key_id"] = attrs["customer_managed_key_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EncryptionSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EncryptionSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"azure_encryption_settings": reflect.TypeOf(AzureEncryptionSettings{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EncryptionSettings
+// only implements ToObjectValue() and Type().
+func (m EncryptionSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"azure_encryption_settings": m.AzureEncryptionSettings,
+			"azure_key_vault_key_id":    m.AzureKeyVaultKeyId,
+			"customer_managed_key_id":   m.CustomerManagedKeyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EncryptionSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"azure_encryption_settings": AzureEncryptionSettings{}.Type(ctx),
+			"azure_key_vault_key_id":    types.StringType,
+			"customer_managed_key_id":   types.StringType,
+		},
+	}
+}
+
+// GetAzureEncryptionSettings returns the value of the AzureEncryptionSettings field in EncryptionSettings as
+// a AzureEncryptionSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EncryptionSettings) GetAzureEncryptionSettings(ctx context.Context) (AzureEncryptionSettings, bool) {
+	var e AzureEncryptionSettings
+	if m.AzureEncryptionSettings.IsNull() || m.AzureEncryptionSettings.IsUnknown() {
+		return e, false
+	}
+	var v AzureEncryptionSettings
+	d := m.AzureEncryptionSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureEncryptionSettings sets the value of the AzureEncryptionSettings field in EncryptionSettings.
+func (m *EncryptionSettings) SetAzureEncryptionSettings(ctx context.Context, v AzureEncryptionSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.AzureEncryptionSettings = vs
+}
+
 // Represents a tag assignment to an entity
 type EntityTagAssignment struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"entity_name"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"entity_type"`
 	// The source type of the tag assignment, e.g., user-assigned or
 	// system-assigned
@@ -16427,8 +16683,7 @@ func (m GetEffectiveRequest) Type(ctx context.Context) attr.Type {
 type GetEntityTagAssignmentRequest struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"-"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"-"`
 	// Required. The key of the tag
 	TagKey types.String `tfsdk:"-"`
@@ -18615,8 +18870,7 @@ func (m *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 type ListEntityTagAssignmentsRequest struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"-"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"-"`
 	// Optional. Maximum number of tag assignments to return in a single page
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -29287,6 +29541,8 @@ type UpdateCatalog struct {
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
+	// Control CMK encryption for managed catalog data
+	ManagedEncryptionSettings types.Object `tfsdk:"managed_encryption_settings"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
 	// New name for the catalog.
@@ -29300,15 +29556,33 @@ type UpdateCatalog struct {
 }
 
 func (to *UpdateCatalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateCatalog) {
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				// Recursively sync the fields of ManagedEncryptionSettings
+				toManagedEncryptionSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
+			}
+		}
+	}
 }
 
 func (to *UpdateCatalog) SyncFieldsDuringRead(ctx context.Context, from UpdateCatalog) {
+	if !from.ManagedEncryptionSettings.IsNull() && !from.ManagedEncryptionSettings.IsUnknown() {
+		if toManagedEncryptionSettings, ok := to.GetManagedEncryptionSettings(ctx); ok {
+			if fromManagedEncryptionSettings, ok := from.GetManagedEncryptionSettings(ctx); ok {
+				toManagedEncryptionSettings.SyncFieldsDuringRead(ctx, fromManagedEncryptionSettings)
+				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
+			}
+		}
+	}
 }
 
 func (m UpdateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
+	attrs["managed_encryption_settings"] = attrs["managed_encryption_settings"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["options"] = attrs["options"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -29327,8 +29601,9 @@ func (m UpdateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m UpdateCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.String{}),
-		"properties": reflect.TypeOf(types.String{}),
+		"managed_encryption_settings": reflect.TypeOf(EncryptionSettings{}),
+		"options":                     reflect.TypeOf(types.String{}),
+		"properties":                  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -29342,6 +29617,7 @@ func (m UpdateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"comment":                        m.Comment,
 			"enable_predictive_optimization": m.EnablePredictiveOptimization,
 			"isolation_mode":                 m.IsolationMode,
+			"managed_encryption_settings":    m.ManagedEncryptionSettings,
 			"name":                           m.Name,
 			"new_name":                       m.NewName,
 			"options":                        m.Options,
@@ -29357,6 +29633,7 @@ func (m UpdateCatalog) Type(ctx context.Context) attr.Type {
 			"comment":                        types.StringType,
 			"enable_predictive_optimization": types.StringType,
 			"isolation_mode":                 types.StringType,
+			"managed_encryption_settings":    EncryptionSettings{}.Type(ctx),
 			"name":                           types.StringType,
 			"new_name":                       types.StringType,
 			"options": basetypes.MapType{
@@ -29368,6 +29645,31 @@ func (m UpdateCatalog) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetManagedEncryptionSettings returns the value of the ManagedEncryptionSettings field in UpdateCatalog as
+// a EncryptionSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateCatalog) GetManagedEncryptionSettings(ctx context.Context) (EncryptionSettings, bool) {
+	var e EncryptionSettings
+	if m.ManagedEncryptionSettings.IsNull() || m.ManagedEncryptionSettings.IsUnknown() {
+		return e, false
+	}
+	var v EncryptionSettings
+	d := m.ManagedEncryptionSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetManagedEncryptionSettings sets the value of the ManagedEncryptionSettings field in UpdateCatalog.
+func (m *UpdateCatalog) SetManagedEncryptionSettings(ctx context.Context, v EncryptionSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.ManagedEncryptionSettings = vs
 }
 
 // GetOptions returns the value of the Options field in UpdateCatalog as
@@ -29889,8 +30191,7 @@ func (m *UpdateCredentialRequest) SetDatabricksGcpServiceAccount(ctx context.Con
 type UpdateEntityTagAssignmentRequest struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"-"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"-"`
 
 	TagAssignment types.Object `tfsdk:"tag_assignment"`

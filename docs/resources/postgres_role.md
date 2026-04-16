@@ -25,7 +25,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### RoleAttributes
 * `bypassrls` (boolean, optional)
@@ -38,8 +38,8 @@ The following arguments are supported:
   * For the managed identities, OAUTH is used.
   * For the regular postgres roles, authentication based on postgres passwords is used.
   
-  NOTE: this is ignored for the Databricks identity type GROUP,
-  and NO_LOGIN is implicitly assumed instead for the GROUP identity type. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
+  is the default auth method (group can login as well). Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string, optional) - The type of role.
   When specifying a managed-identity, the chosen role_id must be a valid:
   

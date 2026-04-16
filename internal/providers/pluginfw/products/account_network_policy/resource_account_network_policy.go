@@ -165,7 +165,9 @@ func (to *AccountNetworkPolicy) SyncFieldsDuringRead(ctx context.Context, from A
 }
 
 func (m AccountNetworkPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["egress"] = attrs["egress"].SetOptional()
 	attrs["ingress"] = attrs["ingress"].SetOptional()
 	attrs["ingress_dry_run"] = attrs["ingress_dry_run"].SetOptional()

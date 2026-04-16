@@ -1,16 +1,11 @@
 package acceptance
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"regexp"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,20 +29,6 @@ import (
 // These tests use databricks_tag_policy (PF-only resource using types.Object Namespace via
 // GetWorkspaceIDResource / PopulateProviderConfigInState) to validate the unified
 // provider plumbing for Plugin Framework resources.
-
-// noOidcProviderFactories creates provider factories that skip the OidcConfigCustomizer.
-// This is needed for account-level tests where auth is handled via client credentials,
-// not github-oidc. Must be removed before committing to CI.
-func noOidcProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
-	return map[string]func() (tfprotov6.ProviderServer, error){
-		"databricks": func() (tfprotov6.ProviderServer, error) {
-			ctx := context.Background()
-			sdkPluginProvider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
-			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
-			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
-		},
-	}
-}
 
 // ==========================================
 // State Check Helpers
@@ -103,12 +84,10 @@ func tagPolicyWithProviderBlock(providerAttrs, providerConfig string) string {
 // TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
 func TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t, Step{
-		Template:                 tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
-		PlanOnly:                 true,
-		ExpectError:              regexp.MustCompile(`failed to parse workspace_id`),
-		ProtoV6ProviderFactories: noOidc,
+		Template:    tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
+		PlanOnly:    true,
+		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
 
@@ -120,12 +99,10 @@ func TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID(t *testing.T) {
 // Step 1: Create without provider_config. PopulateProviderConfigInState populates state with workspace ID.
 // Step 2: Add provider_config with matching workspace_id -> Noop (same value already in state).
 func TestAccWorkspaceIDTagPolicy_WS_AddProviderConfig(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t,
 		Step{
-			Template:                 tagPolicyTemplate(""),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+			Template: tagPolicyTemplate(""),
+			Check:    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyTemplate(`
@@ -133,7 +110,6 @@ func TestAccWorkspaceIDTagPolicy_WS_AddProviderConfig(t *testing.T) {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -148,7 +124,6 @@ func TestAccWorkspaceIDTagPolicy_WS_AddProviderConfig(t *testing.T) {
 // Step 1: Create with explicit provider_config.
 // Step 2: Remove provider_config -> Noop (ProviderConfigPlanModifier preserves state value).
 func TestAccWorkspaceIDTagPolicy_WS_RemoveProviderConfig(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t,
 		Step{
 			Template: tagPolicyTemplate(`
@@ -156,12 +131,10 @@ func TestAccWorkspaceIDTagPolicy_WS_RemoveProviderConfig(t *testing.T) {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template:                 tagPolicyTemplate(""),
-			ProtoV6ProviderFactories: noOidc,
+			Template: tagPolicyTemplate(""),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -176,7 +149,6 @@ func TestAccWorkspaceIDTagPolicy_WS_RemoveProviderConfig(t *testing.T) {
 // mismatched value on a workspace-level provider.
 // Expected: error — workspace_id mismatch.
 func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t,
 		Step{
 			Template: tagPolicyTemplate(`
@@ -184,8 +156,7 @@ func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 					workspace_id = "{env.THIS_WORKSPACE_ID}"
 				}
 			`),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyTemplate(`
@@ -193,9 +164,32 @@ func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 					workspace_id = "123"
 				}
 			`),
-			ProtoV6ProviderFactories: noOidc,
-			PlanOnly:                 true,
-			ExpectError:              regexp.MustCompile(`workspace_id mismatch`),
+			PlanOnly:    true,
+			ExpectError: regexp.MustCompile(`workspace_id mismatch`),
+		},
+	)
+}
+
+// TestAccWorkspaceIDTagPolicy_WS_UpdatePreservesWorkspaceID tests that an update
+// does not lose provider_config.workspace_id from state.
+// Step 1: Create tag_policy (PopulateProviderConfigInState writes workspace_id to state).
+// Step 2: Update description → SyncFieldsDuringCreateOrUpdate copies plan's ProviderConfig
+//
+//	into new state. Verify workspace_id is still present.
+func TestAccWorkspaceIDTagPolicy_WS_UpdatePreservesWorkspaceID(t *testing.T) {
+	WorkspaceLevel(t,
+		Step{
+			Template: tagPolicyTemplate(""),
+			Check:    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+		},
+		Step{
+			Template: `
+			resource "databricks_tag_policy" "test" {
+				tag_key     = "dwsid-tp-{var.STICKY_RANDOM}"
+				description = "updated description"
+			}
+			`,
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 	)
 }
@@ -208,21 +202,18 @@ func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 // Verifies: resource created, state has correct provider_config.workspace_id.
 
 func TestMwsAccWorkspaceIDTagPolicy_AccountNewSetup(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t, Step{
 		Template: tagPolicyWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 			"",
 		),
-		ProtoV6ProviderFactories: noOidc,
-		Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+		Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 	})
 }
 
 // TestMwsAccWorkspaceIDTagPolicy_AccountNewSetupWithOverride tests that provider_config.workspace_id
 // takes precedence over the provider-level workspace_id.
 func TestMwsAccWorkspaceIDTagPolicy_AccountNewSetupWithOverride(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t, Step{
 		Template: tagPolicyWithProviderBlock(
 			`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
@@ -230,8 +221,7 @@ func TestMwsAccWorkspaceIDTagPolicy_AccountNewSetupWithOverride(t *testing.T) {
 				workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 			}`,
 		),
-		ProtoV6ProviderFactories: noOidc,
-		Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID_2"),
+		Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID_2"),
 	})
 }
 
@@ -244,15 +234,13 @@ func TestMwsAccWorkspaceIDTagPolicy_AccountNewSetupWithOverride(t *testing.T) {
 // Step 2: Same config → Noop (ProviderConfigPlanModifier preserves state value).
 
 func TestMwsAccWorkspaceIDTagPolicy_ImplicitFromProviderDefault(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			// Same config — should be a noop (no perpetual diff).
@@ -260,7 +248,6 @@ func TestMwsAccWorkspaceIDTagPolicy_ImplicitFromProviderDefault(t *testing.T) {
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -285,22 +272,19 @@ func TestMwsAccWorkspaceIDTagPolicy_ImplicitFromProviderDefault(t *testing.T) {
 // Requires: account-level OAuth credentials that also work against the workspace host.
 
 func TestMwsAccWorkspaceIDTagPolicy_MigrationSameWorkspace(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -322,22 +306,19 @@ func TestMwsAccWorkspaceIDTagPolicy_MigrationSameWorkspace(t *testing.T) {
 // Step 2: provider { workspace_id = TEST_WORKSPACE_ID_2 } → ForceNew.
 
 func TestMwsAccWorkspaceIDTagPolicy_MigrationDiffWorkspace(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`host = "{env.TEST_WORKSPACE_URL}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionDestroyBeforeCreate),
@@ -357,15 +338,13 @@ func TestMwsAccWorkspaceIDTagPolicy_MigrationDiffWorkspace(t *testing.T) {
 // Expected: Noop. State already has the same value from the default; no diff.
 
 func TestMwsAccWorkspaceIDTagPolicy_AddOverrideSame(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -374,7 +353,6 @@ func TestMwsAccWorkspaceIDTagPolicy_AddOverrideSame(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -394,15 +372,13 @@ func TestMwsAccWorkspaceIDTagPolicy_AddOverrideSame(t *testing.T) {
 // Expected: ForceNew (effective workspace changes).
 
 func TestMwsAccWorkspaceIDTagPolicy_AddOverrideDiff(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -411,7 +387,6 @@ func TestMwsAccWorkspaceIDTagPolicy_AddOverrideDiff(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionDestroyBeforeCreate),
@@ -431,7 +406,6 @@ func TestMwsAccWorkspaceIDTagPolicy_AddOverrideDiff(t *testing.T) {
 // Expected: ForceNew (effective workspace changes).
 
 func TestMwsAccWorkspaceIDTagPolicy_ChangeOverride(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -440,8 +414,7 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -450,7 +423,6 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionDestroyBeforeCreate),
@@ -471,7 +443,6 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeOverride(t *testing.T) {
 // workspace is unchanged (default fallback is the same value).
 
 func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideSame(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -480,15 +451,13 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideSame(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -511,7 +480,6 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideSame(t *testing.T) {
 // Step 2: Remove override → falls back to TEST_WORKSPACE_ID → ForceNew.
 
 func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideDiff(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -520,15 +488,13 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideDiff(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID_2}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID_2"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID_2"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionDestroyBeforeCreate),
@@ -548,22 +514,19 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideDiff(t *testing.T) {
 // Expected: ForceNew for all affected resources.
 
 func TestMwsAccWorkspaceIDTagPolicy_ChangeDefault(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionDestroyBeforeCreate),
@@ -584,7 +547,6 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeDefault(t *testing.T) {
 // the default changed but the override shields the resource from any diff.
 
 func TestMwsAccWorkspaceIDTagPolicy_ChangeDefaultWithOverride(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -593,8 +555,7 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeDefaultWithOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -603,7 +564,6 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeDefaultWithOverride(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -622,21 +582,17 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeDefaultWithOverride(t *testing.T) {
 // If it matches the host's workspace ID, no error. If it doesn't, workspace_id mismatch.
 
 func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Same(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t, Step{
-		Template:                 tagPolicyWithProviderBlock(`workspace_id = "{env.THIS_WORKSPACE_ID}"`, ""),
-		ProtoV6ProviderFactories: noOidc,
-		Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+		Template: tagPolicyWithProviderBlock(`workspace_id = "{env.THIS_WORKSPACE_ID}"`, ""),
+		Check:    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 	})
 }
 
 func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t, Step{
-		Template:                 tagPolicyWithProviderBlock(`workspace_id = "12345"`, ""),
-		ProtoV6ProviderFactories: noOidc,
-		PlanOnly:                 true,
-		ExpectError:              regexp.MustCompile(`workspace_id mismatch`),
+		Template:    tagPolicyWithProviderBlock(`workspace_id = "12345"`, ""),
+		PlanOnly:    true,
+		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
 
@@ -648,14 +604,12 @@ func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // Expected: error during CRUD — no workspace_id available for routing.
 
 func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t, Step{
 		Template: tagPolicyWithProviderBlock("", ""),
 		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
-		ProtoV6ProviderFactories: noOidc,
 	})
 }
 
@@ -670,16 +624,13 @@ func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
 // field doesn't cause unexpected diffs on existing resources.
 
 func TestAccWorkspaceIDTagPolicy_ProviderUpgrade(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	WorkspaceLevel(t,
 		Step{
-			Template:                 tagPolicyTemplate(""),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
+			Template: tagPolicyTemplate(""),
+			Check:    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "THIS_WORKSPACE_ID"),
 		},
 		Step{
-			Template:                 tagPolicyTemplate(""),
-			ProtoV6ProviderFactories: noOidc,
+			Template: tagPolicyTemplate(""),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(tagPolicyResource, plancheck.ResourceActionNoop),
@@ -703,15 +654,13 @@ func TestAccWorkspaceIDTagPolicy_ProviderUpgrade(t *testing.T) {
 // Step 2: Remove workspace_id → plan error.
 
 func TestMwsAccWorkspaceIDTagPolicy_RemoveDefault(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
 				`workspace_id = "{env.TEST_WORKSPACE_ID}"`,
 				"",
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock("", ""),
@@ -719,7 +668,6 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveDefault(t *testing.T) {
 			ExpectError: regexp.MustCompile(
 				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 		},
 	)
 }
@@ -729,7 +677,6 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveDefault(t *testing.T) {
 // Step 1: Create with explicit provider_config.workspace_id (no provider-level workspace_id).
 // Step 2: Remove provider_config → plan error (workspace_id in state but no source).
 func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideNoFallback(t *testing.T) {
-	noOidc := noOidcProviderFactories()
 	AccountLevel(t,
 		Step{
 			Template: tagPolicyWithProviderBlock(
@@ -738,8 +685,7 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideNoFallback(t *testing.T) {
 					workspace_id = "{env.TEST_WORKSPACE_ID}"
 				}`,
 			),
-			ProtoV6ProviderFactories: noOidc,
-			Check:                    checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
+			Check: checkTagPolicyProviderConfigWSIDFromEnv(tagPolicyResource, "TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: tagPolicyWithProviderBlock("", ""),
@@ -747,7 +693,6 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideNoFallback(t *testing.T) {
 			ExpectError: regexp.MustCompile(
 				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
 			),
-			ProtoV6ProviderFactories: noOidc,
 		},
 	)
 }

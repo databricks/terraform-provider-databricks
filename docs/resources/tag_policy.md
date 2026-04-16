@@ -2,7 +2,7 @@
 subcategory: "Tags"
 ---
 # databricks_tag_policy Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 Define tag policies to manage governed tags in your account.
 

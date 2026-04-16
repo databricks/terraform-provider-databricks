@@ -111,6 +111,54 @@ resource "databricks_postgres_endpoint" "always_on" {
 }
 ```
 
+### High Availability Endpoint
+
+Configure a single endpoint with multiple compute instances for high availability.
+One compute instance acts as the read-write primary, while the remaining secondary compute instances stand ready for automatic failover.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_primary" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    group = {
+      min = 2
+      max = 2
+    }
+  }
+}
+```
+
+### High Availability Endpoint with Readable Secondaries
+
+Enable readable secondaries to offload read traffic to replica computes via a
+dedicated read-only host, in addition to hot-standby failover. Only supported
+on read-write endpoints with more than one compute. The secondaries are optionally 
+exposed as read-only host via `enable_readable_secondaries`.
+
+High availability requires scale-to-zero to be disabled.
+Set `no_suspension = true` in `default_endpoint_settings` as shown in the example below.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_readable" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
+    default_endpoint_settings = {
+      // turn off the "Scale to zero"
+      no_suspension = true
+    }
+  }
+}
+```
+
 ### Complete Example
 
 ```hcl
@@ -145,6 +193,11 @@ resource "databricks_postgres_endpoint" "primary" {
     autoscaling_limit_min_cu = 1.0
     autoscaling_limit_max_cu = 9.0
     no_suspension = true  # Never suspend
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
   }
 }
 

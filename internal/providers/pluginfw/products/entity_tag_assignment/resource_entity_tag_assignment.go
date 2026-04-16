@@ -111,8 +111,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type EntityTagAssignment struct {
 	// The fully qualified name of the entity to which the tag is assigned
 	EntityName types.String `tfsdk:"entity_name"`
-	// The type of the entity to which the tag is assigned. Allowed values are:
-	// catalogs, schemas, tables, columns, volumes.
+	// The type of the entity to which the tag is assigned.
 	EntityType types.String `tfsdk:"entity_type"`
 	// The source type of the tag assignment, e.g., user-assigned or
 	// system-assigned

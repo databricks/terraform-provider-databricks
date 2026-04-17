@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -88,6 +89,10 @@ func ResourceVectorSearchIndex() common.Resource {
 			}
 			err = waitForSearchIndexCreation(w, ctx, req.Name, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
+				nestedErr := w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, req.Name)
+				if nestedErr != nil {
+					log.Printf("[ERROR] Error cleaning up search index: %s", nestedErr.Error())
+				}
 				return err
 			}
 			d.SetId(req.Name)

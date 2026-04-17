@@ -531,8 +531,9 @@ func GetApiLevel(d *schema.ResourceData) string {
 	return ""
 }
 
-// GetApiLevelFromDiff returns the value of the `api` field from a resource diff,
-// or empty string if not set. This mirrors GetApiLevel but works with ResourceDiff.
+// GetApiLevelFromDiff returns the planned (new) value of the `api` field from
+// a resource diff, or empty string if not set. This mirrors GetApiLevel but
+// works with ResourceDiff (used in CustomizeDiff hooks).
 func GetApiLevelFromDiff(d *schema.ResourceDiff) string {
 	if v, ok := d.GetOk("api"); ok {
 		level := v.(string)

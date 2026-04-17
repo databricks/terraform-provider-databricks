@@ -102,7 +102,8 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
 func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	// Dual resources operating at account level have no workspace to track.
+	// Skip dual resources (identified by having an "api" field) when operating
+	// at account level — they have no workspace to track.
 	if d.Get("api") != nil && IsAccountLevelFromDiff(d, c) {
 		return nil
 	}
@@ -127,9 +128,13 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	}
 	// Lazy resolution from workspace host: if newEffective is still empty and
 	// there's an old value in state to compare against, resolve the workspace ID
-	// via the cached workspace ID or SCIM /Me API call. Errors are swallowed so
-	// that on account hosts (where /Me doesn't work) the flow falls through to
-	// the "missing workspace_id" error below, which gives a more actionable message.
+	// via the cached workspace ID or SCIM /Me API call.
+	//
+	// Errors are intentionally swallowed here. On account-level hosts,
+	// CurrentWorkspaceID() fails because /Me doesn't work without a workspace
+	// context. If we propagated the error, account-level providers without
+	// workspace_id would get an opaque API error instead of the clear
+	// "workspace_id required" message below.
 	if newEffective == "" && oldEffective != "" {
 		if resolvedID, err := c.CurrentWorkspaceID(ctx); err == nil && resolvedID != 0 {
 			newEffective = strconv.FormatInt(resolvedID, 10)
@@ -249,7 +254,8 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 		return c, nil
 	}
 
-	// Dual resource (api field in schema) operating at account level: return current client.
+	// Skip dual resources (identified by having an "api" field) when operating
+	// at account level — they have no workspace to track.
 	if d.Get("api") != nil && IsAccountLevel(d, c) {
 		return c, nil
 	}
@@ -277,9 +283,15 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		return nil, err
 	}
 
-	// newDatabricksClient wraps a cached client.DatabricksClient and propagates
-	// any already-resolved workspace client for this workspace ID so that
-	// WorkspaceClient() returns it without recreating.
+	// newDatabricksClient wraps a low-level client.DatabricksClient (Go SDK)
+	// into a common.DatabricksClient (provider-level wrapper). A new wrapper is
+	// needed per workspace because:
+	// 1. HTTP-path resources (non-Go-SDK) use common.DatabricksClient's
+	//    commandFactory, which is not part of the Go SDK client.
+	// 2. Each workspace has its own host/auth, so the underlying SDK client
+	//    differs per workspace ID.
+	// 3. We propagate any already-resolved workspace client from the parent's
+	//    cache so that WorkspaceClient() returns it without recreating.
 	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
 		result := &DatabricksClient{
 			DatabricksClient: dc,

@@ -44,7 +44,8 @@ func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 // host) on the first time — when no workspace ID exists in state yet (after Create).
 // On subsequent reads, it preserves whatever is already in state.
 func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	// Dual resources operating at account level have no workspace to track.
+	// Skip dual resources (identified by having an "api" field) when operating
+	// at account level — they have no workspace to track.
 	if d.Get("api") != nil && IsAccountLevel(d, c) {
 		return nil
 	}

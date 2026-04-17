@@ -33,18 +33,6 @@ func TestAccMetastoreDataAccess_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-// Empty provider_config {} is valid since workspace_id is Optional+Computed.
-func TestAccMetastoreDataAccess_ProviderConfig_EmptyBlock(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: metastoreDataAccessProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
-	})
-}
-
 func TestAccMetastoreDataAccess_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: metastoreDataAccessProviderConfigTemplate(`

@@ -112,7 +112,7 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() != config.WorkspaceHost {
+	if c.HostTypeForTerraform() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
@@ -532,7 +532,7 @@ func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
 	case ApiLevelWorkspace:
 		return false
 	default:
-		return c.Config.HostType() == config.AccountHost
+		return c.HostTypeForTerraform() == config.AccountHost
 	}
 }
 
@@ -567,7 +567,7 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 			// Explicit api field takes precedence over host-based inference
 			isAccount = apiLevel == ApiLevelAccount
 		} else {
-			isAccount = c.Config.HostType() == config.AccountHost
+			isAccount = c.HostTypeForTerraform() == config.AccountHost
 		}
 		if isAccount {
 			// until `/preview` is there for workspace scim,

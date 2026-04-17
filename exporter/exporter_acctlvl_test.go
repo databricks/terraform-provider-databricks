@@ -39,10 +39,9 @@ const testAccountID = "00000000-0000-0000-0000-000000000000"
 // HTTPFixturesApplyAccount is a helper that sets up an account-level client for testing
 func HTTPFixturesApplyAccount(t *testing.T, fixtures []qa.HTTPFixture, testFunc func(ctx context.Context, client *common.DatabricksClient)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
-		// Configure the client as an account-level client
-		// Setting AccountID is enough since the client is in testing mode (isTesting=true)
+		// Configure the client as an account-level client.
+		// Host must be an accounts URL so HostTypeForTerraform() returns AccountHost.
 		client.Config.AccountID = testAccountID
-		// Set Host to accounts.cloud.databricks.com to enable AWS detection via IsAws()
 		client.Config.Host = "https://accounts.cloud.databricks.com"
 		client.Config.WithTesting()
 		testFunc(ctx, client)

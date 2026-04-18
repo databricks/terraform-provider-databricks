@@ -48,7 +48,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-		err2 := Delete(w, ctx, id, timeout)
+		err2 := Delete(w, ctx, id, timeout, false)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
 			return fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
@@ -78,9 +78,11 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	return waitForState(w, ctx, d.Id(), timeout, pipelines.PipelineStateRunning)
 }
 
-func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration) error {
+func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration, preserveTablesOnDelete bool) error {
 	err := w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
-		PipelineId: id,
+		PipelineId:      id,
+		Cascade:         !preserveTablesOnDelete,
+		ForceSendFields: []string{"Cascade"},
 	})
 	if err != nil {
 		return err
@@ -174,6 +176,8 @@ type Pipeline struct {
 	State                pipelines.PipelineState             `json:"state,omitempty"`
 	// Provides the URL to the pipeline in the Databricks UI.
 	URL string `json:"url,omitempty"`
+	// If we should preserve tables on deletion
+	PreserveTablesOnDelete bool `json:"preserve_tables_on_delete,omitempty"`
 }
 
 func (Pipeline) Aliases() map[string]map[string]string {
@@ -318,7 +322,8 @@ func ResourcePipeline() common.Resource {
 				RunAsUserName:   readPipeline.RunAsUserName,
 				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
-				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
+				URL:                    c.FormatURL("#joblist/pipelines/", d.Id()),
+				PreserveTablesOnDelete: d.Get("preserve_tables_on_delete").(bool),
 			}
 			return common.StructToData(p, pipelineSchema, d)
 		},
@@ -335,8 +340,7 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
-
+			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete), d.Get("preserve_tables_on_delete").(bool))
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

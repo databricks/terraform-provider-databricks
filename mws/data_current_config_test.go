@@ -21,12 +21,12 @@ func TestDataSourceCurrentConfig(t *testing.T) {
 
 func TestDataSourceCurrentConfigAccAzure(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    []qa.HTTPFixture{},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceCurrentConfiguration(),
 		ID:          ".",
 		AccountID:   "123456",
+		Host:        "https://accounts.cloud.databricks.com",
 		Azure:       true,
 	}.ApplyAndExpectData(t, map[string]any{
 		"account_id": "123456",
@@ -89,12 +89,12 @@ func TestDataSourceCurrentConfigCloudEmptyValue(t *testing.T) {
 
 func TestDataSourceCurrentConfigCloudOverrideAccountLevel(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    []qa.HTTPFixture{},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceCurrentConfiguration(),
 		ID:          ".",
 		AccountID:   "acc-123",
+		Host:        "https://accounts.cloud.databricks.com",
 		HCL:         `cloud = "aws"`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"is_account": true,

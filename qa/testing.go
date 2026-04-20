@@ -121,6 +121,7 @@ type ResourceFixture struct {
 	AzureSPN    bool
 	Gcp         bool
 	AccountID   string
+	Host        string
 	Token       string
 	// new resource
 	New bool
@@ -237,9 +238,13 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	if f.MockAccountClientFunc != nil {
 		f.MockAccountClientFunc(ma)
 	}
+	cfg := &config.Config{}
+	if f.Host != "" {
+		cfg.Host = f.Host
+	}
 	c := &common.DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
+			Config: cfg,
 		},
 	}
 	c.SetWorkspaceClient(mw.WorkspaceClient)
@@ -670,7 +675,9 @@ func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountCl
 	mockAccountClient(ma)
 	client := &common.DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
+			Config: &config.Config{
+				Host: ma.AccountClient.Config.Host,
+			},
 		},
 	}
 	client.SetAccountClient(ma.AccountClient)

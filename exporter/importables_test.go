@@ -88,7 +88,6 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 // importContextForAccountTestWithClient creates an import context configured for account-level testing
 func importContextForAccountTestWithClient(ctx context.Context, client *common.DatabricksClient, services string) *importContext {
 	client.Config.AccountID = testAccountID
-	client.Config.WithTesting()
 	ic := importContextForTestWithClient(ctx, client)
 	ic.enableServices(services)
 	return ic

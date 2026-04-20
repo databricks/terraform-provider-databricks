@@ -676,7 +676,7 @@ func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountCl
 	client := &common.DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host: "https://accounts.cloud.databricks.com",
+				Host: ma.AccountClient.Config.Host,
 			},
 		},
 	}

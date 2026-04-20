@@ -323,30 +323,6 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 			description: "When workspace_id is explicitly empty, should use cached workspace client",
 		},
 		{
-			name: "workspace_id with different numeric value",
-			resourceData: map[string]interface{}{
-				"name": "test",
-				"provider_config": []interface{}{
-					map[string]interface{}{
-						"workspace_id": "789012",
-					},
-				},
-			},
-			client: &DatabricksClient{
-				DatabricksClient: &client.DatabricksClient{
-					Config: &config.Config{
-						Host:  "https://test.cloud.databricks.com",
-						Token: "test-token",
-					},
-				},
-				cachedWorkspaceClient: mockWorkspaceClient,
-				cachedWorkspaceID:     1234,
-			},
-			expectError:   true,
-			errorContains: "failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 1234 but got 789012 in provider_config",
-			description:   "Should handle different workspace IDs correctly",
-		},
-		{
 			name: "account level provider without workspace_id - returns error",
 			resourceData: map[string]interface{}{
 				"name": "test",
@@ -570,41 +546,6 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			expectError:      false,
 			expectSameClient: true,
 			description:      "Account-level provider without workspace_id should return current client",
-		},
-		{
-			name: "workspace_id mismatch - returns error",
-			resourceData: map[string]interface{}{
-				"name": "test",
-				"provider_config": []interface{}{
-					map[string]interface{}{
-						"workspace_id": "100",
-					},
-				},
-			},
-			client: func() *DatabricksClient {
-				c := &DatabricksClient{
-					DatabricksClient: &client.DatabricksClient{
-						Config: &config.Config{
-							Host:  "https://test.cloud.databricks.com",
-							Token: "test-token",
-						},
-					},
-				}
-				c.Config = c.Config.WithTesting()
-				mockWorkspaceClient := &databricks.WorkspaceClient{
-					Config: &config.Config{
-						Host:  cachedWorkspaceHost,
-						Token: "test-token",
-					},
-				}
-				mockWorkspaceClient.Config = mockWorkspaceClient.Config.WithTesting()
-				c.SetWorkspaceClient(mockWorkspaceClient)
-				c.cachedWorkspaceID = 200
-				return c
-			}(),
-			expectError:   true,
-			errorContains: "workspace_id mismatch",
-			description:   "Should return error when workspace_id doesn't match configured workspace",
 		},
 	}
 

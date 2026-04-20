@@ -120,11 +120,11 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 		}
 		return nil
 	}
-	_, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, newWSID)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
-	return nil
+	return c.validateWorkspaceIDFromProvider(ctx, workspaceIDInt, w)
 }
 
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
@@ -139,11 +139,13 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data
 // This is used by resources and data sources that are developed over SDKv2.
 func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*databricks.WorkspaceClient, error) {
+	// Check if provider_config is part of resource schema
 	workspaceIDFromSchema := d.Get(workspaceIDSchemaKey)
-	// workspace_id does not exist in the resource data
 	if workspaceIDFromSchema == nil {
 		return c.GetWorkspaceClientForUnifiedProvider(ctx, "")
 	}
+
+	// Get the workspace_id from provider_config
 	var workspaceID string
 	workspaceID, ok := workspaceIDFromSchema.(string)
 	if !ok {

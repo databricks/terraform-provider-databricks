@@ -5,16 +5,18 @@
 name: Package
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "The version tag to package (e.g. v1.113.0)."
-        required: true
-        type: string
+  push:
+    branches:
+      - package-workflow
 
 permissions:
   id-token: write
   contents: read
+
+env:
+  # TODO: revert to workflow_dispatch input before merging. Hardcoded for
+  # push-based testing on this branch.
+  TAG: v1.113.0
 
 jobs:
   package:
@@ -23,17 +25,10 @@ jobs:
       labels: linux-ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Validate tag format
-        run: |
-          if [[ ! "${{ inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]; then
-            echo "::error::Invalid tag format '${{ inputs.tag }}'. Expected vX.Y.Z or vX.Y.Z-suffix."
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ env.TAG }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -92,7 +87,7 @@ jobs:
       - name: Write release notes
         run: |
           mkdir -p staging/release-notes
-          git for-each-ref --format='%(body)' "refs/tags/${{ inputs.tag }}" > staging/release-notes/release-notes.md
+          git for-each-ref --format='%(body)' "refs/tags/${{ env.TAG }}" > staging/release-notes/release-notes.md
           echo "Release notes:"
           cat staging/release-notes/release-notes.md
 

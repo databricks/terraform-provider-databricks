@@ -46,7 +46,6 @@ resource "databricks_account_network_policy" "example_network_policy" {
 
 ## Arguments
 The following arguments are supported:
-* `account_id` (string, optional) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic
 * `ingress` (CustomerFacingIngressNetworkPolicy, optional) - The network policies applying for ingress traffic
 * `ingress_dry_run` (CustomerFacingIngressNetworkPolicy, optional) - The ingress policy for dry run mode. Dry run will always run even if the request
@@ -56,9 +55,6 @@ The following arguments are supported:
 
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess, optional)
-
-### CustomerFacingIngressNetworkPolicyAppsDestination
-* `all_destinations` (boolean, optional) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyAuthentication
 * `identities` (list of CustomerFacingIngressNetworkPolicyAuthenticationIdentity, optional) - Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES
@@ -70,9 +66,6 @@ The following arguments are supported:
 
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string, optional) - We only support IPv4 and IPv4 CIDR notation for now
-
-### CustomerFacingIngressNetworkPolicyLakebaseDestination
-* `all_destinations` (boolean, optional) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
@@ -94,10 +87,8 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
-* `apps` (CustomerFacingIngressNetworkPolicyAppsDestination, optional)
-* `lakebase` (CustomerFacingIngressNetworkPolicyLakebaseDestination, optional)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination, optional)
-* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination, optional)
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination, optional) - Workspace destinations
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scopes` (list of string, optional)
@@ -132,7 +123,9 @@ The following arguments are supported:
 ### NetworkPolicyEgress
 * `network_access` (EgressNetworkPolicyNetworkAccessPolicy, optional) - The access policy enforced for egress traffic to the internet
 
-
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `account_id` (string) - The associated account ID for this Network Policy object
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

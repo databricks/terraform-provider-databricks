@@ -273,6 +273,7 @@ internal/providers/pluginfw/tfschema/single_nested_attribute.go linguist-generat
 internal/providers/pluginfw/tfschema/single_nested_block.go linguist-generated=true
 internal/providers/pluginfw/tfschema/string_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/struct_to_schema.go linguist-generated=true
+internal/providers/pluginfw/tfschema/unified_provider.go linguist-generated=true
 internal/service/agentbricks_tf/legacy_model.go linguist-generated=true
 internal/service/agentbricks_tf/model.go linguist-generated=true
 internal/service/apps_tf/legacy_model.go linguist-generated=true

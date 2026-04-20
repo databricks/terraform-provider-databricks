@@ -948,6 +948,7 @@ func TestImportExternalLocationGrants(t *testing.T) {
 
 func TestListMetastores(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
 		metastores := []sdk_uc.MetastoreInfo{
 			{
 				Name:        "test",

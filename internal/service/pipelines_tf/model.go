@@ -1016,7 +1016,11 @@ func (m ConnectionParameters) Type(ctx context.Context) attr.Type {
 type ConnectorOptions struct {
 	GdriveOptions types.Object `tfsdk:"gdrive_options"`
 
+	GoogleAdsOptions types.Object `tfsdk:"google_ads_options"`
+
 	SharepointOptions types.Object `tfsdk:"sharepoint_options"`
+
+	TiktokAdsOptions types.Object `tfsdk:"tiktok_ads_options"`
 }
 
 func (to *ConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectorOptions) {
@@ -1029,12 +1033,30 @@ func (to *ConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.GoogleAdsOptions.IsNull() && !from.GoogleAdsOptions.IsUnknown() {
+		if toGoogleAdsOptions, ok := to.GetGoogleAdsOptions(ctx); ok {
+			if fromGoogleAdsOptions, ok := from.GetGoogleAdsOptions(ctx); ok {
+				// Recursively sync the fields of GoogleAdsOptions
+				toGoogleAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromGoogleAdsOptions)
+				to.SetGoogleAdsOptions(ctx, toGoogleAdsOptions)
+			}
+		}
+	}
 	if !from.SharepointOptions.IsNull() && !from.SharepointOptions.IsUnknown() {
 		if toSharepointOptions, ok := to.GetSharepointOptions(ctx); ok {
 			if fromSharepointOptions, ok := from.GetSharepointOptions(ctx); ok {
 				// Recursively sync the fields of SharepointOptions
 				toSharepointOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromSharepointOptions)
 				to.SetSharepointOptions(ctx, toSharepointOptions)
+			}
+		}
+	}
+	if !from.TiktokAdsOptions.IsNull() && !from.TiktokAdsOptions.IsUnknown() {
+		if toTiktokAdsOptions, ok := to.GetTiktokAdsOptions(ctx); ok {
+			if fromTiktokAdsOptions, ok := from.GetTiktokAdsOptions(ctx); ok {
+				// Recursively sync the fields of TiktokAdsOptions
+				toTiktokAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromTiktokAdsOptions)
+				to.SetTiktokAdsOptions(ctx, toTiktokAdsOptions)
 			}
 		}
 	}
@@ -1049,6 +1071,14 @@ func (to *ConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from Conne
 			}
 		}
 	}
+	if !from.GoogleAdsOptions.IsNull() && !from.GoogleAdsOptions.IsUnknown() {
+		if toGoogleAdsOptions, ok := to.GetGoogleAdsOptions(ctx); ok {
+			if fromGoogleAdsOptions, ok := from.GetGoogleAdsOptions(ctx); ok {
+				toGoogleAdsOptions.SyncFieldsDuringRead(ctx, fromGoogleAdsOptions)
+				to.SetGoogleAdsOptions(ctx, toGoogleAdsOptions)
+			}
+		}
+	}
 	if !from.SharepointOptions.IsNull() && !from.SharepointOptions.IsUnknown() {
 		if toSharepointOptions, ok := to.GetSharepointOptions(ctx); ok {
 			if fromSharepointOptions, ok := from.GetSharepointOptions(ctx); ok {
@@ -1057,11 +1087,21 @@ func (to *ConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from Conne
 			}
 		}
 	}
+	if !from.TiktokAdsOptions.IsNull() && !from.TiktokAdsOptions.IsUnknown() {
+		if toTiktokAdsOptions, ok := to.GetTiktokAdsOptions(ctx); ok {
+			if fromTiktokAdsOptions, ok := from.GetTiktokAdsOptions(ctx); ok {
+				toTiktokAdsOptions.SyncFieldsDuringRead(ctx, fromTiktokAdsOptions)
+				to.SetTiktokAdsOptions(ctx, toTiktokAdsOptions)
+			}
+		}
+	}
 }
 
 func (m ConnectorOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["gdrive_options"] = attrs["gdrive_options"].SetOptional()
+	attrs["google_ads_options"] = attrs["google_ads_options"].SetOptional()
 	attrs["sharepoint_options"] = attrs["sharepoint_options"].SetOptional()
+	attrs["tiktok_ads_options"] = attrs["tiktok_ads_options"].SetOptional()
 
 	return attrs
 }
@@ -1076,7 +1116,9 @@ func (m ConnectorOptions) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m ConnectorOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"gdrive_options":     reflect.TypeOf(GoogleDriveOptions{}),
+		"google_ads_options": reflect.TypeOf(GoogleAdsOptions{}),
 		"sharepoint_options": reflect.TypeOf(SharepointOptions{}),
+		"tiktok_ads_options": reflect.TypeOf(TikTokAdsOptions{}),
 	}
 }
 
@@ -1088,7 +1130,9 @@ func (m ConnectorOptions) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"gdrive_options":     m.GdriveOptions,
+			"google_ads_options": m.GoogleAdsOptions,
 			"sharepoint_options": m.SharepointOptions,
+			"tiktok_ads_options": m.TiktokAdsOptions,
 		})
 }
 
@@ -1097,7 +1141,9 @@ func (m ConnectorOptions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"gdrive_options":     GoogleDriveOptions{}.Type(ctx),
+			"google_ads_options": GoogleAdsOptions{}.Type(ctx),
 			"sharepoint_options": SharepointOptions{}.Type(ctx),
+			"tiktok_ads_options": TikTokAdsOptions{}.Type(ctx),
 		},
 	}
 }
@@ -1127,6 +1173,31 @@ func (m *ConnectorOptions) SetGdriveOptions(ctx context.Context, v GoogleDriveOp
 	m.GdriveOptions = vs
 }
 
+// GetGoogleAdsOptions returns the value of the GoogleAdsOptions field in ConnectorOptions as
+// a GoogleAdsOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions) GetGoogleAdsOptions(ctx context.Context) (GoogleAdsOptions, bool) {
+	var e GoogleAdsOptions
+	if m.GoogleAdsOptions.IsNull() || m.GoogleAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v GoogleAdsOptions
+	d := m.GoogleAdsOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGoogleAdsOptions sets the value of the GoogleAdsOptions field in ConnectorOptions.
+func (m *ConnectorOptions) SetGoogleAdsOptions(ctx context.Context, v GoogleAdsOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.GoogleAdsOptions = vs
+}
+
 // GetSharepointOptions returns the value of the SharepointOptions field in ConnectorOptions as
 // a SharepointOptions value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1150,6 +1221,31 @@ func (m *ConnectorOptions) GetSharepointOptions(ctx context.Context) (Sharepoint
 func (m *ConnectorOptions) SetSharepointOptions(ctx context.Context, v SharepointOptions) {
 	vs := v.ToObjectValue(ctx)
 	m.SharepointOptions = vs
+}
+
+// GetTiktokAdsOptions returns the value of the TiktokAdsOptions field in ConnectorOptions as
+// a TikTokAdsOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions) GetTiktokAdsOptions(ctx context.Context) (TikTokAdsOptions, bool) {
+	var e TikTokAdsOptions
+	if m.TiktokAdsOptions.IsNull() || m.TiktokAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v TikTokAdsOptions
+	d := m.TiktokAdsOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTiktokAdsOptions sets the value of the TiktokAdsOptions field in ConnectorOptions.
+func (m *ConnectorOptions) SetTiktokAdsOptions(ctx context.Context, v TikTokAdsOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.TiktokAdsOptions = vs
 }
 
 type CreatePipeline struct {
@@ -4328,11 +4424,78 @@ func (m *GetUpdateResponse) SetUpdate(ctx context.Context, v UpdateInfo) {
 	m.Update = vs
 }
 
+// Google Ads specific options for ingestion (object-level). When set, these
+// values override the corresponding fields in GoogleAdsConfig
+// (source_configurations).
+type GoogleAdsOptions struct {
+	// (Optional) Number of days to look back for report tables to capture
+	// late-arriving data. If not specified, defaults to 30 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional at this level) Manager Account ID (also called MCC Account ID)
+	// used to list and access customer accounts under this manager account.
+	// Overrides GoogleAdsConfig.manager_account_id from source_configurations
+	// when set.
+	ManagerAccountId types.String `tfsdk:"manager_account_id"`
+	// (Optional) Start date for the initial sync of report tables in YYYY-MM-DD
+	// format. This determines the earliest date from which to sync historical
+	// data. If not specified, defaults to 2 years of historical data.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *GoogleAdsOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleAdsOptions) {
+}
+
+func (to *GoogleAdsOptions) SyncFieldsDuringRead(ctx context.Context, from GoogleAdsOptions) {
+}
+
+func (m GoogleAdsOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["manager_account_id"] = attrs["manager_account_id"].SetRequired()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GoogleAdsOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GoogleAdsOptions
+// only implements ToObjectValue() and Type().
+func (m GoogleAdsOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"lookback_window_days": m.LookbackWindowDays,
+			"manager_account_id":   m.ManagerAccountId,
+			"sync_start_date":      m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GoogleAdsOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"lookback_window_days": types.Int64Type,
+			"manager_account_id":   types.StringType,
+			"sync_start_date":      types.StringType,
+		},
+	}
+}
+
 type GoogleDriveOptions struct {
 	EntityType types.String `tfsdk:"entity_type"`
 
 	FileIngestionOptions types.Object `tfsdk:"file_ingestion_options"`
-	// Required. Google Drive URL.
+	// Google Drive URL.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -11423,7 +11586,7 @@ type TableSpecificConfig struct {
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
-	// The SCD type to use to ingest the table.
+
 	ScdType types.String `tfsdk:"scd_type"`
 	// The column names specifying the logical order of events in the source
 	// data. Spark Declarative Pipelines uses this sequencing to handle change
@@ -11795,6 +11958,181 @@ func (m *TableSpecificConfig) GetWorkdayReportParameters(ctx context.Context) (I
 func (m *TableSpecificConfig) SetWorkdayReportParameters(ctx context.Context, v IngestionPipelineDefinitionWorkdayReportParameters) {
 	vs := v.ToObjectValue(ctx)
 	m.WorkdayReportParameters = vs
+}
+
+// TikTok Ads specific options for ingestion
+type TikTokAdsOptions struct {
+	// (Optional) Data level for the report. If not specified, defaults to
+	// AUCTION_CAMPAIGN.
+	DataLevel types.String `tfsdk:"data_level"`
+	// (Optional) Dimensions to include in the report. Examples: "campaign_id",
+	// "adgroup_id", "ad_id", "stat_time_day", "stat_time_hour" If not
+	// specified, defaults to campaign_id.
+	Dimensions types.List `tfsdk:"dimensions"`
+	// (Optional) Number of days to look back for report tables during
+	// incremental sync to capture late-arriving conversions and attribution
+	// data. If not specified, defaults to 7 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional) Metrics to include in the report. Examples: "spend",
+	// "impressions", "clicks", "conversion", "cpc" If not specified, defaults
+	// to basic metrics (spend, impressions, clicks, etc.)
+	Metrics types.List `tfsdk:"metrics"`
+	// (Optional) Whether to request lifetime metrics (all-time aggregated
+	// data). When true, the report returns all-time data. If not specified,
+	// defaults to false.
+	QueryLifetime types.Bool `tfsdk:"query_lifetime"`
+	// (Optional) Report type for the TikTok Ads API. If not specified, defaults
+	// to BASIC.
+	ReportType types.String `tfsdk:"report_type"`
+	// (Optional) Start date for the initial sync of report tables in YYYY-MM-DD
+	// format. This determines the earliest date from which to sync historical
+	// data. If not specified, defaults to 1 year of historical data for daily
+	// reports and 30 days for hourly reports.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *TikTokAdsOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TikTokAdsOptions) {
+	if !from.Dimensions.IsNull() && !from.Dimensions.IsUnknown() && to.Dimensions.IsNull() && len(from.Dimensions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Dimensions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Dimensions = from.Dimensions
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (to *TikTokAdsOptions) SyncFieldsDuringRead(ctx context.Context, from TikTokAdsOptions) {
+	if !from.Dimensions.IsNull() && !from.Dimensions.IsUnknown() && to.Dimensions.IsNull() && len(from.Dimensions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Dimensions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Dimensions = from.Dimensions
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (m TikTokAdsOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_level"] = attrs["data_level"].SetOptional()
+	attrs["dimensions"] = attrs["dimensions"].SetOptional()
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["query_lifetime"] = attrs["query_lifetime"].SetOptional()
+	attrs["report_type"] = attrs["report_type"].SetOptional()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TikTokAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TikTokAdsOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dimensions": reflect.TypeOf(types.String{}),
+		"metrics":    reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TikTokAdsOptions
+// only implements ToObjectValue() and Type().
+func (m TikTokAdsOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_level":           m.DataLevel,
+			"dimensions":           m.Dimensions,
+			"lookback_window_days": m.LookbackWindowDays,
+			"metrics":              m.Metrics,
+			"query_lifetime":       m.QueryLifetime,
+			"report_type":          m.ReportType,
+			"sync_start_date":      m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TikTokAdsOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_level": types.StringType,
+			"dimensions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"lookback_window_days": types.Int64Type,
+			"metrics": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"query_lifetime":  types.BoolType,
+			"report_type":     types.StringType,
+			"sync_start_date": types.StringType,
+		},
+	}
+}
+
+// GetDimensions returns the value of the Dimensions field in TikTokAdsOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TikTokAdsOptions) GetDimensions(ctx context.Context) ([]types.String, bool) {
+	if m.Dimensions.IsNull() || m.Dimensions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Dimensions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDimensions sets the value of the Dimensions field in TikTokAdsOptions.
+func (m *TikTokAdsOptions) SetDimensions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dimensions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Dimensions = types.ListValueMust(t, vs)
+}
+
+// GetMetrics returns the value of the Metrics field in TikTokAdsOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TikTokAdsOptions) GetMetrics(ctx context.Context) ([]types.String, bool) {
+	if m.Metrics.IsNull() || m.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in TikTokAdsOptions.
+func (m *TikTokAdsOptions) SetMetrics(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Metrics = types.ListValueMust(t, vs)
 }
 
 // Information about truncations applied to this event.

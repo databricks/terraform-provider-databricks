@@ -42,7 +42,9 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -104,6 +106,9 @@ type MaterializedFeatureData struct {
 	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
+	// True if this is an online materialized feature. False if it is an offline
+	// materialized feature.
+	IsOnline types.Bool `tfsdk:"is_online"`
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
@@ -148,6 +153,7 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"cron_schedule":             m.CronSchedule,
 			"feature_name":              m.FeatureName,
+			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
@@ -167,6 +173,7 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"cron_schedule":             types.StringType,
 			"feature_name":              types.StringType,
+			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
@@ -182,6 +189,7 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
+	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
@@ -252,8 +260,12 @@ func (r *MaterializedFeatureDataSource) Read(ctx context.Context, req datasource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Preserve provider_config from config since it's not part of the API response
+	// Preserve provider_config from config so state.Set has the correct type info
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

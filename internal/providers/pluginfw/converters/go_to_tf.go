@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/common/types/duration"
@@ -458,10 +459,5 @@ func getStringFromEnum(srcField reflect.Value) (s string, d diag.Diagnostics) {
 }
 
 func fieldInForceSendFields(fieldName string, forceSendFields []string) bool {
-	for _, field := range forceSendFields {
-		if field == fieldName {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(forceSendFields, fieldName)
 }

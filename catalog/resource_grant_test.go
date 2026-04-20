@@ -441,6 +441,89 @@ func TestResourceGrantDelete(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceGrantReadHonorsProviderConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Me",
+				Response: map[string]any{
+					"id": "user1",
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["SELECT"]
+		provider_config {
+			workspace_id = "123456"
+		}
+		`,
+	}.ExpectError(t, `failed to validate workspace_id: failed to get the workspace_id: strconv.ParseInt: parsing "": invalid syntax`)
+}
+
+func TestResourceGrantRead(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantReadNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ExpectError(t, "resource is not expected to be removed")
+}
+
 func TestResourceGrantReadMalformedId(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceGrant(),

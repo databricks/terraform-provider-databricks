@@ -34,9 +34,6 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess)
 
-### CustomerFacingIngressNetworkPolicyAppsDestination
-* `all_destinations` (boolean) - Must be set to true
-
 ### CustomerFacingIngressNetworkPolicyAuthentication
 * `identities` (list of CustomerFacingIngressNetworkPolicyAuthenticationIdentity) - Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES
 * `identity_type` (string) - Possible values are: `IDENTITY_TYPE_ALL_SERVICE_PRINCIPALS`, `IDENTITY_TYPE_ALL_USERS`, `IDENTITY_TYPE_SELECTED_IDENTITIES`
@@ -47,9 +44,6 @@ The following attributes are exported:
 
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string) - We only support IPv4 and IPv4 CIDR notation for now
-
-### CustomerFacingIngressNetworkPolicyLakebaseDestination
-* `all_destinations` (boolean) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
@@ -71,10 +65,8 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
-* `apps` (CustomerFacingIngressNetworkPolicyAppsDestination)
-* `lakebase` (CustomerFacingIngressNetworkPolicyLakebaseDestination)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination)
-* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination)
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination) - Workspace destinations
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scopes` (list of string)

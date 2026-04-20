@@ -87,6 +87,8 @@ type CreateEndpoint_SdkV2 struct {
 	MinQps types.Int64 `tfsdk:"min_qps"`
 	// Name of the vector search endpoint
 	Name types.String `tfsdk:"name"`
+	// The usage policy id to be applied once we've migrated to usage policies
+	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
 func (to *CreateEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateEndpoint_SdkV2) {
@@ -100,6 +102,7 @@ func (m CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
 	attrs["min_qps"] = attrs["min_qps"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
 }
@@ -126,6 +129,7 @@ func (m CreateEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"endpoint_type":    m.EndpointType,
 			"min_qps":          m.MinQps,
 			"name":             m.Name,
+			"usage_policy_id":  m.UsagePolicyId,
 		})
 }
 
@@ -137,6 +141,7 @@ func (m CreateEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"endpoint_type":    types.StringType,
 			"min_qps":          types.Int64Type,
 			"name":             types.StringType,
+			"usage_policy_id":  types.StringType,
 		},
 	}
 }
@@ -150,6 +155,9 @@ type CreateVectorIndexRequest_SdkV2 struct {
 	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
+	// The subtype of the index. Use `HYBRID` or `FULL_TEXT`. `VECTOR` is not
+	// supported.
+	IndexSubtype types.String `tfsdk:"index_subtype"`
 
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
@@ -204,6 +212,7 @@ func (m CreateVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["index_subtype"] = attrs["index_subtype"].SetOptional()
 	attrs["index_type"] = attrs["index_type"].SetRequired()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["primary_key"] = attrs["primary_key"].SetRequired()
@@ -235,6 +244,7 @@ func (m CreateVectorIndexRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 			"delta_sync_index_spec":    m.DeltaSyncIndexSpec,
 			"direct_access_index_spec": m.DirectAccessIndexSpec,
 			"endpoint_name":            m.EndpointName,
+			"index_subtype":            m.IndexSubtype,
 			"index_type":               m.IndexType,
 			"name":                     m.Name,
 			"primary_key":              m.PrimaryKey,
@@ -252,6 +262,7 @@ func (m CreateVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: DirectAccessVectorIndexSpec_SdkV2{}.Type(ctx),
 			},
 			"endpoint_name": types.StringType,
+			"index_subtype": types.StringType,
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,
@@ -1451,6 +1462,10 @@ func (m EmbeddingVectorColumn_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointInfo_SdkV2 struct {
+	// Discussed here: https://databricks.atlassian.net/wiki/x/OQDlCQE
+	// Additional documentation: https://aip.dev.databricks.com/129 the user
+	// selected budget policy id for the endpoint (client-side)
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Timestamp of endpoint creation
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Creator of the endpoint
@@ -1530,6 +1545,7 @@ func (to *EndpointInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from End
 }
 
 func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
@@ -1570,6 +1586,7 @@ func (m EndpointInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"budget_policy_id":           m.BudgetPolicyId,
 			"creation_timestamp":         m.CreationTimestamp,
 			"creator":                    m.Creator,
 			"custom_tags":                m.CustomTags,
@@ -1589,6 +1606,7 @@ func (m EndpointInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"budget_policy_id":   types.StringType,
 			"creation_timestamp": types.Int64Type,
 			"creator":            types.StringType,
 			"custom_tags": basetypes.ListType{
@@ -2743,6 +2761,8 @@ type MiniVectorIndex_SdkV2 struct {
 	Creator types.String `tfsdk:"creator"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
+	// The subtype of the index.
+	IndexSubtype types.String `tfsdk:"index_subtype"`
 
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
@@ -2760,6 +2780,7 @@ func (to *MiniVectorIndex_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 func (m MiniVectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["index_subtype"] = attrs["index_subtype"].SetOptional()
 	attrs["index_type"] = attrs["index_type"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["primary_key"] = attrs["primary_key"].SetOptional()
@@ -2787,6 +2808,7 @@ func (m MiniVectorIndex_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		map[string]attr.Value{
 			"creator":       m.Creator,
 			"endpoint_name": m.EndpointName,
+			"index_subtype": m.IndexSubtype,
 			"index_type":    m.IndexType,
 			"name":          m.Name,
 			"primary_key":   m.PrimaryKey,
@@ -2799,6 +2821,7 @@ func (m MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"creator":       types.StringType,
 			"endpoint_name": types.StringType,
+			"index_subtype": types.StringType,
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,
@@ -2860,6 +2883,7 @@ func (m PatchEndpointBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type PatchEndpointBudgetPolicyResponse_SdkV2 struct {
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The budget policy applied to the vector search endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 }
@@ -2871,6 +2895,7 @@ func (to *PatchEndpointBudgetPolicyResponse_SdkV2) SyncFieldsDuringRead(ctx cont
 }
 
 func (m PatchEndpointBudgetPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 
 	return attrs
@@ -2894,6 +2919,7 @@ func (m PatchEndpointBudgetPolicyResponse_SdkV2) ToObjectValue(ctx context.Conte
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"budget_policy_id":           m.BudgetPolicyId,
 			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
 		})
 }
@@ -2902,6 +2928,7 @@ func (m PatchEndpointBudgetPolicyResponse_SdkV2) ToObjectValue(ctx context.Conte
 func (m PatchEndpointBudgetPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"budget_policy_id":           types.StringType,
 			"effective_budget_policy_id": types.StringType,
 		},
 	}
@@ -4972,6 +4999,8 @@ type VectorIndex_SdkV2 struct {
 	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name"`
+	// The subtype of the index.
+	IndexSubtype types.String `tfsdk:"index_subtype"`
 
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
@@ -5046,6 +5075,7 @@ func (m VectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["index_subtype"] = attrs["index_subtype"].SetOptional()
 	attrs["index_type"] = attrs["index_type"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["primary_key"] = attrs["primary_key"].SetOptional()
@@ -5081,6 +5111,7 @@ func (m VectorIndex_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"delta_sync_index_spec":    m.DeltaSyncIndexSpec,
 			"direct_access_index_spec": m.DirectAccessIndexSpec,
 			"endpoint_name":            m.EndpointName,
+			"index_subtype":            m.IndexSubtype,
 			"index_type":               m.IndexType,
 			"name":                     m.Name,
 			"primary_key":              m.PrimaryKey,
@@ -5100,6 +5131,7 @@ func (m VectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: DirectAccessVectorIndexSpec_SdkV2{}.Type(ctx),
 			},
 			"endpoint_name": types.StringType,
+			"index_subtype": types.StringType,
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,

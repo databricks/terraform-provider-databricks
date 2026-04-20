@@ -348,6 +348,19 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.cachedAccountClient = a
 }
 
+// GetProviderWorkspaceID returns the provider-level workspace_id from Config.
+// Satisfies the tfschema.UnifiedProviderClient interface.
+func (c *DatabricksClient) GetProviderWorkspaceID() string {
+	return c.Config.WorkspaceID
+}
+
+// ValidateWorkspaceAccess validates that the workspace client for the given
+// workspace_id is reachable. Satisfies the tfschema.UnifiedProviderClient interface.
+func (c *DatabricksClient) ValidateWorkspaceAccess(ctx context.Context, workspaceID string) diag.Diagnostics {
+	_, diags := c.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	return diags
+}
+
 func (c *DatabricksClient) setAccountId(accountId string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()

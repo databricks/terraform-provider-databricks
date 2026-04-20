@@ -15385,6 +15385,9 @@ func (m *StatementResponse) SetStatus(ctx context.Context, v StatementStatus) {
 // information.
 type StatementStatus struct {
 	Error types.Object `tfsdk:"error"`
+	// SQLSTATE error code returned when the statement execution fails. Only
+	// populated when the statement status is `FAILED`.
+	SqlState types.String `tfsdk:"sql_state"`
 	// Statement execution state: - `PENDING`: waiting for warehouse -
 	// `RUNNING`: running - `SUCCEEDED`: execution was successful, result data
 	// available for fetch - `FAILED`: execution failed; reason for failure
@@ -15420,6 +15423,7 @@ func (to *StatementStatus) SyncFieldsDuringRead(ctx context.Context, from Statem
 
 func (m StatementStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["error"] = attrs["error"].SetOptional()
+	attrs["sql_state"] = attrs["sql_state"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 
 	return attrs
@@ -15445,8 +15449,9 @@ func (m StatementStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"error": m.Error,
-			"state": m.State,
+			"error":     m.Error,
+			"sql_state": m.SqlState,
+			"state":     m.State,
 		})
 }
 
@@ -15454,8 +15459,9 @@ func (m StatementStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m StatementStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"error": ServiceError{}.Type(ctx),
-			"state": types.StringType,
+			"error":     ServiceError{}.Type(ctx),
+			"sql_state": types.StringType,
+			"state":     types.StringType,
 		},
 	}
 }

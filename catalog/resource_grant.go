@@ -186,11 +186,7 @@ func ResourceGrant() common.Resource {
 				},
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			err = replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 			if err != nil {
 				return err
@@ -203,11 +199,11 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			ws, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, ws).GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
+			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, w).GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
 			if err != nil {
 				return err
 			}
@@ -243,11 +239,7 @@ func ResourceGrant() common.Resource {
 					},
 				},
 			}
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -263,11 +255,7 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
 		},
 	}

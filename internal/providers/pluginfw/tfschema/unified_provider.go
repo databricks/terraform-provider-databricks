@@ -378,7 +378,7 @@ func ConfigureProviderConfig(attrs map[string]schema.Attribute) {
 // AddProviderConfigType adds the provider_config complex field type to the map.
 // Use this in GetComplexFieldTypes for resources that embed Namespace.
 func AddProviderConfigType(types map[string]reflect.Type) map[string]reflect.Type {
-	types["provider_config"] = reflect.TypeOf(ProviderConfig{})
+	types["provider_config"] = reflect.TypeFor[ProviderConfig]()
 	return types
 }
 

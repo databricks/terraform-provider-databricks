@@ -16,3 +16,4 @@
 ### Internal Changes
 
 * Update Go SDK to v0.128.0.
+* Bump minimum Go toolchain from 1.24.0 to 1.25.7 to pick up the `crypto/tls` TLS 1.3 session-resumption fix.

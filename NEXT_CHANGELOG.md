@@ -8,6 +8,7 @@
 
 ### Bug Fixes
 
+* Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
 * Fixed `databricks_share` creation failing with "no fields to update" when no `object` blocks are specified ([#5443](https://github.com/databricks/terraform-provider-databricks/pull/5443)).
 
 ### Documentation
@@ -15,3 +16,6 @@
 ### Exporter
 
 ### Internal Changes
+
+* Update Go SDK to v0.128.0.
+* Bump minimum Go toolchain from 1.24.0 to 1.25.7 to pick up the `crypto/tls` TLS 1.3 session-resumption fix.

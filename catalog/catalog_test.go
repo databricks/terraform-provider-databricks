@@ -272,17 +272,6 @@ func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
@@ -324,7 +313,7 @@ func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -354,7 +343,7 @@ func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
 		PlanOnly:           true,
@@ -382,7 +371,7 @@ func TestAccCatalog_ProviderConfig_Remove(t *testing.T) {
 		Template: catalogProviderConfigTemplate(catalogName, ""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

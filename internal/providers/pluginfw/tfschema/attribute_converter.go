@@ -11,11 +11,17 @@ type Blockable interface {
 
 // convertAttributesToBlocks converts all attributes implementing the Blockable interface to blocks, returning
 // a new NestedBlockObject with the converted attributes and the original blocks.
+// SingleNestedAttributeBuilder (types.Object) is excluded from conversion because it is used by
+// fields like provider_config that are new to the Plugin Framework and have no SDKv2 block equivalent.
 func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks map[string]BlockBuilder) NestedBlockObject {
 	newAttributes := make(map[string]AttributeBuilder)
 	newBlocks := make(map[string]BlockBuilder)
 	for name, attr := range attributes {
-		if lnab, ok := attr.(Blockable); ok {
+		if _, isSingle := attr.(SingleNestedAttributeBuilder); isSingle {
+			// SingleNestedAttributeBuilder corresponds to types.Object, which has no
+			// SDKv2 block equivalent. Keep it as an attribute.
+			newAttributes[name] = attr
+		} else if lnab, ok := attr.(Blockable); ok {
 			newBlocks[name] = lnab.ToBlock()
 		} else {
 			newAttributes[name] = attr

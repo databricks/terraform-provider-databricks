@@ -169,7 +169,7 @@ func TestAccLibrary_ProviderConfig_Mismatched(t *testing.T) {
 				pypi {
 					package = "networkx"
 				}
-				provider_config {
+				provider_config = {
 					workspace_id = "1234"
 				}
 			}

@@ -14,9 +14,11 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/common/environment"
@@ -125,6 +127,10 @@ type ResourceFixture struct {
 	Token       string
 	// new resource
 	New bool
+
+	// ProviderWorkspaceID sets the workspace_id on the client config for testing
+	// unified provider behavior with provider-level workspace ID fallback.
+	ProviderWorkspaceID string
 }
 
 // wrapper type for calling resource methords
@@ -224,6 +230,26 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}
 	if f.Fixtures != nil {
 		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
+		if err == nil && f.ProviderWorkspaceID != "" {
+			client.Config.WorkspaceID = f.ProviderWorkspaceID
+			// Override default cached workspace ID (12345) to match ProviderWorkspaceID
+			// so that validateWorkspaceIDFromProvider sees a consistent value.
+			if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+				client.SetCachedWorkspaceID(wsID)
+				// Pre-populate workspace client cache so that NamespaceValidateWorkspaceID
+				// and getDatabricksClientForUnifiedProvider find it without making API calls.
+				// Create a workspace-scoped config (no AccountID) so NewWorkspaceClient
+				// accepts it without treating the host as an account host.
+				wsCfg, cfgErr := client.Config.NewWithWorkspaceHost(s.URL)
+				if cfgErr == nil {
+					wsCfg.WorkspaceID = f.ProviderWorkspaceID
+					wsClient, wsErr := databricks.NewWorkspaceClient((*databricks.Config)(wsCfg))
+					if wsErr == nil {
+						client.SetWorkspaceClientForWorkspace(wsID, wsClient)
+					}
+				}
+			}
+		}
 		ss := server{
 			Close: s.Close,
 			URL:   s.URL,
@@ -250,6 +276,26 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
 	c.Config.Credentials = testCredentialsProvider{token: token}
+	if f.ProviderWorkspaceID != "" {
+		c.Config.WorkspaceID = f.ProviderWorkspaceID
+		// Pre-populate the workspace client cache for this workspace ID so that
+		// NamespaceValidateWorkspaceID and getDatabricksClientForUnifiedProvider
+		// find the mock workspace client without making API calls.
+		if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+			mw.WorkspaceClient.Config = (*config.Config)(c.DatabricksClient.Config)
+			c.SetWorkspaceClientForWorkspace(wsID, mw.WorkspaceClient)
+		}
+	}
+	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
+	// API calls in unit tests. When ProviderWorkspaceID is set, use that
+	// value so validateWorkspaceIDFromProvider sees a consistent ID.
+	cachedWsID := int64(12345)
+	if f.ProviderWorkspaceID != "" {
+		if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
+			cachedWsID = wsID
+		}
+	}
+	c.SetCachedWorkspaceID(cachedWsID)
 	return c, server{
 		Close: func() {},
 		URL:   "does-not-matter",
@@ -645,9 +691,13 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 	if err != nil {
 		return nil, nil, err
 	}
-	return &common.DatabricksClient{
+	dc := &common.DatabricksClient{
 		DatabricksClient: c,
-	}, server, nil
+	}
+	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
+	// API calls in unit tests.
+	dc.SetCachedWorkspaceID(12345)
+	return dc, server, nil
 }
 
 // HTTPFixturesApply is a helper method
@@ -667,6 +717,7 @@ func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorksp
 		},
 	}
 	client.SetWorkspaceClient(mw.WorkspaceClient)
+	client.SetCachedWorkspaceID(12345)
 	callback(context.Background(), client)
 }
 

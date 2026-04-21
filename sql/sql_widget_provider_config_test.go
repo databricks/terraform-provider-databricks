@@ -29,17 +29,6 @@ func TestAccSqlWidget_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccSqlWidget_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: sqlWidgetProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccSqlWidget_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlWidgetProviderConfigTemplate(`

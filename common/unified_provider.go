@@ -129,26 +129,16 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	// Lazy resolution from workspace host: if newEffective is still empty and
 	// there's an old value in state to compare against, resolve the workspace ID
 	// via the cached workspace ID or SCIM /Me API call.
-	//
-	// Errors are intentionally swallowed here. On account-level hosts,
-	// CurrentWorkspaceID() fails because /Me doesn't work without a workspace
-	// context. If we propagated the error, account-level providers without
-	// workspace_id would get an opaque API error instead of the clear
-	// "workspace_id required" message below.
 	if newEffective == "" && oldEffective != "" {
-		if resolvedID, err := c.CurrentWorkspaceID(ctx); err == nil && resolvedID != 0 {
-			newEffective = strconv.FormatInt(resolvedID, 10)
+		resolvedID, err := c.CurrentWorkspaceID(ctx)
+		if err != nil || resolvedID == 0 {
+			// Resolution failed (e.g., account-level host where /Me doesn't work)
+			// or returned zero. Either way, workspace_id is required but missing.
+			return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
+				"but managing workspace-level resources requires a workspace_id and "+
+				"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)
 		}
-	}
-
-	// If a resource has a workspace ID in state but the new effective
-	// workspace ID is empty (user removed workspace_id and there's no
-	// explicit provider_config), error out. This prevents silently continuing
-	// to operate against a workspace the user thought they disconnected from.
-	if oldEffective != "" && newEffective == "" {
-		return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
-			"but managing workspace-level resources requires a workspace_id and "+
-			"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)
+		newEffective = strconv.FormatInt(resolvedID, 10)
 	}
 
 	if oldEffective != "" && newEffective != "" && oldEffective != newEffective {

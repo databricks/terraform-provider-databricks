@@ -8,7 +8,7 @@
 
 ### Bug Fixes
 
-* Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
+* Use `SetComputed()` instead of `SetReadOnly()` for `effective_file_event_queue` in `databricks_external_location` to prevent Terraform drift when the field is null.
 ### Documentation
 
 ### Exporter

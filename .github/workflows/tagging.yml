@@ -32,8 +32,8 @@ jobs:
       github.repository == 'databricks/databricks-sdk-java'
     environment: "release-is"
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
     steps:
       - name: Generate GitHub App Token
         id: generate-token
@@ -62,3 +62,11 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: uv run --locked tagging.py
+
+      - name: Upload created tags artifact
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: created-tags
+          path: created_tags.json
+          if-no-files-found: ignore

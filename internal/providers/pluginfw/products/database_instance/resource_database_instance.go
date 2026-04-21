@@ -187,7 +187,9 @@ type DatabaseInstance struct {
 	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
 	// The version of Postgres running on the instance.
 	PgVersion types.String `tfsdk:"pg_version"`
-	// Purge the resource on delete
+	// Deprecated. Omitting the field or setting it to true will result in the
+	// field being hard deleted. Setting a value of false will throw a bad
+	// request.
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// The DNS endpoint to connect to the instance for read only access. This is
 	// only available if enable_readable_secondaries is true.

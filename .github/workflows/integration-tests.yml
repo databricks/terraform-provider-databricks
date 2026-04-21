@@ -35,8 +35,8 @@ jobs:
     name: Trigger Tests
 
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-release-runner-group-emu-access
+      labels: linux-ubuntu-latest-emu-access
 
     needs: check-token
     if: github.event_name == 'pull_request'  && needs.check-token.outputs.has_token == 'true'

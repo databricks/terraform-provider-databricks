@@ -113,7 +113,7 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if err != nil {
 		return err
 	}
-	if c.Config.HostType() != config.WorkspaceHost {
+	if c.HostTypeForTerraform() != config.WorkspaceHost {
 		_, err := c.WorkspaceClientForWorkspace(ctx, workspaceIDInt)
 		if err != nil {
 			return fmt.Errorf("failed to get workspace client with workspace_id %d: %w", workspaceIDInt, err)

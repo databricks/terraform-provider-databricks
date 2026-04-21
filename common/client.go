@@ -348,6 +348,15 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.cachedAccountClient = a
 }
 
+// SetCachedWorkspaceID sets the cached workspace ID directly.
+// This is used by test infrastructure to pre-populate the cache and prevent
+// lazy CurrentWorkspaceID API calls during unit tests.
+func (c *DatabricksClient) SetCachedWorkspaceID(id int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceID = id
+}
+
 // GetProviderWorkspaceID returns the provider-level workspace_id from Config.
 // Satisfies the tfschema.UnifiedProviderClient interface.
 func (c *DatabricksClient) GetProviderWorkspaceID() string {
@@ -359,15 +368,6 @@ func (c *DatabricksClient) GetProviderWorkspaceID() string {
 func (c *DatabricksClient) ValidateWorkspaceAccess(ctx context.Context, workspaceID string) diag.Diagnostics {
 	_, diags := c.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
 	return diags
-}
-
-// SetCachedWorkspaceID sets the cached workspace ID directly.
-// This is used by test infrastructure to pre-populate the cache and prevent
-// lazy CurrentWorkspaceID API calls during unit tests.
-func (c *DatabricksClient) SetCachedWorkspaceID(id int64) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.cachedWorkspaceID = id
 }
 
 func (c *DatabricksClient) setAccountId(accountId string) error {

@@ -13,7 +13,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,16 +33,14 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
-	tfschema.Namespace_SdkV2
+	tfschema.Namespace
 	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
 
 func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	types := s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
-	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
-	return types
+	return tfschema.AddProviderConfigType(s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx))
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -163,11 +160,9 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 
 		c.SetComputed("id")
 
-		// Ensure provider_config list has at most 1 element
-		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
-
 		return c
 	})
+	tfschema.ConfigureProviderConfig(attrs)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Share",
 		Attributes:  attrs,
@@ -182,24 +177,20 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 }
 
 func (r *ShareResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
+	// Guard against nil client (e.g. during acceptance tests before Configure).
 	if r.Client == nil {
 		return
 	}
-	var plan ShareInfoExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -223,7 +214,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -271,6 +262,14 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	newState.ID = newState.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Populate provider_config in state after Create.
+	// If the user set provider_config.workspace_id, it's already copied above.
+	// If the user relies on the provider-level workspace_id, this resolves the
+	// unknown value to the effective workspace ID.
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -295,7 +294,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, existingState.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, existingState.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -333,6 +332,13 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Populate provider_config in state after Read.
+	// During normal refresh, provider_config is in prior state and was copied above.
+	// During import (no prior state), this resolves the effective workspace ID.
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -360,7 +366,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -461,7 +467,7 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, state.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, state.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

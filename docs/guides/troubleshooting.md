@@ -22,9 +22,12 @@ The following resources and data sources have been migrated from sdkv2 to plugin
 
 Example: `export USE_SDK_V2_RESOURCES="databricks_library,databricks_quality_monitor"`
 
+-> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. If you need to manage workspace-level resources from an account-level provider using `workspace_id`, you must use the default Plugin Framework implementation.
+
 ### Resources migrated
   - databricks_quality_monitor
   - databricks_library
+  - databricks_share
 ### Data sources migrated
   - databricks_volumes
 

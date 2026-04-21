@@ -44,9 +44,9 @@ func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 // host) on the first time — when no workspace ID exists in state yet (after Create).
 // On subsequent reads, it preserves whatever is already in state.
 func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	// Skip dual resources (identified by having an "api" field) when operating
-	// at account level — they have no workspace to track.
-	if d.Get("api") != nil && IsAccountLevel(d, c) {
+	// Skip dual resources operating at account level — they have no workspace
+	// to track. IsDual is set on the Resource struct by each dual resource.
+	if IsDualResourceFromContext(ctx) && IsAccountLevel(d, c) {
 		return nil
 	}
 	// If provider_config.workspace_id already exists in state, preserve it.
@@ -91,6 +91,20 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
+// isDualResourceKeyType is a context key that indicates whether the current
+// resource is a dual resource (can operate at both account and workspace level).
+// Set by ToResource() from the IsDual field and read by workspace-tracking guards.
+type isDualResourceKeyType struct{}
+
+var isDualResourceKey = isDualResourceKeyType{}
+
+// IsDualResourceFromContext returns true if the current resource was marked as
+// dual (IsDual: true) in its common.Resource definition.
+func IsDualResourceFromContext(ctx context.Context) bool {
+	v, _ := ctx.Value(isDualResourceKey).(bool)
+	return v
+}
+
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -105,6 +119,10 @@ type Resource struct {
 	DeprecationMessage              string
 	Importer                        *schema.ResourceImporter
 	CanSkipReadAfterCreateAndUpdate func(d *schema.ResourceData) bool
+	// IsDual marks this resource as a dual resource that can operate at both
+	// account and workspace level (has an "api" field from AddApiField).
+	// When true, workspace-tracking logic is skipped for account-level operations.
+	IsDual bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -138,7 +156,9 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	if r.CustomizeDiff == nil {
 		return nil
 	}
+	isDual := r.IsDual
 	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
+		ctx = context.WithValue(ctx, isDualResourceKey, isDual)
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -165,12 +185,14 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 func (r Resource) ToResource() *schema.Resource {
 	// Check if this resource has provider_config in its schema (unified provider resource)
 	_, hasProviderConfig := r.Schema["provider_config"]
+	isDual := r.IsDual
 
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
+			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
 			c := m.(*DatabricksClient)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
@@ -217,6 +239,7 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
+			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Read)(ctx, d, c)
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
@@ -256,6 +279,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Create != nil {
 		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
@@ -291,6 +315,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Delete != nil {
 		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",

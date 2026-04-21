@@ -93,6 +93,7 @@ func ResourceUser() common.Resource {
 		}, nil
 	}
 	return common.Resource{
+		IsDual: true,
 		Schema: userSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)

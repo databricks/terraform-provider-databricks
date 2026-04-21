@@ -110,6 +110,7 @@ func toUpdateAccountsStorageCredential(update *catalog.UpdateStorageCredential) 
 func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
+		IsDual:        true,
 		Schema:        dacSchema,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

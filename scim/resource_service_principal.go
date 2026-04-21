@@ -159,6 +159,7 @@ func ResourceServicePrincipal() common.Resource {
 		}
 	}
 	return common.Resource{
+		IsDual: true,
 		Schema: servicePrincipalSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)

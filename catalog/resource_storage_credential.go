@@ -77,6 +77,7 @@ func parseStorageCredentialId(d *schema.ResourceData) (metastoreId, storageCrede
 
 func ResourceStorageCredential() common.Resource {
 	return common.Resource{
+		IsDual: true,
 		Schema: storageCredentialSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)

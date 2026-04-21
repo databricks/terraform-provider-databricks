@@ -53,5 +53,6 @@ func ResourceUserInstanceProfile() common.Resource {
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 		return common.NamespaceCustomizeDiff(ctx, d, c)
 	}
+	r.IsDual = true
 	return r
 }

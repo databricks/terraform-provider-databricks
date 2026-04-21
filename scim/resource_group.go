@@ -39,6 +39,7 @@ func ResourceGroup() common.Resource {
 	common.AddNamespaceInSchema(groupSchema)
 	common.NamespaceCustomizeSchemaMap(groupSchema)
 	return common.Resource{
+		IsDual: true,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},

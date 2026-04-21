@@ -782,6 +782,69 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// unifiedHostConfig returns a config whose resolved host type is UnifiedHost.
+// It installs a HostMetadataResolver that returns UnifiedHost and forces
+// EnsureResolved to run so resolvedHostType is populated before HostType() is
+// consulted.
+func unifiedHostConfig(t *testing.T, host string) *config.Config {
+	cfg := &config.Config{
+		Host:  host,
+		Token: "test-token",
+		HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.UnifiedHost}, nil
+		},
+	}
+	require.NoError(t, cfg.EnsureResolved())
+	return cfg
+}
+
+func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://workspace.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
+		},
+	}
+	c.SetWorkspaceClientForWorkspace(456, mockWS)
+
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "456",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
+func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
+		},
+	}
+	// No cached workspace client — WorkspaceClientForWorkspace falls back to
+	// tryWorkspaceClientDirect which succeeds for unified hosts (routes via
+	// X-Databricks-Org-Id header). Actual workspace validation happens at apply time.
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "999",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
 func TestNamespaceCustomizeDiff_ForceNewOnChange(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{

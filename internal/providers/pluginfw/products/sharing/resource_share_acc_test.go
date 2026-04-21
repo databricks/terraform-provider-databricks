@@ -630,13 +630,12 @@ func shareTemplate(provider_config string) string {
 func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = "invalid"
 			}
 		`),
 		ExpectError: regexp.MustCompile(
-			`(?s)Attribute provider_config\[0\]\.workspace_id ` +
-				`workspace_id must be a valid.*integer, got: invalid`,
+			`(?s)workspace_id must be a valid.*integer`,
 		),
 		PlanOnly: true,
 	})
@@ -645,7 +644,7 @@ func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = "123"
 			}
 		`),
@@ -657,30 +656,21 @@ func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 }
 
 func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
-				workspace_id = "123"
-			}
-			provider_config {
-				workspace_id = "456"
-			}
-		`),
-		ExpectError: regexp.MustCompile(
-			`Attribute provider_config list must contain at most 1 element`,
-		),
-		PlanOnly: true,
-	})
+	// Skip: duplicate attribute is an HCL-level syntax error ("Attribute redefined").
+	// The acceptance test framework's ExpectError matches successfully, but then
+	// post-match state retrieval also fails because the HCL can't be parsed at all,
+	// causing the test to fail. This is a framework limitation, not a provider bug.
+	t.Skip("HCL-level syntax errors break all terraform commands including state retrieval")
 }
 
 func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = ""
 			}
 		`),
-		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
+		ExpectError: regexp.MustCompile(`Attribute provider_config\.workspace_id string length must be at least 1`),
 		PlanOnly:    true,
 	})
 }
@@ -701,14 +691,16 @@ func TestAccShare_ProviderConfig_Match(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
+		// Adding provider_config with the same workspace_id that's already in state
+		// (populated by PopulateProviderConfigInState during create) is a no-op.
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config {
+			provider_config = {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -724,24 +716,22 @@ func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
+		// Adding matching workspace_id is a no-op (already in state from create).
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config {
+			provider_config = {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
+		// Changing to a mismatched workspace_id triggers ValidateWorkspaceID
+		// failure during ModifyPlan because the workspace client can't be created.
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
+			provider_config = {
 				workspace_id = "123"
 			}
 		`),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionDestroyBeforeCreate),
-			},
-		},
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
+		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client`),
+		PlanOnly:    true,
 	})
 }
 
@@ -755,16 +745,20 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
+		// Adding matching workspace_id is a no-op (already in state from create).
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config {
+			provider_config = {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
+		// Removing provider_config from config: ProviderConfigPlanModifier
+		// copies state to plan (UseStateForUnknown behavior). Effective
+		// workspace_id doesn't change, so this is a no-op.
 		Template: preTestTemplateSchema + shareTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
 			},
 		},
 	})

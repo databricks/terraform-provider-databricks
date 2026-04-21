@@ -22,6 +22,8 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 	s := resp.Schema
 
+	assert.Equal(t, int64(0), s.Version, "schema version should be 0 (bidirectional migration with SDKv2)")
+
 	// Verify name is required with RequiresReplace
 	nameAttr, ok := s.Attributes["name"]
 	require.True(t, ok, "name attribute must exist")
@@ -50,19 +52,22 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "id must be string")
 	assert.True(t, idStr.Computed, "id should be computed")
 
-	// Verify provider_config block (SdkV2 compatible)
-	pcBlock, ok := s.Blocks["provider_config"]
-	require.True(t, ok, "provider_config block must exist")
-	pcList, ok := pcBlock.(schema.ListNestedBlock)
-	require.True(t, ok, "provider_config must be list nested block")
-	assert.Len(t, pcList.Validators, 1, "provider_config should have SizeAtMost(1) validator")
+	// Verify provider_config is a SingleNestedAttribute (types.Object)
+	pcAttr, ok := s.Attributes["provider_config"]
+	require.True(t, ok, "provider_config attribute must exist")
+	pcSNA, ok := pcAttr.(schema.SingleNestedAttribute)
+	require.True(t, ok, "provider_config must be a SingleNestedAttribute")
+	assert.True(t, pcSNA.Optional, "provider_config should be optional")
+	assert.True(t, pcSNA.Computed, "provider_config should be computed")
+	assert.Len(t, pcSNA.PlanModifiers, 1, "provider_config should have ProviderConfigPlanModifier")
 
 	// Verify workspace_id inside provider_config
-	wsAttr, ok := pcList.NestedObject.Attributes["workspace_id"]
+	wsAttr, ok := pcSNA.Attributes["workspace_id"]
 	require.True(t, ok, "workspace_id must exist in provider_config")
 	wsStr, ok := wsAttr.(schema.StringAttribute)
 	require.True(t, ok, "workspace_id must be string")
-	assert.True(t, wsStr.Required, "workspace_id should be required")
+	assert.True(t, wsStr.Optional, "workspace_id should be optional")
+	assert.True(t, wsStr.Computed, "workspace_id should be computed")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
 	assert.Len(t, wsStr.Validators, 2, "workspace_id should have 2 validators")
 }

@@ -1474,14 +1474,18 @@ func TestValidateWorkspaceID(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cfg := &config.Config{
-				Host:        tc.host,
-				AccountID:   tc.accountID,
-				Token:       "test-token",
-				WorkspaceID: tc.workspaceID,
+			c := &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:        tc.host,
+						AccountID:   tc.accountID,
+						Token:       "test-token",
+						WorkspaceID: tc.workspaceID,
+					},
+				},
 			}
 			// Replicate the validation logic from provider init
-			hasError := cfg.WorkspaceID != "" && cfg.HostType() == config.WorkspaceHost
+			hasError := c.Config.WorkspaceID != "" && c.HostTypeForTerraform() == config.WorkspaceHost
 			assert.Equal(t, tc.expectError, hasError)
 		})
 	}

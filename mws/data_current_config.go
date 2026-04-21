@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -31,22 +32,38 @@ func cloudTypeFromConfig(cfg *config.Config) string {
 }
 
 func DataSourceCurrentConfiguration() common.Resource {
-	r := common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
-		data := e.(*currentConfig)
-		data.IsAccount = false
-		if c.Config.HostType() == config.AccountHost {
-			data.AccountId = c.Config.AccountID
-			data.IsAccount = true
-		}
-		data.Host = c.Config.Host
-		if data.Cloud != "" {
-			data.CloudType = data.Cloud
-		} else {
-			data.CloudType = cloudTypeFromConfig(c.Config)
-		}
-		data.AuthType = c.Config.AuthType
-		return nil
+	s := common.StructToSchema(currentConfig{}, func(
+		s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["cloud"].ValidateFunc = validation.StringInSlice(validCloudValues, false)
+		common.AddApiField(s)
+		return s
 	})
-	r.Schema["cloud"].ValidateFunc = validation.StringInSlice(validCloudValues, false)
-	return r
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
+	return common.Resource{
+		Schema: s,
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			var data currentConfig
+			common.DataToStructPointer(d, s, &data)
+			data.IsAccount = false
+			if common.IsAccountLevel(d, newClient) {
+				data.AccountId = newClient.Config.AccountID
+				data.IsAccount = true
+			}
+			data.Host = newClient.Config.Host
+			if data.Cloud != "" {
+				data.CloudType = data.Cloud
+			} else {
+				data.CloudType = cloudTypeFromConfig(newClient.Config)
+			}
+			data.AuthType = newClient.Config.AuthType
+			common.StructToData(&data, s, d)
+			d.SetId("_")
+			return nil
+		},
+	}
 }

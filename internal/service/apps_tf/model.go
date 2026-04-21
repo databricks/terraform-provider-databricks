@@ -3372,6 +3372,55 @@ func (m AppResourceUcSecurable) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The thumbnail for an app.
+type AppThumbnail struct {
+	// The thumbnail image bytes.
+	Thumbnail types.String `tfsdk:"thumbnail"`
+}
+
+func (to *AppThumbnail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppThumbnail) {
+}
+
+func (to *AppThumbnail) SyncFieldsDuringRead(ctx context.Context, from AppThumbnail) {
+}
+
+func (m AppThumbnail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["thumbnail"] = attrs["thumbnail"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppThumbnail.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppThumbnail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppThumbnail
+// only implements ToObjectValue() and Type().
+func (m AppThumbnail) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"thumbnail": m.Thumbnail,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppThumbnail) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"thumbnail": types.StringType,
+		},
+	}
+}
+
 type AppUpdate struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 
@@ -4544,6 +4593,54 @@ func (m DeleteAppRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteAppRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteAppThumbnailRequest struct {
+	// The name of the app.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteAppThumbnailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteAppThumbnailRequest) {
+}
+
+func (to *DeleteAppThumbnailRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteAppThumbnailRequest) {
+}
+
+func (m DeleteAppThumbnailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAppThumbnailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteAppThumbnailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAppThumbnailRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteAppThumbnailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteAppThumbnailRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -7027,6 +7124,103 @@ func (m *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 func (m *UpdateAppRequest) SetApp(ctx context.Context, v App) {
 	vs := v.ToObjectValue(ctx)
 	m.App = vs
+}
+
+type UpdateAppThumbnailRequest struct {
+	// The app thumbnail to set.
+	AppThumbnail types.Object `tfsdk:"app_thumbnail"`
+	// The name of the app.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UpdateAppThumbnailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAppThumbnailRequest) {
+	if !from.AppThumbnail.IsNull() && !from.AppThumbnail.IsUnknown() {
+		if toAppThumbnail, ok := to.GetAppThumbnail(ctx); ok {
+			if fromAppThumbnail, ok := from.GetAppThumbnail(ctx); ok {
+				// Recursively sync the fields of AppThumbnail
+				toAppThumbnail.SyncFieldsDuringCreateOrUpdate(ctx, fromAppThumbnail)
+				to.SetAppThumbnail(ctx, toAppThumbnail)
+			}
+		}
+	}
+}
+
+func (to *UpdateAppThumbnailRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateAppThumbnailRequest) {
+	if !from.AppThumbnail.IsNull() && !from.AppThumbnail.IsUnknown() {
+		if toAppThumbnail, ok := to.GetAppThumbnail(ctx); ok {
+			if fromAppThumbnail, ok := from.GetAppThumbnail(ctx); ok {
+				toAppThumbnail.SyncFieldsDuringRead(ctx, fromAppThumbnail)
+				to.SetAppThumbnail(ctx, toAppThumbnail)
+			}
+		}
+	}
+}
+
+func (m UpdateAppThumbnailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_thumbnail"] = attrs["app_thumbnail"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAppThumbnailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateAppThumbnailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"app_thumbnail": reflect.TypeOf(AppThumbnail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAppThumbnailRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateAppThumbnailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"app_thumbnail": m.AppThumbnail,
+			"name":          m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateAppThumbnailRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"app_thumbnail": AppThumbnail{}.Type(ctx),
+			"name":          types.StringType,
+		},
+	}
+}
+
+// GetAppThumbnail returns the value of the AppThumbnail field in UpdateAppThumbnailRequest as
+// a AppThumbnail value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateAppThumbnailRequest) GetAppThumbnail(ctx context.Context) (AppThumbnail, bool) {
+	var e AppThumbnail
+	if m.AppThumbnail.IsNull() || m.AppThumbnail.IsUnknown() {
+		return e, false
+	}
+	var v AppThumbnail
+	d := m.AppThumbnail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAppThumbnail sets the value of the AppThumbnail field in UpdateAppThumbnailRequest.
+func (m *UpdateAppThumbnailRequest) SetAppThumbnail(ctx context.Context, v AppThumbnail) {
+	vs := v.ToObjectValue(ctx)
+	m.AppThumbnail = vs
 }
 
 type UpdateCustomTemplateRequest struct {

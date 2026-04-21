@@ -6105,8 +6105,8 @@ type RoleRoleSpec struct {
 	// used. * For the regular postgres roles, authentication based on postgres
 	// passwords is used.
 	//
-	// NOTE: this is ignored for the Databricks identity type GROUP, and
-	// NO_LOGIN is implicitly assumed instead for the GROUP identity type.
+	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
+	// default auth method (group can login as well).
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of role. When specifying a managed-identity, the chosen role_id
 	// must be a valid:

@@ -321,9 +321,9 @@ func TestStructToSchemaNamespace(t *testing.T) {
 	assert.True(t, wsAttr.IsOptional())
 	assert.True(t, wsAttr.IsComputed())
 
-	// Test that workspace_id is a required field (for data sources).
+	// Test that workspace_id is optional+computed (for data sources).
 	data_scm = DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
-	assert.True(t, data_scm.Attributes["provider_config"].(datasource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
+	assert.True(t, data_scm.Attributes["provider_config"].(datasource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsOptional())
 }
 
 func testStructToSchemaPanics(t *testing.T, testStruct any, expectedError string) {

@@ -30,18 +30,6 @@ func TestAccMetastore_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-// Empty provider_config {} is valid since workspace_id is Optional+Computed.
-func TestAccMetastore_ProviderConfig_EmptyBlock(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: metastoreProviderConfigTemplate("tf-test-metastore-{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
-	})
-}
-
 func TestAccMetastore_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: metastoreProviderConfigTemplate("tf-test-metastore-{var.STICKY_RANDOM}", `

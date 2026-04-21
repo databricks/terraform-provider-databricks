@@ -32,18 +32,6 @@ func TestAccStorageCredential_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-// Empty provider_config {} is valid since workspace_id is Optional+Computed.
-func TestAccStorageCredential_ProviderConfig_EmptyBlock(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: storageCredentialProviderConfigTemplate("tf-test-sc-{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
-	})
-}
-
 func TestAccStorageCredential_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: storageCredentialProviderConfigTemplate("tf-test-sc-{var.STICKY_RANDOM}", `

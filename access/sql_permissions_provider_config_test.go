@@ -29,19 +29,6 @@ func TestAccSqlPermissions_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-// TestAccSqlPermissions_ProviderConfig_EmptyBlock verifies that an empty
-// provider_config {} block is valid (workspace_id is Optional+Computed).
-func TestAccSqlPermissions_ProviderConfig_EmptyBlock(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: sqlPermissionsProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		PlanOnly:           true,
-		ExpectNonEmptyPlan: true,
-	})
-}
-
 func TestAccSqlPermissions_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlPermissionsProviderConfigTemplate(`

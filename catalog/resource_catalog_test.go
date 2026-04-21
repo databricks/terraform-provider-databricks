@@ -735,6 +735,34 @@ func TestCatalogCreateForeignIceberg(t *testing.T) {
 	})
 }
 
+func TestCatalogCreate_StorageRootTrailingSlashPreserved(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:        "a",
+				StorageRoot: "s3://my-storage",
+			}).Return(&catalog.CatalogInfo{
+				Name:        "a",
+				StorageRoot: "s3://my-storage/",
+			}, nil)
+			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "a.default").Return(nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:        "a",
+				StorageRoot: "s3://my-storage/",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		storage_root = "s3://my-storage"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"storage_root": "s3://my-storage",
+	})
+}
+
 func TestCatalogCreateIsolated(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

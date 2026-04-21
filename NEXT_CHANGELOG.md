@@ -11,6 +11,8 @@
 
 ### Bug Fixes
 
+* Fix URL normalization by backend in UC catalog, schema and external locations ([#5616](https://github.com/databricks/terraform-provider-databricks/pull/5616)).
+
 ### Documentation
 
 ### Exporter

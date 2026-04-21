@@ -105,6 +105,12 @@ func ResourceExternalLocation() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Preserve the configured url when the only difference is a trailing slash.
+			// This prevents "inconsistent final plan" errors on first apply.
+			configuredUrl := d.Get("url").(string)
+			if configuredUrl != "" && ucDirectoryPathSlashOnlySuppressDiff("", configuredUrl, el.Url, d) {
+				el.Url = configuredUrl
+			}
 			return common.StructToData(el, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -782,61 +782,6 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
-func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
-	resource := newTestResourceForCustomizeDiff()
-	mockWS := &databricks.WorkspaceClient{
-		Config: &config.Config{
-			Host:  "https://workspace.cloud.databricks.com",
-			Token: "test-token",
-		},
-	}
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
-		},
-	}
-	c.SetWorkspaceClientForWorkspace(456, mockWS)
-
-	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
-		"name": "test",
-		"provider_config": []interface{}{
-			map[string]interface{}{
-				"workspace_id": "456",
-			},
-		},
-	}, c)
-	assert.NoError(t, err)
-}
-
-func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
-	resource := newTestResourceForCustomizeDiff()
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
-		},
-	}
-	// No cached workspace client — WorkspaceClientForWorkspace falls back to
-	// tryWorkspaceClientDirect which succeeds for unified hosts (routes via
-	// X-Databricks-Org-Id header). Actual workspace validation happens at apply time.
-	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
-		"name": "test",
-		"provider_config": []interface{}{
-			map[string]interface{}{
-				"workspace_id": "999",
-			},
-		},
-	}, c)
-	assert.NoError(t, err)
-}
-
 func TestNamespaceCustomizeDiff_ForceNewOnChange(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{

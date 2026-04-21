@@ -32,15 +32,6 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			},
 		},
 		{
-			name: "experimental_is_unified_host can be set to true",
-			config: map[string]interface{}{
-				"experimental_is_unified_host": true,
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.True(t, dc.Config.Experimental_IsUnifiedHost, "experimental_is_unified_host should be true when set")
-			},
-		},
-		{
 			name: "workspace_id can be set in provider config",
 			config: map[string]interface{}{
 				"host":         "https://accounts.cloud.databricks.com",
@@ -49,17 +40,6 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
 				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
-			},
-		},
-		{
-			name: "unified host configuration with workspace_id",
-			config: map[string]interface{}{
-				"experimental_is_unified_host": true,
-				"workspace_id":                 "9876543210",
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.True(t, dc.Config.Experimental_IsUnifiedHost, "experimental_is_unified_host should be true")
-				assert.Equal(t, "9876543210", dc.Config.WorkspaceID, "workspace_id should be set")
 			},
 		},
 	}

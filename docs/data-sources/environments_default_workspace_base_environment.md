@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_default_workspace_base_environment Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source retrieves the current default Workspace Base Environment configuration for the workspace.
 

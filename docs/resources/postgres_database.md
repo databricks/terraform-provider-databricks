@@ -55,6 +55,16 @@ In addition to the above arguments, the following attributes are exported:
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database
 * `update_time` (string) - A timestamp indicating when the database was last updated
 
+### DatabaseDatabaseStatus
+* `database_id` (string) - The short identifier of the database, suitable for showing to the users.
+  For a database with name `projects/my-project/branches/my-branch/databases/my-db`,
+  the database_id is `my-db`.
+  
+  Use this field when building UI components that display databases to users (e.g., a drop-down
+  selector). Prefer showing `database_id` instead of the full resource name from `Database.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/databases/{database_id}` format
+  and is not user-friendly
+
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl

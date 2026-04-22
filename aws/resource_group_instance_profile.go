@@ -55,7 +55,7 @@ func ResourceGroupInstanceProfile() common.Resource {
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_group_role`"
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-		return common.NamespaceCustomizeDiff(ctx, d, c)
+		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
 	return r
 }

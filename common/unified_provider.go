@@ -231,13 +231,20 @@ func ValidateApiLevelForUnifiedHost(d *schema.ResourceDiff, c *DatabricksClient)
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
-		return err
-	}
 	if err := namespaceForceNew(ctx, d, c); err != nil {
 		return err
 	}
 	return NamespaceValidateWorkspaceID(ctx, d, c)
+}
+
+// CustomizeDiffDualResources is the CustomizeDiff entry point for dual
+// workspace/account resources (those that call AddApiField). It runs the
+// unified-host api-level check before delegating to NamespaceCustomizeDiff.
+func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
+		return err
+	}
+	return NamespaceCustomizeDiff(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data

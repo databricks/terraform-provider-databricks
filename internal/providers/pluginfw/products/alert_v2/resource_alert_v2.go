@@ -134,7 +134,8 @@ type AlertV2 struct {
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// Purge the resource on delete
+	// Whether to permanently delete the alert. If not set, the alert will only
+	// be soft deleted.
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`

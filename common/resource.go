@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// workspaceIDSchemaKey is the key for the workspace ID in schema
+const workspaceIDSchemaKey = "provider_config.0.workspace_id"
+
 func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 	path := cty.Path{
 		cty.GetAttrStep{Name: "provider_config"},

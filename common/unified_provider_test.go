@@ -782,6 +782,22 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// unifiedHostConfig returns a config whose resolved host type is UnifiedHost.
+// It installs a HostMetadataResolver that returns UnifiedHost and forces
+// EnsureResolved to run so resolvedHostType is populated before HostType() is
+// consulted.
+func unifiedHostConfig(t *testing.T, host string) *config.Config {
+	cfg := &config.Config{
+		Host:  host,
+		Token: "test-token",
+		HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.UnifiedHost}, nil
+		},
+	}
+	require.NoError(t, cfg.EnsureResolved())
+	return cfg
+}
+
 func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
@@ -792,11 +808,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 	}
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
 		},
 	}
 	c.SetWorkspaceClientForWorkspace(456, mockWS)
@@ -816,11 +828,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
 		},
 	}
 	// No cached workspace client — WorkspaceClientForWorkspace falls back to
@@ -1474,14 +1482,18 @@ func TestValidateWorkspaceID(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cfg := &config.Config{
-				Host:        tc.host,
-				AccountID:   tc.accountID,
-				Token:       "test-token",
-				WorkspaceID: tc.workspaceID,
+			c := &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:        tc.host,
+						AccountID:   tc.accountID,
+						Token:       "test-token",
+						WorkspaceID: tc.workspaceID,
+					},
+				},
 			}
 			// Replicate the validation logic from provider init
-			hasError := cfg.WorkspaceID != "" && cfg.HostType() == config.WorkspaceHost
+			hasError := c.Config.WorkspaceID != "" && c.HostTypeForTerraform() == config.WorkspaceHost
 			assert.Equal(t, tc.expectError, hasError)
 		})
 	}

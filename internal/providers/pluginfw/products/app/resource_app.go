@@ -40,14 +40,6 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetComputed()
 	s["provider_config"] = s["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
-	// Override workspace_id inside provider_config to Optional+Computed.
-	// ProviderConfig.ApplySchemaCustomizations sets it to Required (for migrated
-	// SDKv2 resources), but PF-native resources need Optional+Computed so the
-	// provider can populate it during apply when the user omits provider_config.
-	pcBuilder := s["provider_config"].(tfschema.SingleNestedAttributeBuilder)
-	pcBuilder.Attributes["workspace_id"] = pcBuilder.Attributes["workspace_id"].SetOptional()
-	pcBuilder.Attributes["workspace_id"] = pcBuilder.Attributes["workspace_id"].SetComputed()
-	s["provider_config"] = pcBuilder
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	return s

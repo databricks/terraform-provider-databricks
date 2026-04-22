@@ -13,9 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// workspaceIDSchemaKey is the key for the workspace ID in schema
-const workspaceIDSchemaKey = "provider_config.0.workspace_id"
-
 // Namespace stores the provider configurations for unified terraform provider
 // This should be kept in sync with Namespace for plugin framework resources and data sources
 // defined in internal/providers/pluginfw/tfschema/unified_provider.go

@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 * Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
+* Fixed `databricks_instance_pool` ignoring `enable_elastic_disk = false` due to `omitempty` JSON tag ([#5454](https://github.com/databricks/terraform-provider-databricks/pull/5454)).
 ### Documentation
 
 ### Exporter

@@ -18,14 +18,14 @@ func ResourceGroupRole() common.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, role string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			return NewGroupsAPI(ctx, c, common.GetApiLevel(d)).Patch(groupID, PatchRequestWithValue("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, groupID, role string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -41,7 +41,7 @@ func ResourceGroupRole() common.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, groupID, role string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -44,7 +44,7 @@ func DataSourceCurrentConfiguration() common.Resource {
 		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := m.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -102,11 +102,6 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
 func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	// Skip dual resources (identified by having an "api" field) when operating
-	// at account level — they have no workspace to track.
-	if d.Get("api") != nil && IsAccountLevelFromDiff(d, c) {
-		return nil
-	}
 	workspaceIDKey := workspaceIDSchemaKey
 
 	// Get the old (state) workspace ID.
@@ -168,10 +163,6 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if newWorkspaceID == nil {
 		return nil
 	}
-	// Skip validation for dual resources (api field in schema) operating at account level.
-	if d.Get("api") != nil && IsAccountLevelFromDiff(d, c) {
-		return nil
-	}
 	newWSID := newWorkspaceID.(string)
 	// Fall back to provider-level workspace_id only if not set on the resource.
 	if newWSID == "" {
@@ -231,22 +222,26 @@ func (c *DatabricksClient) WorkspaceClientUnifiedProvider(ctx context.Context, d
 // DatabricksClientForUnifiedProvider returns a new Databricks Client for the workspace ID from the resource data.
 // This is used by resources and data sources that are developed over SDKv2 and are not using Go SDK.
 //
-// Routing logic:
-//  1. No provider_config in schema → not a unified provider resource, return current client.
-//  2. api field exists in schema (dual resource):
-//     a. api = "account" → return current client (account-level operation).
-//     b. api = "workspace"s → resolve workspace_id, return workspace-scoped client.
-//  3. api field not in schema (pure workspace resource) → resolve workspace_id, return workspace-scoped client.
+// DatabricksClientForDualResource returns the appropriate client for a dual resource
+// (one that can operate at both account and workspace level via the "api" field).
+// When api="account", returns the current client unchanged (no workspace routing).
+// When api="workspace" or unset, delegates to DatabricksClientForUnifiedProvider
+// for workspace-scoped client resolution.
+// Dual resources should call this instead of DatabricksClientForUnifiedProvider.
+func (c *DatabricksClient) DatabricksClientForDualResource(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
+	if IsAccountLevel(d, c) {
+		return c, nil
+	}
+	return c.DatabricksClientForUnifiedProvider(ctx, d)
+}
+
+// DatabricksClientForUnifiedProvider returns the Databricks Client for the workspace ID from the resource data.
+// This is used by non-dual SDKv2 resources that always operate at workspace level.
+// Dual resources should use DatabricksClientForDualResource instead.
 func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
 	workspaceIDFromResourceData := d.Get(workspaceIDSchemaKey)
 	// provider_config doesn't exist in schema — not a unified provider resource.
 	if workspaceIDFromResourceData == nil {
-		return c, nil
-	}
-
-	// Skip dual resources (identified by having an "api" field) when operating
-	// at account level — they have no workspace to track.
-	if d.Get("api") != nil && IsAccountLevel(d, c) {
 		return c, nil
 	}
 

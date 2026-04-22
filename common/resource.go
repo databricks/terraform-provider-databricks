@@ -44,11 +44,6 @@ func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
 // host) on the first time — when no workspace ID exists in state yet (after Create).
 // On subsequent reads, it preserves whatever is already in state.
 func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	// Skip dual resources operating at account level — they have no workspace
-	// to track. IsDual is set on the Resource struct by each dual resource.
-	if IsDualResourceFromContext(ctx) && IsAccountLevel(d, c) {
-		return nil
-	}
 	// If provider_config.workspace_id already exists in state, preserve it.
 	// During refresh reads the state value reflects the workspace the Read
 	// actually targeted. Overwriting it would prevent CustomizeDiff from
@@ -89,20 +84,6 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 	return nil
-}
-
-// isDualResourceKeyType is a context key that indicates whether the current
-// resource is a dual resource (can operate at both account and workspace level).
-// Set by ToResource() from the IsDual field and read by workspace-tracking guards.
-type isDualResourceKeyType struct{}
-
-var isDualResourceKey = isDualResourceKeyType{}
-
-// IsDualResourceFromContext returns true if the current resource was marked as
-// dual (IsDual: true) in its common.Resource definition.
-func IsDualResourceFromContext(ctx context.Context) bool {
-	v, _ := ctx.Value(isDualResourceKey).(bool)
-	return v
 }
 
 // Resource aims to simplify things like error & deleted entities handling
@@ -158,7 +139,14 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	}
 	isDual := r.IsDual
 	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
-		ctx = context.WithValue(ctx, isDualResourceKey, isDual)
+		// Skip CustomizeDiff entirely for dual resources at account level —
+		// they have no workspace to track so ForceNew/validation is not needed.
+		if isDual {
+			c, ok := m.(*DatabricksClient)
+			if ok && IsAccountLevelFromDiff(rd, c) {
+				return nil
+			}
+		}
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -192,7 +180,7 @@ func (r Resource) ToResource() *schema.Resource {
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
+
 			c := m.(*DatabricksClient)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
@@ -239,7 +227,7 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
+
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Read)(ctx, d, c)
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
@@ -258,7 +246,8 @@ func (r Resource) ToResource() *schema.Resource {
 			// doesn't touch it, so the hook preserves the existing value (no-op).
 			// During import (no prior state), the hook resolves the effective workspace ID
 			// from workspace_id / cached host for the first time.
-			if hasProviderConfig && d.Id() != "" {
+			// Dual resources at account level have no workspace to track, so skip.
+			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
@@ -279,7 +268,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Create != nil {
 		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
+
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
@@ -290,7 +279,8 @@ func (r Resource) ToResource() *schema.Resource {
 				// Resources that skip Read after Create (e.g. notebooks with SOURCE
 				// format) still need provider_config populated for CustomizeDiff to
 				// detect workspace changes. Populate it here since Read won't run.
-				if hasProviderConfig && d.Id() != "" {
+				// Dual resources at account level have no workspace to track, so skip.
+				if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
 					if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 					}
@@ -305,7 +295,8 @@ func (r Resource) ToResource() *schema.Resource {
 			// Must run after Read so that Read's DatabricksClientForUnifiedProvider
 			// sees an empty workspace_id and uses the original provider client
 			// (which has the cached workspace ID) rather than creating a new client.
-			if hasProviderConfig && d.Id() != "" {
+			// Dual resources at account level have no workspace to track, so skip.
+			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
@@ -315,7 +306,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Delete != nil {
 		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			ctx = context.WithValue(ctx, isDualResourceKey, isDual)
+
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",

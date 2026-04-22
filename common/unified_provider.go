@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -210,9 +211,29 @@ func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
 	return "", false
 }
 
+// ValidateApiLevelForUnifiedHost fails the plan for dual resources (identified
+// by an `api` field in the schema) when the provider is configured against a
+// UnifiedHost but `api` is not explicitly set. On a unified host the API level
+// cannot be inferred from the host, so the user must declare it.
+func ValidateApiLevelForUnifiedHost(d *schema.ResourceDiff, c *DatabricksClient) error {
+	if d.Get("api") == nil {
+		return nil
+	}
+	if c.HostTypeForTerraform() != config.UnifiedHost {
+		return nil
+	}
+	if GetApiLevelFromDiff(d) != "" {
+		return nil
+	}
+	return fmt.Errorf("please set api to account or workspace")
+}
+
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
+		return err
+	}
 	if err := namespaceForceNew(ctx, d, c); err != nil {
 		return err
 	}

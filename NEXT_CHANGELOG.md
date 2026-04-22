@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Fail at plan time with "please set api to account or workspace" for dual workspace/account resources when the provider is configured against a unified host and the resource's `api` field is not set.
+
 ### Bug Fixes
 
 * Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.

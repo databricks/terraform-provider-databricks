@@ -775,5 +775,5 @@ func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
 		AccountID: "abc-123",
 		Host:      "https://accounts.cloud.databricks.com",
 	}.Apply(t)
-	assert.Contains(t, err.Error(), "managing workspace-level resources requires a workspace_id")
+	assert.Contains(t, err.Error(), "managing a workspace-level resource requires a workspace_id, but none was found")
 }

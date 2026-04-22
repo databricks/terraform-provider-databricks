@@ -3,7 +3,6 @@ package tfschema
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -277,8 +276,7 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 
 	if oldWsID != "" && newWsID == "" {
 		resp.Diagnostics.AddError("Missing workspace_id",
-			fmt.Sprintf("resource has provider_config.workspace_id = %s in state but no workspace_id is configured. "+
-				"Set workspace_id in the provider configuration or in the resource's provider_config block", oldWsID))
+			"managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed")
 		return
 	}
 

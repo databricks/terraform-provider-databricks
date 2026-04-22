@@ -198,3 +198,27 @@ func TestAccDualResource_UnifiedHost_MetastoreAssignment_MissingApi(t *testing.T
 		}
 	`)
 }
+
+func TestAccDualDataSource_UnifiedHost_User_MissingApi(t *testing.T) {
+	dualResourceUnifiedHostPlanTest(t, `
+		data "databricks_user" "this" {
+			user_name = "test@example.com"
+		}
+	`)
+}
+
+func TestAccDualDataSource_UnifiedHost_Group_MissingApi(t *testing.T) {
+	dualResourceUnifiedHostPlanTest(t, `
+		data "databricks_group" "this" {
+			display_name = "test-group"
+		}
+	`)
+}
+
+func TestAccDualDataSource_UnifiedHost_CurrentConfig_MissingApi(t *testing.T) {
+	dualResourceUnifiedHostPlanTest(t, `
+		data "databricks_current_config" "this" {
+			cloud = "aws"
+		}
+	`)
+}

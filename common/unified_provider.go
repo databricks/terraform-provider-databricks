@@ -217,10 +217,21 @@ func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
 // it. Intended for dual resources (called via CustomizeDiffDualResources); the
 // `api` field is assumed to exist in the schema.
 func ValidateApiLevelForUnifiedHost(d *schema.ResourceDiff, c *DatabricksClient) error {
+	return validateApiLevelForUnifiedHost(GetApiLevelFromDiff(d), c)
+}
+
+// ValidateApiLevelForUnifiedHostFromData is the data-source variant of
+// ValidateApiLevelForUnifiedHost. SDKv2 data sources cannot set CustomizeDiff,
+// so call this at the top of Read to fail the plan for dual data sources.
+func ValidateApiLevelForUnifiedHostFromData(d *schema.ResourceData, c *DatabricksClient) error {
+	return validateApiLevelForUnifiedHost(GetApiLevel(d), c)
+}
+
+func validateApiLevelForUnifiedHost(apiLevel string, c *DatabricksClient) error {
 	if c.HostTypeForTerraform() != config.UnifiedHost {
 		return nil
 	}
-	if GetApiLevelFromDiff(d) != "" {
+	if apiLevel != "" {
 		return nil
 	}
 	return fmt.Errorf("please set api to account or workspace")

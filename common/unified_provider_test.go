@@ -896,6 +896,30 @@ func TestValidateApiLevelForUnifiedHost_PassesWhenApiSet(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestValidateApiLevelForUnifiedHostFromData_ErrorsWhenApiMissing(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	d := schema.TestResourceDataRaw(t, AddApiField(map[string]*schema.Schema{}), map[string]interface{}{})
+	err := ValidateApiLevelForUnifiedHostFromData(d, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "please set api to account or workspace")
+}
+
+func TestValidateApiLevelForUnifiedHostFromData_PassesWhenApiSet(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	d := schema.TestResourceDataRaw(t, AddApiField(map[string]*schema.Schema{}), map[string]interface{}{
+		"api": "workspace",
+	})
+	assert.NoError(t, ValidateApiLevelForUnifiedHostFromData(d, c))
+}
+
 func TestValidateApiLevelForUnifiedHost_IgnoresNonUnifiedHost(t *testing.T) {
 	resource := newDualResourceForCustomizeDiff()
 	c := &DatabricksClient{

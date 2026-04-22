@@ -896,24 +896,6 @@ func TestValidateApiLevelForUnifiedHost_PassesWhenApiSet(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestValidateApiLevelForUnifiedHost_IgnoresNonDualResources(t *testing.T) {
-	resource := newTestResourceForCustomizeDiff()
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
-		},
-	}
-	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
-		"name": "test",
-		"provider_config": []interface{}{
-			map[string]interface{}{
-				"workspace_id": "999",
-			},
-		},
-	}, c)
-	assert.NoError(t, err)
-}
-
 func TestValidateApiLevelForUnifiedHost_IgnoresNonUnifiedHost(t *testing.T) {
 	resource := newDualResourceForCustomizeDiff()
 	c := &DatabricksClient{

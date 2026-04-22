@@ -211,14 +211,12 @@ func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
 	return "", false
 }
 
-// ValidateApiLevelForUnifiedHost fails the plan for dual resources (identified
-// by an `api` field in the schema) when the provider is configured against a
-// UnifiedHost but `api` is not explicitly set. On a unified host the API level
-// cannot be inferred from the host, so the user must declare it.
+// ValidateApiLevelForUnifiedHost fails the plan when the provider is configured
+// against a UnifiedHost but the resource's `api` field is not set. On a unified
+// host the API level cannot be inferred from the host, so the user must declare
+// it. Intended for dual resources (called via CustomizeDiffDualResources); the
+// `api` field is assumed to exist in the schema.
 func ValidateApiLevelForUnifiedHost(d *schema.ResourceDiff, c *DatabricksClient) error {
-	if d.Get("api") == nil {
-		return nil
-	}
 	if c.HostTypeForTerraform() != config.UnifiedHost {
 		return nil
 	}

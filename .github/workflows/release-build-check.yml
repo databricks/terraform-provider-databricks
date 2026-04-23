@@ -1,4 +1,4 @@
-name: release-legacy
+name: Release Build Check
 
 on:
   merge_group:

@@ -8,7 +8,6 @@
 
 ### Bug Fixes
 
-* Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
 ### Documentation
 
 ### Exporter

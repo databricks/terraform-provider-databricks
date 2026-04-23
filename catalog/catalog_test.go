@@ -156,7 +156,7 @@ func TestUcAccCatalogHmsConnectionUpdate(t *testing.T) {
 	otherAuthorizedPath := fmt.Sprintf("s3://%s/path/to/authorized", qa.RandomName("hms-other-bucket-"))
 	otherInfra := fmt.Sprintf(`
 		resource "databricks_connection" "sandbox" {
-			name = "hms_connection{var.STICKY_RANDOM}"
+			name = "tf-test-hms-connection-{var.STICKY_RANDOM}"
 			connection_type = "HIVE_METASTORE"
 			comment         = "created in TestUcAccCatalogHmsConnectionUpdate"
 			options = {

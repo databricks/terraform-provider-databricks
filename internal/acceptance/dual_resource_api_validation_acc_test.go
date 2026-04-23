@@ -1,61 +1,19 @@
 package acceptance
 
 import (
-	"context"
+	"os"
 	"regexp"
 	"testing"
-
-	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// unifiedHostMockProviderFactories returns provider factories whose resolved
-// host type is UnifiedHost. The customizer resets the config so EnsureResolved
-// runs again with an in-memory HostMetadataResolver that always returns
-// UnifiedHost — no network call, no env dependency.
-func unifiedHostMockProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
-	customizer := func(cfg *config.Config) error {
-		*cfg = config.Config{
-			Host:  "https://unifiedhost.databricks.com",
-			Token: "test-token",
-			HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
-				return &config.HostMetadata{HostType: config.UnifiedHost}, nil
-			},
-		}
-		return cfg.EnsureResolved()
-	}
-	return map[string]func() (tfprotov6.ProviderServer, error){
-		"databricks": func() (tfprotov6.ProviderServer, error) {
-			ctx := context.Background()
-			sdkPluginProvider := sdkv2.DatabricksProvider(
-				sdkv2.WithConfigCustomizer(customizer),
-			)
-			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
-				pluginfw.WithConfigCustomizer(customizer),
-			)
-			return providers.GetProviderServer(ctx,
-				providers.WithSdkV2Provider(sdkPluginProvider),
-				providers.WithPluginFrameworkProvider(pluginFrameworkProvider),
-			)
-		},
-	}
-}
-
-// dualResourceUnifiedHostPlanTest plans the given HCL against a UnifiedHost-
-// mocked provider and asserts it fails with the missing-api error.
 func dualResourceUnifiedHostPlanTest(t *testing.T, hcl string) {
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: unifiedHostMockProviderFactories(),
-		Steps: []resource.TestStep{{
-			Config:      hcl,
-			PlanOnly:    true,
-			ExpectError: regexp.MustCompile(`please set api to account or workspace`),
-		}},
+	initUnifiedHostWorkspaceEnv(t)
+	unifiedHost := os.Getenv("UNIFIED_HOST")
+	WorkspaceLevel(t, Step{
+		Template:                 hcl,
+		PlanOnly:                 true,
+		ExpectError:              regexp.MustCompile(`please set api to account or workspace`),
+		ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
 	})
 }
 

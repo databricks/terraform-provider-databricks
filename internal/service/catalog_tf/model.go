@@ -10785,7 +10785,7 @@ func (m *DeltaRuntimePropertiesKvPairs) SetDeltaRuntimeProperties(ctx context.Co
 // __table__, __function__, __connection__, __credential__, __volume__, or
 // __secret__.
 type Dependency struct {
-	Connection types.Object `tfsdk:"connection"`
+	UcConnection types.Object `tfsdk:"uc_connection"`
 
 	Credential types.Object `tfsdk:"credential"`
 
@@ -10795,12 +10795,12 @@ type Dependency struct {
 }
 
 func (to *Dependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dependency) {
-	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
-		if toConnection, ok := to.GetConnection(ctx); ok {
-			if fromConnection, ok := from.GetConnection(ctx); ok {
-				// Recursively sync the fields of Connection
-				toConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromConnection)
-				to.SetConnection(ctx, toConnection)
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				// Recursively sync the fields of UcConnection
+				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -10834,11 +10834,11 @@ func (to *Dependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 }
 
 func (to *Dependency) SyncFieldsDuringRead(ctx context.Context, from Dependency) {
-	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
-		if toConnection, ok := to.GetConnection(ctx); ok {
-			if fromConnection, ok := from.GetConnection(ctx); ok {
-				toConnection.SyncFieldsDuringRead(ctx, fromConnection)
-				to.SetConnection(ctx, toConnection)
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -10869,7 +10869,7 @@ func (to *Dependency) SyncFieldsDuringRead(ctx context.Context, from Dependency)
 }
 
 func (m Dependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["connection"] = attrs["connection"].SetOptional()
+	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
 	attrs["credential"] = attrs["credential"].SetOptional()
 	attrs["function"] = attrs["function"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -10886,10 +10886,10 @@ func (m Dependency) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m Dependency) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"connection": reflect.TypeOf(ConnectionDependency{}),
-		"credential": reflect.TypeOf(CredentialDependency{}),
-		"function":   reflect.TypeOf(FunctionDependency{}),
-		"table":      reflect.TypeOf(TableDependency{}),
+		"uc_connection": reflect.TypeOf(ConnectionDependency{}),
+		"credential":    reflect.TypeOf(CredentialDependency{}),
+		"function":      reflect.TypeOf(FunctionDependency{}),
+		"table":         reflect.TypeOf(TableDependency{}),
 	}
 }
 
@@ -10900,10 +10900,10 @@ func (m Dependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection": m.Connection,
-			"credential": m.Credential,
-			"function":   m.Function,
-			"table":      m.Table,
+			"uc_connection": m.UcConnection,
+			"credential":    m.Credential,
+			"function":      m.Function,
+			"table":         m.Table,
 		})
 }
 
@@ -10911,24 +10911,24 @@ func (m Dependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Dependency) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection": ConnectionDependency{}.Type(ctx),
-			"credential": CredentialDependency{}.Type(ctx),
-			"function":   FunctionDependency{}.Type(ctx),
-			"table":      TableDependency{}.Type(ctx),
+			"uc_connection": ConnectionDependency{}.Type(ctx),
+			"credential":    CredentialDependency{}.Type(ctx),
+			"function":      FunctionDependency{}.Type(ctx),
+			"table":         TableDependency{}.Type(ctx),
 		},
 	}
 }
 
-// GetConnection returns the value of the Connection field in Dependency as
+// GetUcConnection returns the value of the UcConnection field in Dependency as
 // a ConnectionDependency value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, bool) {
+func (m *Dependency) GetUcConnection(ctx context.Context) (ConnectionDependency, bool) {
 	var e ConnectionDependency
-	if m.Connection.IsNull() || m.Connection.IsUnknown() {
+	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
 		return e, false
 	}
 	var v ConnectionDependency
-	d := m.Connection.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.UcConnection.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -10938,10 +10938,10 @@ func (m *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, b
 	return v, true
 }
 
-// SetConnection sets the value of the Connection field in Dependency.
-func (m *Dependency) SetConnection(ctx context.Context, v ConnectionDependency) {
+// SetUcConnection sets the value of the UcConnection field in Dependency.
+func (m *Dependency) SetUcConnection(ctx context.Context, v ConnectionDependency) {
 	vs := v.ToObjectValue(ctx)
-	m.Connection = vs
+	m.UcConnection = vs
 }
 
 // GetCredential returns the value of the Credential field in Dependency as

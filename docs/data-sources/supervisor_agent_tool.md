@@ -21,7 +21,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `app` (App)
-* `connection` (Connection)
+* `uc_connection` (UcConnection)
 * `description` (string) - Description of what this tool does (user-facing)
 * `genie_space` (GenieSpace)
 * `id` (string, deprecated) - Deprecated: Use tool_id instead
@@ -36,7 +36,7 @@ The following attributes are exported:
 ### App
 * `name` (string) - App name
 
-### Connection
+### UcConnection
 * `name` (string)
 
 ### GenieSpace

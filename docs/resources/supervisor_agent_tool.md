@@ -17,7 +17,7 @@ The following arguments are supported:
 * `tool_id` (string, required) - User specified id of the Tool
 * `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
 * `app` (App, optional)
-* `connection` (Connection, optional)
+* `uc_connection` (UcConnection, optional)
 * `genie_space` (GenieSpace, optional)
 * `knowledge_assistant` (KnowledgeAssistant, optional)
 * `uc_function` (UcFunction, optional)
@@ -30,7 +30,7 @@ The following arguments are supported:
 ### App
 * `name` (string, required) - App name
 
-### Connection
+### UcConnection
 * `name` (string, required)
 
 ### GenieSpace

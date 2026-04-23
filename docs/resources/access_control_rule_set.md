@@ -316,13 +316,13 @@ resource "databricks_access_control_rule_set" "tag_policy_usage" {
 
 * `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
-* `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
+* `grant_rules` - (Optional) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 
 !> Name uniquely identifies a rule set resource. Ensure all the grant_rules blocks for a rule set name are present in one `databricks_access_control_rule_set` resource block. Otherwise, after applying changes, users might lose their role assignment even if that was not intended.
 
 ### grant_rules
 
-One or more `grant_rules` blocks are required to actually set access rules.
+One or more `grant_rules` blocks are required to actually set access rules. If you want the rule set to contain no grants (for example to remove all existing grants), omit the `grant_rules` blocks entirely.
 
 ```hcl
 grant_rules {

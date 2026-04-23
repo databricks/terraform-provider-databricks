@@ -11,6 +11,8 @@
 * Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
 ### Documentation
 
+In resource `access_control_rule_set` the field `grant_rule` is marked as optional to match the current behaviour.
+
 ### Exporter
 
 ### Internal Changes

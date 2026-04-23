@@ -16,6 +16,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -131,6 +132,9 @@ type Branch struct {
 	// hierarchy. For point-in-time branching from another branch, see
 	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
+	// If true, update the branch if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The spec contains the branch configuration.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
@@ -167,13 +171,14 @@ func (m Branch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"branch_id": m.BranchId,
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"parent":      m.Parent,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
-			"update_time": m.UpdateTime,
+			"create_time":      m.CreateTime,
+			"name":             m.Name,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
+			"spec":             m.Spec,
+			"status":           m.Status,
+			"uid":              m.Uid,
+			"update_time":      m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -185,13 +190,14 @@ func (m Branch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Branch) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"branch_id": types.StringType,
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"parent":      types.StringType,
-			"spec":        postgres_tf.BranchSpec{}.Type(ctx),
-			"status":      postgres_tf.BranchStatus{}.Type(ctx),
-			"uid":         types.StringType,
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"create_time":      timetypes.RFC3339{}.Type(ctx),
+			"name":             types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
+			"spec":             postgres_tf.BranchSpec{}.Type(ctx),
+			"status":           postgres_tf.BranchStatus{}.Type(ctx),
+			"uid":              types.StringType,
+			"update_time":      timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -204,6 +210,9 @@ func (m Branch) Type(ctx context.Context) attr.Type {
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
 	if !from.BranchId.IsUnknown() {
 		to.BranchId = from.BranchId
+	}
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -237,6 +246,9 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
 	if !from.BranchId.IsUnknown() {
 		to.BranchId = from.BranchId
+	}
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -276,6 +288,7 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -387,6 +400,9 @@ func (r *BranchResource) Create(ctx context.Context, req resource.CreateRequest,
 		Parent:   plan.Parent.ValueString(),
 		BranchId: plan.BranchId.ValueString(),
 	}
+	if !plan.ReplaceExisting.IsNull() && !plan.ReplaceExisting.IsUnknown() {
+		createRequest.ReplaceExisting = plan.ReplaceExisting.ValueBool()
+	}
 
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
@@ -467,7 +483,6 @@ func (r *BranchResource) Read(ctx context.Context, req resource.ReadRequest, res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get postgres_branch", err.Error())
 		return
 	}
@@ -582,12 +597,23 @@ func (r *BranchResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	response, err := client.Postgres.DeleteBranch(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_branch", err.Error())
 		return
 	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
 
 	err = response.Wait(ctx)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_branch delete", err.Error())
 		return

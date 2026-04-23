@@ -425,7 +425,6 @@ func (r *AccessRequestDestinationResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get rfa_access_request_destinations", err.Error())
 		return
 	}

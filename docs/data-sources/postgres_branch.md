@@ -58,6 +58,12 @@ The following attributes are exported:
 * `ttl` (string) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl
 
 ### BranchStatus
+* `branch_id` (string) - The short identifier of the branch, suitable for showing to the users.
+  For a branch with name `projects/my-project/branches/my-branch`, the branch_id is `my-branch`.
+  
+  Use this field when building UI components that display branches to users (e.g., a drop-down
+  selector). Prefer showing `branch_id` instead of the full resource name from `Branch.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}` format and is not user-friendly
 * `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
 * `default` (boolean) - Whether the branch is the project's default branch
 * `expire_time` (string) - Absolute expiration time for the branch. Empty if expiration is disabled

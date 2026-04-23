@@ -13,6 +13,8 @@
 
 ### Exporter
 
+* Support `alert_task` when exporting `databricks_job` ([#5629](https://github.com/databricks/terraform-provider-databricks/pull/5629)).
+
 ### Internal Changes
 
 * Update Go SDK to v0.128.0.

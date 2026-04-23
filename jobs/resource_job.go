@@ -1138,7 +1138,7 @@ func ResourceJob() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
-			if jsr.isMultiTask() {
+			if jsr.isMultiTask() || ctx.Value(common.Api) == common.API_2_1 {
 				// Api 2.1
 				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {

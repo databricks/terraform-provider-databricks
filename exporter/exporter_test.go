@@ -1436,7 +1436,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -3060,12 +3060,12 @@ func TestImportingRunJobTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Resource: "/api/2.2/jobs/get?job_id=1047501313827425",
 				Response: getJSONObject("test-data/run-job-main.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Resource: "/api/2.2/jobs/get?job_id=932035899730845",
 				Response: getJSONObject("test-data/run-job-child.json"),
 			},
 		},

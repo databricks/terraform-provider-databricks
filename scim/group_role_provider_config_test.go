@@ -33,17 +33,6 @@ func TestAccGroupRole_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccGroupRole_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: groupRoleProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccGroupRole_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: groupRoleProviderConfigTemplate(`

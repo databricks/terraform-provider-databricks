@@ -33,17 +33,6 @@ func TestAccCredential_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccCredential_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: credentialProviderConfigTemplate("tf-test-cred-{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccCredential_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: credentialProviderConfigTemplate("tf-test-cred-{var.STICKY_RANDOM}", `

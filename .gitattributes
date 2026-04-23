@@ -2,6 +2,7 @@ common/client.go linguist-generated=true
 common/commands.go linguist-generated=true
 common/constants.go linguist-generated=true
 common/customizable_schema.go linguist-generated=true
+common/host_type.go linguist-generated=true
 common/pair.go linguist-generated=true
 common/reflect_resource.go linguist-generated=true
 common/resource.go linguist-generated=true

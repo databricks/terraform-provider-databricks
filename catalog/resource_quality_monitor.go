@@ -35,7 +35,6 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 
 type QualityMonitorSchemaStruct struct {
 	catalog.MonitorInfo
-	common.Namespace
 }
 
 func ResourceQualityMonitor() common.Resource {
@@ -61,7 +60,6 @@ func ResourceQualityMonitor() common.Resource {
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
 			common.CustomizeSchemaPath(m, "schedule", "pause_status").SetReadOnly()
-			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		},
 	)

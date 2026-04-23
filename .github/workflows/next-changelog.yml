@@ -11,8 +11,8 @@ jobs:
     # Allow Dependabot PRs to pass without a changelog entry
     if: github.actor != 'dependabot[bot]'
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
 
     steps:
       - name: Checkout code

@@ -20,7 +20,6 @@ import (
 func unifiedHostProviderFactories(unifiedHost string) map[string]func() (tfprotov6.ProviderServer, error) {
 	customizer := func(cfg *config.Config) error {
 		cfg.Host = unifiedHost
-		cfg.Experimental_IsUnifiedHost = true
 		return nil
 	}
 	return map[string]func() (tfprotov6.ProviderServer, error){

@@ -4,9 +4,161 @@ subcategory: "Postgres"
 # databricks_postgres_role Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres role is an authentication and authorization principal inside a Postgres branch. A role can be a plain Postgres role (authenticating with a password) or can be backed by a Databricks managed identity (authenticating via OAuth).
+
+### Hierarchy Context
+
+Roles exist within the Lakebase Autoscaling resource hierarchy:
+- A **role** belongs to a **branch** within a **project**
+- A **role** can own one or more **databases** in the same branch
+- A branch can contain multiple roles
+
+### Identity Types
+
+`spec.identity_type` controls whether the role is a plain Postgres role or is mapped to a Databricks managed identity:
+
+- **Unset (default)**: Plain Postgres role. `spec.postgres_role` is a Postgres identifier of your choice.
+- **`USER`**: Role is backed by a Databricks workspace user. `spec.postgres_role` must be the user's email (e.g., `jane@example.com`).
+- **`SERVICE_PRINCIPAL`**: Role is backed by a Databricks service principal. `spec.postgres_role` must be the service principal's application ID.
+- **`GROUP`**: Role is backed by a Databricks group. `spec.postgres_role` must be the group name. `GROUP` roles can log in directly via OAuth.
+
+### Authentication Methods
+
+`spec.auth_method` controls how the role authenticates to Postgres. If left unset, a reasonable default is inferred from `identity_type`:
+
+- **`PG_PASSWORD_SCRAM_SHA_256`**: Default for plain Postgres roles (no identity type).
+- **`LAKEBASE_OAUTH_V1`**: Default for managed identities (`USER`, `SERVICE_PRINCIPAL`, `GROUP`). The role logs in via Databricks OAuth.
+- **`NO_LOGIN`**: The role cannot be used for interactive access. Useful for roles that only hold privileges and serve as group targets.
+
+### Attributes
+
+`spec.attributes` exposes a subset of Postgres role attributes:
+
+- `createdb` — role can create databases
+- `createrole` — role can create other roles
+- `bypassrls` — role bypasses row-level security policies
+
+See the [Postgres `CREATE ROLE` documentation](https://www.postgresql.org/docs/16/sql-createrole.html) for the authoritative semantics.
+
+### Membership Roles
+
+`spec.membership_roles` lets a role inherit privileges from Databricks-managed standard roles. The currently supported value is `DATABRICKS_SUPERUSER`, the highest set of privileges exposed to customers.
+
+### Use Cases
+
+- **Per-application service account**: Create a `SERVICE_PRINCIPAL`-backed role so an application authenticates to Postgres via OAuth without managing passwords
+- **Human access**: Create a `USER`-backed role for each analyst or developer who needs direct SQL access
+- **Team access**: Create a `GROUP`-backed role so a Databricks group can sign in collectively
+- **Plain Postgres role**: Create a password-authenticated role for legacy workloads or tooling that cannot use OAuth
 
 
 ## Example Usage
+### Role Backed by a Databricks User Identity
+
+Create a role that is authenticated as a specific Databricks workspace user via OAuth. `auth_method` is left unset and defaults to `LAKEBASE_OAUTH_V1` for managed identities.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "main" {
+  branch_id = "main"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+}
+
+resource "databricks_postgres_role" "jane" {
+  role_id = "jane"
+  parent  = databricks_postgres_branch.main.name
+  spec = {
+    identity_type = "USER"
+    postgres_role = "jane@databricks.com"   # Email of the user
+  }
+}
+```
+
+### Service Principal with `DATABRICKS_SUPERUSER` Membership
+
+Create a role that is authenticated as a Databricks service principal via OAuth and grant it the highest customer-exposed privilege set via `DATABRICKS_SUPERUSER` membership.
+
+```hcl
+resource "databricks_postgres_role" "admin_sp" {
+  role_id = "admin-sp"
+  parent  = databricks_postgres_branch.main.name
+  spec = {
+    identity_type    = "SERVICE_PRINCIPAL"
+    postgres_role    = "00000000-0000-0000-0000-000000000000" # application ID
+    auth_method      = "LAKEBASE_OAUTH_V1"
+    membership_roles = ["DATABRICKS_SUPERUSER"]
+  }
+}
+```
+
+### Multiple roles in a branch
+
+By default, Terraform creates resources in parallel if the dependency graph allows. However, Lakebase
+doesn't allow executing parallel manipulations inside a single branch. Only one of these resources can
+be created or updated at a time:
+
+- Role
+- Database
+- Endpoint
+
+If you try to create resources in parallel, you'll see a conflict error like:
+
+> Your project already has conflicting operations in progress. Please wait until they are complete, and then try again.
+
+Terraform serializes execution automatically when one resource references another.
+For example, when a database names a role as its owner via `spec.role`, Terraform creates the role before the database.
+For resources that don't reference each other, like two sibling roles in the same branch, add `depends_on` so
+Terraform knows to wait for creation of the first one to finish, before scheduling the creation of the second one.
+
+For example:
+
+```hcl
+resource "databricks_postgres_role" "schema_owner" {
+  role_id = "schemamigrator"
+  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  spec = {
+    postgres_role = "schemamigrator"
+    membership_roles = ["DATABRICKS_SUPERUSER"]
+  }
+}
+
+resource "databricks_postgres_database" "application" {
+  database_id = "application"
+  parent      = databricks_postgres_branch.test.name
+  spec = {
+    postgres_database = "application"
+    role              = databricks_postgres_role.schema_owner.name
+  }
+}
+
+resource "databricks_postgres_role" "application" {
+  role_id = "application"
+  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  spec = {
+    postgres_role = "application"
+  }
+  
+  depends_on = [ databricks_postgres_database.application ]
+}
+```
+
+Note: in a real setup, the `application` role would also need `GRANT` privileges, but that's out of scope for this example.
 
 
 ## Arguments
@@ -75,6 +227,16 @@ In addition to the above arguments, the following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
 * `update_time` (string)
+
+### RoleRoleStatus
+* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
+  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+  the role_id is `my-role`.
+  
+  Use this field when building UI components that display roles to users (e.g., a drop-down
+  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
+  and is not user-friendly
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -1058,7 +1058,6 @@ func (r *SettingResource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get workspace_setting_v2", err.Error())
 		return
 	}

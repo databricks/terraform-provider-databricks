@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_disable_legacy_access_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+
 The `databricks_disable_legacy_access_setting` resource allows you to disable legacy access. It has the following impact:
 
 1. Disables direct access to Hive Metastores from the workspace. However, you can still access a Hive Metastore through Hive Metastore federation.

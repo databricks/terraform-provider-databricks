@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_restrict_workspace_admins_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+
 The `databricks_restrict_workspace_admins_setting` resource lets you control the capabilities of workspace admins.
 
 -> This resource can only be used with a workspace-level provider!

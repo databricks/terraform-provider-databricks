@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_disable_legacy_features_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+
 -> This resource can only be used with an account-level provider!
 
 The `databricks_disable_legacy_features_setting` resource allows you to disable legacy features on newly created workspaces.

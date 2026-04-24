@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_vpc_endpoint Resource
 
+[API Documentation](https://docs.databricks.com/api/account/vpcendpoints)
+
 Enables you to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources or gcp vpc_endpoint resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
 
 -> This resource can only be used with an account-level provider!

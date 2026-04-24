@@ -22,6 +22,8 @@ ABAC policies can be applied to the following securable types:
 - Schemas
 - Tables
 
+[API Documentation](https://docs.databricks.com/api/workspace/policies)
+
 
 
 ## Example Usage

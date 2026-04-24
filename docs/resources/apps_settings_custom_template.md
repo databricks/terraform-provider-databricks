@@ -4,6 +4,8 @@ subcategory: "Apps"
 # databricks_apps_settings_custom_template Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+
 Custom App Templates store the metadata of custom app code hosted in an external Git repository, enabling users to reuse boilerplate code when creating apps.
 
 ### Use Cases

@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_library resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/libraries)
+
 Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error.
 
 -> This resource can only be used with a workspace-level provider!

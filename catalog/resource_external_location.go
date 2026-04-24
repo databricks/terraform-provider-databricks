@@ -36,7 +36,7 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "isolation_mode").SetComputed()
 			common.CustomizeSchemaPath(m, "owner").SetComputed()
 			common.CustomizeSchemaPath(m, "metastore_id").SetComputed()
-			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events"} {
+			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events", "effective_file_event_queue"} {
 				common.CustomizeSchemaPath(m, key).SetReadOnly()
 			}
 			// customize file event queue
@@ -104,6 +104,12 @@ func ResourceExternalLocation() common.Resource {
 			el, err := w.ExternalLocations.GetByName(ctx, d.Id())
 			if err != nil {
 				return err
+			}
+			// Force a concrete empty value into state for the output-only block so the
+			// Computed=true schema doesn't render `(known after apply)` on every plan
+			// when the server omits the field (current behavior when file events are off).
+			if el.EffectiveFileEventQueue == nil {
+				el.EffectiveFileEventQueue = &catalog.FileEventQueue{}
 			}
 			return common.StructToData(el, s, d)
 		},

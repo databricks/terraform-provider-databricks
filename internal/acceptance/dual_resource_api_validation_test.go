@@ -1,19 +1,50 @@
 package acceptance
 
 import (
-	"os"
+	"context"
 	"regexp"
 	"testing"
+
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
+func unifiedHostMockProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	customizer := func(cfg *config.Config) error {
+		*cfg = config.Config{
+			Host: "https://unifiedhost.databricks.com",
+			HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
+				return &config.HostMetadata{HostType: config.UnifiedHost}, nil
+			},
+		}
+		return cfg.EnsureResolved()
+	}
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+			sdkPluginProvider := sdkv2.DatabricksProvider(
+				sdkv2.WithConfigCustomizer(customizer),
+			)
+			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
+				pluginfw.WithConfigCustomizer(customizer),
+			)
+			return providers.GetProviderServer(ctx,
+				providers.WithSdkV2Provider(sdkPluginProvider),
+				providers.WithPluginFrameworkProvider(pluginFrameworkProvider),
+			)
+		},
+	}
+}
+
 func dualResourceUnifiedHostPlanTest(t *testing.T, hcl string) {
-	initUnifiedHostWorkspaceEnv(t)
-	unifiedHost := os.Getenv("UNIFIED_HOST")
 	WorkspaceLevel(t, Step{
 		Template:                 hcl,
 		PlanOnly:                 true,
 		ExpectError:              regexp.MustCompile(`please set api to account or workspace`),
-		ProtoV6ProviderFactories: unifiedHostProviderFactories(unifiedHost),
+		ProtoV6ProviderFactories: unifiedHostMockProviderFactories(),
 	})
 }
 

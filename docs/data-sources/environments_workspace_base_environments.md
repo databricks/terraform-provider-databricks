@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_workspace_base_environments Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source retrieves the list of all Workspace Base Environments in the workspace.
 The list can be accessed via the data object's `workspace_base_environments` field.

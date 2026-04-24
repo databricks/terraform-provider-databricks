@@ -188,6 +188,12 @@ In addition to the above arguments, the following attributes are exported:
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
+* `project_id` (string) - The short identifier of the project, suitable for showing to the users.
+  For a project with name `projects/my-project`, the project_id is `my-project`.
+  
+  Use this field when building UI components that display projects to users (e.g., a drop-down
+  selector). Prefer showing `project_id` instead of the full resource name from `Project.name`,
+  which follows the `projects/{project_id}` format and is not user-friendly
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage
 
 ## Import

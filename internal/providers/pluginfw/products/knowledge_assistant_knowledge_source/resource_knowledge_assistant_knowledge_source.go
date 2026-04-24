@@ -16,6 +16,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/knowledgeassistants_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -509,7 +510,6 @@ func (r *KnowledgeSourceResource) Read(ctx context.Context, req resource.ReadReq
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get knowledge_assistant_knowledge_source", err.Error())
 		return
 	}
@@ -618,6 +618,9 @@ func (r *KnowledgeSourceResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	err := client.KnowledgeAssistants.DeleteKnowledgeSource(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete knowledge_assistant_knowledge_source", err.Error())
 		return

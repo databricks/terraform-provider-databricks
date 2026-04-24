@@ -51,7 +51,13 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			if err != nil {
 				return err
 			}
-			rule, err := acc.NetworkConnectivity.CreatePrivateEndpointRule(ctx, create)
+			// Retry on "request timed out after ... of inactivity" — the backend
+			// can exceed the SDK's HTTP inactivity timeout on NCC private endpoint
+			// creation. Retries are safe because (resource_id, group_id, ncc_id)
+			// is the natural key and the API returns a conflict on duplicates.
+			rule, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*settings.NccPrivateEndpointRule, error) {
+				return acc.NetworkConnectivity.CreatePrivateEndpointRule(ctx, create)
+			})
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -293,4 +294,39 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
 	assert.Equal(t, "ncc_id/rule_id", d.Id())
+}
+
+func TestResourceNccPrivateEndpointRuleCreate_RetriesOnTimeout(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			call1 := e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(nil, errors.New("request failed: request timed out after 1m5s of inactivity"))
+			call1.Repeatability = 1
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(getTestNccRule(), nil)
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(
+				mock.Anything, "ncc_id", "rule_id",
+			).Return(getTestNccRule(), nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
 }

@@ -9,6 +9,8 @@
 ### Bug Fixes
 
 * Mark `effective_file_event_queue` as read-only in `databricks_external_location` to prevent Terraform drift.
+* Retry `databricks_mws_ncc_private_endpoint_rule` creation on transient HTTP inactivity timeouts ([#<PR>](https://github.com/databricks/terraform-provider-databricks/pull/<PR>)). Fixes spurious "request timed out after 1m5s of inactivity" failures during `terraform apply`.
+* Retry `databricks_mws_network_connectivity_config` deletion while the backend reports that private endpoint rules or workspaces are still attached ([#<PR>](https://github.com/databricks/terraform-provider-databricks/pull/<PR>)). Absorbs eventual-consistency delays during `terraform destroy`.
 ### Documentation
 
 ### Exporter

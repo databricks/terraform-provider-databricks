@@ -3965,7 +3965,6 @@ func (m ConnectionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 25
 type ConnectionInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -7708,6 +7707,99 @@ func (m *CreateSchema) SetProperties(ctx context.Context, v map[string]types.Str
 	m.Properties = types.MapValueMust(t, vs)
 }
 
+type CreateSecretRequest struct {
+	// The secret object to create. The **name**, **catalog_name**,
+	// **schema_name**, and **value** fields are required.
+	Secret types.Object `tfsdk:"secret"`
+}
+
+func (to *CreateSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSecretRequest) {
+	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
+		if toSecret, ok := to.GetSecret(ctx); ok {
+			if fromSecret, ok := from.GetSecret(ctx); ok {
+				// Recursively sync the fields of Secret
+				toSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromSecret)
+				to.SetSecret(ctx, toSecret)
+			}
+		}
+	}
+}
+
+func (to *CreateSecretRequest) SyncFieldsDuringRead(ctx context.Context, from CreateSecretRequest) {
+	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
+		if toSecret, ok := to.GetSecret(ctx); ok {
+			if fromSecret, ok := from.GetSecret(ctx); ok {
+				toSecret.SyncFieldsDuringRead(ctx, fromSecret)
+				to.SetSecret(ctx, toSecret)
+			}
+		}
+	}
+}
+
+func (m CreateSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["secret"] = attrs["secret"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSecretRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"secret": reflect.TypeOf(Secret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateSecretRequest
+// only implements ToObjectValue() and Type().
+func (m CreateSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"secret": m.Secret,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateSecretRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"secret": Secret{}.Type(ctx),
+		},
+	}
+}
+
+// GetSecret returns the value of the Secret field in CreateSecretRequest as
+// a Secret value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateSecretRequest) GetSecret(ctx context.Context) (Secret, bool) {
+	var e Secret
+	if m.Secret.IsNull() || m.Secret.IsUnknown() {
+		return e, false
+	}
+	var v Secret
+	d := m.Secret.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecret sets the value of the Secret field in CreateSecretRequest.
+func (m *CreateSecretRequest) SetSecret(ctx context.Context, v Secret) {
+	vs := v.ToObjectValue(ctx)
+	m.Secret = vs
+}
+
 type CreateStorageCredential struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
@@ -10307,6 +10399,55 @@ func (m DeleteSchemaRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteSecretRequest struct {
+	// The three-level (fully qualified) name of the secret (for example,
+	// **catalog_name.schema_name.secret_name**).
+	FullName types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSecretRequest) {
+}
+
+func (to *DeleteSecretRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteSecretRequest) {
+}
+
+func (m DeleteSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSecretRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSecretRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name": m.FullName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSecretRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name": types.StringType,
+		},
+	}
+}
+
 type DeleteStorageCredentialRequest struct {
 	// Force an update even if there are dependent external locations or
 	// external tables (when purpose is **STORAGE**) or dependent services (when
@@ -10641,9 +10782,10 @@ func (m *DeltaRuntimePropertiesKvPairs) SetDeltaRuntimeProperties(ctx context.Co
 }
 
 // A dependency of a SQL object. One of the following fields must be defined:
-// __table__, __function__, __connection__, or __credential__.
+// __table__, __function__, __connection__, __credential__, __volume__, or
+// __secret__.
 type Dependency struct {
-	Connection types.Object `tfsdk:"connection"`
+	UcConnection types.Object `tfsdk:"uc_connection"`
 
 	Credential types.Object `tfsdk:"credential"`
 
@@ -10653,12 +10795,12 @@ type Dependency struct {
 }
 
 func (to *Dependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dependency) {
-	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
-		if toConnection, ok := to.GetConnection(ctx); ok {
-			if fromConnection, ok := from.GetConnection(ctx); ok {
-				// Recursively sync the fields of Connection
-				toConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromConnection)
-				to.SetConnection(ctx, toConnection)
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				// Recursively sync the fields of UcConnection
+				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -10692,11 +10834,11 @@ func (to *Dependency) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 }
 
 func (to *Dependency) SyncFieldsDuringRead(ctx context.Context, from Dependency) {
-	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
-		if toConnection, ok := to.GetConnection(ctx); ok {
-			if fromConnection, ok := from.GetConnection(ctx); ok {
-				toConnection.SyncFieldsDuringRead(ctx, fromConnection)
-				to.SetConnection(ctx, toConnection)
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -10727,7 +10869,7 @@ func (to *Dependency) SyncFieldsDuringRead(ctx context.Context, from Dependency)
 }
 
 func (m Dependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["connection"] = attrs["connection"].SetOptional()
+	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
 	attrs["credential"] = attrs["credential"].SetOptional()
 	attrs["function"] = attrs["function"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -10744,10 +10886,10 @@ func (m Dependency) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m Dependency) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"connection": reflect.TypeOf(ConnectionDependency{}),
-		"credential": reflect.TypeOf(CredentialDependency{}),
-		"function":   reflect.TypeOf(FunctionDependency{}),
-		"table":      reflect.TypeOf(TableDependency{}),
+		"uc_connection": reflect.TypeOf(ConnectionDependency{}),
+		"credential":    reflect.TypeOf(CredentialDependency{}),
+		"function":      reflect.TypeOf(FunctionDependency{}),
+		"table":         reflect.TypeOf(TableDependency{}),
 	}
 }
 
@@ -10758,10 +10900,10 @@ func (m Dependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"connection": m.Connection,
-			"credential": m.Credential,
-			"function":   m.Function,
-			"table":      m.Table,
+			"uc_connection": m.UcConnection,
+			"credential":    m.Credential,
+			"function":      m.Function,
+			"table":         m.Table,
 		})
 }
 
@@ -10769,24 +10911,24 @@ func (m Dependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Dependency) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connection": ConnectionDependency{}.Type(ctx),
-			"credential": CredentialDependency{}.Type(ctx),
-			"function":   FunctionDependency{}.Type(ctx),
-			"table":      TableDependency{}.Type(ctx),
+			"uc_connection": ConnectionDependency{}.Type(ctx),
+			"credential":    CredentialDependency{}.Type(ctx),
+			"function":      FunctionDependency{}.Type(ctx),
+			"table":         TableDependency{}.Type(ctx),
 		},
 	}
 }
 
-// GetConnection returns the value of the Connection field in Dependency as
+// GetUcConnection returns the value of the UcConnection field in Dependency as
 // a ConnectionDependency value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, bool) {
+func (m *Dependency) GetUcConnection(ctx context.Context) (ConnectionDependency, bool) {
 	var e ConnectionDependency
-	if m.Connection.IsNull() || m.Connection.IsUnknown() {
+	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
 		return e, false
 	}
 	var v ConnectionDependency
-	d := m.Connection.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.UcConnection.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -10796,10 +10938,10 @@ func (m *Dependency) GetConnection(ctx context.Context) (ConnectionDependency, b
 	return v, true
 }
 
-// SetConnection sets the value of the Connection field in Dependency.
-func (m *Dependency) SetConnection(ctx context.Context, v ConnectionDependency) {
+// SetUcConnection sets the value of the UcConnection field in Dependency.
+func (m *Dependency) SetUcConnection(ctx context.Context, v ConnectionDependency) {
 	vs := v.ToObjectValue(ctx)
-	m.Connection = vs
+	m.UcConnection = vs
 }
 
 // GetCredential returns the value of the Credential field in Dependency as
@@ -15979,6 +16121,356 @@ func (m *GenerateTemporaryTableCredentialResponse) SetR2TempCredentials(ctx cont
 	m.R2TempCredentials = vs
 }
 
+// Generate volume credentials RPC
+type GenerateTemporaryVolumeCredentialRequest struct {
+	// The operation performed against the volume data, either READ_VOLUME or
+	// WRITE_VOLUME. If WRITE_VOLUME is specified, the credentials returned will
+	// have write permissions, otherwise, it will be read only.
+	Operation types.String `tfsdk:"operation"`
+	// Id of the volume to read or write.
+	VolumeId types.String `tfsdk:"volume_id"`
+}
+
+func (to *GenerateTemporaryVolumeCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenerateTemporaryVolumeCredentialRequest) {
+}
+
+func (to *GenerateTemporaryVolumeCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from GenerateTemporaryVolumeCredentialRequest) {
+}
+
+func (m GenerateTemporaryVolumeCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["operation"] = attrs["operation"].SetOptional()
+	attrs["volume_id"] = attrs["volume_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryVolumeCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenerateTemporaryVolumeCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateTemporaryVolumeCredentialRequest
+// only implements ToObjectValue() and Type().
+func (m GenerateTemporaryVolumeCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"operation": m.Operation,
+			"volume_id": m.VolumeId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenerateTemporaryVolumeCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"operation": types.StringType,
+			"volume_id": types.StringType,
+		},
+	}
+}
+
+type GenerateTemporaryVolumeCredentialResponse struct {
+	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
+
+	AzureAad types.Object `tfsdk:"azure_aad"`
+
+	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas"`
+	// Server time when the credential will expire, in epoch milliseconds. The
+	// API client is advised to cache the credential given this expiration time.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+
+	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
+
+	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
+	// The URL of the storage path accessible by the temporary credential.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *GenerateTemporaryVolumeCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenerateTemporaryVolumeCredentialResponse) {
+	if !from.AwsTempCredentials.IsNull() && !from.AwsTempCredentials.IsUnknown() {
+		if toAwsTempCredentials, ok := to.GetAwsTempCredentials(ctx); ok {
+			if fromAwsTempCredentials, ok := from.GetAwsTempCredentials(ctx); ok {
+				// Recursively sync the fields of AwsTempCredentials
+				toAwsTempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsTempCredentials)
+				to.SetAwsTempCredentials(ctx, toAwsTempCredentials)
+			}
+		}
+	}
+	if !from.AzureAad.IsNull() && !from.AzureAad.IsUnknown() {
+		if toAzureAad, ok := to.GetAzureAad(ctx); ok {
+			if fromAzureAad, ok := from.GetAzureAad(ctx); ok {
+				// Recursively sync the fields of AzureAad
+				toAzureAad.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureAad)
+				to.SetAzureAad(ctx, toAzureAad)
+			}
+		}
+	}
+	if !from.AzureUserDelegationSas.IsNull() && !from.AzureUserDelegationSas.IsUnknown() {
+		if toAzureUserDelegationSas, ok := to.GetAzureUserDelegationSas(ctx); ok {
+			if fromAzureUserDelegationSas, ok := from.GetAzureUserDelegationSas(ctx); ok {
+				// Recursively sync the fields of AzureUserDelegationSas
+				toAzureUserDelegationSas.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureUserDelegationSas)
+				to.SetAzureUserDelegationSas(ctx, toAzureUserDelegationSas)
+			}
+		}
+	}
+	if !from.GcpOauthToken.IsNull() && !from.GcpOauthToken.IsUnknown() {
+		if toGcpOauthToken, ok := to.GetGcpOauthToken(ctx); ok {
+			if fromGcpOauthToken, ok := from.GetGcpOauthToken(ctx); ok {
+				// Recursively sync the fields of GcpOauthToken
+				toGcpOauthToken.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpOauthToken)
+				to.SetGcpOauthToken(ctx, toGcpOauthToken)
+			}
+		}
+	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				// Recursively sync the fields of R2TempCredentials
+				toR2TempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
+}
+
+func (to *GenerateTemporaryVolumeCredentialResponse) SyncFieldsDuringRead(ctx context.Context, from GenerateTemporaryVolumeCredentialResponse) {
+	if !from.AwsTempCredentials.IsNull() && !from.AwsTempCredentials.IsUnknown() {
+		if toAwsTempCredentials, ok := to.GetAwsTempCredentials(ctx); ok {
+			if fromAwsTempCredentials, ok := from.GetAwsTempCredentials(ctx); ok {
+				toAwsTempCredentials.SyncFieldsDuringRead(ctx, fromAwsTempCredentials)
+				to.SetAwsTempCredentials(ctx, toAwsTempCredentials)
+			}
+		}
+	}
+	if !from.AzureAad.IsNull() && !from.AzureAad.IsUnknown() {
+		if toAzureAad, ok := to.GetAzureAad(ctx); ok {
+			if fromAzureAad, ok := from.GetAzureAad(ctx); ok {
+				toAzureAad.SyncFieldsDuringRead(ctx, fromAzureAad)
+				to.SetAzureAad(ctx, toAzureAad)
+			}
+		}
+	}
+	if !from.AzureUserDelegationSas.IsNull() && !from.AzureUserDelegationSas.IsUnknown() {
+		if toAzureUserDelegationSas, ok := to.GetAzureUserDelegationSas(ctx); ok {
+			if fromAzureUserDelegationSas, ok := from.GetAzureUserDelegationSas(ctx); ok {
+				toAzureUserDelegationSas.SyncFieldsDuringRead(ctx, fromAzureUserDelegationSas)
+				to.SetAzureUserDelegationSas(ctx, toAzureUserDelegationSas)
+			}
+		}
+	}
+	if !from.GcpOauthToken.IsNull() && !from.GcpOauthToken.IsUnknown() {
+		if toGcpOauthToken, ok := to.GetGcpOauthToken(ctx); ok {
+			if fromGcpOauthToken, ok := from.GetGcpOauthToken(ctx); ok {
+				toGcpOauthToken.SyncFieldsDuringRead(ctx, fromGcpOauthToken)
+				to.SetGcpOauthToken(ctx, toGcpOauthToken)
+			}
+		}
+	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				toR2TempCredentials.SyncFieldsDuringRead(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
+}
+
+func (m GenerateTemporaryVolumeCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_temp_credentials"] = attrs["aws_temp_credentials"].SetOptional()
+	attrs["azure_aad"] = attrs["azure_aad"].SetOptional()
+	attrs["azure_user_delegation_sas"] = attrs["azure_user_delegation_sas"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].SetOptional()
+	attrs["r2_temp_credentials"] = attrs["r2_temp_credentials"].SetOptional()
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryVolumeCredentialResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenerateTemporaryVolumeCredentialResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aws_temp_credentials":      reflect.TypeOf(AwsCredentials{}),
+		"azure_aad":                 reflect.TypeOf(AzureActiveDirectoryToken{}),
+		"azure_user_delegation_sas": reflect.TypeOf(AzureUserDelegationSas{}),
+		"gcp_oauth_token":           reflect.TypeOf(GcpOauthToken{}),
+		"r2_temp_credentials":       reflect.TypeOf(R2Credentials{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateTemporaryVolumeCredentialResponse
+// only implements ToObjectValue() and Type().
+func (m GenerateTemporaryVolumeCredentialResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aws_temp_credentials":      m.AwsTempCredentials,
+			"azure_aad":                 m.AzureAad,
+			"azure_user_delegation_sas": m.AzureUserDelegationSas,
+			"expiration_time":           m.ExpirationTime,
+			"gcp_oauth_token":           m.GcpOauthToken,
+			"r2_temp_credentials":       m.R2TempCredentials,
+			"url":                       m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenerateTemporaryVolumeCredentialResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aws_temp_credentials":      AwsCredentials{}.Type(ctx),
+			"azure_aad":                 AzureActiveDirectoryToken{}.Type(ctx),
+			"azure_user_delegation_sas": AzureUserDelegationSas{}.Type(ctx),
+			"expiration_time":           types.Int64Type,
+			"gcp_oauth_token":           GcpOauthToken{}.Type(ctx),
+			"r2_temp_credentials":       R2Credentials{}.Type(ctx),
+			"url":                       types.StringType,
+		},
+	}
+}
+
+// GetAwsTempCredentials returns the value of the AwsTempCredentials field in GenerateTemporaryVolumeCredentialResponse as
+// a AwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateTemporaryVolumeCredentialResponse) GetAwsTempCredentials(ctx context.Context) (AwsCredentials, bool) {
+	var e AwsCredentials
+	if m.AwsTempCredentials.IsNull() || m.AwsTempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v AwsCredentials
+	d := m.AwsTempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAwsTempCredentials sets the value of the AwsTempCredentials field in GenerateTemporaryVolumeCredentialResponse.
+func (m *GenerateTemporaryVolumeCredentialResponse) SetAwsTempCredentials(ctx context.Context, v AwsCredentials) {
+	vs := v.ToObjectValue(ctx)
+	m.AwsTempCredentials = vs
+}
+
+// GetAzureAad returns the value of the AzureAad field in GenerateTemporaryVolumeCredentialResponse as
+// a AzureActiveDirectoryToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateTemporaryVolumeCredentialResponse) GetAzureAad(ctx context.Context) (AzureActiveDirectoryToken, bool) {
+	var e AzureActiveDirectoryToken
+	if m.AzureAad.IsNull() || m.AzureAad.IsUnknown() {
+		return e, false
+	}
+	var v AzureActiveDirectoryToken
+	d := m.AzureAad.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureAad sets the value of the AzureAad field in GenerateTemporaryVolumeCredentialResponse.
+func (m *GenerateTemporaryVolumeCredentialResponse) SetAzureAad(ctx context.Context, v AzureActiveDirectoryToken) {
+	vs := v.ToObjectValue(ctx)
+	m.AzureAad = vs
+}
+
+// GetAzureUserDelegationSas returns the value of the AzureUserDelegationSas field in GenerateTemporaryVolumeCredentialResponse as
+// a AzureUserDelegationSas value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateTemporaryVolumeCredentialResponse) GetAzureUserDelegationSas(ctx context.Context) (AzureUserDelegationSas, bool) {
+	var e AzureUserDelegationSas
+	if m.AzureUserDelegationSas.IsNull() || m.AzureUserDelegationSas.IsUnknown() {
+		return e, false
+	}
+	var v AzureUserDelegationSas
+	d := m.AzureUserDelegationSas.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureUserDelegationSas sets the value of the AzureUserDelegationSas field in GenerateTemporaryVolumeCredentialResponse.
+func (m *GenerateTemporaryVolumeCredentialResponse) SetAzureUserDelegationSas(ctx context.Context, v AzureUserDelegationSas) {
+	vs := v.ToObjectValue(ctx)
+	m.AzureUserDelegationSas = vs
+}
+
+// GetGcpOauthToken returns the value of the GcpOauthToken field in GenerateTemporaryVolumeCredentialResponse as
+// a GcpOauthToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateTemporaryVolumeCredentialResponse) GetGcpOauthToken(ctx context.Context) (GcpOauthToken, bool) {
+	var e GcpOauthToken
+	if m.GcpOauthToken.IsNull() || m.GcpOauthToken.IsUnknown() {
+		return e, false
+	}
+	var v GcpOauthToken
+	d := m.GcpOauthToken.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGcpOauthToken sets the value of the GcpOauthToken field in GenerateTemporaryVolumeCredentialResponse.
+func (m *GenerateTemporaryVolumeCredentialResponse) SetGcpOauthToken(ctx context.Context, v GcpOauthToken) {
+	vs := v.ToObjectValue(ctx)
+	m.GcpOauthToken = vs
+}
+
+// GetR2TempCredentials returns the value of the R2TempCredentials field in GenerateTemporaryVolumeCredentialResponse as
+// a R2Credentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenerateTemporaryVolumeCredentialResponse) GetR2TempCredentials(ctx context.Context) (R2Credentials, bool) {
+	var e R2Credentials
+	if m.R2TempCredentials.IsNull() || m.R2TempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v R2Credentials
+	d := m.R2TempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetR2TempCredentials sets the value of the R2TempCredentials field in GenerateTemporaryVolumeCredentialResponse.
+func (m *GenerateTemporaryVolumeCredentialResponse) SetR2TempCredentials(ctx context.Context, v R2Credentials) {
+	vs := v.ToObjectValue(ctx)
+	m.R2TempCredentials = vs
+}
+
 type GetAccessRequestDestinationsRequest struct {
 	// The full name of the securable.
 	FullName types.String `tfsdk:"-"`
@@ -17791,6 +18283,61 @@ func (m GetSchemaRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 
 // Type implements basetypes.ObjectValuable.
 func (m GetSchemaRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":      types.StringType,
+			"include_browse": types.BoolType,
+		},
+	}
+}
+
+type GetSecretRequest struct {
+	// The three-level (fully qualified) name of the secret (for example,
+	// **catalog_name.schema_name.secret_name**).
+	FullName types.String `tfsdk:"-"`
+	// Whether to include secrets in the response for which you only have the
+	// **BROWSE** privilege, which limits access to metadata.
+	IncludeBrowse types.Bool `tfsdk:"-"`
+}
+
+func (to *GetSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSecretRequest) {
+}
+
+func (to *GetSecretRequest) SyncFieldsDuringRead(ctx context.Context, from GetSecretRequest) {
+}
+
+func (m GetSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["include_browse"] = attrs["include_browse"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSecretRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSecretRequest
+// only implements ToObjectValue() and Type().
+func (m GetSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":      m.FullName,
+			"include_browse": m.IncludeBrowse,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSecretRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_name":      types.StringType,
@@ -20758,6 +21305,181 @@ func (m *ListSchemasResponse) SetSchemas(ctx context.Context, v []SchemaInfo) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Schemas = types.ListValueMust(t, vs)
+}
+
+type ListSecretsRequest struct {
+	// The name of the catalog under which to list secrets. Both
+	// **catalog_name** and **schema_name** must be specified together.
+	CatalogName types.String `tfsdk:"-"`
+	// Whether to include secrets in the response for which you only have the
+	// **BROWSE** privilege, which limits access to metadata.
+	IncludeBrowse types.Bool `tfsdk:"-"`
+	// Maximum number of secrets to return.
+	//
+	// - If not specified, at most 10000 secrets are returned. - If set to a
+	// value greater than 0, the page length is the minimum of this value and
+	// 10000. - If set to 0, the page length is set to 10000. - If set to a
+	// value less than 0, an invalid parameter error is returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to the next page based on previous query.
+	// The maximum page length is determined by a server configured value.
+	PageToken types.String `tfsdk:"-"`
+	// The name of the schema under which to list secrets. Both **catalog_name**
+	// and **schema_name** must be specified together.
+	SchemaName types.String `tfsdk:"-"`
+}
+
+func (to *ListSecretsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSecretsRequest) {
+}
+
+func (to *ListSecretsRequest) SyncFieldsDuringRead(ctx context.Context, from ListSecretsRequest) {
+}
+
+func (m ListSecretsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+	attrs["include_browse"] = attrs["include_browse"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSecretsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSecretsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSecretsRequest
+// only implements ToObjectValue() and Type().
+func (m ListSecretsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name":   m.CatalogName,
+			"include_browse": m.IncludeBrowse,
+			"page_size":      m.PageSize,
+			"page_token":     m.PageToken,
+			"schema_name":    m.SchemaName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSecretsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name":   types.StringType,
+			"include_browse": types.BoolType,
+			"page_size":      types.Int64Type,
+			"page_token":     types.StringType,
+			"schema_name":    types.StringType,
+		},
+	}
+}
+
+// Response message for ListSecrets.
+type ListSecretsResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. **page_token** should be set to this value for the next
+	// request.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// An array of secret objects.
+	Secrets types.List `tfsdk:"secrets"`
+}
+
+func (to *ListSecretsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSecretsResponse) {
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Secrets = from.Secrets
+	}
+}
+
+func (to *ListSecretsResponse) SyncFieldsDuringRead(ctx context.Context, from ListSecretsResponse) {
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Secrets = from.Secrets
+	}
+}
+
+func (m ListSecretsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["secrets"] = attrs["secrets"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSecretsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSecretsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"secrets": reflect.TypeOf(Secret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSecretsResponse
+// only implements ToObjectValue() and Type().
+func (m ListSecretsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"secrets":         m.Secrets,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSecretsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"secrets": basetypes.ListType{
+				ElemType: Secret{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSecrets returns the value of the Secrets field in ListSecretsResponse as
+// a slice of Secret values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListSecretsResponse) GetSecrets(ctx context.Context) ([]Secret, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v []Secret
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in ListSecretsResponse.
+func (m *ListSecretsResponse) SetSecrets(ctx context.Context, v []Secret) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.ListValueMust(t, vs)
 }
 
 type ListStorageCredentialsRequest struct {
@@ -26373,6 +27095,172 @@ func (m *SchemaInfo) SetProperties(ctx context.Context, v map[string]types.Strin
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Properties = types.MapValueMust(t, vs)
+}
+
+// A secret stored in Unity Catalog. Secrets are three-level namespace objects
+// (catalog.schema.secret) that securely store sensitive credential data such as
+// passwords, tokens, and keys.
+type Secret struct {
+	// Indicates whether the principal is limited to retrieving metadata for the
+	// associated object through the **BROWSE** privilege when
+	// **include_browse** is enabled in the request.
+	BrowseOnly types.Bool `tfsdk:"browse_only"`
+	// The name of the catalog where the schema and the secret reside.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// User-provided free-form text description of the secret.
+	Comment types.String `tfsdk:"comment"`
+	// The time at which this secret was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The principal that created the secret.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// The effective owner of the secret, which may differ from the directly-set
+	// **owner** due to inheritance.
+	EffectiveOwner types.String `tfsdk:"effective_owner"`
+	// The secret value. Only populated in responses when you have the
+	// **READ_SECRET** privilege and **include_value** is set to true in the
+	// request. The maximum size is 60 KiB.
+	EffectiveValue types.String `tfsdk:"effective_value"`
+	// User-provided expiration time of the secret. This field indicates when
+	// the secret should no longer be used and may be displayed as a warning in
+	// the UI. It is purely informational and does not trigger any automatic
+	// actions or affect the secret's lifecycle.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+
+	ExternalSecretId types.String `tfsdk:"external_secret_id"`
+	// The three-level (fully qualified) name of the secret, in the form of
+	// **catalog_name.schema_name.secret_name**.
+	FullName types.String `tfsdk:"full_name"`
+	// Unique identifier of the metastore hosting the secret.
+	MetastoreId types.String `tfsdk:"metastore_id"`
+	// The name of the secret, relative to its parent schema.
+	Name types.String `tfsdk:"name"`
+	// The owner of the secret. Defaults to the creating principal on creation.
+	// Can be updated to transfer ownership of the secret to another principal.
+	Owner types.String `tfsdk:"owner"`
+	// The name of the schema where the secret resides.
+	SchemaName types.String `tfsdk:"schema_name"`
+	// The time at which this secret was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// The principal that last updated the secret.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+	// The secret value to store. This field is input-only and is not returned
+	// in responses — use the **effective_value** field (via GetSecret with
+	// **include_value** set to true) to read the secret value. The maximum size
+	// is 60 KiB (pre-encryption). Accepted content includes passwords, tokens,
+	// keys, and other sensitive credential data.
+	Value types.String `tfsdk:"value"`
+}
+
+func (to *Secret) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Secret) {
+	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
+		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Owner = from.Owner
+	}
+	if !from.Value.IsUnknown() && !from.Value.IsNull() {
+		// Value is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Value = from.Value
+	}
+}
+
+func (to *Secret) SyncFieldsDuringRead(ctx context.Context, from Secret) {
+	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
+		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Owner = from.Owner
+	}
+	if !from.Value.IsUnknown() && !from.Value.IsNull() {
+		// Value is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Value = from.Value
+	}
+}
+
+func (m Secret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["catalog_name"] = attrs["catalog_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
+	attrs["effective_value"] = attrs["effective_value"].SetComputed()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
+	attrs["external_secret_id"] = attrs["external_secret_id"].SetComputed()
+	attrs["full_name"] = attrs["full_name"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["owner"] = attrs["owner"].SetComputed()
+	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+	attrs["value"] = attrs["value"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Secret.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Secret) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Secret
+// only implements ToObjectValue() and Type().
+func (m Secret) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"browse_only":        m.BrowseOnly,
+			"catalog_name":       m.CatalogName,
+			"comment":            m.Comment,
+			"create_time":        m.CreateTime,
+			"created_by":         m.CreatedBy,
+			"effective_owner":    m.EffectiveOwner,
+			"effective_value":    m.EffectiveValue,
+			"expire_time":        m.ExpireTime,
+			"external_secret_id": m.ExternalSecretId,
+			"full_name":          m.FullName,
+			"metastore_id":       m.MetastoreId,
+			"name":               m.Name,
+			"owner":              m.Owner,
+			"schema_name":        m.SchemaName,
+			"update_time":        m.UpdateTime,
+			"updated_by":         m.UpdatedBy,
+			"value":              m.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Secret) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"browse_only":        types.BoolType,
+			"catalog_name":       types.StringType,
+			"comment":            types.StringType,
+			"create_time":        timetypes.RFC3339{}.Type(ctx),
+			"created_by":         types.StringType,
+			"effective_owner":    types.StringType,
+			"effective_value":    types.StringType,
+			"expire_time":        timetypes.RFC3339{}.Type(ctx),
+			"external_secret_id": types.StringType,
+			"full_name":          types.StringType,
+			"metastore_id":       types.StringType,
+			"name":               types.StringType,
+			"owner":              types.StringType,
+			"schema_name":        types.StringType,
+			"update_time":        timetypes.RFC3339{}.Type(ctx),
+			"updated_by":         types.StringType,
+			"value":              types.StringType,
+		},
+	}
 }
 
 // Generic definition of a securable, which is uniquely defined in a metastore
@@ -32536,6 +33424,111 @@ func (m *UpdateSchema) SetProperties(ctx context.Context, v map[string]types.Str
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Properties = types.MapValueMust(t, vs)
+}
+
+type UpdateSecretRequest struct {
+	// The three-level (fully qualified) name of the secret (for example,
+	// **catalog_name.schema_name.secret_name**).
+	FullName types.String `tfsdk:"-"`
+	// The secret object containing the fields to update. Only fields specified
+	// in **update_mask** will be updated.
+	Secret types.Object `tfsdk:"secret"`
+	// The field mask specifying which fields of the secret to update. Supported
+	// fields: **value**, **comment**, **owner**, **expire_time**.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateSecretRequest) {
+	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
+		if toSecret, ok := to.GetSecret(ctx); ok {
+			if fromSecret, ok := from.GetSecret(ctx); ok {
+				// Recursively sync the fields of Secret
+				toSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromSecret)
+				to.SetSecret(ctx, toSecret)
+			}
+		}
+	}
+}
+
+func (to *UpdateSecretRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateSecretRequest) {
+	if !from.Secret.IsNull() && !from.Secret.IsUnknown() {
+		if toSecret, ok := to.GetSecret(ctx); ok {
+			if fromSecret, ok := from.GetSecret(ctx); ok {
+				toSecret.SyncFieldsDuringRead(ctx, fromSecret)
+				to.SetSecret(ctx, toSecret)
+			}
+		}
+	}
+}
+
+func (m UpdateSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["secret"] = attrs["secret"].SetRequired()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSecretRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"secret": reflect.TypeOf(Secret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSecretRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":   m.FullName,
+			"secret":      m.Secret,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateSecretRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":   types.StringType,
+			"secret":      Secret{}.Type(ctx),
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetSecret returns the value of the Secret field in UpdateSecretRequest as
+// a Secret value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateSecretRequest) GetSecret(ctx context.Context) (Secret, bool) {
+	var e Secret
+	if m.Secret.IsNull() || m.Secret.IsUnknown() {
+		return e, false
+	}
+	var v Secret
+	d := m.Secret.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecret sets the value of the Secret field in UpdateSecretRequest.
+func (m *UpdateSecretRequest) SetSecret(ctx context.Context, v Secret) {
+	vs := v.ToObjectValue(ctx)
+	m.Secret = vs
 }
 
 type UpdateStorageCredential struct {

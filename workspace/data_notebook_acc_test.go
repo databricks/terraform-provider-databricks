@@ -50,17 +50,6 @@ func TestAccNotebookData_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
-func TestAccNotebookData_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: notebookDataTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccNotebookData_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: notebookDataTemplate(`

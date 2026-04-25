@@ -53,6 +53,8 @@ func TestAccDataSourcesJob_EmptyID(t *testing.T) {
 	})
 }
 
+// TestAccDataSourcesJob_EmptyBlock verifies that an empty provider_config {}
+// block is valid (workspace_id is Optional+Computed).
 func TestAccDataSourcesJob_EmptyBlock(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
@@ -61,7 +63,6 @@ func TestAccDataSourcesJob_EmptyBlock(t *testing.T) {
 			provider_config {
 			}
 		}`,
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
 	})
 }
 

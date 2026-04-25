@@ -108,6 +108,9 @@ func TestAccDataSourceJob_EmptyID(t *testing.T) {
 	})
 }
 
+// TestAccDataSourceJob_EmptyBlock verifies that an empty provider_config {}
+// block is valid (workspace_id is Optional+Computed).
+// The "no job found" error confirms schema validation passed.
 func TestAccDataSourceJob_EmptyBlock(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
@@ -116,7 +119,7 @@ func TestAccDataSourceJob_EmptyBlock(t *testing.T) {
 			provider_config {
 			}
 		}`,
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		ExpectError: regexp.MustCompile(`no job found with specified name`),
 	})
 }
 

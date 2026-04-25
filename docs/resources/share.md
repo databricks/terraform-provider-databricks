@@ -7,6 +7,12 @@ In Delta Sharing, a share is a read-only collection of tables and table partitio
 
 -> This resource can only be used with a workspace-level provider!
 
+## Plugin Framework Migration
+
+The share resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_share"`.
+
+-> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. To manage shares across workspaces from an account-level provider, use the default Plugin Framework implementation (do not set the override).
+
 In a Unity Catalog-enabled Databricks workspace, a share is a securable object registered in Unity Catalog. A `databricks_share` is contained within a [databricks_metastore](metastore.md). If you remove a share from your Unity Catalog metastore, all recipients of that share lose the ability to access it.
 
 ## Example Usage

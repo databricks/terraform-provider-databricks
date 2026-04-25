@@ -80,6 +80,8 @@ type App_SdkV2 struct {
 	Space types.String `tfsdk:"space"`
 
 	TelemetryExportDestinations types.List `tfsdk:"telemetry_export_destinations"`
+	// The URL of the thumbnail image for the app.
+	ThumbnailUrl types.String `tfsdk:"thumbnail_url"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time"`
 	// The email of the user that last updated the app.
@@ -261,6 +263,7 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
 	attrs["space"] = attrs["space"].SetOptional()
 	attrs["telemetry_export_destinations"] = attrs["telemetry_export_destinations"].SetOptional()
+	attrs["thumbnail_url"] = attrs["thumbnail_url"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
@@ -322,6 +325,7 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"service_principal_name":        m.ServicePrincipalName,
 			"space":                         m.Space,
 			"telemetry_export_destinations": m.TelemetryExportDestinations,
+			"thumbnail_url":                 m.ThumbnailUrl,
 			"update_time":                   m.UpdateTime,
 			"updater":                       m.Updater,
 			"url":                           m.Url,
@@ -374,6 +378,7 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"telemetry_export_destinations": basetypes.ListType{
 				ElemType: TelemetryExportDestination_SdkV2{}.Type(ctx),
 			},
+			"thumbnail_url":   types.StringType,
 			"update_time":     types.StringType,
 			"updater":         types.StringType,
 			"url":             types.StringType,

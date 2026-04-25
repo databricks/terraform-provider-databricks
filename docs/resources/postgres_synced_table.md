@@ -26,7 +26,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
@@ -111,6 +111,9 @@ In addition to the above arguments, the following attributes are exported:
 * `message` (string) - A text description of the current state of the synced table
 * `ongoing_sync_progress` (SyncedTablePipelineProgress)
 * `pipeline_id` (string) - ID of the associated pipeline
+* `project` (string) - The full resource name of the project associated with the table.
+  
+  Format: "projects/{project_id}"
 * `provisioning_phase` (string) - The current phase of the data synchronization pipeline. Possible values are: `PROVISIONING_PHASE_INDEX_SCAN`, `PROVISIONING_PHASE_INDEX_SORT`, `PROVISIONING_PHASE_MAIN`
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`
 

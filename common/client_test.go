@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
@@ -497,4 +498,68 @@ func TestGetApiLevel_ReturnsWorkspaceWhenSet(t *testing.T) {
 func TestGetApiLevel_ReturnsEmptyWhenNotSet(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, testSchemaWithApiField(), map[string]any{})
 	assert.Equal(t, "", GetApiLevel(d))
+}
+
+// testGetApiLevelFromDiff exercises GetApiLevelFromDiff by running a full schema diff
+// with a CustomizeDiff that captures the result. ResourceDiff has no simple test
+// constructor, so we use r.Diff() to create one through the SDK's diff pipeline.
+func testGetApiLevelFromDiff(t *testing.T, apiValue string) string {
+	t.Helper()
+	testSchema := map[string]*schema.Schema{
+		"name": {Type: schema.TypeString, Required: true},
+	}
+	AddApiField(testSchema)
+
+	var captured string
+	r := &schema.Resource{
+		Schema: testSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			captured = GetApiLevelFromDiff(d)
+			return nil
+		},
+	}
+
+	rawConfig := map[string]interface{}{"name": "test"}
+	if apiValue != "" {
+		rawConfig["api"] = apiValue
+	}
+	rc := terraform.NewResourceConfigRaw(rawConfig)
+	_, err := r.Diff(context.Background(), nil, rc, nil)
+	require.NoError(t, err)
+	return captured
+}
+
+func TestGetApiLevelFromDiff_ReturnsAccount(t *testing.T) {
+	assert.Equal(t, "account", testGetApiLevelFromDiff(t, "account"))
+}
+
+func TestGetApiLevelFromDiff_ReturnsWorkspace(t *testing.T) {
+	assert.Equal(t, "workspace", testGetApiLevelFromDiff(t, "workspace"))
+}
+
+func TestGetApiLevelFromDiff_ReturnsEmptyWhenNotSet(t *testing.T) {
+	assert.Equal(t, "", testGetApiLevelFromDiff(t, ""))
+}
+
+func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		// No cachedWorkspaceClient — any attempt to call WorkspaceClient()
+		// and make an API call would fail, proving the cache works.
+	}
+	c.SetCachedWorkspaceID(12345)
+
+	id, err := c.CurrentWorkspaceID(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), id)
+
+	// Second call also returns cached value.
+	id2, err := c.CurrentWorkspaceID(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), id2)
 }

@@ -367,7 +367,7 @@ func TestGrantsReadHonorsProviderConfig(t *testing.T) {
 			workspace_id = "123456"
 		}
 		`,
-	}.ExpectError(t, `failed to validate workspace_id: failed to get the workspace_id: strconv.ParseInt: parsing "": invalid syntax`)
+	}.ExpectError(t, `failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 12345 but got 123456 in provider_config. please check the workspace_id provided in provider_config`)
 }
 
 func TestGrantsRead(t *testing.T) {

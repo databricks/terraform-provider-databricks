@@ -40,7 +40,7 @@ func ResourceGroup() common.Resource {
 	common.NamespaceCustomizeSchemaMap(groupSchema)
 	return common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
+			return common.CustomizeDiffDualResources(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)

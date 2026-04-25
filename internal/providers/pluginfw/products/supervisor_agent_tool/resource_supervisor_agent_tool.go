@@ -114,7 +114,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Tool struct {
 	App types.Object `tfsdk:"app"`
 
-	UcConnection types.Object `tfsdk:"uc_connection"`
+	Connection types.Object `tfsdk:"connection"`
 	// Description of what this tool does (user-facing).
 	Description types.String `tfsdk:"description"`
 
@@ -152,7 +152,7 @@ type Tool struct {
 func (m Tool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app":                 reflect.TypeOf(supervisoragents_tf.App{}),
-		"uc_connection":       reflect.TypeOf(supervisoragents_tf.Connection{}),
+		"connection":          reflect.TypeOf(supervisoragents_tf.Connection{}),
 		"genie_space":         reflect.TypeOf(supervisoragents_tf.GenieSpace{}),
 		"knowledge_assistant": reflect.TypeOf(supervisoragents_tf.KnowledgeAssistant{}),
 		"uc_function":         reflect.TypeOf(supervisoragents_tf.UcFunction{}),
@@ -171,7 +171,7 @@ func (m Tool) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"app": m.App,
-			"uc_connection":       m.UcConnection,
+			"connection":          m.Connection,
 			"description":         m.Description,
 			"genie_space":         m.GenieSpace,
 			"id":                  m.Id,
@@ -193,7 +193,7 @@ func (m Tool) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Tool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"app": supervisoragents_tf.App{}.Type(ctx),
-			"uc_connection":       supervisoragents_tf.Connection{}.Type(ctx),
+			"connection":          supervisoragents_tf.Connection{}.Type(ctx),
 			"description":         types.StringType,
 			"genie_space":         supervisoragents_tf.GenieSpace{}.Type(ctx),
 			"id":                  types.StringType,
@@ -223,12 +223,12 @@ func (to *Tool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Tool) {
 			}
 		}
 	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				// Recursively sync the fields of UcConnection
-				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				// Recursively sync the fields of Connection
+				toConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -287,11 +287,11 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 			}
 		}
 	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				toConnection.SyncFieldsDuringRead(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -336,7 +336,7 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 
 func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetOptional()
-	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
+	attrs["connection"] = attrs["connection"].SetOptional()
 	attrs["description"] = attrs["description"].SetRequired()
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
@@ -384,16 +384,16 @@ func (m *Tool) SetApp(ctx context.Context, v supervisoragents_tf.App) {
 	m.App = vs
 }
 
-// GetUcConnection returns the value of the UcConnection field in Tool as
+// GetConnection returns the value of the Connection field in Tool as
 // a supervisoragents_tf.Connection value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Tool) GetUcConnection(ctx context.Context) (supervisoragents_tf.Connection, bool) {
+func (m *Tool) GetConnection(ctx context.Context) (supervisoragents_tf.Connection, bool) {
 	var e supervisoragents_tf.Connection
-	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
+	if m.Connection.IsNull() || m.Connection.IsUnknown() {
 		return e, false
 	}
 	var v supervisoragents_tf.Connection
-	d := m.UcConnection.As(ctx, &v, basetypes.ObjectAsOptions{
+	d := m.Connection.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -403,10 +403,10 @@ func (m *Tool) GetUcConnection(ctx context.Context) (supervisoragents_tf.Connect
 	return v, true
 }
 
-// SetUcConnection sets the value of the UcConnection field in Tool.
-func (m *Tool) SetUcConnection(ctx context.Context, v supervisoragents_tf.Connection) {
+// SetConnection sets the value of the Connection field in Tool.
+func (m *Tool) SetConnection(ctx context.Context, v supervisoragents_tf.Connection) {
 	vs := v.ToObjectValue(ctx)
-	m.UcConnection = vs
+	m.Connection = vs
 }
 
 // GetGenieSpace returns the value of the GenieSpace field in Tool as

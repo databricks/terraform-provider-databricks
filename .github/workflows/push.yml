@@ -14,20 +14,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
 
       - name: Detect non-markdown changes
         id: filter
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
-        with:
-          # tests_required is true when any non-markdown file is touched.
-          # PRs that only modify *.md files (e.g. docs/, NEXT_CHANGELOG.md) skip tests.
-          filters: |
-            tests_required:
-              - '!**/*.md'
+        shell: bash
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}"
 
+          echo "Comparing $BASE_SHA...$HEAD_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          NON_MD=$(echo "$CHANGED" | grep -v '\.md$' || true)
+          if [ -z "$NON_MD" ] && [ -n "$CHANGED" ]; then
+            echo "Only markdown files changed — tests will be skipped"
+            echo "tests_required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-markdown files changed — tests will run"
+            echo "tests_required=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The `tests` job is a required status check. It MUST always complete (not be
+  # skipped) so that the required check is satisfied. Step-level `if:` skips
+  # the actual work when only markdown files changed; the job itself succeeds.
   tests:
     needs: changes
-    if: needs.changes.outputs.tests_required == 'true'
     runs-on:
       group: databricks-protected-runner-group
       labels: linux-ubuntu-latest
@@ -37,15 +52,22 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout
+      - if: needs.changes.outputs.tests_required == 'false'
+        name: Skip tests (markdown-only change)
+        run: echo "Only markdown files changed — skipping tests."
+
+      - if: needs.changes.outputs.tests_required == 'true'
+        name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Setup Go build environment
+      - if: needs.changes.outputs.tests_required == 'true'
+        name: Setup Go build environment
         uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
 
-      - name: Pull external libraries
+      - if: needs.changes.outputs.tests_required == 'true'
+        name: Pull external libraries
         shell: bash
         run: |
           jf go mod vendor
@@ -57,7 +79,8 @@ jobs:
           echo "GONOSUMCHECK=*" >> $GITHUB_ENV
           echo "GONOSUMDB=*" >> $GITHUB_ENV
 
-      - name: Run tests
+      - if: needs.changes.outputs.tests_required == 'true'
+        name: Run tests
         shell: bash
         run: |
           # Unset OIDC token env vars injected by the id-token: write permission.
@@ -67,7 +90,8 @@ jobs:
           unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
           make test
 
-      - name: Publish test coverage
+      - if: needs.changes.outputs.tests_required == 'true'
+        name: Publish test coverage
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

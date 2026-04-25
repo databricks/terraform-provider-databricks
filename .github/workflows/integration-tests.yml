@@ -21,16 +21,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        with:
+          fetch-depth: 0
 
       - name: Detect non-markdown changes
         id: filter
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
-        with:
-          # tests_required is true when any non-markdown file is touched.
-          # PRs that only modify *.md files (e.g. docs/, NEXT_CHANGELOG.md) skip integration tests.
-          filters: |
-            tests_required:
-              - '!**/*.md'
+        shell: bash
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}"
+
+          echo "Comparing $BASE_SHA...$HEAD_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          NON_MD=$(echo "$CHANGED" | grep -v '\.md$' || true)
+          if [ -z "$NON_MD" ] && [ -n "$CHANGED" ]; then
+            echo "Only markdown files changed — integration tests will be skipped"
+            echo "tests_required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Non-markdown files changed — integration tests will run"
+            echo "tests_required=true" >> "$GITHUB_OUTPUT"
+          fi
 
   check-token:
     name: Check secrets access
@@ -97,7 +110,7 @@ jobs:
   # * Avoid running integration tests twice, since it was already run at the tip of the branch before squashing.
   # We also auto-approve when a PR only changes markdown files, since in that case the trigger-tests job is
   # skipped and the required "Integration Tests" check would otherwise never be reported.
-  # always() is required so this still runs when the `changes` job's output is consumed by the if condition.
+  # always() is required so this still runs when the upstream `changes` job's output is consumed by the if condition.
   auto-approve:
     needs: changes
     if: always() && (github.event_name == 'merge_group' || (github.event_name == 'pull_request' && needs.changes.outputs.tests_required == 'false'))

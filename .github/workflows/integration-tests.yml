@@ -9,6 +9,29 @@ on:
 
 
 jobs:
+  changes:
+    name: Detect non-markdown changes
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    outputs:
+      tests_required: ${{ steps.filter.outputs.tests_required }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+
+      - name: Detect non-markdown changes
+        id: filter
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        with:
+          # tests_required is true when any non-markdown file is touched.
+          # PRs that only modify *.md files (e.g. docs/, NEXT_CHANGELOG.md) skip integration tests.
+          filters: |
+            tests_required:
+              - '!**/*.md'
+
   check-token:
     name: Check secrets access
 
@@ -38,8 +61,8 @@ jobs:
       group: databricks-release-runner-group-emu-access
       labels: linux-ubuntu-latest-emu-access
 
-    needs: check-token
-    if: github.event_name == 'pull_request'  && needs.check-token.outputs.has_token == 'true'
+    needs: [check-token, changes]
+    if: github.event_name == 'pull_request' && needs.check-token.outputs.has_token == 'true' && needs.changes.outputs.tests_required == 'true'
     environment: "test-trigger-is"
 
     steps:
@@ -72,8 +95,12 @@ jobs:
   # We auto approve the check for the merge queue for two reasons:
   # * Queue times out due to duration of tests.
   # * Avoid running integration tests twice, since it was already run at the tip of the branch before squashing.
+  # We also auto-approve when a PR only changes markdown files, since in that case the trigger-tests job is
+  # skipped and the required "Integration Tests" check would otherwise never be reported.
+  # always() is required so this still runs when the `changes` job's output is consumed by the if condition.
   auto-approve:
-    if: github.event_name == 'merge_group'
+    needs: changes
+    if: always() && (github.event_name == 'merge_group' || (github.event_name == 'pull_request' && needs.changes.outputs.tests_required == 'false'))
 
     runs-on:
       group: databricks-deco-testing-runner-group
@@ -88,6 +115,9 @@ jobs:
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
+            const reason = context.eventName === 'merge_group'
+              ? 'Auto-approved for merge queue (tests already passed on PR)'
+              : 'Auto-approved for docs-only change (no non-markdown files modified)';
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -97,6 +127,6 @@ jobs:
               conclusion: 'success',
               output: {
                 title: 'Integration Tests',
-                summary: 'Auto-approved for merge queue (tests already passed on PR)'
+                summary: reason
               }
             });

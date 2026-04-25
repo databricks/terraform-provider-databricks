@@ -7,7 +7,27 @@ on:
     types: [checks_requested]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      tests_required: ${{ steps.filter.outputs.tests_required }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Detect non-markdown changes
+        id: filter
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        with:
+          # tests_required is true when any non-markdown file is touched.
+          # PRs that only modify *.md files (e.g. docs/, NEXT_CHANGELOG.md) skip tests.
+          filters: |
+            tests_required:
+              - '!**/*.md'
+
   tests:
+    needs: changes
+    if: needs.changes.outputs.tests_required == 'true'
     runs-on:
       group: databricks-protected-runner-group
       labels: linux-ubuntu-latest

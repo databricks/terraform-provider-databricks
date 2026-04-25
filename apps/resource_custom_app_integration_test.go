@@ -51,6 +51,7 @@ func TestResourceCustomAppIntegrationCreate(t *testing.T) {
 		},
 		Create:    true,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "custom_integration_name"
 		redirect_urls = ["https://example.com"]
@@ -93,6 +94,7 @@ func TestResourceCustomAppIntegrationRead(t *testing.T) {
 		Read:      true,
 		New:       true,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "integration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"name":           "custom_integration_name",
@@ -158,6 +160,7 @@ func TestResourceCustomAppIntegrationUpdate(t *testing.T) {
 			"token_access_policy.refresh_token_ttl_in_minutes": "30",
 		},
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "integration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": "custom_integration_name",
@@ -172,6 +175,7 @@ func TestResourceCustomAppIntegrationDelete(t *testing.T) {
 		},
 		Resource:  ResourceCustomAppIntegration(),
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "integration_id",
 	}.ApplyAndExpectData(t, nil)

@@ -34,7 +34,7 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess)
 
-### CustomerFacingIngressNetworkPolicyAppsDestination
+### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
 * `all_destinations` (boolean) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyAuthentication
@@ -48,7 +48,7 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string) - We only support IPv4 and IPv4 CIDR notation for now
 
-### CustomerFacingIngressNetworkPolicyLakebaseDestination
+### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
 * `all_destinations` (boolean) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
@@ -59,8 +59,7 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyPublicIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
 * `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
-* `label` (string) - User-provided name for this ingress rule. Helps identify which rule
-  caused a request to be denied or dry-run denied
+* `label` (string) - The label for this ingress rule
 * `origin` (CustomerFacingIngressNetworkPolicyPublicRequestOrigin)
 
 ### CustomerFacingIngressNetworkPolicyPublicRequestOrigin
@@ -71,10 +70,10 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
-* `apps` (CustomerFacingIngressNetworkPolicyAppsDestination)
-* `lakebase` (CustomerFacingIngressNetworkPolicyLakebaseDestination)
+* `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination)
+* `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination)
-* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination)
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination) - Workspace destinations
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scopes` (list of string)
@@ -85,6 +84,9 @@ The following attributes are exported:
 ### EgressNetworkPolicyNetworkAccessPolicy
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
+* `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are blocked from accessing.
+  These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
+  Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 * `restriction_mode` (string) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
 

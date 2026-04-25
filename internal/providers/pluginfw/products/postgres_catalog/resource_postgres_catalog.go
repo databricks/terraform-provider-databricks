@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -50,10 +51,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -269,6 +270,8 @@ func (m Catalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -341,28 +344,18 @@ func (r *CatalogResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *CatalogResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip validation on destroy plans (plan is null).
+	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	var plan Catalog
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var namespace ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *CatalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -426,6 +419,7 @@ func (r *CatalogResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *CatalogResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -463,7 +457,6 @@ func (r *CatalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get postgres_catalog", err.Error())
 		return
 	}
@@ -477,6 +470,10 @@ func (r *CatalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *CatalogResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -515,12 +512,23 @@ func (r *CatalogResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	response, err := client.Postgres.DeleteCatalog(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_catalog", err.Error())
 		return
 	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
 
 	err = response.Wait(ctx)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_catalog delete", err.Error())
 		return

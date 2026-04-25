@@ -20,7 +20,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### OfflineStoreConfig
 * `catalog_name` (string, required) - The Unity Catalog catalog name
@@ -39,6 +39,7 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
+* `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only

@@ -111,6 +111,54 @@ resource "databricks_postgres_endpoint" "always_on" {
 }
 ```
 
+### High Availability Endpoint
+
+Configure a single endpoint with multiple compute instances for high availability.
+One compute instance acts as the read-write primary, while the remaining secondary compute instances stand ready for automatic failover.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_primary" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    group = {
+      min = 2
+      max = 2
+    }
+  }
+}
+```
+
+### High Availability Endpoint with Readable Secondaries
+
+Enable readable secondaries to offload read traffic to replica computes via a
+dedicated read-only host, in addition to hot-standby failover. Only supported
+on read-write endpoints with more than one compute. The secondaries are optionally 
+exposed as read-only host via `enable_readable_secondaries`.
+
+High availability requires scale-to-zero to be disabled.
+Set `no_suspension = true` in `default_endpoint_settings` as shown in the example below.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_readable" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
+    default_endpoint_settings = {
+      // turn off the "Scale to zero"
+      no_suspension = true
+    }
+  }
+}
+```
+
 ### Complete Example
 
 ```hcl
@@ -145,6 +193,11 @@ resource "databricks_postgres_endpoint" "primary" {
     autoscaling_limit_min_cu = 1.0
     autoscaling_limit_max_cu = 9.0
     no_suspension = true  # Never suspend
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
   }
 }
 
@@ -168,11 +221,12 @@ The following arguments are supported:
   For example, `primary` becomes `projects/my-app/branches/development/endpoints/primary`
 * `parent` (string, required) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
+* `replace_existing` (boolean, optional) - If true, update the endpoint if it already exists instead of returning an error
 * `spec` (EndpointSpec, optional) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### EndpointGroupSpec
 * `max` (integer, required) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
@@ -238,6 +292,14 @@ In addition to the above arguments, the following attributes are exported:
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `endpoint_id` (string) - The short identifier of the endpoint, suitable for showing to the users.
+  For an endpoint with name `projects/my-project/branches/my-branch/endpoints/my-endpoint`,
+  the endpoint_id is `my-endpoint`.
+  
+  Use this field when building UI components that display endpoints to users (e.g., a drop-down
+  selector). Prefer showing `endpoint_id` instead of the full resource name from `Endpoint.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}` format
+  and is not user-friendly
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint

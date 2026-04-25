@@ -304,7 +304,7 @@ func TestAccQualityMonitor_ProviderConfig_Mismatched(t *testing.T) {
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTable.name}"
 				output_schema_name = databricks_schema.things.id
 				snapshot {}
-				provider_config {
+				provider_config = {
 					workspace_id = "1234"
 				}
 			}

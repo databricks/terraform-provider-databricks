@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_default_workspace_base_environment Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 The Default Workspace Base Environment is a singleton resource that configures which workspace base environments are applied by default to new notebooks in the workspace. Defaults can be set separately for CPU and GPU compute.
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

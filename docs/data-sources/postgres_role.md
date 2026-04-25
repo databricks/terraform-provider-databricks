@@ -4,9 +4,29 @@ subcategory: "Postgres"
 # databricks_postgres_role Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source retrieves a single Postgres role.
 
 
 ## Example Usage
+### Retrieve Role by Name
+
+```hcl
+data "databricks_postgres_role" "this" {
+  name = "projects/my-project/branches/main/roles/jane"
+}
+
+output "role_postgres_name" {
+  value = data.databricks_postgres_role.this.status.postgres_role
+}
+
+output "role_identity_type" {
+  value = data.databricks_postgres_role.this.status.identity_type
+}
+
+output "role_auth_method" {
+  value = data.databricks_postgres_role.this.status.auth_method
+}
+```
 
 
 ## Arguments
@@ -16,7 +36,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -40,8 +60,8 @@ The following attributes are exported:
   * For the managed identities, OAUTH is used.
   * For the regular postgres roles, authentication based on postgres passwords is used.
   
-  NOTE: this is ignored for the Databricks identity type GROUP,
-  and NO_LOGIN is implicitly assumed instead for the GROUP identity type. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
+  is the default auth method (group can login as well). Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string) - The type of role.
   When specifying a managed-identity, the chosen role_id must be a valid:
   
@@ -69,3 +89,11 @@ The following attributes are exported:
 * `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role
+* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
+  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+  the role_id is `my-role`.
+  
+  Use this field when building UI components that display roles to users (e.g., a drop-down
+  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
+  and is not user-friendly

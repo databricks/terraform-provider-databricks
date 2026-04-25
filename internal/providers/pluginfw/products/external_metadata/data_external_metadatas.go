@@ -122,4 +122,8 @@ func (r *ExternalMetadatasDataSource) Read(ctx context.Context, req datasource.R
 
 	config.ExternalMetadata = types.ListValueMust(ExternalMetadataData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

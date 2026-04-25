@@ -33,7 +33,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -101,6 +101,14 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `endpoint_id` (string) - The short identifier of the endpoint, suitable for showing to the users.
+  For an endpoint with name `projects/my-project/branches/my-branch/endpoints/my-endpoint`,
+  the endpoint_id is `my-endpoint`.
+  
+  Use this field when building UI components that display endpoints to users (e.g., a drop-down
+  selector). Prefer showing `endpoint_id` instead of the full resource name from `Endpoint.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}` format
+  and is not user-friendly
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint

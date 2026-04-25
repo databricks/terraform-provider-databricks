@@ -11,7 +11,9 @@ Installs a [library](https://docs.databricks.com/libraries/index.html) on [datab
 
 ## Plugin Framework Migration
 
-The library resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
+The library resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
+
+-> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. To manage libraries across workspaces from an account-level provider, use the default Plugin Framework implementation (do not set the override).
 
 ## Installing library on all clusters
 

@@ -33,17 +33,6 @@ func TestAccMetastoreDataAccess_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccMetastoreDataAccess_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: metastoreDataAccessProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccMetastoreDataAccess_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: metastoreDataAccessProviderConfigTemplate(`

@@ -46,7 +46,6 @@ resource "databricks_account_network_policy" "example_network_policy" {
 
 ## Arguments
 The following arguments are supported:
-* `account_id` (string, optional) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic
 * `ingress` (CustomerFacingIngressNetworkPolicy, optional) - The network policies applying for ingress traffic
 * `ingress_dry_run` (CustomerFacingIngressNetworkPolicy, optional) - The ingress policy for dry run mode. Dry run will always run even if the request
@@ -57,7 +56,7 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess, optional)
 
-### CustomerFacingIngressNetworkPolicyAppsDestination
+### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
 * `all_destinations` (boolean, optional) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyAuthentication
@@ -71,7 +70,7 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string, optional) - We only support IPv4 and IPv4 CIDR notation for now
 
-### CustomerFacingIngressNetworkPolicyLakebaseDestination
+### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
 * `all_destinations` (boolean, optional) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
@@ -82,8 +81,7 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyPublicIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication, optional)
 * `destination` (CustomerFacingIngressNetworkPolicyRequestDestination, optional)
-* `label` (string, optional) - User-provided name for this ingress rule. Helps identify which rule
-  caused a request to be denied or dry-run denied
+* `label` (string, optional) - The label for this ingress rule
 * `origin` (CustomerFacingIngressNetworkPolicyPublicRequestOrigin, optional)
 
 ### CustomerFacingIngressNetworkPolicyPublicRequestOrigin
@@ -94,10 +92,10 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
-* `apps` (CustomerFacingIngressNetworkPolicyAppsDestination, optional)
-* `lakebase` (CustomerFacingIngressNetworkPolicyLakebaseDestination, optional)
+* `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination, optional)
+* `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination, optional)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination, optional)
-* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination, optional)
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination, optional) - Workspace destinations
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scopes` (list of string, optional)
@@ -109,6 +107,9 @@ The following arguments are supported:
 * `restriction_mode` (string, required) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination, optional) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
+* `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are blocked from accessing.
+  These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
+  Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement, optional) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination
@@ -132,7 +133,9 @@ The following arguments are supported:
 ### NetworkPolicyEgress
 * `network_access` (EgressNetworkPolicyNetworkAccessPolicy, optional) - The access policy enforced for egress traffic to the internet
 
-
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `account_id` (string) - The associated account ID for this Network Policy object
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

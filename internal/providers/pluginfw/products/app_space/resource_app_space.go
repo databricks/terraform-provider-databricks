@@ -16,6 +16,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -558,7 +559,6 @@ func (r *SpaceResource) Read(ctx context.Context, req resource.ReadRequest, resp
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get app_space", err.Error())
 		return
 	}
@@ -673,12 +673,23 @@ func (r *SpaceResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	response, err := client.Apps.DeleteSpace(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete app_space", err.Error())
 		return
 	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
 
 	err = response.Wait(ctx)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for app_space delete", err.Error())
 		return

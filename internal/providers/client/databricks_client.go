@@ -36,7 +36,6 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 			cfg.AuthType = newer
 		}
 	}
-	cfg.EnsureResolved()
 	// Unless set explicitly, the provider will retry indefinitely until context is cancelled
 	// by either a timeout or interrupt.
 	if cfg.RetryTimeoutSeconds == 0 {
@@ -53,6 +52,7 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 			return nil, err
 		}
 	}
+	cfg.EnsureResolved()
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, err

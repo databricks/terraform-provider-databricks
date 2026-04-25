@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -187,7 +188,9 @@ type DatabaseInstance struct {
 	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
 	// The version of Postgres running on the instance.
 	PgVersion types.String `tfsdk:"pg_version"`
-	// Purge the resource on delete
+	// Deprecated. Omitting the field or setting it to true will result in the
+	// field being hard deleted. Setting a value of false will throw a bad
+	// request.
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// The DNS endpoint to connect to the instance for read only access. This is
 	// only available if enable_readable_secondaries is true.
@@ -739,7 +742,6 @@ func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRe
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get database_instance", err.Error())
 		return
 	}
@@ -851,6 +853,9 @@ func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	err := client.Database.DeleteDatabaseInstance(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_instance", err.Error())
 		return

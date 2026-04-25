@@ -3320,7 +3320,7 @@ type ObjectInfo_SdkV2 struct {
 	// Only applicable to files. The creation UTC timestamp.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The language of the object. This value is set only if the object type is
-	// ``NOTEBOOK``.
+	// ``NOTEBOOK``. For Jupyter (.ipynb) notebooks, this is always ``PYTHON``.
 	Language types.String `tfsdk:"language"`
 	// Only applicable to files, the last modified UTC timestamp.
 	ModifiedAt types.Int64 `tfsdk:"modified_at"`

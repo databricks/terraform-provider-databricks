@@ -104,7 +104,8 @@ The following arguments are supported:
   child instance.
   Input: For specifying the parent instance to create a child instance. Optional.
   Output: Only populated if provided as input to create a child instance
-* `purge_on_delete` (boolean, optional) - Purge the resource on delete
+* `purge_on_delete` (boolean, optional) - Deprecated. Omitting the field or setting it to true will result in the field being hard deleted. Setting a value
+  of false will throw a bad request
 * `retention_window_in_days` (integer, optional) - The retention window for the instance. This is the time window in days
   for which the historical data is retained. The default value is 7 days.
   Valid values are 2 to 35 days

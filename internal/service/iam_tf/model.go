@@ -3418,8 +3418,8 @@ type GetPermissionLevelsRequest struct {
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
 	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// genie, instance-pools, jobs, knowledge-assistants, notebooks, pipelines,
+	// queries, registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -3565,8 +3565,8 @@ type GetPermissionRequest struct {
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
 	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// genie, instance-pools, jobs, knowledge-assistants, notebooks, pipelines,
+	// queries, registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -8465,8 +8465,8 @@ type SetObjectPermissions struct {
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
 	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// genie, instance-pools, jobs, knowledge-assistants, notebooks, pipelines,
+	// queries, registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -9435,8 +9435,8 @@ type UpdateObjectPermissions struct {
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
 	// database-projects, dbsql-dashboards, directories, experiments, files,
-	// genie, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// genie, instance-pools, jobs, knowledge-assistants, notebooks, pipelines,
+	// queries, registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 

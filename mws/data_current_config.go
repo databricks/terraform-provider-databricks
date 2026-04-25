@@ -43,6 +43,9 @@ func DataSourceCurrentConfiguration() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
+				return err
+			}
 			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err

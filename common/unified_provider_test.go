@@ -782,6 +782,22 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// unifiedHostConfig returns a config whose resolved host type is UnifiedHost.
+// It installs a HostMetadataResolver that returns UnifiedHost and forces
+// EnsureResolved to run so resolvedHostType is populated before HostType() is
+// consulted.
+func unifiedHostConfig(t *testing.T, host string) *config.Config {
+	cfg := &config.Config{
+		Host:  host,
+		Token: "test-token",
+		HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.UnifiedHost}, nil
+		},
+	}
+	require.NoError(t, cfg.EnsureResolved())
+	return cfg
+}
+
 func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
@@ -792,11 +808,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 	}
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
 		},
 	}
 	c.SetWorkspaceClientForWorkspace(456, mockWS)
@@ -816,11 +828,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:                       "https://unified.cloud.databricks.com",
-				Token:                      "test-token",
-				Experimental_IsUnifiedHost: true,
-			},
+			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
 		},
 	}
 	// No cached workspace client — WorkspaceClientForWorkspace falls back to
@@ -833,6 +841,97 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 				"workspace_id": "999",
 			},
 		},
+	}, c)
+	assert.NoError(t, err)
+}
+
+// newDualResourceForCustomizeDiff builds a test resource with the `api` field
+// (mirroring dual resources that call AddApiField) wired to CustomizeDiffDualResources.
+func newDualResourceForCustomizeDiff() *schema.Resource {
+	r := Resource{
+		Schema: AddApiField(map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		}),
+		CustomizeDiff: CustomizeDiffDualResources,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+			return nil
+		},
+		Create: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+			return nil
+		},
+	}
+	AddNamespaceInSchema(r.Schema)
+	NamespaceCustomizeSchemaMap(r.Schema)
+	return r.ToResource()
+}
+
+func TestValidateApiLevelForUnifiedHost_ErrorsWhenApiMissing(t *testing.T) {
+	resource := newDualResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+	}, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "please set api to account or workspace")
+}
+
+func TestValidateApiLevelForUnifiedHost_PassesWhenApiSet(t *testing.T) {
+	resource := newDualResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"api":  "account",
+	}, c)
+	assert.NoError(t, err)
+}
+
+func TestValidateApiLevelForUnifiedHostFromData_ErrorsWhenApiMissing(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	d := schema.TestResourceDataRaw(t, AddApiField(map[string]*schema.Schema{}), map[string]interface{}{})
+	err := ValidateApiLevelForUnifiedHostFromData(d, c)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "please set api to account or workspace")
+}
+
+func TestValidateApiLevelForUnifiedHostFromData_PassesWhenApiSet(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://unifiedhost.databricks.com"),
+		},
+	}
+	d := schema.TestResourceDataRaw(t, AddApiField(map[string]*schema.Schema{}), map[string]interface{}{
+		"api": "workspace",
+	})
+	assert.NoError(t, ValidateApiLevelForUnifiedHostFromData(d, c))
+}
+
+func TestValidateApiLevelForUnifiedHost_IgnoresNonUnifiedHost(t *testing.T) {
+	resource := newDualResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
 	}, c)
 	assert.NoError(t, err)
 }

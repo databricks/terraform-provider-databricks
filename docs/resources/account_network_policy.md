@@ -56,6 +56,9 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess, optional)
 
+### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
+* `all_destinations` (boolean, optional) - Must be set to true
+
 ### CustomerFacingIngressNetworkPolicyAuthentication
 * `identities` (list of CustomerFacingIngressNetworkPolicyAuthenticationIdentity, optional) - Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES
 * `identity_type` (string, optional) - Possible values are: `IDENTITY_TYPE_ALL_SERVICE_PRINCIPALS`, `IDENTITY_TYPE_ALL_USERS`, `IDENTITY_TYPE_SELECTED_IDENTITIES`
@@ -67,6 +70,9 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string, optional) - We only support IPv4 and IPv4 CIDR notation for now
 
+### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
+* `all_destinations` (boolean, optional) - Must be set to true
+
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule, optional)
@@ -75,8 +81,7 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyPublicIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication, optional)
 * `destination` (CustomerFacingIngressNetworkPolicyRequestDestination, optional)
-* `label` (string, optional) - User-provided name for this ingress rule. Helps identify which rule
-  caused a request to be denied or dry-run denied
+* `label` (string, optional) - The label for this ingress rule
 * `origin` (CustomerFacingIngressNetworkPolicyPublicRequestOrigin, optional)
 
 ### CustomerFacingIngressNetworkPolicyPublicRequestOrigin
@@ -87,6 +92,8 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
+* `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination, optional)
+* `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination, optional)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination, optional)
 * `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination, optional) - Workspace destinations
 
@@ -100,6 +107,9 @@ The following arguments are supported:
 * `restriction_mode` (string, required) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination, optional) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
+* `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are blocked from accessing.
+  These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
+  Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement, optional) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination

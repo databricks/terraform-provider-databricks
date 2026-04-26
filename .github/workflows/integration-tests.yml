@@ -27,9 +27,42 @@ jobs:
       - name: Detect non-markdown changes
         id: filter
         shell: bash
+        env:
+          PR_BEFORE_SHA: ${{ github.event.before }}
+          PR_AFTER_SHA: ${{ github.event.after }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MQ_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MQ_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
         run: |
-          BASE_SHA="${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}"
+          # Pick the SHA range to diff:
+          #  - pull_request.synchronize: only the newly-pushed commits
+          #    (before...after). A docs-only follow-up commit on a code PR
+          #    can skip integration tests without re-running the suite.
+          #    Falls back to full PR diff if `before` is unreachable
+          #    (force-push).
+          #  - pull_request.opened: the entire PR diff (base...head).
+          #  - merge_group: the queue's base_sha...head_sha.
+          case "${{ github.event_name }}" in
+            pull_request)
+              if [ "${{ github.event.action }}" = "synchronize" ] \
+                 && [ -n "$PR_BEFORE_SHA" ] \
+                 && [ "$PR_BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+                 && git cat-file -e "$PR_BEFORE_SHA^{commit}" 2>/dev/null; then
+                BASE_SHA="$PR_BEFORE_SHA"
+                HEAD_SHA="$PR_AFTER_SHA"
+                echo "synchronize: comparing only newly-pushed commits"
+              else
+                BASE_SHA="$PR_BASE_SHA"
+                HEAD_SHA="$PR_HEAD_SHA"
+                echo "first run / unreachable before SHA: comparing full PR"
+              fi
+              ;;
+            merge_group)
+              BASE_SHA="$MQ_BASE_SHA"
+              HEAD_SHA="$MQ_HEAD_SHA"
+              ;;
+          esac
 
           echo "Comparing $BASE_SHA...$HEAD_SHA"
           CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")

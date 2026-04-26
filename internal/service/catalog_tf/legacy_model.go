@@ -11054,7 +11054,7 @@ func (m *DeltaRuntimePropertiesKvPairs_SdkV2) SetDeltaRuntimeProperties(ctx cont
 // __table__, __function__, __connection__, __credential__, __volume__, or
 // __secret__.
 type Dependency_SdkV2 struct {
-	UcConnection types.List `tfsdk:"uc_connection"`
+	Connection types.List `tfsdk:"connection"`
 
 	Credential types.List `tfsdk:"credential"`
 
@@ -11064,12 +11064,12 @@ type Dependency_SdkV2 struct {
 }
 
 func (to *Dependency_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dependency_SdkV2) {
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				// Recursively sync the fields of UcConnection
-				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				// Recursively sync the fields of Connection
+				toConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -11103,11 +11103,11 @@ func (to *Dependency_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 }
 
 func (to *Dependency_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Dependency_SdkV2) {
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				toConnection.SyncFieldsDuringRead(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -11138,8 +11138,8 @@ func (to *Dependency_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Depen
 }
 
 func (m Dependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
-	attrs["uc_connection"] = attrs["uc_connection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["connection"] = attrs["connection"].SetOptional()
+	attrs["connection"] = attrs["connection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["credential"] = attrs["credential"].SetOptional()
 	attrs["credential"] = attrs["credential"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetOptional()
@@ -11159,10 +11159,10 @@ func (m Dependency_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m Dependency_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"uc_connection": reflect.TypeOf(ConnectionDependency_SdkV2{}),
-		"credential":    reflect.TypeOf(CredentialDependency_SdkV2{}),
-		"function":      reflect.TypeOf(FunctionDependency_SdkV2{}),
-		"table":         reflect.TypeOf(TableDependency_SdkV2{}),
+		"connection": reflect.TypeOf(ConnectionDependency_SdkV2{}),
+		"credential": reflect.TypeOf(CredentialDependency_SdkV2{}),
+		"function":   reflect.TypeOf(FunctionDependency_SdkV2{}),
+		"table":      reflect.TypeOf(TableDependency_SdkV2{}),
 	}
 }
 
@@ -11173,10 +11173,10 @@ func (m Dependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"uc_connection": m.UcConnection,
-			"credential":    m.Credential,
-			"function":      m.Function,
-			"table":         m.Table,
+			"connection": m.Connection,
+			"credential": m.Credential,
+			"function":   m.Function,
+			"table":      m.Table,
 		})
 }
 
@@ -11184,7 +11184,7 @@ func (m Dependency_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m Dependency_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"uc_connection": basetypes.ListType{
+			"connection": basetypes.ListType{
 				ElemType: ConnectionDependency_SdkV2{}.Type(ctx),
 			},
 			"credential": basetypes.ListType{
@@ -11200,16 +11200,16 @@ func (m Dependency_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetUcConnection returns the value of the UcConnection field in Dependency_SdkV2 as
+// GetConnection returns the value of the Connection field in Dependency_SdkV2 as
 // a ConnectionDependency_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Dependency_SdkV2) GetUcConnection(ctx context.Context) (ConnectionDependency_SdkV2, bool) {
+func (m *Dependency_SdkV2) GetConnection(ctx context.Context) (ConnectionDependency_SdkV2, bool) {
 	var e ConnectionDependency_SdkV2
-	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
+	if m.Connection.IsNull() || m.Connection.IsUnknown() {
 		return e, false
 	}
 	var v []ConnectionDependency_SdkV2
-	d := m.UcConnection.ElementsAs(ctx, &v, true)
+	d := m.Connection.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11219,11 +11219,11 @@ func (m *Dependency_SdkV2) GetUcConnection(ctx context.Context) (ConnectionDepen
 	return v[0], true
 }
 
-// SetUcConnection sets the value of the UcConnection field in Dependency_SdkV2.
-func (m *Dependency_SdkV2) SetUcConnection(ctx context.Context, v ConnectionDependency_SdkV2) {
+// SetConnection sets the value of the Connection field in Dependency_SdkV2.
+func (m *Dependency_SdkV2) SetConnection(ctx context.Context, v ConnectionDependency_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_connection"]
-	m.UcConnection = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connection"]
+	m.Connection = types.ListValueMust(t, vs)
 }
 
 // GetCredential returns the value of the Credential field in Dependency_SdkV2 as

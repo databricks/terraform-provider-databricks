@@ -23,7 +23,7 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `tools`. It is a list of resources, each with the following attributes:
 * `app` (App)
-* `uc_connection` (UcConnection)
+* `connection` (Connection)
 * `description` (string) - Description of what this tool does (user-facing)
 * `genie_space` (GenieSpace)
 * `id` (string, deprecated) - Deprecated: Use tool_id instead
@@ -38,7 +38,7 @@ This data source exports a single attribute, `tools`. It is a list of resources,
 ### App
 * `name` (string) - App name
 
-### UcConnection
+### Connection
 * `name` (string)
 
 ### GenieSpace

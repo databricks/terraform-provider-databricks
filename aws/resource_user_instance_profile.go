@@ -51,7 +51,7 @@ func ResourceUserInstanceProfile() common.Resource {
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_user_role`. This resource will be removed in v0.5.x"
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-		return common.NamespaceCustomizeDiff(ctx, d, c)
+		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
 	return r
 }

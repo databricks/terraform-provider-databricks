@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -416,7 +417,6 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get quality_monitor_v2", err.Error())
 		return
 	}
@@ -525,6 +525,9 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	err := client.QualityMonitorV2.DeleteQualityMonitor(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete quality_monitor_v2", err.Error())
 		return

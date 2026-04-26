@@ -14,6 +14,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -344,7 +345,6 @@ func (r *AccountNetworkPolicyResource) Read(ctx context.Context, req resource.Re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get account_network_policy", err.Error())
 		return
 	}
@@ -432,6 +432,9 @@ func (r *AccountNetworkPolicyResource) Delete(ctx context.Context, req resource.
 	}
 
 	err := client.NetworkPolicies.DeleteNetworkPolicyRpc(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete account_network_policy", err.Error())
 		return

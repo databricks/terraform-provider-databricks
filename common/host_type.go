@@ -1,3 +1,4 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package common
 
 import "github.com/databricks/databricks-sdk-go/config"
@@ -6,8 +7,5 @@ import "github.com/databricks/databricks-sdk-go/config"
 // Config.HostType() — single chokepoint for future TF-specific host-type logic.
 // Once SDK removes HostType(), this is where TF-local inference lives.
 func (c *DatabricksClient) HostTypeForTerraform() config.HostType {
-	if c.Config.Experimental_IsUnifiedHost {
-		return config.UnifiedHost
-	}
 	return c.Config.HostType()
 }

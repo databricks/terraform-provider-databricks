@@ -16,6 +16,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/dataclassification_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -417,7 +418,6 @@ func (r *CatalogConfigResource) Read(ctx context.Context, req resource.ReadReque
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get data_classification_catalog_config", err.Error())
 		return
 	}
@@ -526,6 +526,9 @@ func (r *CatalogConfigResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	err := client.DataClassification.DeleteCatalogConfig(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete data_classification_catalog_config", err.Error())
 		return

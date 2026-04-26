@@ -202,9 +202,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 				State:      pipelines.PipelineStateFailed,
 			}, nil).Once()
 			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
-				PipelineId:      "abcd",
-				Cascade:         true,
-				ForceSendFields: []string{"Cascade"},
+				PipelineId: "abcd",
 			}).Return(errors.New("Internal error"))
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
 				PipelineId: "abcd",
@@ -245,9 +243,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			}, nil).Once()
 
 			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
-				PipelineId:      "abcd",
-				Cascade:         true,
-				ForceSendFields: []string{"Cascade"},
+				PipelineId: "abcd",
 			}).Return(nil)
 
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -525,9 +521,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockPipelinesAPI().EXPECT()
 			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
-				PipelineId:      "abcd",
-				Cascade:         true,
-				ForceSendFields: []string{"Cascade"},
+				PipelineId: "abcd",
 			}).Return(nil)
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
 				PipelineId: "abcd",
@@ -571,7 +565,7 @@ func TestResourcePipelineDelete_PreserveTables(t *testing.T) {
 		},
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
-		storage = "/test/storage"
+		catalog = "main"
 		preserve_tables_on_delete = true
 		library {
 			notebook {
@@ -586,6 +580,24 @@ func TestResourcePipelineDelete_PreserveTables(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{
 		"id": "abcd",
 	})
+}
+
+func TestResourcePipelinePreserveTablesRequiresCatalog(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		preserve_tables_on_delete = true
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Create: true,
+	}.ExpectError(t, "`preserve_tables_on_delete` can only be used with Unity Catalog-managed pipelines (i.e., when `catalog` is set)")
 }
 
 func TestResourcePipelineDelete_Error(t *testing.T) {

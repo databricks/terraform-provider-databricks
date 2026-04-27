@@ -103,7 +103,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type ToolData struct {
 	App types.Object `tfsdk:"app"`
 
-	UcConnection types.Object `tfsdk:"uc_connection"`
+	Connection types.Object `tfsdk:"connection"`
 	// Description of what this tool does (user-facing).
 	Description types.String `tfsdk:"description"`
 
@@ -138,7 +138,7 @@ type ToolData struct {
 func (m ToolData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app":                 reflect.TypeOf(supervisoragents_tf.App{}),
-		"uc_connection":       reflect.TypeOf(supervisoragents_tf.Connection{}),
+		"connection":          reflect.TypeOf(supervisoragents_tf.Connection{}),
 		"genie_space":         reflect.TypeOf(supervisoragents_tf.GenieSpace{}),
 		"knowledge_assistant": reflect.TypeOf(supervisoragents_tf.KnowledgeAssistant{}),
 		"uc_function":         reflect.TypeOf(supervisoragents_tf.UcFunction{}),
@@ -158,7 +158,7 @@ func (m ToolData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"app":                 m.App,
-			"uc_connection":       m.UcConnection,
+			"connection":          m.Connection,
 			"description":         m.Description,
 			"genie_space":         m.GenieSpace,
 			"id":                  m.Id,
@@ -180,7 +180,7 @@ func (m ToolData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app":                 supervisoragents_tf.App{}.Type(ctx),
-			"uc_connection":       supervisoragents_tf.Connection{}.Type(ctx),
+			"connection":          supervisoragents_tf.Connection{}.Type(ctx),
 			"description":         types.StringType,
 			"genie_space":         supervisoragents_tf.GenieSpace{}.Type(ctx),
 			"id":                  types.StringType,
@@ -198,7 +198,7 @@ func (m ToolData) Type(ctx context.Context) attr.Type {
 
 func (m ToolData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetComputed()
-	attrs["uc_connection"] = attrs["uc_connection"].SetComputed()
+	attrs["connection"] = attrs["connection"].SetComputed()
 	attrs["description"] = attrs["description"].SetComputed()
 	attrs["genie_space"] = attrs["genie_space"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()

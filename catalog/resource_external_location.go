@@ -36,9 +36,14 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "isolation_mode").SetComputed()
 			common.CustomizeSchemaPath(m, "owner").SetComputed()
 			common.CustomizeSchemaPath(m, "metastore_id").SetComputed()
-			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events", "effective_file_event_queue"} {
+			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events"} {
 				common.CustomizeSchemaPath(m, key).SetReadOnly()
 			}
+			// SetReadOnly() alone causes a perpetual `(known after apply)` plan because the field
+			// isn't enabled on the server side yet, and SetReadOnly().SetSuppressDiff() is rejected
+			// by SDKv2's InternalValidate (DiffSuppressFunc requires a config source, which a field
+			// with Optional=false doesn't have).
+			common.CustomizeSchemaPath(m, "effective_file_event_queue").SetComputed().SetSuppressDiff()
 			// customize file event queue
 			supportedQueues := []string{"managed_pubsub", "managed_aqs", "managed_sqs", "provided_pubsub", "provided_aqs", "provided_sqs"}
 			for _, key := range supportedQueues {
@@ -104,12 +109,6 @@ func ResourceExternalLocation() common.Resource {
 			el, err := w.ExternalLocations.GetByName(ctx, d.Id())
 			if err != nil {
 				return err
-			}
-			// Force a concrete empty value into state for the output-only block so the
-			// Computed=true schema doesn't render `(known after apply)` on every plan
-			// when the server omits the field (current behavior when file events are off).
-			if el.EffectiveFileEventQueue == nil {
-				el.EffectiveFileEventQueue = &catalog.FileEventQueue{}
 			}
 			return common.StructToData(el, s, d)
 		},

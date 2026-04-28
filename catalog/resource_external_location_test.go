@@ -740,9 +740,9 @@ func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// When the server omits effective_file_event_queue (e.g. file events disabled),
-// state must still be committed to a concrete empty block — otherwise SDKv2
-// renders `(known after apply)` on every plan for the Computed-only field.
+// When the server omits effective_file_event_queue (current behavior with file events disabled),
+// state should reflect the absence as an empty list. Plan stability is provided by the
+// schema's diff suppressor on the parent block.
 func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -772,12 +772,7 @@ func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)
-	effective := d.Get("effective_file_event_queue").([]any)
-	assert.Len(t, effective, 1, "expected concrete empty block, not nil/empty list")
-	queue := effective[0].(map[string]any)
-	for _, key := range []string{"managed_aqs", "managed_pubsub", "managed_sqs", "provided_aqs", "provided_pubsub", "provided_sqs"} {
-		assert.Empty(t, queue[key].([]any), "expected %s to be empty list", key)
-	}
+	assert.Empty(t, d.Get("effective_file_event_queue").([]any), "expected empty list when server omits the field")
 }
 
 // When the server returns effective_file_event_queue, state must reflect the server response verbatim.

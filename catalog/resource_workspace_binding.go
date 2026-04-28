@@ -86,11 +86,19 @@ func ResourceWorkspaceBinding() common.Resource {
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
 				}, false))
 			common.NamespaceCustomizeSchemaMap(m)
+			// workspace_binding has no real Update API (immutable after Create).
+			// Mark provider_config.workspace_id as ForceNew so a workspace_id
+			// switch destroys and recreates the resource via the new workspace,
+			// instead of erroring at apply with "doesn't support update". ForceNew
+			// must be on the nested attribute (not the list block) so attribute
+			// changes inside the block trigger Replace.
+			m["provider_config"].Elem.(*schema.Resource).Schema["workspace_id"].ForceNew = true
 			return m
 		},
 	)
 	return common.Resource{
 		Schema:        workspaceBindingSchema,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{

@@ -1213,7 +1213,7 @@ func testCustomizeDiffForceNew(t *testing.T, instanceState map[string]string, ne
 			if !ok {
 				return fmt.Errorf("expected *DatabricksClient, got %T", m)
 			}
-			return namespaceForceNew(ctx, d, dc)
+			return namespaceForceNew(ctx, d, dc, true)
 		},
 	}
 

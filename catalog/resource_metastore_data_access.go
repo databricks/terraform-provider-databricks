@@ -75,6 +75,13 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 		common.AddApiField(m)
 		common.AddNamespaceInSchema(m)
 		common.NamespaceCustomizeSchemaMap(m)
+		// metastore_data_access has no real Update API (immutable after Create).
+		// Mark provider_config.workspace_id as ForceNew so a workspace_id switch
+		// destroys and recreates the resource via the new workspace, instead of
+		// erroring at apply with "doesn't support update". ForceNew must be on
+		// the nested attribute (not the list block) so attribute changes inside
+		// the block trigger Replace.
+		m["provider_config"].Elem.(*schema.Resource).Schema["workspace_id"].ForceNew = true
 		return adjustDataAccessSchema(m)
 	})
 
@@ -121,7 +128,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			},
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.CustomizeDiffDualResources(ctx, d, c)
+			return common.CustomizeDiffDualResourcesNoForceNew(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			c, err := c.DatabricksClientForDualResource(ctx, d)
@@ -129,7 +136,6 @@ func ResourceMetastoreDataAccess() common.Resource {
 				return err
 			}
 			metastoreId := d.Get("metastore_id").(string)
-
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, dacSchema, &create)
 

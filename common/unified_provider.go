@@ -92,14 +92,19 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 
 // namespaceForceNew is used to customize the diff for the provider configuration
 // in a resource diff. It resolves effective workspace IDs (accounting for
-// workspace_id fallback) and triggers ForceNew when the effective
-// workspace changes.
+// workspace_id fallback) and, when forceNewOnChange is true, triggers ForceNew
+// when the effective workspace changes. When forceNewOnChange is false, it
+// still publishes the new effective workspace_id to the planned state via
+// SetNew (so the next Update sees and persists the new value) but does not
+// trigger resource recreation. This second mode is used by metastore-scoped
+// UC resources, where the underlying object is not bound to a specific
+// workspace and switching workspaces should not destroy and recreate it.
 //
 // With provider_config marked as Optional+Computed, Terraform preserves the state
 // value when the config doesn't specify provider_config. This means d.GetChange()
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
-func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient, forceNewOnChange bool) error {
 	workspaceIDKey := workspaceIDSchemaKey
 
 	// Get the old (state) workspace ID.
@@ -136,16 +141,19 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 
 	if oldEffective != "" && newEffective != "" && oldEffective != newEffective {
 		// When Optional+Computed preserves the old state value (config removes
-		// provider_config), the SDK sees no diff for workspace_id. ForceNew
-		// requires HasChange, so we SetNew on the top-level provider_config key
-		// to create the diff entry before calling ForceNew.
+		// provider_config), the SDK sees no diff for workspace_id. Both ForceNew
+		// (which requires HasChange) and the metastore-scoped flow (which needs
+		// the new value committed to state via Update) require us to SetNew on
+		// the top-level provider_config key to create the diff entry.
 		if !d.HasChange(workspaceIDKey) {
 			if err := d.SetNew("provider_config", []map[string]interface{}{{"workspace_id": newEffective}}); err != nil {
 				return err
 			}
 		}
-		if err := d.ForceNew(workspaceIDKey); err != nil {
-			return err
+		if forceNewOnChange {
+			if err := d.ForceNew(workspaceIDKey); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -218,10 +226,27 @@ func validateApiLevelForUnifiedHost(apiLevel string, c *DatabricksClient) error 
 	return fmt.Errorf("please set api to account or workspace")
 }
 
-// NamespaceCustomizeDiff is used to customize the diff for the provider configuration
-// in a resource diff.
+// NamespaceCustomizeDiff is the CustomizeDiff entry point for workspace-scoped
+// resources (clusters, notebooks, jobs, ...). When the effective workspace_id
+// changes, it triggers ForceNew so the resource is destroyed in the old
+// workspace and recreated in the new one.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := namespaceForceNew(ctx, d, c); err != nil {
+	if err := namespaceForceNew(ctx, d, c, true); err != nil {
+		return err
+	}
+	return NamespaceValidateWorkspaceID(ctx, d, c)
+}
+
+// NamespaceCustomizeDiffNoForceNew is the CustomizeDiff entry point for
+// metastore-scoped UC resources (catalog, schema, external_location,
+// storage_credential, ...). The underlying object is owned by a metastore,
+// not by a specific workspace, so changing the effective workspace_id should
+// only switch which workspace's API endpoint the provider routes through —
+// it must not destroy and recreate the resource. This entry point publishes
+// the new effective workspace_id to planned state (so SDKv2's Update is
+// invoked and writes the new value to state) without calling ForceNew.
+func NamespaceCustomizeDiffNoForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := namespaceForceNew(ctx, d, c, false); err != nil {
 		return err
 	}
 	return NamespaceValidateWorkspaceID(ctx, d, c)
@@ -240,6 +265,23 @@ func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *
 		return nil
 	}
 	return NamespaceCustomizeDiff(ctx, d, c)
+}
+
+// CustomizeDiffDualResourcesNoForceNew is the CustomizeDiff entry point for
+// dual workspace/account UC resources whose underlying object is metastore-
+// scoped (e.g. databricks_metastore, databricks_storage_credential,
+// databricks_metastore_assignment). At account level, workspace tracking is
+// skipped. At workspace level, the new effective workspace_id is published
+// to planned state via SetNew but ForceNew is NOT triggered — the resource
+// is not destroyed and recreated when the user switches workspaces.
+func CustomizeDiffDualResourcesNoForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
+		return err
+	}
+	if IsAccountLevelFromDiff(d, c) {
+		return nil
+	}
+	return NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data

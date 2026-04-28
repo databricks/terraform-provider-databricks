@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_disable_legacy_features_setting Resource
 
-[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+[API Documentation](https://docs.databricks.com/api/account/disablelegacyfeatures)
 
 -> This resource can only be used with an account-level provider!
 

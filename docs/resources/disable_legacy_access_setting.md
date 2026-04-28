@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_disable_legacy_access_setting Resource
 
-[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+[API Documentation](https://docs.databricks.com/api/workspace/disablelegacyaccess)
 
 The `databricks_disable_legacy_access_setting` resource allows you to disable legacy access. It has the following impact:
 

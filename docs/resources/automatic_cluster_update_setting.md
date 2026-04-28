@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_automatic_cluster_update_workspace_setting Resource
 
-[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+[API Documentation](https://docs.databricks.com/api/workspace/automaticclusterupdate)
 
 The `databricks_automatic_cluster_update_workspace_setting` resource allows you to control whether automatic cluster update is enabled for the current workspace. By default, it is turned off. Enabling this feature on a workspace requires that you add the Enhanced Security and Compliance add-on.
 

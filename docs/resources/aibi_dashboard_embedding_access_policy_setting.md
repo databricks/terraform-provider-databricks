@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_aibi_dashboard_embedding_access_policy_setting Resource
 
-[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+[API Documentation](https://docs.databricks.com/api/workspace/aibidashboardembeddingaccesspolicy)
 
 The `databricks_aibi_dashboard_embedding_access_policy_setting` resource allows you to control [embedding of AI/BI Dashboards](https://learn.microsoft.com/en-us/azure/databricks/dashboards/admin/#manage-dashboard-embedding) into other sites.
 

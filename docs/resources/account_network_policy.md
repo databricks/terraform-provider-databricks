@@ -4,7 +4,7 @@ subcategory: "Settings"
 # databricks_account_network_policy Resource
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-[API Documentation](https://docs.databricks.com/api/account/networkpolicies)
+[API Documentation](https://docs.databricks.com/api/account/accountnetworkpolicy)
 
 Network policies control which network destinations can be accessed from the Databricks environment. 
 

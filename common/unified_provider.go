@@ -90,6 +90,20 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	return m
 }
 
+// NamespaceCustomizeSchemaMapImmutable applies NamespaceCustomizeSchemaMap and
+// additionally marks provider_config.workspace_id as ForceNew. Use this for UC
+// resources that have no real Update API (e.g. metastore_data_access,
+// online_table, workspace_binding): a workspace_id switch destroys and
+// recreates the resource via the new workspace, instead of erroring at apply
+// with "doesn't support update". ForceNew must be on the nested attribute (not
+// the list block) so attribute changes inside the block trigger Replace.
+func NamespaceCustomizeSchemaMapImmutable(m map[string]*schema.Schema) map[string]*schema.Schema {
+	m = NamespaceCustomizeSchemaMap(m)
+	elem := m["provider_config"].Elem.(*schema.Resource)
+	elem.Schema["workspace_id"].ForceNew = true
+	return m
+}
+
 // namespaceForceNew is used to customize the diff for the provider configuration
 // in a resource diff. It resolves effective workspace IDs (accounting for
 // workspace_id fallback) and, when forceNewOnChange is true, triggers ForceNew
@@ -145,6 +159,11 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		// (which requires HasChange) and the metastore-scoped flow (which needs
 		// the new value committed to state via Update) require us to SetNew on
 		// the top-level provider_config key to create the diff entry.
+		//
+		// Note: SetNew here replaces the ENTIRE provider_config block with a
+		// map containing only workspace_id. If new fields are added to
+		// provider_config in the future, this map literal must be extended to
+		// include them (otherwise they'd be cleared from the planned state).
 		if !d.HasChange(workspaceIDKey) {
 			if err := d.SetNew("provider_config", []map[string]interface{}{{"workspace_id": newEffective}}); err != nil {
 				return err

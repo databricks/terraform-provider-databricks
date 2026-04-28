@@ -74,14 +74,10 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 
 		common.AddApiField(m)
 		common.AddNamespaceInSchema(m)
-		common.NamespaceCustomizeSchemaMap(m)
 		// metastore_data_access has no real Update API (immutable after Create).
-		// Mark provider_config.workspace_id as ForceNew so a workspace_id switch
-		// destroys and recreates the resource via the new workspace, instead of
-		// erroring at apply with "doesn't support update". ForceNew must be on
-		// the nested attribute (not the list block) so attribute changes inside
-		// the block trigger Replace.
-		m["provider_config"].Elem.(*schema.Resource).Schema["workspace_id"].ForceNew = true
+		// Use the *Immutable variant so workspace_id is ForceNew → switching the
+		// provider workspace_id destroys and recreates via the new workspace.
+		common.NamespaceCustomizeSchemaMapImmutable(m)
 		return adjustDataAccessSchema(m)
 	})
 

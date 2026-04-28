@@ -19,14 +19,14 @@ func ResourceServicePrincipalRole() common.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, servicePrincipalID, role string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			return scim.NewServicePrincipalsAPI(ctx, c, common.GetApiLevel(d)).Patch(servicePrincipalID, scim.PatchRequestWithValue("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, servicePrincipalID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -42,7 +42,7 @@ func ResourceServicePrincipalRole() common.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, servicePrincipalID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -53,5 +53,6 @@ func ResourceServicePrincipalRole() common.Resource {
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
+	r.IsDual = true
 	return r
 }

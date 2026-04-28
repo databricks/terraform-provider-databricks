@@ -87,12 +87,13 @@ func ResourceMetastore() common.Resource {
 		})
 
 	return common.Resource{
+		IsDual: true,
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.CustomizeDiffDualResources(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -152,7 +153,7 @@ func ResourceMetastore() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -171,7 +172,7 @@ func ResourceMetastore() common.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -258,7 +259,7 @@ func ResourceMetastore() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

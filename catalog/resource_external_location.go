@@ -39,6 +39,13 @@ func ResourceExternalLocation() common.Resource {
 			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only", "effective_enable_file_events"} {
 				common.CustomizeSchemaPath(m, key).SetReadOnly()
 			}
+			// Matches the pattern used for `effective_predictive_optimization_flag` and
+			// `provisioning_info` on `databricks_catalog`.
+			// SetReadOnly() alone causes a perpetual `(known after apply)` plan because the field
+			// isn't enabled on the server side yet, and SetReadOnly().SetSuppressDiff() is rejected
+			// by SDKv2's InternalValidate (DiffSuppressFunc requires a config source, which a field
+			// with Optional=false doesn't have).
+			common.CustomizeSchemaPath(m, "effective_file_event_queue").SetComputed().SetSuppressDiff()
 			// customize file event queue
 			supportedQueues := []string{"managed_pubsub", "managed_aqs", "managed_sqs", "provided_pubsub", "provided_aqs", "provided_sqs"}
 			for _, key := range supportedQueues {

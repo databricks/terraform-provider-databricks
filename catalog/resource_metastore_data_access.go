@@ -110,6 +110,7 @@ func toUpdateAccountsStorageCredential(update *catalog.UpdateStorageCredential) 
 func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
+		IsDual:        true,
 		Schema:        dacSchema,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -123,7 +124,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			return common.CustomizeDiffDualResources(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -174,7 +175,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -217,7 +218,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

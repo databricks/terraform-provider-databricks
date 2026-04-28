@@ -1024,7 +1024,7 @@ func (m SupervisorAgent_SdkV2) Type(ctx context.Context) attr.Type {
 type Tool_SdkV2 struct {
 	App types.List `tfsdk:"app"`
 
-	UcConnection types.List `tfsdk:"uc_connection"`
+	Connection types.List `tfsdk:"connection"`
 	// Description of what this tool does (user-facing).
 	Description types.String `tfsdk:"description"`
 
@@ -1058,12 +1058,12 @@ func (to *Tool_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from T
 			}
 		}
 	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				// Recursively sync the fields of UcConnection
-				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				// Recursively sync the fields of Connection
+				toConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -1114,11 +1114,11 @@ func (to *Tool_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Tool_SdkV2)
 			}
 		}
 	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
+	if !from.Connection.IsNull() && !from.Connection.IsUnknown() {
+		if toConnection, ok := to.GetConnection(ctx); ok {
+			if fromConnection, ok := from.GetConnection(ctx); ok {
+				toConnection.SyncFieldsDuringRead(ctx, fromConnection)
+				to.SetConnection(ctx, toConnection)
 			}
 		}
 	}
@@ -1159,8 +1159,8 @@ func (to *Tool_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Tool_SdkV2)
 func (m Tool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetOptional()
 	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
-	attrs["uc_connection"] = attrs["uc_connection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["connection"] = attrs["connection"].SetOptional()
+	attrs["connection"] = attrs["connection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetRequired()
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["genie_space"] = attrs["genie_space"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1188,7 +1188,7 @@ func (m Tool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 func (m Tool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app":                 reflect.TypeOf(App_SdkV2{}),
-		"uc_connection":       reflect.TypeOf(Connection_SdkV2{}),
+		"connection":          reflect.TypeOf(Connection_SdkV2{}),
 		"genie_space":         reflect.TypeOf(GenieSpace_SdkV2{}),
 		"knowledge_assistant": reflect.TypeOf(KnowledgeAssistant_SdkV2{}),
 		"uc_function":         reflect.TypeOf(UcFunction_SdkV2{}),
@@ -1204,7 +1204,7 @@ func (m Tool_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"app":                 m.App,
-			"uc_connection":       m.UcConnection,
+			"connection":          m.Connection,
 			"description":         m.Description,
 			"genie_space":         m.GenieSpace,
 			"id":                  m.Id,
@@ -1224,7 +1224,7 @@ func (m Tool_SdkV2) Type(ctx context.Context) attr.Type {
 			"app": basetypes.ListType{
 				ElemType: App_SdkV2{}.Type(ctx),
 			},
-			"uc_connection": basetypes.ListType{
+			"connection": basetypes.ListType{
 				ElemType: Connection_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
@@ -1274,16 +1274,16 @@ func (m *Tool_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 	m.App = types.ListValueMust(t, vs)
 }
 
-// GetUcConnection returns the value of the UcConnection field in Tool_SdkV2 as
+// GetConnection returns the value of the Connection field in Tool_SdkV2 as
 // a Connection_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Tool_SdkV2) GetUcConnection(ctx context.Context) (Connection_SdkV2, bool) {
+func (m *Tool_SdkV2) GetConnection(ctx context.Context) (Connection_SdkV2, bool) {
 	var e Connection_SdkV2
-	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
+	if m.Connection.IsNull() || m.Connection.IsUnknown() {
 		return e, false
 	}
 	var v []Connection_SdkV2
-	d := m.UcConnection.ElementsAs(ctx, &v, true)
+	d := m.Connection.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1293,11 +1293,11 @@ func (m *Tool_SdkV2) GetUcConnection(ctx context.Context) (Connection_SdkV2, boo
 	return v[0], true
 }
 
-// SetUcConnection sets the value of the UcConnection field in Tool_SdkV2.
-func (m *Tool_SdkV2) SetUcConnection(ctx context.Context, v Connection_SdkV2) {
+// SetConnection sets the value of the Connection field in Tool_SdkV2.
+func (m *Tool_SdkV2) SetConnection(ctx context.Context, v Connection_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_connection"]
-	m.UcConnection = types.ListValueMust(t, vs)
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connection"]
+	m.Connection = types.ListValueMust(t, vs)
 }
 
 // GetGenieSpace returns the value of the GenieSpace field in Tool_SdkV2 as

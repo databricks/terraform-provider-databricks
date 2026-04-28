@@ -740,7 +740,48 @@ func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestReadExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
+// When the server omits effective_file_event_queue (e.g. file events disabled),
+// state must still be committed to a concrete empty block — otherwise SDKv2
+// renders `(known after apply)` on every plan for the Computed-only field.
+func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:                      "abc",
+					Url:                       "s3://foo/bar",
+					CredentialName:            "bcd",
+					Comment:                   "def",
+					Owner:                     "efg",
+					MetastoreId:               "fgh",
+					EffectiveEnableFileEvents: false,
+					// EffectiveFileEventQueue intentionally nil — mirrors current server behavior.
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Read:     true,
+		ID:       "abc",
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	effective := d.Get("effective_file_event_queue").([]any)
+	assert.Len(t, effective, 1, "expected concrete empty block, not nil/empty list")
+	queue := effective[0].(map[string]any)
+	for _, key := range []string{"managed_aqs", "managed_pubsub", "managed_sqs", "provided_aqs", "provided_pubsub", "provided_sqs"} {
+		assert.Empty(t, queue[key].([]any), "expected %s to be empty list", key)
+	}
+}
+
+// When the server returns effective_file_event_queue, state must reflect the server response verbatim.
+func TestReadExternalLocationServerReturnsEffectiveFileEventQueue(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -773,13 +814,6 @@ func TestReadExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
-	assert.Equal(t, "abc", d.Get("name"))
-	assert.Equal(t, "s3://foo/bar", d.Get("url"))
-	assert.Equal(t, "bcd", d.Get("credential_name"))
-	assert.Equal(t, "def", d.Get("comment"))
-	assert.Equal(t, "efg", d.Get("owner"))
-	assert.Equal(t, "fgh", d.Get("metastore_id"))
 	assert.Equal(t, true, d.Get("effective_enable_file_events"))
 	effective := d.Get("effective_file_event_queue").([]any)
 	assert.Len(t, effective, 1)

@@ -588,7 +588,7 @@ func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: directoryWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`managing a workspace-level resource requires a workspace_id, but none was found`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none was found`,
 		),
 		PlanOnly: true,
 	})

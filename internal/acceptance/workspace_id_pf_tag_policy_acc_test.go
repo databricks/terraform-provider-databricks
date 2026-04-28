@@ -584,7 +584,7 @@ func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
 		Template: tagPolicyWithProviderBlock("", ""),
 		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
-			`managing a workspace-level resource requires a workspace_id, but none was found`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none was found`,
 		),
 	})
 }

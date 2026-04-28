@@ -588,7 +588,7 @@ func TestMwsAccWorkspaceIDApp_NoDefaultNoOverride(t *testing.T) {
 		Template: appWithProviderBlock("", ""),
 		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
-			`managing a workspace-level resource requires a workspace_id, but none was found`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none was found`,
 		),
 	})
 }

@@ -1,10 +1,16 @@
 # Generated file. DO NOT EDIT.
+# Generated file. DO NOT EDIT.
 name: tagging
 
 on:
   # Manual dispatch.
   workflow_dispatch:
-    # No inputs are required for the manual dispatch.
+    inputs:
+      packages:
+        description: 'Comma-separated list of packages to tag (e.g. "pkg1,pkg2"). Leave empty to tag all packages with pending releases.'
+        required: false
+        type: string
+        default: ''
 
   # NOTE: Temporarily disable automated releases.
   #
@@ -61,7 +67,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: uv run --locked tagging.py
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [ -n "$PACKAGES" ]; then
+            uv run --locked tagging.py --package "$PACKAGES"
+          else
+            uv run --locked tagging.py
+          fi
 
       - name: Upload created tags artifact
         if: always()

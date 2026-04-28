@@ -18950,7 +18950,7 @@ func (m RunTag) Type(ctx context.Context) attr.Type {
 
 type SchemaConfig struct {
 	// Schema of the JSON object in standard IETF JSON schema format
-	// (https://json-schema.org/)
+	// (https://json-schema.org/).
 	JsonSchema types.String `tfsdk:"json_schema"`
 }
 

@@ -15,11 +15,11 @@ The following arguments are supported:
 * `parent` (string, required) - Parent resource where this tool will be created.
   Format: supervisor-agents/{supervisor_agent_id}
 * `tool_id` (string, required) - User specified id of the Tool
-* `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
+* `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
 * `app` (App, optional)
-* `uc_connection` (UcConnection, optional)
 * `genie_space` (GenieSpace, optional)
 * `knowledge_assistant` (KnowledgeAssistant, optional)
+* `uc_connection` (UcConnection, optional)
 * `uc_function` (UcFunction, optional)
 * `volume` (Volume, optional)
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
@@ -30,15 +30,15 @@ The following arguments are supported:
 ### App
 * `name` (string, required) - App name
 
-### UcConnection
-* `name` (string, required)
-
 ### GenieSpace
 * `id` (string, required) - The ID of the genie space
 
 ### KnowledgeAssistant
 * `knowledge_assistant_id` (string, required) - The ID of the knowledge assistant
 * `serving_endpoint_name` (string, optional, deprecated) - Deprecated: use knowledge_assistant_id instead
+
+### UcConnection
+* `name` (string, required)
 
 ### UcFunction
 * `name` (string, required) - Full uc function name

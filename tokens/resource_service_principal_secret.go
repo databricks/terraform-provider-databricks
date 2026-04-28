@@ -49,7 +49,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 		IsDual: true,
 		Schema: spnSecretSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
+			return common.CustomizeDiffDualResources(ctx, d, c)
 		},
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
 			return true

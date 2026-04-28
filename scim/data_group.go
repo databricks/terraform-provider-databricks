@@ -43,6 +43,9 @@ func DataSourceGroup() common.Resource {
 		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
+				return err
+			}
 			newClient, err := m.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err

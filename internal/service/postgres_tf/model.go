@@ -342,6 +342,16 @@ func (m BranchSpec) Type(ctx context.Context) attr.Type {
 }
 
 type BranchStatus struct {
+	// The short identifier of the branch, suitable for showing to the users.
+	// For a branch with name `projects/my-project/branches/my-branch`, the
+	// branch_id is `my-branch`.
+	//
+	// Use this field when building UI components that display branches to users
+	// (e.g., a drop-down selector). Prefer showing `branch_id` instead of the
+	// full resource name from `Branch.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}` format and is not
+	// user-friendly.
+	BranchId types.String `tfsdk:"branch_id"`
 	// The branch's state, indicating if it is initializing, ready for use, or
 	// archived.
 	CurrentState types.String `tfsdk:"current_state"`
@@ -375,6 +385,7 @@ func (to *BranchStatus) SyncFieldsDuringRead(ctx context.Context, from BranchSta
 }
 
 func (m BranchStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["default"] = attrs["default"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetComputed()
@@ -407,6 +418,7 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"branch_id":          m.BranchId,
 			"current_state":      m.CurrentState,
 			"default":            m.Default,
 			"expire_time":        m.ExpireTime,
@@ -424,6 +436,7 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m BranchStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"branch_id":          types.StringType,
 			"current_state":      types.StringType,
 			"default":            types.BoolType,
 			"expire_time":        timetypes.RFC3339{}.Type(ctx),
@@ -712,6 +725,15 @@ type CatalogCatalogStatus struct {
 	//
 	// Format: projects/{project_id}/branches/{branch_id}.
 	Branch types.String `tfsdk:"branch"`
+	// The short identifier of the catalog, suitable for showing to the users.
+	// For a catalog with name `catalogs/my-catalog`, the catalog_id is
+	// `my-catalog`.
+	//
+	// Use this field when building UI components that display catalogs to users
+	// (e.g., a drop-down selector). Prefer showing `catalog_id` instead of the
+	// full resource name from `Catalog.name`, which follows the
+	// `catalogs/{catalog_id}` format and is not user-friendly.
+	CatalogId types.String `tfsdk:"catalog_id"`
 	// The name of the Postgres database associated with the catalog.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The resource path of the project associated with the catalog.
@@ -728,6 +750,7 @@ func (to *CatalogCatalogStatus) SyncFieldsDuringRead(ctx context.Context, from C
 
 func (m CatalogCatalogStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetComputed()
+	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetComputed()
 	attrs["project"] = attrs["project"].SetComputed()
 
@@ -753,6 +776,7 @@ func (m CatalogCatalogStatus) ToObjectValue(ctx context.Context) basetypes.Objec
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch":            m.Branch,
+			"catalog_id":        m.CatalogId,
 			"postgres_database": m.PostgresDatabase,
 			"project":           m.Project,
 		})
@@ -763,6 +787,7 @@ func (m CatalogCatalogStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch":            types.StringType,
+			"catalog_id":        types.StringType,
 			"postgres_database": types.StringType,
 			"project":           types.StringType,
 		},
@@ -822,6 +847,9 @@ type CreateBranchRequest struct {
 	// The Project where this Branch will be created. Format:
 	// projects/{project_id}
 	Parent types.String `tfsdk:"-"`
+	// If true, update the branch if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateBranchRequest) {
@@ -834,6 +862,10 @@ func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from CreateBranchRequest) {
@@ -845,12 +877,19 @@ func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from Cr
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (m CreateBranchRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
+	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
+	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -875,9 +914,10 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch":    m.Branch,
-			"branch_id": m.BranchId,
-			"parent":    m.Parent,
+			"branch":           m.Branch,
+			"branch_id":        m.BranchId,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
 		})
 }
 
@@ -885,9 +925,10 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m CreateBranchRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":    Branch{}.Type(ctx),
-			"branch_id": types.StringType,
-			"parent":    types.StringType,
+			"branch":           Branch{}.Type(ctx),
+			"branch_id":        types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
 		},
 	}
 }
@@ -1137,6 +1178,9 @@ type CreateEndpointRequest struct {
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
+	// If true, update the endpoint if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateEndpointRequest) {
@@ -1149,6 +1193,10 @@ func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from CreateEndpointRequest) {
@@ -1160,12 +1208,19 @@ func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (m CreateEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
+	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
+	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1190,9 +1245,10 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"endpoint":    m.Endpoint,
-			"endpoint_id": m.EndpointId,
-			"parent":      m.Parent,
+			"endpoint":         m.Endpoint,
+			"endpoint_id":      m.EndpointId,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
 		})
 }
 
@@ -1200,9 +1256,10 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m CreateEndpointRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoint":    Endpoint{}.Type(ctx),
-			"endpoint_id": types.StringType,
-			"parent":      types.StringType,
+			"endpoint":         Endpoint{}.Type(ctx),
+			"endpoint_id":      types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
 		},
 	}
 }
@@ -1842,6 +1899,17 @@ func (m DatabaseDatabaseSpec) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseDatabaseStatus struct {
+	// The short identifier of the database, suitable for showing to the users.
+	// For a database with name
+	// `projects/my-project/branches/my-branch/databases/my-db`, the database_id
+	// is `my-db`.
+	//
+	// Use this field when building UI components that display databases to
+	// users (e.g., a drop-down selector). Prefer showing `database_id` instead
+	// of the full resource name from `Database.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
+	// format and is not user-friendly.
+	DatabaseId types.String `tfsdk:"database_id"`
 	// The name of the Postgres database.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The name of the role that owns the database. Format:
@@ -1856,6 +1924,7 @@ func (to *DatabaseDatabaseStatus) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m DatabaseDatabaseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
 	attrs["role"] = attrs["role"].SetOptional()
 
@@ -1880,6 +1949,7 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database_id":       m.DatabaseId,
 			"postgres_database": m.PostgresDatabase,
 			"role":              m.Role,
 		})
@@ -1889,6 +1959,7 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m DatabaseDatabaseStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database_id":       types.StringType,
 			"postgres_database": types.StringType,
 			"role":              types.StringType,
 		},
@@ -3124,6 +3195,17 @@ type EndpointStatus struct {
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
+	// The short identifier of the endpoint, suitable for showing to the users.
+	// For an endpoint with name
+	// `projects/my-project/branches/my-branch/endpoints/my-endpoint`, the
+	// endpoint_id is `my-endpoint`.
+	//
+	// Use this field when building UI components that display endpoints to
+	// users (e.g., a drop-down selector). Prefer showing `endpoint_id` instead
+	// of the full resource name from `Endpoint.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// format and is not user-friendly.
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Details on the HA configuration of the endpoint.
@@ -3201,6 +3283,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["autoscaling_limit_min_cu"] = attrs["autoscaling_limit_min_cu"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
 	attrs["group"] = attrs["group"].SetComputed()
 	attrs["hosts"] = attrs["hosts"].SetComputed()
@@ -3237,6 +3320,7 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"current_state":            m.CurrentState,
 			"disabled":                 m.Disabled,
+			"endpoint_id":              m.EndpointId,
 			"endpoint_type":            m.EndpointType,
 			"group":                    m.Group,
 			"hosts":                    m.Hosts,
@@ -3254,6 +3338,7 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"current_state":            types.StringType,
 			"disabled":                 types.BoolType,
+			"endpoint_id":              types.StringType,
 			"endpoint_type":            types.StringType,
 			"group":                    EndpointGroupStatus{}.Type(ctx),
 			"hosts":                    EndpointHosts{}.Type(ctx),
@@ -5511,6 +5596,15 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
+	// The short identifier of the project, suitable for showing to the users.
+	// For a project with name `projects/my-project`, the project_id is
+	// `my-project`.
+	//
+	// Use this field when building UI components that display projects to users
+	// (e.g., a drop-down selector). Prefer showing `project_id` instead of the
+	// full resource name from `Project.name`, which follows the
+	// `projects/{project_id}` format and is not user-friendly.
+	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
 }
@@ -5561,6 +5655,7 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["synthetic_storage_size_bytes"] = attrs["synthetic_storage_size_bytes"].SetComputed()
 
 	return attrs
@@ -5597,6 +5692,7 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"history_retention_duration":      m.HistoryRetentionDuration,
 			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
+			"project_id":                      m.ProjectId,
 			"synthetic_storage_size_bytes":    m.SyntheticStorageSizeBytes,
 		})
 }
@@ -5617,6 +5713,7 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 			"history_retention_duration":   timetypes.GoDuration{}.Type(ctx),
 			"owner":                        types.StringType,
 			"pg_version":                   types.Int64Type,
+			"project_id":                   types.StringType,
 			"synthetic_storage_size_bytes": types.Int64Type,
 		},
 	}
@@ -6282,6 +6379,16 @@ type RoleRoleStatus struct {
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
+	// The short identifier of the role, suitable for showing to the users. For
+	// a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+	// the role_id is `my-role`.
+	//
+	// Use this field when building UI components that display roles to users
+	// (e.g., a drop-down selector). Prefer showing `role_id` instead of the
+	// full resource name from `Role.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format and
+	// is not user-friendly.
+	RoleId types.String `tfsdk:"role_id"`
 }
 
 func (to *RoleRoleStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RoleRoleStatus) {
@@ -6325,6 +6432,7 @@ func (m RoleRoleStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
+	attrs["role_id"] = attrs["role_id"].SetComputed()
 
 	return attrs
 }
@@ -6355,6 +6463,7 @@ func (m RoleRoleStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"identity_type":    m.IdentityType,
 			"membership_roles": m.MembershipRoles,
 			"postgres_role":    m.PostgresRole,
+			"role_id":          m.RoleId,
 		})
 }
 
@@ -6369,6 +6478,7 @@ func (m RoleRoleStatus) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"postgres_role": types.StringType,
+			"role_id":       types.StringType,
 		},
 	}
 }
@@ -7035,6 +7145,10 @@ type SyncedTableSyncedTableStatus struct {
 	OngoingSyncProgress types.Object `tfsdk:"ongoing_sync_progress"`
 	// ID of the associated pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
+	// The full resource name of the project associated with the table.
+	//
+	// Format: "projects/{project_id}".
+	Project types.String `tfsdk:"project"`
 	// The current phase of the data synchronization pipeline.
 	ProvisioningPhase types.String `tfsdk:"provisioning_phase"`
 	// The provisioning state of the synced table entity in Unity Catalog.
@@ -7089,6 +7203,7 @@ func (m SyncedTableSyncedTableStatus) ApplySchemaCustomizations(attrs map[string
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["ongoing_sync_progress"] = attrs["ongoing_sync_progress"].SetComputed()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
+	attrs["project"] = attrs["project"].SetComputed()
 	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
@@ -7123,6 +7238,7 @@ func (m SyncedTableSyncedTableStatus) ToObjectValue(ctx context.Context) basetyp
 			"message":                          m.Message,
 			"ongoing_sync_progress":            m.OngoingSyncProgress,
 			"pipeline_id":                      m.PipelineId,
+			"project":                          m.Project,
 			"provisioning_phase":               m.ProvisioningPhase,
 			"unity_catalog_provisioning_state": m.UnityCatalogProvisioningState,
 		})
@@ -7139,6 +7255,7 @@ func (m SyncedTableSyncedTableStatus) Type(ctx context.Context) attr.Type {
 			"message":                          types.StringType,
 			"ongoing_sync_progress":            SyncedTablePipelineProgress{}.Type(ctx),
 			"pipeline_id":                      types.StringType,
+			"project":                          types.StringType,
 			"provisioning_phase":               types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},

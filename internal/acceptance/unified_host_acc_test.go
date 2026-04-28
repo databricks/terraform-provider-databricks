@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
-func unifiedHostProviderFactories(unifiedHost string) map[string]func() (tfprotov6.ProviderServer, error) {
+func unifiedHostProviderFactories(unifiedHost, accountID string) map[string]func() (tfprotov6.ProviderServer, error) {
 	customizer := func(cfg *config.Config) error {
 		cfg.Host = unifiedHost
+		cfg.AccountID = accountID
 		return nil
 	}
 	return map[string]func() (tfprotov6.ProviderServer, error){
@@ -106,22 +107,21 @@ func TestMwsAccUnifiedHostCreateJobs(t *testing.T) {
 	initUnifiedHostAccountEnv(t)
 	unifiedHost := os.Getenv("UNIFIED_HOST")
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
-	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost))
+	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
+	createJobWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
 func TestAccUnifiedHostWorkspaceCreateJobs(t *testing.T) {
 	initUnifiedHostWorkspaceEnv(t)
-	if !IsAzure(t) {
-		Skipf(t)("This test is only running on Azure until ACCOUNT_ID is exported in our workspace test environments")
-	}
 	unifiedHost := os.Getenv("UNIFIED_HOST")
+	accountID := GetEnvOrSkipTest(t, "TEST_ACCOUNT_ID")
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	workspaceID, err := w.CurrentWorkspaceID(ctx)
 	if err != nil {
 		t.Fatalf("failed to get current workspace ID: %s", err)
 	}
-	createJobWithProviderConfig(t, strconv.FormatInt(workspaceID, 10), unifiedHostProviderFactories(unifiedHost))
+	createJobWithProviderConfig(t, strconv.FormatInt(workspaceID, 10), unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
 func TestMwsAccAccountHostCreateJobs(t *testing.T) {

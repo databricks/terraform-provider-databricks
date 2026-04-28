@@ -5,6 +5,9 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add resource and data sources for `databricks_supervisor_agent`.
+* Add resource and data sources for `databricks_supervisor_agent_tool`.
+* Add resource and data sources for `databricks_secret_uc`.
 
 ### Bug Fixes
 

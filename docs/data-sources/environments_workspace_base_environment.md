@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_workspace_base_environment Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source retrieves a single Workspace Base Environment by its resource name.
 

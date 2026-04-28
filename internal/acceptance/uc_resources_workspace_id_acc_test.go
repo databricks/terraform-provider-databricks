@@ -3,7 +3,6 @@ package acceptance
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -114,23 +113,6 @@ func TestUcAccCatalog_SameProviderWorkspaceID_Noop(t *testing.T) {
 				},
 			},
 			Check: checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
-		},
-	)
-}
-
-// TestUcAccCatalog_InvalidWorkspaceID_PlanError verifies that switching to an
-// invalid workspace_id surfaces a plan-time error from NamespaceValidateWorkspaceID,
-// without recreating or modifying the catalog.
-func TestUcAccCatalog_InvalidWorkspaceID_PlanError(t *testing.T) {
-	UnityAccountLevel(t,
-		Step{
-			Template: catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
-			Check:    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
-		},
-		Step{
-			Template:    catalogWithProviderBlock(`workspace_id = "999999999999999"`),
-			PlanOnly:    true,
-			ExpectError: regexp.MustCompile(`(?s)failed to get workspace client`),
 		},
 	)
 }

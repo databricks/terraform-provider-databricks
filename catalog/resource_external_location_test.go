@@ -740,9 +740,11 @@ func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-// When the server omits effective_file_event_queue (current behavior with file events disabled),
-// state should reflect the absence as an empty list. Plan stability is provided by the
-// schema's diff suppressor on the parent block.
+// Verifies Read behavior when the server response has no `effective_file_event_queue`
+// (current API behavior when file events are disabled). The Go SDK unmarshals this as a
+// nil pointer, which `StructToData` skips, leaving state empty for the field.
+// This test asserts that empty-list shape so we don't accidentally regress to writing a
+// concrete-but-empty block, which would interact differently with the diff suppressor.
 func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -775,7 +777,11 @@ func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
 	assert.Empty(t, d.Get("effective_file_event_queue").([]any), "expected empty list when server omits the field")
 }
 
-// When the server returns effective_file_event_queue, state must reflect the server response verbatim.
+// Verifies Read behavior when the server returns a populated `effective_file_event_queue`
+// (e.g. with a server-assigned `managed_pubsub.managed_resource_id`). Asserts that the
+// nested values land in state verbatim under the expected paths — drift suppression then
+// keeps these populated children from showing diffs on subsequent plans even though the
+// user's HCL never references them.
 func TestReadExternalLocationServerReturnsEffectiveFileEventQueue(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

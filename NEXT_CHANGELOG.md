@@ -8,6 +8,7 @@
 * Add resource and data sources for `databricks_supervisor_agent`.
 * Add resource and data sources for `databricks_supervisor_agent_tool`.
 * Add resource and data sources for `databricks_secret_uc`.
+* Support adopting pre-existing `databricks_postgres_branch` and `databricks_postgres_endpoint` resources via `replace_existing = true` argument.
 
 ### Bug Fixes
 

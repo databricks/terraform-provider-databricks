@@ -364,7 +364,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute",
+			errorContains: "managing a workspace-level resource requires a workspace_id, but none was found",
 			description:   "Account-level provider requires workspace_id to be set",
 		},
 	}
@@ -1115,7 +1115,7 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id",
+			errorContains: "managing a workspace-level resource requires a workspace_id, but none was found",
 			description:   "Should return error when neither workspace_id nor provider_config.workspace_id is set",
 		},
 		{
@@ -1365,7 +1365,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 				"name": "test",
 			},
 			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id",
+			errorContains: "managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed",
 		},
 		{
 			name: "workspace_id removed A to empty default=A - no ForceNew same effective",
@@ -1486,7 +1486,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			},
 			cachedWSID:    0,
 			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id",
+			errorContains: "managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed",
 		},
 		{
 			name: "default takes precedence over cachedWSID - ForceNew from default",

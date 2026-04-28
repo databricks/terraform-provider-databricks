@@ -284,7 +284,7 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 	)
 }
 
-func TestAccQualityMonitor_ProviderConfig_Mismatched(t *testing.T) {
+func TestUcAccQualityMonitor_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: commonPartQualityMonitoring + `
 			resource "databricks_sql_table" "myTable" {

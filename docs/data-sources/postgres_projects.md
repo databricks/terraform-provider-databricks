@@ -22,6 +22,9 @@ output "project_names" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Upper bound for items returned. Cannot be negative. The maximum value is 100
+* `show_deleted` (boolean, optional) - Whether to include soft-deleted projects in the response.
+  When true, soft-deleted projects are included alongside active projects.
+  Hard-deleted and already-purged projects are never returned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -31,12 +34,16 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `projects`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the project was created
-* `initial_endpoint_spec` (InitialEndpointSpec) - Configuration settings for the initial Read/Write endpoint created inside the default branch for a newly
+* `delete_time` (string) - A timestamp indicating when the project was soft-deleted.
+  Empty if the project is not deleted, otherwise set to a timestamp in the past
+* `initial_endpoint_spec` (InitialEndpointSpec) - Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use
   spec.default_endpoint_settings to configure default settings for endpoints created after project creation
 * `name` (string) - Output only. The full resource path of the project.
   Format: projects/{project_id}
+* `purge_time` (string) - A timestamp indicating when the project is scheduled for permanent deletion.
+  Empty if the project is not deleted, otherwise set to a timestamp in the future
 * `spec` (ProjectSpec) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 * `status` (ProjectStatus) - The current status of a Project
 * `uid` (string) - System-generated unique ID for the project
@@ -62,10 +69,12 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. Minimum value is 0.5
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.project_default_settings.suspension` in the update_mask
 * `pg_settings` (object) - A raw representation of Postgres settings
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.project_default_settings.suspension` in the update_mask
 
 ### ProjectSpec
 * `budget_policy_id` (string) - The desired budget policy to associate with the project.
@@ -79,7 +88,7 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings)
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
-* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 2592000s (30 days)
+* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
 * `pg_version` (integer) - The major Postgres version number. Supported versions are 16 and 17
 
 ### ProjectStatus

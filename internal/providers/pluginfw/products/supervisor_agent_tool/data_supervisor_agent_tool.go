@@ -102,8 +102,6 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 // ToolData extends the main model with additional fields.
 type ToolData struct {
 	App types.Object `tfsdk:"app"`
-
-	UcConnection types.Object `tfsdk:"uc_connection"`
 	// Description of what this tool does (user-facing).
 	Description types.String `tfsdk:"description"`
 
@@ -118,9 +116,11 @@ type ToolData struct {
 	// User specified id of the Tool.
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "connection", "app", "volume", "lakeview_dashboard",
+	// "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard",
 	// "serving_endpoint", "uc_table", "vector_search_index".
 	ToolType types.String `tfsdk:"tool_type"`
+
+	UcConnection types.Object `tfsdk:"uc_connection"`
 
 	UcFunction types.Object `tfsdk:"uc_function"`
 
@@ -138,9 +138,9 @@ type ToolData struct {
 func (m ToolData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app":                 reflect.TypeOf(supervisoragents_tf.App{}),
-		"uc_connection":       reflect.TypeOf(supervisoragents_tf.Connection{}),
 		"genie_space":         reflect.TypeOf(supervisoragents_tf.GenieSpace{}),
 		"knowledge_assistant": reflect.TypeOf(supervisoragents_tf.KnowledgeAssistant{}),
+		"uc_connection":       reflect.TypeOf(supervisoragents_tf.UcConnection{}),
 		"uc_function":         reflect.TypeOf(supervisoragents_tf.UcFunction{}),
 		"volume":              reflect.TypeOf(supervisoragents_tf.Volume{}),
 		"provider_config":     reflect.TypeOf(ProviderConfigData{}),
@@ -158,7 +158,6 @@ func (m ToolData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"app":                 m.App,
-			"uc_connection":       m.UcConnection,
 			"description":         m.Description,
 			"genie_space":         m.GenieSpace,
 			"id":                  m.Id,
@@ -166,6 +165,7 @@ func (m ToolData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                m.Name,
 			"tool_id":             m.ToolId,
 			"tool_type":           m.ToolType,
+			"uc_connection":       m.UcConnection,
 			"uc_function":         m.UcFunction,
 			"volume":              m.Volume,
 
@@ -180,7 +180,6 @@ func (m ToolData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app":                 supervisoragents_tf.App{}.Type(ctx),
-			"uc_connection":       supervisoragents_tf.Connection{}.Type(ctx),
 			"description":         types.StringType,
 			"genie_space":         supervisoragents_tf.GenieSpace{}.Type(ctx),
 			"id":                  types.StringType,
@@ -188,6 +187,7 @@ func (m ToolData) Type(ctx context.Context) attr.Type {
 			"name":                types.StringType,
 			"tool_id":             types.StringType,
 			"tool_type":           types.StringType,
+			"uc_connection":       supervisoragents_tf.UcConnection{}.Type(ctx),
 			"uc_function":         supervisoragents_tf.UcFunction{}.Type(ctx),
 			"volume":              supervisoragents_tf.Volume{}.Type(ctx),
 
@@ -198,7 +198,6 @@ func (m ToolData) Type(ctx context.Context) attr.Type {
 
 func (m ToolData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetComputed()
-	attrs["uc_connection"] = attrs["uc_connection"].SetComputed()
 	attrs["description"] = attrs["description"].SetComputed()
 	attrs["genie_space"] = attrs["genie_space"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
@@ -206,6 +205,7 @@ func (m ToolData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["tool_id"] = attrs["tool_id"].SetComputed()
 	attrs["tool_type"] = attrs["tool_type"].SetComputed()
+	attrs["uc_connection"] = attrs["uc_connection"].SetComputed()
 	attrs["uc_function"] = attrs["uc_function"].SetComputed()
 	attrs["volume"] = attrs["volume"].SetComputed()
 

@@ -7,7 +7,7 @@ import os
 import re
 import argparse
 from typing import Optional, List, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import subprocess
 import time
 import json
@@ -27,6 +27,106 @@ It reads the local repository to determine necessary changes, updates changelogs
 - It does **not** modify the local repository directly.
 - Instead of committing and pushing changes locally, it uses the **GitHub API** to create commits and tags.
 """
+
+
+@dataclass(frozen=True)
+class Version:
+    """
+    A semver 2.0.0-compliant version (https://semver.org).
+
+    Mirrors the API of the `semver` PyPI package so this implementation can be
+    swapped for that library if it is ever added to the wheelhouse. Supports
+    parsing, stringification, and the two bumps we need: minor (for stable
+    releases) and prerelease (for release trains).
+    """
+
+    # Permissive pattern for locating a semver version string inside larger
+    # text (e.g. a changelog header). Callers use it in f-strings; strict
+    # validation happens via Version.parse.
+    PATTERN = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
+
+    # Strict anchored regex per https://semver.org. Rejects leading zeros in
+    # numeric identifiers and invalid pre-release/build identifier charsets.
+    _PARSE_REGEX = re.compile(
+        r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+        r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+        r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+    )
+
+    major: int
+    minor: int
+    patch: int
+    prerelease: str = ""
+    build: str = ""
+
+    @classmethod
+    def parse(cls, text: str) -> "Version":
+        """Parse a semver string, raising ValueError on malformed input."""
+        match = cls._PARSE_REGEX.match(text)
+        if not match:
+            raise ValueError(f"Invalid semver version: {text!r}")
+        major, minor, patch, prerelease, build = match.groups()
+        return cls(
+            major=int(major),
+            minor=int(minor),
+            patch=int(patch),
+            prerelease=prerelease or "",
+            build=build or "",
+        )
+
+    def __str__(self) -> str:
+        result = f"{self.major}.{self.minor}.{self.patch}"
+        if self.prerelease:
+            result += f"-{self.prerelease}"
+        if self.build:
+            result += f"+{self.build}"
+        return result
+
+    def bump_minor(self) -> "Version":
+        """
+        Bump the minor version and reset patch.
+
+        Per semver item 9, a pre-release version has lower precedence than
+        the same MAJOR.MINOR.PATCH, so bumping to a new minor drops any
+        pre-release and build metadata.
+        """
+        return Version(major=self.major, minor=self.minor + 1, patch=0)
+
+    def bump_prerelease(self) -> "Version":
+        """
+        Increment the rightmost numeric identifier in the pre-release.
+
+        Matches the npm `prerelease` bump semantics:
+            0.0.0-alpha.1 -> 0.0.0-alpha.2
+            0.0.0-alpha   -> 0.0.0-alpha.1
+            0.0.0-rc.1.2  -> 0.0.0-rc.1.3
+
+        Raises ValueError if the version has no pre-release to bump.
+        Build metadata is dropped since it does not affect precedence.
+        """
+        if not self.prerelease:
+            raise ValueError(f"Cannot bump prerelease of {self}: no pre-release component")
+        parts = self.prerelease.split(".")
+        for i in range(len(parts) - 1, -1, -1):
+            if parts[i].isdigit():
+                parts[i] = str(int(parts[i]) + 1)
+                return replace(self, prerelease=".".join(parts), build="")
+        # No numeric identifier exists; append ".1" to start a counter.
+        return replace(self, prerelease=f"{self.prerelease}.1", build="")
+
+    def next_release_version(self) -> "Version":
+        """
+        Default next version for the changelog after this one is released.
+
+        If on a pre-release track, stay on it by bumping the pre-release
+        identifier (npm convention). Otherwise, bump the minor version,
+        the script's historical default for stable releases. Teams can
+        override the default in the release PR.
+        """
+        if self.prerelease:
+            return self.bump_prerelease()
+        return self.bump_minor()
 
 
 # GitHub does not support signing commits for GitHub Apps directly.
@@ -170,11 +270,11 @@ def update_version_references(tag_info: TagInfo) -> None:
         print("`version` not found in .codegen.json. Nothing to update.")
         return
 
-    # Update the versions
+    # Update the versions.
     for filename, pattern in version.items():
         loc = os.path.join(os.getcwd(), tag_info.package.path, filename)
-        previous_version = re.sub(r"\$VERSION", r"\\d+\\.\\d+\\.\\d+", pattern)
-        new_version = re.sub(r"\$VERSION", tag_info.version, pattern)
+        previous_version = pattern.replace("$VERSION", Version.PATTERN)
+        new_version = pattern.replace("$VERSION", tag_info.version)
 
         with open(loc, "r") as file:
             content = file.read()
@@ -197,23 +297,21 @@ def clean_next_changelog(package_path: str) -> None:
     with open(file_path, "r") as file:
         content = file.read()
 
-    # Remove content between ### sections
+    # Remove content between ### sections.
     cleaned_content = re.sub(r"(### [^\n]+\n)(?:.*?\n?)*?(?=###|$)", r"\1", content)
-    # Ensure there is exactly one empty line before each section
+    # Ensure there is exactly one empty line before each section.
     cleaned_content = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", cleaned_content)
-    # Find the version number
-    version_match = re.search(r"Release v(\d+)\.(\d+)\.(\d+)", cleaned_content)
+    # Find the version number and compute the default next release version.
+    # Teams can adjust the version in the PR if the default is not desired.
+    # For stable versions, bump minor (historical default since minor releases
+    # are more common than patch or major). For pre-release versions, stay on
+    # the same track by bumping the pre-release identifier (npm convention).
+    version_match = re.search(rf"Release v({Version.PATTERN})", cleaned_content)
     if not version_match:
         raise Exception("Version not found in the changelog")
-    major, minor, patch = map(int, version_match.groups())
-    # Prepare next release version.
-    # When doing a PR, teams can adjust the version.
-    # By default, we increase a minor version, since minor versions releases
-    # are more common than patch or major version releases.
-    minor += 1
-    patch = 0
-    new_version = f"Release v{major}.{minor}.{patch}"
-    cleaned_content = cleaned_content.replace(version_match.group(0), new_version)
+    current = Version.parse(version_match.group(1))
+    new_header = f"Release v{current.next_release_version()}"
+    cleaned_content = cleaned_content.replace(version_match.group(0), new_header)
 
     # Update file with cleaned content
     gh.add_file(file_path, cleaned_content)
@@ -229,20 +327,26 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     with open(changelog_path, "r") as f:
         changelog = f.read()
 
-    # Extract the latest release section using regex
-    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
+    # Extract the latest release section using regex.
+    match = re.search(
+        rf"## (\[Release\] )?Release v{Version.PATTERN}.*?(?=\n## (\[Release\] )?Release v|\Z)",
+        changelog,
+        re.S,
+    )
 
     # E.g., for new packages.
     if not match:
         return None
 
     latest_release = match.group(0)
-    version_match = re.search(r"## (\[Release\] )?Release v(\d+\.\d+\.\d+)", latest_release)
+    version_match = re.search(rf"## (\[Release\] )?Release v({Version.PATTERN})", latest_release)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
 
-    return TagInfo(package=package, version=version_match.group(2), content=latest_release)
+    # Validate the extracted string is spec-compliant; fail loudly otherwise.
+    version = str(Version.parse(version_match.group(2)))
+    return TagInfo(package=package, version=version, content=latest_release)
 
 
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
@@ -267,12 +371,14 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
         print("All sections are empty. No changes will be made to the changelog.")
         return None
 
-    version_match = re.search(r"## Release v(\d+\.\d+\.\d+)", next_changelog)
+    version_match = re.search(rf"## Release v({Version.PATTERN})", next_changelog)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
 
-    return TagInfo(package=package, version=version_match.group(1), content=next_changelog)
+    # Validate the extracted string is spec-compliant; fail loudly otherwise.
+    version = str(Version.parse(version_match.group(1)))
+    return TagInfo(package=package, version=version, content=next_changelog)
 
 
 def write_changelog(tag_info: TagInfo) -> None:
@@ -283,10 +389,12 @@ def write_changelog(tag_info: TagInfo) -> None:
     with open(changelog_path, "r") as f:
         changelog = f.read()
 
-    # Add current date to the release header
+    # Add current date to the release header.
     current_date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
     content_with_date = re.sub(
-        r"## Release v(\d+\.\d+\.\d+)", rf"## Release v\1 ({current_date})", tag_info.content.strip()
+        rf"## Release v({Version.PATTERN})",
+        rf"## Release v\1 ({current_date})",
+        tag_info.content.strip(),
     )
 
     updated_changelog = re.sub(r"(# Version changelog\n\n)", f"\\1{content_with_date}\n\n\n", changelog)
@@ -519,15 +627,26 @@ def pull_last_release_commit() -> None:
     reset_repository(commit_hash)
 
 
-def get_package_from_args() -> Optional[str]:
+def get_packages_from_args() -> List[str]:
     """
-    Retrieves an optional package
-    python3 ./tagging.py --package <name>
+    Retrieves the list of packages to tag.
+
+        python3 ./tagging.py --package <name>              # single package
+        python3 ./tagging.py --package <name1>,<name2>     # multiple packages
+
+    Returns an empty list when --package is omitted, which means all packages
+    with pending releases will be tagged.
     """
     parser = argparse.ArgumentParser(description="Update changelogs and tag the release.")
-    parser.add_argument("--package", "-p", type=str, help="Tag a single package")
+    parser.add_argument(
+        "--package",
+        "-p",
+        type=str,
+        default="",
+        help="Comma-separated list of packages to tag. Leave empty to tag all packages with pending releases.",
+    )
     args = parser.parse_args()
-    return args.package
+    return [name.strip() for name in args.package.split(",") if name.strip()]
 
 
 def init_github():
@@ -553,15 +672,15 @@ def process():
     If any tag are pending from an early process, it will skip updating the CHANGELOG.md files and only apply the tags.
     """
 
-    package_name = get_package_from_args()
+    package_names = get_packages_from_args()
     pending_tags = find_pending_tags()
 
     # pending_tags is non-empty only when the tagging process previously failed or interrupted.
     # We must complete the interrupted tagging process before starting a new one to avoid inconsistent states and missing changelog entries.
-    # Therefore, we don't support specifying the package until the previously started process has been successfully completed.
-    if pending_tags and package_name:
+    # Therefore, we don't support specifying packages until the previously started process has been successfully completed.
+    if pending_tags and package_names:
         pending_packages = [tag.package.name for tag in pending_tags]
-        raise Exception(f"Cannot release package {package_name}. Pending release for {pending_packages}")
+        raise Exception(f"Cannot release packages {package_names}. Pending release for {pending_packages}")
 
     if pending_tags:
         print("Found pending tags from previous executions, entering recovery mode.")
@@ -570,9 +689,9 @@ def process():
         return
 
     packages = find_packages()
-    # If a package is specified as an argument, only process that package
-    if package_name:
-        packages = [package for package in packages if package.name == package_name]
+    # If packages are specified as an argument, only process those packages.
+    if package_names:
+        packages = [package for package in packages if package.name in package_names]
 
     pending_tags = retry_function(func=lambda: update_changelogs(packages), cleanup=reset_repository)
     push_tags(pending_tags)

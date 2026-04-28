@@ -260,7 +260,8 @@ func (m BranchOperationMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 
 type BranchSpec_SdkV2 struct {
 	// Absolute expiration timestamp. When set, the branch will expire at this
-	// time.
+	// time. Mutually exclusive with `ttl` and `no_expiry`. When updating, use
+	// `spec.expiration` in the update_mask.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
 	// When set to true, protects the branch from deletion and reset. Associated
 	// compute endpoints and the project cannot be deleted while the branch is
@@ -268,7 +269,8 @@ type BranchSpec_SdkV2 struct {
 	IsProtected types.Bool `tfsdk:"is_protected"`
 	// Explicitly disable expiration. When set to true, the branch will not
 	// expire. If set to false, the request is invalid; provide either ttl or
-	// expire_time instead.
+	// expire_time instead. Mutually exclusive with `expire_time` and `ttl`.
+	// When updating, use `spec.expiration` in the update_mask.
 	NoExpiry types.Bool `tfsdk:"no_expiry"`
 	// The name of the source branch from which this branch was created (data
 	// lineage for point-in-time recovery). If not specified, defaults to the
@@ -282,7 +284,8 @@ type BranchSpec_SdkV2 struct {
 	// created.
 	SourceBranchTime timetypes.RFC3339 `tfsdk:"source_branch_time"`
 	// Relative time-to-live duration. When set, the branch will expire at
-	// creation_time + ttl.
+	// creation_time + ttl. Mutually exclusive with `expire_time` and
+	// `no_expiry`. When updating, use `spec.expiration` in the update_mask.
 	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
@@ -2366,6 +2369,9 @@ type DeleteProjectRequest_SdkV2 struct {
 	// The full resource path of the project to delete. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
+	// If true, permanently deletes the project (hard delete). If false or
+	// unset, performs a soft delete.
+	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteProjectRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteProjectRequest_SdkV2) {
@@ -2376,6 +2382,7 @@ func (to *DeleteProjectRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m DeleteProjectRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -2398,7 +2405,8 @@ func (m DeleteProjectRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":  m.Name,
+			"purge": m.Purge,
 		})
 }
 
@@ -2406,7 +2414,8 @@ func (m DeleteProjectRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m DeleteProjectRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":  types.StringType,
+			"purge": types.BoolType,
 		},
 	}
 }
@@ -3068,7 +3077,9 @@ func (m *EndpointSettings_SdkV2) SetPgSettings(ctx context.Context, v map[string
 }
 
 type EndpointSpec_SdkV2 struct {
-	// The maximum number of Compute Units. Minimum value is 0.5.
+	// The maximum number of Compute Units. The maximum value is 64. The
+	// difference between the minimum and maximum Compute Units (max - min) must
+	// not exceed 16.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -3083,13 +3094,16 @@ type EndpointSpec_SdkV2 struct {
 	// the endpoint (and no readable secondaries for Read/Write endpoints).
 	Group types.List `tfsdk:"group"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided.
+	// suspend). Should be set to true when provided. Mutually exclusive with
+	// `suspend_timeout_duration`. When updating, use `spec.suspension` in the
+	// update_mask.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 
 	Settings types.List `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week).
+	// week). Mutually exclusive with `no_suspension`. When updating, use
+	// `spec.suspension` in the update_mask.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -3254,7 +3268,9 @@ func (m *EndpointSpec_SdkV2) SetSettings(ctx context.Context, v EndpointSettings
 }
 
 type EndpointStatus_SdkV2 struct {
-	// The maximum number of Compute Units.
+	// The maximum number of Compute Units. The maximum value is 64. The
+	// difference between the minimum and maximum Compute Units (max - min) must
+	// not exceed 16.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -3947,8 +3963,9 @@ func (m GetRoleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetSyncedTableRequest_SdkV2 struct {
-	// Format: "synced_tables/{catalog}.{schema}.{table}", where (catalog,
-	// schema, table) are the entity names in the Unity Catalog.
+	// The Full resource name of the synced table. Format:
+	// "synced_tables/{catalog}.{schema}.{table}", where (catalog, schema,
+	// table) are the entity names in the Unity Catalog.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3995,8 +4012,10 @@ func (m GetSyncedTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Configuration for the initial Read/Write endpoint created during project
+// creation.
 type InitialEndpointSpec_SdkV2 struct {
-	// Settings for HA configuration of the endpoint
+	// Settings for HA configuration of the endpoint.
 	Group types.List `tfsdk:"group"`
 }
 
@@ -4563,6 +4582,10 @@ type ListProjectsRequest_SdkV2 struct {
 	// Page token from a previous response. If not provided, returns the first
 	// page.
 	PageToken types.String `tfsdk:"-"`
+	// Whether to include soft-deleted projects in the response. When true,
+	// soft-deleted projects are included alongside active projects.
+	// Hard-deleted and already-purged projects are never returned.
+	ShowDeleted types.Bool `tfsdk:"-"`
 }
 
 func (to *ListProjectsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListProjectsRequest_SdkV2) {
@@ -4574,6 +4597,7 @@ func (to *ListProjectsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 func (m ListProjectsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	return attrs
 }
@@ -4596,8 +4620,9 @@ func (m ListProjectsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"show_deleted": m.ShowDeleted,
 		})
 }
 
@@ -4605,8 +4630,9 @@ func (m ListProjectsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m ListProjectsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"show_deleted": types.BoolType,
 		},
 	}
 }
@@ -5051,8 +5077,11 @@ func (m *Operation_SdkV2) SetError(ctx context.Context, v DatabricksServiceExcep
 type Project_SdkV2 struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// A timestamp indicating when the project was soft-deleted. Empty if the
+	// project is not deleted, otherwise set to a timestamp in the past.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the default branch for a newly created project. If omitted, the initial
+	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -5061,6 +5090,10 @@ type Project_SdkV2 struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// A timestamp indicating when the project is scheduled for permanent
+	// deletion. Empty if the project is not deleted, otherwise set to a
+	// timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -5148,12 +5181,13 @@ func (to *Project_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Project_
 
 func (m Project_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -5189,8 +5223,10 @@ func (m Project_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time":           m.CreateTime,
+			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -5203,10 +5239,12 @@ func (m Project_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"delete_time": timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": basetypes.ListType{
 				ElemType: InitialEndpointSpec_SdkV2{}.Type(ctx),
 			},
-			"name": types.StringType,
+			"name":       types.StringType,
+			"purge_time": timetypes.RFC3339{}.Type(ctx),
 			"spec": basetypes.ListType{
 				ElemType: ProjectSpec_SdkV2{}.Type(ctx),
 			},
@@ -5357,13 +5395,16 @@ type ProjectDefaultEndpointSettings_SdkV2 struct {
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided.
+	// suspend). Should be set to true when provided. Mutually exclusive with
+	// `suspend_timeout_duration`. When updating, use
+	// `spec.project_default_settings.suspension` in the update_mask.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week).
+	// week). Mutually exclusive with `no_suspension`. When updating, use
+	// `spec.project_default_settings.suspension` in the update_mask.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -5518,7 +5559,7 @@ type ProjectSpec_SdkV2 struct {
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
-	// 172800s (2 days) and 2592000s (30 days).
+	// 172800s (2 days) and 3024000s (35 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
 	// The major Postgres version number. Supported versions are 16 and 17.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
@@ -5974,6 +6015,7 @@ func (m *RequestedClaims_SdkV2) SetResources(ctx context.Context, v []RequestedR
 }
 
 type RequestedResource_SdkV2 struct {
+	// The full Unity Catalog table name.
 	TableName types.String `tfsdk:"table_name"`
 
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
@@ -6314,6 +6356,20 @@ type RoleRoleSpec_SdkV2 struct {
 	// The desired API-exposed Postgres role attribute to associate with the
 	// role. Optional.
 	Attributes types.List `tfsdk:"attributes"`
+	// Controls how the Postgres role authenticates when a client opens a
+	// database connection. Supported values:
+	//
+	// * LAKEBASE_OAUTH_V1: the role authenticates by presenting a Databricks
+	// OAuth access token derived from the backing managed identity (the
+	// Databricks user, service principal, or group named by the role's
+	// `postgres_role`). No static password exists for roles using this method.
+	// * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
+	// password verified server-side using the SCRAM-SHA-256 mechanism. Lakebase
+	// generates a password for the role. * NO_LOGIN: the role cannot open a
+	// Postgres session at all. Useful for roles that exist only to own objects
+	// or to aggregate privileges that are then granted to other, loginable
+	// roles.
+	//
 	// If auth_method is left unspecified, a meaningful authentication method is
 	// derived from the identity_type: * For the managed identities, OAUTH is
 	// used. * For the regular postgres roles, authentication based on postgres
@@ -7459,6 +7515,56 @@ func (m *SyncedTableSyncedTableStatus_SdkV2) SetOngoingSyncProgress(ctx context.
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ongoing_sync_progress"]
 	m.OngoingSyncProgress = types.ListValueMust(t, vs)
+}
+
+// Request to restore a soft-deleted project within its retention period.
+type UndeleteProjectRequest_SdkV2 struct {
+	// The full resource path of the project to undelete. Format:
+	// projects/{project_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UndeleteProjectRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteProjectRequest_SdkV2) {
+}
+
+func (to *UndeleteProjectRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UndeleteProjectRequest_SdkV2) {
+}
+
+func (m UndeleteProjectRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteProjectRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndeleteProjectRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteProjectRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UndeleteProjectRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndeleteProjectRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
 type UpdateBranchRequest_SdkV2 struct {

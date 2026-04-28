@@ -28,7 +28,11 @@ Endpoints exist within the Lakebase Autoscaling resource hierarchy:
 
 
 ## Example Usage
-### Basic Read-Write Endpoint
+### Managing Implicitly Created Read-Write Endpoint
+
+A read-write endpoint named `primary` is implicitly created for every branch. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform take ownership of the implicitly created endpoint and immediately apply the provided configuration to it. Support for providing a custom `endpoint_id` will be available in later versions.
+
+This resource is only required if you want to apply configuration changes to the implicitly created endpoint.
 
 ```hcl
 resource "databricks_postgres_project" "this" {
@@ -51,8 +55,12 @@ resource "databricks_postgres_endpoint" "primary" {
   endpoint_id = "primary"
   parent      = databricks_postgres_branch.dev.name
   spec = {
-    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
+    suspend_timeout_duration = "600s"
   }
+  replace_existing = true
 }
 ```
 
@@ -116,17 +124,24 @@ resource "databricks_postgres_endpoint" "always_on" {
 Configure a single endpoint with multiple compute instances for high availability.
 One compute instance acts as the read-write primary, while the remaining secondary compute instances stand ready for automatic failover.
 
+High availability requires scale-to-zero to be disabled.
+Set `no_suspension = true` in `spec` as shown in the example below.
+
 ```hcl
 resource "databricks_postgres_endpoint" "ha_primary" {
   endpoint_id = "primary"
-  parent      = databricks_postgres_branch.main.name
+  parent      = databricks_postgres_branch.dev.name
   spec = {
-    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    no_suspension            = true
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
     group = {
       min = 2
       max = 2
     }
   }
+  replace_existing = true  # for managing implicitly created read-write endpoint
 }
 ```
 
@@ -137,25 +152,22 @@ dedicated read-only host, in addition to hot-standby failover. Only supported
 on read-write endpoints with more than one compute. The secondaries are optionally 
 exposed as read-only host via `enable_readable_secondaries`.
 
-High availability requires scale-to-zero to be disabled.
-Set `no_suspension = true` in `default_endpoint_settings` as shown in the example below.
-
 ```hcl
 resource "databricks_postgres_endpoint" "ha_readable" {
   endpoint_id = "primary"
-  parent      = databricks_postgres_branch.main.name
+  parent      = databricks_postgres_branch.dev.name
   spec = {
-    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    no_suspension            = true
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
     group = {
       min                         = 2
       max                         = 2
       enable_readable_secondaries = true
     }
-    default_endpoint_settings = {
-      // turn off the "Scale to zero"
-      no_suspension = true
-    }
   }
+  replace_existing = true  # for managing implicitly created read-write endpoint
 }
 ```
 
@@ -199,6 +211,7 @@ resource "databricks_postgres_endpoint" "primary" {
       enable_readable_secondaries = true
     }
   }
+  replace_existing = true
 }
 
 resource "databricks_postgres_endpoint" "read_replica" {
@@ -249,7 +262,8 @@ The following arguments are supported:
 
 ### EndpointSpec
 * `endpoint_type` (string, required) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
-* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units. Minimum value is 0.5
+* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units. Minimum value is 0.5
 * `disabled` (boolean, optional) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
@@ -259,10 +273,12 @@ The following arguments are supported:
   to non HA settings, with a single compute backing the endpoint (and no readable secondaries
   for Read/Write endpoints)
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.suspension` in the update_mask
 * `settings` (EndpointSettings, optional)
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.suspension` in the update_mask
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -285,7 +301,8 @@ In addition to the above arguments, the following attributes are exported:
   if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
 
 ### EndpointStatus
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
 * `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.

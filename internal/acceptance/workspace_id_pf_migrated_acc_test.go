@@ -668,7 +668,7 @@ func TestUcAccWorkspaceIDShare_NoDefaultNoOverride(t *testing.T) {
 		Template: shareWithProviderBlock("", ""),
 		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
-			`(?s)managing a workspace-level resource requires a workspace_id.*none was found`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none\s+was\s+found`,
 		),
 	})
 }
@@ -729,7 +729,7 @@ func TestUcAccWorkspaceIDShare_RemoveDefault(t *testing.T) {
 			Template: shareWithProviderBlockNoPrereqs("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously configured workspace_id was removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 		},
 	)
@@ -760,7 +760,7 @@ func TestUcAccWorkspaceIDShare_RemoveOverrideNoFallback(t *testing.T) {
 			Template: shareWithProviderBlockNoPrereqs("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously configured workspace_id was removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 		},
 	)

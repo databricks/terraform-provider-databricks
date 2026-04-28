@@ -597,7 +597,7 @@ func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: notebookWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`(?s)managing a workspace-level resource requires a workspace_id.*none was found`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none\s+was\s+found`,
 		),
 		PlanOnly: true,
 	})
@@ -655,7 +655,7 @@ func TestMwsAccWorkspaceIDHttp_RemoveDefault(t *testing.T) {
 		Step{
 			Template: notebookWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously configured workspace_id was removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 			PlanOnly: true,
 		},
@@ -687,7 +687,7 @@ func TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback(t *testing.T) {
 		Step{
 			Template: notebookWithProviderBlock("", ""),
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously configured workspace_id was removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 			PlanOnly: true,
 		},

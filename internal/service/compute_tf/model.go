@@ -10131,7 +10131,7 @@ func (m *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 }
 
 // The environment entity used to preserve serverless environment side panel,
-// jobs' environment for non-notebook task, and DLT's environment for classic
+// jobs' environment for non-notebook task, and SDP's environment for classic
 // and serverless pipelines. In this minimal environment spec, only pip and java
 // dependencies are supported.
 type Environment struct {

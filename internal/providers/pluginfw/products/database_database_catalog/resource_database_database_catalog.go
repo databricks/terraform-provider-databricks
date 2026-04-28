@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -334,7 +335,6 @@ func (r *DatabaseCatalogResource) Read(ctx context.Context, req resource.ReadReq
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get database_database_catalog", err.Error())
 		return
 	}
@@ -443,6 +443,9 @@ func (r *DatabaseCatalogResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	err := client.Database.DeleteDatabaseCatalog(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete database_database_catalog", err.Error())
 		return

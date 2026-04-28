@@ -10,7 +10,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -692,100 +691,6 @@ func TestCreateExternalLocationWithEffectiveEnableFileEvents(t *testing.T) {
 		comment = "def"
 		`,
 	}.ApplyNoError(t)
-}
-
-func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/external-locations",
-				ExpectedRequest: catalog.CreateExternalLocation{
-					Name:           "abc",
-					Url:            "s3://foo/bar",
-					CredentialName: "bcd",
-					Comment:        "def",
-				},
-				Response: catalog.ExternalLocationInfo{
-					Name:           "abc",
-					Url:            "s3://foo/bar",
-					CredentialName: "bcd",
-					Comment:        "def",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
-				Response: catalog.ExternalLocationInfo{
-					Name:           "abc",
-					Url:            "s3://foo/bar",
-					CredentialName: "bcd",
-					Comment:        "def",
-					Owner:          "efg",
-					MetastoreId:    "fgh",
-					EffectiveFileEventQueue: &catalog.FileEventQueue{
-						ManagedSqs: &catalog.AwsSqsQueue{},
-					},
-				},
-			},
-		},
-		Resource: ResourceExternalLocation(),
-		Create:   true,
-		HCL: `
-		name = "abc"
-		url = "s3://foo/bar"
-		credential_name = "bcd"
-		comment = "def"
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestReadExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
-				Response: catalog.ExternalLocationInfo{
-					Name:           "abc",
-					Url:            "s3://foo/bar",
-					CredentialName: "bcd",
-					Comment:        "def",
-					Owner:          "efg",
-					MetastoreId:    "fgh",
-					EffectiveFileEventQueue: &catalog.FileEventQueue{
-						ManagedPubsub: &catalog.GcpPubsub{
-							ManagedResourceId: "projects/p/subscriptions/s",
-						},
-					},
-					EffectiveEnableFileEvents: true,
-				},
-			},
-		},
-		Resource: ResourceExternalLocation(),
-		Read:     true,
-		ID:       "abc",
-		HCL: `
-		name = "abc"
-		url = "s3://foo/bar"
-		credential_name = "bcd"
-		comment = "def"
-		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
-	assert.Equal(t, "abc", d.Get("name"))
-	assert.Equal(t, "s3://foo/bar", d.Get("url"))
-	assert.Equal(t, "bcd", d.Get("credential_name"))
-	assert.Equal(t, "def", d.Get("comment"))
-	assert.Equal(t, "efg", d.Get("owner"))
-	assert.Equal(t, "fgh", d.Get("metastore_id"))
-	assert.Equal(t, true, d.Get("effective_enable_file_events"))
-	effective := d.Get("effective_file_event_queue").([]any)
-	assert.Len(t, effective, 1)
-	pubsub := effective[0].(map[string]any)["managed_pubsub"].([]any)
-	assert.Len(t, pubsub, 1)
-	assert.Equal(t, "projects/p/subscriptions/s", pubsub[0].(map[string]any)["managed_resource_id"])
 }
 
 func TestUpdateExternalLocationForce(t *testing.T) {

@@ -278,7 +278,6 @@ func (r *DefaultWorkspaceBaseEnvironmentResource) Read(ctx context.Context, req 
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get environments_default_workspace_base_environment", err.Error())
 		return
 	}

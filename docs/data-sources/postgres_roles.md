@@ -4,9 +4,25 @@ subcategory: "Postgres"
 # databricks_postgres_roles Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source lists all Postgres roles in a branch.
 
 
 ## Example Usage
+### List All Roles in a Branch
+
+```hcl
+data "databricks_postgres_roles" "all" {
+  parent = "projects/my-project/branches/main"
+}
+
+output "role_names" {
+  value = [for role in data.databricks_postgres_roles.all.roles : role.name]
+}
+
+output "role_identity_types" {
+  value = [for role in data.databricks_postgres_roles.all.roles : role.status.identity_type]
+}
+```
 
 
 ## Arguments
@@ -71,3 +87,11 @@ This data source exports a single attribute, `roles`. It is a list of resources,
 * `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role
+* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
+  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+  the role_id is `my-role`.
+  
+  Use this field when building UI components that display roles to users (e.g., a drop-down
+  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
+  and is not user-friendly

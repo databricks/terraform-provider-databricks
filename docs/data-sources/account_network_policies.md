@@ -33,6 +33,9 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicy
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess)
 
+### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
+* `all_destinations` (boolean) - Must be set to true
+
 ### CustomerFacingIngressNetworkPolicyAuthentication
 * `identities` (list of CustomerFacingIngressNetworkPolicyAuthenticationIdentity) - Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES
 * `identity_type` (string) - Possible values are: `IDENTITY_TYPE_ALL_SERVICE_PRINCIPALS`, `IDENTITY_TYPE_ALL_USERS`, `IDENTITY_TYPE_SELECTED_IDENTITIES`
@@ -44,6 +47,9 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string) - We only support IPv4 and IPv4 CIDR notation for now
 
+### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
+* `all_destinations` (boolean) - Must be set to true
+
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
 * `deny_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
@@ -52,8 +58,7 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicyPublicIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
 * `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
-* `label` (string) - User-provided name for this ingress rule. Helps identify which rule
-  caused a request to be denied or dry-run denied
+* `label` (string) - The label for this ingress rule
 * `origin` (CustomerFacingIngressNetworkPolicyPublicRequestOrigin)
 
 ### CustomerFacingIngressNetworkPolicyPublicRequestOrigin
@@ -64,6 +69,8 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
+* `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination)
+* `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination)
 * `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination) - Workspace destinations
 
@@ -76,6 +83,9 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### EgressNetworkPolicyNetworkAccessPolicy
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
+* `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are blocked from accessing.
+  These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
+  Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 * `restriction_mode` (string) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
 

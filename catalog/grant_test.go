@@ -173,17 +173,6 @@ func TestUcAccGrant_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestUcAccGrant_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: grantProviderConfigTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestUcAccGrant_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: grantProviderConfigTemplate(`

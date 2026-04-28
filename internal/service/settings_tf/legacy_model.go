@@ -3468,6 +3468,54 @@ func (m *CustomerFacingIngressNetworkPolicy_SdkV2) SetPublicAccess(ctx context.C
 	m.PublicAccess = types.ListValueMust(t, vs)
 }
 
+type CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2 struct {
+	// Must be set to true.
+	AllDestinations types.Bool `tfsdk:"all_destinations"`
+}
+
+func (to *CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) {
+}
+
+func (to *CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) {
+}
+
+func (m CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_destinations"] = attrs["all_destinations"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomerFacingIngressNetworkPolicyAppsRuntimeDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"all_destinations": m.AllDestinations,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"all_destinations": types.BoolType,
+		},
+	}
+}
+
 type CustomerFacingIngressNetworkPolicyAuthentication_SdkV2 struct {
 	// Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES.
 	Identities types.List `tfsdk:"identities"`
@@ -3705,6 +3753,54 @@ func (m *CustomerFacingIngressNetworkPolicyIpRanges_SdkV2) SetIpRanges(ctx conte
 	m.IpRanges = types.ListValueMust(t, vs)
 }
 
+type CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2 struct {
+	// Must be set to true.
+	AllDestinations types.Bool `tfsdk:"all_destinations"`
+}
+
+func (to *CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) {
+}
+
+func (to *CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) {
+}
+
+func (m CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_destinations"] = attrs["all_destinations"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"all_destinations": m.AllDestinations,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"all_destinations": types.BoolType,
+		},
+	}
+}
+
 type CustomerFacingIngressNetworkPolicyPublicAccess_SdkV2 struct {
 	AllowRules types.List `tfsdk:"allow_rules"`
 
@@ -3851,8 +3947,7 @@ type CustomerFacingIngressNetworkPolicyPublicIngressRule_SdkV2 struct {
 	Authentication types.List `tfsdk:"authentication"`
 
 	Destination types.List `tfsdk:"destination"`
-	// User-provided name for this ingress rule. Helps identify which rule
-	// caused a request to be denied or dry-run denied.
+	// The label for this ingress rule.
 	Label types.String `tfsdk:"label"`
 
 	Origin types.List `tfsdk:"origin"`
@@ -4211,12 +4306,34 @@ type CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2 struct {
 	// provided.
 	AllDestinations types.Bool `tfsdk:"all_destinations"`
 
+	AppsRuntime types.List `tfsdk:"apps_runtime"`
+
+	LakebaseRuntime types.List `tfsdk:"lakebase_runtime"`
+
 	WorkspaceApi types.List `tfsdk:"workspace_api"`
 	// Workspace destinations
 	WorkspaceUi types.List `tfsdk:"workspace_ui"`
 }
 
 func (to *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) {
+	if !from.AppsRuntime.IsNull() && !from.AppsRuntime.IsUnknown() {
+		if toAppsRuntime, ok := to.GetAppsRuntime(ctx); ok {
+			if fromAppsRuntime, ok := from.GetAppsRuntime(ctx); ok {
+				// Recursively sync the fields of AppsRuntime
+				toAppsRuntime.SyncFieldsDuringCreateOrUpdate(ctx, fromAppsRuntime)
+				to.SetAppsRuntime(ctx, toAppsRuntime)
+			}
+		}
+	}
+	if !from.LakebaseRuntime.IsNull() && !from.LakebaseRuntime.IsUnknown() {
+		if toLakebaseRuntime, ok := to.GetLakebaseRuntime(ctx); ok {
+			if fromLakebaseRuntime, ok := from.GetLakebaseRuntime(ctx); ok {
+				// Recursively sync the fields of LakebaseRuntime
+				toLakebaseRuntime.SyncFieldsDuringCreateOrUpdate(ctx, fromLakebaseRuntime)
+				to.SetLakebaseRuntime(ctx, toLakebaseRuntime)
+			}
+		}
+	}
 	if !from.WorkspaceApi.IsNull() && !from.WorkspaceApi.IsUnknown() {
 		if toWorkspaceApi, ok := to.GetWorkspaceApi(ctx); ok {
 			if fromWorkspaceApi, ok := from.GetWorkspaceApi(ctx); ok {
@@ -4238,6 +4355,22 @@ func (to *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SyncFields
 }
 
 func (to *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) {
+	if !from.AppsRuntime.IsNull() && !from.AppsRuntime.IsUnknown() {
+		if toAppsRuntime, ok := to.GetAppsRuntime(ctx); ok {
+			if fromAppsRuntime, ok := from.GetAppsRuntime(ctx); ok {
+				toAppsRuntime.SyncFieldsDuringRead(ctx, fromAppsRuntime)
+				to.SetAppsRuntime(ctx, toAppsRuntime)
+			}
+		}
+	}
+	if !from.LakebaseRuntime.IsNull() && !from.LakebaseRuntime.IsUnknown() {
+		if toLakebaseRuntime, ok := to.GetLakebaseRuntime(ctx); ok {
+			if fromLakebaseRuntime, ok := from.GetLakebaseRuntime(ctx); ok {
+				toLakebaseRuntime.SyncFieldsDuringRead(ctx, fromLakebaseRuntime)
+				to.SetLakebaseRuntime(ctx, toLakebaseRuntime)
+			}
+		}
+	}
 	if !from.WorkspaceApi.IsNull() && !from.WorkspaceApi.IsUnknown() {
 		if toWorkspaceApi, ok := to.GetWorkspaceApi(ctx); ok {
 			if fromWorkspaceApi, ok := from.GetWorkspaceApi(ctx); ok {
@@ -4258,6 +4391,10 @@ func (to *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SyncFields
 
 func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["all_destinations"] = attrs["all_destinations"].SetOptional()
+	attrs["apps_runtime"] = attrs["apps_runtime"].SetOptional()
+	attrs["apps_runtime"] = attrs["apps_runtime"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lakebase_runtime"] = attrs["lakebase_runtime"].SetOptional()
+	attrs["lakebase_runtime"] = attrs["lakebase_runtime"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["workspace_api"] = attrs["workspace_api"].SetOptional()
 	attrs["workspace_api"] = attrs["workspace_api"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["workspace_ui"] = attrs["workspace_ui"].SetOptional()
@@ -4275,8 +4412,10 @@ func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) ApplySchemaC
 // SDK values.
 func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"workspace_api": reflect.TypeOf(CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2{}),
-		"workspace_ui":  reflect.TypeOf(CustomerFacingIngressNetworkPolicyWorkspaceUiDestination_SdkV2{}),
+		"apps_runtime":     reflect.TypeOf(CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2{}),
+		"lakebase_runtime": reflect.TypeOf(CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2{}),
+		"workspace_api":    reflect.TypeOf(CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2{}),
+		"workspace_ui":     reflect.TypeOf(CustomerFacingIngressNetworkPolicyWorkspaceUiDestination_SdkV2{}),
 	}
 }
 
@@ -4288,6 +4427,8 @@ func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) ToObjectValu
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"all_destinations": m.AllDestinations,
+			"apps_runtime":     m.AppsRuntime,
+			"lakebase_runtime": m.LakebaseRuntime,
 			"workspace_api":    m.WorkspaceApi,
 			"workspace_ui":     m.WorkspaceUi,
 		})
@@ -4298,6 +4439,12 @@ func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) Type(ctx con
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_destinations": types.BoolType,
+			"apps_runtime": basetypes.ListType{
+				ElemType: CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2{}.Type(ctx),
+			},
+			"lakebase_runtime": basetypes.ListType{
+				ElemType: CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2{}.Type(ctx),
+			},
 			"workspace_api": basetypes.ListType{
 				ElemType: CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2{}.Type(ctx),
 			},
@@ -4306,6 +4453,58 @@ func (m CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) Type(ctx con
 			},
 		},
 	}
+}
+
+// GetAppsRuntime returns the value of the AppsRuntime field in CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2 as
+// a CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) GetAppsRuntime(ctx context.Context) (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2, bool) {
+	var e CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2
+	if m.AppsRuntime.IsNull() || m.AppsRuntime.IsUnknown() {
+		return e, false
+	}
+	var v []CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2
+	d := m.AppsRuntime.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAppsRuntime sets the value of the AppsRuntime field in CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2.
+func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SetAppsRuntime(ctx context.Context, v CustomerFacingIngressNetworkPolicyAppsRuntimeDestination_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["apps_runtime"]
+	m.AppsRuntime = types.ListValueMust(t, vs)
+}
+
+// GetLakebaseRuntime returns the value of the LakebaseRuntime field in CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2 as
+// a CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) GetLakebaseRuntime(ctx context.Context) (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2, bool) {
+	var e CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2
+	if m.LakebaseRuntime.IsNull() || m.LakebaseRuntime.IsUnknown() {
+		return e, false
+	}
+	var v []CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2
+	d := m.LakebaseRuntime.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLakebaseRuntime sets the value of the LakebaseRuntime field in CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2.
+func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SetLakebaseRuntime(ctx context.Context, v CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["lakebase_runtime"]
+	m.LakebaseRuntime = types.ListValueMust(t, vs)
 }
 
 // GetWorkspaceApi returns the value of the WorkspaceApi field in CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2 as
@@ -7767,6 +7966,11 @@ type EgressNetworkPolicyNetworkAccessPolicy_SdkV2 struct {
 	// List of storage destinations that serverless workloads are allowed to
 	// access when in RESTRICTED_ACCESS mode.
 	AllowedStorageDestinations types.List `tfsdk:"allowed_storage_destinations"`
+	// List of internet destinations that serverless workloads are blocked from
+	// accessing. These destinations are enforced when restriction mode is
+	// RESTRICTED_ACCESS or DRY_RUN. Currently supports DNS_NAME type only;
+	// IP_RANGE support is planned.
+	BlockedInternetDestinations types.List `tfsdk:"blocked_internet_destinations"`
 	// Optional. When policy_enforcement is not provided, we default to
 	// ENFORCE_MODE_ALL_SERVICES
 	PolicyEnforcement types.List `tfsdk:"policy_enforcement"`
@@ -7787,6 +7991,12 @@ func (to *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) SyncFieldsDuringCreateOr
 		// If a user specified a non-Null, empty list for AllowedStorageDestinations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllowedStorageDestinations = from.AllowedStorageDestinations
+	}
+	if !from.BlockedInternetDestinations.IsNull() && !from.BlockedInternetDestinations.IsUnknown() && to.BlockedInternetDestinations.IsNull() && len(from.BlockedInternetDestinations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BlockedInternetDestinations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BlockedInternetDestinations = from.BlockedInternetDestinations
 	}
 	if !from.PolicyEnforcement.IsNull() && !from.PolicyEnforcement.IsUnknown() {
 		if toPolicyEnforcement, ok := to.GetPolicyEnforcement(ctx); ok {
@@ -7812,6 +8022,12 @@ func (to *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) SyncFieldsDuringRead(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllowedStorageDestinations = from.AllowedStorageDestinations
 	}
+	if !from.BlockedInternetDestinations.IsNull() && !from.BlockedInternetDestinations.IsUnknown() && to.BlockedInternetDestinations.IsNull() && len(from.BlockedInternetDestinations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BlockedInternetDestinations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BlockedInternetDestinations = from.BlockedInternetDestinations
+	}
 	if !from.PolicyEnforcement.IsNull() && !from.PolicyEnforcement.IsUnknown() {
 		if toPolicyEnforcement, ok := to.GetPolicyEnforcement(ctx); ok {
 			if fromPolicyEnforcement, ok := from.GetPolicyEnforcement(ctx); ok {
@@ -7825,6 +8041,7 @@ func (to *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) SyncFieldsDuringRead(ctx
 func (m EgressNetworkPolicyNetworkAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["allowed_internet_destinations"] = attrs["allowed_internet_destinations"].SetOptional()
 	attrs["allowed_storage_destinations"] = attrs["allowed_storage_destinations"].SetOptional()
+	attrs["blocked_internet_destinations"] = attrs["blocked_internet_destinations"].SetOptional()
 	attrs["policy_enforcement"] = attrs["policy_enforcement"].SetOptional()
 	attrs["policy_enforcement"] = attrs["policy_enforcement"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["restriction_mode"] = attrs["restriction_mode"].SetRequired()
@@ -7843,6 +8060,7 @@ func (m EgressNetworkPolicyNetworkAccessPolicy_SdkV2) GetComplexFieldTypes(ctx c
 	return map[string]reflect.Type{
 		"allowed_internet_destinations": reflect.TypeOf(EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2{}),
 		"allowed_storage_destinations":  reflect.TypeOf(EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2{}),
+		"blocked_internet_destinations": reflect.TypeOf(EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2{}),
 		"policy_enforcement":            reflect.TypeOf(EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement_SdkV2{}),
 	}
 }
@@ -7856,6 +8074,7 @@ func (m EgressNetworkPolicyNetworkAccessPolicy_SdkV2) ToObjectValue(ctx context.
 		map[string]attr.Value{
 			"allowed_internet_destinations": m.AllowedInternetDestinations,
 			"allowed_storage_destinations":  m.AllowedStorageDestinations,
+			"blocked_internet_destinations": m.BlockedInternetDestinations,
 			"policy_enforcement":            m.PolicyEnforcement,
 			"restriction_mode":              m.RestrictionMode,
 		})
@@ -7870,6 +8089,9 @@ func (m EgressNetworkPolicyNetworkAccessPolicy_SdkV2) Type(ctx context.Context) 
 			},
 			"allowed_storage_destinations": basetypes.ListType{
 				ElemType: EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2{}.Type(ctx),
+			},
+			"blocked_internet_destinations": basetypes.ListType{
+				ElemType: EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2{}.Type(ctx),
 			},
 			"policy_enforcement": basetypes.ListType{
 				ElemType: EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement_SdkV2{}.Type(ctx),
@@ -7929,6 +8151,32 @@ func (m *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) SetAllowedStorageDestinat
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_storage_destinations"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.AllowedStorageDestinations = types.ListValueMust(t, vs)
+}
+
+// GetBlockedInternetDestinations returns the value of the BlockedInternetDestinations field in EgressNetworkPolicyNetworkAccessPolicy_SdkV2 as
+// a slice of EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) GetBlockedInternetDestinations(ctx context.Context) ([]EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2, bool) {
+	if m.BlockedInternetDestinations.IsNull() || m.BlockedInternetDestinations.IsUnknown() {
+		return nil, false
+	}
+	var v []EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2
+	d := m.BlockedInternetDestinations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBlockedInternetDestinations sets the value of the BlockedInternetDestinations field in EgressNetworkPolicyNetworkAccessPolicy_SdkV2.
+func (m *EgressNetworkPolicyNetworkAccessPolicy_SdkV2) SetBlockedInternetDestinations(ctx context.Context, v []EgressNetworkPolicyNetworkAccessPolicyInternetDestination_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["blocked_internet_destinations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.BlockedInternetDestinations = types.ListValueMust(t, vs)
 }
 
 // GetPolicyEnforcement returns the value of the PolicyEnforcement field in EgressNetworkPolicyNetworkAccessPolicy_SdkV2 as
@@ -19670,6 +19918,165 @@ func (m *UpdateSqlResultsDownloadRequest_SdkV2) SetSetting(ctx context.Context, 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
 	m.Setting = types.ListValueMust(t, vs)
+}
+
+type UpdateTokenRequest_SdkV2 struct {
+	Token types.List `tfsdk:"token"`
+	// The SHA-256 hash of the token to be updated.
+	TokenId types.String `tfsdk:"-"`
+	// A list of field name under PublicTokenInfo, For example in request use
+	// {"update_mask": "comment,scopes"}
+	//
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (to *UpdateTokenRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateTokenRequest_SdkV2) {
+	if !from.Token.IsNull() && !from.Token.IsUnknown() {
+		if toToken, ok := to.GetToken(ctx); ok {
+			if fromToken, ok := from.GetToken(ctx); ok {
+				// Recursively sync the fields of Token
+				toToken.SyncFieldsDuringCreateOrUpdate(ctx, fromToken)
+				to.SetToken(ctx, toToken)
+			}
+		}
+	}
+}
+
+func (to *UpdateTokenRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateTokenRequest_SdkV2) {
+	if !from.Token.IsNull() && !from.Token.IsUnknown() {
+		if toToken, ok := to.GetToken(ctx); ok {
+			if fromToken, ok := from.GetToken(ctx); ok {
+				toToken.SyncFieldsDuringRead(ctx, fromToken)
+				to.SetToken(ctx, toToken)
+			}
+		}
+	}
+}
+
+func (m UpdateTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token"] = attrs["token"].SetRequired()
+	attrs["token"] = attrs["token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["token_id"] = attrs["token_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTokenRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateTokenRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"token": reflect.TypeOf(PublicTokenInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateTokenRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateTokenRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"token":       m.Token,
+			"token_id":    m.TokenId,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateTokenRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"token": basetypes.ListType{
+				ElemType: PublicTokenInfo_SdkV2{}.Type(ctx),
+			},
+			"token_id":    types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetToken returns the value of the Token field in UpdateTokenRequest_SdkV2 as
+// a PublicTokenInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateTokenRequest_SdkV2) GetToken(ctx context.Context) (PublicTokenInfo_SdkV2, bool) {
+	var e PublicTokenInfo_SdkV2
+	if m.Token.IsNull() || m.Token.IsUnknown() {
+		return e, false
+	}
+	var v []PublicTokenInfo_SdkV2
+	d := m.Token.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetToken sets the value of the Token field in UpdateTokenRequest_SdkV2.
+func (m *UpdateTokenRequest_SdkV2) SetToken(ctx context.Context, v PublicTokenInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["token"]
+	m.Token = types.ListValueMust(t, vs)
+}
+
+type UpdateTokenResponse_SdkV2 struct {
+}
+
+func (to *UpdateTokenResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateTokenResponse_SdkV2) {
+}
+
+func (to *UpdateTokenResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateTokenResponse_SdkV2) {
+}
+
+func (m UpdateTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTokenResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateTokenResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateTokenResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateTokenResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateTokenResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type UpdateWorkspaceNetworkOptionRequest_SdkV2 struct {

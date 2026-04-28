@@ -140,16 +140,7 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	if r.CustomizeDiff == nil {
 		return nil
 	}
-	isDual := r.IsDual
 	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
-		// Skip CustomizeDiff entirely for dual resources at account level —
-		// they have no workspace to track so ForceNew/validation is not needed.
-		if isDual {
-			c, ok := m.(*DatabricksClient)
-			if ok && IsAccountLevelFromDiff(rd, c) {
-				return nil
-			}
-		}
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user

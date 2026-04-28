@@ -229,10 +229,15 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 
 // CustomizeDiffDualResources is the CustomizeDiff entry point for dual
 // workspace/account resources (those that call AddApiField). It runs the
-// unified-host api-level check before delegating to NamespaceCustomizeDiff.
+// unified-host api-level check, then for account-level operations skips
+// workspace-tracking entirely (they have no workspace to track), otherwise
+// delegates to NamespaceCustomizeDiff for workspace routing/validation.
 func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
 	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
 		return err
+	}
+	if IsAccountLevelFromDiff(d, c) {
+		return nil
 	}
 	return NamespaceCustomizeDiff(ctx, d, c)
 }

@@ -82,8 +82,8 @@ func catalogWithProviderBlock(providerAttrs string) string {
 func TestUcAccCatalog_ChangeProviderWorkspaceID_TriggersUpdateNotForceNew(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
-			Check:                    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
+			Template: catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Check:    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template:           catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`),
@@ -103,8 +103,8 @@ func TestUcAccCatalog_ChangeProviderWorkspaceID_TriggersUpdateNotForceNew(t *tes
 func TestUcAccCatalog_SameProviderWorkspaceID_Noop(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
-			Check:                    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
+			Template: catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Check:    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
 		},
 		Step{
 			Template: catalogWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
@@ -113,7 +113,7 @@ func TestUcAccCatalog_SameProviderWorkspaceID_Noop(t *testing.T) {
 					plancheck.ExpectResourceAction(catalogResource, plancheck.ResourceActionNoop),
 				},
 			},
-			Check:                    checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
+			Check: checkCatalogProviderConfigWSIDFromEnv("TEST_WORKSPACE_ID"),
 		},
 	)
 }
@@ -166,7 +166,7 @@ func storageCredentialWithProviderBlock(providerAttrs string) string {
 func TestUcAccStorageCredential_ChangeProviderWorkspaceID_TriggersUpdateNotForceNew(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 storageCredentialWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Template: storageCredentialWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
 		},
 		Step{
 			Template:           storageCredentialWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`),
@@ -212,7 +212,7 @@ func schemaWithProviderBlock(providerAttrs string) string {
 func TestUcAccSchema_ChangeProviderWorkspaceID_TriggersUpdateNotForceNew(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 schemaWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Template: schemaWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
 		},
 		Step{
 			Template:           schemaWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`),
@@ -261,7 +261,7 @@ func dataAccessWithProviderBlock(providerAttrs string) string {
 func TestUcAccMetastoreDataAccess_ChangeProviderWorkspaceID_TriggersReplace(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 dataAccessWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Template: dataAccessWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
 		},
 		Step{
 			Template:           dataAccessWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`),
@@ -315,7 +315,7 @@ func workspaceBindingWithProviderBlock(providerAttrs string) string {
 func TestUcAccWorkspaceBinding_ChangeProviderWorkspaceID_TriggersReplace(t *testing.T) {
 	UnityAccountLevel(t,
 		Step{
-			Template:                 workspaceBindingWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
+			Template: workspaceBindingWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID}"`),
 		},
 		Step{
 			Template:           workspaceBindingWithProviderBlock(`workspace_id = "{env.TEST_WORKSPACE_ID_2}"`),

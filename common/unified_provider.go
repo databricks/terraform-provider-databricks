@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -210,6 +211,32 @@ func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
 	return "", false
 }
 
+// ValidateApiLevelForUnifiedHost fails the plan when the provider is configured
+// against a UnifiedHost but the resource's `api` field is not set. On a unified
+// host the API level cannot be inferred from the host, so the user must declare
+// it. Intended for dual resources (called via CustomizeDiffDualResources); the
+// `api` field is assumed to exist in the schema.
+func ValidateApiLevelForUnifiedHost(d *schema.ResourceDiff, c *DatabricksClient) error {
+	return validateApiLevelForUnifiedHost(GetApiLevelFromDiff(d), c)
+}
+
+// ValidateApiLevelForUnifiedHostFromData is the data-source variant of
+// ValidateApiLevelForUnifiedHost. SDKv2 data sources cannot set CustomizeDiff,
+// so call this at the top of Read to fail the plan for dual data sources.
+func ValidateApiLevelForUnifiedHostFromData(d *schema.ResourceData, c *DatabricksClient) error {
+	return validateApiLevelForUnifiedHost(GetApiLevel(d), c)
+}
+
+func validateApiLevelForUnifiedHost(apiLevel string, c *DatabricksClient) error {
+	if c.HostTypeForTerraform() != config.UnifiedHost {
+		return nil
+	}
+	if apiLevel != "" {
+		return nil
+	}
+	return fmt.Errorf("please set api to account or workspace")
+}
+
 // NamespaceCustomizeDiff is used to customize the diff for the provider configuration
 // in a resource diff.
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
@@ -217,6 +244,16 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 		return err
 	}
 	return NamespaceValidateWorkspaceID(ctx, d, c)
+}
+
+// CustomizeDiffDualResources is the CustomizeDiff entry point for dual
+// workspace/account resources (those that call AddApiField). It runs the
+// unified-host api-level check before delegating to NamespaceCustomizeDiff.
+func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
+		return err
+	}
+	return NamespaceCustomizeDiff(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data

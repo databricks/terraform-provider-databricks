@@ -18,6 +18,7 @@ NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
 CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
+CREATED_TAGS_FILE_NAME = "created_tags.json"
 """
 This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
 It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
@@ -467,9 +468,29 @@ def update_changelogs(packages: List[Package]) -> List[TagInfo]:
 def push_tags(tag_infos: List[TagInfo]) -> None:
     """
     Creates and pushes tags to the repository.
+
+    As a side effect, writes the names of successfully created tags to
+    ``./created_tags.json`` so that workflows triggering this script can
+    discover what was produced (the GitHub Actions workflow uploads this
+    file as the ``created-tags`` artifact).
+
+    Schema:
+        {"tags": ["service-a/v1.2.3", "service-b/v0.4.0"]}
+
+    The manifest is written even if tag creation fails partway through:
+    tags that succeeded before the failure are flushed before the
+    exception is re-raised, so recovery-mode runs still surface their
+    output.
     """
-    for tag_info in tag_infos:
-        gh.tag(tag_info.tag_name(), tag_info.content)
+    created: List[str] = []
+    try:
+        for tag_info in tag_infos:
+            gh.tag(tag_info.tag_name(), tag_info.content)
+            created.append(tag_info.tag_name())
+    finally:
+        manifest_path = os.path.join(os.getcwd(), CREATED_TAGS_FILE_NAME)
+        with open(manifest_path, "w") as f:
+            json.dump({"tags": created}, f)
 
 
 def run_command(command: List[str]) -> str:

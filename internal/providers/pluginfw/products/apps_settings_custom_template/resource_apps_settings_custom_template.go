@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -381,7 +382,6 @@ func (r *CustomTemplateResource) Read(ctx context.Context, req resource.ReadRequ
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get apps_settings_custom_template", err.Error())
 		return
 	}
@@ -489,6 +489,9 @@ func (r *CustomTemplateResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	_, err := client.AppsSettings.DeleteCustomTemplate(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete apps_settings_custom_template", err.Error())
 		return

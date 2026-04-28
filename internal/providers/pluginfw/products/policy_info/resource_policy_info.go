@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -601,7 +602,6 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get policy_info", err.Error())
 		return
 	}
@@ -712,6 +712,9 @@ func (r *PolicyInfoResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := client.Policies.DeletePolicy(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete policy_info", err.Error())
 		return

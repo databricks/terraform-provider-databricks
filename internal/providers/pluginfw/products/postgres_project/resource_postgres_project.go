@@ -16,6 +16,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -520,7 +521,6 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get postgres_project", err.Error())
 		return
 	}
@@ -635,12 +635,23 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	response, err := client.Postgres.DeleteProject(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_project", err.Error())
 		return
 	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
 
 	err = response.Wait(ctx)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_project delete", err.Error())
 		return

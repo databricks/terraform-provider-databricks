@@ -849,6 +849,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 // (mirroring dual resources that call AddApiField) wired to CustomizeDiffDualResources.
 func newDualResourceForCustomizeDiff() *schema.Resource {
 	r := Resource{
+		IsDual: true,
 		Schema: AddApiField(map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

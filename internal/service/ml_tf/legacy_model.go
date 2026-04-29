@@ -1302,13 +1302,9 @@ func (m AvgFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type BackfillSource_SdkV2 struct {
-	// The full three-part name (catalog, schema, name) of the Delta table
-	// containing the historical data to backfill.
-	DeltaTableName types.String `tfsdk:"delta_table_name"`
-	// Deprecated: Use delta_table_name instead. Kept for backwards
-	// compatibility. The Delta table source containing the historical data to
-	// backfill. Only the delta table name is used for backfill, other fields
-	// are ignored.
+	// The Delta table source containing the historic data to backfill. Only the
+	// delta table name is used for backfill, the entity columns and timeseries
+	// column are ignored as they are defined by the associated KafkaSource.
 	DeltaTableSource types.List `tfsdk:"delta_table_source"`
 }
 
@@ -1336,7 +1332,6 @@ func (to *BackfillSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from B
 }
 
 func (m BackfillSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delta_table_name"] = attrs["delta_table_name"].SetOptional()
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
 	attrs["delta_table_source"] = attrs["delta_table_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -1363,7 +1358,6 @@ func (m BackfillSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"delta_table_name":   m.DeltaTableName,
 			"delta_table_source": m.DeltaTableSource,
 		})
 }
@@ -1372,7 +1366,6 @@ func (m BackfillSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m BackfillSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"delta_table_name": types.StringType,
 			"delta_table_source": basetypes.ListType{
 				ElemType: DeltaTableSource_SdkV2{}.Type(ctx),
 			},
@@ -19237,7 +19230,7 @@ func (m RunTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 type SchemaConfig_SdkV2 struct {
 	// Schema of the JSON object in standard IETF JSON schema format
-	// (https://json-schema.org/).
+	// (https://json-schema.org/)
 	JsonSchema types.String `tfsdk:"json_schema"`
 }
 

@@ -462,9 +462,7 @@ func TestModelServingProvisionedThroughputUpdate_RemoveConfigIsNoOp(t *testing.T
 				}
 			}
 			`,
-		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
-			"provider_config.#": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
-		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
 	}.ApplyNoError(t)
 }
 

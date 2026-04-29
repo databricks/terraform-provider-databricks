@@ -32,7 +32,6 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 		Resource:  ResourceServicePrincipalSecret(),
 		Create:    true,
 		AccountID: "xyz",
-		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		service_principal_id = "123"
 		lifetime  	  		 = "20s"
@@ -64,7 +63,6 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 		ID:        "003",
 		Delete:    true,
 		AccountID: "xyz",
-		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		service_principal_id = "123"
 		`,
@@ -89,7 +87,6 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 		ID:        "003",
 		Read:      true,
 		AccountID: "xyz",
-		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		service_principal_id = "123"
 		`,
@@ -118,7 +115,6 @@ func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 		Read:      true,
 		Removed:   true,
 		AccountID: "xyz",
-		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		service_principal_id = "123"
 		`,

@@ -4808,9 +4808,6 @@ func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 type GenieSpace struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
-	// ETag for this space. Pass this value back in the update request to
-	// prevent overwriting concurrent changes.
-	Etag types.String `tfsdk:"etag"`
 	// Parent folder path of the Genie Space
 	ParentPath types.String `tfsdk:"parent_path"`
 	// The contents of the Genie Space in serialized string form. This field is
@@ -4835,7 +4832,6 @@ func (to *GenieSpace) SyncFieldsDuringRead(ctx context.Context, from GenieSpace)
 
 func (m GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
@@ -4864,7 +4860,6 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"description":      m.Description,
-			"etag":             m.Etag,
 			"parent_path":      m.ParentPath,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
@@ -4878,7 +4873,6 @@ func (m GenieSpace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
-			"etag":             types.StringType,
 			"parent_path":      types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
@@ -5233,10 +5227,6 @@ func (m GenieTrashSpaceRequest) Type(ctx context.Context) attr.Type {
 type GenieUpdateSpaceRequest struct {
 	// Optional description
 	Description types.String `tfsdk:"description"`
-	// ETag returned by a previous GET or UPDATE. When set, the update will fail
-	// if the space has been modified since. Omit to apply the update
-	// unconditionally.
-	Etag types.String `tfsdk:"etag"`
 	// The contents of the Genie Space in serialized string form (full
 	// replacement). Use the [Get Genie Space](:method:genie/getspace) API to
 	// retrieve an example response, which includes the `serialized_space`
@@ -5259,7 +5249,6 @@ func (to *GenieUpdateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m GenieUpdateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["etag"] = attrs["etag"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -5287,7 +5276,6 @@ func (m GenieUpdateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"description":      m.Description,
-			"etag":             m.Etag,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
 			"title":            m.Title,
@@ -5300,7 +5288,6 @@ func (m GenieUpdateSpaceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
-			"etag":             types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
 			"title":            types.StringType,
@@ -7093,13 +7080,7 @@ func (m TextAttachment) Type(ctx context.Context) attr.Type {
 type Thought struct {
 	// The md formatted content for this thought.
 	Content types.String `tfsdk:"content"`
-	// The category of this thought. The possible values are: *
-	// `THOUGHT_TYPE_DESCRIPTION`: A high-level description of how the question
-	// was interpreted. * `THOUGHT_TYPE_UNDERSTANDING`: How ambiguous parts of
-	// the question were resolved. * `THOUGHT_TYPE_DATA_SOURCING`: Which tables
-	// or datasets were identified as relevant. * `THOUGHT_TYPE_INSTRUCTIONS`:
-	// Which author-defined instructions were referenced. *
-	// `THOUGHT_TYPE_STEPS`: The logical steps taken to compute the answer.
+	// The category of this thought.
 	ThoughtType types.String `tfsdk:"thought_type"`
 }
 

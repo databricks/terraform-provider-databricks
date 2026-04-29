@@ -925,10 +925,6 @@ type CreateGcpKeyInfo struct {
 	// Globally unique kms key resource id of the form
 	// projects/testProjectId/locations/us-east4/keyRings/gcpCmkKeyRing/cryptoKeys/cmk-eastus4
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
-	// When true, Databricks will not use OAuth to grant the service account
-	// access to the KMS key. The customer is responsible for granting access
-	// manually.
-	Manual types.Bool `tfsdk:"manual"`
 }
 
 func (to *CreateGcpKeyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGcpKeyInfo) {
@@ -957,7 +953,6 @@ func (to *CreateGcpKeyInfo) SyncFieldsDuringRead(ctx context.Context, from Creat
 func (m CreateGcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["gcp_service_account"] = attrs["gcp_service_account"].SetOptional()
 	attrs["kms_key_id"] = attrs["kms_key_id"].SetRequired()
-	attrs["manual"] = attrs["manual"].SetOptional()
 
 	return attrs
 }
@@ -984,7 +979,6 @@ func (m CreateGcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		map[string]attr.Value{
 			"gcp_service_account": m.GcpServiceAccount,
 			"kms_key_id":          m.KmsKeyId,
-			"manual":              m.Manual,
 		})
 }
 
@@ -994,7 +988,6 @@ func (m CreateGcpKeyInfo) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"gcp_service_account": GcpServiceAccount{}.Type(ctx),
 			"kms_key_id":          types.StringType,
-			"manual":              types.BoolType,
 		},
 	}
 }
@@ -2767,10 +2760,6 @@ type GcpKeyInfo struct {
 	// Globally unique kms key resource id of the form
 	// projects/testProjectId/locations/us-east4/keyRings/gcpCmkKeyRing/cryptoKeys/cmk-eastus4
 	KmsKeyId types.String `tfsdk:"kms_key_id"`
-	// When true, Databricks will not use OAuth to grant the service account
-	// access to the KMS key. The customer is responsible for granting access
-	// manually.
-	Manual types.Bool `tfsdk:"manual"`
 }
 
 func (to *GcpKeyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpKeyInfo) {
@@ -2799,7 +2788,6 @@ func (to *GcpKeyInfo) SyncFieldsDuringRead(ctx context.Context, from GcpKeyInfo)
 func (m GcpKeyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["gcp_service_account"] = attrs["gcp_service_account"].SetOptional()
 	attrs["kms_key_id"] = attrs["kms_key_id"].SetRequired()
-	attrs["manual"] = attrs["manual"].SetOptional()
 
 	return attrs
 }
@@ -2826,7 +2814,6 @@ func (m GcpKeyInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"gcp_service_account": m.GcpServiceAccount,
 			"kms_key_id":          m.KmsKeyId,
-			"manual":              m.Manual,
 		})
 }
 
@@ -2836,7 +2823,6 @@ func (m GcpKeyInfo) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"gcp_service_account": GcpServiceAccount{}.Type(ctx),
 			"kms_key_id":          types.StringType,
-			"manual":              types.BoolType,
 		},
 	}
 }

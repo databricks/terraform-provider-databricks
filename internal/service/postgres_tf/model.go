@@ -251,8 +251,7 @@ func (m BranchOperationMetadata) Type(ctx context.Context) attr.Type {
 
 type BranchSpec struct {
 	// Absolute expiration timestamp. When set, the branch will expire at this
-	// time. Mutually exclusive with `ttl` and `no_expiry`. When updating, use
-	// `spec.expiration` in the update_mask.
+	// time.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
 	// When set to true, protects the branch from deletion and reset. Associated
 	// compute endpoints and the project cannot be deleted while the branch is
@@ -260,8 +259,7 @@ type BranchSpec struct {
 	IsProtected types.Bool `tfsdk:"is_protected"`
 	// Explicitly disable expiration. When set to true, the branch will not
 	// expire. If set to false, the request is invalid; provide either ttl or
-	// expire_time instead. Mutually exclusive with `expire_time` and `ttl`.
-	// When updating, use `spec.expiration` in the update_mask.
+	// expire_time instead.
 	NoExpiry types.Bool `tfsdk:"no_expiry"`
 	// The name of the source branch from which this branch was created (data
 	// lineage for point-in-time recovery). If not specified, defaults to the
@@ -275,8 +273,7 @@ type BranchSpec struct {
 	// created.
 	SourceBranchTime timetypes.RFC3339 `tfsdk:"source_branch_time"`
 	// Relative time-to-live duration. When set, the branch will expire at
-	// creation_time + ttl. Mutually exclusive with `expire_time` and
-	// `no_expiry`. When updating, use `spec.expiration` in the update_mask.
+	// creation_time + ttl.
 	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
@@ -345,16 +342,6 @@ func (m BranchSpec) Type(ctx context.Context) attr.Type {
 }
 
 type BranchStatus struct {
-	// The short identifier of the branch, suitable for showing to the users.
-	// For a branch with name `projects/my-project/branches/my-branch`, the
-	// branch_id is `my-branch`.
-	//
-	// Use this field when building UI components that display branches to users
-	// (e.g., a drop-down selector). Prefer showing `branch_id` instead of the
-	// full resource name from `Branch.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}` format and is not
-	// user-friendly.
-	BranchId types.String `tfsdk:"branch_id"`
 	// The branch's state, indicating if it is initializing, ready for use, or
 	// archived.
 	CurrentState types.String `tfsdk:"current_state"`
@@ -388,7 +375,6 @@ func (to *BranchStatus) SyncFieldsDuringRead(ctx context.Context, from BranchSta
 }
 
 func (m BranchStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["default"] = attrs["default"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetComputed()
@@ -421,7 +407,6 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch_id":          m.BranchId,
 			"current_state":      m.CurrentState,
 			"default":            m.Default,
 			"expire_time":        m.ExpireTime,
@@ -439,7 +424,6 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m BranchStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch_id":          types.StringType,
 			"current_state":      types.StringType,
 			"default":            types.BoolType,
 			"expire_time":        timetypes.RFC3339{}.Type(ctx),
@@ -728,15 +712,6 @@ type CatalogCatalogStatus struct {
 	//
 	// Format: projects/{project_id}/branches/{branch_id}.
 	Branch types.String `tfsdk:"branch"`
-	// The short identifier of the catalog, suitable for showing to the users.
-	// For a catalog with name `catalogs/my-catalog`, the catalog_id is
-	// `my-catalog`.
-	//
-	// Use this field when building UI components that display catalogs to users
-	// (e.g., a drop-down selector). Prefer showing `catalog_id` instead of the
-	// full resource name from `Catalog.name`, which follows the
-	// `catalogs/{catalog_id}` format and is not user-friendly.
-	CatalogId types.String `tfsdk:"catalog_id"`
 	// The name of the Postgres database associated with the catalog.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The resource path of the project associated with the catalog.
@@ -753,7 +728,6 @@ func (to *CatalogCatalogStatus) SyncFieldsDuringRead(ctx context.Context, from C
 
 func (m CatalogCatalogStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetComputed()
-	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetComputed()
 	attrs["project"] = attrs["project"].SetComputed()
 
@@ -779,7 +753,6 @@ func (m CatalogCatalogStatus) ToObjectValue(ctx context.Context) basetypes.Objec
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch":            m.Branch,
-			"catalog_id":        m.CatalogId,
 			"postgres_database": m.PostgresDatabase,
 			"project":           m.Project,
 		})
@@ -790,7 +763,6 @@ func (m CatalogCatalogStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch":            types.StringType,
-			"catalog_id":        types.StringType,
 			"postgres_database": types.StringType,
 			"project":           types.StringType,
 		},
@@ -850,9 +822,6 @@ type CreateBranchRequest struct {
 	// The Project where this Branch will be created. Format:
 	// projects/{project_id}
 	Parent types.String `tfsdk:"-"`
-	// If true, update the branch if it already exists instead of returning an
-	// error.
-	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateBranchRequest) {
@@ -865,10 +834,6 @@ func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
-	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
-		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.ReplaceExisting = from.ReplaceExisting
-	}
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from CreateBranchRequest) {
@@ -880,19 +845,12 @@ func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from Cr
 			}
 		}
 	}
-	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
-		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.ReplaceExisting = from.ReplaceExisting
-	}
 }
 
 func (m CreateBranchRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
-	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
-	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
-	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -917,10 +875,9 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch":           m.Branch,
-			"branch_id":        m.BranchId,
-			"parent":           m.Parent,
-			"replace_existing": m.ReplaceExisting,
+			"branch":    m.Branch,
+			"branch_id": m.BranchId,
+			"parent":    m.Parent,
 		})
 }
 
@@ -928,10 +885,9 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m CreateBranchRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":           Branch{}.Type(ctx),
-			"branch_id":        types.StringType,
-			"parent":           types.StringType,
-			"replace_existing": types.BoolType,
+			"branch":    Branch{}.Type(ctx),
+			"branch_id": types.StringType,
+			"parent":    types.StringType,
 		},
 	}
 }
@@ -1181,9 +1137,6 @@ type CreateEndpointRequest struct {
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
-	// If true, update the endpoint if it already exists instead of returning an
-	// error.
-	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateEndpointRequest) {
@@ -1196,10 +1149,6 @@ func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 			}
 		}
 	}
-	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
-		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.ReplaceExisting = from.ReplaceExisting
-	}
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from CreateEndpointRequest) {
@@ -1211,19 +1160,12 @@ func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
-	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
-		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.ReplaceExisting = from.ReplaceExisting
-	}
 }
 
 func (m CreateEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
-	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
-	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
-	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1248,10 +1190,9 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"endpoint":         m.Endpoint,
-			"endpoint_id":      m.EndpointId,
-			"parent":           m.Parent,
-			"replace_existing": m.ReplaceExisting,
+			"endpoint":    m.Endpoint,
+			"endpoint_id": m.EndpointId,
+			"parent":      m.Parent,
 		})
 }
 
@@ -1259,10 +1200,9 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m CreateEndpointRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoint":         Endpoint{}.Type(ctx),
-			"endpoint_id":      types.StringType,
-			"parent":           types.StringType,
-			"replace_existing": types.BoolType,
+			"endpoint":    Endpoint{}.Type(ctx),
+			"endpoint_id": types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -1902,17 +1842,6 @@ func (m DatabaseDatabaseSpec) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseDatabaseStatus struct {
-	// The short identifier of the database, suitable for showing to the users.
-	// For a database with name
-	// `projects/my-project/branches/my-branch/databases/my-db`, the database_id
-	// is `my-db`.
-	//
-	// Use this field when building UI components that display databases to
-	// users (e.g., a drop-down selector). Prefer showing `database_id` instead
-	// of the full resource name from `Database.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
-	// format and is not user-friendly.
-	DatabaseId types.String `tfsdk:"database_id"`
 	// The name of the Postgres database.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The name of the role that owns the database. Format:
@@ -1927,7 +1856,6 @@ func (to *DatabaseDatabaseStatus) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m DatabaseDatabaseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
 	attrs["role"] = attrs["role"].SetOptional()
 
@@ -1952,7 +1880,6 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"database_id":       m.DatabaseId,
 			"postgres_database": m.PostgresDatabase,
 			"role":              m.Role,
 		})
@@ -1962,7 +1889,6 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m DatabaseDatabaseStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"database_id":       types.StringType,
 			"postgres_database": types.StringType,
 			"role":              types.StringType,
 		},
@@ -2316,9 +2242,6 @@ type DeleteProjectRequest struct {
 	// The full resource path of the project to delete. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
-	// If true, permanently deletes the project (hard delete). If false or
-	// unset, performs a soft delete.
-	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteProjectRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteProjectRequest) {
@@ -2329,7 +2252,6 @@ func (to *DeleteProjectRequest) SyncFieldsDuringRead(ctx context.Context, from D
 
 func (m DeleteProjectRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -2352,8 +2274,7 @@ func (m DeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":  m.Name,
-			"purge": m.Purge,
+			"name": m.Name,
 		})
 }
 
@@ -2361,8 +2282,7 @@ func (m DeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m DeleteProjectRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":  types.StringType,
-			"purge": types.BoolType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -3016,9 +2936,7 @@ func (m *EndpointSettings) SetPgSettings(ctx context.Context, v map[string]types
 }
 
 type EndpointSpec struct {
-	// The maximum number of Compute Units. The maximum value is 64. The
-	// difference between the minimum and maximum Compute Units (max - min) must
-	// not exceed 16.
+	// The maximum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -3033,16 +2951,13 @@ type EndpointSpec struct {
 	// the endpoint (and no readable secondaries for Read/Write endpoints).
 	Group types.Object `tfsdk:"group"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided. Mutually exclusive with
-	// `suspend_timeout_duration`. When updating, use `spec.suspension` in the
-	// update_mask.
+	// suspend). Should be set to true when provided.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 
 	Settings types.Object `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week). Mutually exclusive with `no_suspension`. When updating, use
-	// `spec.suspension` in the update_mask.
+	// week).
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -3199,9 +3114,7 @@ func (m *EndpointSpec) SetSettings(ctx context.Context, v EndpointSettings) {
 }
 
 type EndpointStatus struct {
-	// The maximum number of Compute Units. The maximum value is 64. The
-	// difference between the minimum and maximum Compute Units (max - min) must
-	// not exceed 16.
+	// The maximum number of Compute Units.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -3211,17 +3124,6 @@ type EndpointStatus struct {
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
-	// The short identifier of the endpoint, suitable for showing to the users.
-	// For an endpoint with name
-	// `projects/my-project/branches/my-branch/endpoints/my-endpoint`, the
-	// endpoint_id is `my-endpoint`.
-	//
-	// Use this field when building UI components that display endpoints to
-	// users (e.g., a drop-down selector). Prefer showing `endpoint_id` instead
-	// of the full resource name from `Endpoint.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
-	// format and is not user-friendly.
-	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Details on the HA configuration of the endpoint.
@@ -3299,7 +3201,6 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["autoscaling_limit_min_cu"] = attrs["autoscaling_limit_min_cu"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
-	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
 	attrs["group"] = attrs["group"].SetComputed()
 	attrs["hosts"] = attrs["hosts"].SetComputed()
@@ -3336,7 +3237,6 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"current_state":            m.CurrentState,
 			"disabled":                 m.Disabled,
-			"endpoint_id":              m.EndpointId,
 			"endpoint_type":            m.EndpointType,
 			"group":                    m.Group,
 			"hosts":                    m.Hosts,
@@ -3354,7 +3254,6 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"current_state":            types.StringType,
 			"disabled":                 types.BoolType,
-			"endpoint_id":              types.StringType,
 			"endpoint_type":            types.StringType,
 			"group":                    EndpointGroupStatus{}.Type(ctx),
 			"hosts":                    EndpointHosts{}.Type(ctx),
@@ -3882,9 +3781,8 @@ func (m GetRoleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetSyncedTableRequest struct {
-	// The Full resource name of the synced table. Format:
-	// "synced_tables/{catalog}.{schema}.{table}", where (catalog, schema,
-	// table) are the entity names in the Unity Catalog.
+	// Format: "synced_tables/{catalog}.{schema}.{table}", where (catalog,
+	// schema, table) are the entity names in the Unity Catalog.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3931,10 +3829,8 @@ func (m GetSyncedTableRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Configuration for the initial Read/Write endpoint created during project
-// creation.
 type InitialEndpointSpec struct {
-	// Settings for HA configuration of the endpoint.
+	// Settings for HA configuration of the endpoint
 	Group types.Object `tfsdk:"group"`
 }
 
@@ -4497,10 +4393,6 @@ type ListProjectsRequest struct {
 	// Page token from a previous response. If not provided, returns the first
 	// page.
 	PageToken types.String `tfsdk:"-"`
-	// Whether to include soft-deleted projects in the response. When true,
-	// soft-deleted projects are included alongside active projects.
-	// Hard-deleted and already-purged projects are never returned.
-	ShowDeleted types.Bool `tfsdk:"-"`
 }
 
 func (to *ListProjectsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListProjectsRequest) {
@@ -4512,7 +4404,6 @@ func (to *ListProjectsRequest) SyncFieldsDuringRead(ctx context.Context, from Li
 func (m ListProjectsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	return attrs
 }
@@ -4535,9 +4426,8 @@ func (m ListProjectsRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":    m.PageSize,
-			"page_token":   m.PageToken,
-			"show_deleted": m.ShowDeleted,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
 		})
 }
 
@@ -4545,9 +4435,8 @@ func (m ListProjectsRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m ListProjectsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":    types.Int64Type,
-			"page_token":   types.StringType,
-			"show_deleted": types.BoolType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -4988,11 +4877,8 @@ func (m *Operation) SetError(ctx context.Context, v DatabricksServiceExceptionWi
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// A timestamp indicating when the project was soft-deleted. Empty if the
-	// project is not deleted, otherwise set to a timestamp in the past.
-	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the initial branch for a newly created project. If omitted, the initial
+	// the default branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -5001,10 +4887,6 @@ type Project struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// A timestamp indicating when the project is scheduled for permanent
-	// deletion. Empty if the project is not deleted, otherwise set to a
-	// timestamp in the future.
-	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -5092,12 +4974,11 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
+	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -5131,10 +5012,8 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time":           m.CreateTime,
-			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
-			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -5147,10 +5026,8 @@ func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time":           timetypes.RFC3339{}.Type(ctx),
-			"delete_time":           timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
-			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  ProjectSpec{}.Type(ctx),
 			"status":                ProjectStatus{}.Type(ctx),
 			"uid":                   types.StringType,
@@ -5294,16 +5171,13 @@ type ProjectDefaultEndpointSettings struct {
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided. Mutually exclusive with
-	// `suspend_timeout_duration`. When updating, use
-	// `spec.project_default_settings.suspension` in the update_mask.
+	// suspend). Should be set to true when provided.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week). Mutually exclusive with `no_suspension`. When updating, use
-	// `spec.project_default_settings.suspension` in the update_mask.
+	// week).
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -5458,7 +5332,7 @@ type ProjectSpec struct {
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
-	// 172800s (2 days) and 3024000s (35 days).
+	// 172800s (2 days) and 2592000s (30 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
 	// The major Postgres version number. Supported versions are 16 and 17.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
@@ -5637,15 +5511,6 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-	// The short identifier of the project, suitable for showing to the users.
-	// For a project with name `projects/my-project`, the project_id is
-	// `my-project`.
-	//
-	// Use this field when building UI components that display projects to users
-	// (e.g., a drop-down selector). Prefer showing `project_id` instead of the
-	// full resource name from `Project.name`, which follows the
-	// `projects/{project_id}` format and is not user-friendly.
-	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
 }
@@ -5696,7 +5561,6 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["synthetic_storage_size_bytes"] = attrs["synthetic_storage_size_bytes"].SetComputed()
 
 	return attrs
@@ -5733,7 +5597,6 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"history_retention_duration":      m.HistoryRetentionDuration,
 			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
-			"project_id":                      m.ProjectId,
 			"synthetic_storage_size_bytes":    m.SyntheticStorageSizeBytes,
 		})
 }
@@ -5754,7 +5617,6 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 			"history_retention_duration":   timetypes.GoDuration{}.Type(ctx),
 			"owner":                        types.StringType,
 			"pg_version":                   types.Int64Type,
-			"project_id":                   types.StringType,
 			"synthetic_storage_size_bytes": types.Int64Type,
 		},
 	}
@@ -5906,7 +5768,6 @@ func (m *RequestedClaims) SetResources(ctx context.Context, v []RequestedResourc
 }
 
 type RequestedResource struct {
-	// The full Unity Catalog table name.
 	TableName types.String `tfsdk:"table_name"`
 
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
@@ -6239,20 +6100,6 @@ type RoleRoleSpec struct {
 	// The desired API-exposed Postgres role attribute to associate with the
 	// role. Optional.
 	Attributes types.Object `tfsdk:"attributes"`
-	// Controls how the Postgres role authenticates when a client opens a
-	// database connection. Supported values:
-	//
-	// * LAKEBASE_OAUTH_V1: the role authenticates by presenting a Databricks
-	// OAuth access token derived from the backing managed identity (the
-	// Databricks user, service principal, or group named by the role's
-	// `postgres_role`). No static password exists for roles using this method.
-	// * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
-	// password verified server-side using the SCRAM-SHA-256 mechanism. Lakebase
-	// generates a password for the role. * NO_LOGIN: the role cannot open a
-	// Postgres session at all. Useful for roles that exist only to own objects
-	// or to aggregate privileges that are then granted to other, loginable
-	// roles.
-	//
 	// If auth_method is left unspecified, a meaningful authentication method is
 	// derived from the identity_type: * For the managed identities, OAUTH is
 	// used. * For the regular postgres roles, authentication based on postgres
@@ -6435,16 +6282,6 @@ type RoleRoleStatus struct {
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
-	// The short identifier of the role, suitable for showing to the users. For
-	// a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-	// the role_id is `my-role`.
-	//
-	// Use this field when building UI components that display roles to users
-	// (e.g., a drop-down selector). Prefer showing `role_id` instead of the
-	// full resource name from `Role.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format and
-	// is not user-friendly.
-	RoleId types.String `tfsdk:"role_id"`
 }
 
 func (to *RoleRoleStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RoleRoleStatus) {
@@ -6488,7 +6325,6 @@ func (m RoleRoleStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
-	attrs["role_id"] = attrs["role_id"].SetComputed()
 
 	return attrs
 }
@@ -6519,7 +6355,6 @@ func (m RoleRoleStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"identity_type":    m.IdentityType,
 			"membership_roles": m.MembershipRoles,
 			"postgres_role":    m.PostgresRole,
-			"role_id":          m.RoleId,
 		})
 }
 
@@ -6534,7 +6369,6 @@ func (m RoleRoleStatus) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"postgres_role": types.StringType,
-			"role_id":       types.StringType,
 		},
 	}
 }
@@ -7201,10 +7035,6 @@ type SyncedTableSyncedTableStatus struct {
 	OngoingSyncProgress types.Object `tfsdk:"ongoing_sync_progress"`
 	// ID of the associated pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
-	// The full resource name of the project associated with the table.
-	//
-	// Format: "projects/{project_id}".
-	Project types.String `tfsdk:"project"`
 	// The current phase of the data synchronization pipeline.
 	ProvisioningPhase types.String `tfsdk:"provisioning_phase"`
 	// The provisioning state of the synced table entity in Unity Catalog.
@@ -7259,7 +7089,6 @@ func (m SyncedTableSyncedTableStatus) ApplySchemaCustomizations(attrs map[string
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["ongoing_sync_progress"] = attrs["ongoing_sync_progress"].SetComputed()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
-	attrs["project"] = attrs["project"].SetComputed()
 	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetComputed()
 	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
 
@@ -7294,7 +7123,6 @@ func (m SyncedTableSyncedTableStatus) ToObjectValue(ctx context.Context) basetyp
 			"message":                          m.Message,
 			"ongoing_sync_progress":            m.OngoingSyncProgress,
 			"pipeline_id":                      m.PipelineId,
-			"project":                          m.Project,
 			"provisioning_phase":               m.ProvisioningPhase,
 			"unity_catalog_provisioning_state": m.UnityCatalogProvisioningState,
 		})
@@ -7311,7 +7139,6 @@ func (m SyncedTableSyncedTableStatus) Type(ctx context.Context) attr.Type {
 			"message":                          types.StringType,
 			"ongoing_sync_progress":            SyncedTablePipelineProgress{}.Type(ctx),
 			"pipeline_id":                      types.StringType,
-			"project":                          types.StringType,
 			"provisioning_phase":               types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},
@@ -7366,56 +7193,6 @@ func (m *SyncedTableSyncedTableStatus) GetOngoingSyncProgress(ctx context.Contex
 func (m *SyncedTableSyncedTableStatus) SetOngoingSyncProgress(ctx context.Context, v SyncedTablePipelineProgress) {
 	vs := v.ToObjectValue(ctx)
 	m.OngoingSyncProgress = vs
-}
-
-// Request to restore a soft-deleted project within its retention period.
-type UndeleteProjectRequest struct {
-	// The full resource path of the project to undelete. Format:
-	// projects/{project_id}
-	Name types.String `tfsdk:"-"`
-}
-
-func (to *UndeleteProjectRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteProjectRequest) {
-}
-
-func (to *UndeleteProjectRequest) SyncFieldsDuringRead(ctx context.Context, from UndeleteProjectRequest) {
-}
-
-func (m UndeleteProjectRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteProjectRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m UndeleteProjectRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteProjectRequest
-// only implements ToObjectValue() and Type().
-func (m UndeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"name": m.Name,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m UndeleteProjectRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
-		},
-	}
 }
 
 type UpdateBranchRequest struct {

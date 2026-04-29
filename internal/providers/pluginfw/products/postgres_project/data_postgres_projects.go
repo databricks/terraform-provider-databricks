@@ -31,11 +31,7 @@ type ProjectsData struct {
 	Postgres types.List `tfsdk:"projects"`
 	// Upper bound for items returned. Cannot be negative. The maximum value is
 	// 100.
-	PageSize types.Int64 `tfsdk:"page_size"`
-	// Whether to include soft-deleted projects in the response. When true,
-	// soft-deleted projects are included alongside active projects.
-	// Hard-deleted and already-purged projects are never returned.
-	ShowDeleted        types.Bool   `tfsdk:"show_deleted"`
+	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -48,7 +44,6 @@ func (ProjectsData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 
 func (m ProjectsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	attrs["projects"] = attrs["projects"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -127,8 +122,4 @@ func (r *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	config.Postgres = types.ListValueMust(ProjectData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

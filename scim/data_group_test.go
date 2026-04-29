@@ -227,7 +227,6 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 		ID:          ".",
 		State: map[string]any{
 			"display_name": "ds",
-			"api":          "account",
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"acl_principal_id":   "groups/ds",

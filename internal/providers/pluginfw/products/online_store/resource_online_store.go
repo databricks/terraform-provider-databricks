@@ -14,7 +14,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -49,10 +48,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -207,8 +206,6 @@ func (m OnlineStore) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	attrs["provider_config"] = attrs["provider_config"].SetComputed()
-	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -231,18 +228,28 @@ func (r *OnlineStoreResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *OnlineStoreResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip entirely on destroy (no plan state).
+	// Skip validation on destroy plans (plan is null).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan OnlineStore
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -299,7 +306,6 @@ func (r *OnlineStoreResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -337,6 +343,7 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError("failed to get online_store", err.Error())
 		return
 	}
@@ -350,10 +357,6 @@ func (r *OnlineStoreResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *OnlineStoreResource) update(ctx context.Context, plan OnlineStore, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -445,9 +448,6 @@ func (r *OnlineStoreResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	err := client.FeatureStore.DeleteOnlineStore(ctx, deleteRequest)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete online_store", err.Error())
 		return

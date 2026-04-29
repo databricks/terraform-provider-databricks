@@ -37,7 +37,6 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 		Resource:  ResourceMwsPermissionAssignment(),
 		Create:    true,
 		AccountID: "abc",
-		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		workspace_id = 123
 		principal_id = 345
@@ -71,7 +70,6 @@ func TestPermissionAssignmentRead(t *testing.T) {
 		Read:      true,
 		New:       true,
 		AccountID: "abc",
-		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "123|456",
 	}.ApplyAndExpectData(t, map[string]any{
 		"workspace_id": 123,
@@ -99,7 +97,6 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 		Read:      true,
 		Removed:   true,
 		AccountID: "abc",
-		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "123|456",
 	}.ApplyNoError(t)
 }
@@ -114,7 +111,6 @@ func TestPermissionAssignmentDelete(t *testing.T) {
 		Delete:    true,
 		ID:        "123|456",
 		AccountID: "abc",
-		Host:      "https://accounts.cloud.databricks.com",
 	}.ApplyNoError(t)
 }
 

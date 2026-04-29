@@ -50,8 +50,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProviderWorkspaceID = "123456789"
-
 // nolint
 func getJSONObject(filename string) any {
 	var obj map[string]any
@@ -77,7 +75,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.HostTypeForTerraform() == config.AccountHost
+	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()
@@ -3399,7 +3397,6 @@ func TestAlertsV2Export(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

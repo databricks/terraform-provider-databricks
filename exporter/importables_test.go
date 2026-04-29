@@ -77,7 +77,7 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 	ic := importContextForTest()
 	ic.Client = client
 	ic.Context = ctx
-	if client.HostTypeForTerraform() == config.AccountHost {
+	if client.Config.HostType() == config.AccountHost {
 		ic.accountClient, _ = client.AccountClient()
 	} else {
 		ic.workspaceClient, _ = client.WorkspaceClient()
@@ -88,6 +88,7 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 // importContextForAccountTestWithClient creates an import context configured for account-level testing
 func importContextForAccountTestWithClient(ctx context.Context, client *common.DatabricksClient, services string) *importContext {
 	client.Config.AccountID = testAccountID
+	client.Config.WithTesting()
 	ic := importContextForTestWithClient(ctx, client)
 	ic.enableServices(services)
 	return ic

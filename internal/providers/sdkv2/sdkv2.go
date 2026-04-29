@@ -96,8 +96,7 @@ func WithSdkV2DataSourceFallbacks(dataSources []string) SdkV2ProviderOption {
 	}
 }
 
-// WithConfigCustomizer allows the caller to customize the SDK config before config resolution,
-// so customizer-set fields (e.g. Host) participate in resolveHostMetadata and auth.
+// WithConfigCustomizer allows the caller to customize the SDK config after config resolution.
 func WithConfigCustomizer(customizer func(*config.Config) error) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
 		o.configCustomizer = customizer

@@ -37,7 +37,6 @@ func TestResourceUserDeleteAsDisableInAccount_NoError(t *testing.T) {
 		HCL: `
 			user_name    = "abc"
 			disable_as_user_deletion = true
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -57,7 +56,6 @@ func TestResourceUserDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -77,7 +75,6 @@ func TestResourceUserDeleteAsDisableInAccount_HardDelete(t *testing.T) {
 		HCL: `
 			user_name    = "abc"
 			disable_as_user_deletion = false
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }

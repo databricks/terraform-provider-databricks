@@ -123,8 +123,4 @@ func (r *DefaultWarehouseOverridesDataSource) Read(ctx context.Context, req data
 
 	config.Warehouses = types.ListValueMust(DefaultWarehouseOverrideData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

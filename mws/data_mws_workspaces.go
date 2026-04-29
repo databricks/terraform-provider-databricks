@@ -3,7 +3,6 @@ package mws
 import (
 	"context"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
@@ -11,14 +10,15 @@ func DataSourceMwsWorkspaces() common.Resource {
 	type mwsWorkspacesData struct {
 		Ids map[string]int64 `json:"ids" tf:"computed"`
 	}
-	return common.AccountData(func(ctx context.Context, data *mwsWorkspacesData, acc *databricks.AccountClient) error {
-		workspaces, err := acc.Workspaces.List(ctx)
+	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+		data := e.(*mwsWorkspacesData)
+		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config.AccountID)
 		if err != nil {
 			return err
 		}
 		data.Ids = map[string]int64{}
 		for _, v := range workspaces {
-			data.Ids[v.WorkspaceName] = v.WorkspaceId
+			data.Ids[v.WorkspaceName] = v.WorkspaceID
 		}
 		return nil
 	})

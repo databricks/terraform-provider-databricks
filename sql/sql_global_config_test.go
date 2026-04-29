@@ -77,6 +77,9 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	}, acceptance.Step{
 		Template: makeSqlGlobalConfig(""),
 		Check:    checkServerlessEnabled(true),
+	}, acceptance.Step{
+		Template: makeSqlGlobalConfig("enable_serverless_compute = false"),
+		Check:    checkServerlessEnabled(false),
 	})
 }
 

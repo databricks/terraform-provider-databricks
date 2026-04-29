@@ -162,6 +162,7 @@ func (r *WorkspaceNetworkOptionResource) Read(ctx context.Context, req resource.
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError("failed to get workspace_network_option", err.Error())
 		return
 	}

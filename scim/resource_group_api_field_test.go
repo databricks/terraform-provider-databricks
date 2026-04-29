@@ -55,9 +55,8 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:            ResourceGroup(),
-		AccountID:           "acc-123",
-		ProviderWorkspaceID: "12345",
+		Resource:  ResourceGroup(),
+		AccountID: "acc-123",
 		HCL: `
 			display_name = "ws-group"
 			api = "workspace"
@@ -67,18 +66,9 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 }
 
 func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.T) {
-	// When api is NOT set, account host routes to account SCIM (backwards compatible).
-	// Host inference is driven by the host metadata discovery — a 200 on
-	// /.well-known/databricks-config with host_type=ACCOUNT_HOST resolves the
-	// config to AccountHost, which is what a real accounts.* host would do.
+	// When api is NOT set, account host routes to account SCIM (backwards compatible)
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				Resource:     "/.well-known/databricks-config",
-				Response:     map[string]string{"host_type": "account"},
-				ReuseRequest: true,
-			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups",

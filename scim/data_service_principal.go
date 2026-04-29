@@ -29,20 +29,15 @@ func DataSourceServicePrincipal() common.Resource {
 		s["application_id"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
 		s["display_name"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
 		s["scim_id"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
-		common.AddApiField(s)
 		return s
 	})
 	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
-		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
-				return err
-			}
-			newClient, err := m.DatabricksClientForDualResource(ctx, d)
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -50,7 +45,7 @@ func DataSourceServicePrincipal() common.Resource {
 			var spList []User
 
 			common.DataToStructPointer(d, s, &response)
-			spnAPI := NewServicePrincipalsAPI(ctx, newClient, common.GetApiLevel(d))
+			spnAPI := NewServicePrincipalsAPI(ctx, newClient, "")
 
 			if response.ApplicationID != "" {
 				spList, err = spnAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, response.ApplicationID), true)

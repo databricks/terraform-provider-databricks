@@ -16,7 +16,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -54,10 +53,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -128,9 +127,6 @@ type Endpoint struct {
 	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// If true, update the endpoint if it already exists instead of returning an
-	// error.
-	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The spec contains the compute endpoint configuration, including
 	// autoscaling limits, suspend timeout, and disabled state.
 	Spec types.Object `tfsdk:"spec"`
@@ -168,14 +164,13 @@ func (m Endpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"endpoint_id":      m.EndpointId,
-			"name":             m.Name,
-			"parent":           m.Parent,
-			"replace_existing": m.ReplaceExisting,
-			"spec":             m.Spec,
-			"status":           m.Status,
-			"uid":              m.Uid,
-			"update_time":      m.UpdateTime,
+			"endpoint_id": m.EndpointId,
+			"name":        m.Name,
+			"parent":      m.Parent,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"uid":         m.Uid,
+			"update_time": m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -187,14 +182,13 @@ func (m Endpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Endpoint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"endpoint_id":      types.StringType,
-			"name":             types.StringType,
-			"parent":           types.StringType,
-			"replace_existing": types.BoolType,
-			"spec":             postgres_tf.EndpointSpec{}.Type(ctx),
-			"status":           postgres_tf.EndpointStatus{}.Type(ctx),
-			"uid":              types.StringType,
-			"update_time":      timetypes.RFC3339{}.Type(ctx),
+			"endpoint_id": types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
+			"spec":        postgres_tf.EndpointSpec{}.Type(ctx),
+			"status":      postgres_tf.EndpointStatus{}.Type(ctx),
+			"uid":         types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -207,9 +201,6 @@ func (m Endpoint) Type(ctx context.Context) attr.Type {
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
 	if !from.EndpointId.IsUnknown() {
 		to.EndpointId = from.EndpointId
-	}
-	if !from.ReplaceExisting.IsUnknown() {
-		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -243,9 +234,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
 	if !from.EndpointId.IsUnknown() {
 		to.EndpointId = from.EndpointId
-	}
-	if !from.ReplaceExisting.IsUnknown() {
-		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -285,12 +273,9 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	attrs["provider_config"] = attrs["provider_config"].SetComputed()
-	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -363,18 +348,28 @@ func (r *EndpointResource) Configure(ctx context.Context, req resource.Configure
 }
 
 func (r *EndpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip entirely on destroy (no plan state).
+	// Skip validation on destroy plans (plan is null).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan Endpoint
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *EndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -396,9 +391,6 @@ func (r *EndpointResource) Create(ctx context.Context, req resource.CreateReques
 		Endpoint:   endpoint,
 		Parent:     plan.Parent.ValueString(),
 		EndpointId: plan.EndpointId.ValueString(),
-	}
-	if !plan.ReplaceExisting.IsNull() && !plan.ReplaceExisting.IsUnknown() {
-		createRequest.ReplaceExisting = plan.ReplaceExisting.ValueBool()
 	}
 
 	var namespace ProviderConfig
@@ -442,7 +434,6 @@ func (r *EndpointResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -480,6 +471,7 @@ func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError("failed to get postgres_endpoint", err.Error())
 		return
 	}
@@ -493,10 +485,6 @@ func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *EndpointResource) update(ctx context.Context, plan Endpoint, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -594,23 +582,12 @@ func (r *EndpointResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	response, err := client.Postgres.DeleteEndpoint(ctx, deleteRequest)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_endpoint", err.Error())
 		return
 	}
-	if response == nil {
-		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
-		// to avoid a nil-deref on response.Wait(ctx).
-		return
-	}
 
 	err = response.Wait(ctx)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_endpoint delete", err.Error())
 		return

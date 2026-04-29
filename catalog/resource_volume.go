@@ -63,8 +63,7 @@ func ResourceVolume() common.Resource {
 			return m
 		})
 	return common.Resource{
-		Schema:        s,
-		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

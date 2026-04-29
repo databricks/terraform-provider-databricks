@@ -37,7 +37,6 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) 
 		HCL: `
 			application_id    = "abc"
 			disable_as_user_deletion = true
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -57,7 +56,6 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *
 		ID:       "abc",
 		HCL: `
 			application_id    = "abc"
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -77,7 +75,6 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_HardDelete(t *testing.
 		HCL: `
 			application_id    = "abc"
 			disable_as_user_deletion = false
-			api = "account"
 		`,
 	}.ApplyNoError(t)
 }

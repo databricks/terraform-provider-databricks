@@ -33,7 +33,6 @@ func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
 			)
 		},
 		AccountID:   "abc",
-		Host:        "https://accounts.cloud.databricks.com",
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfig(),

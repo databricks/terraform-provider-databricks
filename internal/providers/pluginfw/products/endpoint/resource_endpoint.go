@@ -14,7 +14,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/networking_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -307,6 +306,7 @@ func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError("failed to get endpoint", err.Error())
 		return
 	}
@@ -350,9 +350,6 @@ func (r *EndpointResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	err := client.Endpoints.DeleteEndpoint(ctx, deleteRequest)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete endpoint", err.Error())
 		return

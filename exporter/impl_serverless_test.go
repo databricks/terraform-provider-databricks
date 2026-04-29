@@ -16,7 +16,6 @@ import (
 
 func TestListAccountNetworkPolicies(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockNetworkPoliciesAPI().EXPECT().ListNetworkPoliciesRpcAll(mock.Anything, settings.ListNetworkPoliciesRequest{}).Return([]settings.AccountNetworkPolicy{
 			{
 				NetworkPolicyId: "policy-1",
@@ -42,7 +41,6 @@ func TestListAccountNetworkPolicies(t *testing.T) {
 
 func TestListAccountNetworkPoliciesWithMatch(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockNetworkPoliciesAPI().EXPECT().ListNetworkPoliciesRpcAll(mock.Anything, settings.ListNetworkPoliciesRequest{}).Return([]settings.AccountNetworkPolicy{
 			{
 				NetworkPolicyId: "policy-1",
@@ -69,7 +67,6 @@ func TestListAccountNetworkPoliciesWithMatch(t *testing.T) {
 
 func TestListWorkspaceNetworkOptions(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return([]provisioning.Workspace{
 			{
 				WorkspaceId:     123,
@@ -101,7 +98,6 @@ func TestListWorkspaceNetworkOptions(t *testing.T) {
 
 func TestListWorkspaceNetworkOptionsWithMatch(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return([]provisioning.Workspace{
 			{
 				WorkspaceId:     123,
@@ -134,7 +130,6 @@ func TestListWorkspaceNetworkOptionsWithMatch(t *testing.T) {
 
 func TestImportWorkspaceNetworkOption(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspaceNetworkConfigurationAPI().EXPECT().GetWorkspaceNetworkOptionRpc(mock.Anything, settings.GetWorkspaceNetworkOptionRequest{
 			WorkspaceId: 123,
 		}).Return(&settings.WorkspaceNetworkOption{
@@ -157,7 +152,6 @@ func TestImportWorkspaceNetworkOption(t *testing.T) {
 
 func TestImportWorkspaceNetworkOptionDefaultPolicy(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspaceNetworkConfigurationAPI().EXPECT().GetWorkspaceNetworkOptionRpc(mock.Anything, settings.GetWorkspaceNetworkOptionRequest{
 			WorkspaceId: 123,
 		}).Return(&settings.WorkspaceNetworkOption{
@@ -179,7 +173,6 @@ func TestImportWorkspaceNetworkOptionDefaultPolicy(t *testing.T) {
 
 func TestImportWorkspaceNetworkOptionEmptyPolicy(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspaceNetworkConfigurationAPI().EXPECT().GetWorkspaceNetworkOptionRpc(mock.Anything, settings.GetWorkspaceNetworkOptionRequest{
 			WorkspaceId: 123,
 		}).Return(&settings.WorkspaceNetworkOption{
@@ -201,7 +194,6 @@ func TestImportWorkspaceNetworkOptionEmptyPolicy(t *testing.T) {
 
 func TestImportWorkspaceNetworkOptionInvalidId(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// GetWorkspaceNetworkOptionRpc should not be called with invalid ID
 		// No expectation set, so if it's called the test will fail
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -219,7 +211,6 @@ func TestImportWorkspaceNetworkOptionInvalidId(t *testing.T) {
 
 func TestImportWorkspaceNetworkOptionGetError(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockWorkspaceNetworkConfigurationAPI().EXPECT().GetWorkspaceNetworkOptionRpc(mock.Anything, settings.GetWorkspaceNetworkOptionRequest{
 			WorkspaceId: 123,
 		}).Return(nil, assert.AnError)

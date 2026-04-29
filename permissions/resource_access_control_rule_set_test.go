@@ -377,10 +377,6 @@ func TestResourceRuleSetReadAccountLevel(t *testing.T) {
 		New:       true,
 		Read:      true,
 		ID:        testServicePrincipalRuleSetName,
-		State: map[string]any{
-			"name": testServicePrincipalRuleSetName,
-			"api":  "account",
-		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
 		"etag": "",
@@ -439,7 +435,6 @@ func TestResourceRuleSetCreateAccountLevel(t *testing.T) {
 		Create:    true,
 		HCL: fmt.Sprintf(`
 		name    = "%s"
-		api     = "account"
 		grant_rules {
 			principals = [
 				"users/abc@example.com"

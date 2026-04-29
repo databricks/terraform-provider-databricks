@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/billing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -16,7 +17,6 @@ import (
 
 func TestListBudgetPolicies(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetPolicyAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetPoliciesRequest{}).Return([]billing.BudgetPolicy{
 			{
 				PolicyId:   "policy-1",
@@ -40,7 +40,6 @@ func TestListBudgetPolicies(t *testing.T) {
 
 func TestListBudgetPoliciesWithMatch(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetPolicyAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetPoliciesRequest{}).Return([]billing.BudgetPolicy{
 			{
 				PolicyId:   "policy-1",
@@ -70,7 +69,6 @@ func TestListBudgetPoliciesWithMatch(t *testing.T) {
 
 func TestListBudgetPoliciesEmpty(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetPolicyAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetPoliciesRequest{}).Return([]billing.BudgetPolicy{}, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -83,7 +81,6 @@ func TestListBudgetPoliciesEmpty(t *testing.T) {
 
 func TestListBudgetPoliciesSkipEmptyPolicyId(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetPolicyAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetPoliciesRequest{}).Return([]billing.BudgetPolicy{
 			{
 				PolicyId:   "policy-1",
@@ -111,7 +108,6 @@ func TestListBudgetPoliciesSkipEmptyPolicyId(t *testing.T) {
 
 func TestListBudgetPoliciesError(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetPolicyAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetPoliciesRequest{}).Return(nil, assert.AnError)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -124,7 +120,6 @@ func TestListBudgetPoliciesError(t *testing.T) {
 
 func TestImportBudgetPolicyWithWorkspaceBindings(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,access,mws")
@@ -157,7 +152,6 @@ func TestImportBudgetPolicyWithWorkspaceBindings(t *testing.T) {
 
 func TestImportBudgetPolicyNoWorkspaceBindings(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,access")
@@ -185,7 +179,6 @@ func TestImportBudgetPolicyNoWorkspaceBindings(t *testing.T) {
 
 func TestImportBudgetPolicyAzure(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAzureAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,access")
@@ -216,7 +209,6 @@ func TestImportBudgetPolicyAzure(t *testing.T) {
 
 func TestImportBudgetPolicyNilDataWrapper(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -282,7 +274,10 @@ func (m *mockResourceDataWrapper) GetTypedStruct(ctx context.Context, target int
 
 func TestListBudgets(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
+		// Set Config on the mock AccountClient
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+		}
 		ma.GetMockBudgetsAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetConfigurationsRequest{}).Return([]billing.BudgetConfiguration{
 			{
 				BudgetConfigurationId: "budget-1",
@@ -310,7 +305,9 @@ func TestListBudgets(t *testing.T) {
 
 func TestListBudgetsIncremental(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+		}
 		ma.GetMockBudgetsAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetConfigurationsRequest{}).Return([]billing.BudgetConfiguration{
 			{
 				BudgetConfigurationId: "budget-1",
@@ -341,7 +338,6 @@ func TestListBudgetsIncremental(t *testing.T) {
 
 func TestListBudgetsEmpty(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetsAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetConfigurationsRequest{}).Return([]billing.BudgetConfiguration{}, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -354,7 +350,6 @@ func TestListBudgetsEmpty(t *testing.T) {
 
 func TestListBudgetsError(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		ma.GetMockBudgetsAPI().EXPECT().ListAll(mock.Anything, billing.ListBudgetConfigurationsRequest{}).Return(nil, assert.AnError)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -367,7 +362,10 @@ func TestListBudgetsError(t *testing.T) {
 
 func TestImportBudgetWithWorkspaces(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+			Host:      "https://accounts.cloud.databricks.com",
+		}
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,mws")
 		ic.Client.Config.Host = "https://accounts.cloud.databricks.com"
@@ -407,7 +405,9 @@ func TestImportBudgetWithWorkspaces(t *testing.T) {
 
 func TestImportBudgetWithAlertEmails(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+		}
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,users")
 
@@ -451,7 +451,10 @@ func TestImportBudgetWithAlertEmails(t *testing.T) {
 
 func TestImportBudgetWithWorkspacesAndAlerts(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+			Host:      "https://accounts.cloud.databricks.com",
+		}
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,mws,users")
 		ic.Client.Config.Host = "https://accounts.cloud.databricks.com"
@@ -505,7 +508,10 @@ func TestImportBudgetWithWorkspacesAndAlerts(t *testing.T) {
 
 func TestImportBudgetAzureNoWorkspaces(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAzureAccountConfig(ma)
+		ma.AccountClient.Config = &config.Config{
+			AccountID: testAccountID,
+			Host:      "https://accounts.azuredatabricks.net",
+		}
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,mws,users")
 		ic.Client.Config.Host = "https://accounts.azuredatabricks.net"
@@ -559,7 +565,6 @@ func TestImportBudgetAzureNoWorkspaces(t *testing.T) {
 
 func TestImportBudgetNoWorkspacesNoAlerts(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing")
@@ -584,7 +589,6 @@ func TestImportBudgetNoWorkspacesNoAlerts(t *testing.T) {
 
 func TestImportBudgetNonEmailAction(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
-		setupAwsAccountConfig(ma)
 		// No additional API calls needed for import
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForAccountTestWithClient(ctx, client, "billing,users")

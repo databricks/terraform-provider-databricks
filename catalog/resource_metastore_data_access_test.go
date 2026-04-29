@@ -236,7 +236,6 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
-		api = "account"
 		aws_iam_role {
 			role_arn = "def"
 		}
@@ -304,7 +303,6 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
-		api = "account"
 		azure_managed_identity {
 			access_connector_id = "def"
 		}
@@ -373,7 +371,6 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
-		api = "account"
 		databricks_gcp_service_account {}
 		`,
 	}.ApplyAndExpectData(t,

@@ -159,13 +159,12 @@ func ResourceServicePrincipal() common.Resource {
 		}
 	}
 	return common.Resource{
-		IsDual: true,
 		Schema: servicePrincipalSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.CustomizeDiffDualResources(ctx, d, c)
+			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForDualResource(ctx, d)
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -179,7 +178,7 @@ func ResourceServicePrincipal() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForDualResource(ctx, d)
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -194,7 +193,7 @@ func ResourceServicePrincipal() common.Resource {
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForDualResource(ctx, d)
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -212,7 +211,7 @@ func ResourceServicePrincipal() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForDualResource(ctx, d)
+			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

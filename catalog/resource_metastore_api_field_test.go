@@ -73,11 +73,9 @@ func TestCreateMetastore_ApiFieldWorkspace(t *testing.T) {
 				Name:        "a",
 			}, nil)
 		},
-		Resource:            ResourceMetastore(),
-		AccountID:           "100",
-		ProviderWorkspaceID: "12345",
-		Host:                "https://accounts.cloud.databricks.com",
-		Create:              true,
+		Resource:  ResourceMetastore(),
+		AccountID: "100",
+		Create:    true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"

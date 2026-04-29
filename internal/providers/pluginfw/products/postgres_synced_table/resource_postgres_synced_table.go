@@ -15,7 +15,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -51,10 +50,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -279,8 +278,6 @@ func (m SyncedTable) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
-	attrs["provider_config"] = attrs["provider_config"].SetComputed()
-	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -353,18 +350,28 @@ func (r *SyncedTableResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *SyncedTableResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip entirely on destroy (no plan state).
+	// Skip validation on destroy plans (plan is null).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan SyncedTable
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	var namespace ProviderConfig
+	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -428,7 +435,6 @@ func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -466,6 +472,7 @@ func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError("failed to get postgres_synced_table", err.Error())
 		return
 	}
@@ -479,10 +486,6 @@ func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *SyncedTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -521,23 +524,12 @@ func (r *SyncedTableResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	response, err := client.Postgres.DeleteSyncedTable(ctx, deleteRequest)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_synced_table", err.Error())
 		return
 	}
-	if response == nil {
-		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
-		// to avoid a nil-deref on response.Wait(ctx).
-		return
-	}
 
 	err = response.Wait(ctx)
-	if !declarative.IsDeleteError(err) {
-		err = nil
-	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_synced_table delete", err.Error())
 		return

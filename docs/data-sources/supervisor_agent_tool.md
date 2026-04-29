@@ -21,7 +21,6 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `app` (App)
-* `uc_connection` (UcConnection)
 * `description` (string) - Description of what this tool does (user-facing)
 * `genie_space` (GenieSpace)
 * `id` (string, deprecated) - Deprecated: Use tool_id instead
@@ -29,15 +28,13 @@ The following attributes are exported:
 * `name` (string) - Full resource name:
   supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
 * `tool_id` (string) - User specified id of the Tool
-* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
+* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
+* `uc_connection` (UcConnection)
 * `uc_function` (UcFunction)
 * `volume` (Volume)
 
 ### App
 * `name` (string) - App name
-
-### UcConnection
-* `name` (string)
 
 ### GenieSpace
 * `id` (string) - The ID of the genie space
@@ -45,6 +42,9 @@ The following attributes are exported:
 ### KnowledgeAssistant
 * `knowledge_assistant_id` (string) - The ID of the knowledge assistant
 * `serving_endpoint_name` (string, deprecated) - Deprecated: use knowledge_assistant_id instead
+
+### UcConnection
+* `name` (string)
 
 ### UcFunction
 * `name` (string) - Full uc function name

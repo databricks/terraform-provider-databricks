@@ -116,8 +116,11 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// A timestamp indicating when the project was soft-deleted. Empty if the
+	// project is not deleted, otherwise set to a timestamp in the past.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the default branch for a newly created project. If omitted, the initial
+	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -131,6 +134,13 @@ type Project struct {
 	// long, start with a lowercase letter, and contain only lowercase letters,
 	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
 	ProjectId types.String `tfsdk:"project_id"`
+	// If true, permanently deletes the project (hard delete). If false or
+	// unset, performs a soft delete.
+	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
+	// A timestamp indicating when the project is scheduled for permanent
+	// deletion. Empty if the project is not deleted, otherwise set to a
+	// timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -170,9 +180,12 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
+			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
 			"project_id":            m.ProjectId,
+			"purge_on_delete":       m.PurgeOnDelete,
+			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -188,9 +201,12 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
+			"delete_time":           timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
 			"project_id":            types.StringType,
+			"purge_on_delete":       types.BoolType,
+			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
 			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
 			"uid":                   types.StringType,
@@ -220,6 +236,9 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 	}
 	if !from.ProjectId.IsUnknown() {
 		to.ProjectId = from.ProjectId
+	}
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -266,6 +285,9 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 	if !from.ProjectId.IsUnknown() {
 		to.ProjectId = from.ProjectId
 	}
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -292,11 +314,12 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -306,6 +329,7 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["project_id"] = attrs["project_id"].SetRequired()
 	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -551,7 +575,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("initial_endpoint_spec,spec", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -617,6 +641,9 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	if !state.PurgeOnDelete.IsNull() && !state.PurgeOnDelete.IsUnknown() {
+		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
 	var namespace ProviderConfig

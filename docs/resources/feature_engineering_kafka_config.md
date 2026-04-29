@@ -29,8 +29,10 @@ The following arguments are supported:
 * `uc_service_credential_name` (string, optional) - Name of the Unity Catalog service credential. This value will be set under the option databricks.serviceCredential
 
 ### BackfillSource
-* `delta_table_source` (DeltaTableSource, optional) - The Delta table source containing the historic data to backfill.
-  Only the delta table name is used for backfill, the entity columns and timeseries column are ignored as they are defined by the associated KafkaSource
+* `delta_table_name` (string, optional) - The full three-part name (catalog, schema, name) of the Delta table containing the historical data to backfill
+* `delta_table_source` (DeltaTableSource, optional, deprecated) - Deprecated: Use delta_table_name instead. Kept for backwards compatibility.
+  The Delta table source containing the historical data to backfill.
+  Only the delta table name is used for backfill, other fields are ignored
 
 ### DeltaTableSource
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table

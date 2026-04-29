@@ -1312,11 +1312,13 @@ func (m ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) Type(ctx cont
 	}
 }
 
-// SHIELD feature: CSP
+// SHIELD feature: CSP Compliance Security Profile (CSP) enables enhanced
+// compliance controls on the workspace.
 type ComplianceSecurityProfile struct {
-	// Set by customers when they request Compliance Security Profile (CSP)
+	// Compliance standards selected by the customer for this Compliance
+	// Security Profile.
 	ComplianceStandards types.List `tfsdk:"compliance_standards"`
-
+	// Whether Compliance Security Profile (CSP) is enabled on the workspace.
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
@@ -8680,8 +8682,10 @@ func (m *EnableResultsDownloading) SetBooleanVal(ctx context.Context, v BooleanM
 	m.BooleanVal = vs
 }
 
-// SHIELD feature: ESM
+// SHIELD feature: ESM Enhanced Security Monitoring (ESM) enables additional
+// security monitoring on the workspace.
 type EnhancedSecurityMonitoring struct {
+	// Whether Enhanced Security Monitoring (ESM) is enabled on the workspace.
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 

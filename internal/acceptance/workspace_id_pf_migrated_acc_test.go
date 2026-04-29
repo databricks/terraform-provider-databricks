@@ -667,8 +667,13 @@ func TestUcAccWorkspaceIDShare_NoDefaultNoOverride(t *testing.T) {
 	UnityAccountLevel(t, Step{
 		Template: shareWithProviderBlock("", ""),
 		PlanOnly: true,
+		// shareWithProviderBlock includes SDKv2 prereqs (catalog + schema)
+		// whose CustomizeDiff (NamespaceCustomizeDiffNoForceNew) now validates
+		// workspace_id during plan and surfaces the SDKv2 error before the PF
+		// share's ValidateWorkspaceID would. The SDKv2 error is returned plain
+		// (not wrapped in the PF "failed to get workspace client" diagnostic).
 		ExpectError: regexp.MustCompile(
-			`(?s)failed to get workspace client`,
+			`(?s)managing workspace-level resources requires a workspace_id`,
 		),
 	})
 }

@@ -41,12 +41,13 @@ func DataSourceCurrentConfiguration() common.Resource {
 	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
+		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
 				return err
 			}
-			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := m.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

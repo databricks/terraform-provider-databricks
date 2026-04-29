@@ -1242,9 +1242,13 @@ func (m AvgFunction) Type(ctx context.Context) attr.Type {
 }
 
 type BackfillSource struct {
-	// The Delta table source containing the historic data to backfill. Only the
-	// delta table name is used for backfill, the entity columns and timeseries
-	// column are ignored as they are defined by the associated KafkaSource.
+	// The full three-part name (catalog, schema, name) of the Delta table
+	// containing the historical data to backfill.
+	DeltaTableName types.String `tfsdk:"delta_table_name"`
+	// Deprecated: Use delta_table_name instead. Kept for backwards
+	// compatibility. The Delta table source containing the historical data to
+	// backfill. Only the delta table name is used for backfill, other fields
+	// are ignored.
 	DeltaTableSource types.Object `tfsdk:"delta_table_source"`
 }
 
@@ -1272,6 +1276,7 @@ func (to *BackfillSource) SyncFieldsDuringRead(ctx context.Context, from Backfil
 }
 
 func (m BackfillSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table_name"] = attrs["delta_table_name"].SetOptional()
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
 
 	return attrs
@@ -1297,6 +1302,7 @@ func (m BackfillSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"delta_table_name":   m.DeltaTableName,
 			"delta_table_source": m.DeltaTableSource,
 		})
 }
@@ -1305,6 +1311,7 @@ func (m BackfillSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m BackfillSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"delta_table_name":   types.StringType,
 			"delta_table_source": DeltaTableSource{}.Type(ctx),
 		},
 	}

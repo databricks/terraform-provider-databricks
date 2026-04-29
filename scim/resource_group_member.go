@@ -126,14 +126,14 @@ func ResourceGroupMember() common.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			return globalGroupsCache.addMember(NewGroupsAPI(ctx, c, common.GetApiLevel(d)), groupID, memberID)
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ func ResourceGroupMember() common.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -158,5 +158,6 @@ func ResourceGroupMember() common.Resource {
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
+	r.IsDual = true
 	return r
 }

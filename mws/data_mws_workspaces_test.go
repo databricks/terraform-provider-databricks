@@ -49,6 +49,13 @@ func TestCatalogsData_Error(t *testing.T) {
 	}.ExpectError(t, "i'm a teapot")
 }
 
+func TestDataSourceMwsWorkspaces_NoProviderConfigInSchema(t *testing.T) {
+	s := DataSourceMwsWorkspaces().Schema
+	if _, ok := s["provider_config"]; ok {
+		t.Fatalf("databricks_mws_workspaces is account-only and must not expose provider_config")
+	}
+}
+
 func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

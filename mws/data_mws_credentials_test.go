@@ -38,6 +38,13 @@ func TestDataSourceMwsCredentials(t *testing.T) {
 	})
 }
 
+func TestDataSourceMwsCredentials_NoProviderConfigInSchema(t *testing.T) {
+	s := DataSourceMwsCredentials().Schema
+	if _, ok := s["provider_config"]; ok {
+		t.Fatalf("databricks_mws_credentials is account-only and must not expose provider_config")
+	}
+}
+
 func TestDataSourceMwsCredentials_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,

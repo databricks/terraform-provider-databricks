@@ -676,7 +676,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return wrapMissingClusterError(err, d.Id())
 	}
 	if len(libsToUninstall) > 0 || len(libsToInstall) > 0 {
-		if !clusterInfo.IsRunningOrResizing() {
+		// If a preceding cluster Edit triggered a restart, the cluster will
+		// transition through PENDING or RESTARTING before reaching RUNNING.
+		// Calling Start in those states fails with "unexpected state", so
+		// wait for the cluster to reach RUNNING before applying library changes.
+		if clusterInfo.State == compute.StatePending || clusterInfo.State == compute.StateRestarting {
+			log.Printf("[INFO] Cluster %s is in %s state, waiting for it to reach RUNNING before applying library changes", clusterId, clusterInfo.State)
+			if _, err = clusters.WaitGetClusterRunning(ctx, clusterId, d.Timeout(schema.TimeoutUpdate), nil); err != nil {
+				return err
+			}
+		} else if !clusterInfo.IsRunningOrResizing() {
 			if _, err = clusters.StartByClusterIdAndWait(ctx, clusterId); err != nil {
 				return err
 			}

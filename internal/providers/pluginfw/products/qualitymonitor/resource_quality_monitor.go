@@ -100,6 +100,18 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		Description: "Terraform schema for Databricks Quality Monitor",
 		Attributes:  attrs,
 		Blocks:      blocks,
+		// Version 1 introduces the provider_config object shape (was a list
+		// in v1.113.0 and earlier when the resource embedded
+		// tfschema.Namespace_SdkV2). UpgradeState migrates state in place.
+		// See: https://github.com/databricks/terraform-provider-databricks/issues/5669
+		Version: 1,
+	}
+}
+
+func (r *QualityMonitorResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	return map[int64]resource.StateUpgrader{
+		// v0 (v1.113.0 and earlier): provider_config was a ListNestedBlock.
+		0: {StateUpgrader: tfschema.UpgradeProviderConfigListToObject},
 	}
 }
 

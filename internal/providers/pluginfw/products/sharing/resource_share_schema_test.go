@@ -22,7 +22,10 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 	s := resp.Schema
 
-	assert.Equal(t, int64(0), s.Version, "schema version should be 0 (bidirectional migration with SDKv2)")
+	// Schema version was bumped to 1 to migrate provider_config from list
+	// (v1.113.0 ListNestedBlock) to object (SingleNestedAttribute).
+	// See https://github.com/databricks/terraform-provider-databricks/issues/5669.
+	assert.Equal(t, int64(1), s.Version, "schema version should be 1 after the provider_config list→object migration")
 
 	// Verify name is required with RequiresReplace
 	nameAttr, ok := s.Attributes["name"]

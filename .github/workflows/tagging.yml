@@ -4,7 +4,12 @@ name: tagging
 on:
   # Manual dispatch.
   workflow_dispatch:
-    # No inputs are required for the manual dispatch.
+    inputs:
+      packages:
+        description: 'Comma-separated list of packages to tag (e.g. "pkg1,pkg2"). Leave empty to tag all packages with pending releases.'
+        required: false
+        type: string
+        default: ''
 
   # NOTE: Temporarily disable automated releases.
   #
@@ -32,8 +37,8 @@ jobs:
       github.repository == 'databricks/databricks-sdk-java'
     environment: "release-is"
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
     steps:
       - name: Generate GitHub App Token
         id: generate-token
@@ -61,4 +66,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: uv run --locked tagging.py
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [ -n "$PACKAGES" ]; then
+            uv run --locked tagging.py --package "$PACKAGES"
+          else
+            uv run --locked tagging.py
+          fi
+
+      - name: Upload created tags artifact
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: created-tags
+          path: created_tags.json
+          if-no-files-found: ignore

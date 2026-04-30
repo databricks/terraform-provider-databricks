@@ -4,9 +4,118 @@ subcategory: "Postgres"
 # databricks_postgres_database Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres database is a logical database inside a Postgres branch. Each database is owned by exactly one Postgres role; that role holds the default privileges on the database's objects.
+
+### Hierarchy Context
+
+Databases exist within the Lakebase Autoscaling resource hierarchy:
+- A **database** belongs to a **branch** within a **project**
+- A **database** is owned by a **role** in the same branch
+- A branch can contain multiple databases
+
+### Use Cases
+
+- **Application isolation**: Create one database per application so objects, schemas, and grants stay separate
+- **Ownership management**: Transfer ownership between roles by updating `spec.role`
+- **Renaming**: Change the underlying Postgres database name by updating `spec.postgres_database`
 
 
 ## Example Usage
+### Database Owned by a Specific Role
+
+Assign ownership to a role you manage alongside the database. The Postgres database will be created with the specified role as its owner.
+
+```hcl
+resource "databricks_postgres_role" "app_owner" {
+  role_id = "app-owner"
+  parent  = databricks_postgres_branch.main.name
+  spec = {
+    postgres_role = "app_owner"
+  }
+}
+
+resource "databricks_postgres_database" "app" {
+  database_id = "app"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    postgres_database = "app"
+    role              = databricks_postgres_role.app_owner.name
+  }
+}
+```
+
+### Renaming a Database
+
+Changing `spec.postgres_database` renames the underlying Postgres database without replacing the resource. The resource identifier (`database_id`) is separate from the Postgres database name, and stays intact in the example below.
+
+```hcl
+resource "databricks_postgres_database" "analytics" {
+  database_id = "analytics"
+  parent      = databricks_postgres_branch.main.name
+  spec = {
+    # Rename from "analytics_v1" to "analytics_v2" in Postgres by updating this field
+    postgres_database = "analytics_v2"
+  }
+}
+```
+
+### Multiple databases in a branch
+
+By default, Terraform creates resources in parallel if the dependency graph allows for that. However, Lakebase
+doesn't allow the parallel management of resource inside a single branch. Only one of these resources can
+be created at a time:
+
+- Role
+- Database
+- Endpoint
+
+If you try to create resources in parallel, you'll see a conflict error like:
+
+> Your project already has conflicting operations in progress. Please wait until they are complete, and then try again.
+
+Terraform serializes automatically when one resource references another, forming an edge in the dependency graph.
+For example, if a database's `spec.role` points at a role, Terraform creates the role before the database.
+For resources that don't reference each other, like two sibling databases in the same branch, add `depends_on` so
+Terraform knows to wait for complete creation of the first resource, before starting the creation of the second one.
+
+For example:
+
+```hcl
+resource "databricks_postgres_role" "schema_owner" {
+  role_id = "schemamigrator"
+  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  spec = {
+    postgres_role = "schemamigrator"
+    membership_roles = ["DATABRICKS_SUPERUSER"]
+  }
+}
+
+resource "databricks_postgres_database" "application1" {
+  database_id = "application1"
+  parent      = databricks_postgres_branch.test.name
+  spec = {
+    postgres_database = "application1"
+    role              = databricks_postgres_role.schema_owner.name
+  }
+}
+
+resource "databricks_postgres_database" "application2" {
+  database_id = "application2"
+  parent      = databricks_postgres_branch.test.name
+  spec = {
+    postgres_database = "application2"
+    role              = databricks_postgres_role.schema_owner.name
+  }
+  
+  depends_on = [ databricks_postgres_database.application1 ]
+}
+```
 
 
 ## Arguments
@@ -54,6 +163,16 @@ In addition to the above arguments, the following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database
 * `update_time` (string) - A timestamp indicating when the database was last updated
+
+### DatabaseDatabaseStatus
+* `database_id` (string) - The short identifier of the database, suitable for showing to the users.
+  For a database with name `projects/my-project/branches/my-branch/databases/my-db`,
+  the database_id is `my-db`.
+  
+  Use this field when building UI components that display databases to users (e.g., a drop-down
+  selector). Prefer showing `database_id` instead of the full resource name from `Database.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/databases/{database_id}` format
+  and is not user-friendly
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

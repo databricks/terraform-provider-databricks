@@ -77,7 +77,8 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 * `pg_settings` (object) - A raw representation of Postgres settings
 
 ### EndpointSpec
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. Minimum value is 0.5
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
@@ -88,19 +89,30 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
   to non HA settings, with a single compute backing the endpoint (and no readable secondaries
   for Read/Write endpoints)
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.suspension` in the update_mask
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.suspension` in the update_mask
 
 ### EndpointStatus
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
 * `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `endpoint_id` (string) - The short identifier of the endpoint, suitable for showing to the users.
+  For an endpoint with name `projects/my-project/branches/my-branch/endpoints/my-endpoint`,
+  the endpoint_id is `my-endpoint`.
+  
+  Use this field when building UI components that display endpoints to users (e.g., a drop-down
+  selector). Prefer showing `endpoint_id` instead of the full resource name from `Endpoint.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}` format
+  and is not user-friendly
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint

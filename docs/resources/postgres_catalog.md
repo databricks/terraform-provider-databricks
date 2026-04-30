@@ -57,6 +57,12 @@ In addition to the above arguments, the following attributes are exported:
 * `branch` (string) - The resource path of the branch associated with the catalog.
   
   Format: projects/{project_id}/branches/{branch_id}
+* `catalog_id` (string) - The short identifier of the catalog, suitable for showing to the users.
+  For a catalog with name `catalogs/my-catalog`, the catalog_id is `my-catalog`.
+  
+  Use this field when building UI components that display catalogs to users (e.g., a drop-down
+  selector). Prefer showing `catalog_id` instead of the full resource name from `Catalog.name`,
+  which follows the `catalogs/{catalog_id}` format and is not user-friendly
 * `postgres_database` (string) - The name of the Postgres database associated with the catalog
 * `project` (string) - The resource path of the project associated with the catalog.
   

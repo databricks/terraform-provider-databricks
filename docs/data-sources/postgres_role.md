@@ -4,9 +4,29 @@ subcategory: "Postgres"
 # databricks_postgres_role Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source retrieves a single Postgres role.
 
 
 ## Example Usage
+### Retrieve Role by Name
+
+```hcl
+data "databricks_postgres_role" "this" {
+  name = "projects/my-project/branches/main/roles/jane"
+}
+
+output "role_postgres_name" {
+  value = data.databricks_postgres_role.this.status.postgres_role
+}
+
+output "role_identity_type" {
+  value = data.databricks_postgres_role.this.status.identity_type
+}
+
+output "role_auth_method" {
+  value = data.databricks_postgres_role.this.status.auth_method
+}
+```
 
 
 ## Arguments
@@ -36,7 +56,21 @@ The following attributes are exported:
 
 ### RoleRoleSpec
 * `attributes` (RoleAttributes) - The desired API-exposed Postgres role attribute to associate with the role. Optional
-* `auth_method` (string) - If auth_method is left unspecified, a meaningful authentication method is derived from the identity_type:
+* `auth_method` (string) - Controls how the Postgres role authenticates when a client opens a database
+  connection. Supported values:
+  
+  * LAKEBASE_OAUTH_V1: the role authenticates by presenting a Databricks
+  OAuth access token derived from the backing managed identity (the
+  Databricks user, service principal, or group named by the role's
+  `postgres_role`). No static password exists for roles using this method.
+  * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
+  password verified server-side using the SCRAM-SHA-256 mechanism.
+  Lakebase generates a password for the role.
+  * NO_LOGIN: the role cannot open a Postgres session at all. Useful for
+  roles that exist only to own objects or to aggregate privileges that
+  are then granted to other, loginable roles.
+  
+  If auth_method is left unspecified, a meaningful authentication method is derived from the identity_type:
   * For the managed identities, OAUTH is used.
   * For the regular postgres roles, authentication based on postgres passwords is used.
   
@@ -69,3 +103,11 @@ The following attributes are exported:
 * `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role
+* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
+  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+  the role_id is `my-role`.
+  
+  Use this field when building UI components that display roles to users (e.g., a drop-down
+  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
+  and is not user-friendly

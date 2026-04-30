@@ -4,9 +4,25 @@ subcategory: "Postgres"
 # databricks_postgres_databases Data Source
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+This data source lists all Postgres databases in a branch.
 
 
 ## Example Usage
+### List All Databases in a Branch
+
+```hcl
+data "databricks_postgres_databases" "all" {
+  parent = "projects/my-project/branches/main"
+}
+
+output "database_names" {
+  value = [for db in data.databricks_postgres_databases.all.databases : db.name]
+}
+
+output "postgres_database_names" {
+  value = [for db in data.databricks_postgres_databases.all.databases : db.status.postgres_database]
+}
+```
 
 
 ## Arguments
@@ -47,6 +63,14 @@ This data source exports a single attribute, `databases`. It is a list of resour
   A database always has an owner
 
 ### DatabaseDatabaseStatus
+* `database_id` (string) - The short identifier of the database, suitable for showing to the users.
+  For a database with name `projects/my-project/branches/my-branch/databases/my-db`,
+  the database_id is `my-db`.
+  
+  Use this field when building UI components that display databases to users (e.g., a drop-down
+  selector). Prefer showing `database_id` instead of the full resource name from `Database.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}/databases/{database_id}` format
+  and is not user-friendly
 * `postgres_database` (string) - The name of the Postgres database
 * `role` (string) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}

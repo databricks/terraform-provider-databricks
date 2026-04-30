@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Support adopting pre-existing `databricks_postgres_branch` and `databricks_postgres_endpoint` resources via `replace_existing = true` argument.
+
 ### Bug Fixes
 
 ### Documentation

@@ -6,7 +6,7 @@
 import os
 import re
 import argparse
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Dict
 from dataclasses import dataclass, replace
 import subprocess
 import time
@@ -254,35 +254,103 @@ def get_package_name(package_path: str) -> str:
     return ""
 
 
-def update_version_references(tag_info: TagInfo) -> None:
+def stage_version_updates(tag_infos: List[TagInfo], packages: List[Package]) -> None:
     """
-    Updates the version of the package in code references.
-    Code references are defined in .package.json files.
+    Stages all version-related edits for the release in a single pass over
+    every package the workspace already opts in via ``.package.json``.
     """
 
-    # Load version patterns from '.codegen.json' file at the top level of the repository
+    # Load patterns from '.codegen.json' at the top level of the repository.
     package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
     with open(package_file_path, "r") as file:
-        package_file = json.load(file)
+        codegen = json.load(file)
 
-    version = package_file.get("version")
-    if not version:
-        print("`version` not found in .codegen.json. Nothing to update.")
+    version_patterns = codegen.get("version", {})
+    dep_patterns = codegen.get("dependency_pattern", {})
+    name_template = codegen.get("dependency_name_template", "")
+
+    if not version_patterns and not dep_patterns:
+        print("Neither `version` nor `dependency_pattern` found in .codegen.json. Nothing to update.")
         return
 
-    # Update the versions.
-    for filename, pattern in version.items():
-        loc = os.path.join(os.getcwd(), tag_info.package.path, filename)
-        previous_version = pattern.replace("$VERSION", Version.PATTERN)
-        new_version = pattern.replace("$VERSION", tag_info.version)
+    bumped_by_dir: Dict[str, TagInfo] = {info.package.path: info for info in tag_infos}
+    new_dep_versions = compute_dependency_rewrites(tag_infos, name_template)
 
-        with open(loc, "r") as file:
-            content = file.read()
+    files = sorted(set(version_patterns.keys()) | set(dep_patterns.keys()))
 
-        # Replace the version in the file content
-        updated_content = re.sub(previous_version, new_version, content)
+    for pkg in packages:
+        for filename in files:
+            loc = os.path.join(os.getcwd(), pkg.path, filename)
 
-        gh.add_file(loc, updated_content)
+            with open(loc, "r") as file:
+                content = file.read()
+            original = content
+
+            # Own version (only when this package is being released and the
+            # file has a version pattern declared).
+            info = bumped_by_dir.get(pkg.path)
+            if info is not None and filename in version_patterns:
+                pattern = version_patterns[filename]
+                previous_version = pattern.replace("$VERSION", Version.PATTERN)
+                new_version = pattern.replace("$VERSION", info.version)
+                content = re.sub(previous_version, new_version, content)
+
+            # Sibling dependency rewrites (only when the file has a
+            # dependency pattern and there is at least one bumped sibling).
+            if filename in dep_patterns and new_dep_versions:
+                content = rewrite_dependencies(content, dep_patterns[filename], new_dep_versions)
+
+            if content != original:
+                gh.add_file(loc, content)
+
+
+def compute_dependency_rewrites(
+    tag_infos: List[TagInfo],
+    name_template: str,
+) -> Dict[str, str]:
+    """
+    Returns a map of dependency-name to the new semver string for each
+    bumped package.
+    """
+    if not name_template:
+        return {}
+    rewrites: Dict[str, str] = {}
+    for info in tag_infos:
+        # Skip legacy releases that don't have a per-package name; their
+        # tag_info has an empty package.name and they can't be referenced
+        # as a sibling dep anyway.
+        if not info.package.name:
+            continue
+        dep_name = name_template.replace("$PACKAGE", info.package.name)
+        rewrites[dep_name] = info.version
+    return rewrites
+
+
+def rewrite_dependencies(content: str, pattern: str, new_versions: Dict[str, str]) -> str:
+    """
+    Apply ``pattern`` (with ``$DEPENDENCY`` and ``$VERSION`` placeholders) to
+    rewrite every entry in ``content`` whose dependency name appears in
+    ``new_versions``.
+    """
+    # Sentinel strings used to protect the placeholders through re.escape:
+    # we substitute them in, escape the whole template, then swap them out
+    # for the dep-name literal and Version.PATTERN. Control characters so
+    # they can't collide with anything in real .codegen.json patterns.
+    dep_sentinel = "\x01DEPENDENCY\x01"
+    ver_sentinel = "\x01VERSION\x01"
+
+    for dep_name, new_value in new_versions.items():
+        regex = pattern.replace("$DEPENDENCY", dep_sentinel).replace("$VERSION", ver_sentinel)
+        regex = re.escape(regex)
+        regex = regex.replace(re.escape(dep_sentinel), re.escape(dep_name))
+        regex = regex.replace(re.escape(ver_sentinel), Version.PATTERN)
+
+        # Build the literal replacement text by substituting the same
+        # placeholders directly. A lambda is used instead of a string to
+        # avoid re.sub interpreting \1, \g<...>, etc. inside the value.
+        replacement_text = pattern.replace("$DEPENDENCY", dep_name).replace("$VERSION", new_value)
+        content = re.sub(regex, lambda _m, text=replacement_text: text, content)
+    return content
 
 
 def clean_next_changelog(package_path: str) -> None:
@@ -403,9 +471,8 @@ def write_changelog(tag_info: TagInfo) -> None:
 
 def process_package(package: Package) -> TagInfo:
     """
-    Processes a package
+    Processes a package's changelog scaffolding for the release.
     """
-    # Prepare tag_info from NEXT_CHANGELOG.md
     print(f"Processing package {package.name}")
     tag_info = get_next_tag_info(package)
 
@@ -415,7 +482,6 @@ def process_package(package: Package) -> TagInfo:
 
     write_changelog(tag_info)
     clean_next_changelog(package.path)
-    update_version_references(tag_info)
     return tag_info
 
 
@@ -567,8 +633,9 @@ def update_changelogs(packages: List[Package]) -> List[TagInfo]:
     Updates changelogs and pushes the commits.
     """
     tag_infos = [info for info in (process_package(package) for package in packages) if info is not None]
-    # If any package was changed, push the changes.
+    # If any package was changed, stage version updates and push.
     if tag_infos:
+        stage_version_updates(tag_infos, packages)
         push_changes(tag_infos)
     return tag_infos
 

@@ -105,15 +105,30 @@ func (r Resource) ToResource() *schema.Resource {
 			return nil
 		}
 	} else {
-		// set ForceNew to all attributes with CRD
+		// patch-1.114.3 (variant C): for resources without an Update
+		// that ALSO have the framework-injected `provider_config` block,
+		// stamp ForceNew on every non-Computed field EXCEPT
+		// provider_config, and supply a no-op Update wrapper. Result:
+		// InternalValidate passes via the has-Update branch (Optional
+		// provider_config counts as the one updateable attribute), and
+		// an in-place change to provider_config does not trigger
+		// destroy-and-recreate.
+		//
+		// Resources without provider_config (legacy mounts, mws_*) keep
+		// the historical behavior: every non-Computed field gets
+		// ForceNew, no synthesized Update.
+		_, hasProviderConfig := r.Schema["provider_config"]
 		queue := []*schema.Resource{
 			{Schema: r.Schema},
 		}
 		for {
 			head := queue[0]
 			queue = queue[1:]
-			for _, v := range head.Schema {
+			for k, v := range head.Schema {
 				if v.Computed {
+					continue
+				}
+				if hasProviderConfig && k == "provider_config" {
 					continue
 				}
 				if nested, ok := v.Elem.(*schema.Resource); ok {
@@ -123,6 +138,19 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 			if len(queue) == 0 {
 				break
+			}
+		}
+		// Only synthesize the no-op Update for writable resources that
+		// have provider_config. Data sources flow through here and must
+		// not have Update; resources without provider_config would fail
+		// InternalValidate's "Update is superfluous" check.
+		if hasProviderConfig && (r.Create != nil || r.Delete != nil) {
+			update = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+				c := m.(*DatabricksClient)
+				if err := recoverable(r.Read)(ctx, d, c); err != nil {
+					return diag.FromErr(nicerError(ctx, err, "read"))
+				}
+				return nil
 			}
 		}
 	}

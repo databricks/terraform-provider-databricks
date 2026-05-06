@@ -1,4 +1,3 @@
-// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package tfschema
 
 import (
@@ -8,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -101,8 +101,7 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfigData type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
@@ -238,23 +237,10 @@ func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req pl
 	}
 }
 
-// UnifiedProviderClient is the subset of common.DatabricksClient needed by
-// the shared workspace_id helpers. Both the real provider client and the
-// synthetic test client satisfy this interface.
-type UnifiedProviderClient interface {
-	// GetProviderWorkspaceID returns the provider-level workspace_id from Config.
-	GetProviderWorkspaceID() string
-	// CurrentWorkspaceID resolves the workspace ID from the provider's host.
-	CurrentWorkspaceID(ctx context.Context) (int64, error)
-	// ValidateWorkspaceAccess validates that the workspace client for the given
-	// workspace_id is reachable. Returns diagnostics on failure.
-	ValidateWorkspaceAccess(ctx context.Context, workspaceID string) diag.Diagnostics
-}
-
 // WorkspaceDriftDetection compares the old (state) and new (config/provider)
 // effective workspace IDs and triggers RequiresReplace when they differ.
 // Only runs for updates — during create there is no prior state to compare.
-func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func WorkspaceDriftDetection(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// No prior state means create — nothing to compare.
 	if req.State.Raw.IsNull() {
 		return
@@ -272,7 +258,7 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 		return
 	}
 	if oldWsID == "" {
-		oldWsID = client.GetProviderWorkspaceID()
+		oldWsID = client.Config.WorkspaceID
 	}
 
 	// Get new effective workspace ID from config (the raw user config, NOT
@@ -284,15 +270,10 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 	}
 	var newWsID string
 	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
-		var wsIDDiags diag.Diagnostics
-		newWsID, wsIDDiags = GetWorkspaceIDResource(ctx, cfgPC)
-		resp.Diagnostics.Append(wsIDDiags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		newWsID, _ = GetWorkspaceIDResource(ctx, cfgPC)
 	}
 	if newWsID == "" {
-		newWsID = client.GetProviderWorkspaceID()
+		newWsID = client.Config.WorkspaceID
 	}
 	// Fallback to cached workspace ID for workspace-level providers.
 	if newWsID == "" {
@@ -319,7 +300,7 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 // ValidateWorkspaceID validates that the workspace client for the planned
 // workspace_id is reachable. Runs for both create and update.
 // Call this from any PF resource's ModifyPlan that has a provider_config block.
-func ValidateWorkspaceID(ctx context.Context, client UnifiedProviderClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func ValidateWorkspaceID(ctx context.Context, client *common.DatabricksClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var planPC types.Object
 	// Read from resp.Plan (not req.Plan) because WorkspaceDriftDetection may
 	// have updated provider_config in the plan to reflect a new workspace_id.
@@ -333,9 +314,10 @@ func ValidateWorkspaceID(ctx context.Context, client UnifiedProviderClient, req 
 		return
 	}
 	if workspaceID == "" {
-		workspaceID = client.GetProviderWorkspaceID()
+		workspaceID = client.Config.WorkspaceID
 	}
-	resp.Diagnostics.Append(client.ValidateWorkspaceAccess(ctx, workspaceID)...)
+	_, validateDiags := client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 // PopulateProviderConfigInState resolves the effective workspace ID and sets it
@@ -349,7 +331,7 @@ func ValidateWorkspaceID(ctx context.Context, client UnifiedProviderClient, req 
 // Preserving the prior state value is critical: ModifyPlan compares the old
 // effective workspace ID against the new one to trigger ForceNew when they
 // differ. Overwriting it here would make that detection impossible.
-func PopulateProviderConfigInState(ctx context.Context, client UnifiedProviderClient,
+func PopulateProviderConfigInState(ctx context.Context, client *common.DatabricksClient,
 	providerConfig types.Object, state *tfsdk.State) diag.Diagnostics {
 	// GetWorkspaceIDResource reads from providerConfig, which during Read
 	// comes from the prior state. If the state already has a workspace ID,
@@ -360,7 +342,7 @@ func PopulateProviderConfigInState(ctx context.Context, client UnifiedProviderCl
 		return diags
 	}
 	if wsID == "" {
-		wsID = client.GetProviderWorkspaceID()
+		wsID = client.Config.WorkspaceID
 	}
 	if wsID == "" {
 		id, err := client.CurrentWorkspaceID(ctx)
@@ -373,36 +355,6 @@ func PopulateProviderConfigInState(ctx context.Context, client UnifiedProviderCl
 	if wsID != "" {
 		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
 			ProviderConfig{WorkspaceID: types.StringValue(wsID)}.ToObjectValue(ctx))...)
-	}
-	return diags
-}
-
-// PopulateProviderConfigInStateForDataSource resolves the effective workspace ID
-// and sets it in the response state. Call this at the end of every Read method
-// for unified-provider Plugin Framework data sources.
-//
-// Unlike PopulateProviderConfigInState (for resources), data sources re-read
-// every time so there is no "preserve existing" logic.
-func PopulateProviderConfigInStateForDataSource(ctx context.Context, client UnifiedProviderClient,
-	providerConfig types.Object, state *tfsdk.State) diag.Diagnostics {
-	wsID, diags := GetWorkspaceIDDataSource(ctx, providerConfig)
-	if diags.HasError() {
-		return diags
-	}
-	if wsID == "" {
-		wsID = client.GetProviderWorkspaceID()
-	}
-	if wsID == "" {
-		id, err := client.CurrentWorkspaceID(ctx)
-		if err != nil {
-			return diag.Diagnostics{diag.NewErrorDiagnostic(
-				"failed to resolve workspace ID for provider_config state population", err.Error())}
-		}
-		wsID = strconv.FormatInt(id, 10)
-	}
-	if wsID != "" {
-		diags.Append(state.SetAttribute(ctx, path.Root("provider_config"),
-			ProviderConfigData{WorkspaceID: types.StringValue(wsID)}.ToObjectValue(ctx))...)
 	}
 	return diags
 }

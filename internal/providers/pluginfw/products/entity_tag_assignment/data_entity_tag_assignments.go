@@ -125,8 +125,4 @@ func (r *EntityTagAssignmentsDataSource) Read(ctx context.Context, req datasourc
 
 	config.EntityTagAssignments = types.ListValueMust(EntityTagAssignmentData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

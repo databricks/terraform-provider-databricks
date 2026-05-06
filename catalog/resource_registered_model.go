@@ -43,7 +43,6 @@ func ResourceRegisteredModel() common.Resource {
 		})
 
 	return common.Resource{
-		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

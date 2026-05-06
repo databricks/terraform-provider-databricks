@@ -323,11 +323,6 @@ func (r *SecretResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	if r.Client == nil {
 		return
 	}
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *SecretResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -381,10 +376,6 @@ func (r *SecretResource) Create(ctx context.Context, req resource.CreateRequest,
 	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *SecretResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -435,10 +426,6 @@ func (r *SecretResource) Read(ctx context.Context, req resource.ReadRequest, res
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *SecretResource) update(ctx context.Context, plan Secret, diags *diag.Diagnostics, state *tfsdk.State) {

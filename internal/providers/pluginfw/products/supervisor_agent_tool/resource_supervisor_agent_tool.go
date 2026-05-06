@@ -534,11 +534,6 @@ func (r *ToolResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRe
 	if r.Client == nil {
 		return
 	}
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *ToolResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -594,10 +589,6 @@ func (r *ToolResource) Create(ctx context.Context, req resource.CreateRequest, r
 	newState.SyncFieldsDuringCreateOrUpdate(ctx, plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *ToolResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -648,10 +639,6 @@ func (r *ToolResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ToolResource) update(ctx context.Context, plan Tool, diags *diag.Diagnostics, state *tfsdk.State) {

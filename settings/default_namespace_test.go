@@ -55,6 +55,17 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccDefaultNamespaceSetting_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: defaultNamespaceSettingTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
+	})
+}
+
 func TestAccDefaultNamespaceSetting_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: defaultNamespaceSettingTemplate(`
@@ -84,7 +95,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
@@ -135,7 +146,7 @@ func TestAccDefaultNamespaceSetting_ProviderConfig_Remove(t *testing.T) {
 		Template: defaultNamespaceSettingTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_default_namespace_setting.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

@@ -118,6 +118,17 @@ func TestAccNotebook_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccNotebook_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
+	})
+}
+
 func TestAccNotebook_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: notebookTemplate(`
@@ -147,7 +158,7 @@ func TestAccNotebook_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
@@ -198,7 +209,7 @@ func TestAccNotebook_ProviderConfig_Remove(t *testing.T) {
 		Template: notebookTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

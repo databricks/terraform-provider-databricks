@@ -118,6 +118,17 @@ func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestAccJobCluster_ProviderConfig_Required(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+			}
+		`),
+		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
+		PlanOnly:    true,
+	})
+}
+
 func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(`
@@ -147,7 +158,7 @@ func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
@@ -198,7 +209,7 @@ func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
 		Template: jobClusterTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

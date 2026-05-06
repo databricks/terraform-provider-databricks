@@ -59,9 +59,8 @@ func TestResourceUserCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:            ResourceUser(),
-		AccountID:           "acc-123",
-		ProviderWorkspaceID: "12345",
+		Resource:  ResourceUser(),
+		AccountID: "acc-123",
 		HCL: `
 			user_name = "ws@example.com"
 			api = "workspace"
@@ -99,9 +98,8 @@ func TestResourceUserDelete_ApiFieldWorkspace(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 			},
 		},
-		Resource:            ResourceUser(),
-		AccountID:           "acc-123",
-		ProviderWorkspaceID: "12345",
+		Resource:  ResourceUser(),
+		AccountID: "acc-123",
 		HCL: `
 			user_name = "me@example.com"
 			api = "workspace"

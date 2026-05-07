@@ -26,8 +26,8 @@ output "all_mws_workspaces" {
 
 ## Argument Reference
 
-* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
-  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `provider_config` - (Optional, **Deprecated**) This data source is account-only and has no workspace context, so `provider_config` has no effect and will be removed in a future major release. The block consists of the following field:
+  * `workspace_id` - (Optional, **Deprecated**) Ignored. This data source always operates against the account configured on the provider.
 
 ## Attribute Reference
 

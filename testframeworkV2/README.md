@@ -39,32 +39,54 @@ See [DESIGN.md](DESIGN.md) for the full rationale.
 ## Quickstart
 
 ```sh
-# 1. Build the CLI.
-go build -o ~/.local/bin/tfv2 ./cmd/tfv2
-
-# 2. Make sure you have a working terraform on PATH (or set
+# 1. Make sure you have a working terraform on PATH (or set
 #    --terraform-bin / TFV2_TERRAFORM_BIN).
 terraform -version
 
-# 3. Add a profile to ~/.databrickscfg matching the test.yaml's `profile` field.
+# 2. Add a profile to ~/.databrickscfg matching the test.yaml's `profile` field.
 #    The framework reads the section's host to infer cloud / level for the
 #    requires-skip-check, then sets DATABRICKS_CONFIG_PROFILE for the SDK.
 
-# 4. Run the issue #5672 mission test.
-#    --repo is auto-discovered by walking up from cwd looking for the
-#    provider repo's go.mod; pass --repo or set TFV2_REPO if you're
-#    invoking from outside a checkout.
-tfv2 run testframeworkV2/issues-repro/issue_5672/
+# 3. Run the issue #5672 mission test.
+cd testframeworkV2/
+make test issues-repro/issue_5672/
 
 # Expected:
-# [PASS] step 1 (passes_on_1_113_0): 1.113.0      plan in 5.1s
-# [PASS] step 2 (fails_on_1_114_0): 1.114.0       plan in 4.7s    (failure-as-expected)
-# [PASS] step 3 (fixed_on_1_114_1): 1.114.1       plan in 4.6s
-# [PASS] step 4 (fixed_on_local):   99.0.0-local  plan in 5.9s
+# [PASS] step 1 (passes_on_1_113_0): 1.113.0      plan in 5.1s   no changes
+# [PASS] step 2 (fails_on_1_114_0): 1.114.0       plan in 4.7s — failure-as-expected
+# [PASS] step 3 (fixed_on_1_114_1): 1.114.1       plan in 4.6s   no changes
+# [PASS] step 4 (fixed_on_local):   99.0.0-local  plan in 5.9s   no changes
 # ----------------------------------------------------------
 # issue_5672_...: PASS (4/4 steps passed in 22.4s)
 # run dir: /Users/you/.testframeworkv2/runs/issue_5672_...-2026-05-08T08-15-00-a3f2
 ```
+
+`make test <path>` is a thin wrapper around the underlying CLI. Full
+target list:
+
+```sh
+make help        # usage banner
+make test <path> # single fixture (recommended)
+make test-all    # every fixture via 'go test' (TFV2_RUN=1)
+make unit        # unit tests only — no cloud auth
+make build       # build ./tfv2 binary
+make clean       # remove the binary
+```
+
+Alternative invocation forms (same outcome, useful for IDEs / CI):
+
+```sh
+# Direct CLI — equivalent to `make test <path>` but skips Make:
+go run ./cmd/tfv2 run issues-repro/issue_5672/
+
+# `go test` — every fixture is also a Go subtest under TestFixtures
+# (gated by TFV2_RUN=1 so plain `go test ./...` stays cheap):
+TFV2_RUN=1 go test -run TestFixtures/issues-repro/issue_5672 -v ./...
+```
+
+`--repo` is auto-discovered by walking up from cwd looking for the
+provider repo's `go.mod`; pass `--repo <path>` or set `TFV2_REPO` if
+you're invoking from outside a checkout.
 
 ## Subcommands
 
@@ -91,9 +113,11 @@ TFV2_RUN=1 go test -run TestFixtures -v ./...
 
 `TFV2_RUN=1` is the gate — without it, `TestFixtures` skips (so plain
 `go test ./...` stays cheap and doesn't fire real cloud-auth flows).
-Each fixture runs as a separate `t.Run` subtest, so IDEs render one
-green/red dot per fixture and `-run TestFixtures/issue_5672` filters to
-a single one. See DESIGN.md §12.7 for the design rationale.
+Each fixture runs as a separate `t.Run` subtest with the tree-
+preserving 3-segment path (`<tree>/<fixture-dir>`), so IDEs render one
+green/red dot per fixture and
+`-run TestFixtures/issues-repro/issue_5672` filters to a single one.
+See DESIGN.md §12.7 for the design rationale.
 
 ## test.yaml schema
 

@@ -175,7 +175,20 @@ together (AND semantics). At least one is required when `expect: failure`.
 ```sh
 cd testframeworkV2/
 
-# Run a single test (the canonical command). --repo is auto-discovered.
+# Recommended one-liner — wraps `go run ./cmd/tfv2 run` underneath.
+make test issues-repro/issue_5672/
+
+# Run every committed fixture (TFV2_RUN=1 set by the Makefile):
+make test-all
+```
+
+The Makefile's `make test <path>` target is just a wrapper around the
+direct CLI invocation; both forms produce identical output. Use
+whichever fits your workflow.
+
+```sh
+# Direct CLI form — equivalent to the make wrapper, useful when you
+# want to pass extra flags Make doesn't pre-wire:
 go run ./cmd/tfv2 run issues-repro/issue_5672/
 
 # Override the terraform binary if it's not on PATH:
@@ -188,8 +201,11 @@ go run ./cmd/tfv2 run --no-cleanup issues-repro/issue_5672/
 # Verbose framework logs to stderr (does NOT enable terraform's TF_LOG):
 go run ./cmd/tfv2 run --verbose issues-repro/issue_5672/
 
-# Run via go test (alternative entry point — IDEs, CI):
-TFV2_RUN=1 go test -run 'TestFixtures/issue_5672' -v ./...
+# Run via `go test` — every fixture is also a Go subtest under
+# TestFixtures (TFV2_RUN=1 gate keeps `go test ./...` cheap by
+# default). Subtest names use the tree-preserving path so the
+# `-run` filter is `TestFixtures/<tree>/<fixture-dir>`:
+TFV2_RUN=1 go test -run 'TestFixtures/issues-repro/issue_5672' -v ./...
 ```
 
 `--repo` is **auto-discovered** by walking up from the working

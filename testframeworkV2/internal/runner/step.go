@@ -50,7 +50,7 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 	}
 	defer func() { res.Duration = r.nowFn().Sub(res.Started) }()
 
-	syntheticVer, err := r.resolveStepVersion(ctx, step.Version)
+	syntheticVer, err := r.resolveStepVersion(ctx, step.Version, runDir)
 	if err != nil {
 		return res, err
 	}
@@ -72,22 +72,41 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 }
 
 // resolveStepVersion converts a step.Version string into the
-// (path, syntheticVersion) pair from providercache. version="local" is
-// dispatched to the M6 path (which currently errors); released
-// versions return the normalized version string for the override file.
-func (r *Runner) resolveStepVersion(ctx context.Context, version string) (string, error) {
+// syntheticVersion the runner pins via _tfv2_versions_override.tf.
+//
+// Released versions (e.g. "1.114.0") flow through providercache.Cache.
+// Resolve, which downloads + atomically installs the zip on a cache
+// miss. version="local" dispatches to providercache.Cache.BuildLocal,
+// which (re)builds the provider from r.opts.RepoRoot every step
+// (DESIGN.md §8 — "rebuild every step") and copies the provenance
+// JSON into runDir.
+func (r *Runner) resolveStepVersion(ctx context.Context, version, runDir string) (string, error) {
 	if version == config.LocalVersion {
-		if r.opts.RepoRoot == "" {
-			return "", errMissingRepoRoot
-		}
-		// M6 wires up the actual local-build call here. For M4 we
-		// surface the M6-pending error from providercache.
-		_, syn, err := r.cache.Resolve(ctx, version, providercache.HostTarget())
-		return syn, err
+		return r.resolveLocalVersion(ctx, runDir)
 	}
 	_, syn, err := r.cache.Resolve(ctx, version, providercache.HostTarget())
 	if err != nil {
 		return "", fmt.Errorf("runner: cache resolve %q: %w", version, err)
+	}
+	return syn, nil
+}
+
+// resolveLocalVersion is the version=local arm of resolveStepVersion.
+// Split out so resolveStepVersion stays small and the local path is
+// single-purpose.
+func (r *Runner) resolveLocalVersion(ctx context.Context, runDir string) (string, error) {
+	if r.opts.RepoRoot == "" {
+		return "", errMissingRepoRoot
+	}
+	_, syn, prov, err := r.cache.BuildLocal(ctx, r.opts.RepoRoot, providercache.HostTarget())
+	if err != nil {
+		return "", fmt.Errorf("runner: local build: %w", err)
+	}
+	// DESIGN.md §8 — write the run-dir copy of provenance so the run's
+	// outcome is reproducible later. The cache-side copy is written
+	// by BuildLocal itself.
+	if err := providercache.CopyProvenanceTo(filepath.Join(runDir, providercache.LocalVersionFilename), prov); err != nil {
+		return "", fmt.Errorf("runner: copy local-version.json into run dir: %w", err)
 	}
 	return syn, nil
 }

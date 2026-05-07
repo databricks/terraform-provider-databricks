@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -919,8 +920,10 @@ steps:
 	}
 }
 
-// TestRunner_LocalVersionWithoutRepoRoot confirms M4 errors out when
-// asked for version=local without RepoRoot configured (M6 territory).
+// TestRunner_LocalVersionWithoutRepoRoot confirms the runner errors
+// out when asked for version=local without RepoRoot configured. The
+// CLI surfaces this to the user via tfv2's --repo flag — a plain
+// `tfv2 run` against a local-step test without --repo would hit this.
 func TestRunner_LocalVersionWithoutRepoRoot(t *testing.T) {
 	yaml := `
 name: t
@@ -940,6 +943,121 @@ steps:
 	if !errors.Is(err, errMissingRepoRoot) {
 		t.Errorf("expected errMissingRepoRoot, got: %v", err)
 	}
+}
+
+// TestRunner_LocalVersion_BuildsAndPins exercises the full M6 path.
+// We point RepoRoot at a tiny Go module + git repo, run a single
+// version=local step, and verify:
+//
+//   - the override file pins to "99.0.0-local"
+//   - the cache-side binary is built and exists on disk
+//   - local-version.json is copied into the run dir (DESIGN.md §8
+//     "two-copy provenance")
+//   - the synthetic version flows into the StepResult.SyntheticVersion
+func TestRunner_LocalVersion_BuildsAndPins(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skipf("go binary not on PATH: %v", err)
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("git binary not on PATH: %v", err)
+	}
+	repo := makeTinyGoRepo(t)
+
+	yaml := `
+name: t
+profile: ACCOUNT_AWS
+requires: { cloud: any, level: account }
+steps:
+  - { name: only, version: "local", command: plan }
+`
+	src, spec := loadFixture(t, yaml, fixtureMainTF, "ACCOUNT_AWS")
+
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("T_NO_CLEANUP", "")
+	cacheDir := t.TempDir()
+	cache := providercache.New(cacheDir)
+	factory, _ := stubFactory([]stepBehaviour{{}})
+	r := New(spec, makeAccountAWSProfile(), Options{
+		SourceDir:    src,
+		CacheDir:     cacheDir,
+		RunRoot:      t.TempDir(),
+		TerraformBin: "/fake",
+		RepoRoot:     repo,
+	},
+		WithCache(cache),
+		WithTFFactory(factory),
+		WithNow(func() time.Time { return time.Date(2026, 5, 7, 20, 15, 0, 0, time.UTC) }),
+		WithRandReader(bytes.NewReader([]byte{0xa3, 0xf2})),
+	)
+
+	res, err := r.Run(context.Background())
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if !res.AllPassed() {
+		t.Fatalf("expected all-pass, got: %s", res.String())
+	}
+	if got := res.Steps[0].SyntheticVersion; got != providercache.SyntheticVersionLocal {
+		t.Errorf("SyntheticVersion: got %q want %q", got, providercache.SyntheticVersionLocal)
+	}
+
+	// Override file pins the synthetic version.
+	override, err := os.ReadFile(filepath.Join(res.RunDir, "workdir", "_tfv2_versions_override.tf"))
+	if err != nil {
+		t.Fatalf("read override: %v", err)
+	}
+	if !strings.Contains(string(override), `version = "= 99.0.0-local"`) {
+		t.Errorf("override missing local pin: %s", override)
+	}
+
+	// Binary lives in the unpacked layout under the cache root.
+	target := providercache.HostTarget()
+	binPath := filepath.Join(cacheDir, "registry.terraform.io", "databricks", "databricks",
+		"99.0.0-local", target.String(), "terraform-provider-databricks_v99.0.0-local")
+	if _, err := os.Stat(binPath); err != nil {
+		t.Errorf("local binary not in cache: %v", err)
+	}
+
+	// Run-dir provenance file present.
+	runProv := filepath.Join(res.RunDir, providercache.LocalVersionFilename)
+	if _, err := os.Stat(runProv); err != nil {
+		t.Errorf("run-dir local-version.json missing: %v", err)
+	}
+	// Cache-dir provenance file present.
+	cacheProv := filepath.Join(cacheDir, "registry.terraform.io", "databricks", "databricks",
+		"99.0.0-local", target.String(), providercache.LocalVersionFilename)
+	if _, err := os.Stat(cacheProv); err != nil {
+		t.Errorf("cache-dir local-version.json missing: %v", err)
+	}
+}
+
+// makeTinyGoRepo is a runner-test-local helper that produces a
+// buildable Go module with a single git commit. Mirrors the
+// providercache test helper but without that package's t.Helper
+// machinery (we duplicate to keep the test files independent).
+func makeTinyGoRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"),
+		[]byte("package main\n\nfunc main() {}\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"),
+		[]byte("module example.com/tinybuild\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	for _, args := range [][]string{
+		{"init", "--initial-branch=main"},
+		{"-c", "user.name=tester", "-c", "user.email=t@example.com", "add", "."},
+		{"-c", "user.name=tester", "-c", "user.email=t@example.com", "commit", "-m", "init", "--no-gpg-sign"},
+	} {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	return dir
 }
 
 // TestRunner_AppliesRunsApply uses command: apply and confirms the

@@ -1,5 +1,5 @@
-// Package testframeworkv2 — go-test integration for the framework's own
-// fixtures. See DESIGN.md §12.7.
+// Package testframeworkv2_test — go-test integration for the framework's
+// own fixtures. See DESIGN.md §12.7.
 //
 // TestFixtures discovers every test.yaml under issues-repro/ and tests/,
 // then runs each one programmatically through internal/runner under a
@@ -11,13 +11,14 @@
 // The fixtures hit real cloud APIs (terraform apply against ~/.databrickscfg
 // profiles); we don't want them firing on every `go test ./...` developer
 // run.
-package testframeworkv2
+package testframeworkv2_test
 
 import (
 	"context"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/config"
@@ -35,6 +36,11 @@ var fixtureRoots = []string{"issues-repro", "tests"}
 // one in a t.Run subtest. Each fixture is independent: a failure in one
 // doesn't short-circuit the others (Go's testing.T.Run already isolates
 // subtests).
+//
+// Subtest names preserve the directory tree (e.g.
+// "issues-repro/issue_5672") so `go test -run 'TestFixtures/issues-repro/'`
+// filters to a whole subtree, and tree-position information shows up in
+// IDE / CI test output.
 //
 // Skip conditions:
 //   - TFV2_RUN != "1" — the test fires real cloud-auth flows; keep
@@ -64,36 +70,31 @@ func TestFixtures(t *testing.T) {
 	}
 
 	for _, dir := range specs {
-		t.Run(filepath.Base(dir), func(t *testing.T) {
+		// Subtest name preserves the dir tree (e.g.
+		// "issues-repro/issue_5672") and uses forward slashes regardless
+		// of host OS so `-run TestFixtures/issues-repro/issue_5672`
+		// matches on every platform. Trim a leading "./" if filepath
+		// added one.
+		name := filepath.ToSlash(strings.TrimPrefix(dir, "./"))
+		t.Run(name, func(t *testing.T) {
 			runFixture(t, dir, repoRoot, terraformBin)
 		})
 	}
 }
 
-// discoverFixtures returns absolute directory paths for every directory
-// containing a test.yaml under any of `roots`. Roots are evaluated
-// relative to the cwd of the go-test process (which is the package dir
-// — so testframeworkV2/).
+// discoverFixtures returns directory paths (relative to the package
+// directory, which is the cwd of `go test`) for every directory
+// containing a test.yaml under any of `roots`. Roots that don't exist
+// are silently skipped — not an error.
 func discoverFixtures(roots []string) ([]string, error) {
 	var out []string
 	for _, root := range roots {
-		stat, err := os.Stat(root)
-		if err != nil || !stat.IsDir() {
-			continue // missing roots are not an error — just skipped
-		}
-		entries, err := os.ReadDir(root)
+		matches, err := filepath.Glob(filepath.Join(root, "*", "test.yaml"))
 		if err != nil {
 			return nil, err
 		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			candidate := filepath.Join(root, e.Name(), "test.yaml")
-			if _, err := os.Stat(candidate); err == nil {
-				abs, _ := filepath.Abs(filepath.Join(root, e.Name()))
-				out = append(out, abs)
-			}
+		for _, m := range matches {
+			out = append(out, filepath.Dir(m))
 		}
 	}
 	sort.Strings(out)
@@ -106,7 +107,11 @@ func discoverFixtures(roots []string) ([]string, error) {
 // inside which fixture failed.
 func runFixture(t *testing.T, dir, repoRoot, terraformBin string) {
 	t.Helper()
-	spec, err := config.LoadDir(dir)
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		t.Fatalf("abs(%q): %v", dir, err)
+	}
+	spec, err := config.LoadDir(absDir)
 	if err != nil {
 		t.Fatalf("load %s: %v", dir, err)
 	}
@@ -118,7 +123,7 @@ func runFixture(t *testing.T, dir, repoRoot, terraformBin string) {
 		t.Skipf("profile %q unavailable: %v", spec.Profile, err)
 	}
 	opts := runner.Options{
-		SourceDir:    dir,
+		SourceDir:    absDir,
 		CacheDir:     defaultCacheDirForTest(),
 		RunRoot:      defaultRunDirForTest(),
 		TerraformBin: terraformBin,

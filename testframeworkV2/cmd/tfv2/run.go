@@ -17,6 +17,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/terraform"
 )
 
+// errNeedsRepoForLocal is returned by runOnce when auto-discovery
+// fails AND the test has a step with `version: local`. It's surfaced
+// as exitCodeUsage rather than exitCodeFailed because it's a
+// "you forgot a flag" error, not a "your test caught a bug" outcome —
+// CI scripts that gate retries on exit code can distinguish.
+var errNeedsRepoForLocal = errors.New(
+	"--repo unset and auto-discovery failed: this test has a step with " +
+		"`version: local`; pass --repo or set TFV2_REPO to the provider repo root")
+
 // runRun handles the `tfv2 run <test-dir>` subcommand (and `-r` for
 // recursive runs). Returns the exit code main should hand to
 // os.Exit.
@@ -36,6 +45,9 @@ func runRun(args []string) int {
 	res, err := runOnce(ctx, f)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "tfv2 run: %v\n", err)
+		if errors.Is(err, errNeedsRepoForLocal) {
+			return exitCodeUsage
+		}
 		return exitCodeFailed
 	}
 	printRunResult(os.Stdout, res)
@@ -143,9 +155,9 @@ func runOnce(ctx context.Context, f runFlags) (result.RunResult, error) {
 		case derr == nil:
 			f.repoRoot = discovered
 		case specHasLocalStep(spec):
-			return result.RunResult{}, fmt.Errorf(
-				"--repo unset and auto-discovery failed: %w (this test has a step with `version: local`; pass --repo or set TFV2_REPO to the provider repo root)",
-				derr)
+			// Wrap so errors.Is in runRun maps this to exitCodeUsage,
+			// while preserving the underlying ErrNotFound for diagnostics.
+			return result.RunResult{}, fmt.Errorf("%w (auto-discovery: %s)", errNeedsRepoForLocal, derr)
 		}
 	}
 	prof, err := profile.Load(spec.Profile)

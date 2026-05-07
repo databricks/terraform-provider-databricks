@@ -147,8 +147,12 @@ For a regression test, the standard 4-version shape is:
 3. **Last bad in any released tag** OR **patch release** — proves rollback worked.
 4. **`local`** — proves the real fix on the current branch.
 
-Step 4 is the most important one. It's the only step that exercises code that
-isn't in any released tag yet.
+For #5672, step 3 uses v1.114.1 — a rollback retag of v1.113.0 (same git source
+SHA, different binary SHA because goreleaser rebuilds independently per tag;
+see DESIGN.md §16 F6 for the empirical sha256s). Step 3 passing only confirms
+the rollback worked; it does NOT validate the actual code fix. That's why
+step 4 (`local`) is the most important one — it's the only step that exercises
+code that isn't in any released tag yet.
 
 ### Crafting `error_regex`
 
@@ -227,8 +231,11 @@ AWS account-level profile, which matches `cloud: aws` (or `any`) +
 
 **Test fails on a step you expected to pass.** Open the per-step stderr log:
 ```sh
-ls ~/.testframeworkv2/runs/test1_issue_5672-*/
-cat ~/.testframeworkv2/runs/test1_issue_5672-*/step_1_*.stderr.log
+# <test-name> is the `name:` field from your test.yaml (NOT the source-dir name).
+# For account/test1_issue_5672/test.yaml that's
+# issue_5672_mws_workspaces_account_provider_config_regression.
+ls ~/.testframeworkv2/runs/<test-name>-*/
+cat ~/.testframeworkv2/runs/<test-name>-*/step_1_*.stderr.log
 ```
 
 **Wrong provider version is being served.** Verify the lock file matches the

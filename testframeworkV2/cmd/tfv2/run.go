@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/config"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/profile"
@@ -14,10 +16,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/terraform"
 )
 
-// runRun handles the `tfv2 run <test-dir>` subcommand. It returns the
-// exit code main should pass to os.Exit. Errors during setup return
-// exitCodeUsage / exitCodeFailed depending on whether they're caused
-// by the user's invocation or by the test outcome.
+// runRun handles the `tfv2 run <test-dir>` subcommand (and `-r` for
+// recursive runs). Returns the exit code main should hand to
+// os.Exit.
 func runRun(args []string) int {
 	f, err := parseRunFlags(args)
 	if err != nil {
@@ -28,6 +29,9 @@ func runRun(args []string) int {
 	ctx, cancel := signalContext()
 	defer cancel()
 
+	if f.recursive {
+		return runRecursive(ctx, f)
+	}
 	res, err := runOnce(ctx, f)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "tfv2 run: %v\n", err)
@@ -38,6 +42,78 @@ func runRun(args []string) int {
 		return exitCodeFailed
 	}
 	return exitCodeOK
+}
+
+// runRecursive walks f.testDir for nested test.yaml files and runs
+// each one in turn. We continue past per-test failures so the user
+// sees the full picture in one invocation; the aggregate exit code is
+// failed if ANY test failed.
+//
+// Discovery rule: any directory containing a regular `test.yaml` file
+// counts as a test root. Subdirectories that themselves contain a
+// `test.yaml` are also picked up (separate, independent tests).
+func runRecursive(ctx context.Context, f runFlags) int {
+	roots, err := discoverTests(f.testDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "tfv2 run -r: %v\n", err)
+		return exitCodeFailed
+	}
+	if len(roots) == 0 {
+		fmt.Fprintf(os.Stderr, "tfv2 run -r: no test.yaml found under %s\n", f.testDir)
+		return exitCodeFailed
+	}
+	fmt.Fprintf(os.Stdout, "Discovered %d test(s) under %s\n", len(roots), f.testDir)
+	allPassed := true
+	for i, dir := range roots {
+		fmt.Fprintf(os.Stdout, "\n== test %d/%d: %s ==\n", i+1, len(roots), dir)
+		each := f
+		each.testDir = dir
+		each.recursive = false
+		res, err := runOnce(ctx, each)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "tfv2 run -r: %s: %v\n", dir, err)
+			allPassed = false
+			continue
+		}
+		printRunResult(os.Stdout, res)
+		if !res.AllPassed() {
+			allPassed = false
+		}
+	}
+	if !allPassed {
+		return exitCodeFailed
+	}
+	return exitCodeOK
+}
+
+// discoverTests walks root and returns every directory containing a
+// regular `test.yaml` file, sorted by path. Hidden directories
+// (starting with ".") are skipped — that excludes .git, .terraform,
+// and the per-run workdirs that the framework writes elsewhere.
+func discoverTests(root string) ([]string, error) {
+	var out []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			name := filepath.Base(path)
+			if path != root && len(name) > 0 && name[0] == '.' {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.Name() != "test.yaml" {
+			return nil
+		}
+		out = append(out, filepath.Dir(path))
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(out)
+	return out, nil
 }
 
 // runOnce performs the full test execution: locate terraform, load

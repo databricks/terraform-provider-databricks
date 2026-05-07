@@ -1,7 +1,13 @@
 // Command tfv2 is the CLI entry point for testframeworkV2 — the
-// multi-version Terraform test harness. M5 implements the only
-// subcommand mission-test needs (`tfv2 run <test-dir>`); M7 polishes
-// `cache list`, `cache prune`, `build local`, and recursive `-r`.
+// multi-version Terraform test harness. Subcommands:
+//
+//	tfv2 run <test-dir>           run a single test
+//	tfv2 run -r <root>            recursively run every test under root
+//	tfv2 cache list               show cached versions
+//	tfv2 cache prune              delete provider cache
+//	tfv2 build local --repo <p>   eagerly build local provider into cache
+//	tfv2 version                  print version
+//	tfv2 help                     show usage banner
 package main
 
 import (
@@ -41,6 +47,10 @@ func run(args []string) int {
 	switch args[0] {
 	case "run":
 		return runRun(args[1:])
+	case "cache":
+		return runCache(args[1:])
+	case "build":
+		return runBuild(args[1:])
 	case "version", "--version", "-v":
 		fmt.Fprintf(os.Stdout, "tfv2 %s\n", version)
 		return exitCodeOK
@@ -54,28 +64,34 @@ func run(args []string) int {
 	}
 }
 
-// printUsage emits a top-level usage banner. M7 expands this with
-// `cache` and `build` subcommands.
+// printUsage emits a top-level usage banner. Each subcommand
+// (run / cache / build) has its own --help via the flag.FlagSet
+// returned by parseRunFlags / parseCacheFlags / parseBuildFlags.
 func printUsage(w *os.File) {
 	fmt.Fprintln(w, `tfv2 — testframeworkV2 multi-version Terraform test harness
 
 usage:
-  tfv2 run <test-dir>          run a single test
-  tfv2 version                 print version
-  tfv2 help                    show this banner
+  tfv2 run <test-dir>             run a single test
+  tfv2 run -r <root>              recursively run every test.yaml under root
+  tfv2 cache list                 show cached provider versions
+  tfv2 cache prune                delete the provider cache
+  tfv2 build local --repo <path>  eagerly build local provider into cache
+  tfv2 version                    print version
+  tfv2 help                       show this banner
 
 flags for `+"`tfv2 run`"+`:
-  --terraform-bin <path>       override terraform binary discovery
-  --cache-dir <path>           override ~/.testframeworkv2/providers
-  --run-dir <path>             override ~/.testframeworkv2/runs root
-  --repo <path>                provider repo root (for version=local — M6)
-  --no-cleanup                 disable cleanup destroy regardless of test.yaml
-  --verbose                    print framework debug logs to stderr
+  -r, --recursive                 walk <root> for nested test.yaml files
+  --terraform-bin <path>          override terraform binary discovery
+  --cache-dir <path>              override ~/.testframeworkv2/providers
+  --run-dir <path>                override ~/.testframeworkv2/runs root
+  --repo <path>                   provider repo root (for version=local)
+  --no-cleanup                    disable cleanup destroy regardless of test.yaml
+  --verbose                       print framework debug logs to stderr
 
 env-var equivalents (CLI flags win):
-  TFV2_TERRAFORM_BIN           = --terraform-bin
-  TFV2_CACHE_DIR               = --cache-dir
-  T_NO_CLEANUP=1               = --no-cleanup`)
+  TFV2_TERRAFORM_BIN              = --terraform-bin
+  TFV2_CACHE_DIR                  = --cache-dir
+  T_NO_CLEANUP=1                  = --no-cleanup`)
 }
 
 // runFlags holds the parsed `tfv2 run` options. Kept as a struct so the
@@ -88,6 +104,7 @@ type runFlags struct {
 	repoRoot     string
 	noCleanup    bool
 	verbose      bool
+	recursive    bool
 	testDir      string
 }
 
@@ -105,6 +122,8 @@ func parseRunFlags(args []string) (runFlags, error) {
 	fs.StringVar(&f.repoRoot, "repo", "", "provider repo root for version=local")
 	fs.BoolVar(&f.noCleanup, "no-cleanup", false, "disable cleanup destroy")
 	fs.BoolVar(&f.verbose, "verbose", false, "print framework debug logs")
+	fs.BoolVar(&f.recursive, "r", false, "recursively walk <test-dir> for nested test.yaml files")
+	fs.BoolVar(&f.recursive, "recursive", false, "recursively walk <test-dir> for nested test.yaml files (alias of -r)")
 	if err := fs.Parse(args); err != nil {
 		return runFlags{}, err
 	}

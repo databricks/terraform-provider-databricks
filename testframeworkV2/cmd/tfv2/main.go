@@ -119,7 +119,7 @@ func parseRunFlags(args []string) (runFlags, error) {
 	fs.StringVar(&f.terraformBin, "terraform-bin", os.Getenv("TFV2_TERRAFORM_BIN"), "override terraform binary discovery")
 	fs.StringVar(&f.cacheDir, "cache-dir", os.Getenv("TFV2_CACHE_DIR"), "override ~/.testframeworkv2/providers")
 	fs.StringVar(&f.runDir, "run-dir", "", "override ~/.testframeworkv2/runs root")
-	fs.StringVar(&f.repoRoot, "repo", "", "provider repo root for version=local")
+	fs.StringVar(&f.repoRoot, "repo", os.Getenv("TFV2_REPO"), "provider repo root for version=local (auto-discovered if empty)")
 	fs.BoolVar(&f.noCleanup, "no-cleanup", false, "disable cleanup destroy")
 	fs.BoolVar(&f.verbose, "verbose", false, "print framework debug logs")
 	fs.BoolVar(&f.recursive, "r", false, "recursively walk <test-dir> for nested test.yaml files")

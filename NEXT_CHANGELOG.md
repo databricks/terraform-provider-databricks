@@ -24,10 +24,12 @@
 
   Fixtures live under two trees: `testframeworkV2/issues-repro/issue_<N>/` for fixtures that reproduce a specific GitHub issue, and `testframeworkV2/tests/<descriptive-slug>/` for green-path / smoke / regression-guard fixtures not tied to a bug. Profile level (workspace / account / UC) is declared per-test via `requires.level`.
 
+  `tfv2` auto-discovers the provider repo root (the `--repo` flag) by walking up from the working directory, and exposes every fixture as a `go test` subtest under `TestFixtures` (gated by `TFV2_RUN=1`) — so IDEs and CI can drive the framework without invoking the CLI.
+
   Quickstart:
   ```sh
   go build -o ~/.local/bin/tfv2 ./testframeworkV2/cmd/tfv2
-  tfv2 run --repo "$(pwd)" testframeworkV2/issues-repro/issue_5672/
+  tfv2 run testframeworkV2/issues-repro/issue_5672/    # --repo auto-discovered
   ```
 
   Subcommands: `tfv2 run [-r] <dir>` (single or recursive), `tfv2 cache list/prune`, `tfv2 build local --repo <path>`. The framework lives in its own Go module (`testframeworkV2/go.mod`) so it can be built and run independently of the provider's transitive deps.

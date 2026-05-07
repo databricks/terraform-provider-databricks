@@ -51,7 +51,10 @@ terraform -version
 #    requires-skip-check, then sets DATABRICKS_CONFIG_PROFILE for the SDK.
 
 # 4. Run the issue #5672 mission test.
-tfv2 run --repo "$(pwd)" testframeworkV2/issues-repro/issue_5672/
+#    --repo is auto-discovered by walking up from cwd looking for the
+#    provider repo's go.mod; pass --repo or set TFV2_REPO if you're
+#    invoking from outside a checkout.
+tfv2 run testframeworkV2/issues-repro/issue_5672/
 
 # Expected:
 # [PASS] step 1 (passes_on_1_113_0): 1.113.0      plan in 5.1s
@@ -74,6 +77,23 @@ tfv2 build local --repo <path>  eagerly build local provider into cache
 tfv2 version                    print version
 tfv2 help                       show usage banner
 ```
+
+## Running fixtures via `go test`
+
+Every `test.yaml` under `issues-repro/` and `tests/` is also exposed as
+a `go test` subtest, so IDEs and CI can drive the fixtures without
+shelling out to `tfv2`:
+
+```sh
+cd testframeworkV2/
+TFV2_RUN=1 go test -run TestFixtures -v ./...
+```
+
+`TFV2_RUN=1` is the gate — without it, `TestFixtures` skips (so plain
+`go test ./...` stays cheap and doesn't fire real cloud-auth flows).
+Each fixture runs as a separate `t.Run` subtest, so IDEs render one
+green/red dot per fixture and `-run TestFixtures/issue_5672` filters to
+a single one. See DESIGN.md §12.7 for the design rationale.
 
 ## test.yaml schema
 
@@ -177,7 +197,7 @@ out of `<run-dir>/workdir/` after a copy.
 | `--terraform-bin <path>` | `TFV2_TERRAFORM_BIN` | override terraform binary discovery |
 | `--cache-dir <path>` | `TFV2_CACHE_DIR` | override `~/.testframeworkv2/providers` |
 | `--run-dir <path>` | — | override `~/.testframeworkv2/runs` |
-| `--repo <path>` | — | provider repo root (required for `version: local`) |
+| `--repo <path>` | `TFV2_REPO` | provider repo root for `version: local`. **Auto-discovered** when unset by walking up from cwd looking for the provider repo's go.mod (DESIGN.md §12.6). Required only when auto-discovery fails AND a step uses `version: local`. |
 | `--no-cleanup` | `T_NO_CLEANUP=1` | skip final destroy regardless of test.yaml |
 | `--verbose` | — | print framework debug logs |
 | `-r`, `--recursive` | — | (run only) walk `<test-dir>` for nested test.yaml files |

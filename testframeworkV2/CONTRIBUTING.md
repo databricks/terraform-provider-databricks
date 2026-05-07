@@ -175,24 +175,29 @@ together (AND semantics). At least one is required when `expect: failure`.
 ```sh
 cd testframeworkV2/
 
-# Run a single test (the canonical command):
-go run ./cmd/tfv2 run --repo "$(pwd)/.." issues-repro/issue_5672/
+# Run a single test (the canonical command). --repo is auto-discovered.
+go run ./cmd/tfv2 run issues-repro/issue_5672/
 
 # Override the terraform binary if it's not on PATH:
 go run ./cmd/tfv2 run --terraform-bin /opt/terraform/1.5.7/terraform \
-  --repo "$(pwd)/.." issues-repro/issue_5672/
+  issues-repro/issue_5672/
 
 # Disable cleanup destroy (preserves state for inspection):
-go run ./cmd/tfv2 run --no-cleanup --repo "$(pwd)/.." issues-repro/issue_5672/
+go run ./cmd/tfv2 run --no-cleanup issues-repro/issue_5672/
 
 # Verbose framework logs to stderr (does NOT enable terraform's TF_LOG):
-go run ./cmd/tfv2 run --verbose --repo "$(pwd)/.." issues-repro/issue_5672/
+go run ./cmd/tfv2 run --verbose issues-repro/issue_5672/
+
+# Run via go test (alternative entry point — IDEs, CI):
+TFV2_RUN=1 go test -run 'TestFixtures/issue_5672' -v ./...
 ```
 
-`--repo` points at the provider repo root and is required for any step with
-`version: local` (the framework runs `go build` from there). If your `pwd`
-is `testframeworkV2/`, `--repo "$(pwd)/.."` is the parent. You can also
-`cd` to the repo root and pass `--repo .`.
+`--repo` is **auto-discovered** by walking up from the working
+directory looking for the provider repo's `go.mod` (DESIGN.md §12.6).
+If you're inside the provider checkout, no flag is needed. Pass
+`--repo <path>` or set `TFV2_REPO` only when invoking from outside a
+checkout AND your test has at least one step with `version: local`.
+Tests pinning only released semvers don't need a repo root at all.
 
 Expected output for the mission test (all four steps green):
 
@@ -266,7 +271,7 @@ to check:
 
 **Custom run-dir for a one-off debug session:**
 ```sh
-go run ./cmd/tfv2 run --run-dir /tmp/myrun --repo "$(pwd)/.." issues-repro/issue_5672/
+go run ./cmd/tfv2 run --run-dir /tmp/myrun issues-repro/issue_5672/
 ```
 
 ---
@@ -292,11 +297,15 @@ go run ./cmd/tfv2 run --run-dir /tmp/myrun --repo "$(pwd)/.." issues-repro/issue
    a clear error. If your `.databrickscfg` lives elsewhere, set
    `DATABRICKS_CONFIG_FILE` in your shell and the framework propagates it.
 
-4. **`version: local` without `--repo` and pwd is not the repo root.**
-   `local` triggers `go build` from `--repo`. If `--repo` isn't passed, the
-   framework defaults to pwd if pwd looks like a tf-provider checkout
-   (heuristic: `go.mod` declares the right module). If you're running from
-   `testframeworkV2/`, you need `--repo "$(pwd)/.."`.
+4. **`version: local` outside a provider checkout, with no `--repo` /
+   `TFV2_REPO`.** Auto-discovery walks up from cwd looking for a
+   `go.mod` whose `module` line is `github.com/databricks/terraform-provider-databricks`
+   (the framework's own `testframeworkV2/go.mod` is intentionally
+   skipped — it declares a sub-module path). If the walk hits the
+   filesystem root without a match, the framework returns a clear error
+   pointing you at `--repo` / `TFV2_REPO`. The check fires only when at
+   least one step uses `version: local`; pure released-semver tests
+   never look for a repo root.
 
 5. **`provider_config { workspace_id = ... }` block in `main.tf`.** This is
    the exact schema shape that triggered issue #5672. Don't include it

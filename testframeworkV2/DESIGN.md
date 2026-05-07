@@ -1,6 +1,6 @@
 # testframeworkV2 — Design Doc
 
-**Status:** Draft v6.0 (implementer-tf11 + researcher-tf11, 2026-05-08)
+**Status:** Draft v6.1 (implementer-tf11 + researcher-tf11, 2026-05-08)
 **Audience:** tech-lead-tf11, reviewer-tf11, tester-tf11, implementer-tf11
 **Scope:** Multi-step, multi-version Terraform integration test harness for `databricks/terraform-provider-databricks`. v1 ships small.
 **Supersedes:** v5.0, v4.2, v4.1, v4, v3, v2, and v1.
@@ -1021,7 +1021,7 @@ tfv2 build local --repo <path>                  # eagerly build local provider i
 --terraform-bin <path>     # override binary discovery (G8)
 --cache-dir <path>         # override ~/.testframeworkv2/providers
 --run-dir <path>           # override ~/.testframeworkv2/runs/<id>
---repo <path>              # provider repo root for `local` builds (defaults to pwd if it looks like one)
+--repo <path>              # provider repo root for `local` builds; auto-discovered when unset (§12.6)
 --no-cleanup               # overrides cleanup: true per-test
 --keep-run-dir             # always keep run dir (default: keep regardless; this is forward-compat)
 -v / --verbose             # framework debug logs
@@ -1032,7 +1032,9 @@ tfv2 build local --repo <path>                  # eagerly build local provider i
 ```
 TFV2_TERRAFORM_BIN     # = --terraform-bin
 TFV2_CACHE_DIR         # = --cache-dir
+TFV2_REPO              # = --repo (auto-discovery is the default; this is the explicit-override path)
 TFV2_FORCE_REBUILD     # reserved for v2; v1 always rebuilds local
+TFV2_RUN=1             # gate for the go-test fixtures runner (§12.7)
 T_NO_CLEANUP=1         # global cleanup disable (same as --no-cleanup)
 ```
 
@@ -1058,7 +1060,41 @@ func (r *Runner) Run(ctx context.Context) (result.RunResult, error)
 
 The CLI is a thin shell over this API (~100 LOC). v2 may add `gotest.Run(t *testing.T, dir string)` helper.
 
-### 12.6 Key types (sketch)
+### 12.6 Auto-discovery of `--repo`
+
+`internal/repodiscover.Find(start)` walks upward from `start` (or `os.Getwd()` when empty) looking for a `go.mod` whose first non-blank, non-comment line is exactly `module github.com/databricks/terraform-provider-databricks`. The framework's own `testframeworkV2/go.mod` declares a sub-module path so the walk skips past it and lands on the parent provider repo.
+
+`cmd/tfv2/run.go` calls `Find("")` after `config.LoadDir(...)` and BEFORE building the `runner.Options`:
+
+- `--repo` flag set explicitly OR `TFV2_REPO` env set → use that, no discovery.
+- Both unset → attempt `Find("")`. On success, populate `RepoRoot`. On `ErrNotFound`, the error is suppressed UNLESS the spec has a step with `version: local` (`specHasLocalStep`). When the spec needs a local build and discovery failed, return:
+  ```
+  --repo unset and auto-discovery failed: <wrapped error> (this test has a step with
+  `version: local`; pass --repo or set TFV2_REPO to the provider repo root)
+  ```
+
+Why post-config-load: we need to know whether the spec actually requires a local build (cheap field walk) before deciding whether discovery failure is fatal. Tests that only pin released semvers don't need a repo at all — discovery silently fails, runner runs.
+
+Why module-line matching (not just any `go.mod`): the framework lives in a sub-module under the provider. Matching any `go.mod` would short-circuit the walk on the framework's own file. Matching the canonical module string keeps the search discriminating without hard-coding a directory name.
+
+Implementation: ~30 LOC in `internal/repodiscover/repodiscover.go`. Five unit tests cover: nested-from-deep-subdir, skip-past-submodule (the framework's own `go.mod`), filesystem-root miss → `ErrNotFound`, default-to-cwd, and comment-tolerant module-line matching. Zero new direct deps.
+
+### 12.7 Running fixtures via `go test`
+
+`testframeworkV2/fixtures_test.go` exposes a `TestFixtures` Go test that walks every `test.yaml` under `issues-repro/` and `tests/`, then runs each one through `internal/runner.Run` programmatically inside a `t.Run(filepath.Base(dir), ...)` subtest. This gives developers a single `go test ./...` invocation to validate every fixture without going through the CLI — useful for IDE green/red dots and CI integration without writing yet another wrapper script.
+
+Gating: the test fires real cloud-auth flows (terraform apply against `~/.databrickscfg` profiles), so it would be hostile to fire on every plain `go test ./...` run. The test reads `TFV2_RUN` from the env and `t.Skip()`s when it's not exactly `"1"`. CI explicitly sets `TFV2_RUN=1`; default developer runs stay cheap.
+
+Failure modes are split between `t.Skip` (non-actionable for the developer in this env) and `t.Errorf` (real failures the developer should investigate):
+- Profile not present in `~/.databrickscfg` → `t.Skipf(...)` with the profile name.
+- Spec's `requires:` block doesn't match the active profile → `t.Skipf(...)` with the runner's reason.
+- Per-step assertion failure or terraform error → `t.Errorf(...)` with `step %d (%s): %s — %s`.
+
+`testframeworkV2/doc.go` is a 3-line placeholder package (`package testframeworkv2`) whose only purpose is to give `fixtures_test.go` a package to live in. The framework's runtime code lives under `cmd/tfv2/` and `internal/...`; the root-level package is intentionally empty otherwise.
+
+The test file uses `internal/runner` programmatically, so it can only live inside the framework's own module — which is exactly what we want (no external module can import `internal/...` per Go's tooling rules). External users still drive the framework via the CLI.
+
+### 12.8 Key types (sketch)
 
 ```go
 // internal/config

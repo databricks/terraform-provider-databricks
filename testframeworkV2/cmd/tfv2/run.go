@@ -11,6 +11,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/config"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/profile"
+	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/repodiscover"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/result"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/runner"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/terraform"
@@ -133,6 +134,20 @@ func runOnce(ctx context.Context, f runFlags) (result.RunResult, error) {
 	if err != nil {
 		return result.RunResult{}, err
 	}
+	// Auto-discover --repo when the user didn't pass one. We only emit
+	// the failure if the spec actually needs a local build — pure
+	// released-version tests are happy with an empty RepoRoot.
+	if f.repoRoot == "" {
+		discovered, derr := repodiscover.Find("")
+		switch {
+		case derr == nil:
+			f.repoRoot = discovered
+		case specHasLocalStep(spec):
+			return result.RunResult{}, fmt.Errorf(
+				"--repo unset and auto-discovery failed: %w (this test has a step with `version: local`; pass --repo or set TFV2_REPO to the provider repo root)",
+				derr)
+		}
+	}
 	prof, err := profile.Load(spec.Profile)
 	if err != nil {
 		// Profile-existence is also checked at config-load time. If we
@@ -145,6 +160,18 @@ func runOnce(ctx context.Context, f runFlags) (result.RunResult, error) {
 	}
 	r := runner.New(spec, prof, optionsFromFlags(f, bin, absTestDir))
 	return r.Run(ctx)
+}
+
+// specHasLocalStep reports whether any step in the spec uses
+// version=local. Cheap pre-check used by runOnce to decide whether
+// missing --repo is fatal.
+func specHasLocalStep(spec *config.TestSpec) bool {
+	for _, s := range spec.Steps {
+		if s.Version == config.LocalVersion {
+			return true
+		}
+	}
+	return false
 }
 
 // optionsFromFlags maps the CLI flag struct into runner.Options.

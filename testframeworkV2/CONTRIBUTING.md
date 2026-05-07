@@ -20,13 +20,15 @@ You need:
 | `~/.databrickscfg` with a working profile | Auth flows through `DATABRICKS_CONFIG_PROFILE` only — no inline tokens in HCL. | Run `databricks configure --profile <name>` if you don't have one. |
 | Network access to GitHub releases | First test run downloads provider zips into `~/.testframeworkv2/providers/`. Cached after that. | Behind a corporate proxy? `HTTPS_PROXY`/`HTTP_PROXY`/`NO_PROXY` are propagated automatically (DESIGN.md §10/G6). |
 
-Build the CLI once:
+For day-to-day test iteration, run from source:
 
-```bash
+```sh
 cd testframeworkV2/
-go build -o tfv2 ./cmd/tfv2/
-./tfv2 version            # prints "tfv2 dev"
+go run ./cmd/tfv2 version     # prints "tfv2 dev"
 ```
+
+For repeated runs (CI, perf-sensitive loops) install a binary instead — see
+README.md "Quickstart". The rest of this guide uses `go run ./cmd/tfv2`.
 
 ---
 
@@ -163,142 +165,211 @@ together (AND semantics). At least one is required when `expect: failure`.
 
 ## Step 4 — Run locally
 
-```bash
+```sh
 cd testframeworkV2/
 
-# Run a single test:
-./tfv2 run account/test1_issue_5672/
+# Run a single test (the canonical command):
+go run ./cmd/tfv2 run --repo "$(pwd)/.." account/test1_issue_5672/
 
 # Override the terraform binary if it's not on PATH:
-./tfv2 run --terraform-bin /opt/terraform/1.5.7/terraform account/test1_issue_5672/
+go run ./cmd/tfv2 run --terraform-bin /opt/terraform/1.5.7/terraform \
+  --repo "$(pwd)/.." account/test1_issue_5672/
 
 # Disable cleanup destroy (preserves state for inspection):
-./tfv2 run --no-cleanup account/test1_issue_5672/
+go run ./cmd/tfv2 run --no-cleanup --repo "$(pwd)/.." account/test1_issue_5672/
 
 # Verbose framework logs to stderr (does NOT enable terraform's TF_LOG):
-./tfv2 run --verbose account/test1_issue_5672/
+go run ./cmd/tfv2 run --verbose --repo "$(pwd)/.." account/test1_issue_5672/
+```
+
+`--repo` points at the provider repo root and is required for any step with
+`version: local` (the framework runs `go build` from there). If your `pwd`
+is `testframeworkV2/`, `--repo "$(pwd)/.."` is the parent. You can also
+`cd` to the repo root and pass `--repo .`.
+
+Expected output for the mission test (all four steps green):
+
+```
+[PASS] step 1 (passes_on_1_113_0): 1.113.0      plan in 5.1s
+[PASS] step 2 (fails_on_1_114_0): 1.114.0       plan in 4.7s     (failure-as-expected)
+[PASS] step 3 (fixed_on_1_114_1): 1.114.1       plan in 4.6s
+[PASS] step 4 (fixed_on_local):   99.0.0-local  plan in 5.9s
+----------------------------------------------------------
+issue_5672_mws_workspaces_account_provider_config_regression: PASS (4/4 steps in 22.4s)
+run dir: /Users/<you>/.testframeworkv2/runs/issue_5672_..-2026-05-08T08-15-00-a3f2
 ```
 
 Exit codes:
 - `0` — every step passed (or test was skipped due to `requires` mismatch).
-- `1` — at least one step did not pass.
-- `2` — bad flags / missing arguments.
+- `1` — at least one step did not pass, or the framework hit an error.
+- `2` — usage error (bad flags, unknown subcommand, missing `<test-dir>`).
 
-Per-step logs land at `~/.testframeworkv2/runs/<test>-<ts>-<rand>/`. The run
-directory is preserved on disk after the test ends — open it with your editor
-to inspect captured stdout/stderr per step, the generated `.terraformrc`, the
-generated `_tfv2_versions_override.tf`, and the `terraform.tfstate` that
+Per-step logs land at
+`~/.testframeworkv2/runs/<test>-<ts>-<rand>/step_<n>_<name>.{stdout,stderr}.log`.
+The run directory is preserved on disk after the test ends — open it with
+your editor to inspect the captured streams, the generated `.terraformrc`,
+the generated `_tfv2_versions_override.tf`, and the `terraform.tfstate` that
 carried across steps.
 
 ---
 
 ## Step 5 — Debugging
 
-**Test is being skipped unexpectedly.** Check `requires:` against your profile:
-```bash
-# Inspect the named profile's host:
+**Test is being skipped unexpectedly.** Check `requires:` against your
+profile (INI section names in `~/.databrickscfg` are case-sensitive — match
+exactly):
+```sh
 grep -A 5 "^\[ACCOUNT_AWS\]" ~/.databrickscfg
 ```
-If your profile has `host = https://accounts.cloud.databricks.com` it's an AWS
-account-level profile → matches `cloud: aws` (or `any`) + `level: account`.
+If your profile has `host = https://accounts.cloud.databricks.com` it's an
+AWS account-level profile, which matches `cloud: aws` (or `any`) +
+`level: account`.
 
 **Test fails on a step you expected to pass.** Open the per-step stderr log:
-```bash
+```sh
 ls ~/.testframeworkv2/runs/test1_issue_5672-*/
-cat ~/.testframeworkv2/runs/test1_issue_5672-*/step-1-*.stderr.log
+cat ~/.testframeworkv2/runs/test1_issue_5672-*/step_1_*.stderr.log
 ```
-The framework's curated subprocess env (DESIGN.md §10/G6) intentionally strips
-`TF_LOG`. If you need terraform's debug logs, add a temporary `TF_LOG=DEBUG`
-to `passthrough_env` in your test.yaml — but DON'T commit that.
 
 **Wrong provider version is being served.** Verify the lock file matches the
 expected version:
-```bash
+```sh
 cat ~/.testframeworkv2/runs/<run-id>/workdir/.terraform.lock.hcl
 ```
-The framework wipes `.terraform/` and `.terraform.lock.hcl` between every step,
-so each step's lock should reflect ONLY that step's pinned version.
+The framework wipes `.terraform/` and `.terraform.lock.hcl` between every
+step, so each step's lock should reflect ONLY that step's pinned version.
 
-**Local build (`version: local`) isn't picking up my changes.** The framework
-runs `go build` every step (no source-tree caching). If the build is silently
-stale, your `go build` itself is — try `go clean -cache` and retry.
+**Local build (`version: local`) isn't picking up my changes.** Two things
+to check:
+
+1. `--repo` is pointing at the right tree. `local-version.json` next to the
+   built binary records the git SHA + dirty flag at build time:
+   ```sh
+   cat ~/.testframeworkv2/providers/registry.terraform.io/databricks/databricks/99.0.0-local/<os>_<arch>/local-version.json
+   ```
+   A copy is also written into the run dir so each run's provenance is
+   self-contained.
+
+2. The framework runs `go build` every step (no source-tree hash caching).
+   If the build is silently stale, your `go build` cache is stale —
+   `go clean -cache` and retry.
 
 **Custom run-dir for a one-off debug session:**
-```bash
-./tfv2 run --run-dir /tmp/myrun account/test1_issue_5672/
+```sh
+go run ./cmd/tfv2 run --run-dir /tmp/myrun --repo "$(pwd)/.." account/test1_issue_5672/
 ```
 
 ---
 
 ## Common gotchas
 
-1. **TF_LOG=DEBUG leaking from your shell.** The curated subprocess env strips
-   `TF_LOG`. Good. But if you want it for one debug run, use the
-   `passthrough_env` field in your test.yaml — never `os.Setenv` from
-   surrounding test infrastructure.
+1. **`passthrough_env` containing tfexec-prohibited names.** `tfexec`
+   reserves a fixed set of env-var names it manages internally and rejects
+   at runtime: `TF_APPEND_USER_AGENT`, `TF_IN_AUTOMATION`, `TF_INPUT`,
+   `TF_LOG`, `TF_LOG_PATH`, `TF_REATTACH_PROVIDERS`, `TF_DISABLE_PLUGIN_TLS`,
+   `TF_SKIP_PROVIDER_VERIFY`. Listing any of these in your test.yaml's
+   `passthrough_env` will make the runner fail when it calls
+   `tfexec.SetEnv()`. Don't do it.
 
-2. **`DATABRICKS_HOST`/`DATABRICKS_TOKEN` env vars in your shell.** Stripped
-   by default — the framework only propagates `DATABRICKS_CONFIG_PROFILE` and
-   `DATABRICKS_CONFIG_FILE`. If your tests genuinely need different
-   credentials, use a different profile in `~/.databrickscfg`, not env vars.
+2. **`passthrough_env` containing `DATABRICKS_*` names.** Rejected at parse
+   time — the profile field is the only sanctioned auth channel. If a test
+   genuinely needs different credentials, use a different `~/.databrickscfg`
+   profile, not env vars.
 
-3. **`provider_config { workspace_id = ... }` block in main.tf.** This is the
-   exact schema shape that triggered issue #5672. Don't include it unless your
-   test specifically intends to exercise it. Plain `provider "databricks" {}`
-   covers most regression scenarios.
+3. **Profile must exist in `~/.databrickscfg` (case-sensitive section
+   name).** The framework eagerly validates section existence at parse
+   time; a typo like `account_aws` instead of `ACCOUNT_AWS` fails fast with
+   a clear error. If your `.databrickscfg` lives elsewhere, set
+   `DATABRICKS_CONFIG_FILE` in your shell and the framework propagates it.
 
-4. **Wide `include` filter.** Don't be tempted to write `include = ["*/*"]`
-   anywhere. The framework's narrow `registry.terraform.io/databricks/*` is
-   load-bearing — wider patterns break `hashicorp/google` and similar.
+4. **`version: local` without `--repo` and pwd is not the repo root.**
+   `local` triggers `go build` from `--repo`. If `--repo` isn't passed, the
+   framework defaults to pwd if pwd looks like a tf-provider checkout
+   (heuristic: `go.mod` declares the right module). If you're running from
+   `testframeworkV2/`, you need `--repo "$(pwd)/.."`.
 
-5. **`requires.cloud: gcp` when you mean "this bug only shows up on a GCP
-   profile I happened to test against".** Run the test on AWS / Azure too —
-   most bugs are host-agnostic. Use `cloud: any` unless you've actually
+5. **`provider_config { workspace_id = ... }` block in `main.tf`.** This is
+   the exact schema shape that triggered issue #5672. Don't include it
+   unless your test specifically intends to exercise it. Plain
+   `provider "databricks" {}` covers most regression scenarios.
+
+6. **`DATABRICKS_HOST`/`DATABRICKS_TOKEN` env vars set in your shell.**
+   Stripped by default — the framework only propagates
+   `DATABRICKS_CONFIG_PROFILE` and `DATABRICKS_CONFIG_FILE`. This is a
+   feature, not a bug; profile auth is the only auth channel in tests.
+
+7. **`requires.cloud: gcp` when you mean "this bug only showed up on the GCP
+   profile I happened to test against".** Run the test on AWS or Azure too
+   first — most bugs are host-agnostic. Use `cloud: any` unless you've
    verified the bug is cloud-specific.
 
-6. **`error_regex` matching only one cloud's inner error.** Anchor on the
-   outer error wrapper. Inner SDK errors vary; outer terraform diagnostics
-   are stable.
+8. **`error_regex` matching only one cloud's inner error.** Anchor on the
+   outer error wrapper. Inner SDK errors vary by auth method; outer
+   terraform diagnostics are stable across clouds.
 
-7. **Committing `.terraform.lock.hcl` from a run dir.** Don't. Lock files
-   carry single-platform `h1:` hashes and break cross-arch CI. Per-test
-   directories shouldn't have one (the framework writes them only into the
-   run dir, which is outside the repo).
+9. **Committing `.terraform/`, `.terraform.lock.hcl`, `*.tfstate*`.**
+   Already gitignored at the framework level, but worth saying: the
+   framework writes these only into the per-run dir under
+   `~/.testframeworkv2/runs/...`, never into your test source dir. If they
+   show up in `git status`, you've run `terraform` manually in the wrong
+   directory.
 
-8. **`hc-install` / `tfinstall` auto-install of terraform.** Framework refuses
-   to use this — the public hashicorp signing key is currently expired in
-   their default flow. If you're tempted to add an "automatic terraform
-   downloader" feature, please first read DESIGN.md §10/G8 and TL's binding
-   constraint B7.
+10. **Wide `include` filter in `.terraformrc`.** Don't write
+    `include = ["*/*"]`. The framework's narrow
+    `registry.terraform.io/databricks/*` is load-bearing — wider patterns
+    break `hashicorp/google` and similar.
 
-9. **Running multiple tests in <1 second.** Each run gets a 4-char
-   `crypto/rand` hex suffix on the run dir. If you somehow generate a
-   collision, file an issue with the random number generator company.
+11. **`hc-install` / `tfinstall` auto-install of terraform.** Framework
+    refuses to use this — the public HashiCorp signing key is currently
+    expired in the default flow. Terraform binary discovery is
+    user-controlled (`--terraform-bin` / `TFV2_TERRAFORM_BIN` / `$PATH`).
+    See DESIGN.md §10/G8.
+
+12. **Running multiple tests in <1 second.** Each run dir gets a 4-char
+    `crypto/rand` hex suffix to prevent collisions. The runtime tree at
+    `~/.testframeworkv2/runs/` accumulates monotonically — clean it up
+    manually when needed.
 
 ---
 
 ## Adding dependencies
 
-testframeworkV2 has its own `go.mod` (DESIGN.md §12 explains why). Adding deps
-is a normal `go get`:
+testframeworkV2 has its own `go.mod` (DESIGN.md §12 explains why). Direct
+dependencies are kept minimal — currently `gopkg.in/yaml.v3` and
+`github.com/hashicorp/terraform-exec`.
 
-```bash
+**Acceptance policy for new direct deps:**
+
+- Published by **HashiCorp** (`github.com/hashicorp/...`) — accepted without
+  further discussion.
+- Already a direct dep of the **main provider repo's** `go.mod` (the parent
+  `terraform-provider-databricks` module) — accepted. Reusing what the main
+  repo already vets keeps the supply-chain footprint flat.
+- Anything else — **file an ask via tech-lead first.** Don't slip in
+  third-party tools. Transitive deps inherited from sanctioned direct deps
+  are fine; we only gate at the direct-dep boundary.
+
+Adding a sanctioned dep is a normal `go get`:
+
+```sh
 cd testframeworkV2/
-go get github.com/some/package@v1.2.3
+go get github.com/hashicorp/some-package@v1.2.3
 go mod tidy
 ```
 
-Guidelines:
-- Pull in deps sparingly. Right now we have 1 direct dep (`gopkg.in/yaml.v3`)
-  + `terraform-exec`. Less is more — every dep is a future supply-chain audit.
-- **Never add `hc-install` or `tfinstall`.** Terraform binary discovery is
-  user-controlled (`--terraform-bin` / `TFV2_TERRAFORM_BIN` / `$PATH`).
-- **Never import `internal/acceptance`** from the parent provider repo.
+**Hard prohibitions:**
+
+- **Never add `hc-install` or `tfinstall`** even though they're HashiCorp.
+  See DESIGN.md §10/G8 — these auto-install terraform via a flow whose
+  signing key is currently expired. Binary discovery stays user-controlled.
+- **Never import `internal/acceptance`** from the main provider repo.
   That package's `init()` calls `os.Setenv("TF_LOG", "DEBUG")` globally and
-  has other process-wide side effects we deliberately do not inherit.
-- If you need profile-loading helpers, the framework's
-  `internal/profile/` package owns that — extend it rather than reaching into
-  the parent provider for similar code.
+  has other process-wide side effects. The framework's separate `go.mod`
+  exists partly to make this an explicit boundary.
+- **Don't import the parent provider's source modules.** The framework
+  treats the provider as an opaque binary — the whole point is to test
+  multiple versions, including ones from before any `internal/...` symbols
+  existed.
 
 ---
 

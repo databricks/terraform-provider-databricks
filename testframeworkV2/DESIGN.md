@@ -323,7 +323,7 @@ The framework writes one `.terraformrc` per run into the run's workdir, then exp
 
 provider_installation {
   filesystem_mirror {
-    path    = "/Users/tanmay.rustagi/.testframeworkv2/providers"
+    path    = "/Users/<you>/.testframeworkv2/providers"
     include = ["registry.terraform.io/databricks/*"]
   }
 
@@ -337,7 +337,7 @@ provider_installation {
 # instead of copying the binary. Tester confirmed empirically (same inode 577301870
 # across init invocations). Within-run reuse across the 4 step inits is essentially free.
 # Per-run cache (not shared across runs) preserves test isolation.
-plugin_cache_dir = "/Users/tanmay.rustagi/.testframeworkv2/runs/<run-id>/plugins"
+plugin_cache_dir = "/Users/<you>/.testframeworkv2/runs/<run-id>/plugins"
 ```
 
 ### Why exactly this shape
@@ -913,7 +913,7 @@ The framework doesn't validate the credential field choice — it just sets `DAT
 $ tfv2 run testframeworkV2/issues-repro/issue_5672/
 
 ▶ issue_5672  profile=ACCOUNT_GCP  cloud=gcp  level=account
-  workdir: /Users/tanmay.rustagi/.testframeworkv2/runs/issue_5672_mws_workspaces_account_provider_config_regression-2026-05-07T20-15-00-a3f2/workdir
+  workdir: /Users/<you>/.testframeworkv2/runs/issue_5672_mws_workspaces_account_provider_config_regression-2026-05-07T20-15-00-a3f2/workdir
   terraform: /usr/local/bin/terraform (v1.5.7)
 
   ▶ step 1/4: passes_on_1_113_0      databricks 1.113.0   command=plan  expect=success

@@ -1,11 +1,14 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/profile"
 )
 
 // fixtureProfile writes a minimal .databrickscfg containing the named
@@ -244,6 +247,12 @@ steps:
 	}
 	if !strings.Contains(err.Error(), "NONEXISTENT") {
 		t.Errorf("expected error to mention NONEXISTENT, got: %v", err)
+	}
+	// Pin the sentinel-wrap so callers (notably fixtures_test.go's
+	// runFixture) can distinguish "profile missing in this env"
+	// (→ t.Skip) from other config errors (→ t.Fatal).
+	if !errors.Is(err, profile.ErrSectionNotFound) {
+		t.Errorf("expected errors.Is(err, profile.ErrSectionNotFound) to be true, got: %v", err)
 	}
 }
 

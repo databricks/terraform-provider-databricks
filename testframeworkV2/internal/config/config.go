@@ -367,7 +367,12 @@ func validateProfileExists(profileName, databricksCfgPath string) error {
 		return fmt.Errorf("profile: %w", err)
 	}
 	if !ok {
-		return fmt.Errorf("profile: %q not found in %s", profileName, databricksCfgPath)
+		// Wrap the sentinel so callers can detect "profile missing" via
+		// errors.Is(err, profile.ErrSectionNotFound). fixtures_test.go
+		// uses this to t.Skip rather than t.Fatal when the test
+		// environment doesn't have the profile in question.
+		return fmt.Errorf("profile: %q not found in %s: %w",
+			profileName, databricksCfgPath, profile.ErrSectionNotFound)
 	}
 	return nil
 }

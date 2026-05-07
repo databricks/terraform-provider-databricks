@@ -15,6 +15,7 @@ package testframeworkv2_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"sort"
@@ -113,14 +114,27 @@ func runFixture(t *testing.T, dir, repoRoot, terraformBin string) {
 	}
 	spec, err := config.LoadDir(absDir)
 	if err != nil {
+		// `config.LoadDir` validates profile-section existence in
+		// `~/.databrickscfg` at parse time (DESIGN.md §4). When the
+		// fixture's named profile isn't on this machine, the wrapped
+		// error carries `profile.ErrSectionNotFound` — surface as Skip
+		// with the profile name (intent: developer adds the profile and
+		// reruns), not as Fail (the test isn't broken; the environment
+		// just doesn't have what it needs).
+		if errors.Is(err, profile.ErrSectionNotFound) {
+			t.Skipf("load %s: %v", dir, err)
+		}
 		t.Fatalf("load %s: %v", dir, err)
 	}
 	prof, err := profile.Load(spec.Profile)
 	if err != nil {
-		// Don't fail the whole test on a missing profile in this env;
-		// surface as Skip with the profile name so the developer can
-		// add the profile and rerun.
-		t.Skipf("profile %q unavailable: %v", spec.Profile, err)
+		// Belt-and-suspenders: if profile.Load disagrees with config
+		// (~/.databrickscfg edited between parse and Load), still skip
+		// rather than fail.
+		if errors.Is(err, profile.ErrSectionNotFound) {
+			t.Skipf("profile %q unavailable: %v", spec.Profile, err)
+		}
+		t.Fatalf("profile %q load: %v", spec.Profile, err)
 	}
 	opts := runner.Options{
 		SourceDir:    absDir,

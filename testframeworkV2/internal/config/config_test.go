@@ -999,3 +999,86 @@ steps:
 		t.Errorf("IsV2 should be false for v1 spec")
 	}
 }
+
+// TestLoadDir_RejectsMissingConfigFile pins the parse-time existence
+// check added in v6.1 (DESIGN.md §17.7): for v2 specs, every step's
+// `config:` MUST reference an existing file under the test dir. A
+// typo at step N must NOT let steps 1..N-1 execute (and mutate real
+// cloud resources) before failing.
+func TestLoadDir_RejectsMissingConfigFile(t *testing.T) {
+	dir := t.TempDir()
+	body := `name: t
+profile: P
+steps:
+  - { name: s1, version: "1.0.0", config: nonexistent.tf, command: apply }
+`
+	if err := os.WriteFile(filepath.Join(dir, "test.yaml"), []byte(body), 0o600); err != nil {
+		t.Fatalf("write test.yaml: %v", err)
+	}
+	cfg := filepath.Join(t.TempDir(), ".databrickscfg")
+	_ = os.WriteFile(cfg, []byte("[P]\nhost = x\n"), 0o600)
+	t.Setenv("DATABRICKS_CONFIG_FILE", cfg)
+
+	_, err := LoadDir(dir)
+	if err == nil {
+		t.Fatal("expected error for missing config file, got nil")
+	}
+	if !strings.Contains(err.Error(), "nonexistent.tf") || !strings.Contains(err.Error(), "not found") {
+		t.Errorf("error should identify the missing file: %v", err)
+	}
+}
+
+// TestLoadDir_AcceptsExistingConfigFiles is the happy-path counterpart:
+// when every step's `config:` resolves to a real file, LoadDir succeeds.
+func TestLoadDir_AcceptsExistingConfigFiles(t *testing.T) {
+	dir := t.TempDir()
+	body := `name: t
+profile: P
+steps:
+  - { name: s1, version: "1.0.0", config: step1.tf, command: apply }
+  - { name: s2, version: "1.0.0", config: step2.tf, command: apply }
+`
+	if err := os.WriteFile(filepath.Join(dir, "test.yaml"), []byte(body), 0o600); err != nil {
+		t.Fatalf("write test.yaml: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "step1.tf"), []byte("# step 1\n"), 0o600); err != nil {
+		t.Fatalf("write step1.tf: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "step2.tf"), []byte("# step 2\n"), 0o600); err != nil {
+		t.Fatalf("write step2.tf: %v", err)
+	}
+	cfg := filepath.Join(t.TempDir(), ".databrickscfg")
+	_ = os.WriteFile(cfg, []byte("[P]\nhost = x\n"), 0o600)
+	t.Setenv("DATABRICKS_CONFIG_FILE", cfg)
+
+	spec, err := LoadDir(dir)
+	if err != nil {
+		t.Fatalf("LoadDir: %v", err)
+	}
+	if !spec.IsV2() {
+		t.Errorf("expected v2 spec, got v1")
+	}
+}
+
+// TestLoadDir_V1NoExistenceCheck confirms LoadDir does NOT stat config:
+// paths for v1 specs (where steps don't set `config:`). Pure backward-
+// compat: existing v1 fixtures must continue to load without any
+// per-step .tf file requirement.
+func TestLoadDir_V1NoExistenceCheck(t *testing.T) {
+	dir := t.TempDir()
+	body := `name: t
+profile: P
+steps:
+  - { name: s1, version: "1.0.0", command: apply }
+`
+	if err := os.WriteFile(filepath.Join(dir, "test.yaml"), []byte(body), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	cfg := filepath.Join(t.TempDir(), ".databrickscfg")
+	_ = os.WriteFile(cfg, []byte("[P]\nhost = x\n"), 0o600)
+	t.Setenv("DATABRICKS_CONFIG_FILE", cfg)
+
+	if _, err := LoadDir(dir); err != nil {
+		t.Fatalf("v1 LoadDir should not require step .tf files: %v", err)
+	}
+}

@@ -243,9 +243,29 @@ func load(r io.Reader, path, databricksCfgPath string) (*TestSpec, error) {
 	return &spec, nil
 }
 
-// LoadDir is a convenience wrapper that loads `<dir>/test.yaml`.
+// LoadDir is a convenience wrapper that loads `<dir>/test.yaml` and,
+// for v2-mode specs, additionally verifies that every step's
+// `config:` references an existing file under `dir`. The existence
+// check is dir-aware (vs. `Load`, which only sees the test.yaml path)
+// and so lives here. Surfacing typo'd `config:` paths at parse time —
+// before any step runs — prevents a 5-step test from applying steps
+// 1-4 (mutating real cloud resources) only to fail at step 5 with a
+// "no such file or directory".
 func LoadDir(dir string) (*TestSpec, error) {
-	return Load(filepath.Join(dir, "test.yaml"))
+	yamlPath := filepath.Join(dir, "test.yaml")
+	spec, err := Load(yamlPath)
+	if err != nil {
+		return nil, err
+	}
+	if spec.IsV2() {
+		for i, s := range spec.Steps {
+			cfgPath := filepath.Join(dir, s.Config)
+			if _, err := os.Stat(cfgPath); err != nil {
+				return nil, fmt.Errorf("config: %s: steps[%d] (%s): config file %q not found in %s: %w", yamlPath, i, s.Name, s.Config, dir, err)
+			}
+		}
+	}
+	return spec, nil
 }
 
 // normalize fills in defaults and parses string-encoded values that yaml

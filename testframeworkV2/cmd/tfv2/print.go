@@ -15,10 +15,16 @@ import (
 //
 // Format (per-step then summary):
 //
-//	[PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 1.2s
+//	[PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 1.2s   no changes
 //	[FAIL] step 2 (fails_on_1_114_0): 1.114.0 plan in 0.8s — expected failure but command succeeded
+//	       (full stderr at ~/.testframeworkv2/runs/<id>/step_2_fails_on_1_114_0.stderr.log)
 //	...
 //	test1: PASS (4/4 steps passed in 23.4s) — runDir: <path>
+//
+// On FAIL we always render the per-step stderr log path on the next
+// line as an operator-debugging hint — useful regardless of whether
+// the failure was an assertion mismatch, a regex no-match, or an
+// unexpected terraform error.
 func printRunResult(w io.Writer, r result.RunResult) {
 	if r.Skipped {
 		fmt.Fprintf(w, "%s: SKIPPED — %s\n", r.Test, r.Reason)
@@ -26,12 +32,30 @@ func printRunResult(w io.Writer, r result.RunResult) {
 	}
 	for _, s := range r.Steps {
 		fmt.Fprintln(w, formatStepLine(s))
+		if hint := formatFailHint(s); hint != "" {
+			fmt.Fprintln(w, hint)
+		}
 	}
 	fmt.Fprintln(w, strings.Repeat("-", 60))
 	fmt.Fprintf(w, "%s\n", r.String())
 	if r.RunDir != "" {
 		fmt.Fprintf(w, "run dir: %s\n", r.RunDir)
 	}
+}
+
+// formatFailHint returns the indented "(full stderr at <path>)"
+// pointer line we render under each FAIL step. Empty string for
+// PASS / SKIP — those don't need the hint, and emitting an empty
+// line per step would dilute the table density.
+//
+// 7-space indent matches the visual width of the [FAIL] tag plus a
+// trailing space, so the hint visibly threads under the tag column
+// without colliding with the step number.
+func formatFailHint(s result.StepResult) string {
+	if s.Status != result.StatusFail || s.StderrLog == "" {
+		return ""
+	}
+	return fmt.Sprintf("       (full stderr at %s)", s.StderrLog)
 }
 
 // formatStepLine renders one step's outcome as a single line. The

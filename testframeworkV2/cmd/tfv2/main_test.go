@@ -168,7 +168,12 @@ func TestPrintRunResult_WithFailures(t *testing.T) {
 		Test: "t",
 		Steps: []result.StepResult{
 			{Index: 0, Name: "a", Version: "1.113.0", Command: "plan", Status: result.StatusPass, Duration: 100 * time.Millisecond},
-			{Index: 1, Name: "b", Version: "1.114.0", Command: "plan", Status: result.StatusFail, Reason: "expected success but got error: boom", Duration: 200 * time.Millisecond},
+			{
+				Index: 1, Name: "b", Version: "1.114.0", Command: "plan",
+				Status: result.StatusFail, Reason: "expected success but got error: boom",
+				Duration:  200 * time.Millisecond,
+				StderrLog: "/run/dir/step_2_b.stderr.log",
+			},
 		},
 		Duration: 300 * time.Millisecond,
 	}
@@ -183,6 +188,81 @@ func TestPrintRunResult_WithFailures(t *testing.T) {
 	}
 	if !strings.Contains(out, "1/2 steps passed") {
 		t.Errorf("summary should show 1/2 passed: %s", out)
+	}
+	// Run-dir hint pointer line on FAIL — operator-debugging entry
+	// point per task #23 v2 polish.
+	if !strings.Contains(out, "(full stderr at /run/dir/step_2_b.stderr.log)") {
+		t.Errorf("FAIL line should be followed by stderr-path hint, got:\n%s", out)
+	}
+}
+
+// TestPrintRunResult_FailHintIndent pins the 7-space indent on the
+// stderr-path hint line — that's the visual width of "[FAIL] " (the
+// tag plus its trailing space), which threads the hint under the
+// tag column. Operators eyeballing the output expect this column
+// alignment.
+func TestPrintRunResult_FailHintIndent(t *testing.T) {
+	r := result.RunResult{
+		Test: "t",
+		Steps: []result.StepResult{{
+			Index: 0, Name: "a", Version: "1.0.0", Command: "plan",
+			Status: result.StatusFail, Reason: "boom",
+			Duration:  100 * time.Millisecond,
+			StderrLog: "/r/step_1_a.stderr.log",
+		}},
+		Duration: 100 * time.Millisecond,
+	}
+	var buf bytes.Buffer
+	printRunResult(&buf, r)
+	for line := range strings.SplitSeq(buf.String(), "\n") {
+		if strings.HasPrefix(line, "(full stderr") {
+			t.Errorf("hint line must be indented 7 spaces, got %q", line)
+		}
+		if strings.HasPrefix(line, "       (full stderr") {
+			return // found the well-indented line; pass
+		}
+	}
+	t.Errorf("did not find indented hint line in output:\n%s", buf.String())
+}
+
+// TestPrintRunResult_NoHintOnPass: passing steps don't get a hint
+// line. Stderr log is harmless (and present), but the hint is FAIL-
+// only.
+func TestPrintRunResult_NoHintOnPass(t *testing.T) {
+	r := result.RunResult{
+		Test: "t",
+		Steps: []result.StepResult{{
+			Index: 0, Name: "a", Version: "1.0.0", Command: "plan",
+			Status: result.StatusPass, Duration: 100 * time.Millisecond,
+			StderrLog: "/r/step_1_a.stderr.log",
+		}},
+		Duration: 100 * time.Millisecond,
+	}
+	var buf bytes.Buffer
+	printRunResult(&buf, r)
+	if strings.Contains(buf.String(), "full stderr at") {
+		t.Errorf("PASS step should not emit stderr hint, got:\n%s", buf.String())
+	}
+}
+
+// TestFormatFailHint covers the helper directly: FAIL + stderr →
+// hint, every other shape → empty.
+func TestFormatFailHint(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		in   result.StepResult
+		want string
+	}{
+		{"fail with stderr", result.StepResult{Status: result.StatusFail, StderrLog: "/x.log"}, "       (full stderr at /x.log)"},
+		{"fail without stderr", result.StepResult{Status: result.StatusFail}, ""},
+		{"pass with stderr", result.StepResult{Status: result.StatusPass, StderrLog: "/x.log"}, ""},
+		{"skipped", result.StepResult{Status: result.StatusSkipped, StderrLog: "/x.log"}, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := formatFailHint(tc.in); got != tc.want {
+				t.Errorf("got %q\nwant %q", got, tc.want)
+			}
+		})
 	}
 }
 

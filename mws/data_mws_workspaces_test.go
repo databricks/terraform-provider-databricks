@@ -58,8 +58,8 @@ func TestCatalogsData_Error(t *testing.T) {
 // At account level, the post-Read provider_config hook used to fail with
 // "cannot populate provider_config for mws workspaces: failed to resolve
 // workspace_id" because the data source has no workspace context. The fix
-// short-circuits the hook for account-only data sources via
-// accountOnlyDataSources in common/resource.go.
+// short-circuits the hook for resources that opt in via
+// common.Resource.SkipProviderConfigStatePopulation.
 func TestDataSourceMwsWorkspaces_AccountLevelNoHookFailure(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

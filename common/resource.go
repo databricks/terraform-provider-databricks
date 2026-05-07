@@ -107,6 +107,20 @@ type Resource struct {
 	// account and workspace level (has an "api" field from AddApiField).
 	// When true, workspace-tracking logic is skipped for account-level operations.
 	IsDual bool
+	// SkipProviderConfigStatePopulation marks resources whose schema carries the legacy
+	// provider_config block but which have no workspace context (e.g. account-
+	// only data sources defined via the deprecated common.DataResource helper).
+	// When true, the post-Read populateProviderConfigInState hook is skipped so
+	// it does not try to resolve a workspace ID that does not exist.
+	// See https://github.com/databricks/terraform-provider-databricks/issues/5672.
+	//
+	// TODO: replace this (and IsDual / hasProviderConfig schema-presence
+	// inference) with a complete resource-level annotation describing the
+	// resource's API level (workspace / account / dual / account-only-legacy),
+	// and route the post-Read hook + workspace-tracking logic from that
+	// annotation instead of inferring behavior from schema shape and ad-hoc
+	// boolean flags.
+	SkipProviderConfigStatePopulation bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -168,6 +182,7 @@ func (r Resource) ToResource() *schema.Resource {
 	// Check if this resource has provider_config in its schema (unified provider resource)
 	_, hasProviderConfig := r.Schema["provider_config"]
 	isDual := r.IsDual
+	skipProviderConfigStatePopulation := r.SkipProviderConfigStatePopulation
 
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
@@ -241,7 +256,7 @@ func (r Resource) ToResource() *schema.Resource {
 			// During import (no prior state), the hook resolves the effective workspace ID
 			// from workspace_id / cached host for the first time.
 			// Dual resources at account level have no workspace to track, so skip.
-			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
+			if hasProviderConfig && d.Id() != "" && !skipProviderConfigStatePopulation && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
@@ -274,7 +289,7 @@ func (r Resource) ToResource() *schema.Resource {
 				// format) still need provider_config populated for CustomizeDiff to
 				// detect workspace changes. Populate it here since Read won't run.
 				// Dual resources at account level have no workspace to track, so skip.
-				if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
+				if hasProviderConfig && d.Id() != "" && !skipProviderConfigStatePopulation && !(isDual && IsAccountLevel(d, c)) {
 					if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 					}
@@ -290,7 +305,7 @@ func (r Resource) ToResource() *schema.Resource {
 			// sees an empty workspace_id and uses the original provider client
 			// (which has the cached workspace ID) rather than creating a new client.
 			// Dual resources at account level have no workspace to track, so skip.
-			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
+			if hasProviderConfig && d.Id() != "" && !skipProviderConfigStatePopulation && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}

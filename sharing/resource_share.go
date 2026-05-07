@@ -12,6 +12,7 @@ import (
 
 type ShareInfo struct {
 	sharing.ShareInfo
+	common.Namespace
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -38,6 +39,7 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("object", "partition", "value", "op").SetRequired()
 	s.SchemaPath("object", "partition", "value", "name").SetRequired()
 
+	common.NamespaceCustomizeSchema(s)
 	return s
 }
 
@@ -154,6 +156,9 @@ func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, nil)
 	return common.Resource{
 		Schema: shareSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

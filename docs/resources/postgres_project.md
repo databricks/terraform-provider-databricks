@@ -63,7 +63,7 @@ resource "databricks_postgres_project" "this" {
     default_endpoint_settings = {
       autoscaling_limit_min_cu    = 1.0
       autoscaling_limit_max_cu    = 8.0
-      suspend_timeout_duration    = "300s"  # 5 minutes
+      suspend_timeout_duration    = "86400s"  # 24 hours
     }
   }
 }

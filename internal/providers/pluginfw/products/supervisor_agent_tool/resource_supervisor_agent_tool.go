@@ -131,7 +131,8 @@ type Tool struct {
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
 	// "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard",
-	// "serving_endpoint", "uc_table", "vector_search_index".
+	// "serving_endpoint", "uc_table", "vector_search_index", "catalog",
+	// "schema", "supervisor_agent", "web_search".
 	ToolType types.String `tfsdk:"tool_type"`
 
 	UcConnection types.Object `tfsdk:"uc_connection"`
@@ -336,7 +337,7 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 
 func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetOptional()
-	attrs["description"] = attrs["description"].SetRequired()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["knowledge_assistant"] = attrs["knowledge_assistant"].SetOptional()

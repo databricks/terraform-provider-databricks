@@ -30,9 +30,9 @@ Branches exist within the Lakebase Autoscaling resource hierarchy:
 ## Example Usage
 ### Managing Implicitly Created Root Branch
 
-A root branch named `production` is implicitly created for every project. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform take ownership of the implicitly created branch and immediately apply the provided configuration to it. Support for providing a custom `branch_id` will be available in later versions.
+A root branch named `production` is implicitly created for every project. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created branch in Terraform state and immediately apply the provided configuration to it. Support for providing a custom `branch_id` will be available in later versions.
 
-This resource is only required if you want to apply configuration changes to the implicitly created branch.
+Terraform uses this resource exclusively for managing updates. It does not control creation or deletion of the branch itself. Removing the resource from your Terraform configuration only removes it from Terraform state; the actual branch is unaffected, because its lifecycle is currently controlled by the parent project. The only way to remove the actual branch is to delete the project it belongs to.
 
 ```hcl
 resource "databricks_postgres_project" "this" {

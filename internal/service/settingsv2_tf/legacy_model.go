@@ -2678,10 +2678,16 @@ func (m *Setting_SdkV2) SetStringVal(ctx context.Context, v StringMessage_SdkV2)
 type SettingsMetadata_SdkV2 struct {
 	// Setting description for what this setting controls
 	Description types.String `tfsdk:"description"`
+	// Human-readable display name for the setting or feature preview. This
+	// field may be unset if no display name is available.
+	DisplayName types.String `tfsdk:"display_name"`
 	// Link to databricks documentation for the setting
 	DocsLink types.String `tfsdk:"docs_link"`
 	// Name of the setting.
 	Name types.String `tfsdk:"name"`
+	// Preview phase for feature preview settings. This field is not set for
+	// non-preview settings.
+	PreviewPhase types.String `tfsdk:"preview_phase"`
 	// Sample message depicting the type of the setting. To set this setting,
 	// the value sent must match this type.
 	Type_ types.String `tfsdk:"type"`
@@ -2695,8 +2701,10 @@ func (to *SettingsMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m SettingsMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["docs_link"] = attrs["docs_link"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["preview_phase"] = attrs["preview_phase"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
 
 	return attrs
@@ -2720,10 +2728,12 @@ func (m SettingsMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"description": m.Description,
-			"docs_link":   m.DocsLink,
-			"name":        m.Name,
-			"type":        m.Type_,
+			"description":   m.Description,
+			"display_name":  m.DisplayName,
+			"docs_link":     m.DocsLink,
+			"name":          m.Name,
+			"preview_phase": m.PreviewPhase,
+			"type":          m.Type_,
 		})
 }
 
@@ -2731,10 +2741,12 @@ func (m SettingsMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m SettingsMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
-			"docs_link":   types.StringType,
-			"name":        types.StringType,
-			"type":        types.StringType,
+			"description":   types.StringType,
+			"display_name":  types.StringType,
+			"docs_link":     types.StringType,
+			"name":          types.StringType,
+			"preview_phase": types.StringType,
+			"type":          types.StringType,
 		},
 	}
 }

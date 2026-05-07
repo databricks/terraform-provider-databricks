@@ -716,8 +716,21 @@ func Build(profile, tfrcPath, runDir string, passthrough []string) []string {
         "NO_PROXY="                   + os.Getenv("NO_PROXY"),
         // Framework-controlled — terraform-specific.
         "TF_CLI_CONFIG_FILE="         + tfrcPath,
-        "TF_IN_AUTOMATION=1",                                                    // suppress interactive prompts
         "TF_PLUGIN_CACHE_DIR="        + filepath.Join(runDir, "plugins"),        // hardlink optimization (F2)
+        // NOTE on TF_IN_AUTOMATION (and other tfexec-prohibited vars):
+        // We do NOT set TF_IN_AUTOMATION here even though terraform documents it.
+        // tfexec auto-manages it (terraform-exec@v0.25.0/tfexec/cmd.go:178
+        // unconditionally sets env[automationEnvVar] = "1" in buildEnv) and
+        // rejects callers who try to set it via tfexec.Terraform.SetEnv with
+        // ErrManualEnvVar: `manual setting of env var "TF_IN_AUTOMATION" detected`.
+        // The subprocess still receives it because tfexec sets it; we just must
+        // not duplicate. The same prohibition (per cmd.go:24-43 prohibitedEnvVars)
+        // applies to TF_CLI_ARGS, TF_CLI_ARGS_*, TF_INPUT, TF_LOG, TF_LOG_CORE,
+        // TF_LOG_PATH, TF_LOG_PROVIDER, TF_REATTACH_PROVIDERS, TF_APPEND_USER_AGENT,
+        // TF_WORKSPACE, TF_DISABLE_PLUGIN_TLS, TF_SKIP_PROVIDER_VERIFY, TF_VAR_*.
+        // TestBuild_NoTfexecProhibitedVars in env_test.go enumerates the full
+        // prohibited list as a regression guard against future re-introductions.
+        //
         // Framework-controlled — Databricks SDK auth via profile only.
         "DATABRICKS_CONFIG_PROFILE="  + profile,
         "DATABRICKS_CONFIG_FILE="     + filepath.Join(os.Getenv("HOME"), ".databrickscfg"),

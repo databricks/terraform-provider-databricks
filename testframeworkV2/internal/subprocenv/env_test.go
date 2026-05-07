@@ -91,6 +91,7 @@ func TestBuild_StripsDatabricksLeakageVars(t *testing.T) {
 		"DATABRICKS_AUTH_TYPE",
 		"DATABRICKS_ACCOUNT_ID",
 		"DATABRICKS_AZURE_TENANT_ID",
+		"DATABRICKS_AZURE_RESOURCE_ID",
 		"DATABRICKS_GOOGLE_SERVICE_ACCOUNT",
 	}
 	for _, k := range leakers {
@@ -132,6 +133,60 @@ func TestBuild_StripsTFLeakageVars(t *testing.T) {
 	}
 }
 
+// TestBuild_NoTfexecProhibitedVars asserts Build() never emits any name
+// in tfexec's prohibitedEnvVars list (terraform-exec@v0.25.0/tfexec/
+// cmd.go:24-43). tfexec.Terraform.SetEnv returns ErrManualEnvVar when
+// any of these is set by the caller, breaking the runner before any
+// terraform subprocess starts. tfexec auto-manages every prohibited
+// variable internally — buildEnv() at cmd.go:178 unconditionally sets
+// TF_IN_AUTOMATION="1", and others are filtered/managed similarly —
+// so the subprocess receives them without our help.
+//
+// The test is defense-in-depth: a future contributor accidentally
+// adding (e.g.) TF_LOG=DEBUG to appendFrameworkControlled would be
+// caught here without needing a live-cloud smoke run to find it.
+func TestBuild_NoTfexecProhibitedVars(t *testing.T) {
+	prohibitedExact := []string{
+		"TF_CLI_ARGS",
+		"TF_INPUT",
+		"TF_IN_AUTOMATION",
+		"TF_LOG",
+		"TF_LOG_CORE",
+		"TF_LOG_PATH",
+		"TF_LOG_PROVIDER",
+		"TF_REATTACH_PROVIDERS",
+		"TF_APPEND_USER_AGENT",
+		"TF_WORKSPACE",
+		"TF_DISABLE_PLUGIN_TLS",
+		"TF_SKIP_PROVIDER_VERIFY",
+	}
+	prohibitedPrefixes := []string{"TF_VAR_", "TF_CLI_ARGS_"}
+
+	// Pollute parent env so the allowlist's silent-strip behaviour is
+	// the only thing keeping these out of the result. The exact-match
+	// names use synthetic values; the prefix names use one
+	// representative each.
+	for _, p := range prohibitedExact {
+		t.Setenv(p, "leaked")
+	}
+	t.Setenv("TF_VAR_password", "leaked")
+	t.Setenv("TF_CLI_ARGS_init", "leaked")
+
+	got := envMap(Build("p", "/tmp/.tfrc", "/tmp/run", nil))
+	for _, k := range prohibitedExact {
+		if _, ok := got[k]; ok {
+			t.Errorf("Build() emitted prohibited %q (would break tfexec.SetEnv)", k)
+		}
+	}
+	for k := range got {
+		for _, prefix := range prohibitedPrefixes {
+			if strings.HasPrefix(k, prefix) {
+				t.Errorf("Build() emitted prohibited prefix %q in %q (would break tfexec.SetEnv)", prefix, k)
+			}
+		}
+	}
+}
+
 // TestBuild_StripsCloudCredentialVars verifies cloud creds aren't leaked.
 // The user opts into them via passthrough_env when needed.
 func TestBuild_StripsCloudCredentialVars(t *testing.T) {
@@ -159,8 +214,12 @@ func TestBuild_StripsCloudCredentialVars(t *testing.T) {
 }
 
 // TestBuild_FrameworkControlledVarsAreSet pins the values we always set:
-// TF_CLI_CONFIG_FILE, TF_IN_AUTOMATION, TF_PLUGIN_CACHE_DIR,
-// DATABRICKS_CONFIG_PROFILE, DATABRICKS_CONFIG_FILE.
+// TF_CLI_CONFIG_FILE, TF_PLUGIN_CACHE_DIR, DATABRICKS_CONFIG_PROFILE,
+// DATABRICKS_CONFIG_FILE.
+//
+// TF_IN_AUTOMATION is intentionally absent — tfexec auto-manages it
+// (see TestBuild_NoTfexecProhibitedVars + the comment in
+// appendFrameworkControlled).
 func TestBuild_FrameworkControlledVarsAreSet(t *testing.T) {
 	t.Setenv("HOME", "/home/testuser")
 
@@ -172,7 +231,6 @@ func TestBuild_FrameworkControlledVarsAreSet(t *testing.T) {
 		want string
 	}{
 		{"TF_CLI_CONFIG_FILE", "/run/.terraformrc"},
-		{"TF_IN_AUTOMATION", "1"},
 		{"TF_PLUGIN_CACHE_DIR", filepath.Join("/run/test-abc", "plugins")},
 		{"DATABRICKS_CONFIG_PROFILE", "MY_PROFILE"},
 		{"DATABRICKS_CONFIG_FILE", filepath.Join("/home/testuser", ".databrickscfg")},

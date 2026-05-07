@@ -90,13 +90,26 @@ func appendAllowlist(env []string) []string {
 }
 
 // appendFrameworkControlled writes the variables the framework owns:
-// TF_CLI_CONFIG_FILE / TF_IN_AUTOMATION / TF_PLUGIN_CACHE_DIR — and the
+// TF_CLI_CONFIG_FILE / TF_PLUGIN_CACHE_DIR — and the
 // DATABRICKS_CONFIG_PROFILE / DATABRICKS_CONFIG_FILE pair which is the
 // linchpin of the no-leak invariant (DESIGN.md §10 G6).
+//
+// Note: TF_IN_AUTOMATION is intentionally NOT added here. tfexec
+// auto-manages it (terraform-exec@v0.25.0/tfexec/cmd.go:178
+// unconditionally sets env[automationEnvVar] = "1" in buildEnv) and
+// rejects callers who try to set it via tfexec.Terraform.SetEnv —
+// `manual setting of env var "TF_IN_AUTOMATION" detected`. The
+// subprocess still receives it because tfexec sets it; we just must
+// not duplicate. The same prohibition applies to TF_CLI_ARGS,
+// TF_CLI_ARGS_*, TF_INPUT, TF_LOG, TF_LOG_CORE, TF_LOG_PATH,
+// TF_LOG_PROVIDER, TF_REATTACH_PROVIDERS, TF_APPEND_USER_AGENT,
+// TF_WORKSPACE, TF_DISABLE_PLUGIN_TLS, TF_SKIP_PROVIDER_VERIFY, and
+// TF_VAR_* — none of which we set; the regression tests in
+// env_test.go enumerate all of them so a future contributor can't
+// silently re-introduce one.
 func appendFrameworkControlled(env []string, profile, tfrcPath, runDir string) []string {
 	return append(env,
 		"TF_CLI_CONFIG_FILE="+tfrcPath,
-		"TF_IN_AUTOMATION=1",
 		"TF_PLUGIN_CACHE_DIR="+filepath.Join(runDir, "plugins"),
 		"DATABRICKS_CONFIG_PROFILE="+profile,
 		"DATABRICKS_CONFIG_FILE="+filepath.Join(os.Getenv("HOME"), ".databrickscfg"),

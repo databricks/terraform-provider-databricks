@@ -1,0 +1,61 @@
+# testframeworkV2 reproducer for GitHub issue #5668
+# https://github.com/databricks/terraform-provider-databricks/issues/5668
+#
+# Bug: workspace-level resources (databricks_token, databricks_git_credential,
+# and others that hit common/client.go:176's validateWorkspaceID call site)
+# fail at plan in v1.114.0 with:
+#   Error: failed to validate workspace_id: failed to get the workspace_id:
+#          User not authorized.
+#
+# Root cause: PR #5492 (a3ab0a93) added a workspace_id validation hook in
+# common/client.go that resolves the effective workspace_id by calling SCIM
+# /Me. When the auth identity is a service principal that hasn't been assigned
+# to the workspace as a user (or any non-user identity that lacks /Me access),
+# the resolution fails — wrapped twice as
+#   "failed to validate workspace_id: failed to get the workspace_id: <inner>"
+#
+# Same regression family as #5664 / #5672 / #5678 (all caused by PR #5492).
+# This one specifically fires for workspace-level resources at validate time.
+#
+# Fix path:
+#   v1.114.1: rollback retag — same git source SHA as v1.113.0; the released
+#             binary was independently rebuilt by goreleaser, so binary SHAs
+#             differ. See DESIGN.md §16 F6.
+#   No `local` step — the fix on `main` is currently aligned to v1.113.0 source
+#   for this code path (PR #5492 was reverted), so a `local` step would just
+#   duplicate step 3.
+
+name: issue_5668_workspace_validate_workspace_id_regression
+profile: WORKSPACE_AZURE_SP_UNASSIGNED   # placeholder — see main.tf header comment for profile shape
+cleanup: true                             # destroy the token after the test
+
+requires:
+  cloud: any                              # bug is auth-method-dependent, not cloud-dependent
+                                          # (any /Me-blocked identity reproduces; reporter saw it on Azure SP)
+  level: workspace                        # workspace-level resource path
+
+steps:
+  # Step 1: pre-regression baseline. v1.113.0 has no validate hook on the
+  # workspace-level path — apply succeeds even with an /Me-blocked identity.
+  # (Verifies the test setup is sane.)
+  - name: passes_on_1_113_0
+    version: "1.113.0"
+    command: apply
+    expect: success
+
+  # Step 2: regression. v1.114.0's validate hook calls /Me, which returns
+  # "User not authorized" for an unassigned SP. Plan exits non-zero with the
+  # outer error wrapper. The inner string varies by auth method (Azure SP:
+  # "User not authorized."; AWS OAuth M2M: similar wording; GCP SA: similar);
+  # we anchor on the cloud-portable outer pattern.
+  - name: fails_on_1_114_0
+    version: "1.114.0"
+    command: plan
+    expect: failure
+    error_regex: 'failed to validate workspace_id: failed to get the workspace_id'
+
+  # Step 3: rollback retag — proves the fix works (apply succeeds again).
+  - name: fixed_on_1_114_1
+    version: "1.114.1"
+    command: apply
+    expect: success

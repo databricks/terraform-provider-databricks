@@ -588,3 +588,82 @@ func TestLoad_FixtureFromMissionTest(t *testing.T) {
 		t.Errorf("expected 4 steps in mission test, got %d", got)
 	}
 }
+
+// TestLoad_AllShippedFixturesParse loads every committed test.yaml
+// under testframeworkV2/{issues-repro,tests}/ and asserts each one
+// parses + validates cleanly. This catches schema drift in any
+// shipped fixture without requiring per-fixture wiring — adding a
+// new fixture under either tree is automatically covered.
+//
+// Per-fixture profile names are stubbed via fixtureProfile so the
+// existence preflight passes without needing the developer's real
+// ~/.databrickscfg to define WORKSPACE_AZURE_SP_UNASSIGNED etc.
+func TestLoad_AllShippedFixturesParse(t *testing.T) {
+	roots := []string{
+		filepath.Join("..", "..", "issues-repro"),
+		filepath.Join("..", "..", "tests"),
+	}
+	for _, root := range roots {
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			// A repo where a tree doesn't yet exist (e.g. an early
+			// branch where issues-repro/ is empty) is fine — skip.
+			t.Logf("skip %s: %v", root, err)
+			continue
+		}
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			yamlPath := filepath.Join(root, e.Name(), "test.yaml")
+			if _, err := os.Stat(yamlPath); err != nil {
+				continue
+			}
+			t.Run(filepath.Base(root)+"/"+e.Name(), func(t *testing.T) {
+				// Peek at the profile name so the synthetic
+				// .databrickscfg can stub the right section.
+				body, err := os.ReadFile(yamlPath)
+				if err != nil {
+					t.Fatalf("ReadFile: %v", err)
+				}
+				profileName := extractYAMLField(string(body), "profile")
+				if profileName == "" {
+					t.Fatal("could not extract `profile` from test.yaml")
+				}
+				cfg := fixtureProfile(t, profileName)
+				spec, err := LoadWithProfilePath(yamlPath, cfg)
+				if err != nil {
+					t.Fatalf("LoadWithProfilePath: %v", err)
+				}
+				if len(spec.Steps) == 0 {
+					t.Errorf("expected at least 1 step, got 0")
+				}
+			})
+		}
+	}
+}
+
+// extractYAMLField returns the value of `key:` from a YAML document
+// using a tiny line-based heuristic. We don't import yaml.v3 here
+// because the only callers are the per-fixture parse tests above —
+// the heuristic only needs to handle top-level scalar fields, which
+// it does correctly for the shape every committed fixture uses.
+func extractYAMLField(body, key string) string {
+	for line := range strings.SplitSeq(body, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		k, v, ok := strings.Cut(trimmed, ":")
+		if !ok || strings.TrimSpace(k) != key {
+			continue
+		}
+		// Strip trailing comment if any.
+		v = strings.TrimSpace(v)
+		if i := strings.Index(v, "#"); i >= 0 {
+			v = strings.TrimSpace(v[:i])
+		}
+		return v
+	}
+	return ""
+}

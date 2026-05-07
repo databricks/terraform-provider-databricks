@@ -65,9 +65,13 @@ steps:
     command: plan
     expect: success
 
-  # Step 4: the actual code fix on the current branch (PR #5667, commit
-  # ab834c38 — migrates databricks_mws_workspaces to common.AccountData).
-  # This is the only step that proves the real fix works.
+  # Step 4: validates the framework's local-build pipeline. As of 2026-05-08
+  # main has reverted PR #5667 + PR #5492 + related (commits cc89a814,
+  # f4aebfc2, 8a4e64ab, 0d2c487e, 20108fee, a20971ad, c707a744 — see
+  # DESIGN.md §16 F7), so the source under `local` is now equivalent to
+  # v1.113.0 for this code path. Step 4 passes for the same reason step 1
+  # does, and will graduate to a true regression-proof step once the next
+  # forward-rolled fix lands on main.
   - name: fixed_on_local
     version: "local"
     command: plan

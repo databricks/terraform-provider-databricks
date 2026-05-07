@@ -24,6 +24,19 @@
 #   No `local` step — the fix on `main` is currently aligned to v1.113.0 source
 #   for this code path (PR #5492 was reverted), so a `local` step would just
 #   duplicate step 3.
+#
+# ── PROFILE PREREQUISITE (CRITICAL) ─────────────────────────────────────────
+# This test ONLY produces meaningful results with a workspace-level profile
+# whose auth identity lacks /Me access (e.g., an Azure SP not assigned as a
+# workspace user, an AWS OAuth M2M identity without workspace user access, or
+# a GCP SA in the same boat). On admin/standard profiles, step 1 (apply on
+# 1.113.0) will succeed but step 2 (fail-as-expected on 1.114.0) won't fire
+# the validate hook — the test won't validate the regression.
+#
+# If your test environment doesn't have such a profile, skip this test and
+# mark it as manual-verification-deferred in your live-smoke closeout. Don't
+# block Phase 3 sign-off on this test.
+# ────────────────────────────────────────────────────────────────────────────
 
 name: issue_5668_workspace_validate_workspace_id_regression
 profile: WORKSPACE_AZURE_SP_UNASSIGNED   # placeholder — see main.tf header comment for profile shape

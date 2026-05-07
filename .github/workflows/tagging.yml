@@ -50,6 +50,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          # Force re-resolution of ``main`` at step time. Without
+          # ``ref:``, checkout pins to ``github.sha`` — the SHA frozen
+          # at workflow_dispatch time — which means re-running a stale
+          # dispatch checks out an older main even when newer commits
+          # exist.
+          ref: main
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 

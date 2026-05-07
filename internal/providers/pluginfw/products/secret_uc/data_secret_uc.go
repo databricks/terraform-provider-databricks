@@ -312,8 +312,4 @@ func (r *SecretDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

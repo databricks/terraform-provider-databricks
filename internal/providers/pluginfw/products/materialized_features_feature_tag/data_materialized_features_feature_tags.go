@@ -127,8 +127,4 @@ func (r *FeatureTagsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	config.MaterializedFeatures = types.ListValueMust(FeatureTagData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

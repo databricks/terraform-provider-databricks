@@ -55,9 +55,8 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:            ResourceGroup(),
-		AccountID:           "acc-123",
-		ProviderWorkspaceID: "12345",
+		Resource:  ResourceGroup(),
+		AccountID: "acc-123",
 		HCL: `
 			display_name = "ws-group"
 			api = "workspace"

@@ -264,8 +264,4 @@ func (r *SupervisorAgentDataSource) Read(ctx context.Context, req datasource.Rea
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

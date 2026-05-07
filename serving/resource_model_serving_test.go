@@ -629,9 +629,7 @@ func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
 		HCL: `
 			name = "test-endpoint"
 			`,
-		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
-			"provider_config.#": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
-		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
 	}.ApplyNoError(t)
 }
 

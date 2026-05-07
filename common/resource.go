@@ -6,88 +6,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// workspaceIDSchemaKey is the key for the workspace ID in schema
-const workspaceIDSchemaKey = "provider_config.0.workspace_id"
-
-func workspaceIDFromRawConfig(d *schema.ResourceData) (string, bool) {
-	path := cty.Path{
-		cty.GetAttrStep{Name: "provider_config"},
-		cty.IndexStep{Key: cty.NumberIntVal(0)},
-		cty.GetAttrStep{Name: "workspace_id"},
-	}
-	rawValue, diags := d.GetRawConfigAt(path)
-	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
-		return "", false
-	}
-	if rawValue.Type() == cty.String {
-		return rawValue.AsString(), true
-	}
-	return "", false
-}
-
-// populateProviderConfigInState writes the effective workspace ID into
-// provider_config in the resource state.
-//
-// During refresh reads (terraform plan), the prior state value must be preserved
-// so that CustomizeDiff can compare the old effective workspace ID against the
-// new one and trigger ForceNew when they differ. If this hook resolved the "new
-// effective" workspace ID and wrote it during refresh, it would overwrite the old
-// value before CustomizeDiff runs, making workspace-change detection impossible.
-//
-// Therefore this hook only resolves from provider-level sources (workspace_id,
-// host) on the first time — when no workspace ID exists in state yet (after Create).
-// On subsequent reads, it preserves whatever is already in state.
-func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	// If provider_config.workspace_id already exists in state, preserve it.
-	// During refresh reads the state value reflects the workspace the Read
-	// actually targeted. Overwriting it would prevent CustomizeDiff from
-	// detecting workspace changes.
-	if existing := d.Get(workspaceIDSchemaKey); existing != nil {
-		if existingStr, ok := existing.(string); ok && existingStr != "" {
-			if err := d.Set("provider_config", []map[string]any{{"workspace_id": existingStr}}); err != nil {
-				return fmt.Errorf("failed to set provider_config in state: %w", err)
-			}
-			return nil
-		}
-	}
-
-	// No workspace ID in state yet (first time — after Create/Import).
-	// Resolve from provider config to populate state for the first time:
-	// 1. provider_config.workspace_id from raw config
-	// 2. workspace_id from provider
-	// 3. Lazy resolution via CurrentWorkspaceID API call (GET /api/2.0/preview/scim/v2/Me)
-	//
-	// Account hosts without workspace_id never reach here: plan-time validation
-	// rejects them, and dual resources at account level are guarded by the api
-	// field early return above.
-	wsID, _ := workspaceIDFromRawConfig(d)
-	if wsID == "" && c.DatabricksClient != nil && c.Config != nil {
-		wsID = c.Config.WorkspaceID
-	}
-	if wsID == "" && c.DatabricksClient != nil {
-		resolvedID, err := c.CurrentWorkspaceID(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to resolve workspace_id: %w", err)
-		}
-		wsID = strconv.FormatInt(resolvedID, 10)
-	}
-
-	if wsID != "" {
-		if err := d.Set("provider_config", []map[string]any{{"workspace_id": wsID}}); err != nil {
-			return fmt.Errorf("failed to set provider_config in state: %w", err)
-		}
-	}
-	return nil
-}
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
@@ -165,10 +89,6 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
-	// Check if this resource has provider_config in its schema (unified provider resource)
-	_, hasProviderConfig := r.Schema["provider_config"]
-	isDual := r.IsDual
-
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
 	if r.Update != nil {
@@ -187,10 +107,6 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
-			// No post-Read hook needed for Update: provider_config.workspace_id is
-			// already in state from a previous Create, and r.Read() never touches it.
-			// If the workspace ID had changed, CustomizeDiff would have triggered
-			// ForceNew (destroy+create), so Update only runs when it's unchanged.
 			return nil
 		}
 	} else {
@@ -221,9 +137,7 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-
-			c := m.(*DatabricksClient)
-			err := recoverable(r.Read)(ctx, d, c)
+			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -234,17 +148,6 @@ func (r Resource) ToResource() *schema.Resource {
 			if err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
-			}
-			// Post-Read hook for refresh reads and imports: populate provider_config in state.
-			// During normal refresh, provider_config is already in prior state and r.Read()
-			// doesn't touch it, so the hook preserves the existing value (no-op).
-			// During import (no prior state), the hook resolves the effective workspace ID
-			// from workspace_id / cached host for the first time.
-			// Dual resources at account level have no workspace to track, so skip.
-			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
-				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
-					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
-				}
 			}
 			return nil
 		}
@@ -270,30 +173,11 @@ func (r Resource) ToResource() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
-				// Resources that skip Read after Create (e.g. notebooks with SOURCE
-				// format) still need provider_config populated for CustomizeDiff to
-				// detect workspace changes. Populate it here since Read won't run.
-				// Dual resources at account level have no workspace to track, so skip.
-				if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
-					if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
-						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
-					}
-				}
 				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
-			}
-			// Post-Create hook: populate provider_config in state after Read.
-			// Must run after Read so that Read's DatabricksClientForUnifiedProvider
-			// sees an empty workspace_id and uses the original provider client
-			// (which has the cached workspace ID) rather than creating a new client.
-			// Dual resources at account level have no workspace to track, so skip.
-			if hasProviderConfig && d.Id() != "" && !(isDual && IsAccountLevel(d, c)) {
-				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
-					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
-				}
 			}
 			return nil
 		}

@@ -121,8 +121,4 @@ func (r *WorkspaceBaseEnvironmentsDataSource) Read(ctx context.Context, req data
 
 	config.Environments = types.ListValueMust(WorkspaceBaseEnvironmentData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

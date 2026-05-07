@@ -326,7 +326,6 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 		},
 		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
 			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
-			"provider_config.#":         {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
@@ -358,7 +357,6 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
 			"auto_stop_mins":            {Old: "120", New: "0", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
-			"provider_config.#":         {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},

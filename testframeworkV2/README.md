@@ -54,16 +54,13 @@ terraform -version
 tfv2 run --repo "$(pwd)" testframeworkV2/issues-repro/issue_5672/
 
 # Expected:
-# [PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 5.1s
-# [FAIL] step 2 (fails_on_1_114_0): 1.114.0 plan in 4.7s
-#        — wait, this should pass with failure-as-expected
-# Actually:
-# [PASS] step 2 (fails_on_1_114_0): 1.114.0 plan in 4.7s     # failure-as-expected
-# [PASS] step 3 (fixed_on_1_114_1): 1.114.1 plan in 4.6s
-# [PASS] step 4 (fixed_on_local):   99.0.0-local plan in 5.9s
+# [PASS] step 1 (passes_on_1_113_0): 1.113.0      plan in 5.1s
+# [PASS] step 2 (fails_on_1_114_0): 1.114.0       plan in 4.7s    (failure-as-expected)
+# [PASS] step 3 (fixed_on_1_114_1): 1.114.1       plan in 4.6s
+# [PASS] step 4 (fixed_on_local):   99.0.0-local  plan in 5.9s
 # ----------------------------------------------------------
 # issue_5672_...: PASS (4/4 steps passed in 22.4s)
-# run dir: /Users/you/.testframeworkv2/runs/issue_5672_...-2026-05-07T20-15-00-a3f2
+# run dir: /Users/you/.testframeworkv2/runs/issue_5672_...-2026-05-08T08-15-00-a3f2
 ```
 
 ## Subcommands
@@ -129,11 +126,11 @@ testframeworkV2/
 │   ├── runner/                            ← orchestration: parse → step loop → cleanup
 │   └── result/                            ← per-step + per-run result types
 ├── issues-repro/                          ← fixtures that reproduce a specific GitHub issue
-│   ├── issue_5672/                        ← the keystone mws_workspaces regression test
+│   ├── issue_5672/                        ← keystone mws_workspaces regression test (account-level)
 │   │   ├── test.yaml
 │   │   └── main.tf
-│   ├── issue_5678/                        ← (Phase 2 — pending researcher output)
-│   └── issue_5668/                        ← (Phase 2 — pending researcher output)
+│   ├── issue_5678/                        ← catalog_workspace_binding force-replace on rollback
+│   └── issue_5668/                        ← databricks_token validate (unassigned-SP profile required)
 └── tests/                                 ← green-path / smoke fixtures (no specific issue)
     └── workspace_data_source_smoke/       ← happy-path data.databricks_mws_workspaces
         ├── test.yaml

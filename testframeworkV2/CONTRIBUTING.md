@@ -47,9 +47,11 @@ framework reads that field and skips the test cleanly if the named profile
 doesn't match.
 
 Issue #5672 is account-only (the post-Read hook only fires against an account
-host) → `issues-repro/issue_5672/`. A workspace-level `databricks_grant`
-regression for issue #5678 would go at `issues-repro/issue_5678/`. A green-
-path data-source smoke test goes under `tests/`.
+host) → `issues-repro/issue_5672/`. The workspace-level `databricks_token`
+regression for issue #5668 lives at `issues-repro/issue_5668/`, and the
+`databricks_catalog_workspace_binding` rollback regression for issue #5678
+lives at `issues-repro/issue_5678/`. A green-path data-source smoke test
+goes under `tests/` (e.g. `tests/workspace_data_source_smoke/`).
 
 Slug-style names: lowercase, digits, `_`, `-` (matches `^[a-z0-9_-]+$`).
 

@@ -1,0 +1,61 @@
+# testframeworkV2 v2-mode demo: full create/modify/destroy lifecycle of databricks_token
+# with state assertions at every step.
+#
+# Demonstrates the v2 capabilities introduced in DESIGN.md §17:
+#   - per-step `config:` swaps the HCL between steps (each step has its own .tf file)
+#   - state survives the swap (terraform.tfstate is preserved across steps)
+#   - `assert:` blocks check resource presence + attribute equality after each command
+#
+# Why this fixture exists: token lifecycle is the simplest 3-step CRUD coverage.
+# Step 1 creates with one set of attrs, step 2 modifies them in-place, step 3 destroys
+# the resource entirely. Each step asserts the state shape it expects to see.
+
+name: token_lifecycle_v2
+profile: WORKSPACE_AWS                  # any workspace-level profile works
+cleanup: true                            # default; final destroy uses last-successful Apply step's version
+
+requires:
+  cloud: any
+  level: workspace
+
+steps:
+  # Step 1: CREATE. Empty initial state → token exists after apply with the
+  # initial attrs. We use `local` here to demonstrate the framework against
+  # the current branch's provider; an issue-repro test would use a pinned
+  # broken/fixed semver instead.
+  - name: create_token
+    config: step1_create.tf
+    version: "local"
+    command: apply
+    expect: success
+    assert:
+      - resource: databricks_token.pat
+        # present: true is the default
+        attrs:
+          comment: "tfv2-token-lifecycle-step-1"
+          lifetime_seconds: 3600
+
+  # Step 2: MODIFY. Same resource address; HCL changes the comment +
+  # lifetime_seconds. Apply does an in-place update (no destroy). State retains
+  # the same id (verifiable by reading the run-dir's plan log if you want).
+  - name: modify_attrs
+    config: step2_modify.tf
+    version: "local"
+    command: apply
+    expect: success
+    assert:
+      - resource: databricks_token.pat
+        attrs:
+          comment: "tfv2-token-lifecycle-step-2-modified"
+          lifetime_seconds: 7200
+
+  # Step 3: DESTROY. The HCL is empty (no databricks_token block) — terraform
+  # plans a destroy. Apply removes the resource from state.
+  - name: destroy_token
+    config: step3_destroy.tf
+    version: "local"
+    command: apply
+    expect: success
+    assert:
+      - resource: databricks_token.pat
+        present: false      # explicit absence — resource MUST NOT be in state

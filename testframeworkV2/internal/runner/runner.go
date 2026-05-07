@@ -195,8 +195,20 @@ func (r *Runner) prepareRun() (runPrep, error) {
 	if err := os.MkdirAll(pluginDir, 0o755); err != nil {
 		return runPrep{}, fmt.Errorf("runner: mkdir %s: %w", pluginDir, err)
 	}
-	if err := copyTerraformFiles(r.opts.SourceDir, workDir); err != nil {
-		return runPrep{}, err
+	// In v1 mode the runner copies every *.tf / *.tfvars from SourceDir
+	// into workDir once at run start. In v2 mode each step brings its
+	// own per-step config file (Step.Config), so the bulk-copy is
+	// skipped here and runStep does a wipe-and-copy before each init.
+	// The workdir is still created so .terraformrc + override file
+	// writes have somewhere to land.
+	if !r.spec.IsV2() {
+		if err := copyTerraformFiles(r.opts.SourceDir, workDir); err != nil {
+			return runPrep{}, err
+		}
+	} else {
+		if err := os.MkdirAll(workDir, 0o755); err != nil {
+			return runPrep{}, fmt.Errorf("runner: mkdir %s: %w", workDir, err)
+		}
 	}
 	tfrcPath, err := tfrcwriter.WriteTerraformRC(workDir, r.cache.Root(), pluginDir)
 	if err != nil {

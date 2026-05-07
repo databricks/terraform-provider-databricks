@@ -1,9 +1,10 @@
 # testframeworkV2 — Design Doc
 
-**Status:** Draft v5.0 (implementer-tf11, 2026-05-08)
+**Status:** Draft v6.0 (implementer-tf11 + researcher-tf11, 2026-05-08)
 **Audience:** tech-lead-tf11, reviewer-tf11, tester-tf11, implementer-tf11
 **Scope:** Multi-step, multi-version Terraform integration test harness for `databricks/terraform-provider-databricks`. v1 ships small.
-**Supersedes:** v4.2, v4.1, v4, v3, v2, and v1.
+**Supersedes:** v5.0, v4.2, v4.1, v4, v3, v2, and v1.
+**v6.0 deltas (vs v5.0):** v2-mode opt-in, per-step HCL + structured state assertions (Task #20). New §17 covering the full v2 schema + runner integration. Net behaviour change: tests in `issues-repro/` and `tests/` continue to work as v1 unless they declare `config:` on every step. v2 specs gain (a) per-step `*.tf` file swap (state survives the swap; runner wipes user `*.tf` and copies the per-step file before each `terraform init`), and (b) structured `assert:` blocks with resource presence + attribute equality checks against `terraform show -json` output. Implementation adds `internal/stateassert` package; extends `internal/config` (Step.Config + Step.Assert), `internal/result` (AssertionFailure type + StepResult.Assertions/AssertLog fields), and `internal/runner` (mode-aware prepareRun + per-step swapStepConfig + post-command runStateAssert). New fixture `tests/token_lifecycle_v2/` demonstrates the end-to-end create/modify/destroy lifecycle. v1 backward compat preserved — v1 specs see zero behaviour change; new fields are omitted-by-default in JSON output.
 **v5.0 deltas (vs v4.2):** Phase 2 directory restructure to support multiple fixtures (Task #17). (1) `testframeworkV2/account/` → `testframeworkV2/issues-repro/` — the `account/`-as-level-marker convention from v4.x didn't scale to bug fixtures targeting different profile levels (issue #5678 is workspace-level, issue #5668 is account-level). The `issues-repro/` namespace groups all "this commit reproduces a known bug" fixtures regardless of level; per-test `requires.{cloud,level}` does the actual gating. (2) `testframeworkV2/tests/` added as a parallel sibling for green-path / smoke fixtures that aren't tied to a specific issue (e.g. `tests/<workspace-ds-smoke>/` covers the `data.databricks_mws_workspaces` happy path on the current branch). (3) `account/test1_issue_5672/` renamed to `issues-repro/issue_5672/` — drops the `test1_` prefix and aligns with the `issue_<N>` convention used by the new fixtures. (4) §3 directory layout block + §11 worked-example paths + §13 OQ3 updated; OQ3 now CLOSED with the issues-repro / tests split documented as the v5.0 convention. Pure structural change; no schema, runner, or behaviour deltas from v4.2.
 **v4.2 deltas (vs v4.1):** picked up reviewer's 3 last-bounce items that the v4.1 sweep missed. (1) §4 schema example `requires.cloud: gcp` → `any` (matches the actual #5672 fixture). (2) §11 in-doc `test.yaml` example block (lines ~810-840) was a v3-era stale copy with `cloud: gcp` + GCP-specific regex + `error_substring` — synced fully with the actual fixture file. (3) §13 open question 2 ("issue #5672 cloud-specificity") marked CLOSED with reference to Appendix A "AWS account full-smoke" entry. Pure consistency cleanup; no behavior or schema changes from v4.1.
 **v4.1 deltas (vs v4):** stale-reference sweep — 6 spots that still referenced the dropped preflight rule or the truncated "same SHA" framing. Pure consistency cleanup; no behavior or schema changes. (1) §4 schema example `passthrough_env` no longer lists items already in core (HTTP_PROXY etc.) — replaced with niche cross-cloud examples (AWS_PROFILE, AZURE_CLIENT_ID, GCP_PROJECT). (2) §7.0 pseudocode comment dropped the "validate no `databricks` pin" clause. (3) §8 synthetic-version subsection rewrote the "preflight guarantees no collision" sentence to cite override-merge per-attribute semantics instead. (4) §11 main.tf example block in DESIGN.md sample synced with the actual fixture (allow user pin). (5) test.yaml header comment about v1.114.1 expanded to mention binary-vs-git SHA distinction. (6) test.yaml step 3 inline comment same expansion.
@@ -1184,6 +1185,126 @@ For implementer-tf11. Each milestone is independently shippable to PR; M1-M3 don
 **F6. v1.114.1 vs v1.113.0 — same source, different binaries.** The git tag `v1.114.1` points at commit `7a6b469e`, identical to `v1.113.0`. But the released binary content differs (tester sha256: 1.113.0 = `d2ee4a9a...9f9f9469`, 1.114.1 = `ddf8cdb0...32d368b`, both 64,601,938 bytes). This is normal: same source rebuilt by goreleaser at different times produces different binaries (build timestamps, environment metadata embedded by Go's linker). Functionally equivalent at runtime; Terraform treats them as distinct versions because the cached filenames differ (`terraform-provider-databricks_v1.113.0` vs `_v1.114.1`) and the lock-file entries differ. The framework caches them independently, by version string. No special handling needed. Worth knowing for anyone debugging "why does v1.114.1 still produce a different lock entry than v1.113.0".
 
 **F7. PR #5492 / #5667 revert chain (2026-05-08).** Between v1.114.0 (which contained PR #5492's "workspace_id support of SDKv2 resources") and the current state of `main`, the following commits reverted the workspace_id machinery and its dependent fixes: `cc89a814`, `f4aebfc2`, `8a4e64ab`, `0d2c487e`, `20108fee`, `a20971ad`, `c707a744`. Net effect: `main`'s source for the affected code paths (the post-Read hook in `common/resource.go`, `validateWorkspaceID` in `common/client.go`, `databricks_mws_workspaces` migration to `common.AccountData`) is currently equivalent to v1.113.0. This means the issue #5672 mission test's step 4 (`local`) currently passes because the source matches v1.113.0, NOT because a forward-rolled fix is in place. Step 4 still validates the framework's local-build pipeline (compile flags, layout, override semantics, provenance JSON) and will graduate to "proves the regression-fix works" automatically once the next forward attempt at workspace_id resolution lands on main — the synthetic-version mechanism handles the version-flip transparently with no test.yaml change required. The new `issues-repro/issue_5678/` fixture (added in v5.0) covers the state-incompatibility consequence of that same revert chain, and the next forward-rolled fix will introduce a new fixture in `issues-repro/` to cover whatever new bug surface (if any) emerges.
+
+---
+
+## 17. v2 mode — per-step HCL + state assertions
+
+Added in v6.0. v2 mode is opt-in: a test stays in v1 unless every step declares `config:`. v1 tests continue to work unchanged — same schema, same runner pipeline, same JSON output shape. v2 tests gain two capabilities that v1 cannot express:
+
+1. **Per-step HCL swap.** Each step has its own `*.tf` file (`config:`); the runner wipes user `*.tf` from the workdir and copies the step's file in before each `terraform init`. State (`terraform.tfstate`) survives the swap. This is the substrate for state-incompatibility regressions like #5678 where the bug only fires when state written by version A is read by version B with a different schema.
+2. **Structured state assertions.** Each step can declare an `assert:` block; after the step's command succeeds, the runner runs `terraform show -json` and checks resource presence + attribute values. Failures are surfaced via the existing `StepResult` (new `Assertions []AssertionFailure` field) and a per-step `step_<n>_<name>.assert.log`.
+
+### 17.1 Mode detection
+
+A test is in **v2 mode** iff every step has a non-empty `config:`. v1 mode iff no step has one. Mixed configurations are a parse-time error (`v2 mode requires every step to set config:`). The all-or-none rule lives on `validateV2Consistency`; the runtime accessor is `(*TestSpec).Mode()` returning `ModeV1` / `ModeV2`.
+
+Why all-or-none: a v1-style `main.tf` in the source dir would conflict with a v2 step's per-step swap. Allowing a mix means defining surprising priority rules between user-authored `main.tf` and per-step `config:` files. Easier to require uniformity.
+
+### 17.2 `config:` schema
+
+```yaml
+steps:
+  - name: setup
+    config: 01_initial.tf            # path RELATIVE to the test dir (slug-shaped basename)
+    version: "1.114.0"
+    command: apply
+    expect: success
+```
+
+Path validation: the `config:` value must match `^[a-zA-Z0-9_][a-zA-Z0-9_-]*\.(tf|tf\.json)$`. No traversal (`../`), no subdirectories (`subdir/file.tf`), no hidden files (`.foo.tf`), no other extensions (`wrong.txt`). The framework's `_tfv2_` prefix is also forbidden — that's the namespace for runner-generated files.
+
+### 17.3 `assert:` schema
+
+```yaml
+assert:
+  - resource: databricks_token.pat   # required: <type>.<name> or data.<type>.<name>
+    # present: true is the default — omit for "I expect this resource to exist"
+    attrs:
+      comment: "tfv2-test"            # YAML scalars / lists / maps; numerics are coerced to float64
+      lifetime_seconds: 3600
+
+  - resource: databricks_some.removed
+    present: false                    # explicit absence assertion; attrs: rejected here
+```
+
+Resource address rules: root-module only (`<type>.<name>` for managed, `data.<type>.<name>` for data sources). Module-scoped addresses (`module.X.Y.Z`) are deferred to v3 — v2 launch covers issue #5678 fully without them.
+
+### 17.4 Per-step file flow
+
+In v1 mode, `prepareRun.copyTerraformFiles` runs once at run start; every step shares the same set of `.tf` files. In v2 mode the file flow changes:
+
+- **`prepareRun`** does NOT pre-copy any user `.tf` files. Workdir starts empty (apart from `.terraformrc` written by the framework).
+- **Each step** runs `swapStepConfig`:
+  1. Remove every user `*.tf` / `*.tfvars` from workdir (preserves `_tfv2_*.tf` and dot-files).
+  2. Copy `<sourceDir>/<step.Config>` into workdir under its basename.
+  3. State (`terraform.tfstate`) and the framework override are untouched.
+
+Then the existing per-step pipeline takes over: write `_tfv2_versions_override.tf`, wipe `.terraform/` + `.terraform.lock.hcl`, init, command, assert.
+
+### 17.5 State-assertion semantics
+
+After a successful command (only when `expect: success`), the runner spawns `<terraformBin> show -json` in workdir, parses the JSON, and walks `values.root_module.resources[*]` for each assertion:
+
+1. **Presence**: find the resource by canonical address. `present: true` → fail if missing. `present: false` → fail if found.
+2. **Attrs** (only when `present: true` and resource found): for each `(key, expected)` pair, dot-walk into the resource's `values` map and `reflect.DeepEqual`-compare. Numeric expected values are coerced to `float64` first because YAML's untagged-int decoder produces `int` while JSON produces `float64`.
+3. **Sensitive attrs**: `terraform show -json` reports them as `"(sensitive)"`. The framework surfaces a clear failure ("attribute is marked sensitive in state — assert against a non-sensitive proxy") rather than a value mismatch.
+4. **Collect-all-failures**: the evaluator never short-circuits. An assertion with three mismatched attrs produces three failures; the runner surfaces all of them via `StepResult.Assertions`.
+
+`AssertionFailure` shape (in `internal/result`):
+
+```go
+type AssertionFailure struct {
+    Address  string  // e.g. "databricks_token.pat"
+    Reason   string  // "expected present, not found in state" | "value mismatch" | ...
+    Field    string  // attribute key (only on per-attr failures)
+    Expected any     // YAML-decoded
+    Actual   any     // JSON-decoded
+}
+```
+
+### 17.6 Per-step assert.log
+
+For every step that runs assertions, the framework writes `step_<n>_<name>.assert.log` next to the existing stdout/stderr logs:
+
+```
+OK   databricks_token.pat
+FAIL databricks_other.x.comment: value mismatch (expected=foo, actual=bar)
+```
+
+`StepResult.AssertLog` carries the absolute path; tester's debug grep over `~/.testframeworkv2/runs/<run-id>/` picks it up alongside the existing logs.
+
+### 17.7 Parse-time validation rules (consolidated)
+
+`internal/config.validate` enforces all of:
+
+1. All-or-none `config:` across steps.
+2. `config:` shape: slug basename, `.tf` or `.tf.json` extension, no `_tfv2_` prefix.
+3. `assert:` requires v2 mode (every step has `config:`).
+4. Each assertion has a non-empty `resource:` matching the root-module address shape.
+5. `present: false` is incompatible with `attrs:` (logically inconsistent).
+6. `assert:` is incompatible with `expect: failure` (no meaningful state to assert against).
+7. Sensitive-attribute assertions are surfaced at evaluation time (parse-time gate would require provider schema introspection — out of scope).
+
+### 17.8 Out of scope for v6 launch (v3 fodder)
+
+| Item | Why deferred |
+|---|---|
+| Module-scoped resource addresses | Needs proper HCL2 address parsing. Root-module covers the bug surface we have. |
+| `attrs:` deep-nested matchers via JSON Pointer | Dot-walk handles the common cases. |
+| Plan-time assertions (`assert_plan:` matching the plan diff) | Would close #5678's "must be replaced" gap, but plan output is unstructured. Needs separate `tfexec.Plan(... -out ...)` + `ShowPlanFile` flow. |
+| Cross-step state diffing | Composite of single-step assertions; library helpers come later. |
+| Custom matcher types (regex, `>=`, etc.) | Wait until 1+ test demands it. |
+
+### 17.9 Implementation seam summary
+
+| Package | Change |
+|---|---|
+| `internal/config` | `Step.Config` + `Step.Assert` fields; `Mode()` accessor; `validateV2Consistency`; address-shape validator. |
+| `internal/stateassert` (new) | `Run(ctx, workdir, terraformBin, env, []Assertion) ([]AssertionFailure, error)` — spawns `terraform show -json`, evaluates each assertion, returns structured failures. |
+| `internal/result` | `AssertionFailure` type; `StepResult.Assertions` + `StepResult.AssertLog` fields (omitempty). |
+| `internal/runner` | `prepareRun` skips bulk-copy in v2; `runStep` calls `swapStepConfig` before init in v2 mode and `runStateAssert` after the command on success-path steps. Per-step `assert.log` written. |
+| Fixtures | `tests/token_lifecycle_v2/` — 3-step apply-modify-destroy lifecycle of `databricks_token` exercising all three assertion shapes (present-with-attrs, present-with-attrs after modify, present:false). |
 
 ---
 

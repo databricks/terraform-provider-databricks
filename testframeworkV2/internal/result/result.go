@@ -40,6 +40,50 @@ type StepResult struct {
 	// uniform.
 	StdoutLog string
 	StderrLog string
+
+	// AssertLog is the absolute path to the per-step state-assertion
+	// log file. Populated only on v2-mode steps that declared an
+	// `assert:` block (DESIGN.md §17.5). Empty otherwise.
+	AssertLog string `json:",omitempty"`
+
+	// Assertions surfaces structured per-attribute assertion failures
+	// for v2-mode steps. Populated only when at least one assertion
+	// failed; nil/omitted on v1 runs and on passing v2 steps so the
+	// JSON shape stays backwards-compatible (DESIGN.md §17.5 / §17.8).
+	Assertions []AssertionFailure `json:",omitempty"`
+}
+
+// AssertionFailure is one structured per-attribute (or per-resource-
+// presence) failure produced by stateassert.Run during a v2-mode step.
+// Lives in the result package (rather than internal/stateassert) so
+// it appears alongside StepResult in the JSON shape and external
+// consumers (cmd/tfv2's printer, future programmatic callers) don't
+// need to import stateassert just to render a step outcome.
+//
+// Address is the Terraform resource address from the test.yaml
+// `assert[].resource:` field (e.g. `databricks_token.pat`). Reason
+// is a short human-readable explanation. Field is non-empty only for
+// per-attribute mismatches (Reason="value mismatch"); it's the
+// dot-walked attribute key that didn't match. Expected and Actual
+// are the YAML-decoded expected value and the JSON-decoded actual
+// value respectively (both `any`).
+type AssertionFailure struct {
+	Address  string
+	Reason   string
+	Field    string `json:",omitempty"`
+	Expected any    `json:",omitempty"`
+	Actual   any    `json:",omitempty"`
+}
+
+// String returns a one-line human-readable form. Used by the runner
+// to populate StepResult.Reason and to write per-line entries in the
+// step's assert.log file.
+func (f AssertionFailure) String() string {
+	if f.Field != "" {
+		return fmt.Sprintf("%s.%s: %s (expected=%v, actual=%v)",
+			f.Address, f.Field, f.Reason, f.Expected, f.Actual)
+	}
+	return fmt.Sprintf("%s: %s", f.Address, f.Reason)
 }
 
 // RunResult is the top-level result Runner.Run returns.

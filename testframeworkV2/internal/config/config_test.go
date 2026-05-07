@@ -667,3 +667,335 @@ func extractYAMLField(body, key string) string {
 	}
 	return ""
 }
+
+// ═══════════════════════════════════════════════════════════
+// v2-mode config tests
+// ═══════════════════════════════════════════════════════════
+
+// TestLoad_V2_ConfigField parses a minimal v2 spec — every step has
+// a `config:` field and the runner-visible IsV2() flag flips true.
+func TestLoad_V2_ConfigField(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", config: step1.tf }
+  - { name: b, version: "1.0.0", config: step2.tf }
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !spec.IsV2() {
+		t.Errorf("IsV2 should be true when steps declare config:")
+	}
+	if spec.Steps[0].Config != "step1.tf" {
+		t.Errorf("Config: got %q", spec.Steps[0].Config)
+	}
+}
+
+// TestLoad_V2_AssertField confirms the assert: list survives YAML
+// decoding into the Assertion struct + the IsV2 detection path.
+func TestLoad_V2_AssertField(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step1.tf
+    command: apply
+    assert:
+      - resource: databricks_token.pat
+        attrs:
+          comment: hello
+          lifetime_seconds: 1800
+      - resource: databricks_token.pat
+        present: false
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !spec.IsV2() {
+		t.Errorf("IsV2 should be true with config: set")
+	}
+	if got := spec.Mode(); got != ModeV2 {
+		t.Errorf("Mode: got %q want %q", got, ModeV2)
+	}
+	if got := len(spec.Steps[0].Assert); got != 2 {
+		t.Fatalf("expected 2 assertions, got %d", got)
+	}
+	if spec.Steps[0].Assert[0].Resource != "databricks_token.pat" {
+		t.Errorf("Assert[0].Resource: got %q", spec.Steps[0].Assert[0].Resource)
+	}
+	// Default Present is true (omitted YAML field → nil pointer →
+	// PresentValue() returns true).
+	if !spec.Steps[0].Assert[0].PresentValue() {
+		t.Errorf("Assert[0].PresentValue() should default to true")
+	}
+	// Explicit false survives.
+	if spec.Steps[0].Assert[1].PresentValue() {
+		t.Errorf("Assert[1].PresentValue() with explicit false should be false")
+	}
+	// YAML int decodes as int (not float64).
+	if got := spec.Steps[0].Assert[0].Attrs["lifetime_seconds"]; got != 1800 {
+		t.Errorf("Attrs[lifetime_seconds]: got %v (%T), want 1800 (int)", got, got)
+	}
+	if got := spec.Steps[0].Assert[0].Attrs["comment"]; got != "hello" {
+		t.Errorf("Attrs[comment]: got %v", got)
+	}
+}
+
+// TestLoad_V2_RejectsMixedV1V2 enforces validateV2Consistency: if
+// ANY step uses Config or Assert, ALL steps must use Config.
+func TestLoad_V2_RejectsMixedV1V2(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", config: step1.tf }
+  - { name: b, version: "1.0.0" }
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Fatal("expected error for v1/v2 mix, got nil")
+	}
+	if !strings.Contains(err.Error(), "v2 mode requires every step to set `config:`") {
+		t.Errorf("error: %v", err)
+	}
+}
+
+// TestLoad_V2_RejectsAssertOnPlanFailure pins the rule: state
+// assertions only make sense after a successful command that
+// produces state — not on expect=failure.
+func TestLoad_V2_RejectsAssertOnFailure(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step1.tf
+    command: apply
+    expect: failure
+    error_substring: oops
+    assert:
+      - resource: x.y
+        attrs: {comment: foo}
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Fatal("expected error for assert on expect=failure, got nil")
+	}
+}
+
+// TestLoad_V2_RejectsAssertOnV1Spec covers DESIGN.md §17.7 rule 3:
+// assert: requires v2 mode. A step without `config:` setting
+// `assert:` is a parse error.
+func TestLoad_V2_RejectsAssertOnV1Spec(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    command: apply
+    assert:
+      - resource: x.y
+        attrs: {foo: bar}
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Fatal("expected error: assert without config (v1 mode) should be rejected")
+	}
+	if !strings.Contains(err.Error(), "v2 mode") {
+		t.Errorf("error should mention v2 mode: %v", err)
+	}
+}
+
+// TestLoad_V2_RejectsTfv2PrefixedConfig covers DESIGN.md §17.4: user
+// config files must not collide with the framework's `_tfv2_` namespace.
+func TestLoad_V2_RejectsTfv2PrefixedConfig(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", config: _tfv2_collision.tf }
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Fatal("expected error for _tfv2_-prefixed config")
+	}
+	if !strings.Contains(err.Error(), "_tfv2_") {
+		t.Errorf("error should mention _tfv2_ prefix: %v", err)
+	}
+}
+
+// TestLoad_V2_RejectsPresentFalseWithAttrs covers §17.7 rule 6:
+// present:false + attrs:set is logically inconsistent.
+func TestLoad_V2_RejectsPresentFalseWithAttrs(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step.tf
+    command: apply
+    assert:
+      - resource: x.y
+        present: false
+        attrs: {foo: bar}
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Fatal("expected error for present:false + attrs")
+	}
+}
+
+// TestLoad_V2_RejectsBadResourceAddress covers §17.5: root-module
+// only addresses, no module-scoped or malformed shapes.
+func TestLoad_V2_RejectsBadResourceAddress(t *testing.T) {
+	for _, addr := range []string{
+		"module.foo.databricks_x.y", // module-scoped — deferred to v3
+		"databricks_x",              // missing name
+		".databricks_x.y",           // leading dot
+		"data.databricks_x",         // data missing name
+	} {
+		body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step.tf
+    command: apply
+    assert:
+      - resource: ` + addr + `
+        attrs: {foo: bar}
+`
+		t.Run(addr, func(t *testing.T) {
+			_, err := loadString(t, body, "P")
+			if err == nil {
+				t.Errorf("address %q accepted, expected rejection", addr)
+			}
+		})
+	}
+}
+
+// TestLoad_V2_AcceptsValidResourceAddresses covers the addresses
+// the regex SHOULD accept — managed + data-source root-module
+// shapes.
+func TestLoad_V2_AcceptsValidResourceAddresses(t *testing.T) {
+	for _, addr := range []string{
+		"databricks_token.pat",
+		"databricks_token.MyResource_42",
+		"data.databricks_mws_workspaces.all",
+		"data.databricks_x.snake_case_name",
+	} {
+		body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step.tf
+    command: apply
+    assert:
+      - resource: ` + addr + `
+        attrs: {foo: bar}
+`
+		t.Run(addr, func(t *testing.T) {
+			if _, err := loadString(t, body, "P"); err != nil {
+				t.Errorf("address %q rejected: %v", addr, err)
+			}
+		})
+	}
+}
+
+// TestLoad_V2_RejectsTraversalConfigPaths blocks "../escape.tf" and
+// other shapes that would let a test reach outside its directory.
+func TestLoad_V2_RejectsTraversalConfigPaths(t *testing.T) {
+	for _, p := range []string{
+		"../escape.tf",
+		"sub/dir.tf",
+		".hidden.tf",
+		"no-extension",
+		"wrong.txt",
+	} {
+		body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", config: ` + p + ` }
+`
+		t.Run(p, func(t *testing.T) {
+			_, err := loadString(t, body, "P")
+			if err == nil {
+				t.Errorf("config %q accepted, expected rejection", p)
+			}
+		})
+	}
+}
+
+// TestLoad_V2_AcceptsValidConfigPaths covers the set of basenames
+// the v2ConfigPathRegexp does accept.
+func TestLoad_V2_AcceptsValidConfigPaths(t *testing.T) {
+	for _, p := range []string{
+		"step1.tf",
+		"step1_create.tf",
+		"step-2.tf",
+		"main.tf.json",
+	} {
+		body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", config: ` + p + ` }
+`
+		t.Run(p, func(t *testing.T) {
+			if _, err := loadString(t, body, "P"); err != nil {
+				t.Errorf("config %q rejected: %v", p, err)
+			}
+		})
+	}
+}
+
+// TestLoad_V2_RejectsAssertWithoutResource enforces the minimum
+// `resource:` requirement for each entry in assert:.
+func TestLoad_V2_RejectsAssertWithoutResource(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    config: step.tf
+    command: apply
+    assert:
+      - attrs: {foo: bar}
+`
+	_, err := loadString(t, body, "P")
+	if err == nil {
+		t.Errorf("expected error for missing resource: field")
+	}
+}
+
+// TestIsV2_FalseForV1 confirms specs that never touch v2 fields
+// remain in v1 mode.
+func TestIsV2_FalseForV1(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0" }
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if spec.IsV2() {
+		t.Errorf("IsV2 should be false for v1 spec")
+	}
+}

@@ -99,6 +99,55 @@ type Step struct {
 	Timeout        time.Duration  `yaml:"-"`
 	TimeoutRaw     string         `yaml:"timeout"`
 	CompiledRegex  *regexp.Regexp `yaml:"-"`
+
+	// v2-mode fields. A non-empty Config OR a non-empty Assert flips the
+	// containing TestSpec into v2 mode; the runner then wipes
+	// non-framework `*.tf` from the workdir and copies Step.Config in
+	// before each step's `terraform init` (rather than the v1 model
+	// where the user's full `*.tf` set is copied once at run start).
+	//
+	// Config is a path RELATIVE to the test directory containing
+	// test.yaml — e.g. "step1_create.tf" if test.yaml lives in
+	// `tests/token_lifecycle_v2/`.
+	//
+	// Assert runs against `terraform show -json` after the step's
+	// command succeeds. Assertions are only consulted when
+	// Expect == ExpectSuccess (failure-path steps don't have meaningful
+	// state to inspect).
+	Config string      `yaml:"config"`
+	Assert []Assertion `yaml:"assert"`
+}
+
+// Assertion is one (resource address, presence, attributes) bundle —
+// the v2 mode's structured replacement for stderr-regex matching.
+//
+// Resource is the canonical Terraform address: `<type>.<name>` for
+// managed resources (e.g. `databricks_token.pat`) and
+// `data.<type>.<name>` for data sources (e.g.
+// `data.databricks_mws_workspaces.all`). Module-scoped addresses are
+// out of scope for v2 launch — root module only.
+//
+// Present is a pointer-bool so a YAML-omitted field is distinguishable
+// from an explicit `present: false`. Default (omitted) is true; the
+// PresentValue helper centralizes the defaulting logic.
+//
+// Attrs is the (key, expected-value) map evaluated only when Present is
+// true (or omitted). Values use Go-typed YAML scalars / sequences /
+// mappings; the runner normalizes numerics to float64 (matching
+// `terraform show -json` decoding) before comparing.
+type Assertion struct {
+	Resource string         `yaml:"resource"`
+	Present  *bool          `yaml:"present"`
+	Attrs    map[string]any `yaml:"attrs"`
+}
+
+// PresentValue returns the effective Present value, defaulting to true
+// when the field was omitted in YAML. Mirrors TestSpec.CleanupEnabled().
+func (a *Assertion) PresentValue() bool {
+	if a.Present == nil {
+		return true
+	}
+	return *a.Present
 }
 
 // TestSpec is the full parsed test.yaml.
@@ -110,6 +159,31 @@ type TestSpec struct {
 	PassthroughEnv []string `yaml:"passthrough_env"`
 	Steps          []Step   `yaml:"steps"`
 }
+
+// Mode is the v1/v2 enum for a parsed TestSpec. The runner branches
+// on this to decide between "copy *.tf once + run multi-step" (v1)
+// and "wipe-and-copy per step" (v2).
+type Mode string
+
+const (
+	ModeV1 Mode = "v1"
+	ModeV2 Mode = "v2"
+)
+
+// Mode reports v1 vs v2. Determined by the FIRST step's Config field:
+// because validateV2Consistency enforces all-or-none Config across
+// steps, looking at steps[0] is sufficient and unambiguous after
+// validation completes (DESIGN.md §17.2).
+func (s *TestSpec) Mode() Mode {
+	if len(s.Steps) > 0 && s.Steps[0].Config != "" {
+		return ModeV2
+	}
+	return ModeV1
+}
+
+// IsV2 is a convenience predicate for callers that prefer a bool over
+// the enum. Equivalent to Mode() == ModeV2.
+func (s *TestSpec) IsV2() bool { return s.Mode() == ModeV2 }
 
 // CleanupEnabled reports whether destroy-on-completion is on. Honours the
 // pointer-vs-default distinction: an explicit `cleanup: false` MUST stay
@@ -253,18 +327,27 @@ func validate(spec *TestSpec, databricksCfgPath string) error {
 	if err := validateSteps(spec.Steps); err != nil {
 		return err
 	}
-	// Profile existence is the last preflight check. Skipping it for
-	// the empty-string case is unreachable (profile required above);
-	// keeping the explicit guard so a future caller that bypasses Load
-	// can't land here with an empty path.
-	if databricksCfgPath != "" {
-		ok, err := profile.SectionExists(databricksCfgPath, spec.Profile)
-		if err != nil {
-			return fmt.Errorf("profile: %w", err)
-		}
-		if !ok {
-			return fmt.Errorf("profile: %q not found in %s", spec.Profile, databricksCfgPath)
-		}
+	if err := validateV2Consistency(spec.Steps); err != nil {
+		return err
+	}
+	return validateProfileExists(spec.Profile, databricksCfgPath)
+}
+
+// validateProfileExists is the parse-time profile-existence preflight
+// (DESIGN.md §4 "Pre-flight validation"). Skipping it for the empty-
+// string case is unreachable from Load (profile required above), but
+// the explicit guard keeps the function safe for callers that bypass
+// Load.
+func validateProfileExists(profileName, databricksCfgPath string) error {
+	if databricksCfgPath == "" {
+		return nil
+	}
+	ok, err := profile.SectionExists(databricksCfgPath, profileName)
+	if err != nil {
+		return fmt.Errorf("profile: %w", err)
+	}
+	if !ok {
+		return fmt.Errorf("profile: %q not found in %s", profileName, databricksCfgPath)
 	}
 	return nil
 }
@@ -329,6 +412,12 @@ func validateStep(i int, s Step) error {
 // from DESIGN.md §4: when expect=failure, at least one of error_substring
 // / error_regex MUST be set; conversely, on expect=success the error_*
 // fields are rejected as a likely copy-paste mistake.
+//
+// v2-mode invariants: state assertions (Step.Assert) only make sense
+// when a step is expected to succeed AND the command leaves state
+// behind (apply or destroy — plan doesn't mutate state). Reject
+// Assert on expect=failure or command=plan as a likely
+// misconfiguration.
 func validateStepAssertion(i int, s Step) error {
 	hasSub := s.ErrorSubstring != ""
 	hasRe := s.ErrorRegex != ""
@@ -337,13 +426,138 @@ func validateStepAssertion(i int, s Step) error {
 		if !hasSub && !hasRe {
 			return fmt.Errorf("steps[%d] (%s): expect=failure requires error_substring or error_regex", i, s.Name)
 		}
+		if len(s.Assert) > 0 {
+			return fmt.Errorf("steps[%d] (%s): assert is only valid with expect=success", i, s.Name)
+		}
 	case ExpectSuccess:
 		if hasSub || hasRe {
 			return fmt.Errorf("steps[%d] (%s): error_substring/error_regex are only valid with expect=failure", i, s.Name)
 		}
 	}
+	for j, a := range s.Assert {
+		if a.Resource == "" {
+			return fmt.Errorf("steps[%d] (%s): assert[%d].resource is required", i, s.Name, j)
+		}
+		// present:false + attrs:set is logically inconsistent — can't
+		// inspect attrs of a resource we expect to NOT exist
+		// (DESIGN.md §17.7 rule 6).
+		if a.Present != nil && !*a.Present && len(a.Attrs) > 0 {
+			return fmt.Errorf("steps[%d] (%s): assert[%d] cannot set attrs when present is false", i, s.Name, j)
+		}
+		// Resource address shape: managed = `<type>.<name>`; data
+		// sources = `data.<type>.<name>`. v2 launch is root-module
+		// only — module-scoped addresses are deferred (§17.5 / §17.9).
+		if !validResourceAddress(a.Resource) {
+			return fmt.Errorf("steps[%d] (%s): assert[%d].resource %q is not a valid root-module address (expected `type.name` or `data.type.name`)",
+				i, s.Name, j, a.Resource)
+		}
+	}
 	return nil
 }
+
+// validResourceAddress reports whether addr is a root-module
+// Terraform resource address (DESIGN.md §17.5). Two shapes:
+//
+//   - managed: `<type>.<name>` (e.g. `databricks_token.pat`)
+//   - data:    `data.<type>.<name>` (e.g.
+//     `data.databricks_mws_workspaces.all`)
+//
+// Validates structurally (split on `.`) rather than via a single
+// regex because Go's RE2 lacks the negative lookahead needed to
+// distinguish "data.X" (a 2-part malformed address) from "data.X.Y"
+// (a valid 3-part data-source address).
+func validResourceAddress(addr string) bool {
+	parts := strings.Split(addr, ".")
+	switch len(parts) {
+	case 2:
+		// Managed resource. Reject `data.<x>` as a 2-part address —
+		// that's an incomplete data-source address (`data.<type>.<name>`
+		// requires 3 parts).
+		if parts[0] == "data" {
+			return false
+		}
+		return v2AddrTypeRegexp.MatchString(parts[0]) && v2AddrNameRegexp.MatchString(parts[1])
+	case 3:
+		return parts[0] == "data" &&
+			v2AddrTypeRegexp.MatchString(parts[1]) &&
+			v2AddrNameRegexp.MatchString(parts[2])
+	default:
+		return false
+	}
+}
+
+var (
+	// v2AddrTypeRegexp constrains the resource type segment
+	// (`databricks_token`, `databricks_mws_workspaces`).
+	v2AddrTypeRegexp = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
+
+	// v2AddrNameRegexp constrains the resource name segment, allowing
+	// the slightly-broader Terraform identifier shape
+	// (`pat`, `MyResource_42`, `tag-foo`).
+	v2AddrNameRegexp = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
+)
+
+// validateV2Consistency enforces the all-or-none invariant from
+// DESIGN.md §17.2: a test.yaml is v2 iff every step has a non-empty
+// `config:`, v1 iff no step has one. Mixed configurations are a
+// parse-time error.
+//
+// Additional v2-mode rules enforced here:
+//
+//   - `config:` paths must be slug-shaped basenames ending in `.tf`
+//     or `.tf.json`. No path traversal (`../escape.tf`), no
+//     subdirectories, no hidden files.
+//   - `config:` must NOT start with the framework's `_tfv2_` prefix
+//     (collision risk with `_tfv2_versions_override.tf`; §17.4).
+//   - `assert:` blocks may only appear in v2 specs. A v1 step (no
+//     `config:`) with `assert:` set is a parse error (§17.7 rule 3).
+//
+// Per-Assertion shape rules (resource address, present+attrs
+// consistency) live on validateStepAssertion.
+func validateV2Consistency(steps []Step) error {
+	configured := 0
+	for _, s := range steps {
+		if s.Config != "" {
+			configured++
+		}
+	}
+	mode := ModeV1
+	switch configured {
+	case 0:
+		// pure v1; assert: not allowed.
+		for i, s := range steps {
+			if len(s.Assert) > 0 {
+				return fmt.Errorf("steps[%d] (%s): assert: requires v2 mode (set config: on every step) — see DESIGN.md §17.7", i, s.Name)
+			}
+		}
+		return nil
+	case len(steps):
+		mode = ModeV2
+	default:
+		// mixed.
+		for i, s := range steps {
+			if s.Config == "" {
+				return fmt.Errorf("steps[%d] (%s): v2 mode requires every step to set `config:` (this test mixes v1 and v2 steps) — see DESIGN.md §17.2", i, s.Name)
+			}
+		}
+	}
+	_ = mode
+	for i, s := range steps {
+		if !v2ConfigPathRegexp.MatchString(s.Config) {
+			return fmt.Errorf("steps[%d] (%s): config %q must be a slug-shaped .tf or .tf.json basename (e.g. step1_create.tf)", i, s.Name, s.Config)
+		}
+		if strings.HasPrefix(s.Config, "_tfv2_") {
+			return fmt.Errorf("steps[%d] (%s): config %q must not start with `_tfv2_` (framework-reserved prefix) — see DESIGN.md §17.4", i, s.Name, s.Config)
+		}
+	}
+	return nil
+}
+
+// v2ConfigPathRegexp constrains Step.Config to a slug-shaped basename
+// ending in `.tf` or `.tf.json`. Matches `step1_create.tf`,
+// `apply-with-tag.tf`, and `main.tf.json`; rejects `../escape.tf`,
+// `subdir/file.tf`, hidden `.foo.tf`, and non-`.tf` extensions.
+var v2ConfigPathRegexp = regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*\.(tf|tf\.json)$`)
 
 func validCloud(c Cloud) bool {
 	return slices.Contains([]Cloud{CloudAWS, CloudAzure, CloudGCP, CloudAny}, c)

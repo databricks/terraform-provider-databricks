@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/config"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/providercache"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/result"
+	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/stateassert"
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/tfrcwriter"
 )
 
@@ -38,8 +39,9 @@ func (r *Runner) runAllSteps(ctx context.Context, workDir, runDir string, env ma
 	return out, nil
 }
 
-// runStep executes one step end-to-end: cache resolve, override write,
-// .terraform wipe, init, command, assert. The returned StepResult is
+// runStep executes one step end-to-end: cache resolve, (v2-only)
+// per-step config swap, override write, .terraform wipe, init,
+// command, assert (state-level for v2). The returned StepResult is
 // always populated; the error return is reserved for infrastructure
 // failures (cache, FS) where we couldn't even attempt the command.
 func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir, runDir string, env map[string]string) (result.StepResult, error) {
@@ -56,6 +58,18 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 	}
 	res.SyntheticVersion = syntheticVer
 
+	// v2 mode: wipe non-framework *.tf from workdir then copy the
+	// step's config file in. Done before the override file write so
+	// the wipe doesn't accidentally clobber _tfv2_versions_override.tf
+	// (the swap helper preserves _tfv2_* by name). Mode check uses
+	// spec.Mode() rather than step.Config != "" so v2 specs with
+	// Config set (validated all-or-none at parse time) take this
+	// path uniformly.
+	if r.spec.Mode() == config.ModeV2 {
+		if err := r.swapStepConfig(workDir, step.Config); err != nil {
+			return res, fmt.Errorf("runner: step %s: swap config: %w", step.Name, err)
+		}
+	}
 	if err := tfrcwriter.WriteVersionsOverride(workDir, syntheticVer); err != nil {
 		return res, fmt.Errorf("runner: step %s: write version override: %w", step.Name, err)
 	}
@@ -68,7 +82,139 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 
 	stderr, err := r.runCommand(ctx, step, workDir, env, stdoutLog, stderrLog)
 	finalize(&res, step, err, stderr)
+	r.runStateAssert(ctx, &res, step, workDir, runDir, env)
 	return res, nil
+}
+
+// swapStepConfig is the v2-mode workdir swap: removes any non-
+// framework *.tf / *.tfvars files (keeps _tfv2_*.tf and dot-files
+// intact) and copies the step's per-step config from SourceDir into
+// workDir.
+//
+// Path safety: configBase is constrained to a slug-shaped basename
+// by the config-layer validator (v2ConfigPathRegexp); the join below
+// can't traverse out of SourceDir.
+func (r *Runner) swapStepConfig(workDir, configBase string) error {
+	entries, err := os.ReadDir(workDir)
+	if err != nil {
+		return fmt.Errorf("read workdir %s: %w", workDir, err)
+	}
+	for _, e := range entries {
+		if !e.Type().IsRegular() {
+			continue
+		}
+		name := e.Name()
+		if !shouldWipeForV2Swap(name) {
+			continue
+		}
+		if err := os.Remove(filepath.Join(workDir, name)); err != nil {
+			return fmt.Errorf("remove %s: %w", name, err)
+		}
+	}
+	src := filepath.Join(r.opts.SourceDir, configBase)
+	dst := filepath.Join(workDir, configBase)
+	body, err := os.ReadFile(src)
+	if err != nil {
+		return fmt.Errorf("read %s: %w", src, err)
+	}
+	if err := os.WriteFile(dst, body, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", dst, err)
+	}
+	return nil
+}
+
+// shouldWipeForV2Swap returns true for files the v2 wipe pass must
+// remove from the workdir before copying the next step's config in.
+// We wipe user-authored *.tf and *.tfvars; the framework-generated
+// _tfv2_*.tf override stays (it's regenerated per step anyway, but
+// removing it here would create a window where init fails on a
+// missing override). Hidden files and other extensions are
+// untouched.
+func shouldWipeForV2Swap(name string) bool {
+	if strings.HasPrefix(name, "_tfv2_") {
+		return false
+	}
+	if strings.HasPrefix(name, ".") {
+		return false
+	}
+	ext := strings.ToLower(filepath.Ext(name))
+	return ext == ".tf" || ext == ".tfvars"
+}
+
+// runStateAssert evaluates the step's `assert:` block (if any)
+// against `terraform show -json` output, writes a per-step assert.log
+// with one OK/FAIL line per assertion, and surfaces failures via
+// StepResult.Assertions + StepResult.Status flip (DESIGN.md §17.5 /
+// §17.8).
+//
+// Only fires when (a) the step has assertions to evaluate AND (b) the
+// step otherwise passed (config-layer validation already rejects
+// assert: on expect=failure, so the gate here is a defense-in-depth
+// "don't run terraform show on a failed step where state may be
+// unparseable").
+func (r *Runner) runStateAssert(ctx context.Context, res *result.StepResult, step config.Step, workDir, runDir string, env map[string]string) {
+	if len(step.Assert) == 0 || res.Status != result.StatusPass {
+		return
+	}
+	failures, err := stateassert.Run(ctx, workDir, r.opts.TerraformBin, env, step.Assert)
+	if err != nil {
+		res.Status = result.StatusFail
+		res.Reason = fmt.Sprintf("stateassert: %v", err)
+		return
+	}
+	res.AssertLog = r.stepAssertLogPath(runDir, res.Index, step.Name)
+	if logErr := writeAssertLog(res.AssertLog, step.Assert, failures); logErr != nil {
+		// Log-write failures are non-fatal — surface in stderr but
+		// don't flip a passing step to fail just because we couldn't
+		// open a log file. The structured Assertions slice is the
+		// authoritative record either way.
+		fmt.Fprintf(os.Stderr, "runner: step %s: write assert log: %v\n", step.Name, logErr)
+	}
+	if len(failures) == 0 {
+		return
+	}
+	res.Status = result.StatusFail
+	res.Assertions = failures
+	parts := make([]string, len(failures))
+	for i, f := range failures {
+		parts[i] = f.String()
+	}
+	res.Reason = "state assertion(s) failed: " + strings.Join(parts, "; ")
+}
+
+// stepAssertLogPath returns the absolute path of the per-step
+// assertion log under runDir. Naming mirrors the existing
+// step_<n>_<name>.{stdout,stderr}.log convention with the
+// `.assert.log` suffix (DESIGN.md §17.5).
+func (r *Runner) stepAssertLogPath(runDir string, idx int, name string) string {
+	return filepath.Join(runDir, fmt.Sprintf("step_%d_%s.assert.log", idx+1, name))
+}
+
+// writeAssertLog renders one OK/FAIL line per assertion into path.
+// failures is the slice from stateassert.Run; assertions is the
+// original Step.Assert list — we walk both to surface a "PASS" line
+// for assertions that succeeded, in YAML order.
+func writeAssertLog(path string, assertions []config.Assertion, failures []result.AssertionFailure) error {
+	failuresByAddr := map[string][]result.AssertionFailure{}
+	for _, f := range failures {
+		failuresByAddr[f.Address] = append(failuresByAddr[f.Address], f)
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	for _, a := range assertions {
+		fs := failuresByAddr[a.Resource]
+		if len(fs) == 0 {
+			fmt.Fprintf(f, "OK   %s\n", a.Resource)
+			continue
+		}
+		for _, fail := range fs {
+			fmt.Fprintf(f, "FAIL %s\n", fail.String())
+		}
+	}
+	return nil
 }
 
 // resolveStepVersion converts a step.Version string into the

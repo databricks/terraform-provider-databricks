@@ -34,8 +34,13 @@ func printRunResult(w io.Writer, r result.RunResult) {
 	}
 }
 
-// formatStepLine renders one step's outcome as a single line. Reason
-// is appended only on FAIL; on PASS we omit it to keep the table dense.
+// formatStepLine renders one step's outcome as a single line. The
+// terraform-result Summary is appended on PASS with a 3-space gutter
+// so it visually separates from the duration. On FAIL we prefer
+// Reason (which carries the failure-specific diagnostic) over Summary
+// — Summary's "failure-as-expected" / "error: ..." excerpt overlaps
+// with Reason, and Reason is the one the user wants for a failed
+// step. Skipped steps surface neither.
 func formatStepLine(s result.StepResult) string {
 	tag := "[PASS]"
 	switch s.Status {
@@ -45,8 +50,11 @@ func formatStepLine(s result.StepResult) string {
 		tag = "[SKIP]"
 	}
 	suffix := ""
-	if s.Status != result.StatusPass && s.Reason != "" {
+	switch {
+	case s.Status != result.StatusPass && s.Reason != "":
 		suffix = " — " + s.Reason
+	case s.Status == result.StatusPass && s.Summary != "":
+		suffix = "   " + s.Summary
 	}
 	return fmt.Sprintf("%s step %d (%s): %s %s in %s%s",
 		tag, s.Index+1, s.Name, s.Version, s.Command, formatDuration(s.Duration), suffix)

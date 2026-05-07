@@ -51,6 +51,15 @@ type StepResult struct {
 	// failed; nil/omitted on v1 runs and on passing v2 steps so the
 	// JSON shape stays backwards-compatible (DESIGN.md §17.5 / §17.8).
 	Assertions []AssertionFailure `json:",omitempty"`
+
+	// Summary is a short human-readable phrase rendered at the end of
+	// the step's CLI line — e.g. "no changes", "1 added, 1 destroyed",
+	// "failure-as-expected: cannot populate provider_config...". The
+	// runner's summary parser fills this in from terraform's stdout +
+	// stderr + step.Expect + assertion outcome. omitempty so v1 JSON
+	// output stays unchanged for runs that don't (or can't) extract a
+	// summary.
+	Summary string `json:",omitempty"`
 }
 
 // AssertionFailure is one structured per-attribute (or per-resource-

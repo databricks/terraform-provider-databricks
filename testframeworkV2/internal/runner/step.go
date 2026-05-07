@@ -57,33 +57,61 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 		return res, err
 	}
 	res.SyntheticVersion = syntheticVer
-
-	// v2 mode: wipe non-framework *.tf from workdir then copy the
-	// step's config file in. Done before the override file write so
-	// the wipe doesn't accidentally clobber _tfv2_versions_override.tf
-	// (the swap helper preserves _tfv2_* by name). Mode check uses
-	// spec.Mode() rather than step.Config != "" so v2 specs with
-	// Config set (validated all-or-none at parse time) take this
-	// path uniformly.
-	if r.spec.Mode() == config.ModeV2 {
-		if err := r.swapStepConfig(workDir, step.Config); err != nil {
-			return res, fmt.Errorf("runner: step %s: swap config: %w", step.Name, err)
-		}
-	}
-	if err := tfrcwriter.WriteVersionsOverride(workDir, syntheticVer); err != nil {
-		return res, fmt.Errorf("runner: step %s: write version override: %w", step.Name, err)
-	}
-	if err := wipeTerraformState(workDir); err != nil {
-		return res, fmt.Errorf("runner: step %s: %w", step.Name, err)
+	if err := r.prepareStepWorkdir(workDir, syntheticVer, step); err != nil {
+		return res, err
 	}
 
 	stdoutLog, stderrLog := r.stepLogPaths(runDir, idx, step.Name)
 	res.StdoutLog, res.StderrLog = stdoutLog, stderrLog
 
-	stderr, err := r.runCommand(ctx, step, workDir, env, stdoutLog, stderrLog)
-	finalize(&res, step, err, stderr)
+	stdout, stderr, cmdErr := r.runCommand(ctx, step, workDir, env, stdoutLog, stderrLog)
+	finalize(&res, step, cmdErr, stderr)
 	r.runStateAssert(ctx, &res, step, workDir, runDir, env)
+	res.Summary = summarizeStep(step, &res, cmdErr, stdout, stderr)
 	return res, nil
+}
+
+// prepareStepWorkdir does the per-step workdir setup that happens
+// before terraform init: v2-mode HCL swap, _tfv2_versions_override.tf
+// write, .terraform/.terraform.lock.hcl wipe. Split from runStep so
+// runStep stays under the 40-line CLAUDE.md threshold and the
+// pre-init setup is one named, testable phase.
+//
+// v2 mode check uses spec.Mode() rather than step.Config != "" so v2
+// specs with Config set (validated all-or-none at parse time) take
+// this path uniformly. The swap deliberately runs BEFORE the
+// override write so the wipe doesn't accidentally clobber
+// _tfv2_versions_override.tf (the swap helper preserves _tfv2_* by
+// name).
+func (r *Runner) prepareStepWorkdir(workDir, syntheticVer string, step config.Step) error {
+	if r.spec.Mode() == config.ModeV2 {
+		if err := r.swapStepConfig(workDir, step.Config); err != nil {
+			return fmt.Errorf("runner: step %s: swap config: %w", step.Name, err)
+		}
+	}
+	if err := tfrcwriter.WriteVersionsOverride(workDir, syntheticVer); err != nil {
+		return fmt.Errorf("runner: step %s: write version override: %w", step.Name, err)
+	}
+	if err := wipeTerraformState(workDir); err != nil {
+		return fmt.Errorf("runner: step %s: %w", step.Name, err)
+	}
+	return nil
+}
+
+// summarizeStep is a thin adapter over summarize() that picks the
+// right (assertionsRan, assertionsOK) flags from the step + res. Kept
+// in step.go (rather than summary.go) so summary.go stays a pure
+// parser with no result-struct knowledge.
+func summarizeStep(step config.Step, res *result.StepResult, cmdErr error, stdout, stderr []byte) string {
+	return summarize(summaryInputs{
+		command:       step.Command,
+		expect:        step.Expect,
+		cmdErr:        cmdErr,
+		stdout:        stdout,
+		stderr:        stderr,
+		assertionsRan: len(step.Assert) > 0,
+		assertionsOK:  len(step.Assert) > 0 && len(res.Assertions) == 0 && res.Status == result.StatusPass,
+	})
 }
 
 // swapStepConfig is the v2-mode workdir swap: removes any non-
@@ -283,38 +311,53 @@ func (r *Runner) stepLogPaths(runDir string, idx int, name string) (string, stri
 }
 
 // runCommand performs init + the requested command (plan/apply/
-// destroy) and returns the captured stderr bytes. tfexec writes
-// stdout/stderr through the writers we set; we tee stderr into a
-// memory buffer for assertion matching while also writing to the log
-// file (DESIGN.md §7 — assertions match stderr only).
-func (r *Runner) runCommand(ctx context.Context, step config.Step, workDir string, env map[string]string, stdoutLog, stderrLog string) ([]byte, error) {
+// destroy) and returns the captured (stdout, stderr) bytes plus the
+// command error. tfexec writes stdout/stderr through the writers we
+// set; we tee BOTH into in-memory buffers while also writing to the
+// log files. stderr feeds the assertion regex match (DESIGN.md §7);
+// stdout feeds the per-step Summary parser (Task #23).
+//
+// Init's stdout is captured separately and dropped — the summary
+// parser only cares about the command's output, not init's
+// boilerplate. Init failures still surface via cmdErr; the
+// finalize/summarize path produces a useful error excerpt from
+// stderr in that case.
+func (r *Runner) runCommand(ctx context.Context, step config.Step, workDir string, env map[string]string, stdoutLog, stderrLog string) (cmdStdout, cmdStderr []byte, cmdErr error) {
 	tf, err := r.tfFactory(workDir, r.opts.TerraformBin)
 	if err != nil {
-		return nil, fmt.Errorf("runner: step %s: tfexec factory: %w", step.Name, err)
+		return nil, nil, fmt.Errorf("runner: step %s: tfexec factory: %w", step.Name, err)
 	}
 	if err := tf.SetEnv(env); err != nil {
-		return nil, fmt.Errorf("runner: step %s: SetEnv: %w", step.Name, err)
+		return nil, nil, fmt.Errorf("runner: step %s: SetEnv: %w", step.Name, err)
 	}
 	stdoutF, err := os.Create(stdoutLog)
 	if err != nil {
-		return nil, fmt.Errorf("runner: step %s: open stdout log: %w", step.Name, err)
+		return nil, nil, fmt.Errorf("runner: step %s: open stdout log: %w", step.Name, err)
 	}
 	defer stdoutF.Close()
 	stderrF, err := os.Create(stderrLog)
 	if err != nil {
-		return nil, fmt.Errorf("runner: step %s: open stderr log: %w", step.Name, err)
+		return nil, nil, fmt.Errorf("runner: step %s: open stderr log: %w", step.Name, err)
 	}
 	defer stderrF.Close()
 
 	stderrBuf := &capturingWriter{}
+	stdoutBuf := &capturingWriter{}
+	// Init phase: stdout goes to log file only. We don't summarise
+	// init output and capturing it would dilute the command's stdout
+	// when the summary parser scans for "Plan: ..." / "Apply
+	// complete!".
 	tf.SetStdout(stdoutF)
 	tf.SetStderr(io.MultiWriter(stderrF, stderrBuf))
 
 	if err := tf.Init(ctx); err != nil {
-		return stderrBuf.Bytes(), err
+		return stdoutBuf.Bytes(), stderrBuf.Bytes(), err
 	}
-	cmdErr := dispatchCommand(ctx, tf, step.Command)
-	return stderrBuf.Bytes(), cmdErr
+	// Command phase: stdout tees to both log file AND in-memory
+	// buffer for the summary parser.
+	tf.SetStdout(io.MultiWriter(stdoutF, stdoutBuf))
+	cmdErr = dispatchCommand(ctx, tf, step.Command)
+	return stdoutBuf.Bytes(), stderrBuf.Bytes(), cmdErr
 }
 
 // dispatchCommand maps the test.yaml command enum onto the tfExec

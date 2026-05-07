@@ -6,9 +6,11 @@ build of the current branch — without touching the developer's
 `~/.terraformrc`, `~/.databrickscfg`, or shell environment.
 
 The framework was built to make issue [#5672][issue-5672] reliably
-reproducible. The mission test in [`account/test1_issue_5672/`](account/test1_issue_5672)
+reproducible. The mission test in [`issues-repro/issue_5672/`](issues-repro/issue_5672)
 is the keystone scenario: 4 steps that walk a release-rollback-fix
-trajectory end-to-end.
+trajectory end-to-end. Additional regression fixtures live under
+`issues-repro/` (one directory per GitHub issue); green-path / smoke
+fixtures live under `tests/`.
 
 [issue-5672]: https://github.com/databricks/terraform-provider-databricks/issues/5672
 
@@ -49,7 +51,7 @@ terraform -version
 #    requires-skip-check, then sets DATABRICKS_CONFIG_PROFILE for the SDK.
 
 # 4. Run the issue #5672 mission test.
-tfv2 run --repo "$(pwd)" testframeworkV2/account/test1_issue_5672/
+tfv2 run --repo "$(pwd)" testframeworkV2/issues-repro/issue_5672/
 
 # Expected:
 # [PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 5.1s
@@ -126,11 +128,22 @@ testframeworkV2/
 │   ├── config/                            ← test.yaml schema + parse + validate
 │   ├── runner/                            ← orchestration: parse → step loop → cleanup
 │   └── result/                            ← per-step + per-run result types
-└── account/                               ← tests grouped by profile level
-    └── test1_issue_5672/
+├── issues-repro/                          ← fixtures that reproduce a specific GitHub issue
+│   ├── issue_5672/                        ← the keystone mws_workspaces regression test
+│   │   ├── test.yaml
+│   │   └── main.tf
+│   ├── issue_5678/                        ← (Phase 2 — pending researcher output)
+│   └── issue_5668/                        ← (Phase 2 — pending researcher output)
+└── tests/                                 ← green-path / smoke fixtures (no specific issue)
+    └── workspace_data_source_smoke/       ← happy-path data.databricks_mws_workspaces
         ├── test.yaml
         └── main.tf
 ```
+
+Each `issues-repro/issue_<N>/` and `tests/<slug>/` directory is fully
+self-contained: one `test.yaml` plus at least one `*.tf` file. Profile
+level (workspace / account / UC) is declared per-test via
+`requires.level`, not encoded in the directory tree.
 
 ## Runtime tree
 
@@ -204,8 +217,11 @@ design doc is the source of truth for "why does it behave this way?"
 
 Each new test directory should:
 
-1. live under `account/`, `workspace/`, `ucws/`, or `ucacct/` to match the
-   profile level the test targets;
+1. live under `issues-repro/issue_<N>/` (when reproducing a specific GitHub
+   issue) or `tests/<descriptive-slug>/` (when it's a green-path / smoke
+   fixture not tied to an issue);
 2. include `test.yaml` + at least one `*.tf` file in the same directory;
-3. document the regression / behaviour the test pins, ideally with an
+3. declare the target profile level via `requires.level` in `test.yaml`,
+   not via directory placement (per v5.0 — see DESIGN.md §3 + §13 OQ3);
+4. document the regression / behaviour the test pins, ideally with an
    issue or PR link.

@@ -4,7 +4,7 @@ This guide walks you from "I want to write a regression test for a Databricks
 provider bug" to "test passes locally on my profile". For framework internals,
 see `DESIGN.md`. For a quick "what is this thing", see `README.md`.
 
-The running example throughout is `account/test1_issue_5672/`, which
+The running example throughout is `issues-repro/issue_5672/`, which
 reproduces [issue #5672](https://github.com/databricks/terraform-provider-databricks/issues/5672) end-to-end across 4 provider versions.
 
 ---
@@ -34,26 +34,27 @@ README.md "Quickstart". The rest of this guide uses `go run ./cmd/tfv2`.
 
 ## Step 1 — Pick a directory
 
-Tests are grouped by the **profile level** they require. The framework reads
-the level from your test's `requires:` block and skips the test cleanly if
-the named profile doesn't match.
+Tests are grouped by **intent** (per DESIGN.md v5.0):
 
-| Subdir | Use when your bug requires… |
+| Subdir | Use when… |
 |---|---|
-| `testframeworkV2/account/`  | An account-level profile (`host = https://accounts.{cloud}.databricks.com`). |
-| `testframeworkV2/workspace/` | A workspace-level profile (any cloud). |
-| `testframeworkV2/ucws/`     | Unity Catalog on a workspace profile. |
-| `testframeworkV2/ucacct/`   | Unity Catalog on an account profile. |
+| `testframeworkV2/issues-repro/issue_<N>/`  | You are reproducing a specific GitHub issue. The directory name is `issue_<number>` (e.g. `issue_5672`, `issue_5678`). |
+| `testframeworkV2/tests/<descriptive-slug>/` | The test is a green-path / smoke / regression-guard fixture NOT tied to a specific issue (e.g. `workspace_data_source_smoke`). |
+
+Profile level (workspace / account / UC) is NOT encoded in the directory
+name; it's declared per-test via `requires.level` in `test.yaml`. The
+framework reads that field and skips the test cleanly if the named profile
+doesn't match.
 
 Issue #5672 is account-only (the post-Read hook only fires against an account
-host) → `account/test1_issue_5672/`. If you're testing, say, a workspace-level
-`databricks_grant` regression → `workspace/your_test_name/`.
+host) → `issues-repro/issue_5672/`. A workspace-level `databricks_grant`
+regression for issue #5678 would go at `issues-repro/issue_5678/`. A green-
+path data-source smoke test goes under `tests/`.
 
-Test directory name convention: `<short_descriptor>` or `<issue_id>_<descriptor>`.
-Slug-style, lowercase, underscores: `^[a-z0-9_-]+$`.
+Slug-style names: lowercase, digits, `_`, `-` (matches `^[a-z0-9_-]+$`).
 
 ```
-testframeworkV2/account/test1_issue_5672/
+testframeworkV2/issues-repro/issue_5672/
 ├── main.tf
 └── test.yaml
 ```
@@ -76,7 +77,7 @@ Two rules:
 The minimum HCL for the running example:
 
 ```hcl
-# testframeworkV2/account/test1_issue_5672/main.tf
+# testframeworkV2/issues-repro/issue_5672/main.tf
 
 provider "databricks" {
   alias = "accounts"            # alias is fine; not required
@@ -100,7 +101,7 @@ should exercise the user-shaped configuration.
 ## Step 3 — Write `test.yaml`
 
 The schema (full reference: DESIGN.md §4) has three top-level required fields,
-two optional ones, and a list of steps. Walk-through using `account/test1_issue_5672/test.yaml`:
+two optional ones, and a list of steps. Walk-through using `issues-repro/issue_5672/test.yaml`:
 
 ```yaml
 name: issue_5672_mws_workspaces_account_provider_config_regression
@@ -173,17 +174,17 @@ together (AND semantics). At least one is required when `expect: failure`.
 cd testframeworkV2/
 
 # Run a single test (the canonical command):
-go run ./cmd/tfv2 run --repo "$(pwd)/.." account/test1_issue_5672/
+go run ./cmd/tfv2 run --repo "$(pwd)/.." issues-repro/issue_5672/
 
 # Override the terraform binary if it's not on PATH:
 go run ./cmd/tfv2 run --terraform-bin /opt/terraform/1.5.7/terraform \
-  --repo "$(pwd)/.." account/test1_issue_5672/
+  --repo "$(pwd)/.." issues-repro/issue_5672/
 
 # Disable cleanup destroy (preserves state for inspection):
-go run ./cmd/tfv2 run --no-cleanup --repo "$(pwd)/.." account/test1_issue_5672/
+go run ./cmd/tfv2 run --no-cleanup --repo "$(pwd)/.." issues-repro/issue_5672/
 
 # Verbose framework logs to stderr (does NOT enable terraform's TF_LOG):
-go run ./cmd/tfv2 run --verbose --repo "$(pwd)/.." account/test1_issue_5672/
+go run ./cmd/tfv2 run --verbose --repo "$(pwd)/.." issues-repro/issue_5672/
 ```
 
 `--repo` points at the provider repo root and is required for any step with
@@ -232,7 +233,7 @@ AWS account-level profile, which matches `cloud: aws` (or `any`) +
 **Test fails on a step you expected to pass.** Open the per-step stderr log:
 ```sh
 # <test-name> is the `name:` field from your test.yaml (NOT the source-dir name).
-# For account/test1_issue_5672/test.yaml that's
+# For issues-repro/issue_5672/test.yaml that's
 # issue_5672_mws_workspaces_account_provider_config_regression.
 ls ~/.testframeworkv2/runs/<test-name>-*/
 cat ~/.testframeworkv2/runs/<test-name>-*/step_1_*.stderr.log
@@ -263,7 +264,7 @@ to check:
 
 **Custom run-dir for a one-off debug session:**
 ```sh
-go run ./cmd/tfv2 run --run-dir /tmp/myrun --repo "$(pwd)/.." account/test1_issue_5672/
+go run ./cmd/tfv2 run --run-dir /tmp/myrun --repo "$(pwd)/.." issues-repro/issue_5672/
 ```
 
 ---

@@ -1,0 +1,27 @@
+# Green-path smoke: data.databricks_mws_workspaces reads cleanly on the current
+# branch. Not tied to a specific GitHub issue — guards the happy path so a
+# future regression of #5672 (or similar) is caught by `tfv2 run -r` sweeps.
+#
+# This is the canonical example for `tests/<descriptive-slug>/` fixtures
+# (DESIGN.md v5.0 §3 / §13 OQ3 — green-path lives under tests/, bug repros
+# under issues-repro/issue_<N>/).
+
+name: workspace_data_source_smoke
+profile: ACCOUNT_AWS                 # any account-level profile works; cloud is `any` below
+cleanup: true                        # no-op for plan-only
+
+requires:
+  cloud: any                         # data.databricks_mws_workspaces is host-agnostic;
+                                     # AWS / Azure / GCP account profiles all work
+  level: account                     # data source is account-only
+
+steps:
+  # Single step: build the provider from the current branch and assert the
+  # data source plans cleanly. If the data source ever regresses on the
+  # branch HEAD, this step fails and the framework returns exit code 1 —
+  # which is exactly what we want green-path / regression-guard fixtures
+  # to do.
+  - name: reads_on_local
+    version: "local"
+    command: plan
+    expect: success

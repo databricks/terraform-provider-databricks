@@ -1,9 +1,10 @@
 # testframeworkV2 — Design Doc
 
-**Status:** Draft v4.2 (researcher-tf11, 2026-05-07)
+**Status:** Draft v5.0 (implementer-tf11, 2026-05-08)
 **Audience:** tech-lead-tf11, reviewer-tf11, tester-tf11, implementer-tf11
 **Scope:** Multi-step, multi-version Terraform integration test harness for `databricks/terraform-provider-databricks`. v1 ships small.
-**Supersedes:** v4.1, v4, v3, v2, and v1.
+**Supersedes:** v4.2, v4.1, v4, v3, v2, and v1.
+**v5.0 deltas (vs v4.2):** Phase 2 directory restructure to support multiple fixtures (Task #17). (1) `testframeworkV2/account/` → `testframeworkV2/issues-repro/` — the `account/`-as-level-marker convention from v4.x didn't scale to bug fixtures targeting different profile levels (issue #5678 is workspace-level, issue #5668 is account-level). The `issues-repro/` namespace groups all "this commit reproduces a known bug" fixtures regardless of level; per-test `requires.{cloud,level}` does the actual gating. (2) `testframeworkV2/tests/` added as a parallel sibling for green-path / smoke fixtures that aren't tied to a specific issue (e.g. `tests/<workspace-ds-smoke>/` covers the `data.databricks_mws_workspaces` happy path on the current branch). (3) `account/test1_issue_5672/` renamed to `issues-repro/issue_5672/` — drops the `test1_` prefix and aligns with the `issue_<N>` convention used by the new fixtures. (4) §3 directory layout block + §11 worked-example paths + §13 OQ3 updated; OQ3 now CLOSED with the issues-repro / tests split documented as the v5.0 convention. Pure structural change; no schema, runner, or behaviour deltas from v4.2.
 **v4.2 deltas (vs v4.1):** picked up reviewer's 3 last-bounce items that the v4.1 sweep missed. (1) §4 schema example `requires.cloud: gcp` → `any` (matches the actual #5672 fixture). (2) §11 in-doc `test.yaml` example block (lines ~810-840) was a v3-era stale copy with `cloud: gcp` + GCP-specific regex + `error_substring` — synced fully with the actual fixture file. (3) §13 open question 2 ("issue #5672 cloud-specificity") marked CLOSED with reference to Appendix A "AWS account full-smoke" entry. Pure consistency cleanup; no behavior or schema changes from v4.1.
 **v4.1 deltas (vs v4):** stale-reference sweep — 6 spots that still referenced the dropped preflight rule or the truncated "same SHA" framing. Pure consistency cleanup; no behavior or schema changes. (1) §4 schema example `passthrough_env` no longer lists items already in core (HTTP_PROXY etc.) — replaced with niche cross-cloud examples (AWS_PROFILE, AZURE_CLIENT_ID, GCP_PROJECT). (2) §7.0 pseudocode comment dropped the "validate no `databricks` pin" clause. (3) §8 synthetic-version subsection rewrote the "preflight guarantees no collision" sentence to cite override-merge per-attribute semantics instead. (4) §11 main.tf example block in DESIGN.md sample synced with the actual fixture (allow user pin). (5) test.yaml header comment about v1.114.1 expanded to mention binary-vs-git SHA distinction. (6) test.yaml step 3 inline comment same expansion.
 **v4 deltas (vs v3):** mission test regex loosened to outer pattern `cannot populate provider_config for mws workspaces.*failed to resolve workspace_id` (cloud-portable — tester confirmed AWS reproduces with different inner error); `requires.cloud: any` in the #5672 sample (was `gcp`); env allowlist extended with SSL_CERT_FILE/DIR + HTTPS_PROXY/HTTP_PROXY/NO_PROXY (§10/G6); run-dir naming gains a 4-char random hex suffix to prevent same-second collisions; Appendix A renamed `expA` → `expA1`, added `B-COLLISION` and "AWS account full-smoke" entries; §11 walkthrough now shows both AWS and GCP inner-error variants; `error_substring` removed from the #5672 sample test.yaml (kept in schema as a forward-compat option for tests that want literal-byte matching).
@@ -22,7 +23,7 @@
 8. [Local-build flow](#8-local-build-flow)
 9. [Why not `terraform-plugin-testing.ExternalProviders`?](#9-why-not-terraform-plugin-testingexternalproviders)
 10. [Failure modes & gotchas](#10-failure-modes--gotchas)
-11. [Worked example — `test1_issue_5672`](#11-worked-example--test1_issue_5672)
+11. [Worked example — `issue_5672`](#11-worked-example--issue_5672)
 12. [Public API surface](#12-public-api-surface)
 13. [Open questions](#13-open-questions)
 14. [Out of scope (v1)](#14-out-of-scope-v1)
@@ -73,7 +74,7 @@ The framework is a thin orchestration layer between (a) a YAML-described multi-s
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  $ tfv2 run testframeworkV2/account/test1_issue_5672/                    │
+│  $ tfv2 run testframeworkV2/issues-repro/issue_5672/                     │
 │                                                                          │
 │  ┌──────────┐   ┌────────────────────────────────────────┐               │
 │  │ test.yaml│──▶│ config: parse, validate, skip-check    │               │
@@ -160,21 +161,36 @@ testframeworkV2/
 │   │   └── config_test.go
 │   └── result/
 │       └── result.go                      ← per-step + per-run result types, summary printer
-├── account/                               ← tests using an account-level profile
-│   └── test1_issue_5672/
+├── issues-repro/                          ← fixtures that reproduce known bugs (one dir per issue)
+│   ├── issue_5672/                        ← #5672 mws_workspaces account provider_config regression
+│   │   ├── test.yaml
+│   │   └── main.tf
+│   ├── issue_5678/                        ← researcher-tf11 output (Phase 2)
+│   │   ├── test.yaml
+│   │   └── main.tf
+│   └── issue_5668/                        ← researcher-tf11 output (Phase 2)
 │       ├── test.yaml
 │       └── main.tf
-└── workspace/                             ← (created when first workspace-level test arrives)
-    └── ...
+└── tests/                                 ← green-path / smoke fixtures NOT tied to a specific issue
+    └── workspace_data_source_smoke/       ← happy-path data.databricks_mws_workspaces on local build
+        ├── test.yaml
+        └── main.tf
 
-# Note on directory naming:
-# Per user-approved guidance, test directories group by profile level:
-#   account/    — tests against an account-level ~/.databrickscfg profile
-#   workspace/  — tests against a workspace-level profile
-#   ucws/       — Unity Catalog workspace
-#   ucacct/     — Unity Catalog account
-# This makes the `requires.level` field redundant for v1 (we could derive from path),
-# but keeping it explicit avoids coupling path → semantics. See §13 open question.
+# Note on directory naming (v5.0):
+# Two top-level fixture trees, distinguished by intent rather than profile level:
+#   issues-repro/  — each subdir reproduces a SPECIFIC GitHub issue. Naming
+#                    convention: issue_<N>/ where N is the issue number.
+#                    Profile level (workspace / account / UC) varies per test;
+#                    each test.yaml's `requires.level` does the actual gating.
+#   tests/         — green-path / regression-guard fixtures NOT tied to a specific
+#                    bug. Naming convention: descriptive slug (e.g.
+#                    workspace_data_source_smoke/). Same `requires.level` gating.
+#
+# v4.x used `account/` / `workspace/` / `ucws/` / `ucacct/` as the level marker via
+# directory placement. This didn't scale: the new fixtures span multiple levels
+# (#5678 is workspace, #5668 is account, the smoke is workspace), and forcing
+# bug-fixture organisation through profile-level dirs split related issues across
+# different trees. See §13 OQ3 (CLOSED) for the rationale.
 ```
 
 ### Runtime tree (created by the framework)
@@ -191,7 +207,7 @@ testframeworkV2/
 │                   └── darwin_arm64/                                          ← unpacked
 │                       └── terraform-provider-databricks_v99.0.0-local
 └── runs/                                  ← per-run work dirs (preserved on disk for debugging)
-    └── test1_issue_5672-2026-05-07T20-15-00-a3f2/
+    └── issue_5672_mws_workspaces_account_provider_config_regression-2026-05-07T20-15-00-a3f2/
         ├── workdir/
         │   ├── main.tf                    ← copied from source dir
         │   ├── _tfv2_versions_override.tf ← regenerated each step
@@ -211,7 +227,7 @@ testframeworkV2/
         └── run.json                       ← final result manifest (one record per step)
 ```
 
-**Why two trees?** The provider cache is shared across all runs and tests on the host (downloaded once, reused forever for released versions). Per-run workdirs are throwaway but preserved on disk for forensic debugging. User's source tree (`testframeworkV2/account/test1_issue_5672/`) is never written to by the framework.
+**Why two trees?** The provider cache is shared across all runs and tests on the host (downloaded once, reused forever for released versions). Per-run workdirs are throwaway but preserved on disk for forensic debugging. User's source tree (`testframeworkV2/issues-repro/issue_5672/`) is never written to by the framework.
 
 ---
 
@@ -302,7 +318,7 @@ The framework writes one `.terraformrc` per run into the run's workdir, then exp
 
 ```hcl
 # Generated by testframeworkV2. Do not edit.
-# Run: test1_issue_5672-2026-05-07T20-15-00-a3f2
+# Run: issue_5672_mws_workspaces_account_provider_config_regression-2026-05-07T20-15-00-a3f2
 
 provider_installation {
   filesystem_mirror {
@@ -795,7 +811,7 @@ type Profile struct {
 **Symptom:** Importing `terraform-plugin-testing` doesn't auto-install, but transitively it pulls `hc-install`. We don't use plugin-testing at all (§9), so this doesn't apply, but note: we also don't use `tfexec.WithCheckTerraformVersion` if it ever calls `hc-install`. We use only `tfexec.NewTerraform(workDir, knownPath)`.
 
 ### G11. Framework writes into the user's source dir
-**Symptom:** Generated `_tfv2_versions_override.tf`, `.terraform/`, `.terraform.lock.hcl`, `terraform.tfstate` accumulate in `testframeworkV2/account/test1_issue_5672/`. Pollutes git status; tempting to commit by mistake.
+**Symptom:** Generated `_tfv2_versions_override.tf`, `.terraform/`, `.terraform.lock.hcl`, `terraform.tfstate` accumulate in `testframeworkV2/issues-repro/issue_5672/`. Pollutes git status; tempting to commit by mistake.
 **Mitigation:** Framework copies user `.tf` files into `~/.testframeworkv2/runs/<test>-<ts>-<rand>/workdir/` and runs everything there. User's source dir is read-only from the framework's POV. Defense in depth: `testframeworkV2/.gitignore` covers the framework-generated patterns in case anyone runs terraform manually in the source dir.
 
 ### G12. Failing destroy retry-loops (per reviewer I)
@@ -816,11 +832,11 @@ type Profile struct {
 
 ---
 
-## 11. Worked example — `test1_issue_5672`
+## 11. Worked example — `issue_5672`
 
 ### 11.1 Files
 
-`testframeworkV2/account/test1_issue_5672/test.yaml`:
+`testframeworkV2/issues-repro/issue_5672/test.yaml`:
 ```yaml
 name: issue_5672_mws_workspaces_account_provider_config_regression
 profile: ACCOUNT_AWS         # any account-level profile works (AWS / Azure / GCP)
@@ -857,7 +873,7 @@ steps:
     expect: success
 ```
 
-`testframeworkV2/account/test1_issue_5672/main.tf`:
+`testframeworkV2/issues-repro/issue_5672/main.tf`:
 ```hcl
 # Version pinning: this file does NOT pin a databricks version. The framework writes a
 # `_tfv2_versions_override.tf` per step that pins via Terraform's *_override.tf
@@ -893,10 +909,10 @@ The framework doesn't validate the credential field choice — it just sets `DAT
 ### 11.2 Execution timeline
 
 ```
-$ tfv2 run testframeworkV2/account/test1_issue_5672/
+$ tfv2 run testframeworkV2/issues-repro/issue_5672/
 
-▶ test1_issue_5672  profile=ACCOUNT_GCP  cloud=gcp  level=account
-  workdir: /Users/tanmay.rustagi/.testframeworkv2/runs/test1_issue_5672-2026-05-07T20-15-00-a3f2/workdir
+▶ issue_5672  profile=ACCOUNT_GCP  cloud=gcp  level=account
+  workdir: /Users/tanmay.rustagi/.testframeworkv2/runs/issue_5672_mws_workspaces_account_provider_config_regression-2026-05-07T20-15-00-a3f2/workdir
   terraform: /usr/local/bin/terraform (v1.5.7)
 
   ▶ step 1/4: passes_on_1_113_0      databricks 1.113.0   command=plan  expect=success
@@ -942,7 +958,7 @@ $ tfv2 run testframeworkV2/account/test1_issue_5672/
 
   cleanup: skipped (no apply steps)
 
-PASS  test1_issue_5672  (4/4 steps, 41.6s)
+PASS  issue_5672  (4/4 steps, 41.6s)
 ```
 
 ### 11.3 What just happened (annotated)
@@ -1096,7 +1112,7 @@ Things to validate during implementation, in priority order. None block this des
 
 2. ~~**Issue #5672 cloud-specificity.**~~ — **CLOSED.** Tester ran the full 4-step mission test against an AWS account profile (`https://accounts.cloud.databricks.com`, OAuth M2M) and reproduced the bug with a different inner error (`Unable to load OAuth Config` vs GCP's `strconv.ParseInt`) wrapped by the same outer pattern. `test.yaml` uses `requires.cloud: any` accordingly. See Appendix A "AWS account full-smoke" entry.
 
-3. **Directory naming convention for tests.** This design uses `account/`, `workspace/`, `ucws/`, `ucacct/` based on `requires.level`. Reviewer's older draft suggested flat (`tests/` only) — reconfirm this is OK as N grows.
+3. ~~**Directory naming convention for tests.**~~ — **CLOSED in v5.0.** The earlier `account/` / `workspace/` / `ucws/` / `ucacct/` (one tree per `requires.level` value) didn't scale once Phase 2 added fixtures spanning multiple levels. v5.0 splits along **intent** instead of profile level: `issues-repro/issue_<N>/` for fixtures that reproduce a specific GitHub issue (any level), `tests/<descriptive-slug>/` for green-path / smoke fixtures that aren't tied to a bug. Per-test `requires.{cloud,level}` does the actual host-gating. See §3 "Directory layout" for the convention block and the v5.0 delta entry in the doc header for the rationale.
 
 4. **terraform CLI minimum version.** Picked 1.5.0. Tester to confirm the mission test passes against terraform 1.5.7 (currently on disk) and 1.10+ (likely on CI). If 1.5.0 has any filesystem_mirror edge case, raise the floor.
 

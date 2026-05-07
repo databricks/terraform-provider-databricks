@@ -20,12 +20,14 @@
 
 * Add `testframeworkV2/`, a multi-version Terraform test harness for the provider ([DESIGN.md](https://github.com/databricks/terraform-provider-databricks/blob/main/testframeworkV2/DESIGN.md)).
 
-  The framework runs a single test definition (`test.yaml` + a directory of `*.tf` files) across N released provider versions plus a fresh `go build` of the current branch — without touching the developer's `~/.terraformrc`, `~/.databrickscfg`, or shell environment. Built around issue [#5672](https://github.com/databricks/terraform-provider-databricks/issues/5672)'s mission test (`testframeworkV2/account/test1_issue_5672/`), which pins the regression-rollback-fix trajectory across `1.113.0` → `1.114.0` → `1.114.1` → `local` in four steps.
+  The framework runs a single test definition (`test.yaml` + a directory of `*.tf` files) across N released provider versions plus a fresh `go build` of the current branch — without touching the developer's `~/.terraformrc`, `~/.databrickscfg`, or shell environment. Built around issue [#5672](https://github.com/databricks/terraform-provider-databricks/issues/5672)'s mission test (`testframeworkV2/issues-repro/issue_5672/`), which pins the regression-rollback-fix trajectory across `1.113.0` → `1.114.0` → `1.114.1` → `local` in four steps.
+
+  Fixtures live under two trees: `testframeworkV2/issues-repro/issue_<N>/` for fixtures that reproduce a specific GitHub issue, and `testframeworkV2/tests/<descriptive-slug>/` for green-path / smoke / regression-guard fixtures not tied to a bug. Profile level (workspace / account / UC) is declared per-test via `requires.level`.
 
   Quickstart:
   ```sh
   go build -o ~/.local/bin/tfv2 ./testframeworkV2/cmd/tfv2
-  tfv2 run --repo "$(pwd)" testframeworkV2/account/test1_issue_5672/
+  tfv2 run --repo "$(pwd)" testframeworkV2/issues-repro/issue_5672/
   ```
 
   Subcommands: `tfv2 run [-r] <dir>` (single or recursive), `tfv2 cache list/prune`, `tfv2 build local --repo <path>`. The framework lives in its own Go module (`testframeworkV2/go.mod`) so it can be built and run independently of the provider's transitive deps.

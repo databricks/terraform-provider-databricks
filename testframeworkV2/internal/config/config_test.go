@@ -570,12 +570,12 @@ steps:
 }
 
 // TestLoad_FixtureFromMissionTest exercises the actual on-disk
-// `account/test1_issue_5672/test.yaml` (resolved relative to the
+// `issues-repro/issue_5672/test.yaml` (resolved relative to the
 // test source). We point at a synthetic .databrickscfg matching the
 // fixture's profile name so the existence check passes.
 func TestLoad_FixtureFromMissionTest(t *testing.T) {
-	// Path relative to this test file: ../../account/test1_issue_5672/test.yaml
-	yamlPath := filepath.Join("..", "..", "account", "test1_issue_5672", "test.yaml")
+	// Path relative to this test file: ../../issues-repro/issue_5672/test.yaml
+	yamlPath := filepath.Join("..", "..", "issues-repro", "issue_5672", "test.yaml")
 	if _, err := os.Stat(yamlPath); err != nil {
 		t.Skipf("mission-test fixture not available: %v", err)
 	}

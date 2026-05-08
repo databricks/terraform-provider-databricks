@@ -14,3 +14,7 @@ _tfv2_*.json
 
 # Local-build artifacts (if anything leaks)
 local-version.json
+
+# `make build` output. Anchored to testframeworkV2/ root so it doesn't
+# accidentally match a subpath named tfv2 elsewhere in the tree.
+/tfv2

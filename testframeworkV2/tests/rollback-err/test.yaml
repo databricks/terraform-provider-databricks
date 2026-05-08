@@ -1,24 +1,26 @@
-# Regression-guard: a v1.113.0 -> v1.114.0 -> v1.113.0 downgrade should NOT
-# destructively replace databricks_token. Same root cause as issue #5678
-# (state pollution by v1.114.0's post-Read hook + schema mismatch on the
-# rolled-back binary's auto-ForceNew sweep), observed at the downgrade
-# direction (v1.114.0 -> v1.113.0) instead of #5678's forward direction
-# (v1.114.0 -> v1.114.1).
+# Regression-guard for the apply-then-downgrade sibling of issue #5678.
 #
-# Step 3 asserts the destructive replacement via v6.3 plan-content matchers
-# (expect_non_empty_plan + plan_match 'must be replaced'). Step 4 remains
-# a comment-only manual check: the on-main fix can produce either an
-# empty plan or an in-place update, and the framework currently has no
-# negative matcher to express "must NOT contain forces replacement".
+# When databricks_token is created with v1.113.0 then refreshed under
+# v1.114.0, v1.114.0's post-Read hook (common/resource.go::
+# populateProviderConfigInState) writes provider_config = [{workspace_id =
+# "<resolved>"}] to state. Rolling back to v1.113.0 then re-running plan
+# would diff the polluted state against the (provider_config-less) config
+# and v1.113.0's auto-ForceNew sweep would force-replace the token,
+# silently destroying and recreating it on apply.
+#
+# This fixture is a perpetual canary: it FAILS today (PR #5667 + #5492
+# revert chain on main means the bug is present in step 3 plan output)
+# and turns GREEN once a forward-rolled fix lands that prevents the
+# destructive plan diff.
+#
+# Step 3 asserts the rollback produces an EMPTY plan — i.e., no destructive
+# replacement, no in-place change. Today the assertion fails because plan
+# stdout contains "must be replaced" instead of "No changes". When a fix
+# lands and the rollback produces a clean plan, step 3 turns green.
 #
 # Step 3 is plan-only for safety: applying v1.113.0 against the polluted
-# state would silently DESTROY the real token and recreate it. Test
-# infrastructure should not silently destroy real cloud resources.
-#
-# Step 4 proves the on-main fix (commit 115199fc) resolves the destructive
-# intent: the local build skips provider_config in the auto-ForceNew sweep
-# and synthesizes a no-op Update for resources with provider_config +
-# Create/Delete (no Update method).
+# state would silently DESTROY the real token. Test infrastructure should
+# not silently destroy real cloud resources.
 
 name: rollback_err_token_v1_113_v1_114_v1_113
 profile: WORKSPACE_AWS
@@ -38,20 +40,11 @@ steps:
     command: apply
     expect: success
 
-  - name: rollback_to_1_113_0_force_replaces
+  - name: rollback_to_1_113_0_must_not_force_replace
     version: "1.113.0"
     command: plan
     expect: success
-    expect_non_empty_plan: true
-    plan_match: 'must be replaced'
-
-  - name: fixed_on_local
-    version: "local"
-    command: plan
-    expect: success
-    # Manual verification: open step_4_*.stdout.log and confirm NO
-    # "# forces replacement" annotation. Either in-place update
-    # ("Plan: 0 to add, 1 to change, 0 to destroy") OR "No changes"
-    # is acceptable — both indicate the on-main fix at 115199fc
-    # successfully avoids the destructive replacement. The auto-
-    # forced-replacement is the bug; everything else is a fix.
+    plan_match: 'No changes'    # plan stdout must contain "No changes."
+                                 # Today: fails (plan shows "must be replaced");
+                                 # passes once a forward-rolled fix prevents
+                                 # the destructive plan diff.

@@ -9,10 +9,10 @@
 # producing a "# forces replacement" annotation. Applying this plan would
 # destroy and recreate the real token.
 #
-# The on-main fix at commit 115199fc skips provider_config in the
-# auto-ForceNew sweep and synthesizes a no-op Update for resources with
-# provider_config + Create/Delete. With local build, step 4 produces a
-# clean plan ("No changes" or in-place update only).
+# This fixture is a perpetual canary: step 3's plan_match: 'No changes'
+# fails today because the bug is present (PR #5667 + #5492 revert chain
+# on main), and turns green once a forward-rolled fix prevents the
+# destructive plan diff.
 
 provider "databricks" {}
 

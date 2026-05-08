@@ -188,16 +188,50 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 	if newWorkspaceID == nil {
 		return nil
 	}
-	newWSID := newWorkspaceID.(string)
-	// Fall back to provider-level workspace_id only if not set on the resource.
+	newWSID, ok := newWorkspaceID.(string)
+	if !ok {
+		return nil
+	}
 	if newWSID == "" {
+		// When the user wrote provider_config.workspace_id but its value
+		// references another resource's computed attribute that hasn't been
+		// applied yet (e.g. databricks_mws_workspaces.this.workspace_id), the
+		// value is unknown at plan time. Defer validation to the next plan —
+		// falling back to the provider-level workspace_id here would attempt
+		// to validate against a different value than what the user wrote.
+		if isWorkspaceIDUnknownInRawConfig(d) {
+			return nil
+		}
+		// Fall back to provider-level workspace_id only if not set on the resource.
 		newWSID = c.Config.WorkspaceID
+	}
+	// "none" is a sentinel the Databricks CLI writes to ~/.databrickscfg when
+	// a profile has no workspace bound (e.g. account-level auth login). Treat
+	// it as "no workspace_id" and skip validation rather than failing parse.
+	if newWSID == "" || newWSID == "none" {
+		return nil
 	}
 	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// isWorkspaceIDUnknownInRawConfig returns true when provider_config.workspace_id
+// is present in the user's raw config but its value is unknown at plan time
+// (e.g. a reference to a yet-to-be-created resource's computed attribute).
+func isWorkspaceIDUnknownInRawConfig(d *schema.ResourceDiff) bool {
+	path := cty.Path{
+		cty.GetAttrStep{Name: "provider_config"},
+		cty.IndexStep{Key: cty.NumberIntVal(0)},
+		cty.GetAttrStep{Name: "workspace_id"},
+	}
+	rawValue, diags := d.GetRawConfigAt(path)
+	if diags.HasError() {
+		return false
+	}
+	return !rawValue.IsNull() && !rawValue.IsKnown()
 }
 
 // workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config

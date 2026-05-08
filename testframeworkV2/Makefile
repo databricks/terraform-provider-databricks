@@ -24,6 +24,12 @@
 .PHONY: help test test-all unit build clean
 .DEFAULT_GOAL := help
 
+# Treat any extra command-line goals (i.e. the path arg to `make test <path>`)
+# as phony. Without this, when the path corresponds to an existing directory
+# (e.g. `issues-repro/issue_5672`), make filesystem-checks it and prints
+# `make: 'issues-repro/issue_5672' is up to date.` after the test output.
+.PHONY: $(filter-out test test-all unit build clean help,$(MAKECMDGOALS))
+
 # Catch-all so the path-arg goals passed to `make test <path>` are
 # silent no-ops rather than "No rule to make target" errors.
 %:

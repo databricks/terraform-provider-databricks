@@ -32,7 +32,20 @@ The following attributes are exported:
 * `network_policy_id` (string) - The unique identifier for the network policy
 
 ### CustomerFacingIngressNetworkPolicy
-* `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess)
+* `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess) - The network policy restrictions for private access to the workspace.
+  Configures how registered private endpoints are allowed or denied access
+* `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess) - The network policy restrictions for public access to the workspace.
+  Configures how public internet traffic is allowed or denied access
+
+### CustomerFacingIngressNetworkPolicyAccountApiDestination
+* `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
+* `scopes` (list of string)
+
+### CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination
+* `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyAccountUiDestination
+* `all_destinations` (boolean) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
 * `all_destinations` (boolean) - Must be set to true
@@ -45,11 +58,31 @@ The following attributes are exported:
 * `principal_id` (integer)
 * `principal_type` (string) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
 
+### CustomerFacingIngressNetworkPolicyEndpoints
+* `endpoint_ids` (list of string)
+
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string) - We only support IPv4 and IPv4 CIDR notation for now
 
 ### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
 * `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyPrivateAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule)
+* `restriction_mode` (string) - Possible values are: `ALLOW_ALL_REGISTERED_ENDPOINTS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyPrivateIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyPrivateRequestOrigin)
+
+### CustomerFacingIngressNetworkPolicyPrivateRequestOrigin
+* `all_private_access` (boolean)
+* `all_registered_endpoints` (boolean)
+* `azure_workspace_private_link` (boolean)
+* `endpoints` (CustomerFacingIngressNetworkPolicyEndpoints)
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
@@ -68,14 +101,18 @@ The following attributes are exported:
 * `included_ip_ranges` (CustomerFacingIngressNetworkPolicyIpRanges) - Will not allow IP ranges with private IPs
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
+* `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination)
+* `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination)
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
 * `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination)
 * `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination)
 * `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination)
-* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination) - Workspace destinations
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination)
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
+* `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
 * `scopes` (list of string)
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceUiDestination

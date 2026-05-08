@@ -30115,6 +30115,8 @@ type TemporaryCredentials_SdkV2 struct {
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
+
+	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 }
 
 func (to *TemporaryCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TemporaryCredentials_SdkV2) {
@@ -30145,6 +30147,15 @@ func (to *TemporaryCredentials_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 			}
 		}
 	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				// Recursively sync the fields of R2TempCredentials
+				toR2TempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
 }
 
 func (to *TemporaryCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TemporaryCredentials_SdkV2) {
@@ -30172,6 +30183,14 @@ func (to *TemporaryCredentials_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 			}
 		}
 	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				toR2TempCredentials.SyncFieldsDuringRead(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
 }
 
 func (m TemporaryCredentials_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -30182,6 +30201,8 @@ func (m TemporaryCredentials_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
 	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].SetOptional()
 	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["r2_temp_credentials"] = attrs["r2_temp_credentials"].SetOptional()
+	attrs["r2_temp_credentials"] = attrs["r2_temp_credentials"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -30198,6 +30219,7 @@ func (m TemporaryCredentials_SdkV2) GetComplexFieldTypes(ctx context.Context) ma
 		"aws_temp_credentials": reflect.TypeOf(AwsCredentials_SdkV2{}),
 		"azure_aad":            reflect.TypeOf(AzureActiveDirectoryToken_SdkV2{}),
 		"gcp_oauth_token":      reflect.TypeOf(GcpOauthToken_SdkV2{}),
+		"r2_temp_credentials":  reflect.TypeOf(R2Credentials_SdkV2{}),
 	}
 }
 
@@ -30212,6 +30234,7 @@ func (m TemporaryCredentials_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"azure_aad":            m.AzureAad,
 			"expiration_time":      m.ExpirationTime,
 			"gcp_oauth_token":      m.GcpOauthToken,
+			"r2_temp_credentials":  m.R2TempCredentials,
 		})
 }
 
@@ -30228,6 +30251,9 @@ func (m TemporaryCredentials_SdkV2) Type(ctx context.Context) attr.Type {
 			"expiration_time": types.Int64Type,
 			"gcp_oauth_token": basetypes.ListType{
 				ElemType: GcpOauthToken_SdkV2{}.Type(ctx),
+			},
+			"r2_temp_credentials": basetypes.ListType{
+				ElemType: R2Credentials_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -30309,6 +30335,32 @@ func (m *TemporaryCredentials_SdkV2) SetGcpOauthToken(ctx context.Context, v Gcp
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_oauth_token"]
 	m.GcpOauthToken = types.ListValueMust(t, vs)
+}
+
+// GetR2TempCredentials returns the value of the R2TempCredentials field in TemporaryCredentials_SdkV2 as
+// a R2Credentials_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TemporaryCredentials_SdkV2) GetR2TempCredentials(ctx context.Context) (R2Credentials_SdkV2, bool) {
+	var e R2Credentials_SdkV2
+	if m.R2TempCredentials.IsNull() || m.R2TempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []R2Credentials_SdkV2
+	d := m.R2TempCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetR2TempCredentials sets the value of the R2TempCredentials field in TemporaryCredentials_SdkV2.
+func (m *TemporaryCredentials_SdkV2) SetR2TempCredentials(ctx context.Context, v R2Credentials_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["r2_temp_credentials"]
+	m.R2TempCredentials = types.ListValueMust(t, vs)
 }
 
 // Detailed status of an online table. Shown if the online table is in the

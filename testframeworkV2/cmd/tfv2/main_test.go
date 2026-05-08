@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -246,7 +247,8 @@ func TestPrintRunResult_NoHintOnPass(t *testing.T) {
 }
 
 // TestFormatFailHint covers the helper directly: FAIL + stderr →
-// hint, every other shape → empty.
+// hint, every other shape → empty. Plan-assertion failures take a
+// separate path tested in TestFormatFailHint_PlanAssertion.
 func TestFormatFailHint(t *testing.T) {
 	for _, tc := range []struct {
 		name string
@@ -263,6 +265,206 @@ func TestFormatFailHint(t *testing.T) {
 				t.Errorf("got %q\nwant %q", got, tc.want)
 			}
 		})
+	}
+}
+
+// TestFormatPlanStdoutExcerpt covers the four shapes called out in
+// the task spec: long output (truncated to last 15), short output
+// (whole thing), empty, only-blank-lines (treated as empty).
+func TestFormatPlanStdoutExcerpt(t *testing.T) {
+	t.Run("50 lines truncates to last 15", func(t *testing.T) {
+		var sb strings.Builder
+		for i := 1; i <= 50; i++ {
+			fmt.Fprintf(&sb, "line %d\n", i)
+		}
+		got := formatPlanStdoutExcerpt([]byte(sb.String()))
+		// Header present.
+		if !strings.HasPrefix(got, "       plan output (tail):") {
+			t.Errorf("missing header, got first line: %q", strings.SplitN(got, "\n", 2)[0])
+		}
+		// Body has exactly 15 lines (header + 15 body = 16 lines total).
+		lines := strings.Split(got, "\n")
+		if len(lines) != 16 {
+			t.Errorf("want 16 lines (1 header + 15 body), got %d:\n%s", len(lines), got)
+		}
+		// First body line is "line 36" (truncated to last 15 of 50: 36..50).
+		if !strings.HasSuffix(lines[1], "line 36") {
+			t.Errorf("first body line should be 'line 36', got %q", lines[1])
+		}
+		// Last body line is "line 50".
+		if !strings.HasSuffix(lines[15], "line 50") {
+			t.Errorf("last body line should be 'line 50', got %q", lines[15])
+		}
+		// Body indent is 9 spaces.
+		for i := 1; i <= 15; i++ {
+			if !strings.HasPrefix(lines[i], "         ") {
+				t.Errorf("body line %d should be 9-space-indented, got %q", i, lines[i])
+			}
+		}
+	})
+
+	t.Run("5 lines prints whole thing", func(t *testing.T) {
+		stdout := []byte("a\nb\nc\nd\ne\n")
+		got := formatPlanStdoutExcerpt(stdout)
+		want := "       plan output (tail):\n         a\n         b\n         c\n         d\n         e"
+		if got != want {
+			t.Errorf("got:\n%q\nwant:\n%q", got, want)
+		}
+	})
+
+	t.Run("empty stdout returns placeholder", func(t *testing.T) {
+		if got := formatPlanStdoutExcerpt(nil); got != "       (plan stdout was empty)" {
+			t.Errorf("got %q", got)
+		}
+		if got := formatPlanStdoutExcerpt([]byte("")); got != "       (plan stdout was empty)" {
+			t.Errorf("got %q", got)
+		}
+	})
+
+	t.Run("only-blank-lines returns placeholder", func(t *testing.T) {
+		got := formatPlanStdoutExcerpt([]byte("\n\n   \n\t\n\n"))
+		if got != "       (plan stdout was empty)" {
+			t.Errorf("got %q", got)
+		}
+	})
+
+	t.Run("strips leading and trailing blanks", func(t *testing.T) {
+		got := formatPlanStdoutExcerpt([]byte("\n\n  \nfoo\nbar\n\n  \n"))
+		want := "       plan output (tail):\n         foo\n         bar"
+		if got != want {
+			t.Errorf("got:\n%q\nwant:\n%q", got, want)
+		}
+	})
+
+	t.Run("preserves interior blank lines", func(t *testing.T) {
+		// terraform inserts blank lines between resources; we keep them.
+		got := formatPlanStdoutExcerpt([]byte("foo\n\nbar\n"))
+		want := "       plan output (tail):\n         foo\n         \n         bar"
+		if got != want {
+			t.Errorf("got:\n%q\nwant:\n%q", got, want)
+		}
+	})
+
+	t.Run("exactly 15 lines prints all", func(t *testing.T) {
+		var sb strings.Builder
+		for i := 1; i <= 15; i++ {
+			fmt.Fprintf(&sb, "line %d\n", i)
+		}
+		got := formatPlanStdoutExcerpt([]byte(sb.String()))
+		// Header + 15 body = 16 lines.
+		if len(strings.Split(got, "\n")) != 16 {
+			t.Errorf("want 16 lines, got:\n%s", got)
+		}
+		// Should include line 1 (no truncation).
+		if !strings.Contains(got, "line 1\n") {
+			t.Errorf("exactly-15-lines case should include line 1, got:\n%s", got)
+		}
+	})
+}
+
+// TestFormatFailHint_PlanAssertion exercises the multi-line hint
+// path: when PlanAssertions is non-empty, the hint includes the
+// stdout excerpt block AND a dual-pointer line mentioning both
+// stdout and stderr log paths.
+func TestFormatFailHint_PlanAssertion(t *testing.T) {
+	t.Run("non-empty stdout + both log paths", func(t *testing.T) {
+		s := result.StepResult{
+			Status:         result.StatusFail,
+			StdoutLog:      "/r/step_3.stdout.log",
+			StderrLog:      "/r/step_3.stderr.log",
+			Stdout:         []byte("Plan: 1 to add, 0 to change, 1 to destroy.\n"),
+			PlanAssertions: []result.PlanAssertionFailure{{Kind: "plan_match", Pattern: "x", Reason: "no match"}},
+		}
+		got := formatFailHint(s)
+		if !strings.Contains(got, "       plan output (tail):") {
+			t.Errorf("missing excerpt header:\n%s", got)
+		}
+		if !strings.Contains(got, "         Plan: 1 to add, 0 to change, 1 to destroy.") {
+			t.Errorf("missing 9-space-indented body line:\n%s", got)
+		}
+		if !strings.Contains(got, "(full stdout at /r/step_3.stdout.log; stderr at /r/step_3.stderr.log)") {
+			t.Errorf("missing dual-pointer line:\n%s", got)
+		}
+	})
+
+	t.Run("empty stdout omits header but keeps pointer", func(t *testing.T) {
+		s := result.StepResult{
+			Status:         result.StatusFail,
+			StdoutLog:      "/r/step.stdout.log",
+			StderrLog:      "/r/step.stderr.log",
+			Stdout:         nil,
+			PlanAssertions: []result.PlanAssertionFailure{{Kind: "expect_non_empty_plan", Reason: "x"}},
+		}
+		got := formatFailHint(s)
+		if !strings.Contains(got, "       (plan stdout was empty)") {
+			t.Errorf("missing empty placeholder:\n%s", got)
+		}
+		if strings.Contains(got, "plan output (tail):") {
+			t.Errorf("should NOT have excerpt header for empty stdout:\n%s", got)
+		}
+		if !strings.Contains(got, "(full stdout at /r/step.stdout.log; stderr at /r/step.stderr.log)") {
+			t.Errorf("missing dual-pointer line:\n%s", got)
+		}
+	})
+
+	t.Run("falls back to stderr-only pointer if StdoutLog missing", func(t *testing.T) {
+		s := result.StepResult{
+			Status:         result.StatusFail,
+			StderrLog:      "/r/step.stderr.log",
+			Stdout:         []byte("foo\n"),
+			PlanAssertions: []result.PlanAssertionFailure{{Kind: "plan_match", Reason: "x"}},
+		}
+		got := formatFailHint(s)
+		if !strings.Contains(got, "(full stderr at /r/step.stderr.log)") {
+			t.Errorf("missing stderr-only pointer:\n%s", got)
+		}
+		if strings.Contains(got, "stdout at") {
+			t.Errorf("should NOT include stdout pointer when StdoutLog empty:\n%s", got)
+		}
+	})
+}
+
+// TestPrintRunResult_PlanAssertionFailure exercises the full
+// printRunResult flow on a step with plan assertions failing — the
+// FAIL line is followed by the multi-line excerpt block. Pins
+// behavior end-to-end so the printer's plumbing into formatFailHint
+// stays consistent with the helper's contract.
+func TestPrintRunResult_PlanAssertionFailure(t *testing.T) {
+	r := result.RunResult{
+		Test: "rollback_err",
+		Steps: []result.StepResult{{
+			Index: 2, Name: "rollback_to_1_113_0_force_replaces", Version: "1.113.0", Command: "plan",
+			Status:    result.StatusFail,
+			Reason:    "plan assertion(s) failed: plan_match(must be replaced): plan stdout did not match",
+			Duration:  500 * time.Millisecond,
+			StdoutLog: "/run/dir/step_3_rollback.stdout.log",
+			StderrLog: "/run/dir/step_3_rollback.stderr.log",
+			Stdout:    []byte("Terraform planned the following actions...\n\nPlan: 0 to add, 0 to change, 0 to destroy.\n"),
+			PlanAssertions: []result.PlanAssertionFailure{
+				{Kind: "plan_match", Pattern: "must be replaced", Reason: "plan stdout did not match"},
+			},
+		}},
+		Duration: 500 * time.Millisecond,
+	}
+	var buf bytes.Buffer
+	printRunResult(&buf, r)
+	out := buf.String()
+	for _, want := range []string{
+		"[FAIL] step 3 (rollback_to_1_113_0_force_replaces)",
+		"plan assertion(s) failed: plan_match(must be replaced)",
+		"       plan output (tail):",
+		"         Terraform planned the following actions...",
+		"         Plan: 0 to add, 0 to change, 0 to destroy.",
+		"(full stdout at /run/dir/step_3_rollback.stdout.log; stderr at /run/dir/step_3_rollback.stderr.log)",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q, got:\n%s", want, out)
+		}
+	}
+	// The legacy single-line stderr-pointer wording must NOT appear
+	// (we replaced it with the dual-path pointer).
+	if strings.Contains(out, "(full stderr at /run/dir/step_3_rollback.stderr.log)") {
+		t.Errorf("plan-assertion FAIL should NOT emit the legacy stderr-only pointer:\n%s", out)
 	}
 }
 

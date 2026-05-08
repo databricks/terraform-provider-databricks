@@ -36,6 +36,11 @@ func runPlanAssert(res *result.StepResult, step config.Step, stdout []byte) {
 	}
 	res.Status = result.StatusFail
 	res.PlanAssertions = failures
+	// Stash the captured stdout so the CLI printer can render an
+	// inline tail excerpt under the FAIL line. Stored only on
+	// failure to keep memory bounded — the success path never holds
+	// stdout bytes past the step boundary.
+	res.Stdout = stdout
 	parts := make([]string, len(failures))
 	for i, f := range failures {
 		parts[i] = f.String()

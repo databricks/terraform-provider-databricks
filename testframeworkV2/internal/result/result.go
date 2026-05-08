@@ -67,6 +67,14 @@ type StepResult struct {
 	// failed; nil/omitted on plain plan steps and on passing steps so
 	// the JSON shape stays backwards-compatible.
 	PlanAssertions []PlanAssertionFailure `json:",omitempty"`
+
+	// Stdout holds the captured terraform stdout bytes. Populated only
+	// when PlanAssertions is non-empty, so the CLI printer can render
+	// an inline excerpt under the FAIL line without re-reading
+	// StdoutLog. Empty otherwise. Always omitted from JSON (the file
+	// at StdoutLog is the canonical archive; this field is an
+	// in-memory crutch for the printer).
+	Stdout []byte `json:"-"`
 }
 
 // PlanAssertionFailure is one plan-content matcher mismatch. Kind is

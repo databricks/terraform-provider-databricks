@@ -182,6 +182,42 @@ func TestRunPlanAssert_BothMatchers_CollectAllFailures(t *testing.T) {
 	}
 }
 
+// TestRunPlanAssert_StashesStdoutOnFailure pins the invariant that
+// runPlanAssert copies the captured stdout onto res.Stdout when at
+// least one matcher fails — so the CLI printer can render an inline
+// excerpt under the FAIL line without re-reading StdoutLog.
+func TestRunPlanAssert_StashesStdoutOnFailure(t *testing.T) {
+	res := &result.StepResult{Status: result.StatusPass}
+	stdout := []byte(canonicalPlanNoOp)
+	runPlanAssert(res, config.Step{
+		Command:            config.CommandPlan,
+		ExpectNonEmptyPlan: true,
+	}, stdout)
+	if res.Status != result.StatusFail {
+		t.Fatalf("expected fail, got %s", res.Status)
+	}
+	if string(res.Stdout) != string(stdout) {
+		t.Errorf("res.Stdout should equal captured stdout, got %d bytes (want %d)", len(res.Stdout), len(stdout))
+	}
+}
+
+// TestRunPlanAssert_NoStdoutStashOnPass pins the memory-bounded
+// invariant: on a passing matcher run, res.Stdout stays nil so the
+// runner doesn't hold the full plan output past the step boundary.
+func TestRunPlanAssert_NoStdoutStashOnPass(t *testing.T) {
+	res := &result.StepResult{Status: result.StatusPass}
+	runPlanAssert(res, config.Step{
+		Command:            config.CommandPlan,
+		ExpectNonEmptyPlan: true,
+	}, []byte(canonicalPlanWithChanges))
+	if res.Status != result.StatusPass {
+		t.Fatalf("expected pass, got %s", res.Status)
+	}
+	if res.Stdout != nil {
+		t.Errorf("res.Stdout should be nil on success, got %d bytes", len(res.Stdout))
+	}
+}
+
 // TestPlanAssertionFailure_String covers the result.PlanAssertionFailure
 // stringer for the with-Pattern and without-Pattern shapes.
 func TestPlanAssertionFailure_String(t *testing.T) {

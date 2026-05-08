@@ -22,11 +22,11 @@ type tfExec interface {
 
 	// SetEnv replaces the subprocess env entirely (it does NOT inherit
 	// os.Environ()). The runner relies on this replacement semantics
-	// for B5 leak protection (DESIGN.md §10/G6).
+	// for B5 leak protection.
 	SetEnv(env map[string]string) error
 
 	// SetStdout / SetStderr direct the terraform subprocess's streams
-	// to the per-step log files (DESIGN.md §3 — runtime tree).
+	// to the per-step log files.
 	SetStdout(w io.Writer)
 	SetStderr(w io.Writer)
 }
@@ -57,7 +57,7 @@ func newRealTF(workDir, bin string) (tfExec, error) {
 
 func (r *realTF) Init(ctx context.Context) error {
 	// The framework deliberately does NOT pass tfexec.Reconfigure(true)
-	// here — §7.1.c removes .terraform/ entirely before each init,
+	// here — §7.1.c removes.terraform/ entirely before each init,
 	// which makes Reconfigure unnecessary.
 	return r.inner.Init(ctx)
 }
@@ -65,7 +65,7 @@ func (r *realTF) Init(ctx context.Context) error {
 func (r *realTF) Plan(ctx context.Context) (bool, error) {
 	// Plan returns (hasChanges, error). The runner discards hasChanges
 	// — we only care about success/failure for assertion semantics
-	// (DESIGN.md §7).
+	//.
 	return r.inner.Plan(ctx)
 }
 

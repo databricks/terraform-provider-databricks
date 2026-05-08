@@ -9,12 +9,12 @@ import (
 
 // goldenState is a hand-crafted `terraform show -json` payload
 // covering the shapes the package's evaluator has to handle:
-//   - top-level scalar (`comment`)
-//   - top-level numeric (`lifetime_seconds`) — YAML int vs JSON float64
-//   - top-level list of strings (`tags`)
-//   - nested map (`provider_config.workspace_id`)
-//   - sensitive sentinel (`token_value`)
-//   - resource in a child module
+// - top-level scalar (`comment`)
+// - top-level numeric (`lifetime_seconds`) — YAML int vs JSON float64
+// - top-level list of strings (`tags`)
+// - nested map (`provider_config.workspace_id`)
+// - sensitive sentinel (`token_value`)
+// - resource in a child module
 //
 // Lives as a Go literal rather than a fixture file so the test is
 // hermetic — no external file IO.

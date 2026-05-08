@@ -117,7 +117,7 @@ func TestDiscoverTests_NestedLayout(t *testing.T) {
 	}
 }
 
-// TestDiscoverTests_SkipsHiddenDirs: .git, .terraform, etc. must be
+// TestDiscoverTests_SkipsHiddenDirs:.git,.terraform, etc. must be
 // skipped — otherwise we descend into per-run workdirs and pick up
 // test.yaml copies the framework wrote earlier.
 func TestDiscoverTests_SkipsHiddenDirs(t *testing.T) {
@@ -125,7 +125,7 @@ func TestDiscoverTests_SkipsHiddenDirs(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(root, ".terraform", "providers"), 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	// A test.yaml under .terraform/ must be skipped.
+	// A test.yaml under.terraform/ must be skipped.
 	if err := os.WriteFile(filepath.Join(root, ".terraform", "test.yaml"), []byte("x"), 0o644); err != nil {
 		t.Fatalf("write: %v", err)
 	}

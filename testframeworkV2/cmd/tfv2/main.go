@@ -1,13 +1,13 @@
 // Command tfv2 is the CLI entry point for testframeworkV2 — the
 // multi-version Terraform test harness. Subcommands:
 //
-//	tfv2 run <test-dir>           run a single test
-//	tfv2 run -r <root>            recursively run every test under root
-//	tfv2 cache list               show cached versions
-//	tfv2 cache prune              delete provider cache
-//	tfv2 build local --repo <p>   eagerly build local provider into cache
-//	tfv2 version                  print version
-//	tfv2 help                     show usage banner
+//	tfv2 run <test-dir> run a single test
+//	tfv2 run -r <root> recursively run every test under root
+//	tfv2 cache list show cached versions
+//	tfv2 cache prune delete provider cache
+//	tfv2 build local --repo <p> eagerly build local provider into cache
+//	tfv2 version print version
+//	tfv2 help show usage banner
 package main
 
 import (
@@ -28,7 +28,7 @@ const (
 	exitCodeUsage  = 2 // bad flags or missing arguments
 )
 
-// version is set by the build (e.g., goreleaser ldflags).  Defaults to
+// version is set by the build (e.g., goreleaser ldflags). Defaults to
 // "dev" so plain `go build` still produces a useful banner.
 var version = "dev"
 

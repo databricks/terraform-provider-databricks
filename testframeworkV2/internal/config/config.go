@@ -1,13 +1,13 @@
 // Package config parses and validates testframeworkV2's test.yaml schema
-// (DESIGN.md §4). The package owns:
+// . The package owns:
 //
-//   - the public Go types (TestSpec, Step, Requires) that the runner
-//     consumes,
-//   - YAML parsing with strict-unknown-field rejection so typos surface
-//     loud rather than silently turning into defaults,
-//   - schema validation: required fields, slug shape, version syntax,
-//     `expect: failure` ⇒ ≥1 of error_substring/error_regex, regex
-//     compilation, enum membership.
+// - the public Go types (TestSpec, Step, Requires) that the runner
+// consumes,
+// - YAML parsing with strict-unknown-field rejection so typos surface
+// loud rather than silently turning into defaults,
+// - schema validation: required fields, slug shape, version syntax,
+// `expect: failure` ⇒ ≥1 of error_substring/error_regex, regex
+// compilation, enum membership.
 //
 // The package does NOT make any cloud calls. Profile-existence checks
 // happen in the config layer because they're a parse-time concern, but
@@ -31,13 +31,13 @@ import (
 )
 
 // LocalVersion is the literal version string a step uses to opt into a
-// local build (DESIGN.md §4 / §8). Lifted into config so the runner can
-// dispatch to providercache.Resolve("local", ...) without re-checking
+// local build. Lifted into config so the runner can
+// dispatch to providercache.Resolve("local",...) without re-checking
 // against the constant elsewhere.
 const LocalVersion = "local"
 
 // DefaultStepTimeout is the per-step timeout used when test.yaml omits
-// the `timeout` field (DESIGN.md §4 schema rules).
+// the `timeout` field.
 const DefaultStepTimeout = 10 * time.Minute
 
 // DefaultCleanup is the default value of the top-level `cleanup` flag.
@@ -117,7 +117,7 @@ type Step struct {
 	Config string      `yaml:"config"`
 	Assert []Assertion `yaml:"assert"`
 
-	// Plan-content matchers (DESIGN.md §17.10). Both fields require
+	// Plan-content matchers. Both fields require
 	// `command: plan` AND `expect: success`; the runner evaluates them
 	// against terraform plan's stdout (which contains the diff
 	// annotations: "Plan: X to add...", "# forces replacement",
@@ -195,7 +195,7 @@ const (
 // Mode reports v1 vs v2. Determined by the FIRST step's Config field:
 // because validateV2Consistency enforces all-or-none Config across
 // steps, looking at steps[0] is sufficient and unambiguous after
-// validation completes (DESIGN.md §17.2).
+// validation completes.
 func (s *TestSpec) Mode() Mode {
 	if len(s.Steps) > 0 && s.Steps[0].Config != "" {
 		return ModeV2
@@ -330,7 +330,7 @@ func normalize(spec *TestSpec) error {
 		if s.PlanMatch != "" {
 			// Multiline by default — plan output has line breaks and
 			// callers anchor on phrases like "# forces replacement"
-			// that follow a leading "  - resource ..." line.
+			// that follow a leading " - resource..." line.
 			re, err := regexp.Compile(`(?s)` + s.PlanMatch)
 			if err != nil {
 				return fmt.Errorf("step %q: invalid plan_match %q: %w", s.Name, s.PlanMatch, err)
@@ -341,7 +341,7 @@ func normalize(spec *TestSpec) error {
 	return nil
 }
 
-// slugRegexp matches the slug shape from DESIGN.md §4 schema rules
+// slugRegexp matches the slug shape from schema rules
 // (lowercase letters, digits, underscore, hyphen).
 var slugRegexp = regexp.MustCompile(`^[a-z0-9_-]+$`)
 
@@ -351,7 +351,7 @@ var slugRegexp = regexp.MustCompile(`^[a-z0-9_-]+$`)
 // leading zeros to mirror Terraform's stricter parser.
 var strictSemverRegexp = regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$`)
 
-// validate enforces every rule in DESIGN.md §4 + §10. Returning the
+// validate enforces every rule in + §10. Returning the
 // first error keeps messages surgical; the caller invariably stops on
 // the first issue anyway.
 func validate(spec *TestSpec, databricksCfgPath string) error {
@@ -386,7 +386,7 @@ func validate(spec *TestSpec, databricksCfgPath string) error {
 }
 
 // validateProfileExists is the parse-time profile-existence preflight
-// (DESIGN.md §4 "Pre-flight validation"). Skipping it for the empty-
+// . Skipping it for the empty-
 // string case is unreachable from Load (profile required above), but
 // the explicit guard keeps the function safe for callers that bypass
 // Load.
@@ -418,7 +418,7 @@ func validatePassthroughEnv(names []string) error {
 			return errors.New("passthrough_env: empty name not allowed")
 		}
 		if strings.HasPrefix(n, "DATABRICKS_") {
-			return fmt.Errorf("passthrough_env: %q starts with DATABRICKS_ — use the `profile` field instead (DESIGN.md §4)", n)
+			return fmt.Errorf("passthrough_env: %q starts with DATABRICKS_ — use the `profile` field instead", n)
 		}
 	}
 	return nil
@@ -466,7 +466,7 @@ func validateStep(i int, s Step) error {
 }
 
 // validateStepAssertion enforces the failure-assertion completeness rule
-// from DESIGN.md §4: when expect=failure, at least one of error_substring
+// from when expect=failure, at least one of error_substring
 // / error_regex MUST be set; conversely, on expect=success the error_*
 // fields are rejected as a likely copy-paste mistake.
 //
@@ -497,7 +497,7 @@ func validateStepAssertion(i int, s Step) error {
 		}
 		// present:false + attrs:set is logically inconsistent — can't
 		// inspect attrs of a resource we expect to NOT exist
-		// (DESIGN.md §17.7 rule 6).
+		//.
 		if a.Present != nil && !*a.Present && len(a.Attrs) > 0 {
 			return fmt.Errorf("steps[%d] (%s): assert[%d] cannot set attrs when present is false", i, s.Name, j)
 		}
@@ -515,12 +515,12 @@ func validateStepAssertion(i int, s Step) error {
 // validatePlanMatchers enforces the §17.10 invariants on the new
 // plan-content matcher fields:
 //
-//   - `expect_non_empty_plan: true` requires `command: plan` AND
-//     `expect: success`. plan-content matchers against an apply or
-//     destroy stdout would be checking the wrong thing (terraform
-//     prints different summary lines), and against a failed plan
-//     they're noise (the cmdErr already explains the failure).
-//   - `plan_match: <regex>` has the same two requirements.
+// - `expect_non_empty_plan: true` requires `command: plan` AND
+// `expect: success`. plan-content matchers against an apply or
+// destroy stdout would be checking the wrong thing (terraform
+// prints different summary lines), and against a failed plan
+// they're noise (the cmdErr already explains the failure).
+// - `plan_match: <regex>` has the same two requirements.
 //
 // Both fields default off (false / empty); existing fixtures see no
 // behaviour change.
@@ -542,11 +542,11 @@ func validatePlanMatchers(i int, s Step) error {
 }
 
 // validResourceAddress reports whether addr is a root-module
-// Terraform resource address (DESIGN.md §17.5). Two shapes:
+// Terraform resource address. Two shapes:
 //
-//   - managed: `<type>.<name>` (e.g. `databricks_token.pat`)
-//   - data:    `data.<type>.<name>` (e.g.
-//     `data.databricks_mws_workspaces.all`)
+// - managed: `<type>.<name>` (e.g. `databricks_token.pat`)
+// - data: `data.<type>.<name>` (e.g.
+// `data.databricks_mws_workspaces.all`)
 //
 // Validates structurally (split on `.`) rather than via a single
 // regex because Go's RE2 lacks the negative lookahead needed to
@@ -584,19 +584,19 @@ var (
 )
 
 // validateV2Consistency enforces the all-or-none invariant from
-// DESIGN.md §17.2: a test.yaml is v2 iff every step has a non-empty
+// a test.yaml is v2 iff every step has a non-empty
 // `config:`, v1 iff no step has one. Mixed configurations are a
 // parse-time error.
 //
 // Additional v2-mode rules enforced here:
 //
-//   - `config:` paths must be slug-shaped basenames ending in `.tf`
-//     or `.tf.json`. No path traversal (`../escape.tf`), no
-//     subdirectories, no hidden files.
-//   - `config:` must NOT start with the framework's `_tfv2_` prefix
-//     (collision risk with `_tfv2_versions_override.tf`; §17.4).
-//   - `assert:` blocks may only appear in v2 specs. A v1 step (no
-//     `config:`) with `assert:` set is a parse error (§17.7 rule 3).
+// - `config:` paths must be slug-shaped basenames ending in `.tf`
+// or `.tf.json`. No path traversal (`../escape.tf`), no
+// subdirectories, no hidden files.
+// - `config:` must NOT start with the framework's `_tfv2_` prefix
+// (collision risk with `_tfv2_versions_override.tf`; §17.4).
+// - `assert:` blocks may only appear in v2 specs. A v1 step (no
+// `config:`) with `assert:` set is a parse error (§17.7 rule 3).
 //
 // Per-Assertion shape rules (resource address, present+attrs
 // consistency) live on validateStepAssertion.
@@ -613,7 +613,7 @@ func validateV2Consistency(steps []Step) error {
 		// pure v1; assert: not allowed.
 		for i, s := range steps {
 			if len(s.Assert) > 0 {
-				return fmt.Errorf("steps[%d] (%s): assert: requires v2 mode (set config: on every step) — see DESIGN.md §17.7", i, s.Name)
+				return fmt.Errorf("steps[%d] (%s): assert: requires v2 mode (set config: on every step)", i, s.Name)
 			}
 		}
 		return nil
@@ -623,7 +623,7 @@ func validateV2Consistency(steps []Step) error {
 		// mixed.
 		for i, s := range steps {
 			if s.Config == "" {
-				return fmt.Errorf("steps[%d] (%s): v2 mode requires every step to set `config:` (this test mixes v1 and v2 steps) — see DESIGN.md §17.2", i, s.Name)
+				return fmt.Errorf("steps[%d] (%s): v2 mode requires every step to set `config:` (this test mixes v1 and v2 steps)", i, s.Name)
 			}
 		}
 	}
@@ -633,7 +633,7 @@ func validateV2Consistency(steps []Step) error {
 			return fmt.Errorf("steps[%d] (%s): config %q must be a slug-shaped .tf or .tf.json basename (e.g. step1_create.tf)", i, s.Name, s.Config)
 		}
 		if strings.HasPrefix(s.Config, "_tfv2_") {
-			return fmt.Errorf("steps[%d] (%s): config %q must not start with `_tfv2_` (framework-reserved prefix) — see DESIGN.md §17.4", i, s.Name, s.Config)
+			return fmt.Errorf("steps[%d] (%s): config %q must not start with `_tfv2_` (framework-reserved prefix)", i, s.Name, s.Config)
 		}
 	}
 	return nil

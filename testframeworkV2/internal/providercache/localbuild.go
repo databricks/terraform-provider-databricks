@@ -14,14 +14,14 @@ import (
 )
 
 // LocalVersion captures provenance for a local provider build
-// (DESIGN.md §8). Two copies are persisted per step:
+// . Two copies are persisted per step:
 //
-//  1. <cache-root>/registry.terraform.io/databricks/databricks/99.0.0-local/<target>/local-version.json
-//     — overwritten each rebuild; reflects the most recent build.
-//  2. <run-dir>/local-version.json — preserved with the run's logs so a
-//     test result is reproducible later.
+// 1. <cache-root>/registry.terraform.io/databricks/databricks/99.0.0-local/<target>/local-version.json
+// — overwritten each rebuild; reflects the most recent build.
+// 2. <run-dir>/local-version.json — preserved with the run's logs so a
+// test result is reproducible later.
 //
-// JSON field names match DESIGN.md §8's example.
+// JSON field names match example.
 type LocalVersion struct {
 	SyntheticVersion string    `json:"synthetic_version"`
 	GitSHA           string    `json:"git_sha"`
@@ -57,19 +57,19 @@ func (c *Cache) localBinPath(target Target) string {
 }
 
 // BuildLocal compiles the provider from repoRoot and installs it into
-// the cache's unpacked layout (DESIGN.md §6 / §8). Per design's
+// the cache's unpacked layout. Per design's
 // "rebuild every step" policy, BuildLocal does not consult any cache —
 // it always invokes `go build`.
 //
 // Returns:
 //
-//   - binDir            unpacked layout directory containing the
-//     binary (the path Cache.Resolve also returns
-//     for local versions).
-//   - syntheticVersion  always SyntheticVersionLocal ("99.0.0-local").
-//   - provenance        the captured LocalVersion record. The runner
-//     uses this to also write a copy into the run dir
-//     (DESIGN.md §8 — two-copy provenance).
+// - binDir unpacked layout directory containing the
+// binary (the path Cache.Resolve also returns
+// for local versions).
+// - syntheticVersion always SyntheticVersionLocal ("99.0.0-local").
+// - provenance the captured LocalVersion record. The runner
+// uses this to also write a copy into the run dir
+// .
 //
 // Provenance is captured BEFORE the build (so timestamps reflect when
 // the inputs were sampled, not when the build finished). The git
@@ -123,7 +123,7 @@ func captureProvenance(ctx context.Context, repoRoot string, target Target) Loca
 	return prov
 }
 
-// runGoBuild invokes `go build -o <binPath> ./` with the framework's
+// runGoBuild invokes `go build -o <binPath>./` with the framework's
 // canonical env (CGO_ENABLED=0 + GOOS/GOARCH for the target). Stdout
 // and stderr go directly to the calling process's streams so users
 // see compile errors without an extra log-file hop.
@@ -185,7 +185,7 @@ func writeProvenance(path string, v LocalVersion) error {
 
 // CopyProvenanceTo writes the provenance v to dst (typically the run
 // dir's local-version.json). Used by the runner to satisfy the
-// two-copy provenance rule from DESIGN.md §8 — the cache-side copy is
+// two-copy provenance rule from — the cache-side copy is
 // written by BuildLocal directly; the run-dir copy is the runner's
 // responsibility because providercache doesn't know about run dirs.
 func CopyProvenanceTo(dst string, v LocalVersion) error {

@@ -15,10 +15,12 @@ import (
 //
 // Format (per-step then summary):
 //
-//	[PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 1.2s   no changes
+//	[PASS] step 1 (passes_on_1_113_0): 1.113.0 plan in 1.2s no changes
 //	[FAIL] step 2 (fails_on_1_114_0): 1.114.0 plan in 0.8s — expected failure but command succeeded
-//	       (full stderr at ~/.testframeworkv2/runs/<id>/step_2_fails_on_1_114_0.stderr.log)
-//	...
+//
+// (full stderr at ~/.testframeworkv2/runs/<id>/step_2_fails_on_1_114_0.stderr.log)
+// ...
+//
 //	test1: PASS (4/4 steps passed in 23.4s) — runDir: <path>
 //
 // On FAIL we always render the per-step stderr log path on the next
@@ -55,7 +57,7 @@ func printRunResult(w io.Writer, r result.RunResult) {
 // Plan-assertion failures (PlanAssertions non-empty) get an inline
 // stdout-tail excerpt before the pointer line — manual `cat`'ing of
 // the stdout log is the part of the failure-triage loop we want to
-// remove for plan-content matchers (DESIGN.md §17.10). Plain stderr-
+// remove for plan-content matchers. Plain stderr-
 // regex / unexpected-error failures keep the single-line shape.
 func formatFailHint(s result.StepResult) string {
 	if s.Status != result.StatusFail {
@@ -149,7 +151,7 @@ func stripBlankEdges(lines []string) []string {
 // terraform-result Summary is appended on PASS with a 3-space gutter
 // so it visually separates from the duration. On FAIL we prefer
 // Reason (which carries the failure-specific diagnostic) over Summary
-// — Summary's "failure-as-expected" / "error: ..." excerpt overlaps
+// — Summary's "failure-as-expected" / "error:..." excerpt overlaps
 // with Reason, and Reason is the one the user wants for a failed
 // step. Skipped steps surface neither.
 func formatStepLine(s result.StepResult) string {

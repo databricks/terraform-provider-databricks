@@ -137,7 +137,7 @@ func prepopulatedCache(t *testing.T, versions ...string) *providercache.Cache {
 
 // makeSourceDir creates a directory containing the given files. Tests
 // pass the typical "main.tf only" map; helper kept generic so we can
-// also exercise multi-file copy and .tfvars handling.
+// also exercise multi-file copy and.tfvars handling.
 func makeSourceDir(t *testing.T, files map[string]string) string {
 	t.Helper()
 	dir := t.TempDir()
@@ -457,7 +457,7 @@ steps:
 }
 
 // TestRunner_RunContinuesAfterStepFail confirms a failed step does not
-// short-circuit the run — DESIGN.md §7 explicitly requires later steps
+// short-circuit the run explicitly requires later steps
 // to execute regardless.
 func TestRunner_RunContinuesAfterStepFail(t *testing.T) {
 	yaml := `
@@ -624,8 +624,8 @@ steps:
 	}
 }
 
-// TestRunner_TerraformStateWiped confirms that .terraform.lock.hcl and
-// .terraform/ are removed before each step's init (DESIGN.md §7.1.c).
+// TestRunner_TerraformStateWiped confirms that.terraform.lock.hcl and
+// .terraform/ are removed before each step's init.
 // We seed pre-existing copies and assert the mock never sees them
 // during the second step's init.
 func TestRunner_TerraformStateWiped(t *testing.T) {
@@ -646,7 +646,7 @@ steps:
 	res, _ := r.Run(context.Background())
 	workdir := filepath.Join(res.RunDir, "workdir")
 
-	// After both steps complete, .terraform/ and .terraform.lock.hcl
+	// After both steps complete,.terraform/ and.terraform.lock.hcl
 	// should not exist (the runner's last action was wipe-then-init,
 	// and the mock Init does nothing). This is a structural assertion
 	// that wipeTerraformState ran at least once.
@@ -664,7 +664,7 @@ steps:
 	}
 }
 
-// TestRunner_TerraformRCWritten confirms .terraformrc is generated in
+// TestRunner_TerraformRCWritten confirms.terraformrc is generated in
 // the run's workdir (linchpin of the no-leak invariant — TF_CLI_CONFIG_FILE
 // points here).
 func TestRunner_TerraformRCWritten(t *testing.T) {
@@ -949,11 +949,11 @@ steps:
 // We point RepoRoot at a tiny Go module + git repo, run a single
 // version=local step, and verify:
 //
-//   - the override file pins to "99.0.0-local"
-//   - the cache-side binary is built and exists on disk
-//   - local-version.json is copied into the run dir (DESIGN.md §8
-//     "two-copy provenance")
-//   - the synthetic version flows into the StepResult.SyntheticVersion
+// - the override file pins to "99.0.0-local"
+// - the cache-side binary is built and exists on disk
+// - local-version.json is copied into the run dir ( §8
+// "two-copy provenance")
+// - the synthetic version flows into the StepResult.SyntheticVersion
 func TestRunner_LocalVersion_BuildsAndPins(t *testing.T) {
 	if _, err := exec.LookPath("go"); err != nil {
 		t.Skipf("go binary not on PATH: %v", err)

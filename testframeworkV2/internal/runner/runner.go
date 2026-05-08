@@ -1,6 +1,6 @@
 // Package runner orchestrates a single test.yaml run. It composes
 // providercache, tfrcwriter, profile, subprocenv, and tfexec into the
-// step execution flow described in DESIGN.md §7.
+// step execution flow described in
 //
 // The runner is deliberately mockable: pass WithTFFactory to substitute
 // a fake tfExec for unit tests, WithNow / WithRandReader for
@@ -34,7 +34,7 @@ import (
 type Options struct {
 	// SourceDir is the user's test directory containing test.yaml +
 	// *.tf files. The runner copies *.tf into the run's workdir; it
-	// never writes back to SourceDir (DESIGN.md §10 G11).
+	// never writes back to SourceDir.
 	SourceDir string
 
 	// CacheDir is the providercache root (typically
@@ -50,7 +50,7 @@ type Options struct {
 	TerraformBin string
 
 	// RepoRoot is the provider repo root used when a step's version
-	// is "local" (DESIGN.md §8 / M6). Empty in M4.
+	// is "local". Empty in M4.
 	RepoRoot string
 
 	// NoCleanup overrides cleanup: true per-test. Set true to keep the
@@ -108,7 +108,7 @@ func WithNow(now func() time.Time) Option {
 }
 
 // WithRandReader overrides the random source used to build the 4-char
-// hex run-dir suffix (DESIGN.md §16/F5). Tests pass a deterministic
+// hex run-dir suffix. Tests pass a deterministic
 // reader for stable run-dir names.
 func WithRandReader(rr io.Reader) Option {
 	return func(r *Runner) {
@@ -139,7 +139,7 @@ func New(spec *config.TestSpec, prof *profile.Profile, opts Options, options ...
 }
 
 // Run executes every step in the spec and returns the aggregate result.
-// Per DESIGN.md §7, the run continues even after a step fails — the
+// Per the run continues even after a step fails — the
 // whole point of the framework is multi-step regression tests where a
 // middle step fails-as-expected.
 //
@@ -183,7 +183,7 @@ type runPrep struct {
 }
 
 // prepareRun creates the run directory, copies user HCL into workdir,
-// writes the per-run .terraformrc, and computes the curated subprocess
+// writes the per-run.terraformrc, and computes the curated subprocess
 // env map. Errors here are infrastructure failures and abort the run.
 func (r *Runner) prepareRun() (runPrep, error) {
 	runDir, err := r.makeRunDir()
@@ -199,7 +199,7 @@ func (r *Runner) prepareRun() (runPrep, error) {
 	// into workDir once at run start. In v2 mode each step brings its
 	// own per-step config file (Step.Config), so the bulk-copy is
 	// skipped here and runStep does a wipe-and-copy before each init.
-	// The workdir is still created so .terraformrc + override file
+	// The workdir is still created so.terraformrc + override file
 	// writes have somewhere to land.
 	if !r.spec.IsV2() {
 		if err := copyTerraformFiles(r.opts.SourceDir, workDir); err != nil {
@@ -235,7 +235,7 @@ func (r *Runner) skipReason() (string, bool) {
 }
 
 // makeRunDir creates ~/.testframeworkv2/runs/<test>-<ts>-<rand>/ and
-// returns its absolute path. Naming follows DESIGN.md §16/F5:
+// returns its absolute path. Naming follows
 // `<testName>-<RFC3339-with-colons-as-dashes>-<4-char-hex>`.
 func (r *Runner) makeRunDir() (string, error) {
 	ts := r.nowFn().UTC().Format("2006-01-02T15-04-05")
@@ -252,7 +252,7 @@ func (r *Runner) makeRunDir() (string, error) {
 }
 
 // randHex returns a 4-character lowercase hex string from the
-// configured random reader (DESIGN.md §16/F5). Two bytes encode to
+// configured random reader. Two bytes encode to
 // exactly four hex characters.
 func (r *Runner) randHex() (string, error) {
 	b := make([]byte, 2)
@@ -265,11 +265,10 @@ func (r *Runner) randHex() (string, error) {
 // cleanupEligible reports whether we should run the post-run destroy
 // pass. The conditions are:
 //
-//   - test.yaml's cleanup field is true (or unset, defaulting to true),
-//   - --no-cleanup wasn't passed (Options.NoCleanup),
-//   - T_NO_CLEANUP=1 wasn't set in the parent env (DESIGN.md §12.4),
-//   - at least one Apply step succeeded (otherwise destroy is a no-op
-//     — DESIGN.md §7).
+// - test.yaml's cleanup field is true (or unset, defaulting to true),
+// - --no-cleanup wasn't passed (Options.NoCleanup),
+// - T_NO_CLEANUP=1 wasn't set in the parent env,
+// - at least one Apply step succeeded (otherwise destroy is a no-op
 //
 // The lastSuccessfulApply check happens inside runCleanup itself; here
 // we only check the flags.
@@ -301,7 +300,7 @@ func envSliceToMap(env []string) map[string]string {
 
 // copyTerraformFiles copies every regular *.tf file from src into dst.
 // Subdirectories are NOT recursed (test layouts are flat by
-// convention); hidden files (e.g. .terraformrc) are skipped to avoid
+// convention); hidden files (e.g..terraformrc) are skipped to avoid
 // accidentally clobbering the framework's generated files. *.tfvars
 // files copy too — they're occasionally useful for parameterized
 // tests.
@@ -361,4 +360,4 @@ func copyFile(src, dst string) error {
 
 // errMissingRepoRoot is returned when a step requests version=local but
 // the runner wasn't configured with a RepoRoot (M6 territory).
-var errMissingRepoRoot = errors.New("runner: version=local requires Options.RepoRoot — not yet implemented (DESIGN.md §15 M6)")
+var errMissingRepoRoot = errors.New("runner: version=local requires Options.RepoRoot — not yet implemented")

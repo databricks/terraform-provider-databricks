@@ -11,7 +11,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/testframeworkV2/internal/profile"
 )
 
-// fixtureProfile writes a minimal .databrickscfg containing the named
+// fixtureProfile writes a minimal.databrickscfg containing the named
 // section so config.Load's profile-existence preflight passes.
 func fixtureProfile(t *testing.T, name string) string {
 	t.Helper()
@@ -225,7 +225,7 @@ steps:
 }
 
 // TestLoad_ProfileMustExist checks the preflight: a profile name not
-// present in the .databrickscfg file fails parse-time.
+// present in the.databrickscfg file fails parse-time.
 func TestLoad_ProfileMustExist(t *testing.T) {
 	body := `
 name: t
@@ -580,10 +580,10 @@ steps:
 
 // TestLoad_FixtureFromMissionTest exercises the actual on-disk
 // `issues-repro/issue_5672/test.yaml` (resolved relative to the
-// test source). We point at a synthetic .databrickscfg matching the
+// test source). We point at a synthetic.databrickscfg matching the
 // fixture's profile name so the existence check passes.
 func TestLoad_FixtureFromMissionTest(t *testing.T) {
-	// Path relative to this test file: ../../issues-repro/issue_5672/test.yaml
+	// Path relative to this test file:../../issues-repro/issue_5672/test.yaml
 	yamlPath := filepath.Join("..", "..", "issues-repro", "issue_5672", "test.yaml")
 	if _, err := os.Stat(yamlPath); err != nil {
 		t.Skipf("mission-test fixture not available: %v", err)
@@ -630,7 +630,7 @@ func TestLoad_AllShippedFixturesParse(t *testing.T) {
 			}
 			t.Run(filepath.Base(root)+"/"+e.Name(), func(t *testing.T) {
 				// Peek at the profile name so the synthetic
-				// .databrickscfg can stub the right section.
+				//.databrickscfg can stub the right section.
 				body, err := os.ReadFile(yamlPath)
 				if err != nil {
 					t.Fatalf("ReadFile: %v", err)
@@ -799,7 +799,7 @@ steps:
 	}
 }
 
-// TestLoad_V2_RejectsAssertOnV1Spec covers DESIGN.md §17.7 rule 3:
+// TestLoad_V2_RejectsAssertOnV1Spec covers rule 3:
 // assert: requires v2 mode. A step without `config:` setting
 // `assert:` is a parse error.
 func TestLoad_V2_RejectsAssertOnV1Spec(t *testing.T) {
@@ -823,7 +823,7 @@ steps:
 	}
 }
 
-// TestLoad_V2_RejectsTfv2PrefixedConfig covers DESIGN.md §17.4: user
+// TestLoad_V2_RejectsTfv2PrefixedConfig covers user
 // config files must not collide with the framework's `_tfv2_` namespace.
 func TestLoad_V2_RejectsTfv2PrefixedConfig(t *testing.T) {
 	body := `
@@ -1010,7 +1010,7 @@ steps:
 }
 
 // TestLoadDir_RejectsMissingConfigFile pins the parse-time existence
-// check added in v6.1 (DESIGN.md §17.7): for v2 specs, every step's
+// check added in v6.1: for v2 specs, every step's
 // `config:` MUST reference an existing file under the test dir. A
 // typo at step N must NOT let steps 1..N-1 execute (and mutate real
 // cloud resources) before failing.
@@ -1072,7 +1072,7 @@ steps:
 // TestLoadDir_V1NoExistenceCheck confirms LoadDir does NOT stat config:
 // paths for v1 specs (where steps don't set `config:`). Pure backward-
 // compat: existing v1 fixtures must continue to load without any
-// per-step .tf file requirement.
+// per-step.tf file requirement.
 func TestLoadDir_V1NoExistenceCheck(t *testing.T) {
 	dir := t.TempDir()
 	body := `name: t
@@ -1093,7 +1093,7 @@ steps:
 }
 
 // ═══════════════════════════════════════════════════════════
-// Plan-content matcher tests (Task #34 / DESIGN.md §17.10)
+// Plan-content matcher tests (Task #34
 // ═══════════════════════════════════════════════════════════
 
 // TestLoad_PlanMatchers_HappyPath confirms both fields decode and the

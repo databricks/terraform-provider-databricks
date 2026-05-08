@@ -3,7 +3,7 @@
 // `module` line matches the canonical provider module path.
 //
 // Used by cmd/tfv2 to fill in the --repo flag automatically when the user
-// runs the framework from anywhere inside a checkout. See DESIGN.md §12.
+// runs the framework from anywhere inside a checkout.
 package repodiscover
 
 import (

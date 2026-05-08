@@ -12,7 +12,7 @@ import (
 // canonicalPlanWithChanges is a representative `terraform plan` stdout
 // for a non-empty plan. Used by the matcher tests to verify both the
 // empty-plan check (should NOT contain "No changes") and the
-// regex-anchor check (should match a "Plan: ..." pattern).
+// regex-anchor check (should match a "Plan:..." pattern).
 const canonicalPlanWithChanges = `Terraform used the selected providers to generate the following execution
 plan. Resource actions are indicated with the following symbols:
   + create

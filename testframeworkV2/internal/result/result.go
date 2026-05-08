@@ -1,5 +1,5 @@
 // Package result holds the result types the runner returns. Kept in its
-// own package per DESIGN.md §3 so the CLI (cmd/tfv2) and any future
+// own package per so the CLI (cmd/tfv2) and any future
 // programmatic callers can depend on the result shape without pulling in
 // the full runner (and its tfexec dependency).
 package result
@@ -43,13 +43,13 @@ type StepResult struct {
 
 	// AssertLog is the absolute path to the per-step state-assertion
 	// log file. Populated only on v2-mode steps that declared an
-	// `assert:` block (DESIGN.md §17.5). Empty otherwise.
+	// `assert:` block. Empty otherwise.
 	AssertLog string `json:",omitempty"`
 
 	// Assertions surfaces structured per-attribute assertion failures
 	// for v2-mode steps. Populated only when at least one assertion
 	// failed; nil/omitted on v1 runs and on passing v2 steps so the
-	// JSON shape stays backwards-compatible (DESIGN.md §17.5 / §17.8).
+	// JSON shape stays backwards-compatible.
 	Assertions []AssertionFailure `json:",omitempty"`
 
 	// Summary is a short human-readable phrase rendered at the end of
@@ -63,7 +63,7 @@ type StepResult struct {
 
 	// PlanAssertions surfaces structured plan-content matcher failures
 	// from `expect_non_empty_plan` / `plan_match` fields on the step
-	// (DESIGN.md §17.10). Populated only when at least one matcher
+	//. Populated only when at least one matcher
 	// failed; nil/omitted on plain plan steps and on passing steps so
 	// the JSON shape stays backwards-compatible.
 	PlanAssertions []PlanAssertionFailure `json:",omitempty"`
@@ -138,7 +138,7 @@ type RunResult struct {
 	RunDir  string
 
 	// Skipped is true when the test's `requires` block didn't match the
-	// host's profile (DESIGN.md §10/G9). Skipped runs return early
+	// host's profile. Skipped runs return early
 	// before any step executes; Steps is empty in that case.
 	Skipped bool
 	Reason  string

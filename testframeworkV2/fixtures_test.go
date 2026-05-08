@@ -1,5 +1,5 @@
 // Package testframeworkv2_test — go-test integration for the framework's
-// own fixtures. See DESIGN.md §12.7.
+// own fixtures.
 //
 // TestFixtures discovers every test.yaml under issues-repro/ and tests/,
 // then runs each one programmatically through internal/runner under a
@@ -9,7 +9,7 @@
 //
 // Gating: TFV2_RUN=1 is required to run. Otherwise TestFixtures skips.
 // The fixtures hit real cloud APIs (terraform apply against ~/.databrickscfg
-// profiles); we don't want them firing on every `go test ./...` developer
+// profiles); we don't want them firing on every `go test./...` developer
 // run.
 package testframeworkv2_test
 
@@ -44,10 +44,10 @@ var fixtureRoots = []string{"issues-repro", "tests"}
 // IDE / CI test output.
 //
 // Skip conditions:
-//   - TFV2_RUN != "1" — the test fires real cloud-auth flows; keep
-//     `go test ./...` cheap by default.
-//   - The fixture's `requires:` block doesn't match the active profile —
-//     the runner returns Skipped=true; we surface that via t.Skip.
+// - TFV2_RUN != "1" — the test fires real cloud-auth flows; keep
+// `go test./...` cheap by default.
+// - The fixture's `requires:` block doesn't match the active profile —
+// the runner returns Skipped=true; we surface that via t.Skip.
 func TestFixtures(t *testing.T) {
 	if os.Getenv("TFV2_RUN") != "1" {
 		t.Skip("set TFV2_RUN=1 to run the live fixtures")
@@ -63,7 +63,7 @@ func TestFixtures(t *testing.T) {
 	// Resolve the provider repo root once for all fixtures — every test
 	// shares the same checkout. Failure is non-fatal here; per-fixture
 	// `version: local` steps will surface a clear error if RepoRoot is
-	// empty (DESIGN.md §15 M6).
+	// empty.
 	repoRoot, _ := repodiscover.Find("")
 	terraformBin, _, err := terraform.LocateAndCheck(context.Background(), os.Getenv("TFV2_TERRAFORM_BIN"))
 	if err != nil {
@@ -115,7 +115,7 @@ func runFixture(t *testing.T, dir, repoRoot, terraformBin string) {
 	spec, err := config.LoadDir(absDir)
 	if err != nil {
 		// `config.LoadDir` validates profile-section existence in
-		// `~/.databrickscfg` at parse time (DESIGN.md §4). When the
+		// `~/.databrickscfg` at parse time. When the
 		// fixture's named profile isn't on this machine, the wrapped
 		// error carries `profile.ErrSectionNotFound` — surface as Skip
 		// with the profile name (intent: developer adds the profile and

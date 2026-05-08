@@ -262,7 +262,7 @@ func TestBuild_PassthroughEnv_OptInWorks(t *testing.T) {
 }
 
 // TestBuild_PassthroughEnv_DropsEmpty documents that names with no value
-// in the parent env are silently dropped (per DESIGN.md §10 G6).
+// in the parent env are silently dropped (per G6).
 func TestBuild_PassthroughEnv_DropsEmpty(t *testing.T) {
 	withUnset(t, "TFV2_TEST_NEVER_SET_VAR")
 	env := Build("p", "/tmp/.tfrc", "/tmp/run", []string{"TFV2_TEST_NEVER_SET_VAR"})

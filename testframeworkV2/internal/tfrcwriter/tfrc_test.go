@@ -7,17 +7,17 @@ import (
 	"testing"
 )
 
-// TestWriteTerraformRC_HappyPath pins the generated .terraformrc against
-// every line that DESIGN.md §5 calls out as load-bearing. A regression on
+// TestWriteTerraformRC_HappyPath pins the generated.terraformrc against
+// every line that calls out as load-bearing. A regression on
 // any of these strings would silently break terraform init:
 //
-//   - filesystem_mirror.path (must be absolute, must be the configured
-//     mirrorRoot — not derived from workDir)
-//   - filesystem_mirror.include (NARROW; widening breaks user HCL
-//     declaring other providers — see DESIGN.md §5 "Narrow include")
-//   - direct.exclude (mirrors the include exactly; otherwise some
-//     providers route neither through mirror nor direct)
-//   - plugin_cache_dir (per-run; absolute; enables hardlink reuse — F2)
+// - filesystem_mirror.path (must be absolute, must be the configured
+// mirrorRoot — not derived from workDir)
+// - filesystem_mirror.include (NARROW; widening breaks user HCL
+// declaring other providers "Narrow include")
+// - direct.exclude (mirrors the include exactly; otherwise some
+// providers route neither through mirror nor direct)
+// - plugin_cache_dir (per-run; absolute; enables hardlink reuse — F2)
 func TestWriteTerraformRC_HappyPath(t *testing.T) {
 	workDir := t.TempDir()
 	mirrorRoot := t.TempDir()
@@ -71,7 +71,7 @@ func TestWriteTerraformRC_HappyPath(t *testing.T) {
 	}
 }
 
-// TestWriteTerraformRC_RejectsRelativePaths locks in DESIGN.md §5 ("Mirror
+// TestWriteTerraformRC_RejectsRelativePaths locks in ("Mirror
 // path is absolute"). A relative path silently resolves against the
 // subprocess cwd at terraform-run time, breaking mirror lookup. Same
 // reasoning for plugin_cache_dir.
@@ -99,7 +99,7 @@ func TestWriteTerraformRC_RejectsRelativePaths(t *testing.T) {
 }
 
 // TestWriteTerraformRC_RejectsEmpty ensures the function fails fast on
-// missing args rather than emitting a malformed .terraformrc.
+// missing args rather than emitting a malformed.terraformrc.
 func TestWriteTerraformRC_RejectsEmpty(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
@@ -187,8 +187,8 @@ func TestHCLString_EscapesSpecialChars(t *testing.T) {
 	}
 }
 
-// TestWriteVersionsOverride_HappyPath pins the override .tf body against
-// DESIGN.md §5 and Appendix A expA3 / B-COLLISION evidence: the file MUST
+// TestWriteVersionsOverride_HappyPath pins the override.tf body against
+// and Appendix A expA3 / B-COLLISION evidence: the file MUST
 // declare exactly one databricks entry with source = "databricks/
 // databricks" and an explicit "= <version>" exact-equality pin.
 func TestWriteVersionsOverride_HappyPath(t *testing.T) {
@@ -217,7 +217,7 @@ func TestWriteVersionsOverride_HappyPath(t *testing.T) {
 
 // TestWriteVersionsOverride_LocalSynthetic confirms the function writes a
 // well-formed pin for the synthetic prerelease "99.0.0-local". This is the
-// keystone path for issue #5672's step 4 (DESIGN.md §11 / §15 M5).
+// keystone path for issue #5672's step 4.
 func TestWriteVersionsOverride_LocalSynthetic(t *testing.T) {
 	workDir := t.TempDir()
 	if err := WriteVersionsOverride(workDir, "99.0.0-local"); err != nil {
@@ -232,9 +232,9 @@ func TestWriteVersionsOverride_LocalSynthetic(t *testing.T) {
 	}
 }
 
-// TestVersionsOverrideFilename_Suffix locks in DESIGN.md §5 "Filename
+// TestVersionsOverrideFilename_Suffix locks in "Filename
 // rules": the file MUST end in _override.tf so terraform recognizes it for
-// per-attribute merge. A non-override .tf would clash with the user's own
+// per-attribute merge. A non-override.tf would clash with the user's own
 // terraform {} block at parse time ("duplicate terraform block").
 func TestVersionsOverrideFilename_Suffix(t *testing.T) {
 	if !strings.HasSuffix(VersionsOverrideFilename, "_override.tf") {
@@ -273,7 +273,7 @@ func TestWriteVersionsOverride_RejectsBadInputs(t *testing.T) {
 
 // TestWriteVersionsOverride_OverwritesExisting documents that subsequent
 // calls replace the previous pin. The runner regenerates this file per
-// step (DESIGN.md §7 "Step execution flow"), so any append-on-rewrite
+// step, so any append-on-rewrite
 // behaviour would corrupt later steps.
 func TestWriteVersionsOverride_OverwritesExisting(t *testing.T) {
 	workDir := t.TempDir()
@@ -307,7 +307,7 @@ func TestProviderSource_Constant(t *testing.T) {
 	}
 }
 
-// TestWriteVersionsOverride_CreatesWorkDir mirrors the .terraformrc helper:
+// TestWriteVersionsOverride_CreatesWorkDir mirrors the.terraformrc helper:
 // missing workDir is bootstrapped rather than silently failing.
 func TestWriteVersionsOverride_CreatesWorkDir(t *testing.T) {
 	parent := t.TempDir()

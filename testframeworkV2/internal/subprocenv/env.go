@@ -1,7 +1,7 @@
 // Package subprocenv builds the environment variable list passed to every
 // `terraform` subprocess in a testframeworkV2 run.
 //
-// The list is a strict allowlist (DESIGN.md §10/G6 / B5). It exists because
+// The list is a strict allowlist. It exists because
 // `os.Environ()` can leak DATABRICKS_HOST or DATABRICKS_TOKEN from the
 // developer's shell into the SDK auth chain, which silently routes the test
 // against the wrong host. The runner is expected to call this function and
@@ -22,7 +22,7 @@ import (
 //
 // IMPORTANT: this list is exhaustive — anything not here is stripped.
 // Adding to it widens the attack surface for env-var leaks, so keep
-// additions justified in DESIGN.md.
+// additions justified in.
 var allowedKeys = []string{
 	// Basics — required for any subprocess to execute.
 	"PATH",
@@ -50,21 +50,21 @@ var allowedKeys = []string{
 //
 // Inputs:
 //
-//   - profile        Databricks profile name (becomes
-//     DATABRICKS_CONFIG_PROFILE; the SDK's auth chain reads it).
-//   - tfrcPath       absolute path to the per-run .terraformrc the runner
-//     wrote (becomes TF_CLI_CONFIG_FILE; this is the
-//     mechanism that makes terraform ignore the user's
-//     ~/.terraformrc — DESIGN.md §5 / G1).
-//   - runDir         per-run root (TF_PLUGIN_CACHE_DIR is set to
-//     <runDir>/plugins, enabling terraform's hardlink
-//     optimization within the run — F2).
-//   - passthrough    optional list of env-var names from test.yaml's
-//     passthrough_env field. Names whose value is empty
-//     in the parent environment are silently dropped.
-//     DATABRICKS_* names are explicitly REJECTED here —
-//     the profile mechanism is the only sanctioned auth
-//     channel (DESIGN.md §4 / §10 G6).
+// - profile Databricks profile name (becomes
+// DATABRICKS_CONFIG_PROFILE; the SDK's auth chain reads it).
+// - tfrcPath absolute path to the per-run.terraformrc the runner
+// wrote (becomes TF_CLI_CONFIG_FILE; this is the
+// mechanism that makes terraform ignore the user's
+// ~/.terraformrc / G1).
+// - runDir per-run root (TF_PLUGIN_CACHE_DIR is set to
+// <runDir>/plugins, enabling terraform's hardlink
+// optimization within the run — F2).
+// - passthrough optional list of env-var names from test.yaml's
+// passthrough_env field. Names whose value is empty
+// in the parent environment are silently dropped.
+// DATABRICKS_* names are explicitly REJECTED here —
+// the profile mechanism is the only sanctioned auth
+// channel.
 //
 // The DATABRICKS_CONFIG_FILE override always points at $HOME/.databrickscfg
 // so the SDK's auth chain reads from a deterministic location regardless of
@@ -92,7 +92,7 @@ func appendAllowlist(env []string) []string {
 // appendFrameworkControlled writes the variables the framework owns:
 // TF_CLI_CONFIG_FILE / TF_PLUGIN_CACHE_DIR — and the
 // DATABRICKS_CONFIG_PROFILE / DATABRICKS_CONFIG_FILE pair which is the
-// linchpin of the no-leak invariant (DESIGN.md §10 G6).
+// linchpin of the no-leak invariant.
 //
 // Note: TF_IN_AUTOMATION is intentionally NOT added here. tfexec
 // auto-manages it (terraform-exec@v0.25.0/tfexec/cmd.go:178

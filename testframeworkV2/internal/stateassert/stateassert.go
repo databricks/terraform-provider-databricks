@@ -7,18 +7,18 @@
 // already located the binary), parse the resulting state, and walk
 // `values.root_module.resources[*]` for each assertion. Failures are
 // returned as `result.AssertionFailure` so the runner can surface them
-// uniformly with the rest of the step result (DESIGN.md §17.5 / §17.8).
+// uniformly with the rest of the step result.
 //
 // Three classes of failure exist:
 //
-//   - Resource not present when `present: true` (or omitted) was
-//     expected. Field == "", Reason == "expected present, not found in
-//     state".
-//   - Resource present when `present: false` was expected. Field == "",
-//     Reason == "expected absent, found in state".
-//   - Per-attribute value mismatch. Field == the attribute key (or
-//     dot-path), Reason == "value mismatch", Expected/Actual filled
-//     from YAML and JSON sides respectively.
+// - Resource not present when `present: true` (or omitted) was
+// expected. Field == "", Reason == "expected present, not found in
+// state".
+// - Resource present when `present: false` was expected. Field == "",
+// Reason == "expected absent, found in state".
+// - Per-attribute value mismatch. Field == the attribute key (or
+// dot-path), Reason == "value mismatch", Expected/Actual filled
+// from YAML and JSON sides respectively.
 //
 // Numerics are normalized to float64 before comparison because YAML's
 // untagged-int decoder produces `int` while `terraform show -json`'s
@@ -26,7 +26,7 @@
 // would never match a JSON `3600` despite being semantically equal.
 //
 // Sensitive attributes are reported as `"(sensitive)"` by terraform
-// and treated as a hard mismatch — DESIGN.md §17.7 rule 7 says the
+// and treated as a hard mismatch rule 7 says the
 // runner should reject these at parse time eventually, but until
 // then we surface a clear failure so the user knows what happened.
 package stateassert
@@ -59,7 +59,7 @@ import (
 // Assertions are evaluated in YAML order; within a single Assertion,
 // missing-resource and per-attribute checks run sequentially. Run
 // never short-circuits — collect-all-failures is the documented
-// invariant (DESIGN.md §17.5).
+// invariant.
 func Run(ctx context.Context, workdir, terraformBin string, env map[string]string, assertions []config.Assertion) ([]result.AssertionFailure, error) {
 	if len(assertions) == 0 {
 		return nil, nil
@@ -188,7 +188,7 @@ func evaluateAttrs(address string, values map[string]any, attrs map[string]any) 
 		if isSensitiveSentinel(got) {
 			failures = append(failures, result.AssertionFailure{
 				Address: address, Field: k,
-				Reason: "attribute is marked sensitive in state — assert against a non-sensitive proxy (DESIGN.md §17.6)",
+				Reason: "attribute is marked sensitive in state — assert against a non-sensitive proxy",
 				Actual: got,
 			})
 			continue
@@ -206,7 +206,7 @@ func evaluateAttrs(address string, values map[string]any, attrs map[string]any) 
 }
 
 // isSensitiveSentinel reports whether terraform reported this value
-// as opaque-sensitive ("(sensitive)" string). DESIGN.md §17.7 rule 7
+// as opaque-sensitive ("(sensitive)" string). rule 7
 // says we should reject these at parse time eventually; until then
 // we surface a useful failure pointing the user at the proxy
 // pattern.

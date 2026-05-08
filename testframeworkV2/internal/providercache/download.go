@@ -14,8 +14,6 @@ import (
 // and status check) and writeAtomic (temp-file plus rename) — so each piece
 // stays small enough to read at a glance and so writeAtomic is reusable for
 // future asset types (e.g. _SHA256SUMS in v2 / F4).
-//
-// See DESIGN.md §6 "Cache atomicity" and F3 (Atomic cache writes).
 func (c *Cache) downloadZip(ctx context.Context, version string, target Target, dst string) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return fmt.Errorf("providercache: mkdir %s: %w", filepath.Dir(dst), err)
@@ -53,12 +51,12 @@ func (c *Cache) fetchAsset(ctx context.Context, url string) (io.ReadCloser, erro
 // file plus fsync plus rename. The temp file is created with os.CreateTemp
 // in the same directory as dst, which guarantees:
 //
-//   - a unique, freshly-created file we own exclusively (no two concurrent
-//     writers stomp on each other's bytes), and
-//   - a same-filesystem path so os.Rename is atomic.
+// - a unique, freshly-created file we own exclusively (no two concurrent
+// writers stomp on each other's bytes), and
+// - a same-filesystem path so os.Rename is atomic.
 //
 // On any error path we close the temp file and remove it, so a crashed
-// download leaves no .partial.* leftovers.
+// download leaves no.partial.* leftovers.
 func writeAtomic(dst string, src io.Reader) (retErr error) {
 	dir := filepath.Dir(dst)
 	tmp, err := os.CreateTemp(dir, filepath.Base(dst)+".partial.*")

@@ -4,12 +4,12 @@
 // We deliberately do NOT use the Databricks SDK or
 // `internal/acceptance.LoadProfileEnv` here:
 //
-//   - The SDK validates ALL fields aggressively, which means it errors
-//     out on profiles that are perfectly fine for our purposes
-//     (DESIGN.md §10/G9).
-//   - `internal/acceptance.init()` calls os.Setenv("TF_LOG", "DEBUG")
-//     which leaks into every subsequent terraform invocation
-//     (DESIGN.md §10/G7 / B6 / F).
+// - The SDK validates ALL fields aggressively, which means it errors
+// out on profiles that are perfectly fine for our purposes
+// .
+// - `internal/acceptance.init()` calls os.Setenv("TF_LOG", "DEBUG")
+// which leaks into every subsequent terraform invocation
+// .
 //
 // We do JUST enough parsing to (a) confirm the named section exists in
 // the file, and (b) infer Cloud + Level from the host string. Everything
@@ -64,7 +64,7 @@ type Profile struct {
 	// does not interpret this — it's surfaced for debugging only.
 	AuthType string
 
-	// Cloud is inferred from Host (DESIGN.md §10 G9). CloudUnknown when
+	// Cloud is inferred from Host. CloudUnknown when
 	// the host shape doesn't match any known pattern.
 	Cloud Cloud
 
@@ -104,7 +104,7 @@ func Load(name string) (*Profile, error) {
 	return LoadFromPath(DefaultPath(), name)
 }
 
-// LoadFromPath reads the .databrickscfg-format file at path and returns
+// LoadFromPath reads the.databrickscfg-format file at path and returns
 // the section named `name`. Returns ErrSectionNotFound when the section
 // is missing — the runner uses errors.Is to differentiate from I/O errors
 // when surfacing a friendly preflight message.
@@ -148,7 +148,7 @@ func profileFromRaw(name string, raw map[string]string) *Profile {
 }
 
 // SectionExists is a thin convenience wrapper for the config-layer
-// preflight check (DESIGN.md §4 "Profile existence"). It does NOT load
+// preflight check. It does NOT load
 // the section — useful for confirming a profile name is well-formed
 // before the runner spends time on cache lookups and run-dir setup.
 func SectionExists(path, name string) (bool, error) {
@@ -168,7 +168,7 @@ func SectionExists(path, name string) (bool, error) {
 	return ok, nil
 }
 
-// parseINI is a deliberately tiny parser for the .databrickscfg subset of
+// parseINI is a deliberately tiny parser for the.databrickscfg subset of
 // INI: section headers `[Name]`, `key = value` lines, comments starting
 // with `#` or `;`, and blank lines. We don't pull in `gopkg.in/ini.v1`
 // because (a) the format we accept is trivial, and (b) one fewer dep is
@@ -179,7 +179,7 @@ func parseINI(r io.Reader) (map[string]map[string]string, error) {
 	current := ""
 	scanner := bufio.NewScanner(r)
 	// Allow generous line lengths — Databricks PATs and JWT tokens can be
-	// long, and 1 MiB is plenty for any reasonable .databrickscfg.
+	// long, and 1 MiB is plenty for any reasonable.databrickscfg.
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 	lineno := 0
 	for scanner.Scan() {
@@ -194,7 +194,7 @@ func parseINI(r io.Reader) (map[string]map[string]string, error) {
 	return sections, nil
 }
 
-// parseINILine handles a single line of the .databrickscfg-format file.
+// parseINILine handles a single line of the.databrickscfg-format file.
 // Mutates sections and *current. Lines that are blank or comments are
 // no-ops; section headers update *current; key=value lines populate the
 // active section.
@@ -231,7 +231,7 @@ func parseINILine(raw string, lineno int, sections map[string]map[string]string,
 }
 
 // inferCloudLevel maps a host (and optional account_id) to (Cloud, Level)
-// using the rules from DESIGN.md §10 G9.
+// using the rules from G9.
 //
 // Cloud inference is keyed on substrings of the host because customer
 // accounts can have arbitrary subdomain prefixes (e.g.

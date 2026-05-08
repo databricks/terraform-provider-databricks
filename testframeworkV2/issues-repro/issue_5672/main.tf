@@ -5,7 +5,7 @@
 # documented override-merge semantics. You may optionally add your own
 # `terraform { required_providers { databricks = { source = "databricks/databricks", version = ">= 1.113.0" } } }`
 # block here for IDE/standalone-`terraform plan` workflows; the framework's override will
-# transparently win on `version` at test time. Empirically validated (see DESIGN.md Appendix A).
+# transparently win on `version` at test time.
 #
 # Auth: the framework injects DATABRICKS_CONFIG_PROFILE=<test.yaml profile> into the
 # terraform subprocess env. The Databricks SDK reads ~/.databrickscfg's section to

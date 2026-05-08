@@ -16,7 +16,7 @@ import (
 )
 
 // runAllSteps executes every step in the spec sequentially. Per
-// DESIGN.md §7, a single step's failure does NOT short-circuit the run
+// a single step's failure does NOT short-circuit the run
 // — the framework's value proposition is multi-step regression where
 // step N fails-as-expected and step N+1 still runs.
 func (r *Runner) runAllSteps(ctx context.Context, workDir, runDir string, env map[string]string) ([]result.StepResult, error) {
@@ -40,7 +40,7 @@ func (r *Runner) runAllSteps(ctx context.Context, workDir, runDir string, env ma
 }
 
 // runStep executes one step end-to-end: cache resolve, (v2-only)
-// per-step config swap, override write, .terraform wipe, init,
+// per-step config swap, override write,.terraform wipe, init,
 // command, assert (state-level for v2). The returned StepResult is
 // always populated; the error return is reserved for infrastructure
 // failures (cache, FS) where we couldn't even attempt the command.
@@ -74,7 +74,7 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 
 // prepareStepWorkdir does the per-step workdir setup that happens
 // before terraform init: v2-mode HCL swap, _tfv2_versions_override.tf
-// write, .terraform/.terraform.lock.hcl wipe. Split from runStep so
+// write,.terraform/.terraform.lock.hcl wipe. Split from runStep so
 // runStep stays under the 40-line CLAUDE.md threshold and the
 // pre-init setup is one named, testable phase.
 //
@@ -177,7 +177,7 @@ func shouldWipeForV2Swap(name string) bool {
 // runStateAssert evaluates the step's `assert:` block (if any)
 // against `terraform show -json` output, writes a per-step assert.log
 // with one OK/FAIL line per assertion, and surfaces failures via
-// StepResult.Assertions + StepResult.Status flip (DESIGN.md §17.5 /
+// StepResult.Assertions + StepResult.Status flip ( §17.5 /
 // §17.8).
 //
 // Only fires when (a) the step has assertions to evaluate AND (b) the
@@ -218,7 +218,7 @@ func (r *Runner) runStateAssert(ctx context.Context, res *result.StepResult, ste
 // stepAssertLogPath returns the absolute path of the per-step
 // assertion log under runDir. Naming mirrors the existing
 // step_<n>_<name>.{stdout,stderr}.log convention with the
-// `.assert.log` suffix (DESIGN.md §17.5).
+// `.assert.log` suffix.
 func (r *Runner) stepAssertLogPath(runDir string, idx int, name string) string {
 	return filepath.Join(runDir, fmt.Sprintf("step_%d_%s.assert.log", idx+1, name))
 }
@@ -257,7 +257,7 @@ func writeAssertLog(path string, assertions []config.Assertion, failures []resul
 // Resolve, which downloads + atomically installs the zip on a cache
 // miss. version="local" dispatches to providercache.Cache.BuildLocal,
 // which (re)builds the provider from r.opts.RepoRoot every step
-// (DESIGN.md §8 — "rebuild every step") and copies the provenance
+// and copies the provenance
 // JSON into runDir.
 func (r *Runner) resolveStepVersion(ctx context.Context, version, runDir string) (string, error) {
 	if version == config.LocalVersion {
@@ -281,7 +281,7 @@ func (r *Runner) resolveLocalVersion(ctx context.Context, runDir string) (string
 	if err != nil {
 		return "", fmt.Errorf("runner: local build: %w", err)
 	}
-	// DESIGN.md §8 — write the run-dir copy of provenance so the run's
+	// — write the run-dir copy of provenance so the run's
 	// outcome is reproducible later. The cache-side copy is written
 	// by BuildLocal itself.
 	if err := providercache.CopyProvenanceTo(filepath.Join(runDir, providercache.LocalVersionFilename), prov); err != nil {
@@ -291,8 +291,8 @@ func (r *Runner) resolveLocalVersion(ctx context.Context, runDir string) (string
 }
 
 // wipeTerraformState removes the per-step state from terraform's
-// working directory: .terraform.lock.hcl AND the .terraform/ subdir
-// (DESIGN.md §7.1.c / §10 G3). The state file (terraform.tfstate)
+// working directory:.terraform.lock.hcl AND the.terraform/ subdir
+// . The state file (terraform.tfstate)
 // lives at workdir root and is explicitly NOT touched — preserved
 // across all steps.
 func wipeTerraformState(workDir string) error {
@@ -319,7 +319,7 @@ func (r *Runner) stepLogPaths(runDir string, idx int, name string) (string, stri
 // destroy) and returns the captured (stdout, stderr) bytes plus the
 // command error. tfexec writes stdout/stderr through the writers we
 // set; we tee BOTH into in-memory buffers while also writing to the
-// log files. stderr feeds the assertion regex match (DESIGN.md §7);
+// log files. stderr feeds the assertion regex match;
 // stdout feeds the per-step Summary parser (Task #23).
 //
 // Init's stdout is captured separately and dropped — the summary
@@ -350,7 +350,7 @@ func (r *Runner) runCommand(ctx context.Context, step config.Step, workDir strin
 	stdoutBuf := &capturingWriter{}
 	// Init phase: stdout goes to log file only. We don't summarise
 	// init output and capturing it would dilute the command's stdout
-	// when the summary parser scans for "Plan: ..." / "Apply
+	// when the summary parser scans for "Plan:..." / "Apply
 	// complete!".
 	tf.SetStdout(stdoutF)
 	tf.SetStderr(io.MultiWriter(stderrF, stderrBuf))
@@ -402,7 +402,7 @@ func finalize(res *result.StepResult, step config.Step, cmdErr error, stderr []b
 
 // finalizeFailure handles the expect=failure path: the command MUST
 // error, AND any error_substring / error_regex must match stderr
-// (AND semantics when both present — DESIGN.md §4 / §7).
+// (AND semantics when both present / §7).
 func finalizeFailure(res *result.StepResult, step config.Step, cmdErr error, stderr []byte) {
 	if cmdErr == nil {
 		res.Status = result.StatusFail
@@ -424,7 +424,7 @@ func finalizeFailure(res *result.StepResult, step config.Step, cmdErr error, std
 
 // runCleanup attempts a single destroy with the last successful
 // Apply step's version. Failures are loud-logged but never
-// fatal — destroy retries are out of scope (DESIGN.md §10 G12).
+// fatal — destroy retries are out of scope.
 //
 // In M4 the cleanup path is exercised via mocked tfexec to confirm we
 // invoke the right sequence (writeOverride → wipe → init → destroy).
@@ -471,7 +471,7 @@ func (r *Runner) runCleanup(ctx context.Context, workDir, runDir string, env map
 // lastSuccessfulApply walks the executed step results in reverse and
 // returns the most recent one whose corresponding spec step had
 // Command=apply AND Status=pass. Returns nil when no Apply step
-// succeeded — cleanup is then a no-op (DESIGN.md §7).
+// succeeded — cleanup is then a no-op.
 func lastSuccessfulApply(executed []result.StepResult, spec []config.Step) *result.StepResult {
 	for i := len(executed) - 1; i >= 0; i-- {
 		s := executed[i]

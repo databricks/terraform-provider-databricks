@@ -101,7 +101,7 @@ func runRecursive(ctx context.Context, f runFlags) int {
 
 // discoverTests walks root and returns every directory containing a
 // regular `test.yaml` file, sorted by path. Hidden directories
-// (starting with ".") are skipped — that excludes .git, .terraform,
+// (starting with ".") are skipped — that excludes.git,.terraform,
 // and the per-run workdirs that the framework writes elsewhere.
 func discoverTests(root string) ([]string, error) {
 	var out []string
@@ -163,7 +163,7 @@ func runOnce(ctx context.Context, f runFlags) (result.RunResult, error) {
 	prof, err := profile.Load(spec.Profile)
 	if err != nil {
 		// Profile-existence is also checked at config-load time. If we
-		// reach here the .databrickscfg contents changed between
+		// reach here the.databrickscfg contents changed between
 		// validation and load, which is rare but worth surfacing.
 		if errors.Is(err, profile.ErrSectionNotFound) {
 			return result.RunResult{}, fmt.Errorf("profile %q not found in ~/.databrickscfg (set DATABRICKS_CONFIG_FILE if your config lives elsewhere)", spec.Profile)

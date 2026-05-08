@@ -20,7 +20,7 @@
 # Fix path:
 #   v1.114.1: rollback retag — same git source SHA as v1.113.0; the released
 #             binary was independently rebuilt by goreleaser, so binary SHAs
-#             differ. See DESIGN.md §16 F6.
+#             differ.
 #   No `local` step — the fix on `main` is currently aligned to v1.113.0 source
 #   for this code path (PR #5492 was reverted), so a `local` step would just
 #   duplicate step 3.

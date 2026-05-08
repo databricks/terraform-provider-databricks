@@ -79,7 +79,7 @@ func newCacheServer(t *testing.T, h http.Handler) *Cache {
 }
 
 // TestTarget_String pins the canonical "<os>_<arch>" formatting that the
-// rest of the framework, .terraformrc generation, and the cache layout all
+// rest of the framework,.terraformrc generation, and the cache layout all
 // depend on.
 func TestTarget_String(t *testing.T) {
 	if got, want := (Target{OS: "darwin", Arch: "arm64"}).String(), "darwin_arm64"; got != want {
@@ -137,7 +137,7 @@ func TestResolve_DownloadsAndCaches(t *testing.T) {
 	}
 }
 
-// TestResolve_CacheLayoutPacked pins the on-disk layout against DESIGN.md
+// TestResolve_CacheLayoutPacked pins the on-disk layout against
 // §6 ("Cache layout — Released versions"). Breaking the layout breaks
 // Terraform's filesystem_mirror discovery.
 func TestResolve_CacheLayoutPacked(t *testing.T) {
@@ -158,7 +158,7 @@ func TestResolve_CacheLayoutPacked(t *testing.T) {
 		t.Errorf("packed mirror path:\n got  %q\n want %q", gotPath, want)
 	}
 
-	// No spurious .partial.* siblings should remain in the provider dir.
+	// No spurious.partial.* siblings should remain in the provider dir.
 	entries, err := os.ReadDir(filepath.Dir(want))
 	if err != nil {
 		t.Fatalf("ReadDir: %v", err)
@@ -209,7 +209,7 @@ func TestResolve_NotFound_ReturnsError(t *testing.T) {
 		t.Errorf("error should mention HTTP 404: %v", err)
 	}
 
-	// Cache directory should be empty (no .zip and no .partial leftover).
+	// Cache directory should be empty (no.zip and no.partial leftover).
 	zip := expectedZipPath(c, "9.9.9", "darwin_arm64")
 	if _, err := os.Stat(zip); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("expected no zip on disk, got err=%v", err)
@@ -224,17 +224,16 @@ func TestResolve_NotFound_ReturnsError(t *testing.T) {
 }
 
 // TestResolve_LocalVersion_NotImplemented locks in the M1 behaviour: a step
-// asking for version=local must fail with a clear, actionable error pointing
-// to the milestone that lands the feature, not a confusing 404 from
-// "GET .../vlocal/...".
+// asking for version=local must fail with a clear, actionable error rather
+// than a confusing 404 from "GET.../vlocal/...".
 func TestResolve_LocalVersion_NotImplemented(t *testing.T) {
 	c := New(t.TempDir())
 	_, _, err := c.Resolve(context.Background(), LocalVersionInput, testTarget())
 	if err == nil {
 		t.Fatal("Resolve(local): expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "M6") {
-		t.Errorf("error should mention M6 milestone: %v", err)
+	if !strings.Contains(err.Error(), "is not yet implemented") {
+		t.Errorf("error should mention not-yet-implemented status: %v", err)
 	}
 }
 
@@ -266,8 +265,8 @@ func TestResolve_RejectsBadInputs(t *testing.T) {
 }
 
 // TestResolve_TruncatedStream_CleansUpPartial covers the crash-safety
-// invariant from DESIGN.md §6: a broken transfer must leave no
-// half-written zip and no leftover .partial.* artifacts.
+// invariant from a broken transfer must leave no
+// half-written zip and no leftover.partial.* artifacts.
 func TestResolve_TruncatedStream_CleansUpPartial(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc(releasePath(testVersion, "darwin_arm64"), func(w http.ResponseWriter, r *http.Request) {
@@ -324,10 +323,10 @@ func TestResolve_ContextCanceled(t *testing.T) {
 	}
 }
 
-// TestResolve_Concurrent exercises the per-writer .partial discipline. With
+// TestResolve_Concurrent exercises the per-writer.partial discipline. With
 // N goroutines racing on the same uncached (version, target), every Resolve
 // must succeed and the cache must end with a single zip file containing the
-// correct bytes — no leftover .partial.* entries.
+// correct bytes — no leftover.partial.* entries.
 func TestResolve_Concurrent(t *testing.T) {
 	expected := fakeZipContent(t)
 	var hits int32
@@ -360,7 +359,7 @@ func TestResolve_Concurrent(t *testing.T) {
 		}
 	}
 
-	// Final state: exactly one zip, no .partial.* siblings, correct bytes.
+	// Final state: exactly one zip, no.partial.* siblings, correct bytes.
 	zip := expectedZipPath(c, testVersion, "darwin_arm64")
 	got, err := os.ReadFile(zip)
 	if err != nil {
@@ -390,7 +389,7 @@ func TestResolve_Concurrent(t *testing.T) {
 	}
 }
 
-// TestResolve_ReleaseURL pins the URL shape against DESIGN.md task
+// TestResolve_ReleaseURL pins the URL shape against task
 // description (the GitHub releases canonical asset URL). A regression here
 // would silently start hitting the wrong endpoint.
 func TestResolve_ReleaseURL(t *testing.T) {

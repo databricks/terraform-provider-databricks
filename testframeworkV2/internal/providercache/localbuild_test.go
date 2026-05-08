@@ -67,7 +67,7 @@ func gitInit(t *testing.T, dir string) {
 }
 
 // TestLocalBinPath_LayoutPin pins the unpacked-mirror layout from
-// DESIGN.md §6. A regression here breaks Terraform's filesystem_mirror
+// A regression here breaks Terraform's filesystem_mirror
 // discovery for local builds.
 func TestLocalBinPath_LayoutPin(t *testing.T) {
 	c := New(t.TempDir())
@@ -179,7 +179,7 @@ func TestBuildLocal_DirtyRepoMarked(t *testing.T) {
 }
 
 // TestBuildLocal_RebuildsEveryCall ensures the cache-strategy
-// "rebuild every step" guarantee from DESIGN.md §8 holds. The second
+// "rebuild every step" guarantee from holds. The second
 // call should re-execute go build and update local-version.json's
 // BuiltAt timestamp.
 func TestBuildLocal_RebuildsEveryCall(t *testing.T) {
@@ -276,7 +276,7 @@ func TestBuildLocal_NoGitProvenanceFallback(t *testing.T) {
 
 // TestCopyProvenanceTo writes a LocalVersion to a destination path
 // and confirms the JSON round-trips. Used by the runner to satisfy
-// the two-copy provenance rule from DESIGN.md §8.
+// the two-copy provenance rule from
 func TestCopyProvenanceTo(t *testing.T) {
 	dst := filepath.Join(t.TempDir(), "local-version.json")
 	want := LocalVersion{

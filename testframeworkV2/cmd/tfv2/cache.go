@@ -54,9 +54,9 @@ func parseCacheCommon(name string, args []string) (cacheCommonFlags, error) {
 // runCacheList walks the cache root and prints one line per cached
 // version. Output shape:
 //
-//	1.113.0 darwin_arm64 packed   /Users/.../.zip   65 MB
-//	1.114.0 darwin_arm64 packed   /Users/.../.zip   65 MB
-//	99.0.0-local darwin_arm64 unpacked  /Users/...  62 MB
+//	1.113.0 darwin_arm64 packed /Users/.../.zip 65 MB
+//	1.114.0 darwin_arm64 packed /Users/.../.zip 65 MB
+//	99.0.0-local darwin_arm64 unpacked /Users/... 62 MB
 //
 // We deliberately don't pretty-print into columns — `column -t` is
 // the user's friend and avoids us tracking column widths.

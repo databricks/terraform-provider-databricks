@@ -14,9 +14,9 @@
 # so the hook fired against the account host and blew up at strconv.ParseInt.
 #
 # Fix path:
-#   v1.114.1: rollback retag — same git source SHA as v1.113.0; the released binary
-#             was independently rebuilt by goreleaser, so binary SHAs differ. See
-#             DESIGN.md §16 F6 for the full fact (with tester's empirical sha256s).
+#   v1.114.1: rollback retag — same git source SHA as v1.113.0; the released
+#             binary was independently rebuilt by goreleaser, so binary SHAs
+#             differ.
 #   PR #5667: migrate databricks_mws_workspaces from common.DataResource to
 #             common.AccountData. AccountData doesn't inject provider_config,
 #             so the hook never runs. The fix is on `main` (current branch),
@@ -27,9 +27,8 @@ profile: ACCOUNT_AWS                 # ~/.databrickscfg section name; any accoun
 cleanup: true                        # no-op since all steps are plan-only
 
 requires:
-  cloud: any                         # bug fires on AWS, Azure, and GCP — empirically confirmed by
-                                     # tester-tf11 on AWS account profile (issue reporter saw it on GCP).
-                                     # The outer error wraps a cloud-specific inner failure:
+  cloud: any                         # bug fires on AWS, Azure, and GCP. The outer error wraps a
+                                     # cloud-specific inner failure:
                                      #   AWS/OAuth M2M: "Unable to load OAuth Config"
                                      #   GCP/google_service_account: 'strconv.ParseInt: parsing "": invalid syntax'
   level: account                     # account-host-only is the actual constraint
@@ -47,9 +46,9 @@ steps:
   # inner error). The outer wrapper "cannot populate provider_config for mws
   # workspaces: failed to resolve workspace_id" is identical across clouds.
   #
-  # Regex chosen to match the cloud-portable outer pattern (tester confirmed
-  # AWS + GCP both reproduce). Schema also supports `error_substring` for
-  # tests that want a literal byte match — see DESIGN.md §4.
+  # Regex chosen to match the cloud-portable outer pattern (AWS + GCP both
+  # reproduce). The schema also supports `error_substring` for tests that
+  # want a literal byte match.
   - name: fails_on_1_114_0
     version: "1.114.0"
     command: plan
@@ -59,7 +58,6 @@ steps:
   # Step 3: v1.114.1 is a rollback retag — same git source SHA as v1.113.0
   # (binary SHAs differ from independent rebuild). Proves the rollback worked,
   # but does NOT prove the real code fix (which only landed on `main`).
-  # See DESIGN.md §16 F6.
   - name: fixed_on_1_114_1
     version: "1.114.1"
     command: plan
@@ -67,11 +65,10 @@ steps:
 
   # Step 4: validates the framework's local-build pipeline. As of 2026-05-08
   # main has reverted PR #5667 + PR #5492 + related (commits cc89a814,
-  # f4aebfc2, 8a4e64ab, 0d2c487e, 20108fee, a20971ad, c707a744 — see
-  # DESIGN.md §16 F7), so the source under `local` is now equivalent to
-  # v1.113.0 for this code path. Step 4 passes for the same reason step 1
-  # does, and will graduate to a true regression-proof step once the next
-  # forward-rolled fix lands on main.
+  # f4aebfc2, 8a4e64ab, 0d2c487e, 20108fee, a20971ad, c707a744), so the
+  # source under `local` is now equivalent to v1.113.0 for this code path.
+  # Step 4 passes for the same reason step 1 does, and will graduate to a
+  # true regression-proof step once the next forward-rolled fix lands on main.
   - name: fixed_on_local
     version: "local"
     command: plan

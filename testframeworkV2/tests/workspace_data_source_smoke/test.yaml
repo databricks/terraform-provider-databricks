@@ -2,9 +2,8 @@
 # branch. Not tied to a specific GitHub issue — guards the happy path so a
 # future regression of #5672 (or similar) is caught by `tfv2 run -r` sweeps.
 #
-# This is the canonical example for `tests/<descriptive-slug>/` fixtures
-# (DESIGN.md v5.0 §3 / §13 OQ3 — green-path lives under tests/, bug repros
-# under issues-repro/issue_<N>/).
+# This is the canonical example for `tests/<descriptive-slug>/` fixtures —
+# green-path lives under tests/, bug repros under issues-repro/issue_<N>/.
 
 name: workspace_data_source_smoke
 profile: ACCOUNT_AWS                 # any account-level profile works; cloud is `any` below

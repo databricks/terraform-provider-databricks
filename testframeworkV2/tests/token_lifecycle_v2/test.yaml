@@ -1,7 +1,7 @@
 # testframeworkV2 v2-mode demo: full create/modify/destroy lifecycle of databricks_token
 # with state assertions at every step.
 #
-# Demonstrates the v2 capabilities introduced in DESIGN.md §17:
+# Demonstrates the v2 mode capabilities:
 #   - per-step `config:` swaps the HCL between steps (each step has its own .tf file)
 #   - state survives the swap (terraform.tfstate is preserved across steps)
 #   - `assert:` blocks check resource presence + attribute equality after each command

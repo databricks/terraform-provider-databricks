@@ -3,7 +3,7 @@
 // requirement (1.5.0).
 //
 // The framework deliberately does NOT use hc-install or any
-// auto-installer — see DESIGN.md §10/G8 / B7 (Hashicorp's release-signing
+// auto-installer / B7 (Hashicorp's release-signing
 // key has expired, breaking installer flows). Instead we resolve a
 // known-good binary the user has already provisioned.
 package terraform
@@ -34,12 +34,12 @@ const EnvVarBin = "TFV2_TERRAFORM_BIN"
 var ErrNotFound = errors.New("terraform binary not found; install terraform >= " + MinVersion + " or pass --terraform-bin")
 
 // Locate resolves the terraform binary using the documented order
-// (DESIGN.md §10/G8):
+// :
 //
-//  1. override (typically wired up to the --terraform-bin CLI flag)
-//  2. TFV2_TERRAFORM_BIN environment variable
-//  3. exec.LookPath("terraform") — first match in the user's PATH
-//  4. ErrNotFound
+// 1. override (typically wired up to the --terraform-bin CLI flag)
+// 2. TFV2_TERRAFORM_BIN environment variable
+// 3. exec.LookPath("terraform") — first match in the user's PATH
+// 4. ErrNotFound
 //
 // The returned path is always absolute. Callers are expected to pass the
 // path to tfexec.NewTerraform; sanity-checking the version is a separate

@@ -2,13 +2,11 @@
 // local filesystem in the layout that Terraform's `filesystem_mirror`
 // provider_installation block expects.
 //
-// See DESIGN.md §6 ("Cache layout") for the overall design.
-//
 // In M1 the cache supports released versions only:
 //
 //	<root>/registry.terraform.io/databricks/databricks/terraform-provider-databricks_<version>_<os>_<arch>.zip
 //
-// Local-build (unpacked) layout is wired up in M6 (DESIGN.md §15). The
+// Local-build (unpacked) layout is wired up in M6. The
 // SyntheticVersionLocal sentinel and the early-exit error in Resolve preserve
 // the API shape so the runner does not need to change when local lands.
 package providercache
@@ -46,13 +44,13 @@ func HostTarget() Target {
 }
 
 // SyntheticVersionLocal is the placeholder version used by the framework for
-// locally-built providers (DESIGN.md §6 / §8). M1 does not implement local
+// locally-built providers. M1 does not implement local
 // builds; this constant is exported so that callers and future milestones
 // share a single source of truth.
 const SyntheticVersionLocal = "99.0.0-local"
 
 // LocalVersionInput is the literal string a test.yaml step uses to opt into a
-// local build (DESIGN.md §4 / §8).
+// local build.
 const LocalVersionInput = "local"
 
 // DefaultDownloadBaseURL is the GitHub releases prefix for the published
@@ -69,7 +67,7 @@ const defaultDownloadTimeout = 10 * time.Minute
 // Cache manages downloaded provider zips on the local filesystem. A single
 // Cache value is safe for concurrent use across goroutines and processes:
 // every download writes to a unique "<dst>.partial.<rand>" file and then
-// atomically renames into place (DESIGN.md §6 "Cache atomicity"), so two
+// atomically renames into place, so two
 // parallel runs racing on the same uncached version both succeed and end with
 // identical content at <dst>.
 type Cache struct {
@@ -105,7 +103,7 @@ func WithBaseURL(u string) Option {
 // New constructs a Cache rooted at root. The directory is created lazily on
 // the first download — New does not touch the filesystem.
 //
-// root is typically `~/.testframeworkv2/providers` (DESIGN.md §3).
+// root is typically `~/.testframeworkv2/providers`.
 func New(root string, opts ...Option) *Cache {
 	c := &Cache{
 		root:       root,
@@ -131,9 +129,9 @@ func (c *Cache) Root() string { return c.root }
 //
 // Released-version flow (M1):
 //
-//  1. compute the canonical zip path under c.root,
-//  2. if cached, return it immediately,
-//  3. otherwise download the asset and atomically install it.
+// 1. compute the canonical zip path under c.root,
+// 2. if cached, return it immediately,
+// 3. otherwise download the asset and atomically install it.
 //
 // Versions starting with "v" are normalized to drop the prefix — GitHub
 // release tags use "v1.114.0" while Terraform's filesystem_mirror filenames
@@ -146,7 +144,7 @@ func (c *Cache) Resolve(ctx context.Context, version string, target Target) (pat
 		// M6 wires up local builds. Surfacing a clear error is much more
 		// helpful than the bewildering 404 we would otherwise hit while
 		// trying to GET v"local" from GitHub.
-		return "", "", fmt.Errorf("providercache: version %q is not yet implemented (DESIGN.md §15 M6)", LocalVersionInput)
+		return "", "", fmt.Errorf("providercache: version %q is not yet implemented", LocalVersionInput)
 	}
 	if target.OS == "" || target.Arch == "" {
 		return "", "", fmt.Errorf("providercache: target requires both OS and Arch (got %q)", target.String())

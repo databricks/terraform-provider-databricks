@@ -28,15 +28,15 @@ type summaryInputs struct {
 // StepResult.Summary. Pure function over its inputs — no FS, no exec,
 // no globals. Expected output shapes per DESIGN dispatch:
 //
-//   - Plan no-op:                  "no changes"
-//   - Plan with changes:           "1 added, 1 destroyed"
-//   - Apply:                       "2 added, 1 changed"
-//   - Destroy:                     "1 destroyed"
-//   - expect=failure (regex match): "failure-as-expected: <80-char excerpt>"
-//   - unexpected error:            "error: <80-char excerpt>"
-//   - v2 + passing state asserts:  " · assertions ok" appended
-//   - plan-content matchers ok:    " · plan-match ok" appended (in
-//     addition to any state-assertion suffix above)
+// - Plan no-op: "no changes"
+// - Plan with changes: "1 added, 1 destroyed"
+// - Apply: "2 added, 1 changed"
+// - Destroy: "1 destroyed"
+// - expect=failure (regex match): "failure-as-expected: <80-char excerpt>"
+// - unexpected error: "error: <80-char excerpt>"
+// - v2 + passing state asserts: " · assertions ok" appended
+// - plan-content matchers ok: " · plan-match ok" appended (in
+// addition to any state-assertion suffix above)
 //
 // The empty-string return is the "no summary available" sentinel —
 // the CLI printer skips the suffix entirely when summary == "".

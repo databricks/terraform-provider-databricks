@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// writeCfg drops a fixture .databrickscfg into t.TempDir() and returns
+// writeCfg drops a fixture.databrickscfg into t.TempDir() and returns
 // the absolute path. Tests should use it for path-based loading; for
 // the inference helpers (which are the bulk of the suite) we exercise
 // inferCloudLevel directly.
@@ -21,7 +21,7 @@ func writeCfg(t *testing.T, body string) string {
 	return path
 }
 
-// TestInferCloudLevel locks in DESIGN.md §10 G9's mapping rules — these
+// TestInferCloudLevel locks in G9's mapping rules — these
 // are the strings the runner compares requires.cloud / requires.level
 // against, so a regression here silently breaks skip-checks.
 func TestInferCloudLevel(t *testing.T) {

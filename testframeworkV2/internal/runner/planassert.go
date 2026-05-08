@@ -9,7 +9,7 @@ import (
 
 // runPlanAssert evaluates the step's plan-content matchers
 // (`expect_non_empty_plan` and `plan_match`) against terraform plan's
-// stdout. Per DESIGN.md §17.10, both fields are gated on
+// stdout. Per both fields are gated on
 // `command: plan` AND `expect: success` at parse time, so this
 // function only fires on success-path plan steps that previously
 // passed `finalize` (Status == StatusPass).

@@ -155,7 +155,7 @@ func TestSummarize_FailureAsExpected(t *testing.T) {
 	if !strings.HasPrefix(got, "failure-as-expected: ") {
 		t.Errorf("missing prefix: got %q", got)
 	}
-	// First stderr line is the "Error: ..." line — confirm the
+	// First stderr line is the "Error:..." line — confirm the
 	// excerpt grabs that, not the indented context lines.
 	if !strings.Contains(got, "cannot populate provider_config") {
 		t.Errorf("excerpt should be the Error line, got %q", got)

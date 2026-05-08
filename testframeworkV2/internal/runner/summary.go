@@ -13,13 +13,15 @@ import (
 // as a struct (rather than a long parameter list) so callers can pass
 // it positionally without coupling to the runner.
 type summaryInputs struct {
-	command       config.Command
-	expect        config.Expect
-	cmdErr        error  // non-nil iff the terraform subprocess returned an error
-	stdout        []byte // captured terraform stdout (combined logs)
-	stderr        []byte // captured terraform stderr
-	assertionsRan bool   // true when the step had >= 1 v2-mode assertion
-	assertionsOK  bool   // true when assertionsRan AND no failures
+	command           config.Command
+	expect            config.Expect
+	cmdErr            error  // non-nil iff the terraform subprocess returned an error
+	stdout            []byte // captured terraform stdout (combined logs)
+	stderr            []byte // captured terraform stderr
+	assertionsRan     bool   // true when the step had >= 1 v2-mode assertion
+	assertionsOK      bool   // true when assertionsRan AND no failures
+	planAssertionsRan bool   // true when the step had ≥1 plan-content matcher
+	planAssertionsOK  bool   // true when planAssertionsRan AND none failed
 }
 
 // summarize produces the short human-readable phrase that lands in
@@ -32,14 +34,22 @@ type summaryInputs struct {
 //   - Destroy:                     "1 destroyed"
 //   - expect=failure (regex match): "failure-as-expected: <80-char excerpt>"
 //   - unexpected error:            "error: <80-char excerpt>"
-//   - v2 + passing assertions:     " · assertions ok" appended
+//   - v2 + passing state asserts:  " · assertions ok" appended
+//   - plan-content matchers ok:    " · plan-match ok" appended (in
+//     addition to any state-assertion suffix above)
 //
 // The empty-string return is the "no summary available" sentinel —
 // the CLI printer skips the suffix entirely when summary == "".
 func summarize(in summaryInputs) string {
 	base := summarizeOutcome(in)
-	if in.assertionsRan && in.assertionsOK && base != "" {
-		return base + " · assertions ok"
+	if base == "" {
+		return ""
+	}
+	if in.planAssertionsRan && in.planAssertionsOK {
+		base += " · plan-match ok"
+	}
+	if in.assertionsRan && in.assertionsOK {
+		base += " · assertions ok"
 	}
 	return base
 }

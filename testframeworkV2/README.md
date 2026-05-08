@@ -147,10 +147,22 @@ steps:                       # required, ≥1
     expect: failure
     error_regex: 'failed to resolve workspace_id'
     # error_substring: 'literal'  # also supported; AND semantics with regex
+
+  - name: forced_replace_check
+    version: "1.113.0"
+    command: plan                  # plan-content matchers below require plan
+    expect: success                # and require expect: success
+    expect_non_empty_plan: true    # plan stdout MUST NOT contain "No changes."
+    plan_match: '# forces replacement'  # Go RE2 against plan stdout (multiline)
 ```
 
 When `expect: failure`, **at least one of `error_substring` / `error_regex`
 is required** — the framework rejects "fail in any way".
+
+When asserting on plan content (e.g. "this rollback should produce a
+forced-replacement diff"), use `expect_non_empty_plan` and/or
+`plan_match`. Both fields require `command: plan` + `expect: success`;
+both AND when combined. See DESIGN.md §17.10.
 
 ## Repository layout
 

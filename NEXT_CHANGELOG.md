@@ -24,7 +24,7 @@
 
   Fixtures live under two trees: `testframeworkV2/issues-repro/issue_<N>/` for fixtures that reproduce a specific GitHub issue, and `testframeworkV2/tests/<descriptive-slug>/` for green-path / smoke / regression-guard fixtures not tied to a bug. Profile level (workspace / account / UC) is declared per-test via `requires.level`.
 
-  `tfv2` auto-discovers the provider repo root (the `--repo` flag) by walking up from the working directory, and exposes every fixture as a `go test` subtest under `TestFixtures` (gated by `TFV2_RUN=1`) — so IDEs and CI can drive the framework without invoking the CLI. A `testframeworkV2/Makefile` wraps both entry points behind a `make test <path>` shortcut.
+  `tfv2` auto-discovers the provider repo root (the `--repo` flag) by walking up from the working directory, and exposes every fixture as a `go test` subtest under `TestFixtures` (gated by `TFV2_RUN=1`) — so IDEs and CI can drive the framework without invoking the CLI. A `testframeworkV2/Makefile` wraps both entry points behind a `make test <path>` shortcut. Test specs can also assert against `terraform plan` stdout via `expect_non_empty_plan: true` and `plan_match: <regex>` (DESIGN.md §17.10) for regressions that surface as a destructive plan diff rather than a non-zero exit.
 
   Quickstart:
   ```sh

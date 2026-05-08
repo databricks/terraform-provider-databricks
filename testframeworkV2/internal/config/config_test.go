@@ -1091,3 +1091,150 @@ steps:
 		t.Fatalf("v1 LoadDir should not require step .tf files: %v", err)
 	}
 }
+
+// ═══════════════════════════════════════════════════════════
+// Plan-content matcher tests (Task #34 / DESIGN.md §17.10)
+// ═══════════════════════════════════════════════════════════
+
+// TestLoad_PlanMatchers_HappyPath confirms both fields decode and the
+// regex compiles. Both values survive into the parsed Step.
+func TestLoad_PlanMatchers_HappyPath(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    command: plan
+    expect_non_empty_plan: true
+    plan_match: 'forces replacement'
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	s := spec.Steps[0]
+	if !s.ExpectNonEmptyPlan {
+		t.Errorf("ExpectNonEmptyPlan: expected true")
+	}
+	if s.PlanMatch != "forces replacement" {
+		t.Errorf("PlanMatch: got %q", s.PlanMatch)
+	}
+	if s.CompiledPlanMatch == nil {
+		t.Errorf("CompiledPlanMatch should be set after Load")
+	}
+}
+
+// TestLoad_PlanMatchers_DefaultsOff: a step with neither field set
+// has both at zero values + nil regex.
+func TestLoad_PlanMatchers_DefaultsOff(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: plan }
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	s := spec.Steps[0]
+	if s.ExpectNonEmptyPlan || s.PlanMatch != "" || s.CompiledPlanMatch != nil {
+		t.Errorf("expected all zero/nil, got ExpectNonEmptyPlan=%v PlanMatch=%q Compiled=%v",
+			s.ExpectNonEmptyPlan, s.PlanMatch, s.CompiledPlanMatch)
+	}
+}
+
+// TestLoad_PlanMatchers_RejectsApplyCommand pins the §17.10 rule:
+// expect_non_empty_plan / plan_match require command: plan. An apply
+// step with the field set is rejected at parse time.
+func TestLoad_PlanMatchers_RejectsApplyCommand(t *testing.T) {
+	for _, body := range []string{
+		`
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: apply, expect_non_empty_plan: true }
+`, `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: apply, plan_match: 'foo' }
+`,
+	} {
+		_, err := loadString(t, body, "P")
+		if err == nil {
+			t.Errorf("expected error for plan matcher on apply step, got nil for body:\n%s", body)
+		}
+	}
+}
+
+// TestLoad_PlanMatchers_RejectsDestroyCommand: same gate against
+// destroy.
+func TestLoad_PlanMatchers_RejectsDestroyCommand(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: destroy, expect_non_empty_plan: true }
+`
+	if _, err := loadString(t, body, "P"); err == nil {
+		t.Error("expected error for plan matcher on destroy step")
+	}
+}
+
+// TestLoad_PlanMatchers_RejectsExpectFailure: per §17.10,
+// plan-content matchers also require expect: success. A failed
+// plan's stdout shape is undefined (terraform may abort early), so
+// content assertions there are noise.
+func TestLoad_PlanMatchers_RejectsExpectFailure(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - name: a
+    version: "1.0.0"
+    command: plan
+    expect: failure
+    error_substring: oops
+    expect_non_empty_plan: true
+`
+	if _, err := loadString(t, body, "P"); err == nil {
+		t.Error("expected error for plan matcher on expect=failure step")
+	}
+}
+
+// TestLoad_PlanMatchers_RejectsBadRegex pins parse-time regex
+// compilation. A `(` with no closing `)` is RE2-invalid.
+func TestLoad_PlanMatchers_RejectsBadRegex(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: plan, plan_match: '(' }
+`
+	if _, err := loadString(t, body, "P"); err == nil {
+		t.Error("expected error for invalid plan_match regex")
+	}
+}
+
+// TestLoad_PlanMatchers_RegexMultiline confirms the implicit `(?s)`
+// flag — `.` matches across newlines, so a plan_match like
+// "Plan:.*destroy" works against multiline plan output.
+func TestLoad_PlanMatchers_RegexMultiline(t *testing.T) {
+	body := `
+name: t
+profile: P
+steps:
+  - { name: a, version: "1.0.0", command: plan, plan_match: 'Plan:.*destroy' }
+`
+	spec, err := loadString(t, body, "P")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	re := spec.Steps[0].CompiledPlanMatch
+	multilineInput := "Plan: 1 to add, 0 to change, 1 to destroy.\nMore output here."
+	if !re.MatchString(multilineInput) {
+		t.Errorf("compiled regex should match multiline input via implicit (?s)")
+	}
+}

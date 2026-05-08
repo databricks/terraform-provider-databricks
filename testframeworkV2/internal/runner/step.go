@@ -66,6 +66,7 @@ func (r *Runner) runStep(ctx context.Context, idx int, step config.Step, workDir
 
 	stdout, stderr, cmdErr := r.runCommand(ctx, step, workDir, env, stdoutLog, stderrLog)
 	finalize(&res, step, cmdErr, stderr)
+	runPlanAssert(&res, step, stdout)
 	r.runStateAssert(ctx, &res, step, workDir, runDir, env)
 	res.Summary = summarizeStep(step, &res, cmdErr, stdout, stderr)
 	return res, nil
@@ -99,18 +100,22 @@ func (r *Runner) prepareStepWorkdir(workDir, syntheticVer string, step config.St
 }
 
 // summarizeStep is a thin adapter over summarize() that picks the
-// right (assertionsRan, assertionsOK) flags from the step + res. Kept
-// in step.go (rather than summary.go) so summary.go stays a pure
-// parser with no result-struct knowledge.
+// right (assertionsRan, assertionsOK, planAssertionsRan,
+// planAssertionsOK) flags from the step + res. Kept in step.go
+// (rather than summary.go) so summary.go stays a pure parser with
+// no result-struct knowledge.
 func summarizeStep(step config.Step, res *result.StepResult, cmdErr error, stdout, stderr []byte) string {
+	planMatchersRan := step.ExpectNonEmptyPlan || step.CompiledPlanMatch != nil
 	return summarize(summaryInputs{
-		command:       step.Command,
-		expect:        step.Expect,
-		cmdErr:        cmdErr,
-		stdout:        stdout,
-		stderr:        stderr,
-		assertionsRan: len(step.Assert) > 0,
-		assertionsOK:  len(step.Assert) > 0 && len(res.Assertions) == 0 && res.Status == result.StatusPass,
+		command:           step.Command,
+		expect:            step.Expect,
+		cmdErr:            cmdErr,
+		stdout:            stdout,
+		stderr:            stderr,
+		assertionsRan:     len(step.Assert) > 0,
+		assertionsOK:      len(step.Assert) > 0 && len(res.Assertions) == 0 && res.Status == result.StatusPass,
+		planAssertionsRan: planMatchersRan,
+		planAssertionsOK:  planMatchersRan && len(res.PlanAssertions) == 0 && res.Status == result.StatusPass,
 	})
 }
 

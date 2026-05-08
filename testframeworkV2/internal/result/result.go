@@ -60,6 +60,34 @@ type StepResult struct {
 	// output stays unchanged for runs that don't (or can't) extract a
 	// summary.
 	Summary string `json:",omitempty"`
+
+	// PlanAssertions surfaces structured plan-content matcher failures
+	// from `expect_non_empty_plan` / `plan_match` fields on the step
+	// (DESIGN.md §17.10). Populated only when at least one matcher
+	// failed; nil/omitted on plain plan steps and on passing steps so
+	// the JSON shape stays backwards-compatible.
+	PlanAssertions []PlanAssertionFailure `json:",omitempty"`
+}
+
+// PlanAssertionFailure is one plan-content matcher mismatch. Kind is
+// either "expect_non_empty_plan" or "plan_match" (the YAML field name
+// that fired). Pattern carries the raw matcher value for diagnostic
+// rendering — the regex source for plan_match, or "true" for
+// expect_non_empty_plan. Reason is a short human-readable
+// explanation.
+type PlanAssertionFailure struct {
+	Kind    string
+	Pattern string `json:",omitempty"`
+	Reason  string
+}
+
+// String returns a one-line human-readable form. Used by the runner
+// to populate StepResult.Reason and to render in the CLI summary.
+func (f PlanAssertionFailure) String() string {
+	if f.Pattern != "" {
+		return fmt.Sprintf("%s(%s): %s", f.Kind, f.Pattern, f.Reason)
+	}
+	return fmt.Sprintf("%s: %s", f.Kind, f.Reason)
 }
 
 // AssertionFailure is one structured per-attribute (or per-resource-

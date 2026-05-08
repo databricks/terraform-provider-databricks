@@ -340,3 +340,80 @@ func TestParseInt(t *testing.T) {
 		t.Errorf("parseInt(garbage): got %d, want 0", got)
 	}
 }
+
+// ═══════════════════════════════════════════════════════════
+// Plan-content matcher Summary suffix tests (Task #34 / §17.10)
+// ═══════════════════════════════════════════════════════════
+
+// TestSummarize_PlanMatchOK_AppendsSuffix: a successful plan step
+// with at least one plan-content matcher running clean appends
+// "· plan-match ok" to the base summary.
+func TestSummarize_PlanMatchOK_AppendsSuffix(t *testing.T) {
+	got := summarize(summaryInputs{
+		command:           config.CommandPlan,
+		expect:            config.ExpectSuccess,
+		stdout:            []byte(realPlanWithChanges),
+		planAssertionsRan: true,
+		planAssertionsOK:  true,
+	})
+	want := "1 added, 1 destroyed · plan-match ok"
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
+// TestSummarize_PlanMatchAndStateAssertOK: when both matcher
+// suffixes apply (v2 mode + plan matcher), they both render. Order
+// is plan-match first, then assertions, so the visual progression
+// reads "what plan said" then "what state said".
+func TestSummarize_PlanMatchAndStateAssertOK(t *testing.T) {
+	got := summarize(summaryInputs{
+		command:           config.CommandApply,
+		expect:            config.ExpectSuccess,
+		stdout:            []byte(realApply),
+		assertionsRan:     true,
+		assertionsOK:      true,
+		planAssertionsRan: false, // apply doesn't run plan matchers
+		planAssertionsOK:  false,
+	})
+	// Apply only carries assertion suffix. Plan matchers are gated
+	// on command=plan (validation rejects on apply), so there's no
+	// realistic case where both fire on the same step. We test the
+	// plan-only and apply-only cases separately rather than a
+	// composite that the schema forbids.
+	want := "2 added, 1 changed, 1 destroyed · assertions ok"
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
+// TestSummarize_PlanMatchRanButFailedNoSuffix: planAssertionsRan=true
+// + planAssertionsOK=false (the matcher fired and a failure surfaced)
+// does NOT append the OK suffix. The runner separately flips Status
+// to fail and populates Reason; the summary stays on the base
+// outcome (CLI suppresses Summary on FAIL anyway).
+func TestSummarize_PlanMatchRanButFailedNoSuffix(t *testing.T) {
+	got := summarize(summaryInputs{
+		command:           config.CommandPlan,
+		expect:            config.ExpectSuccess,
+		stdout:            []byte(realPlanWithChanges),
+		planAssertionsRan: true,
+		planAssertionsOK:  false,
+	})
+	if strings.Contains(got, "plan-match ok") {
+		t.Errorf("failed plan matcher should NOT get the ok suffix: %q", got)
+	}
+}
+
+// TestSummarize_NoPlanMatchersNoSuffix: a plan step without any
+// matchers configured doesn't get the suffix even on a passing step.
+func TestSummarize_NoPlanMatchersNoSuffix(t *testing.T) {
+	got := summarize(summaryInputs{
+		command: config.CommandPlan,
+		expect:  config.ExpectSuccess,
+		stdout:  []byte(realPlanWithChanges),
+	})
+	if strings.Contains(got, "plan-match") {
+		t.Errorf("step without matchers should not mention plan-match: %q", got)
+	}
+}

@@ -1,9 +1,10 @@
 # testframeworkV2 — Design Doc
 
-**Status:** Draft v6.2 (implementer-tf11 + researcher-tf11, 2026-05-08)
+**Status:** Draft v6.3 (implementer-tf11 + researcher-tf11, 2026-05-08)
 **Audience:** tech-lead-tf11, reviewer-tf11, tester-tf11, implementer-tf11
 **Scope:** Multi-step, multi-version Terraform integration test harness for `databricks/terraform-provider-databricks`. v1 ships small.
-**Supersedes:** v6.1, v6.0, v5.0, v4.2, v4.1, v4, v3, v2, and v1.
+**Supersedes:** v6.2, v6.1, v6.0, v5.0, v4.2, v4.1, v4, v3, v2, and v1.
+**v6.3 deltas (vs v6.2):** plan-content matchers (Task #34). New `Step.ExpectNonEmptyPlan bool` + `Step.PlanMatch string` fields let v2 fixtures assert against `terraform plan` stdout — `# forces replacement`, `Plan: X to add, Y to destroy`, `No changes.`, etc. — without falling back to manual log inspection. Both fields require `command: plan` + `expect: success` (validated at parse time); both default off; both AND when combined. Implementation adds `internal/runner/planassert.go` (~75 LOC) with collect-all-failures semantics and `result.PlanAssertionFailure` (Kind/Pattern/Reason). The CLI Summary suffix gains a `· plan-match ok` token rendered alongside the existing `· assertions ok` v2 token. Fully backward-compat: v1 fixtures see zero behaviour change; v2 fixtures without the new fields are unaffected. Closes the framework limitation documented inline in `tests/rollback-err/` step 3 — Task #35 upgrades that fixture to use the new matchers in place of "read the log manually".
 **v6.2 deltas (vs v6.1):** developer-experience shortcut (Task #27). Adds `testframeworkV2/Makefile` wrapping the existing CLI + `go test` entry points behind shorter targets — `make test <path>`, `make test-all`, `make unit`, `make build`, `make clean`, `make help`. `make test <path>` uses the `%: @:` catch-all idiom + `MAKECMDGOALS` filter to accept positional path arguments, making `make test issues-repro/issue_5672/` the recommended one-liner that everyone (including IDEs that shell out via `make`) lands on. `make test-all` invokes `TFV2_RUN=1 go test -run TestFixtures -v ./...` so the env-gate is set automatically. README "Quickstart" + CONTRIBUTING "Step 4 — Run locally" now lead with the Make form; CLI + go-test forms remain documented as alternatives. Pure thin wrapper — no behaviour change, no new deps, no schema or runner changes; equivalent commands still produce identical output. Also folds in OBS-B from #26: replaces stale 2-segment `TestFixtures/issue_NNNN` filter examples in README + CONTRIBUTING with the canonical 3-segment `TestFixtures/<tree>/issue_NNNN` form (matches the `t.Run` tree-preserving subtest names landed in #25). New §12.9 captures the Makefile target list.
 **v6.1 deltas (vs v6.0):** developer-experience polish (Tasks #22, #23, #25). (1) Parse-time config-file existence check (§17.7): `LoadDir` now stats every step's `config:` value before returning the spec, so a typo at step N can no longer let steps 1..N-1 apply (and mutate real cloud resources) before the failure surfaces. v1 specs (no `config:` anywhere) skip the check — pure backward-compat. (2) Per-step terraform-result Summary on PASS lines (§7 / §12.2): each `[PASS]` line is now followed by a 3-space gutter + a short summary parsed from terraform's stdout/stderr — `1 added`, `no changes`, `1 added, 1 destroyed`, or `failure-as-expected: <stderr excerpt>` for `expect: failure`. v2 fixtures append `· assertions ok` when post-command state assertions pass. The `summary` field is `omitempty` in StepResult JSON so existing tooling sees no schema change for v1 results. (3) Auto-discovery of `--repo` (§12.6): new `internal/repodiscover` package walks upward from cwd looking for the canonical `module github.com/databricks/terraform-provider-databricks` go.mod line, populating `--repo` automatically when the user runs `tfv2 run` from anywhere inside a checkout. The framework's own sub-module go.mod is intentionally non-matching (different module path), so the walk skips past it to the parent provider repo. Discovery failure is silent unless a step uses `version: local`, in which case it surfaces a clear error pointing the user at `--repo`/`TFV2_REPO`. (4) Go-test integration (§12.7): new root-level `testframeworkV2/fixtures_test.go` walks every `test.yaml` under `issues-repro/` and `tests/`, runs each via `t.Run(filepath.Base(dir), ...)` programmatically through `internal/runner`. Gated by `TFV2_RUN=1` so plain `go test ./...` stays cheap; CI sets it explicitly. Net effect: developers get a single `go test ./...` invocation that shows IDE green/red dots per fixture without writing wrapper scripts. Backward-compat preserved across all four changes — v1 fixtures see zero behaviour change, JSON output for existing summary-less results unchanged, and explicit `--repo`/`TFV2_REPO` still wins over auto-discovery.
 **v6.0 deltas (vs v5.0):** v2-mode opt-in, per-step HCL + structured state assertions (Task #20). New §17 covering the full v2 schema + runner integration. Net behaviour change: tests in `issues-repro/` and `tests/` continue to work as v1 unless they declare `config:` on every step. v2 specs gain (a) per-step `*.tf` file swap (state survives the swap; runner wipes user `*.tf` and copies the per-step file before each `terraform init`), and (b) structured `assert:` blocks with resource presence + attribute equality checks against `terraform show -json` output. Implementation adds `internal/stateassert` package; extends `internal/config` (Step.Config + Step.Assert), `internal/result` (AssertionFailure type + StepResult.Assertions/AssertLog fields), and `internal/runner` (mode-aware prepareRun + per-step swapStepConfig + post-command runStateAssert). New fixture `tests/token_lifecycle_v2/` demonstrates the end-to-end create/modify/destroy lifecycle. v1 backward compat preserved — v1 specs see zero behaviour change; new fields are omitted-by-default in JSON output.
@@ -1362,6 +1363,74 @@ FAIL databricks_other.x.comment: value mismatch (expected=foo, actual=bar)
 | `internal/result` | `AssertionFailure` type; `StepResult.Assertions` + `StepResult.AssertLog` fields (omitempty). |
 | `internal/runner` | `prepareRun` skips bulk-copy in v2; `runStep` calls `swapStepConfig` before init in v2 mode and `runStateAssert` after the command on success-path steps. Per-step `assert.log` written. |
 | Fixtures | `tests/token_lifecycle_v2/` — 3-step apply-modify-destroy lifecycle of `databricks_token` exercising all three assertion shapes (present-with-attrs, present-with-attrs after modify, present:false). |
+
+### 17.10 Plan-content matchers — `expect_non_empty_plan` + `plan_match`
+
+Added in v6.3 to address the `tests/rollback-err/` framework limitation: bugs that surface as a destructive plan diff (not a non-zero exit) need a structured way to assert against plan stdout. Until v6.3, the `rollback-err` fixture documented this as "manual verification — read step_3_*.stdout.log". v6.3 lets tests automate the same check.
+
+**Schema**:
+
+```yaml
+steps:
+  - name: rollback_to_1_113_0_force_replaces
+    version: "1.113.0"
+    command: plan
+    expect: success
+    expect_non_empty_plan: true            # NEW: plan stdout MUST NOT contain "No changes."
+    plan_match: '# forces replacement'     # NEW: Go RE2 against plan stdout
+```
+
+Both fields default off; existing fixtures see no behaviour change. Both AND when set together — a step passes the matcher gate iff `expect_non_empty_plan` is satisfied AND `plan_match` is satisfied. Failures collect (don't short-circuit), so both diagnostics surface in one shot.
+
+**Parse-time validation**:
+
+1. `expect_non_empty_plan: true` requires `command: plan`. apply / destroy stdout has different summary lines (`Apply complete! Resources: ...`, `Destroy complete! Resources: ...`) and the `No changes.` token isn't a stable signal there.
+2. `plan_match: <regex>` has the same `command: plan` requirement.
+3. Both require `expect: success`. A failed plan's stdout shape is undefined (terraform may abort before reaching the diff section), so content matchers there are noise — the cmdErr already explains the failure.
+4. `plan_match` regex compiles at parse time; bad RE2 surfaces a clear error rather than firing only at runtime.
+5. `plan_match` is wrapped with the implicit `(?s)` flag so `.` matches newlines — anchors like `Plan:.*destroy` work against multiline plan output without manual flag management by the user.
+
+**Runtime semantics** (`internal/runner/planassert.go`):
+
+After `command: plan` returns nil and `finalize` sets Status=Pass, the runner calls `runPlanAssert` against the captured plan stdout. The function:
+
+- Returns immediately if Status != Pass (an earlier check already failed) or neither matcher is set.
+- Walks `expect_non_empty_plan` first: `strings.Contains(stdout, "No changes")` → fail with `expect_non_empty_plan: plan was empty (stdout contains "No changes")`.
+- Walks `plan_match` second: `compiledRegex.Match(stdout)` → fail with `plan_match(<pattern>): plan stdout did not match` when no match.
+- On any failure, flips Status to fail, populates `StepResult.PlanAssertions`, and rewrites Reason with the joined failure list.
+
+**StepResult shape**:
+
+```go
+type StepResult struct {
+    // ... existing fields ...
+    PlanAssertions []PlanAssertionFailure `json:",omitempty"`
+}
+
+type PlanAssertionFailure struct {
+    Kind    string  // "expect_non_empty_plan" or "plan_match"
+    Pattern string  // regex source for plan_match; "true" for expect_non_empty_plan
+    Reason  string  // human-readable diagnostic
+}
+```
+
+`omitempty` on `PlanAssertions` keeps the v1 JSON shape unchanged for steps that don't use the matchers.
+
+**CLI summary suffix**:
+
+When matchers run AND pass, the per-step `[PASS]` line gets a `· plan-match ok` suffix appended after any base summary phrase. v2 fixtures with state assertions still get their `· assertions ok` suffix; the two render in order:
+
+```
+[PASS] step 3 (rollback_to_1_113_0_force_replaces): 1.113.0 plan in 4.7s   1 added, 1 destroyed · plan-match ok
+```
+
+Order is `<plan-match suffix> · <state-assertion suffix>` so the visual progression reads "what plan said" then "what state said".
+
+**Why this isn't an extension of `error_substring`/`error_regex`**:
+
+The existing `error_*` fields are deliberately stderr-only — they exist for the `expect: failure` path where terraform exits non-zero and writes the diagnostic to stderr. Plan-content matchers run on `expect: success` + `command: plan`, asserting against stdout (where terraform writes the diff). Different streams, different lifecycle: keeping them as separate field names avoids the cognitive overload of one field name behaving differently based on `expect:`.
+
+**Fixture upgrade path**: `tests/rollback-err/` step 3 currently documents "manual verification: step_3_*.stdout.log SHOULD contain '# forces replacement'". v6.3 lets that step add `expect_non_empty_plan: true` + `plan_match: '# forces replacement'` so the assertion runs automatically. Task #35 captures the upgrade.
 
 ---
 

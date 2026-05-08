@@ -170,6 +170,33 @@ flag implicit (so `.` matches newlines).
 If you need a literal substring match, use `error_substring`. Both can be set
 together (AND semantics). At least one is required when `expect: failure`.
 
+### Plan-content matchers (`expect_non_empty_plan`, `plan_match`)
+
+For tests where the regression surfaces as a plan **diff** rather than
+a non-zero exit (e.g. a forced-replacement annotation, an unexpected
+empty plan, a specific number of resources to destroy), use the
+plan-content matchers instead of `error_*`. Both fields require
+`command: plan` AND `expect: success`:
+
+```yaml
+- name: rollback_to_1_113_0_force_replaces
+  version: "1.113.0"
+  command: plan
+  expect: success
+  expect_non_empty_plan: true            # plan stdout MUST NOT contain "No changes."
+  plan_match: '# forces replacement'     # Go RE2 against plan stdout (multiline)
+```
+
+Both default off, both AND when set together, both compile/validate
+at parse time. A failing matcher flips the step to FAIL and surfaces
+a structured `result.PlanAssertionFailure` (Kind / Pattern / Reason)
+alongside the regular step result. The CLI Summary suffix shows
+`· plan-match ok` on PASS so you can see at a glance that the
+matcher fired and was satisfied.
+
+See DESIGN.md §17.10 for the full schema + parse-time validation
+rules.
+
 ---
 
 ## Step 4 — Run locally

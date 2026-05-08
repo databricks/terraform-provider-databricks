@@ -116,6 +116,28 @@ type Step struct {
 	// state to inspect).
 	Config string      `yaml:"config"`
 	Assert []Assertion `yaml:"assert"`
+
+	// Plan-content matchers (DESIGN.md §17.10). Both fields require
+	// `command: plan` AND `expect: success`; the runner evaluates them
+	// against terraform plan's stdout (which contains the diff
+	// annotations: "Plan: X to add...", "# forces replacement",
+	// "No changes.", etc.).
+	//
+	// ExpectNonEmptyPlan asserts the plan is NOT empty — i.e. stdout
+	// does NOT contain "No changes.". Useful for fixtures that should
+	// always show a diff (regression-guard against silent acceptance).
+	//
+	// PlanMatch is a Go RE2 string matched against plan stdout with
+	// the multiline `(?s)` flag implicit (so `.` spans newlines). Used
+	// to anchor on stable phrases like "# forces replacement" or
+	// "Plan: 1 to add, 0 to change, 1 to destroy" without needing a
+	// post-step manual log grep.
+	//
+	// Both AND together when both set. Both default off so existing
+	// fixtures keep their behaviour exactly.
+	ExpectNonEmptyPlan bool           `yaml:"expect_non_empty_plan"`
+	PlanMatch          string         `yaml:"plan_match"`
+	CompiledPlanMatch  *regexp.Regexp `yaml:"-"`
 }
 
 // Assertion is one (resource address, presence, attributes) bundle —
@@ -305,6 +327,16 @@ func normalize(spec *TestSpec) error {
 			}
 			s.CompiledRegex = re
 		}
+		if s.PlanMatch != "" {
+			// Multiline by default — plan output has line breaks and
+			// callers anchor on phrases like "# forces replacement"
+			// that follow a leading "  - resource ..." line.
+			re, err := regexp.Compile(`(?s)` + s.PlanMatch)
+			if err != nil {
+				return fmt.Errorf("step %q: invalid plan_match %q: %w", s.Name, s.PlanMatch, err)
+			}
+			s.CompiledPlanMatch = re
+		}
 	}
 	return nil
 }
@@ -476,6 +508,35 @@ func validateStepAssertion(i int, s Step) error {
 			return fmt.Errorf("steps[%d] (%s): assert[%d].resource %q is not a valid root-module address (expected `type.name` or `data.type.name`)",
 				i, s.Name, j, a.Resource)
 		}
+	}
+	return validatePlanMatchers(i, s)
+}
+
+// validatePlanMatchers enforces the §17.10 invariants on the new
+// plan-content matcher fields:
+//
+//   - `expect_non_empty_plan: true` requires `command: plan` AND
+//     `expect: success`. plan-content matchers against an apply or
+//     destroy stdout would be checking the wrong thing (terraform
+//     prints different summary lines), and against a failed plan
+//     they're noise (the cmdErr already explains the failure).
+//   - `plan_match: <regex>` has the same two requirements.
+//
+// Both fields default off (false / empty); existing fixtures see no
+// behaviour change.
+func validatePlanMatchers(i int, s Step) error {
+	if !s.ExpectNonEmptyPlan && s.PlanMatch == "" {
+		return nil
+	}
+	field := "expect_non_empty_plan"
+	if s.PlanMatch != "" {
+		field = "plan_match"
+	}
+	if s.Command != CommandPlan {
+		return fmt.Errorf("steps[%d] (%s): %s requires command: plan (got %q)", i, s.Name, field, s.Command)
+	}
+	if s.Expect != ExpectSuccess {
+		return fmt.Errorf("steps[%d] (%s): %s requires expect: success (got %q)", i, s.Name, field, s.Expect)
 	}
 	return nil
 }

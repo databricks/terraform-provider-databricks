@@ -284,3 +284,22 @@ func TestDeleteDisableLegacyFeaturesWithConflict(t *testing.T) {
 		etagAttrName: "etag3",
 	})
 }
+
+// TestDisableLegacyFeaturesSetting_SkipProviderConfigStatePopulation is a
+// regression guard for the bug where the post-Read provider_config hook ran
+// against an account-only setting and failed with
+// "cannot populate provider_config for disable legacy features setting:
+//
+//	failed to resolve workspace_id: ... Unable to load OAuth Config".
+//
+// Account-only settings (built via accountSetting in generic_setting.go) must
+// have SkipProviderConfigStatePopulation set so the hook is short-circuited.
+// See https://github.com/databricks/terraform-provider-databricks/issues/5672
+// (and the parallel fix in #5689 for account-only mws data sources).
+func TestDisableLegacyFeaturesSetting_SkipProviderConfigStatePopulation(t *testing.T) {
+	assert.True(t, testDisableLegacyFeatures.SkipProviderConfigStatePopulation,
+		"databricks_disable_legacy_features_setting must opt out of post-Read provider_config population")
+	pc, ok := testDisableLegacyFeatures.Schema["provider_config"]
+	assert.True(t, ok, "provider_config block must still exist in the schema (kept for state compatibility)")
+	assert.NotEmpty(t, pc.Deprecated, "provider_config block must be marked deprecated for account-only settings")
+}

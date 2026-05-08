@@ -24,16 +24,18 @@
 .PHONY: help test test-all unit build clean
 .DEFAULT_GOAL := help
 
-# Treat any extra command-line goals (i.e. the path arg to `make test <path>`)
-# as phony. Without this, when the path corresponds to an existing directory
-# (e.g. `issues-repro/issue_5672`), make filesystem-checks it and prints
-# `make: 'issues-repro/issue_5672' is up to date.` after the test output.
-.PHONY: $(filter-out test test-all unit build clean help,$(MAKECMDGOALS))
-
-# Catch-all so the path-arg goals passed to `make test <path>` are
-# silent no-ops rather than "No rule to make target" errors.
-%:
+# `make test <path>` passes the path as an extra command-line goal. Make
+# tries to "build" that goal too — and prints either "is up to date" (when
+# the path is an existing directory) or "Nothing to be done" (when phony).
+# Trick: capture the extra goals at parse time, declare them phony AND
+# depend on `test` so they get marked as built when `test` finishes. Then
+# the catch-all rule's empty recipe doesn't trigger any status output.
+EXTRA_GOALS := $(filter-out test test-all unit build clean help,$(MAKECMDGOALS))
+ifneq ($(EXTRA_GOALS),)
+.PHONY: $(EXTRA_GOALS)
+$(EXTRA_GOALS): test
 	@:
+endif
 
 help:
 	@echo "testframeworkV2 — Makefile targets"

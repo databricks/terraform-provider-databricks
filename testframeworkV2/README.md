@@ -175,10 +175,12 @@ testframeworkV2/
 │   │   └── main.tf
 │   ├── issue_5678/                        ← catalog_workspace_binding force-replace on rollback
 │   └── issue_5668/                        ← databricks_token validate (unassigned-SP profile required)
-└── tests/                                 ← green-path / smoke fixtures (no specific issue)
-    └── workspace_data_source_smoke/       ← happy-path data.databricks_mws_workspaces
-        ├── test.yaml
-        └── main.tf
+└── tests/                                 ← green-path / smoke / regression-guard fixtures (no specific issue)
+    ├── workspace_data_source_smoke/       ← happy-path data.databricks_mws_workspaces
+    │   ├── test.yaml
+    │   └── main.tf
+    ├── token_lifecycle_v2/                ← v2-mode demo: create/modify/destroy databricks_token
+    └── rollback-err/                      ← regression-guard: v1.113 → v1.114 → v1.113 must not force-replace
 ```
 
 Each `issues-repro/issue_<N>/` and `tests/<slug>/` directory is fully

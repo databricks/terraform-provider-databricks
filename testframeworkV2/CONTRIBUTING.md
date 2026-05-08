@@ -39,7 +39,7 @@ Tests are grouped by **intent** (per DESIGN.md v5.0):
 | Subdir | Use when… |
 |---|---|
 | `testframeworkV2/issues-repro/issue_<N>/`  | You are reproducing a specific GitHub issue. The directory name is `issue_<number>` (e.g. `issue_5672`, `issue_5678`). |
-| `testframeworkV2/tests/<descriptive-slug>/` | The test is a green-path / smoke / regression-guard fixture NOT tied to a specific issue (e.g. `workspace_data_source_smoke`). |
+| `testframeworkV2/tests/<descriptive-slug>/` | The test is a green-path / smoke / regression-guard fixture NOT tied to a specific issue (e.g. `workspace_data_source_smoke`, `rollback-err`). |
 
 Profile level (workspace / account / UC) is NOT encoded in the directory
 name; it's declared per-test via `requires.level` in `test.yaml`. The
@@ -51,7 +51,9 @@ host) → `issues-repro/issue_5672/`. The workspace-level `databricks_token`
 regression for issue #5668 lives at `issues-repro/issue_5668/`, and the
 `databricks_catalog_workspace_binding` rollback regression for issue #5678
 lives at `issues-repro/issue_5678/`. A green-path data-source smoke test
-goes under `tests/` (e.g. `tests/workspace_data_source_smoke/`).
+goes under `tests/` (e.g. `tests/workspace_data_source_smoke/` for a
+data-source happy-path, or `tests/rollback-err/` for a regression-guard
+that pins behaviour without referencing a specific GitHub issue).
 
 Slug-style names: lowercase, digits, `_`, `-` (matches `^[a-z0-9_-]+$`).
 

@@ -33,3 +33,5 @@
   ```
 
   Make targets: `make test <path>` (single fixture), `make test-all` (every fixture via `go test -run TestFixtures`), `make unit` (unit tests only — no cloud auth), `make build` (build `./tfv2`), `make clean`, `make help`. CLI subcommands: `tfv2 run [-r] <dir>`, `tfv2 cache list/prune`, `tfv2 build local --repo <path>`. The framework lives in its own Go module (`testframeworkV2/go.mod`) so it can be built and run independently of the provider's transitive deps.
+
+  Shipped fixtures: `issues-repro/issue_5672` (the keystone mws_workspaces regression), `issues-repro/issue_5678` (catalog_workspace_binding force-replace on rollback), `issues-repro/issue_5668` (databricks_token validate, requires unassigned-SP profile), `tests/workspace_data_source_smoke` (data.databricks_mws_workspaces happy path), `tests/token_lifecycle_v2` (v2-mode demo: create/modify/destroy databricks_token with state assertions), and `tests/rollback-err` (regression-guard: v1.113.0 → v1.114.0 → v1.113.0 must not destructively replace databricks_token — the apply-then-downgrade sibling of #5678's apply-then-rollback-tag scenario).

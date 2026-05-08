@@ -1,0 +1,53 @@
+# Regression-guard: a v1.113.0 -> v1.114.0 -> v1.113.0 downgrade should NOT
+# destructively replace databricks_token. Same root cause as issue #5678
+# (state pollution by v1.114.0's post-Read hook + schema mismatch on the
+# rolled-back binary's auto-ForceNew sweep), observed at the downgrade
+# direction (v1.114.0 -> v1.113.0) instead of #5678's forward direction
+# (v1.114.0 -> v1.114.1).
+#
+# FRAMEWORK LIMITATION: bug surfaces as a destructive plan diff, not an
+# error. v1 framework matches stderr only; plan exits 0. Until a v2
+# `plan_diff_match` matcher lands, tester verifies manually that
+# step_3_rollback_to_1_113_0_force_replaces.stdout.log contains
+# "# forces replacement" and "Plan: 1 to add, 0 to change, 1 to destroy".
+#
+# Step 3 is plan-only for safety: applying v1.113.0 against the polluted
+# state would silently DESTROY the real token and recreate it. Test
+# infrastructure should not silently destroy real cloud resources.
+#
+# Step 4 proves the on-main fix (commit 115199fc) resolves the destructive
+# intent: the local build skips provider_config in the auto-ForceNew sweep
+# and synthesizes a no-op Update for resources with provider_config +
+# Create/Delete (no Update method).
+
+name: rollback_err_token_v1_113_v1_114_v1_113
+profile: WORKSPACE_AWS
+cleanup: true
+requires:
+  cloud: any
+  level: workspace
+
+steps:
+  - name: create_on_1_113_0
+    version: "1.113.0"
+    command: apply
+    expect: success
+
+  - name: refresh_pollutes_state_on_1_114_0
+    version: "1.114.0"
+    command: apply
+    expect: success
+
+  - name: rollback_to_1_113_0_force_replaces
+    version: "1.113.0"
+    command: plan
+    expect: success
+    # Manual verification: step_3_*.stdout.log contains "# forces replacement"
+    # and "Plan: 1 to add, 0 to change, 1 to destroy".
+
+  - name: fixed_on_local
+    version: "local"
+    command: plan
+    expect: success
+    # Manual verification: step_4_*.stdout.log shows "No changes" or in-place
+    # update only — no "# forces replacement" annotation.

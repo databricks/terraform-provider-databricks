@@ -299,4 +299,7 @@ func TestDeleteDisableLegacyFeaturesWithConflict(t *testing.T) {
 func TestDisableLegacyFeaturesSetting_SkipProviderConfigStatePopulation(t *testing.T) {
 	assert.True(t, testDisableLegacyFeatures.SkipProviderConfigStatePopulation,
 		"databricks_disable_legacy_features_setting must opt out of post-Read provider_config population")
+	pc, ok := testDisableLegacyFeatures.Schema["provider_config"]
+	assert.True(t, ok, "provider_config block must still exist in the schema (kept for state compatibility)")
+	assert.NotEmpty(t, pc.Deprecated, "provider_config block must be marked deprecated for account-only settings")
 }

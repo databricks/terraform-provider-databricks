@@ -30,7 +30,7 @@ This data source exports a single attribute, `tools`. It is a list of resources,
 * `name` (string) - Full resource name:
   supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
 * `tool_id` (string) - User specified id of the Tool
-* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
+* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search"
 * `uc_connection` (UcConnection)
 * `uc_function` (UcFunction)
 * `volume` (Volume)

@@ -29498,6 +29498,8 @@ type TemporaryCredentials struct {
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
+
+	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
 }
 
 func (to *TemporaryCredentials) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TemporaryCredentials) {
@@ -29528,6 +29530,15 @@ func (to *TemporaryCredentials) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 			}
 		}
 	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				// Recursively sync the fields of R2TempCredentials
+				toR2TempCredentials.SyncFieldsDuringCreateOrUpdate(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
 }
 
 func (to *TemporaryCredentials) SyncFieldsDuringRead(ctx context.Context, from TemporaryCredentials) {
@@ -29555,6 +29566,14 @@ func (to *TemporaryCredentials) SyncFieldsDuringRead(ctx context.Context, from T
 			}
 		}
 	}
+	if !from.R2TempCredentials.IsNull() && !from.R2TempCredentials.IsUnknown() {
+		if toR2TempCredentials, ok := to.GetR2TempCredentials(ctx); ok {
+			if fromR2TempCredentials, ok := from.GetR2TempCredentials(ctx); ok {
+				toR2TempCredentials.SyncFieldsDuringRead(ctx, fromR2TempCredentials)
+				to.SetR2TempCredentials(ctx, toR2TempCredentials)
+			}
+		}
+	}
 }
 
 func (m TemporaryCredentials) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -29562,6 +29581,7 @@ func (m TemporaryCredentials) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["azure_aad"] = attrs["azure_aad"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
 	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].SetOptional()
+	attrs["r2_temp_credentials"] = attrs["r2_temp_credentials"].SetOptional()
 
 	return attrs
 }
@@ -29578,6 +29598,7 @@ func (m TemporaryCredentials) GetComplexFieldTypes(ctx context.Context) map[stri
 		"aws_temp_credentials": reflect.TypeOf(AwsCredentials{}),
 		"azure_aad":            reflect.TypeOf(AzureActiveDirectoryToken{}),
 		"gcp_oauth_token":      reflect.TypeOf(GcpOauthToken{}),
+		"r2_temp_credentials":  reflect.TypeOf(R2Credentials{}),
 	}
 }
 
@@ -29592,6 +29613,7 @@ func (m TemporaryCredentials) ToObjectValue(ctx context.Context) basetypes.Objec
 			"azure_aad":            m.AzureAad,
 			"expiration_time":      m.ExpirationTime,
 			"gcp_oauth_token":      m.GcpOauthToken,
+			"r2_temp_credentials":  m.R2TempCredentials,
 		})
 }
 
@@ -29603,6 +29625,7 @@ func (m TemporaryCredentials) Type(ctx context.Context) attr.Type {
 			"azure_aad":            AzureActiveDirectoryToken{}.Type(ctx),
 			"expiration_time":      types.Int64Type,
 			"gcp_oauth_token":      GcpOauthToken{}.Type(ctx),
+			"r2_temp_credentials":  R2Credentials{}.Type(ctx),
 		},
 	}
 }
@@ -29680,6 +29703,31 @@ func (m *TemporaryCredentials) GetGcpOauthToken(ctx context.Context) (GcpOauthTo
 func (m *TemporaryCredentials) SetGcpOauthToken(ctx context.Context, v GcpOauthToken) {
 	vs := v.ToObjectValue(ctx)
 	m.GcpOauthToken = vs
+}
+
+// GetR2TempCredentials returns the value of the R2TempCredentials field in TemporaryCredentials as
+// a R2Credentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TemporaryCredentials) GetR2TempCredentials(ctx context.Context) (R2Credentials, bool) {
+	var e R2Credentials
+	if m.R2TempCredentials.IsNull() || m.R2TempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v R2Credentials
+	d := m.R2TempCredentials.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetR2TempCredentials sets the value of the R2TempCredentials field in TemporaryCredentials.
+func (m *TemporaryCredentials) SetR2TempCredentials(ctx context.Context, v R2Credentials) {
+	vs := v.ToObjectValue(ctx)
+	m.R2TempCredentials = vs
 }
 
 // Detailed status of an online table. Shown if the online table is in the

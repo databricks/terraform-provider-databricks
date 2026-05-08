@@ -18,13 +18,13 @@
 
 ### Internal Changes
 
-* Add `testframeworkV2/`, a multi-version Terraform test harness for the provider ([DESIGN.md](https://github.com/databricks/terraform-provider-databricks/blob/main/testframeworkV2/DESIGN.md)).
+* Add `testframeworkV2/`, a multi-version Terraform test harness for the provider.
 
   The framework runs a single test definition (`test.yaml` + a directory of `*.tf` files) across N released provider versions plus a fresh `go build` of the current branch — without touching the developer's `~/.terraformrc`, `~/.databrickscfg`, or shell environment. Built around issue [#5672](https://github.com/databricks/terraform-provider-databricks/issues/5672)'s mission test (`testframeworkV2/issues-repro/issue_5672/`), which pins the regression-rollback-fix trajectory across `1.113.0` → `1.114.0` → `1.114.1` → `local` in four steps.
 
   Fixtures live under two trees: `testframeworkV2/issues-repro/issue_<N>/` for fixtures that reproduce a specific GitHub issue, and `testframeworkV2/tests/<descriptive-slug>/` for green-path / smoke / regression-guard fixtures not tied to a bug. Profile level (workspace / account / UC) is declared per-test via `requires.level`.
 
-  `tfv2` auto-discovers the provider repo root (the `--repo` flag) by walking up from the working directory, and exposes every fixture as a `go test` subtest under `TestFixtures` (gated by `TFV2_RUN=1`) — so IDEs and CI can drive the framework without invoking the CLI. A `testframeworkV2/Makefile` wraps both entry points behind a `make test <path>` shortcut. Test specs can also assert against `terraform plan` stdout via `expect_non_empty_plan: true` and `plan_match: <regex>` (DESIGN.md §17.10) for regressions that surface as a destructive plan diff rather than a non-zero exit. Plan-assertion failures now include the last 15 lines of plan stdout inline under the FAIL line — no manual `cat` of the per-step stdout log to see what the plan was.
+  `tfv2` auto-discovers the provider repo root (the `--repo` flag) by walking up from the working directory, and exposes every fixture as a `go test` subtest under `TestFixtures` (gated by `TFV2_RUN=1`) — so IDEs and CI can drive the framework without invoking the CLI. A `testframeworkV2/Makefile` wraps both entry points behind a `make test <path>` shortcut. Test specs can also assert against `terraform plan` stdout via `expect_non_empty_plan: true` and `plan_match: <regex>` for regressions that surface as a destructive plan diff rather than a non-zero exit. Plan-assertion failures now include the last 15 lines of plan stdout inline under the FAIL line — no manual `cat` of the per-step stdout log to see what the plan was.
 
   Quickstart:
   ```sh

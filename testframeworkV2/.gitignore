@@ -18,3 +18,12 @@ local-version.json
 # `make build` output. Anchored to testframeworkV2/ root so it doesn't
 # accidentally match a subpath named tfv2 elsewhere in the tree.
 /tfv2
+
+# OS / editor noise.
+.DS_Store
+*.swp
+*~
+*.bak
+
+# Local-only architecture doc — kept on disk, not in the repo.
+/DESIGN.md

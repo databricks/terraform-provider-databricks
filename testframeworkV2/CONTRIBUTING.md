@@ -1,8 +1,8 @@
 # Contributing to testframeworkV2
 
 This guide walks you from "I want to write a regression test for a Databricks
-provider bug" to "test passes locally on my profile". For framework internals,
-see `DESIGN.md`. For a quick "what is this thing", see `README.md`.
+provider bug" to "test passes locally on my profile". For a quick "what is
+this thing", see `README.md`.
 
 The running example throughout is `issues-repro/issue_5672/`, which
 reproduces [issue #5672](https://github.com/databricks/terraform-provider-databricks/issues/5672) end-to-end across 4 provider versions.
@@ -18,7 +18,7 @@ You need:
 | `terraform` ≥ 1.5.0 on `$PATH` | Framework spawns it as a subprocess; no auto-install. | Override with `--terraform-bin <path>` or `TFV2_TERRAFORM_BIN` env if not on `$PATH`. |
 | Go ≥ 1.25 | To build `tfv2` and (for `version: local`) the provider itself. | `go.mod` pins the toolchain. |
 | `~/.databrickscfg` with a working profile | Auth flows through `DATABRICKS_CONFIG_PROFILE` only — no inline tokens in HCL. | Run `databricks configure --profile <name>` if you don't have one. |
-| Network access to GitHub releases | First test run downloads provider zips into `~/.testframeworkv2/providers/`. Cached after that. | Behind a corporate proxy? `HTTPS_PROXY`/`HTTP_PROXY`/`NO_PROXY` are propagated automatically (DESIGN.md §10/G6). |
+| Network access to GitHub releases | First test run downloads provider zips into `~/.testframeworkv2/providers/`. Cached after that. | Behind a corporate proxy? `HTTPS_PROXY`/`HTTP_PROXY`/`NO_PROXY` are propagated automatically. |
 
 For day-to-day test iteration, run from source:
 
@@ -34,7 +34,7 @@ README.md "Quickstart". The rest of this guide uses `go run ./cmd/tfv2`.
 
 ## Step 1 — Pick a directory
 
-Tests are grouped by **intent** (per DESIGN.md v5.0):
+Tests are grouped by **intent**:
 
 | Subdir | Use when… |
 |---|---|
@@ -74,8 +74,7 @@ Two rules:
    No `host`, `token`, `client_id`, `google_service_account` etc. inline.
 2. **You MAY pin `databricks` in your own `terraform { required_providers {} }` block** (or skip it entirely). If you pin, the framework's
    `_tfv2_versions_override.tf` overrides only the `version` field at test time
-   via Terraform's `*_override.tf` per-attribute merge — empirically validated
-   in DESIGN.md Appendix A (expA1/A2/A3 + B-COLLISION). Other providers
+   via Terraform's `*_override.tf` per-attribute merge — other providers
    (`hashicorp/google`, `hashicorp/random`, etc.) are preserved untouched.
 
 The minimum HCL for the running example:
@@ -104,7 +103,7 @@ should exercise the user-shaped configuration.
 
 ## Step 3 — Write `test.yaml`
 
-The schema (full reference: DESIGN.md §4) has three top-level required fields,
+The schema has three top-level required fields,
 two optional ones, and a list of steps. Walk-through using `issues-repro/issue_5672/test.yaml`:
 
 ```yaml
@@ -153,10 +152,10 @@ For a regression test, the standard 4-version shape is:
 4. **`local`** — proves the real fix on the current branch.
 
 For #5672, step 3 uses v1.114.1 — a rollback retag of v1.113.0 (same git source
-SHA, different binary SHA because goreleaser rebuilds independently per tag;
-see DESIGN.md §16 F6 for the empirical sha256s). Step 3 passing only confirms
-the rollback worked; it does NOT validate the actual code fix. That's why
-step 4 (`local`) is the most important one — it's the only step that exercises
+SHA, different binary SHA because goreleaser rebuilds independently per tag).
+Step 3 passing only confirms the rollback worked; it does NOT validate the
+actual code fix. That's why step 4 (`local`) is the most important one — it's
+the only step that exercises
 code that isn't in any released tag yet.
 
 ### Crafting `error_regex`
@@ -194,8 +193,8 @@ alongside the regular step result. The CLI Summary suffix shows
 `· plan-match ok` on PASS so you can see at a glance that the
 matcher fired and was satisfied.
 
-See DESIGN.md §17.10 for the full schema + parse-time validation
-rules.
+Both fields require `command: plan` + `expect: success`; both ANDed when
+combined. Parse-time validation rejects mismatches.
 
 ---
 
@@ -238,8 +237,8 @@ TFV2_RUN=1 go test -run 'TestFixtures/issues-repro/issue_5672' -v ./...
 ```
 
 `--repo` is **auto-discovered** by walking up from the working
-directory looking for the provider repo's `go.mod` (DESIGN.md §12.6).
-If you're inside the provider checkout, no flag is needed. Pass
+directory looking for the provider repo's `go.mod`. If you're inside
+the provider checkout, no flag is needed. Pass
 `--repo <path>` or set `TFV2_REPO` only when invoking from outside a
 checkout AND your test has at least one step with `version: local`.
 Tests pinning only released semvers don't need a repo root at all.
@@ -387,7 +386,6 @@ go run ./cmd/tfv2 run --run-dir /tmp/myrun issues-repro/issue_5672/
     refuses to use this — the public HashiCorp signing key is currently
     expired in the default flow. Terraform binary discovery is
     user-controlled (`--terraform-bin` / `TFV2_TERRAFORM_BIN` / `$PATH`).
-    See DESIGN.md §10/G8.
 
 12. **Running multiple tests in <1 second.** Each run dir gets a 4-char
     `crypto/rand` hex suffix to prevent collisions. The runtime tree at
@@ -398,9 +396,8 @@ go run ./cmd/tfv2 run --run-dir /tmp/myrun issues-repro/issue_5672/
 
 ## Adding dependencies
 
-testframeworkV2 has its own `go.mod` (DESIGN.md §12 explains why). Direct
-dependencies are kept minimal — currently `gopkg.in/yaml.v3` and
-`github.com/hashicorp/terraform-exec`.
+testframeworkV2 has its own `go.mod`. Direct dependencies are kept
+minimal — currently `gopkg.in/yaml.v3` and `github.com/hashicorp/terraform-exec`.
 
 **Acceptance policy for new direct deps:**
 
@@ -423,9 +420,9 @@ go mod tidy
 
 **Hard prohibitions:**
 
-- **Never add `hc-install` or `tfinstall`** even though they're HashiCorp.
-  See DESIGN.md §10/G8 — these auto-install terraform via a flow whose
-  signing key is currently expired. Binary discovery stays user-controlled.
+- **Never add `hc-install` or `tfinstall`** even though they're HashiCorp —
+  these auto-install terraform via a flow whose signing key is currently
+  expired. Binary discovery stays user-controlled.
 - **Never import `internal/acceptance`** from the main provider repo.
   That package's `init()` calls `os.Setenv("TF_LOG", "DEBUG")` globally and
   has other process-wide side effects. The framework's separate `go.mod`
@@ -439,10 +436,7 @@ go mod tidy
 
 ## Where to ask questions
 
-- **Framework internals**: read `DESIGN.md` cover-to-cover. The 16 sections
-  are cross-referenced; the table of contents at the top points everywhere.
 - **A specific test misbehaving**: file a Jira issue with the run dir
   contents (logs + workdir) attached.
-- **A new design pivot you think is needed**: open a PR with a `DESIGN.md`
-  patch alongside the code change. Past pivots (override-merge,
-  cloud-portable regex, run-dir suffixing) all started this way.
+- **A new design pivot you think is needed**: open a PR alongside the
+  code change describing the rationale.

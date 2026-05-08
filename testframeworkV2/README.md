@@ -34,8 +34,6 @@ subprocess pipeline:
 * curated subprocess env: `DATABRICKS_*` from the developer's shell is
   stripped and replaced with the test.yaml's `profile`.
 
-See [DESIGN.md](DESIGN.md) for the full rationale.
-
 ## Quickstart
 
 ```sh
@@ -117,7 +115,6 @@ Each fixture runs as a separate `t.Run` subtest with the tree-
 preserving 3-segment path (`<tree>/<fixture-dir>`), so IDEs render one
 green/red dot per fixture and
 `-run TestFixtures/issues-repro/issue_5672` filters to a single one.
-See DESIGN.md §12.7 for the design rationale.
 
 ## test.yaml schema
 
@@ -162,14 +159,14 @@ is required** — the framework rejects "fail in any way".
 When asserting on plan content (e.g. "this rollback should produce a
 forced-replacement diff"), use `expect_non_empty_plan` and/or
 `plan_match`. Both fields require `command: plan` + `expect: success`;
-both AND when combined. See DESIGN.md §17.10.
+both AND when combined.
 
 ## Repository layout
 
 ```
 testframeworkV2/
-├── DESIGN.md                              ← detailed rationale (16 sections)
 ├── README.md                              ← this file
+├── CONTRIBUTING.md                        ← step-by-step add-a-test guide
 ├── go.mod                                 ← separate module (minimal deps)
 ├── cmd/tfv2/                              ← CLI entry point
 ├── internal/
@@ -235,7 +232,7 @@ out of `<run-dir>/workdir/` after a copy.
 | `--terraform-bin <path>` | `TFV2_TERRAFORM_BIN` | override terraform binary discovery |
 | `--cache-dir <path>` | `TFV2_CACHE_DIR` | override `~/.testframeworkv2/providers` |
 | `--run-dir <path>` | — | override `~/.testframeworkv2/runs` |
-| `--repo <path>` | `TFV2_REPO` | provider repo root for `version: local`. **Auto-discovered** when unset by walking up from cwd looking for the provider repo's go.mod (DESIGN.md §12.6). Required only when auto-discovery fails AND a step uses `version: local`. |
+| `--repo <path>` | `TFV2_REPO` | provider repo root for `version: local`. **Auto-discovered** when unset by walking up from cwd looking for the provider repo's go.mod. Required only when auto-discovery fails AND a step uses `version: local`. |
 | `--no-cleanup` | `T_NO_CLEANUP=1` | skip final destroy regardless of test.yaml |
 | `--verbose` | — | print framework debug logs |
 | `-r`, `--recursive` | — | (run only) walk `<test-dir>` for nested test.yaml files |
@@ -256,19 +253,17 @@ chance to abort cleanly via `tfexec`'s context propagation.
 ## What's intentionally not in v1
 
 * `dev_overrides` support — the framework rejects them by design (they
-  silently bypass version pins; see DESIGN.md §5 / G1).
+  silently bypass version pins).
 * GPG verification of downloaded zips — accepted tradeoff with the
-  filesystem_mirror approach (DESIGN.md §16/F4). v2 fodder.
+  filesystem_mirror approach. v2 fodder.
 * Cross-arch local builds — `local` builds for the host target only.
 * Parallel test execution — v1 runs tests sequentially; v2 may add a flag.
-* Retry on cleanup destroy failure — single attempt, loud-log on failure
-  (DESIGN.md §10/G12).
+* Retry on cleanup destroy failure — single attempt, loud-log on failure.
 
 ## Contributing
 
 Fixes and additions to the framework go through standard provider PR review.
-For substantial behaviour changes, please update `DESIGN.md` first; the
-design doc is the source of truth for "why does it behave this way?"
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the step-by-step add-a-test guide.
 
 Each new test directory should:
 
@@ -277,6 +272,6 @@ Each new test directory should:
    fixture not tied to an issue);
 2. include `test.yaml` + at least one `*.tf` file in the same directory;
 3. declare the target profile level via `requires.level` in `test.yaml`,
-   not via directory placement (per v5.0 — see DESIGN.md §3 + §13 OQ3);
+   not via directory placement;
 4. document the regression / behaviour the test pins, ideally with an
    issue or PR link.

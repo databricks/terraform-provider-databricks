@@ -5,11 +5,11 @@
 # direction (v1.114.0 -> v1.113.0) instead of #5678's forward direction
 # (v1.114.0 -> v1.114.1).
 #
-# FRAMEWORK LIMITATION: bug surfaces as a destructive plan diff, not an
-# error. v1 framework matches stderr only; plan exits 0. Until a v2
-# `plan_diff_match` matcher lands, tester verifies manually that
-# step_3_rollback_to_1_113_0_force_replaces.stdout.log contains
-# "# forces replacement" and "Plan: 1 to add, 0 to change, 1 to destroy".
+# Step 3 asserts the destructive replacement via v6.3 plan-content matchers
+# (expect_non_empty_plan + plan_match 'must be replaced'). Step 4 remains
+# a comment-only manual check: the on-main fix can produce either an
+# empty plan or an in-place update, and the framework currently has no
+# negative matcher to express "must NOT contain forces replacement".
 #
 # Step 3 is plan-only for safety: applying v1.113.0 against the polluted
 # state would silently DESTROY the real token and recreate it. Test
@@ -42,12 +42,16 @@ steps:
     version: "1.113.0"
     command: plan
     expect: success
-    # Manual verification: step_3_*.stdout.log contains "# forces replacement"
-    # and "Plan: 1 to add, 0 to change, 1 to destroy".
+    expect_non_empty_plan: true
+    plan_match: 'must be replaced'
 
   - name: fixed_on_local
     version: "local"
     command: plan
     expect: success
-    # Manual verification: step_4_*.stdout.log shows "No changes" or in-place
-    # update only — no "# forces replacement" annotation.
+    # Manual verification: open step_4_*.stdout.log and confirm NO
+    # "# forces replacement" annotation. Either in-place update
+    # ("Plan: 0 to add, 1 to change, 0 to destroy") OR "No changes"
+    # is acceptable — both indicate the on-main fix at 115199fc
+    # successfully avoids the destructive replacement. The auto-
+    # forced-replacement is the bug; everything else is a fix.

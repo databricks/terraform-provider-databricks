@@ -117,7 +117,8 @@ type ToolData struct {
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
 	// "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard",
-	// "serving_endpoint", "uc_table", "vector_search_index".
+	// "serving_endpoint", "uc_table", "vector_search_index", "catalog",
+	// "schema", "supervisor_agent", "web_search".
 	ToolType types.String `tfsdk:"tool_type"`
 
 	UcConnection types.Object `tfsdk:"uc_connection"`

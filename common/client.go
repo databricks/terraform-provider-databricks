@@ -608,6 +608,17 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 			// `/api/2.0` is added by completeUrl visitor
 			r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
 				fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+			return nil
+		}
+		// Workspace-level SCIM on UnifiedHost: route by X-Databricks-Org-Id.
+		// Without this header, the unified host returns HTTP 400
+		// "Unable to load OAuth Config" because it cannot determine the target
+		// workspace from the URL alone. The Go SDK does not auto-inject this
+		// header from Config.WorkspaceID for general API calls (only specific
+		// methods like CurrentWorkspaceID do), so the provider adds it here for
+		// the SCIM path it owns.
+		if c.HostTypeForTerraform() == config.UnifiedHost && c.Config.WorkspaceID != "" {
+			r.Header.Set("X-Databricks-Org-Id", c.Config.WorkspaceID)
 		}
 		return nil
 	}

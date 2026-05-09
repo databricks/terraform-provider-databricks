@@ -563,3 +563,73 @@ func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(12345), id2)
 }
+
+func unifiedHostConfigForClientTest(t *testing.T, host string) *config.Config {
+	cfg := &config.Config{
+		Host:  host,
+		Token: "test-token",
+		HostMetadataResolver: func(ctx context.Context, _ string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.UnifiedHost}, nil
+		},
+	}
+	require.NoError(t, cfg.EnsureResolved())
+	return cfg
+}
+
+func TestScimVisitorForLevel_AccountRewritesPath(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://accounts.cloud.databricks.com",
+				AccountID: "acct-123",
+				Token:     "t",
+			},
+		},
+	}
+	r, _ := http.NewRequest("GET", "https://example/api/2.0/preview/scim/v2/Users", nil)
+	require.NoError(t, c.scimVisitorForLevel("account")(r))
+	assert.Equal(t, "/api/2.0/accounts/acct-123/scim/v2/Users", r.URL.Path)
+	assert.Empty(t, r.Header.Get("X-Databricks-Org-Id"))
+}
+
+func TestScimVisitorForLevel_WorkspaceOnUnifiedHost_AddsOrgIdHeader(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfigForClientTest(t, "https://unified.cloud.databricks.com"),
+		},
+	}
+	c.Config.WorkspaceID = "470576644108500"
+	r, _ := http.NewRequest("GET", "https://example/api/2.0/preview/scim/v2/Users", nil)
+	require.NoError(t, c.scimVisitorForLevel("workspace")(r))
+	// Path is unchanged for workspace requests.
+	assert.Equal(t, "/api/2.0/preview/scim/v2/Users", r.URL.Path)
+	// X-Databricks-Org-Id is added so the unified host can route to the workspace.
+	assert.Equal(t, "470576644108500", r.Header.Get("X-Databricks-Org-Id"))
+}
+
+func TestScimVisitorForLevel_WorkspaceOnUnifiedHost_NoWorkspaceID_NoHeader(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfigForClientTest(t, "https://unified.cloud.databricks.com"),
+		},
+	}
+	// WorkspaceID intentionally unset.
+	r, _ := http.NewRequest("GET", "https://example/api/2.0/preview/scim/v2/Users", nil)
+	require.NoError(t, c.scimVisitorForLevel("workspace")(r))
+	assert.Empty(t, r.Header.Get("X-Databricks-Org-Id"))
+}
+
+func TestScimVisitorForLevel_WorkspaceOnNonUnifiedHost_NoHeader(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://workspace.cloud.databricks.com",
+				WorkspaceID: "470576644108500",
+				Token:       "t",
+			},
+		},
+	}
+	r, _ := http.NewRequest("GET", "https://example/api/2.0/preview/scim/v2/Users", nil)
+	require.NoError(t, c.scimVisitorForLevel("workspace")(r))
+	assert.Empty(t, r.Header.Get("X-Databricks-Org-Id"))
+}

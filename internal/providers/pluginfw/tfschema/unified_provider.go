@@ -317,25 +317,57 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 }
 
 // ValidateWorkspaceID validates that the workspace client for the planned
-// workspace_id is reachable. Runs for both create and update.
+// workspace_id is reachable, but only when the user explicitly typed
+// provider_config.workspace_id in HCL.
+//
+// Reads from req.Config (the raw user config) rather than resp.Plan so that
+// values populated by drift detection or UseStateForUnknown do not trigger
+// validation. Defers when:
+//   - provider_config block is null (user did not write it),
+//   - provider_config block is unknown (still being computed),
+//   - inner workspace_id field is null or unknown
+//     (cross-resource reference like
+//     `workspace_id = databricks_mws_workspaces.this.workspace_id`),
+//   - inner workspace_id is the empty string.
+//
+// Apply-time client construction in GetWorkspaceClientForUnifiedProvider does
+// the layered fallback to Config.WorkspaceID and produces actionable API
+// errors for the deferred cases.
+//
+// Plan-time validation must not fall back to client.GetProviderWorkspaceID()
+// here, since doing so caused the v1.114.0 regressions (#5664, #5668, #5672,
+// and the cross-resource bootstrap pattern). Falling back is only appropriate
+// at apply, where the dispatcher handles it.
+//
+// We deliberately do NOT call GetWorkspaceIDResource because that helper sets
+// UnhandledUnknownAsEmpty: true and collapses the cross-resource-ref unknown
+// signal into "", which would then route into validation as if the user had
+// typed nothing.
+//
 // Call this from any PF resource's ModifyPlan that has a provider_config block.
 func ValidateWorkspaceID(ctx context.Context, client UnifiedProviderClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	var planPC types.Object
-	// Read from resp.Plan (not req.Plan) because WorkspaceDriftDetection may
-	// have updated provider_config in the plan to reflect a new workspace_id.
-	resp.Diagnostics.Append(resp.Plan.GetAttribute(ctx, path.Root("provider_config"), &planPC)...)
+	var cfgPC types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("provider_config"), &cfgPC)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := GetWorkspaceIDResource(ctx, planPC)
+	if cfgPC.IsNull() || cfgPC.IsUnknown() {
+		return
+	}
+	var ns ProviderConfig
+	diags := cfgPC.As(ctx, &ns, basetypes.ObjectAsOptions{})
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if workspaceID == "" {
-		workspaceID = client.GetProviderWorkspaceID()
+	if ns.WorkspaceID.IsNull() || ns.WorkspaceID.IsUnknown() {
+		return
 	}
-	resp.Diagnostics.Append(client.ValidateWorkspaceAccess(ctx, workspaceID)...)
+	wsID := ns.WorkspaceID.ValueString()
+	if wsID == "" {
+		return
+	}
+	resp.Diagnostics.Append(client.ValidateWorkspaceAccess(ctx, wsID)...)
 }
 
 // PopulateProviderConfigInState resolves the effective workspace ID and sets it

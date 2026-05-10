@@ -108,9 +108,17 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 // for terraform provider, the provider can be configured at account level or workspace level.
 // This implementation will be used by resources and data sources that are developed
 // over SDKv2.
+//
+// When workspaceID is empty, the provider-level workspace_id (Config.WorkspaceID)
+// is used as a fallback. This is the single point that all unified-provider
+// workspace-client lookups transit, so both SDKv2 helpers and Plugin Framework
+// callers benefit from this fallback without per-callsite duplication.
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
+	if workspaceID == "" && c.DatabricksClient != nil && c.Config != nil {
+		workspaceID = c.Config.WorkspaceID
+	}
 	// The provider can be configured at account level or workspace level.
 	if c.HostTypeForTerraform() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
@@ -124,11 +132,6 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// If workspace_id is not provided in provider_config, use the provider-level
-	// workspace_id from SDK config as fallback
-	if workspaceID == "" {
-		workspaceID = c.Config.WorkspaceID
-	}
 	if workspaceID == "" {
 		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
 			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")

@@ -582,7 +582,12 @@ func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during apply — no workspace_id available for routing.
+//
+// With the v1.114-era plan-time validator removed, the user-typed-nothing case
+// is no longer flagged at plan; it surfaces at apply time when the resource's
+// CRUD method calls WorkspaceClientUnifiedProvider, which routes through the
+// dispatcher and produces the same error message.
 
 func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
@@ -590,7 +595,6 @@ func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
 		),
-		PlanOnly: true,
 	})
 }
 

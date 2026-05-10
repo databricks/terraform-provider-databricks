@@ -775,5 +775,9 @@ func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
 		AccountID: "abc-123",
 		Host:      "https://accounts.cloud.databricks.com",
 	}.Apply(t)
-	assert.Contains(t, err.Error(), "managing workspace-level resources requires a workspace_id")
+	// Surfaces from the AccountHost guard at the top of resource_entitlement.go's
+	// Create — fires before unified-provider routing. See issue #5680 for the
+	// follow-up that removes this premature guard so provider_config { workspace_id }
+	// can route account-level providers to the workspace-level SCIM API.
+	assert.Contains(t, err.Error(), "entitlements can only be managed with a provider configured at the workspace-level")
 }

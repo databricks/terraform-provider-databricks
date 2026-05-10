@@ -668,6 +668,12 @@ func newTestResourceForCustomizeDiff() *schema.Resource {
 
 // diffCustomizeDiff runs Diff on the resource with the given state and config,
 // returning the diff and any error from CustomizeDiff.
+//
+// Uses NewResourceConfigShimmed with a cty value so that GetRawConfigAt works
+// for tests of NamespaceValidateWorkspaceID (which inspects raw config to
+// distinguish "user typed it" from "preserved from state"). When the test
+// resource has the api field (dual resources), it is included in the cty
+// schema; otherwise only name + provider_config are populated.
 func diffCustomizeDiff(
 	t *testing.T,
 	resource *schema.Resource,
@@ -678,12 +684,71 @@ func diffCustomizeDiff(
 	t.Helper()
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, ResourceName, "test_resource")
-	var is *terraform.InstanceState
+
+	ctyVal := testResourceConfigToCtyValue(resource, rawConfig)
+	block := schema.InternalMap(resource.Schema).CoreConfigSchema()
+	rc := terraform.NewResourceConfigShimmed(ctyVal, block)
+
+	// Always pass an InstanceState with RawConfig set so that
+	// ResourceDiff.GetRawConfigAt — used by NamespaceValidateWorkspaceID
+	// to detect explicit user input — sees the cty value. Mirrors the gRPC
+	// PlanResourceChange path where priorState.RawConfig = configVal.
+	is := &terraform.InstanceState{RawConfig: ctyVal}
 	if instanceState != nil {
-		is = &terraform.InstanceState{Attributes: instanceState}
+		is.Attributes = instanceState
 	}
-	rc := terraform.NewResourceConfigRaw(rawConfig)
 	return resource.Diff(ctx, is, rc, c)
+}
+
+// testResourceConfigToCtyValue converts a Go map representing a test config to
+// a cty.Value matching the resource's schema. It handles the provider_config
+// TypeList block and the optional api field used by dual resources.
+func testResourceConfigToCtyValue(resource *schema.Resource, rawConfig map[string]any) cty.Value {
+	block := schema.InternalMap(resource.Schema).CoreConfigSchema()
+	implType := block.ImpliedType()
+	vals := map[string]cty.Value{}
+	for name, attrType := range implType.AttributeTypes() {
+		raw, ok := rawConfig[name]
+		if !ok {
+			vals[name] = cty.NullVal(attrType)
+			continue
+		}
+		vals[name] = goValueToCty(raw, attrType)
+	}
+	return cty.ObjectVal(vals)
+}
+
+func goValueToCty(v any, t cty.Type) cty.Value {
+	if v == nil {
+		return cty.NullVal(t)
+	}
+	switch {
+	case t.Equals(cty.String):
+		return cty.StringVal(v.(string))
+	case t.IsListType():
+		items := v.([]any)
+		if len(items) == 0 {
+			return cty.ListValEmpty(t.ElementType())
+		}
+		elements := make([]cty.Value, 0, len(items))
+		for _, item := range items {
+			elements = append(elements, goValueToCty(item, t.ElementType()))
+		}
+		return cty.ListVal(elements)
+	case t.IsObjectType():
+		objMap := v.(map[string]any)
+		objVals := map[string]cty.Value{}
+		for fieldName, fieldType := range t.AttributeTypes() {
+			if fv, ok := objMap[fieldName]; ok {
+				objVals[fieldName] = goValueToCty(fv, fieldType)
+			} else {
+				objVals[fieldName] = cty.NullVal(fieldType)
+			}
+		}
+		return cty.ObjectVal(objVals)
+	default:
+		return cty.NullVal(t)
+	}
 }
 
 func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
@@ -749,6 +814,78 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "workspace_id mismatch")
 	assert.Contains(t, err.Error(), "please check the workspace_id provided in provider_config")
+}
+
+// TestNamespaceValidateWorkspaceID_DefersWhenConfigAbsent asserts the validator
+// returns nil when the user did not write provider_config in HCL, even when
+// the provider-level Config.WorkspaceID is set to a value that would mismatch
+// the cached workspace ID. This is the v1.114-regression-fixing path: validators
+// must not fall back to Config.WorkspaceID at plan time.
+func TestNamespaceValidateWorkspaceID_DefersWhenConfigAbsent(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://test.cloud.databricks.com",
+				Token:       "test-token",
+				WorkspaceID: "123", // mismatching auto-resolved value
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     999999,
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		// no provider_config in raw config
+	}, c)
+	assert.NoError(t, err, "validator must defer when provider_config is not written by user")
+}
+
+// TestNamespaceValidateWorkspaceID_DefersWhenInnerEmpty asserts the validator
+// returns nil when provider_config is written but workspace_id is empty —
+// matches the schema-level "user wrote a placeholder block" case. The empty
+// string is still a known value, but the validator treats it like an absent
+// value because there is nothing concrete to validate.
+//
+// Note: cross-resource references (workspace_id = databricks_mws_workspaces.this.workspace_id)
+// produce an *unknown* cty value at plan time. terraform-plugin-sdk's
+// NewResourceConfigShimmed cannot synthesize cty.UnknownVal directly, but the
+// underlying GetRawConfigAt code path is exercised by the IsKnown() check in
+// workspaceIDFromRawDiffConfig, which has its own unit coverage.
+func TestNamespaceValidateWorkspaceID_DefersWhenInnerEmpty(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	mockWS := &databricks.WorkspaceClient{
+		Config: &config.Config{
+			Host:  "https://test.cloud.databricks.com",
+			Token: "test-token",
+		},
+	}
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://test.cloud.databricks.com",
+				Token:       "test-token",
+				WorkspaceID: "123", // mismatching auto-resolved value
+			},
+		},
+		cachedWorkspaceClient: mockWS,
+		cachedWorkspaceID:     999999,
+	}
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "",
+			},
+		},
+	}, c)
+	assert.NoError(t, err, "validator must defer when inner workspace_id is empty")
 }
 
 func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {
@@ -1119,7 +1256,26 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 			description:   "Should return error when neither workspace_id nor provider_config.workspace_id is set",
 		},
 		{
-			name: "workspace-level with workspace_id - ignores it and uses workspace client",
+			name: "workspace-level with matching workspace_id - validates and uses workspace client",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:        "https://workspace.test.databricks.com",
+						Token:       "test-token",
+						WorkspaceID: "123456",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     123456,
+			},
+			expectError: false,
+			description: "Workspace-level provider falls back to Config.WorkspaceID; validation passes when it matches the cached workspace ID",
+		},
+		{
+			name: "workspace-level with mismatching workspace_id - returns mismatch error",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -1134,8 +1290,9 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     123456,
 			},
-			expectError: false,
-			description: "Workspace-level provider should ignore workspace_id and use configured workspace",
+			expectError:   true,
+			errorContains: "workspace_id mismatch",
+			description:   "Workspace-level provider with Config.WorkspaceID that doesn't match the cached workspace ID errors at apply",
 		},
 	}
 

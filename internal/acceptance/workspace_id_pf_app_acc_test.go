@@ -581,12 +581,17 @@ func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during apply — no workspace_id available for routing.
+//
+// With the v1.114-era plan-time validator removed, the user-typed-nothing case
+// is no longer flagged at plan; it surfaces at apply time when the resource's
+// Create calls GetWorkspaceClientForUnifiedProviderWithDiagnostics, which
+// wraps the dispatcher's "managing workspace-level resources..." error with
+// "failed to get workspace client".
 
 func TestMwsAccWorkspaceIDApp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: appWithProviderBlock("", ""),
-		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),

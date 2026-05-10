@@ -107,19 +107,9 @@ type Resource struct {
 	// account and workspace level (has an "api" field from AddApiField).
 	// When true, workspace-tracking logic is skipped for account-level operations.
 	IsDual bool
-	// SkipProviderConfigStatePopulation marks resources whose schema carries the legacy
-	// provider_config block but which have no workspace context (e.g. account-
-	// only data sources defined via the deprecated common.DataResource helper).
-	// When true, the post-Read populateProviderConfigInState hook is skipped so
-	// it does not try to resolve a workspace ID that does not exist.
-	// See https://github.com/databricks/terraform-provider-databricks/issues/5672.
-	//
-	// TODO: replace this (and IsDual / hasProviderConfig schema-presence
-	// inference) with a complete resource-level annotation describing the
-	// resource's API level (workspace / account / dual / account-only-legacy),
-	// and route the post-Read hook + workspace-tracking logic from that
-	// annotation instead of inferring behavior from schema shape and ad-hoc
-	// boolean flags.
+	// SkipProviderConfigStatePopulation opts out of the post-Read hook that
+	// populates provider_config in state. Set this for account-level data
+	// sources that carry a provider_config block but lack workspace context.
 	SkipProviderConfigStatePopulation bool
 }
 

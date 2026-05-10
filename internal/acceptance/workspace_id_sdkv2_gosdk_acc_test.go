@@ -85,9 +85,11 @@ func directoryWithProviderBlock(providerAttrs, providerConfig string) string {
 // so invalid values are caught during workspace client creation.
 func TestMwsAccWorkspaceID_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
-		Template:    directoryWithProviderBlock(`workspace_id = "invalid"`, ""),
+		Template: directoryWithProviderBlock(`workspace_id = "invalid"`, ""),
+		// Surfaces at apply via the dispatcher's Config.WorkspaceID fallback into
+		// parseWorkspaceID, since the plan-time validator only inspects user-typed
+		// provider_config.workspace_id.
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-		PlanOnly:    true,
 	})
 }
 
@@ -571,8 +573,11 @@ func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 
 func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    directoryWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
+		Template: directoryWithProviderBlock(`workspace_id = "12345"`, ""),
+		// Validator defers when the user did not type provider_config.workspace_id;
+		// the dispatcher's Config.WorkspaceID fallback at apply triggers
+		// validateWorkspaceIDFromProvider which catches the mismatch — protecting
+		// against silent miscreation in the wrong workspace.
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -582,7 +587,12 @@ func TestAccWorkspaceID_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during apply — no workspace_id available for routing.
+//
+// With the v1.114-era plan-time validator removed, the user-typed-nothing case
+// is no longer flagged at plan; it surfaces at apply time when the resource's
+// CRUD method calls WorkspaceClientUnifiedProvider, which routes through the
+// dispatcher and produces the same error message.
 
 func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
@@ -590,7 +600,6 @@ func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
 		),
-		PlanOnly: true,
 	})
 }
 

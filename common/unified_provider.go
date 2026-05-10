@@ -179,25 +179,27 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 }
 
 // NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
-// is reachable during the plan phase.
-// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
-// For account-level providers, it checks that the workspace is accessible from the account.
-// This is a no-op when provider_config is not set.
+// is reachable during the plan phase, but only when the user explicitly typed
+// provider_config.workspace_id in HCL.
+//
+// When the user did not write provider_config, or wrote it but the workspace_id
+// is unknown (e.g. cross-resource reference like
+// `workspace_id = databricks_mws_workspaces.this.workspace_id`), the validator
+// defers — apply-time client construction in
+// GetWorkspaceClientForUnifiedProvider does the layered fallback to
+// Config.WorkspaceID and produces actionable API errors.
+//
+// Plan-time validation here is purely a fail-fast UX hint for users who typed a
+// concrete workspace_id; it must not fall back to Config.WorkspaceID itself,
+// since doing so caused regressions in v1.114.0 (see #5664, #5668, #5672, the
+// cross-resource bootstrap pattern).
 func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
-	if newWorkspaceID == nil {
+	wsID, hasExplicit := workspaceIDFromRawDiffConfig(d)
+	if !hasExplicit || wsID == "" {
 		return nil
 	}
-	newWSID := newWorkspaceID.(string)
-	// Fall back to provider-level workspace_id only if not set on the resource.
-	if newWSID == "" {
-		newWSID = c.Config.WorkspaceID
-	}
-	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, wsID)
+	return err
 }
 
 // workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config

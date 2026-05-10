@@ -50,7 +50,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProviderWorkspaceID = "123456789"
+const (
+	testProviderWorkspaceID    = "123456789"
+	testProviderWorkspaceIDInt = int64(123456789)
+)
 
 // nolint
 func getJSONObject(filename string) any {
@@ -3400,6 +3403,7 @@ func TestAlertsV2Export(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

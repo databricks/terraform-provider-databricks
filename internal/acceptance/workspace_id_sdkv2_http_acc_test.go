@@ -85,11 +85,13 @@ func notebookWithProviderBlock(providerAttrs, providerConfig string) string {
 
 // TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
+// Surfaces at apply via the dispatcher's Config.WorkspaceID fallback into
+// parseWorkspaceID, since the plan-time validator only inspects user-typed
+// provider_config.workspace_id.
 func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    notebookWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-		PlanOnly:    true,
 	})
 }
 
@@ -573,8 +575,11 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 
 func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    notebookWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
+		Template: notebookWithProviderBlock(`workspace_id = "12345"`, ""),
+		// Validator defers when the user did not type provider_config.workspace_id;
+		// the dispatcher's Config.WorkspaceID fallback at apply triggers
+		// validateWorkspaceIDFromProvider which catches the mismatch — protecting
+		// against silent miscreation in the wrong workspace.
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -584,22 +589,22 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during apply — no workspace_id available for routing.
 //
-// Unlike the Go SDK path (TestMwsAccWorkspaceID_NoDefaultNoOverride), which
-// returns a clear "no workspace_id" error via GetWorkspaceClientForUnifiedProvider,
-// the HTTP path (DatabricksClientForUnifiedProvider) cannot validate early because
-// it doesn't know whether the caller needs a workspace-scoped or account-scoped
-// client. It returns the account-level client, which then fails at the API layer
-// when the resource attempts a workspace-level operation.
+// With the v1.114-era plan-time validator removed, the user-typed-nothing case
+// is no longer flagged at plan. The HTTP path (DatabricksClientForUnifiedProvider)
+// returns the account-level client unchanged when no workspace_id is available,
+// so the failure surfaces at the API layer when the notebook import call is
+// routed to the accounts host. The exact error text comes from the API response,
+// so we match on the wrapped "cannot create notebook" prefix that nicerError
+// adds, which covers any underlying API failure.
 
 func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: notebookWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
+			`cannot create notebook`,
 		),
-		PlanOnly: true,
 	})
 }
 

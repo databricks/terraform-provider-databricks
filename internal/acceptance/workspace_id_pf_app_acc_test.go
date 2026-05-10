@@ -89,8 +89,10 @@ func appWithProviderBlock(providerAttrs, providerConfig string) string {
 // invalid workspace_id values in the provider block are rejected.
 func TestMwsAccWorkspaceIDApp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
-		Template:    appWithProviderBlock(`workspace_id = "invalid"`, ""),
-		PlanOnly:    true,
+		Template: appWithProviderBlock(`workspace_id = "invalid"`, ""),
+		// Surfaces at apply via the dispatcher's Config.WorkspaceID fallback into
+		// parseWorkspaceID, since the plan-time validator only inspects user-typed
+		// provider_config.workspace_id.
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
@@ -570,8 +572,11 @@ func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 
 func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    appWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
+		Template: appWithProviderBlock(`workspace_id = "12345"`, ""),
+		// Validator defers when the user did not type provider_config.workspace_id;
+		// the dispatcher's Config.WorkspaceID fallback at apply triggers
+		// validateWorkspaceIDFromProvider which catches the mismatch — protecting
+		// against silent miscreation in the wrong workspace.
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -581,12 +586,17 @@ func TestAccWorkspaceIDApp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during apply — no workspace_id available for routing.
+//
+// With the v1.114-era plan-time validator removed, the user-typed-nothing case
+// is no longer flagged at plan; it surfaces at apply time when the resource's
+// Create calls GetWorkspaceClientForUnifiedProviderWithDiagnostics, which
+// wraps the dispatcher's "managing workspace-level resources..." error with
+// "failed to get workspace client".
 
 func TestMwsAccWorkspaceIDApp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: appWithProviderBlock("", ""),
-		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),

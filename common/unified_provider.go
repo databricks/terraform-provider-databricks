@@ -128,11 +128,23 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	// Determine the new effective workspace ID by inspecting the raw config.
 	// With Optional+Computed, d.GetChange may return the preserved state value
 	// rather than reflecting the actual config, so we check the raw config directly.
-	configWsID, configHasProviderConfig := workspaceIDFromRawDiffConfig(d)
+	configWsID, configHasProviderConfig, configIsKnown := workspaceIDFromRawDiffConfig(d)
+
+	// Explicit-but-unknown: user wrote provider_config.workspace_id as a
+	// reference that isn't resolved yet (e.g. `workspace_id =
+	// databricks_mws_workspaces.foo.workspace_id` for a workspace being created
+	// in the same plan). Defer all force-new and drift decisions; falling back
+	// to c.Config.WorkspaceID here would silently substitute a different value
+	// than the user wrote, causing speculative ForceNew or spurious
+	// "managing workspace-level resources requires a workspace_id" errors on
+	// account-host providers. Apply will see the resolved value and act on it.
+	if configHasProviderConfig && !configIsKnown {
+		return nil
+	}
 
 	var newEffective string
 	if configHasProviderConfig {
-		// Config explicitly sets provider_config.workspace_id
+		// Config explicitly sets provider_config.workspace_id to a known value.
 		newEffective = configWsID
 	} else {
 		// Config does not have provider_config; use workspace_id
@@ -194,8 +206,8 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 // since doing so caused regressions in v1.114.0 (see #5664, #5668, #5672, the
 // cross-resource bootstrap pattern).
 func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	wsID, hasExplicit := workspaceIDFromRawDiffConfig(d)
-	if !hasExplicit || wsID == "" {
+	wsID, explicit, known := workspaceIDFromRawDiffConfig(d)
+	if !explicit || !known || wsID == "" {
 		return nil
 	}
 	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, wsID)
@@ -203,22 +215,45 @@ func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c
 }
 
 // workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config
-// of a ResourceDiff. Returns the workspace ID string and whether provider_config
-// is present in the config.
-func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
+// of a ResourceDiff. Three distinct states are surfaced separately so callers
+// can disambiguate "user did not write provider_config" from "user wrote
+// provider_config.workspace_id as an unknown reference (not yet resolved)":
+//
+//   - explicit=false                 → user did not write provider_config
+//     (cty.Null). Returned value is "". Callers should fall back to whatever
+//     other source of workspace_id they have (e.g. c.Config.WorkspaceID).
+//   - explicit=true,  known=false    → user wrote provider_config.workspace_id
+//     but the value is unknown at plan time (e.g.
+//     `workspace_id = databricks_mws_workspaces.foo.workspace_id` for a
+//     workspace being created in the same plan). Returned value is "".
+//     Callers should DEFER any decision that depends on the value —
+//     Terraform Core will show "(known after apply)" in the diff, and apply
+//     will see the resolved value.
+//   - explicit=true,  known=true     → user wrote a literal string. Returned
+//     value is the literal. Callers can use it directly.
+//
+// Distinguishing the unknown case prevents speculative ForceNew (silently
+// substituting c.Config.WorkspaceID for an unknown ref and comparing against
+// state) and avoids spurious "managing workspace-level resources requires a
+// workspace_id" errors on account-host providers where the lazy-resolution
+// fallback can't run.
+func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (value string, explicit, known bool) {
 	path := cty.Path{
 		cty.GetAttrStep{Name: "provider_config"},
 		cty.IndexStep{Key: cty.NumberIntVal(0)},
 		cty.GetAttrStep{Name: "workspace_id"},
 	}
 	rawValue, diags := d.GetRawConfigAt(path)
-	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
-		return "", false
+	if diags.HasError() || rawValue.IsNull() {
+		return "", false, true
+	}
+	if !rawValue.IsKnown() {
+		return "", true, false
 	}
 	if rawValue.Type() == cty.String {
-		return rawValue.AsString(), true
+		return rawValue.AsString(), true, true
 	}
-	return "", false
+	return "", false, true
 }
 
 // ValidateApiLevelForUnifiedHost fails the plan when the provider is configured

@@ -2,6 +2,7 @@ package qa
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,7 +14,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -534,8 +535,8 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 
 func diagsToString(diags diag.Diagnostics) string {
 	if diags.HasError() {
-		sort.Slice(diags, func(i, j int) bool {
-			return diags[i].Detail < diags[j].Detail
+		slices.SortFunc(diags, func(a, b diag.Diagnostic) int {
+			return cmp.Compare(a.Detail, b.Detail)
 		})
 		issues := []string{}
 		for _, diag := range diags {

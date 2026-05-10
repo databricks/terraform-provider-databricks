@@ -1292,7 +1292,7 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 			},
 			expectError:   true,
 			errorContains: "workspace_id mismatch",
-			description:   "Workspace-level provider with Config.WorkspaceID that doesn't match the cached workspace ID errors at apply",
+			description:   "Workspace-level provider with Config.WorkspaceID that doesn't match the cached workspace ID errors at apply — protecting against state being written for the wrong workspace",
 		},
 	}
 

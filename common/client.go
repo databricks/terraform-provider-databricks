@@ -113,6 +113,12 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 // is used as a fallback. This is the single point that all unified-provider
 // workspace-client lookups transit, so both SDKv2 helpers and Plugin Framework
 // callers benefit from this fallback without per-callsite duplication.
+//
+// On workspace-level providers this also engages validateWorkspaceIDFromProvider
+// and catches the case where the user typed a workspace_id at provider level
+// that does not match the workspace the host actually points at — preventing
+// the resource from being created in workspace A while state records it as
+// workspace B.
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {

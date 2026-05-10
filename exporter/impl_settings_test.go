@@ -62,6 +62,7 @@ func TestWorkspaceSettingV2Export(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -124,6 +125,7 @@ func TestWorkspaceSettingV2ExportWithBooleanValue(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -181,6 +183,7 @@ func TestWorkspaceSettingV2ExportWithStringValue(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -238,6 +241,7 @@ func TestWorkspaceSettingV2ExportWithIntegerValue(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -315,6 +319,7 @@ func TestWorkspaceSettingV2ExportWithAutomaticClusterUpdate(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

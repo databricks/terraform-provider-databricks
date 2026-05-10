@@ -85,8 +85,10 @@ func tagPolicyWithProviderBlock(providerAttrs, providerConfig string) string {
 // invalid workspace_id values in the provider block are rejected.
 func TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
-		Template:    tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
-		PlanOnly:    true,
+		Template: tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
+		// Surfaces at apply via the dispatcher's Config.WorkspaceID fallback into
+		// parseWorkspaceID, since the plan-time validator only inspects user-typed
+		// provider_config.workspace_id.
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
 	})
 }
@@ -566,8 +568,11 @@ func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 
 func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    tagPolicyWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
+		Template: tagPolicyWithProviderBlock(`workspace_id = "12345"`, ""),
+		// Validator defers when the user did not type provider_config.workspace_id;
+		// the dispatcher's Config.WorkspaceID fallback at apply triggers
+		// validateWorkspaceIDFromProvider which catches the mismatch — protecting
+		// against silent miscreation in the wrong workspace.
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }

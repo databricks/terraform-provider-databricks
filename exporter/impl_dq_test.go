@@ -46,6 +46,7 @@ func TestQualityMonitorV2Export(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -128,6 +129,7 @@ func TestQualityMonitorV2ExportWithMultipleMonitors(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -180,6 +182,7 @@ func TestDataQualityMonitorsExport(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		client.Config.WorkspaceID = testProviderWorkspaceID
+		client.SetCachedWorkspaceID(testProviderWorkspaceIDInt)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

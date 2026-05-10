@@ -85,11 +85,13 @@ func notebookWithProviderBlock(providerAttrs, providerConfig string) string {
 
 // TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID tests that
 // invalid workspace_id values in the provider block are rejected.
+// Surfaces at apply via the dispatcher's Config.WorkspaceID fallback into
+// parseWorkspaceID, since the plan-time validator only inspects user-typed
+// provider_config.workspace_id.
 func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
 	AccountLevel(t, Step{
 		Template:    notebookWithProviderBlock(`workspace_id = "invalid"`, ""),
 		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-		PlanOnly:    true,
 	})
 }
 
@@ -573,8 +575,11 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 
 func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
-		Template:    notebookWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
+		Template: notebookWithProviderBlock(`workspace_id = "12345"`, ""),
+		// Validator defers when the user did not type provider_config.workspace_id;
+		// the dispatcher's Config.WorkspaceID fallback at apply triggers
+		// validateWorkspaceIDFromProvider which catches the mismatch — protecting
+		// against silent miscreation in the wrong workspace.
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }

@@ -3,7 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -103,12 +103,12 @@ func DataSourceGroup() common.Resource {
 			}
 			this.ExternalID = group.ExternalID
 			this.AclPrincipalID = fmt.Sprintf("groups/%s", this.DisplayName)
-			sort.Strings(this.Groups)
-			sort.Strings(this.Members)
-			sort.Strings(this.Users)
-			sort.Strings(this.ChildGroups)
-			sort.Strings(this.ServicePrincipals)
-			sort.Strings(this.InstanceProfiles)
+			slices.Sort(this.Groups)
+			slices.Sort(this.Members)
+			slices.Sort(this.Users)
+			slices.Sort(this.ChildGroups)
+			slices.Sort(this.ServicePrincipals)
+			slices.Sort(this.InstanceProfiles)
 			err = common.StructToData(this, s, d)
 			if err != nil {
 				return err

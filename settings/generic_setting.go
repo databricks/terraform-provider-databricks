@@ -357,23 +357,6 @@ func (aw accountWorkspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*s
 
 var _ accountWorkspaceSettingDefinition[struct{}] = accountWorkspaceSetting[struct{}]{}
 
-// deprecateProviderConfigInSchema marks the auto-injected provider_config
-// block (added by AddNamespaceInSchema) and its nested workspace_id as
-// deprecated for account-only settings. These resources have no workspace
-// context, so the field has never had a meaningful effect.
-func deprecateProviderConfigInSchema(s map[string]*schema.Schema) {
-	pc, ok := s["provider_config"]
-	if !ok {
-		return
-	}
-	pc.Deprecated = "provider_config has no effect on this account-only setting and will be removed in a future major release."
-	if elem, ok := pc.Elem.(*schema.Resource); ok {
-		if ws, ok := elem.Schema["workspace_id"]; ok {
-			ws.Deprecated = "workspace_id is ignored for account-only settings."
-		}
-	}
-}
-
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
 		defn.GetCustomizeSchemaFunc())
@@ -384,9 +367,11 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 	// that does not exist (account host) and fail. Mark these resources to
 	// skip the hook and deprecate the auto-injected provider_config block.
 	// See https://github.com/databricks/terraform-provider-databricks/issues/5672.
-	_, isAccountOnly := defn.(accountSettingDefinition[T])
-	if isAccountOnly {
-		deprecateProviderConfigInSchema(resourceSchema)
+	var isAccountOnly bool
+	switch defn.(type) {
+	case accountSettingDefinition[T]:
+		isAccountOnly = true
+		common.DeprecateProviderConfigInSchema(resourceSchema)
 	}
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}

@@ -14,6 +14,12 @@ import (
 // account-level profiles is normalized to an empty string at provider configure
 // time. Without this normalization, downstream parseWorkspaceID call sites fail
 // with a strconv.ParseInt error.
+//
+// Both subtests set WorkspaceID to a non-zero value, so the SDK's ConfigAttributes
+// env loader (which only fills zero fields) cannot pollute the assertion from an
+// ambient DATABRICKS_WORKSPACE_ID. The HostMetadataResolver stub suppresses the
+// /.well-known/databricks-config HTTP fetch; the host is a fake .invalid TLD as
+// defense in depth.
 func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -30,20 +36,17 @@ func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 			workspaceID:         "1234567890",
 			expectedWorkspaceID: "1234567890",
 		},
-		{
-			name:                "empty workspace_id stays empty",
-			workspaceID:         "",
-			expectedWorkspaceID: "",
-		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := &config.Config{
-				Host:        "https://accounts.cloud.databricks.com",
-				AccountID:   "00000000-0000-0000-0000-000000000000",
+				Host:        "https://test.invalid",
 				Token:       "test-token",
 				WorkspaceID: tc.workspaceID,
+				HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
+					return nil, nil
+				},
 			}
 			pc, err := PrepareDatabricksClient(context.Background(), cfg, nil)
 			require.NoError(t, err)

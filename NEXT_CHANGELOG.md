@@ -18,6 +18,7 @@
 ### Exporter
 
 * Support `alert_task` when exporting `databricks_job` ([#5629](https://github.com/databricks/terraform-provider-databricks/pull/5629)).
+* Add support for exporting Agent Bricks resources ([#5704](https://github.com/databricks/terraform-provider-databricks/issues/5704)).
 
 ### Internal Changes
 

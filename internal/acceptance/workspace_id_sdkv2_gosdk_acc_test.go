@@ -604,6 +604,54 @@ func TestMwsAccWorkspaceID_NoDefaultNoOverride(t *testing.T) {
 }
 
 // ==========================================
+// Unknown workspace_id reference — bootstrap pattern (end-to-end)
+// ==========================================
+//
+// The canonical bootstrap scenario: a brand-new serverless workspace is
+// created in the same plan as a workspace-level resource that references the
+// workspace's computed workspace_id via provider_config. At plan time the ref
+// is unknown; the validator and force-new detector must both defer.
+// Terraform Core renders the diff as "(known after apply)"; at apply the
+// workspace is provisioned first, then the directory is created in the
+// resolved workspace via the unified-provider dispatcher.
+//
+// Without the fix, namespaceForceNew folds "explicit-but-unknown" into
+// "absent", falls back to the empty c.Config.WorkspaceID on an account-host
+// provider, then takes the lazy-resolution branch which fails because account
+// hosts have no workspace context — surfacing as
+// `resource has provider_config.workspace_id = "..." in state, but managing
+// workspace-level resources requires a workspace_id`.
+//
+// The TestCheckResourceAttrPair on the state confirms that the directory's
+// recorded workspace_id is exactly the one the freshly-created workspace
+// reports — proving the apply-time routing went where the ref pointed.
+
+func TestMwsAccWorkspaceID_UnknownWorkspaceIDRef(t *testing.T) {
+	AccountLevel(t, Step{
+		Template: `
+			resource "databricks_mws_workspaces" "src" {
+				account_id     = "{env.DATABRICKS_ACCOUNT_ID}"
+				workspace_name = "dwsid-{var.STICKY_RANDOM}"
+				aws_region     = "{env.AWS_REGION}"
+				compute_mode   = "SERVERLESS"
+			}
+			resource "databricks_directory" "test" {
+				path = "/Shared/dwsid-test-{var.STICKY_RANDOM}"
+				provider_config {
+					workspace_id = databricks_mws_workspaces.src.workspace_id
+				}
+			}
+		`,
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttrPair(
+				directoryResource, "provider_config.0.workspace_id",
+				"databricks_mws_workspaces.src", "workspace_id",
+			),
+		),
+	})
+}
+
+// ==========================================
 // Provider Upgrade (Existing Resources, No Config Changes)
 // ==========================================
 //

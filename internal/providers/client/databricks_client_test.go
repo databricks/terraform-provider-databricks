@@ -9,17 +9,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// noopLoader is a no-op config.Loader installed in tests to suppress the SDK's
+// default loader chain (env-var attributes + ~/.databrickscfg). The SDK injects
+// its defaults only when Loaders is empty (see config.go EnsureResolved), so
+// providing this single no-op keeps EnsureResolved from reading ambient state
+// — protecting the test from a developer's DATABRICKS_* env vars or a
+// ~/.databrickscfg that would otherwise trigger
+// "more than one authorization method configured" when combined with our
+// explicit Token, and from any other unrelated fields the loaders might fill.
+// Mirrors the unexported noopLoader the SDK already defines for its own
+// internal API client.
+type noopLoader struct{}
+
+func (noopLoader) Name() string                   { return "noop" }
+func (noopLoader) Configure(*config.Config) error { return nil }
+
 // TestPrepareDatabricksClient_NormalizesNoneWorkspaceID verifies that the
 // "none" sentinel that the Databricks CLI writes to ~/.databrickscfg for
 // account-level profiles is normalized to an empty string at provider configure
 // time. Without this normalization, downstream parseWorkspaceID call sites fail
 // with a strconv.ParseInt error.
 //
-// Both subtests set WorkspaceID to a non-zero value, so the SDK's ConfigAttributes
-// env loader (which only fills zero fields) cannot pollute the assertion from an
-// ambient DATABRICKS_WORKSPACE_ID. The HostMetadataResolver stub suppresses the
-// /.well-known/databricks-config HTTP fetch; the host is a fake .invalid TLD as
-// defense in depth.
+// The test is hermetic against ambient developer state: Loaders is set to a
+// single no-op to suppress env-var and databrickscfg reads, HostMetadataResolver
+// is stubbed so EnsureResolved does not fetch /.well-known/databricks-config
+// or mutate config fields from discovery, and the host is a fake .invalid TLD.
 func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -44,6 +58,7 @@ func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 				Host:        "https://test.invalid",
 				Token:       "test-token",
 				WorkspaceID: tc.workspaceID,
+				Loaders:     []config.Loader{noopLoader{}},
 				HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
 					return nil, nil
 				},

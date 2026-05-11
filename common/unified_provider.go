@@ -62,6 +62,26 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 	return m
 }
 
+// DeprecateProviderConfigInSchema marks the auto-injected provider_config block
+// (added by AddNamespaceInSchema) and its nested workspace_id as deprecated for
+// account-only resources/data sources. These resources have no workspace
+// context, so the field has never had a meaningful effect; pair this call with
+// SkipProviderConfigStatePopulation = true on the common.Resource to ensure
+// the post-Read provider_config hook is skipped as well. See
+// https://github.com/databricks/terraform-provider-databricks/issues/5672.
+func DeprecateProviderConfigInSchema(s map[string]*schema.Schema) {
+	pc, ok := s["provider_config"]
+	if !ok {
+		return
+	}
+	pc.Deprecated = "provider_config has no effect on this account-only resource and will be removed in a future major release."
+	if elem, ok := pc.Elem.(*schema.Resource); ok {
+		if ws, ok := elem.Schema["workspace_id"]; ok {
+			ws.Deprecated = "workspace_id is ignored for account-only resources."
+		}
+	}
+}
+
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
 // for a single schema.
 func NamespaceCustomizeSchema(s *CustomizableSchema) {

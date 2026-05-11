@@ -622,7 +622,7 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: alert_v2_id, app_name, authorization, cluster_id, cluster_policy_id, dashboard_id, database_instance_name, database_project_name, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
+	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: alert_v2_id, app_name, authorization, cluster_id, cluster_policy_id, dashboard_id, database_instance_name, database_project_name, directory_id, directory_path, experiment_id, instance_pool_id, job_id, knowledge_assistant_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, supervisor_agent_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
@@ -1917,4 +1917,148 @@ func TestAccessControlHashFunction(t *testing.T) {
 	hash4 := acSchema.Set(elem4)
 	hash5 := acSchema.Set(elem5)
 	assert.Equal(t, hash4, hash5, "Service principal elements with and without empty fields should have the same hash")
+}
+
+func TestResourcePermissionsCreate_KnowledgeAssistant(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.SetObjectPermissions{
+				RequestObjectId:   "ka-abc",
+				RequestObjectType: "knowledge-assistants",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_QUERY",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+				},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "ka-abc",
+				RequestObjectType: "knowledge-assistants",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/knowledge-assistants/ka-abc",
+				ObjectType: "knowledge-assistants",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_QUERY",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"knowledge_assistant_id": "ka-abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_QUERY",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_QUERY", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_KnowledgeAssistant_InvalidLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		knowledge_assistant_id = "ka-abc"
+		access_control {
+			user_name        = "ben"
+			permission_level = "CAN_VIEW"
+		}
+		`,
+	}.ExpectError(t, "permission_level CAN_VIEW is not supported with knowledge_assistant_id objects; allowed levels: CAN_MANAGE, CAN_QUERY")
+}
+
+func TestResourcePermissionsCreate_SupervisorAgent(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.SetObjectPermissions{
+				RequestObjectId:   "sa-abc",
+				RequestObjectType: "supervisor-agents",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_QUERY",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+				},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "sa-abc",
+				RequestObjectType: "supervisor-agents",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/supervisor-agents/sa-abc",
+				ObjectType: "supervisor-agents",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_QUERY",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"supervisor_agent_id": "sa-abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_QUERY",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_QUERY", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SupervisorAgent_InvalidLevel(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		supervisor_agent_id = "sa-abc"
+		access_control {
+			user_name        = "ben"
+			permission_level = "CAN_VIEW"
+		}
+		`,
+	}.ExpectError(t, "permission_level CAN_VIEW is not supported with supervisor_agent_id objects; allowed levels: CAN_MANAGE, CAN_QUERY")
 }

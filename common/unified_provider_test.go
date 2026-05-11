@@ -782,16 +782,20 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// unknownValueSentinel is the legacy SDK marker for "unknown at plan time" —
+// the same constant as hcl2shim.UnknownVariableValue, which lives in an
+// internal/ package and so can't be imported by name. Passing this string in
+// rawConfig through NewResourceConfigRaw produces a ResourceDiff whose
+// NewValueKnown returns false for the corresponding key, modelling values
+// like databricks_mws_workspaces.ws.workspace_id that aren't resolved until
+// apply.
+const unknownValueSentinel = "74D93920-ED26-11E3-AC10-0800200C9A66"
+
 // TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation verifies that
 // when provider_config.workspace_id references a value that's unknown at plan
 // time (e.g., it points at another resource being created in the same plan,
 // like databricks_mws_workspaces.ws.workspace_id), validation is deferred to
 // apply time instead of falling back to c.Config.WorkspaceID and erroring.
-//
-// The magic string "74D93920-ED26-11E3-AC10-0800200C9A66" is the legacy SDK
-// sentinel for an unknown value (see hcl2shim.UnknownVariableValue); passing
-// it through NewResourceConfigRaw produces a ResourceDiff with NewValueKnown
-// returning false for the corresponding key.
 //
 // The Config below uses a placeholder Host that would fail a real parse and a
 // WorkspaceID intentionally set to something parseInt couldn't handle — if the
@@ -814,7 +818,7 @@ func TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation(t *testing.T
 		"name": "test",
 		"provider_config": []interface{}{
 			map[string]interface{}{
-				"workspace_id": "74D93920-ED26-11E3-AC10-0800200C9A66",
+				"workspace_id": unknownValueSentinel,
 			},
 		},
 	}, c)

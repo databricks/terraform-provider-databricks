@@ -79,6 +79,10 @@ Exactly one of the following attributes must be provided:
   * `database_name` - The name of database.
   * `instance_name` - The name of database instance.
   * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
+* `postgres` attribute
+  * `branch` - The resource path of the Lakebase Autoscaling branch to grant permission on (e.g. `projects/proj-abc123/branches/branch-xyz789`).
+  * `database` - (Optional) The resource path of a specific database within the branch to grant permission on (e.g. `projects/proj-abc123/branches/branch-xyz789/databases/db-456`). If omitted, permission applies to the branch.
+  * `permission` - Permission to grant on the Lakebase Autoscaling branch or database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
 * `genie_space` attribute
   * `name` - The name of Genie Space.
   * ``permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.

@@ -600,6 +600,50 @@ func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
 }
 
 // ==========================================
+// Unknown workspace_id reference — bootstrap pattern (end-to-end)
+// ==========================================
+//
+// The canonical bootstrap scenario: a brand-new serverless workspace is
+// created in the same plan as a PF resource that references the workspace's
+// computed workspace_id via provider_config. At plan time the ref is unknown;
+// PF WorkspaceDriftDetection and ValidateWorkspaceID must both defer.
+// Terraform Core renders the diff as "(known after apply)"; at apply the
+// workspace is provisioned first, then the tag_policy is created in the
+// resolved workspace via the PF client construction path.
+//
+// Without the fix, WorkspaceDriftDetection's outer-block / inner-attribute
+// unknown collapses into "" (via UnhandledUnknownAsEmpty), falls back to
+// client.GetProviderWorkspaceID() (empty on account host), then
+// client.CurrentWorkspaceID(ctx) (errors on account host) — surfacing as a
+// "Missing workspace_id" diagnostic.
+
+func TestMwsAccWorkspaceIDTagPolicy_UnknownWorkspaceIDRef(t *testing.T) {
+	AccountLevel(t, Step{
+		Template: `
+			resource "databricks_mws_workspaces" "src" {
+				account_id     = "{env.DATABRICKS_ACCOUNT_ID}"
+				workspace_name = "dwsid-{var.STICKY_RANDOM}"
+				aws_region     = "{env.AWS_REGION}"
+				compute_mode   = "SERVERLESS"
+			}
+			resource "databricks_tag_policy" "test" {
+				tag_key     = "dwsid-tp-{var.STICKY_RANDOM}"
+				description = "workspace_id acceptance test"
+				provider_config = {
+					workspace_id = databricks_mws_workspaces.src.workspace_id
+				}
+			}
+		`,
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttrPair(
+				tagPolicyResource, "provider_config.workspace_id",
+				"databricks_mws_workspaces.src", "workspace_id",
+			),
+		),
+	})
+}
+
+// ==========================================
 // Provider Upgrade (Existing Resources, No Config Changes)
 // ==========================================
 //

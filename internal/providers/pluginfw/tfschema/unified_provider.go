@@ -282,13 +282,32 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Explicit-but-unknown: the user wrote provider_config (or its
+	// workspace_id field) as a reference that is not yet resolved at plan
+	// time. Defer drift detection — Terraform Core will show
+	// "(known after apply)" in the diff, and apply will see the resolved
+	// value. Falling back to GetProviderWorkspaceID / CurrentWorkspaceID
+	// here would silently substitute a different value for the user's ref,
+	// causing speculative RequiresReplace or a spurious "Missing workspace_id"
+	// error on account-host providers.
+	if !cfgPC.IsNull() && cfgPC.IsUnknown() {
+		return
+	}
 	var newWsID string
 	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
-		var wsIDDiags diag.Diagnostics
-		newWsID, wsIDDiags = GetWorkspaceIDResource(ctx, cfgPC)
-		resp.Diagnostics.Append(wsIDDiags...)
+		var ns ProviderConfig
+		nsDiags := cfgPC.As(ctx, &ns, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(nsDiags...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+		if ns.WorkspaceID.IsUnknown() {
+			// Inner workspace_id is the unknown leg of a cross-resource ref.
+			// Same reasoning as the outer-unknown guard above.
+			return
+		}
+		if !ns.WorkspaceID.IsNull() {
+			newWsID = ns.WorkspaceID.ValueString()
 		}
 	}
 	if newWsID == "" {

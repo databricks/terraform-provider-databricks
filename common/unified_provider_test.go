@@ -888,6 +888,91 @@ func TestNamespaceValidateWorkspaceID_DefersWhenInnerEmpty(t *testing.T) {
 	assert.NoError(t, err, "validator must defer when inner workspace_id is empty")
 }
 
+// TestNamespaceCustomizeDiff_DefersWhenInnerUnknown is the load-bearing test for
+// the explicit-but-unknown case: user wrote
+//
+//	provider_config { workspace_id = databricks_mws_workspaces.foo.workspace_id }
+//
+// where the referenced workspace_id is computed and not yet resolved at plan
+// time. Both halves of NamespaceCustomizeDiff must defer:
+//
+//   - NamespaceValidateWorkspaceID must not call into the dispatcher (would
+//     have produced a confused "managing workspace-level resources" error on
+//     an account host).
+//   - namespaceForceNew must not silently substitute c.Config.WorkspaceID for
+//     the user's unknown ref (would have triggered speculative ForceNew or a
+//     spurious "resource has provider_config.workspace_id = … in state"
+//     error).
+//
+// The test deliberately constructs a setup where deferral matters:
+//   - Account host with empty c.Config.WorkspaceID (the lazy-resolution branch
+//     in namespaceForceNew would fail if reached).
+//   - State already has provider_config.0.workspace_id = "12345" so the old
+//     side of the comparison is non-empty.
+func TestNamespaceCustomizeDiff_DefersWhenInnerUnknown(t *testing.T) {
+	testSchema := map[string]*schema.Schema{
+		"name": {Type: schema.TypeString, Required: true},
+	}
+	AddNamespaceInSchema(testSchema)
+
+	r := &schema.Resource{
+		Schema: testSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+			dc, ok := m.(*DatabricksClient)
+			if !ok {
+				return fmt.Errorf("expected *DatabricksClient, got %T", m)
+			}
+			return NamespaceCustomizeDiff(ctx, d, dc)
+		},
+	}
+
+	// Build cty config with provider_config.0.workspace_id = UnknownVal.
+	ctyVal := cty.ObjectVal(map[string]cty.Value{
+		"name": cty.StringVal("test"),
+		"provider_config": cty.ListVal([]cty.Value{
+			cty.ObjectVal(map[string]cty.Value{
+				"workspace_id": cty.UnknownVal(cty.String),
+			}),
+		}),
+	})
+
+	block := schema.InternalMap(testSchema).CoreConfigSchema()
+	rc := terraform.NewResourceConfigShimmed(ctyVal, block)
+
+	// Prior state has a concrete workspace_id "12345" — the old side that
+	// namespaceForceNew compares against.
+	is := &terraform.InstanceState{
+		ID: "test-resource-id",
+		Attributes: map[string]string{
+			"name":                           "test",
+			"provider_config.#":              "1",
+			"provider_config.0.workspace_id": "12345",
+		},
+		RawConfig: ctyVal,
+	}
+
+	// Account-host provider with NO Config.WorkspaceID and NO cached workspace.
+	// If namespaceForceNew fails to defer, it will fall back to "" for the new
+	// effective and then attempt c.CurrentWorkspaceID, which would error on an
+	// account host. If the validator fails to defer, it would invoke the
+	// dispatcher with "" and produce the "managing workspace-level resources"
+	// error.
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: unifiedHostConfig(t, "https://accounts.cloud.databricks.com"),
+		},
+	}
+
+	diff, err := r.Diff(context.Background(), is, rc, c)
+	assert.NoError(t, err, "namespaceForceNew and the validator must both defer when the user wrote provider_config.workspace_id as an unknown reference")
+
+	if diff != nil {
+		for k, v := range diff.Attributes {
+			assert.False(t, v.RequiresNew, "ForceNew must not fire for attribute %q while workspace_id is unknown", k)
+		}
+	}
+}
+
 func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{

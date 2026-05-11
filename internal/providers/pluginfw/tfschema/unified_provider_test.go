@@ -2,6 +2,7 @@ package tfschema
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -447,4 +448,68 @@ func TestValidateWorkspaceID_RunsWhenExplicit(t *testing.T) {
 	assert.False(t, resp.Diagnostics.HasError(), "expected no diagnostics, got %v", resp.Diagnostics.Errors())
 	assert.Equal(t, []string{"12345"}, fake.validateCalls,
 		"ValidateWorkspaceAccess must be called with the explicit workspace_id")
+}
+
+// TestWorkspaceDriftDetection_DefersWhenInnerUnknown asserts that when the user
+// wrote `provider_config { workspace_id = some_resource.attr }` and the ref is
+// unknown at plan time, the drift detector defers — does not trigger
+// RequiresReplace, does not synthesize a new plan value for provider_config,
+// does not emit the "Missing workspace_id" error.
+//
+// Without this guard, the drift detector falls back to client.GetProviderWorkspaceID
+// (empty on an account host), then to CurrentWorkspaceID (errors on account
+// host), and either flags a phantom replacement or surfaces a misleading error.
+// Apply will see the resolved value and act on it.
+func TestWorkspaceDriftDetection_DefersWhenInnerUnknown(t *testing.T) {
+	ctx := context.Background()
+	testSchema := validateTestSchema()
+	providerConfigTfType, rootTfType := validateTfTypes()
+
+	// State has a concrete workspace_id "12345" — the old side that
+	// WorkspaceDriftDetection compares against.
+	state := tfsdk.State{
+		Schema: testSchema,
+		Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+				"workspace_id": tftypes.NewValue(tftypes.String, "12345"),
+			}),
+		}),
+	}
+	// Config has provider_config.workspace_id = unknown (cross-resource ref
+	// not yet resolved).
+	tfConfig := tfsdk.Config{
+		Schema: testSchema,
+		Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+				"workspace_id": tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			}),
+		}),
+	}
+	// Plan starts as a copy of state (typical post-ProviderConfigPlanModifier shape).
+	plan := tfsdk.Plan{
+		Schema: testSchema,
+		Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+				"workspace_id": tftypes.NewValue(tftypes.String, "12345"),
+			}),
+		}),
+	}
+	modifyReq := resource.ModifyPlanRequest{State: state, Config: tfConfig, Plan: plan}
+	resp := &resource.ModifyPlanResponse{Plan: plan}
+
+	// Fake account-host client: GetProviderWorkspaceID returns empty, and
+	// CurrentWorkspaceID errors (matches reality on an account host).
+	fake := &fakeUnifiedProviderClient{
+		currentErr: fmt.Errorf("account host has no workspace context"),
+	}
+
+	WorkspaceDriftDetection(ctx, fake, modifyReq, resp)
+
+	assert.False(t, resp.Diagnostics.HasError(),
+		"WorkspaceDriftDetection must defer when inner workspace_id is unknown; got %v",
+		resp.Diagnostics.Errors())
+	assert.Empty(t, resp.RequiresReplace,
+		"RequiresReplace must not be set for an unknown workspace_id ref")
+	assert.Empty(t, fake.validateCalls,
+		"ValidateWorkspaceAccess must not be called from drift detection")
 }

@@ -1,11 +1,13 @@
 package settings
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -302,4 +304,72 @@ func TestDisableLegacyFeaturesSetting_SkipProviderConfigStatePopulation(t *testi
 	pc, ok := testDisableLegacyFeatures.Schema["provider_config"]
 	assert.True(t, ok, "provider_config block must still exist in the schema (kept for state compatibility)")
 	assert.NotEmpty(t, pc.Deprecated, "provider_config block must be marked deprecated for account-only settings")
+}
+
+// TestDisableLegacyFeaturesSetting_AccountLevelNoHookFailure is the end-to-end
+// regression test the reviewer asked for: it drives the full Create path
+// against an account-host HTTP server WITHOUT mocking the /Me endpoint
+// that the post-Create provider_config hook would call.
+//
+// Without the fix in this PR, the post-Create hook runs
+// `populateProviderConfigInState` → `CurrentWorkspaceID` → `/Me`, which has
+// no fixture and so the test fails with the exact error users hit in
+// production:
+//
+//	cannot populate provider_config for disable_legacy_features_setting:
+//	failed to resolve workspace_id: ...
+//
+// With the fix, SkipProviderConfigStatePopulation = true short-circuits the
+// hook and the Create flow returns cleanly. Mirrors the pattern from
+// PR #5689's TestDataSourceMwsWorkspaces_AccountLevelNoHookFailure.
+func TestDisableLegacyFeaturesSetting_AccountLevelNoHookFailure(t *testing.T) {
+	apiPath := "/api/2.0/accounts/abc/settings/types/disable_legacy_features/names/default"
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:       "PATCH",
+			Resource:     apiPath,
+			ReuseRequest: true,
+			Response: settings.DisableLegacyFeatures{
+				Etag:        "etag1",
+				SettingName: "disable_legacy_features",
+				DisableLegacyFeatures: settings.BooleanMessage{
+					Value: true,
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     apiPath + "?etag=etag1",
+			ReuseRequest: true,
+			Response: settings.DisableLegacyFeatures{
+				Etag:        "etag1",
+				SettingName: "disable_legacy_features",
+				DisableLegacyFeatures: settings.BooleanMessage{
+					Value: true,
+				},
+			},
+		},
+		// Deliberately NO fixture for /api/2.0/preview/scim/v2/Me — if the
+		// post-Create provider_config hook fires, it will try to call /Me
+		// and the test will fail.
+	})
+	assert.NoError(t, err)
+	defer server.Close()
+
+	// Simulate a real account-level provider: AccountID set, no cached or
+	// configured workspace_id. Without the fix this is exactly the
+	// configuration that fails inside populateProviderConfigInState.
+	client.Config.AccountID = "abc"
+	client.SetCachedWorkspaceID(0)
+
+	r := testDisableLegacyFeatures.ToResource()
+	d := r.TestResourceData()
+	err = d.Set("disable_legacy_features", []any{map[string]any{"value": true}})
+	assert.NoError(t, err)
+	ctx := context.WithValue(context.Background(), common.ResourceName, "disable_legacy_features_setting")
+	diags := r.CreateContext(ctx, d, client)
+
+	assert.False(t, diags.HasError(),
+		"post-Create provider_config hook must be skipped for account-only setting; got: %v", diags)
+	assert.Equal(t, defaultSettingId, d.Id())
 }

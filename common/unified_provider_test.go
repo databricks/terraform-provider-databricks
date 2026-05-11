@@ -782,6 +782,45 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation verifies that
+// when provider_config.workspace_id references a value that's unknown at plan
+// time (e.g., it points at another resource being created in the same plan,
+// like databricks_mws_workspaces.ws.workspace_id), validation is deferred to
+// apply time instead of falling back to c.Config.WorkspaceID and erroring.
+//
+// The magic string "74D93920-ED26-11E3-AC10-0800200C9A66" is the legacy SDK
+// sentinel for an unknown value (see hcl2shim.UnknownVariableValue); passing
+// it through NewResourceConfigRaw produces a ResourceDiff with NewValueKnown
+// returning false for the corresponding key.
+//
+// The Config below uses a placeholder Host that would fail a real parse and a
+// WorkspaceID intentionally set to something parseInt couldn't handle — if the
+// short-circuit ever regresses, the test fails with the parseInt error rather
+// than passing silently.
+func TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://accounts.cloud.databricks.com",
+				AccountID:   "test-account-id",
+				Token:       "test-token",
+				WorkspaceID: "not-an-int",
+			},
+		},
+	}
+
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": "74D93920-ED26-11E3-AC10-0800200C9A66",
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
 // unifiedHostConfig returns a config whose resolved host type is UnifiedHost.
 // It installs a HostMetadataResolver that returns UnifiedHost and forces
 // EnsureResolved to run so resolvedHostType is populated before HostType() is

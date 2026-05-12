@@ -164,6 +164,7 @@ func TestAppExport(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -235,6 +236,7 @@ func TestAppExportWithEmptyDescription(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -310,6 +312,7 @@ func TestAppsSettingsCustomTemplateExport(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

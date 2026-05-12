@@ -1,9 +1,5 @@
 version: 2
 
-before:
-  hooks:
-    - go mod download
-
 builds:
 - env:
     - CGO_ENABLED=0
@@ -43,12 +39,3 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
-
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
-
-release: {}

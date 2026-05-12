@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -250,7 +251,8 @@ func (m BranchOperationMetadata) Type(ctx context.Context) attr.Type {
 
 type BranchSpec struct {
 	// Absolute expiration timestamp. When set, the branch will expire at this
-	// time.
+	// time. Mutually exclusive with `ttl` and `no_expiry`. When updating, use
+	// `spec.expiration` in the update_mask.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
 	// When set to true, protects the branch from deletion and reset. Associated
 	// compute endpoints and the project cannot be deleted while the branch is
@@ -258,7 +260,8 @@ type BranchSpec struct {
 	IsProtected types.Bool `tfsdk:"is_protected"`
 	// Explicitly disable expiration. When set to true, the branch will not
 	// expire. If set to false, the request is invalid; provide either ttl or
-	// expire_time instead.
+	// expire_time instead. Mutually exclusive with `expire_time` and `ttl`.
+	// When updating, use `spec.expiration` in the update_mask.
 	NoExpiry types.Bool `tfsdk:"no_expiry"`
 	// The name of the source branch from which this branch was created (data
 	// lineage for point-in-time recovery). If not specified, defaults to the
@@ -272,7 +275,8 @@ type BranchSpec struct {
 	// created.
 	SourceBranchTime timetypes.RFC3339 `tfsdk:"source_branch_time"`
 	// Relative time-to-live duration. When set, the branch will expire at
-	// creation_time + ttl.
+	// creation_time + ttl. Mutually exclusive with `expire_time` and
+	// `no_expiry`. When updating, use `spec.expiration` in the update_mask.
 	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
@@ -341,6 +345,16 @@ func (m BranchSpec) Type(ctx context.Context) attr.Type {
 }
 
 type BranchStatus struct {
+	// The short identifier of the branch, suitable for showing to the users.
+	// For a branch with name `projects/my-project/branches/my-branch`, the
+	// branch_id is `my-branch`.
+	//
+	// Use this field when building UI components that display branches to users
+	// (e.g., a drop-down selector). Prefer showing `branch_id` instead of the
+	// full resource name from `Branch.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}` format and is not
+	// user-friendly.
+	BranchId types.String `tfsdk:"branch_id"`
 	// The branch's state, indicating if it is initializing, ready for use, or
 	// archived.
 	CurrentState types.String `tfsdk:"current_state"`
@@ -374,6 +388,7 @@ func (to *BranchStatus) SyncFieldsDuringRead(ctx context.Context, from BranchSta
 }
 
 func (m BranchStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["default"] = attrs["default"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetComputed()
@@ -406,6 +421,7 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"branch_id":          m.BranchId,
 			"current_state":      m.CurrentState,
 			"default":            m.Default,
 			"expire_time":        m.ExpireTime,
@@ -423,6 +439,7 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m BranchStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"branch_id":          types.StringType,
 			"current_state":      types.StringType,
 			"default":            types.BoolType,
 			"expire_time":        timetypes.RFC3339{}.Type(ctx),
@@ -434,6 +451,390 @@ func (m BranchStatus) Type(ctx context.Context) attr.Type {
 			"source_branch_time": timetypes.RFC3339{}.Type(ctx),
 			"state_change_time":  timetypes.RFC3339{}.Type(ctx),
 		},
+	}
+}
+
+type Catalog struct {
+	// A timestamp indicating when the catalog was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Output only. The full resource path of the catalog.
+	//
+	// Format: "catalogs/{catalog_id}".
+	Name types.String `tfsdk:"name"`
+	// The desired state of the Catalog.
+	Spec types.Object `tfsdk:"spec"`
+	// The observed state of the Catalog.
+	Status types.Object `tfsdk:"status"`
+	// System-generated unique identifier for the catalog.
+	Uid types.String `tfsdk:"uid"`
+	// A timestamp indicating when the catalog was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Catalog) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Catalog) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (to *Catalog) SyncFieldsDuringRead(ctx context.Context, from Catalog) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (m Catalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Catalog.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Catalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spec":   reflect.TypeOf(CatalogCatalogSpec{}),
+		"status": reflect.TypeOf(CatalogCatalogStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Catalog
+// only implements ToObjectValue() and Type().
+func (m Catalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"name":        m.Name,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"uid":         m.Uid,
+			"update_time": m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Catalog) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"spec":        CatalogCatalogSpec{}.Type(ctx),
+			"status":      CatalogCatalogStatus{}.Type(ctx),
+			"uid":         types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetSpec returns the value of the Spec field in Catalog as
+// a CatalogCatalogSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Catalog) GetSpec(ctx context.Context) (CatalogCatalogSpec, bool) {
+	var e CatalogCatalogSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v CatalogCatalogSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in Catalog.
+func (m *Catalog) SetSpec(ctx context.Context, v CatalogCatalogSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// GetStatus returns the value of the Status field in Catalog as
+// a CatalogCatalogStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Catalog) GetStatus(ctx context.Context) (CatalogCatalogStatus, bool) {
+	var e CatalogCatalogStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v CatalogCatalogStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in Catalog.
+func (m *Catalog) SetStatus(ctx context.Context, v CatalogCatalogStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+// The desired state of the Catalog.
+type CatalogCatalogSpec struct {
+	// The resource path of the branch associated with the catalog.
+	//
+	// Format: projects/{project_id}/branches/{branch_id}.
+	Branch types.String `tfsdk:"branch"`
+	// If set to true, the specified postgres_database is created on behalf of
+	// the calling user if it does not already exist. In this case, the calling
+	// user has a role created for them in Postgres if they do not already have
+	// one.
+	//
+	// Defaults to false, meaning that the request fails if the specified
+	// postgres_database does not already exist.
+	CreateDatabaseIfMissing types.Bool `tfsdk:"create_database_if_missing"`
+	// The name of the Postgres database inside the specified Lakebase project
+	// and branch to be associated with the UC catalog. This database must
+	// already exist, unless create_database_if_missing is set to true on
+	// creation.
+	//
+	// A database can only be registered with one UC catalog at a time. To
+	// re-register a database with a different catalog, the existing catalog
+	// must be deleted first.
+	//
+	// A child branch inherits the fact of parent's registration. This means the
+	// same-named database in a child branch cannot be registered with a second
+	// catalog while the parent's registration exists. To allow registering the
+	// database of a child branch, drop and recreate the database on the child
+	// branch. This removes the fact of parent's registration from this branch
+	// only.
+	//
+	// Doing Point In Time Restore (PITR) prior to the moment before the
+	// Postgres DB was registered in the Catalog drops the fact of registration
+	// of the database. So the user should avoid doing so.
+	PostgresDatabase types.String `tfsdk:"postgres_database"`
+}
+
+func (to *CatalogCatalogSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogCatalogSpec) {
+	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
+		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
+	}
+}
+
+func (to *CatalogCatalogSpec) SyncFieldsDuringRead(ctx context.Context, from CatalogCatalogSpec) {
+	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
+		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
+	}
+}
+
+func (m CatalogCatalogSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetOptional()
+	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetComputed()
+	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["postgres_database"] = attrs["postgres_database"].SetRequired()
+	attrs["postgres_database"] = attrs["postgres_database"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CatalogCatalogSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CatalogCatalogSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CatalogCatalogSpec
+// only implements ToObjectValue() and Type().
+func (m CatalogCatalogSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":                     m.Branch,
+			"create_database_if_missing": m.CreateDatabaseIfMissing,
+			"postgres_database":          m.PostgresDatabase,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CatalogCatalogSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch":                     types.StringType,
+			"create_database_if_missing": types.BoolType,
+			"postgres_database":          types.StringType,
+		},
+	}
+}
+
+// The observed state of the Catalog.
+type CatalogCatalogStatus struct {
+	// The resource path of the branch associated with the catalog.
+	//
+	// Format: projects/{project_id}/branches/{branch_id}.
+	Branch types.String `tfsdk:"branch"`
+	// The short identifier of the catalog, suitable for showing to the users.
+	// For a catalog with name `catalogs/my-catalog`, the catalog_id is
+	// `my-catalog`.
+	//
+	// Use this field when building UI components that display catalogs to users
+	// (e.g., a drop-down selector). Prefer showing `catalog_id` instead of the
+	// full resource name from `Catalog.name`, which follows the
+	// `catalogs/{catalog_id}` format and is not user-friendly.
+	CatalogId types.String `tfsdk:"catalog_id"`
+	// The name of the Postgres database associated with the catalog.
+	PostgresDatabase types.String `tfsdk:"postgres_database"`
+	// The resource path of the project associated with the catalog.
+	//
+	// Format: projects/{project_id}.
+	Project types.String `tfsdk:"project"`
+}
+
+func (to *CatalogCatalogStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogCatalogStatus) {
+}
+
+func (to *CatalogCatalogStatus) SyncFieldsDuringRead(ctx context.Context, from CatalogCatalogStatus) {
+}
+
+func (m CatalogCatalogStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetComputed()
+	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
+	attrs["postgres_database"] = attrs["postgres_database"].SetComputed()
+	attrs["project"] = attrs["project"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CatalogCatalogStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CatalogCatalogStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CatalogCatalogStatus
+// only implements ToObjectValue() and Type().
+func (m CatalogCatalogStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":            m.Branch,
+			"catalog_id":        m.CatalogId,
+			"postgres_database": m.PostgresDatabase,
+			"project":           m.Project,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CatalogCatalogStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch":            types.StringType,
+			"catalog_id":        types.StringType,
+			"postgres_database": types.StringType,
+			"project":           types.StringType,
+		},
+	}
+}
+
+type CatalogOperationMetadata struct {
+}
+
+func (to *CatalogOperationMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogOperationMetadata) {
+}
+
+func (to *CatalogOperationMetadata) SyncFieldsDuringRead(ctx context.Context, from CatalogOperationMetadata) {
+}
+
+func (m CatalogOperationMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CatalogOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CatalogOperationMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CatalogOperationMetadata
+// only implements ToObjectValue() and Type().
+func (m CatalogOperationMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CatalogOperationMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -449,6 +850,9 @@ type CreateBranchRequest struct {
 	// The Project where this Branch will be created. Format:
 	// projects/{project_id}
 	Parent types.String `tfsdk:"-"`
+	// If true, update the branch if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateBranchRequest) {
@@ -461,6 +865,10 @@ func (to *CreateBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from CreateBranchRequest) {
@@ -472,12 +880,19 @@ func (to *CreateBranchRequest) SyncFieldsDuringRead(ctx context.Context, from Cr
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (m CreateBranchRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
+	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
+	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -502,9 +917,10 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"branch":    m.Branch,
-			"branch_id": m.BranchId,
-			"parent":    m.Parent,
+			"branch":           m.Branch,
+			"branch_id":        m.BranchId,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
 		})
 }
 
@@ -512,9 +928,10 @@ func (m CreateBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m CreateBranchRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":    Branch{}.Type(ctx),
-			"branch_id": types.StringType,
-			"parent":    types.StringType,
+			"branch":           Branch{}.Type(ctx),
+			"branch_id":        types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
 		},
 	}
 }
@@ -542,6 +959,103 @@ func (m *CreateBranchRequest) GetBranch(ctx context.Context) (Branch, bool) {
 func (m *CreateBranchRequest) SetBranch(ctx context.Context, v Branch) {
 	vs := v.ToObjectValue(ctx)
 	m.Branch = vs
+}
+
+type CreateCatalogRequest struct {
+	Catalog types.Object `tfsdk:"catalog"`
+	// The ID in the Unity Catalog. It becomes the full resource name, for
+	// example "my_catalog" becomes "catalogs/my_catalog".
+	CatalogId types.String `tfsdk:"-"`
+}
+
+func (to *CreateCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCatalogRequest) {
+	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
+		if toCatalog, ok := to.GetCatalog(ctx); ok {
+			if fromCatalog, ok := from.GetCatalog(ctx); ok {
+				// Recursively sync the fields of Catalog
+				toCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalog)
+				to.SetCatalog(ctx, toCatalog)
+			}
+		}
+	}
+}
+
+func (to *CreateCatalogRequest) SyncFieldsDuringRead(ctx context.Context, from CreateCatalogRequest) {
+	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
+		if toCatalog, ok := to.GetCatalog(ctx); ok {
+			if fromCatalog, ok := from.GetCatalog(ctx); ok {
+				toCatalog.SyncFieldsDuringRead(ctx, fromCatalog)
+				to.SetCatalog(ctx, toCatalog)
+			}
+		}
+	}
+}
+
+func (m CreateCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetRequired()
+	attrs["catalog_id"] = attrs["catalog_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateCatalogRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"catalog": reflect.TypeOf(Catalog{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCatalogRequest
+// only implements ToObjectValue() and Type().
+func (m CreateCatalogRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog":    m.Catalog,
+			"catalog_id": m.CatalogId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateCatalogRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog":    Catalog{}.Type(ctx),
+			"catalog_id": types.StringType,
+		},
+	}
+}
+
+// GetCatalog returns the value of the Catalog field in CreateCatalogRequest as
+// a Catalog value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCatalogRequest) GetCatalog(ctx context.Context) (Catalog, bool) {
+	var e Catalog
+	if m.Catalog.IsNull() || m.Catalog.IsUnknown() {
+		return e, false
+	}
+	var v Catalog
+	d := m.Catalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCatalog sets the value of the Catalog field in CreateCatalogRequest.
+func (m *CreateCatalogRequest) SetCatalog(ctx context.Context, v Catalog) {
+	vs := v.ToObjectValue(ctx)
+	m.Catalog = vs
 }
 
 type CreateDatabaseRequest struct {
@@ -667,6 +1181,9 @@ type CreateEndpointRequest struct {
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
+	// If true, update the endpoint if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateEndpointRequest) {
@@ -679,6 +1196,10 @@ func (to *CreateEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from CreateEndpointRequest) {
@@ -690,12 +1211,19 @@ func (to *CreateEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.ReplaceExisting.IsUnknown() && !from.ReplaceExisting.IsNull() {
+		// ReplaceExisting is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 }
 
 func (m CreateEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
+	attrs["replace_existing"] = attrs["replace_existing"].SetComputed()
+	attrs["replace_existing"] = attrs["replace_existing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -720,9 +1248,10 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"endpoint":    m.Endpoint,
-			"endpoint_id": m.EndpointId,
-			"parent":      m.Parent,
+			"endpoint":         m.Endpoint,
+			"endpoint_id":      m.EndpointId,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
 		})
 }
 
@@ -730,9 +1259,10 @@ func (m CreateEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m CreateEndpointRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoint":    Endpoint{}.Type(ctx),
-			"endpoint_id": types.StringType,
-			"parent":      types.StringType,
+			"endpoint":         Endpoint{}.Type(ctx),
+			"endpoint_id":      types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
 		},
 	}
 }
@@ -970,6 +1500,113 @@ func (m *CreateRoleRequest) GetRole(ctx context.Context) (Role, bool) {
 func (m *CreateRoleRequest) SetRole(ctx context.Context, v Role) {
 	vs := v.ToObjectValue(ctx)
 	m.Role = vs
+}
+
+type CreateSyncedTableRequest struct {
+	SyncedTable types.Object `tfsdk:"synced_table"`
+	// The ID to use for the Synced Table. This becomes the final component of
+	// the SyncedTable's resource name. ID is required and is the synced table
+	// name, containing (catalog, schema, table) tuple. Elements of the tuple
+	// are the UC entity names.
+	//
+	// Example: "{catalog}.{schema}.{table}"
+	//
+	// synced_table_id represents both of the following:
+	//
+	// 1. An online VIEW virtual table in the Unity Catalog accessible via the
+	// Lakehouse Federation. 2. Postgres table named "{table}" in schema
+	// "{schema}" in the connected Postgres database
+	SyncedTableId types.String `tfsdk:"-"`
+}
+
+func (to *CreateSyncedTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSyncedTableRequest) {
+	if !from.SyncedTable.IsNull() && !from.SyncedTable.IsUnknown() {
+		if toSyncedTable, ok := to.GetSyncedTable(ctx); ok {
+			if fromSyncedTable, ok := from.GetSyncedTable(ctx); ok {
+				// Recursively sync the fields of SyncedTable
+				toSyncedTable.SyncFieldsDuringCreateOrUpdate(ctx, fromSyncedTable)
+				to.SetSyncedTable(ctx, toSyncedTable)
+			}
+		}
+	}
+}
+
+func (to *CreateSyncedTableRequest) SyncFieldsDuringRead(ctx context.Context, from CreateSyncedTableRequest) {
+	if !from.SyncedTable.IsNull() && !from.SyncedTable.IsUnknown() {
+		if toSyncedTable, ok := to.GetSyncedTable(ctx); ok {
+			if fromSyncedTable, ok := from.GetSyncedTable(ctx); ok {
+				toSyncedTable.SyncFieldsDuringRead(ctx, fromSyncedTable)
+				to.SetSyncedTable(ctx, toSyncedTable)
+			}
+		}
+	}
+}
+
+func (m CreateSyncedTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["synced_table"] = attrs["synced_table"].SetRequired()
+	attrs["synced_table_id"] = attrs["synced_table_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSyncedTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateSyncedTableRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"synced_table": reflect.TypeOf(SyncedTable{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateSyncedTableRequest
+// only implements ToObjectValue() and Type().
+func (m CreateSyncedTableRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"synced_table":    m.SyncedTable,
+			"synced_table_id": m.SyncedTableId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateSyncedTableRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"synced_table":    SyncedTable{}.Type(ctx),
+			"synced_table_id": types.StringType,
+		},
+	}
+}
+
+// GetSyncedTable returns the value of the SyncedTable field in CreateSyncedTableRequest as
+// a SyncedTable value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateSyncedTableRequest) GetSyncedTable(ctx context.Context) (SyncedTable, bool) {
+	var e SyncedTable
+	if m.SyncedTable.IsNull() || m.SyncedTable.IsUnknown() {
+		return e, false
+	}
+	var v SyncedTable
+	d := m.SyncedTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSyncedTable sets the value of the SyncedTable field in CreateSyncedTableRequest.
+func (m *CreateSyncedTableRequest) SetSyncedTable(ctx context.Context, v SyncedTable) {
+	vs := v.ToObjectValue(ctx)
+	m.SyncedTable = vs
 }
 
 // Database represents a Postgres database within a Branch.
@@ -1265,6 +1902,17 @@ func (m DatabaseDatabaseSpec) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseDatabaseStatus struct {
+	// The short identifier of the database, suitable for showing to the users.
+	// For a database with name
+	// `projects/my-project/branches/my-branch/databases/my-db`, the database_id
+	// is `my-db`.
+	//
+	// Use this field when building UI components that display databases to
+	// users (e.g., a drop-down selector). Prefer showing `database_id` instead
+	// of the full resource name from `Database.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
+	// format and is not user-friendly.
+	DatabaseId types.String `tfsdk:"database_id"`
 	// The name of the Postgres database.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The name of the role that owns the database. Format:
@@ -1279,6 +1927,7 @@ func (to *DatabaseDatabaseStatus) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m DatabaseDatabaseStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
 	attrs["role"] = attrs["role"].SetOptional()
 
@@ -1303,6 +1952,7 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"database_id":       m.DatabaseId,
 			"postgres_database": m.PostgresDatabase,
 			"role":              m.Role,
 		})
@@ -1312,6 +1962,7 @@ func (m DatabaseDatabaseStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m DatabaseDatabaseStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"database_id":       types.StringType,
 			"postgres_database": types.StringType,
 			"role":              types.StringType,
 		},
@@ -1513,6 +2164,56 @@ func (m DeleteBranchRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteCatalogRequest struct {
+	// The full resource path of the catalog to delete.
+	//
+	// Format: "catalogs/{catalog_id}".
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCatalogRequest) {
+}
+
+func (to *DeleteCatalogRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteCatalogRequest) {
+}
+
+func (m DeleteCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteCatalogRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCatalogRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteCatalogRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteCatalogRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteDatabaseRequest struct {
 	// The resource name of the postgres database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
@@ -1615,6 +2316,9 @@ type DeleteProjectRequest struct {
 	// The full resource path of the project to delete. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
+	// If true, permanently deletes the project (hard delete). If false or
+	// unset, performs a soft delete.
+	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteProjectRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteProjectRequest) {
@@ -1625,6 +2329,7 @@ func (to *DeleteProjectRequest) SyncFieldsDuringRead(ctx context.Context, from D
 
 func (m DeleteProjectRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -1647,7 +2352,8 @@ func (m DeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":  m.Name,
+			"purge": m.Purge,
 		})
 }
 
@@ -1655,7 +2361,8 @@ func (m DeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m DeleteProjectRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":  types.StringType,
+			"purge": types.BoolType,
 		},
 	}
 }
@@ -1714,6 +2421,111 @@ func (m DeleteRoleRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name":              types.StringType,
 			"reassign_owned_to": types.StringType,
+		},
+	}
+}
+
+type DeleteSyncedTableRequest struct {
+	// The Full resource name of the synced table, of the format
+	// "synced_tables/{catalog}.{schema}.{table}", where (catalog, schema,
+	// table) are the UC entity names.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSyncedTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSyncedTableRequest) {
+}
+
+func (to *DeleteSyncedTableRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteSyncedTableRequest) {
+}
+
+func (m DeleteSyncedTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSyncedTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSyncedTableRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSyncedTableRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteSyncedTableRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSyncedTableRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeltaTableSyncInfo struct {
+	// The timestamp when the above Delta version was committed in the source
+	// Delta table. Note: This is the Delta commit time, not the time the data
+	// was written to the synced table.
+	DeltaCommitTime timetypes.RFC3339 `tfsdk:"delta_commit_time"`
+	// The Delta Lake commit version that was last successfully synced.
+	DeltaCommitVersion types.Int64 `tfsdk:"delta_commit_version"`
+}
+
+func (to *DeltaTableSyncInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaTableSyncInfo) {
+}
+
+func (to *DeltaTableSyncInfo) SyncFieldsDuringRead(ctx context.Context, from DeltaTableSyncInfo) {
+}
+
+func (m DeltaTableSyncInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_commit_time"] = attrs["delta_commit_time"].SetComputed()
+	attrs["delta_commit_version"] = attrs["delta_commit_version"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeltaTableSyncInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeltaTableSyncInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeltaTableSyncInfo
+// only implements ToObjectValue() and Type().
+func (m DeltaTableSyncInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delta_commit_time":    m.DeltaCommitTime,
+			"delta_commit_version": m.DeltaCommitVersion,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeltaTableSyncInfo) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delta_commit_time":    timetypes.RFC3339{}.Type(ctx),
+			"delta_commit_version": types.Int64Type,
 		},
 	}
 }
@@ -2204,7 +3016,9 @@ func (m *EndpointSettings) SetPgSettings(ctx context.Context, v map[string]types
 }
 
 type EndpointSpec struct {
-	// The maximum number of Compute Units. Minimum value is 0.5.
+	// The maximum number of Compute Units. The maximum value is 64. The
+	// difference between the minimum and maximum Compute Units (max - min) must
+	// not exceed 16.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -2219,13 +3033,16 @@ type EndpointSpec struct {
 	// the endpoint (and no readable secondaries for Read/Write endpoints).
 	Group types.Object `tfsdk:"group"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided.
+	// suspend). Should be set to true when provided. Mutually exclusive with
+	// `suspend_timeout_duration`. When updating, use `spec.suspension` in the
+	// update_mask.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 
 	Settings types.Object `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week).
+	// week). Mutually exclusive with `no_suspension`. When updating, use
+	// `spec.suspension` in the update_mask.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -2382,7 +3199,9 @@ func (m *EndpointSpec) SetSettings(ctx context.Context, v EndpointSettings) {
 }
 
 type EndpointStatus struct {
-	// The maximum number of Compute Units.
+	// The maximum number of Compute Units. The maximum value is 64. The
+	// difference between the minimum and maximum Compute Units (max - min) must
+	// not exceed 16.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
@@ -2392,6 +3211,17 @@ type EndpointStatus struct {
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
+	// The short identifier of the endpoint, suitable for showing to the users.
+	// For an endpoint with name
+	// `projects/my-project/branches/my-branch/endpoints/my-endpoint`, the
+	// endpoint_id is `my-endpoint`.
+	//
+	// Use this field when building UI components that display endpoints to
+	// users (e.g., a drop-down selector). Prefer showing `endpoint_id` instead
+	// of the full resource name from `Endpoint.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
+	// format and is not user-friendly.
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Details on the HA configuration of the endpoint.
@@ -2469,6 +3299,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["autoscaling_limit_min_cu"] = attrs["autoscaling_limit_min_cu"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
 	attrs["group"] = attrs["group"].SetComputed()
 	attrs["hosts"] = attrs["hosts"].SetComputed()
@@ -2505,6 +3336,7 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"autoscaling_limit_min_cu": m.AutoscalingLimitMinCu,
 			"current_state":            m.CurrentState,
 			"disabled":                 m.Disabled,
+			"endpoint_id":              m.EndpointId,
 			"endpoint_type":            m.EndpointType,
 			"group":                    m.Group,
 			"hosts":                    m.Hosts,
@@ -2522,6 +3354,7 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"autoscaling_limit_min_cu": types.Float64Type,
 			"current_state":            types.StringType,
 			"disabled":                 types.BoolType,
+			"endpoint_id":              types.StringType,
 			"endpoint_type":            types.StringType,
 			"group":                    EndpointGroupStatus{}.Type(ctx),
 			"hosts":                    EndpointHosts{}.Type(ctx),
@@ -2747,6 +3580,56 @@ func (m GetBranchRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 
 // Type implements basetypes.ObjectValuable.
 func (m GetBranchRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetCatalogRequest struct {
+	// The full resource path of the catalog to retrieve.
+	//
+	// Format: "catalogs/{catalog_id}".
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCatalogRequest) {
+}
+
+func (to *GetCatalogRequest) SyncFieldsDuringRead(ctx context.Context, from GetCatalogRequest) {
+}
+
+func (m GetCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetCatalogRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCatalogRequest
+// only implements ToObjectValue() and Type().
+func (m GetCatalogRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetCatalogRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2998,8 +3881,60 @@ func (m GetRoleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetSyncedTableRequest struct {
+	// The Full resource name of the synced table. Format:
+	// "synced_tables/{catalog}.{schema}.{table}", where (catalog, schema,
+	// table) are the entity names in the Unity Catalog.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetSyncedTableRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSyncedTableRequest) {
+}
+
+func (to *GetSyncedTableRequest) SyncFieldsDuringRead(ctx context.Context, from GetSyncedTableRequest) {
+}
+
+func (m GetSyncedTableRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSyncedTableRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSyncedTableRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSyncedTableRequest
+// only implements ToObjectValue() and Type().
+func (m GetSyncedTableRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSyncedTableRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Configuration for the initial Read/Write endpoint created during project
+// creation.
 type InitialEndpointSpec struct {
-	// Settings for HA configuration of the endpoint
+	// Settings for HA configuration of the endpoint.
 	Group types.Object `tfsdk:"group"`
 }
 
@@ -3562,6 +4497,10 @@ type ListProjectsRequest struct {
 	// Page token from a previous response. If not provided, returns the first
 	// page.
 	PageToken types.String `tfsdk:"-"`
+	// Whether to include soft-deleted projects in the response. When true,
+	// soft-deleted projects are included alongside active projects.
+	// Hard-deleted and already-purged projects are never returned.
+	ShowDeleted types.Bool `tfsdk:"-"`
 }
 
 func (to *ListProjectsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListProjectsRequest) {
@@ -3573,6 +4512,7 @@ func (to *ListProjectsRequest) SyncFieldsDuringRead(ctx context.Context, from Li
 func (m ListProjectsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	return attrs
 }
@@ -3595,8 +4535,9 @@ func (m ListProjectsRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"show_deleted": m.ShowDeleted,
 		})
 }
 
@@ -3604,8 +4545,9 @@ func (m ListProjectsRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m ListProjectsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"show_deleted": types.BoolType,
 		},
 	}
 }
@@ -3861,6 +4803,68 @@ func (m *ListRolesResponse) SetRoles(ctx context.Context, v []Role) {
 	m.Roles = types.ListValueMust(t, vs)
 }
 
+type NewPipelineSpec struct {
+	// Budget policy to set on the newly created pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// UC catalog for the pipeline to store intermediate files (checkpoints,
+	// event logs etc). This needs to be a standard catalog where the user has
+	// permissions to create Delta tables.
+	StorageCatalog types.String `tfsdk:"storage_catalog"`
+	// UC schema for the pipeline to store intermediate files (checkpoints,
+	// event logs etc). This needs to be in the standard catalog where the user
+	// has permissions to create Delta tables.
+	StorageSchema types.String `tfsdk:"storage_schema"`
+}
+
+func (to *NewPipelineSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NewPipelineSpec) {
+}
+
+func (to *NewPipelineSpec) SyncFieldsDuringRead(ctx context.Context, from NewPipelineSpec) {
+}
+
+func (m NewPipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
+	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NewPipelineSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m NewPipelineSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NewPipelineSpec
+// only implements ToObjectValue() and Type().
+func (m NewPipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"budget_policy_id": m.BudgetPolicyId,
+			"storage_catalog":  m.StorageCatalog,
+			"storage_schema":   m.StorageSchema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m NewPipelineSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"budget_policy_id": types.StringType,
+			"storage_catalog":  types.StringType,
+			"storage_schema":   types.StringType,
+		},
+	}
+}
+
 // This resource represents a long-running operation that is the result of a
 // network API call.
 type Operation struct {
@@ -3984,8 +4988,11 @@ func (m *Operation) SetError(ctx context.Context, v DatabricksServiceExceptionWi
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// A timestamp indicating when the project was soft-deleted. Empty if the
+	// project is not deleted, otherwise set to a timestamp in the past.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the default branch for a newly created project. If omitted, the initial
+	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -3994,6 +5001,10 @@ type Project struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// A timestamp indicating when the project is scheduled for permanent
+	// deletion. Empty if the project is not deleted, otherwise set to a
+	// timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -4081,11 +5092,12 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -4119,8 +5131,10 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time":           m.CreateTime,
+			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -4133,8 +5147,10 @@ func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"delete_time":           timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
+			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  ProjectSpec{}.Type(ctx),
 			"status":                ProjectStatus{}.Type(ctx),
 			"uid":                   types.StringType,
@@ -4278,13 +5294,16 @@ type ProjectDefaultEndpointSettings struct {
 	// The minimum number of Compute Units. Minimum value is 0.5.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided.
+	// suspend). Should be set to true when provided. Mutually exclusive with
+	// `suspend_timeout_duration`. When updating, use
+	// `spec.project_default_settings.suspension` in the update_mask.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
 	// A raw representation of Postgres settings.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
 	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week).
+	// week). Mutually exclusive with `no_suspension`. When updating, use
+	// `spec.project_default_settings.suspension` in the update_mask.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -4426,6 +5445,9 @@ type ProjectSpec struct {
 	// existing tags, omit this field from the update_mask (or use wildcard "*"
 	// which auto-excludes empty tags).
 	CustomTags types.List `tfsdk:"custom_tags"`
+	// The full resource path for the default branch of the project Format:
+	// projects/{project_id}/branches/{branch_id}
+	DefaultBranch types.String `tfsdk:"default_branch"`
 
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
 	// Human-readable project name. Length should be between 1 and 256
@@ -4436,7 +5458,7 @@ type ProjectSpec struct {
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
-	// 172800s (2 days) and 2592000s (30 days).
+	// 172800s (2 days) and 3024000s (35 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
 	// The major Postgres version number. Supported versions are 16 and 17.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
@@ -4480,6 +5502,7 @@ func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpe
 func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["default_branch"] = attrs["default_branch"].SetOptional()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetOptional()
@@ -4513,6 +5536,7 @@ func (m ProjectSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"budget_policy_id":           m.BudgetPolicyId,
 			"custom_tags":                m.CustomTags,
+			"default_branch":             m.DefaultBranch,
 			"default_endpoint_settings":  m.DefaultEndpointSettings,
 			"display_name":               m.DisplayName,
 			"enable_pg_native_login":     m.EnablePgNativeLogin,
@@ -4529,6 +5553,7 @@ func (m ProjectSpec) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.ListType{
 				ElemType: ProjectCustomTag{}.Type(ctx),
 			},
+			"default_branch":             types.StringType,
 			"default_endpoint_settings":  ProjectDefaultEndpointSettings{}.Type(ctx),
 			"display_name":               types.StringType,
 			"enable_pg_native_login":     types.BoolType,
@@ -4596,6 +5621,8 @@ type ProjectStatus struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The effective custom tags associated with the project.
 	CustomTags types.List `tfsdk:"custom_tags"`
+	// The full resource path of the default branch of the project
+	DefaultBranch types.String `tfsdk:"default_branch"`
 	// The effective default endpoint settings.
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
 	// The effective human-readable project name.
@@ -4610,6 +5637,15 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
+	// The short identifier of the project, suitable for showing to the users.
+	// For a project with name `projects/my-project`, the project_id is
+	// `my-project`.
+	//
+	// Use this field when building UI components that display projects to users
+	// (e.g., a drop-down selector). Prefer showing `project_id` instead of the
+	// full resource name from `Project.name`, which follows the
+	// `projects/{project_id}` format and is not user-friendly.
+	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
 }
@@ -4653,12 +5689,14 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["branch_logical_size_limit_bytes"] = attrs["branch_logical_size_limit_bytes"].SetComputed()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
 	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
+	attrs["default_branch"] = attrs["default_branch"].SetComputed()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["synthetic_storage_size_bytes"] = attrs["synthetic_storage_size_bytes"].SetComputed()
 
 	return attrs
@@ -4688,12 +5726,14 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"branch_logical_size_limit_bytes": m.BranchLogicalSizeLimitBytes,
 			"budget_policy_id":                m.BudgetPolicyId,
 			"custom_tags":                     m.CustomTags,
+			"default_branch":                  m.DefaultBranch,
 			"default_endpoint_settings":       m.DefaultEndpointSettings,
 			"display_name":                    m.DisplayName,
 			"enable_pg_native_login":          m.EnablePgNativeLogin,
 			"history_retention_duration":      m.HistoryRetentionDuration,
 			"owner":                           m.Owner,
 			"pg_version":                      m.PgVersion,
+			"project_id":                      m.ProjectId,
 			"synthetic_storage_size_bytes":    m.SyntheticStorageSizeBytes,
 		})
 }
@@ -4707,12 +5747,14 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 			"custom_tags": basetypes.ListType{
 				ElemType: ProjectCustomTag{}.Type(ctx),
 			},
+			"default_branch":               types.StringType,
 			"default_endpoint_settings":    ProjectDefaultEndpointSettings{}.Type(ctx),
 			"display_name":                 types.StringType,
 			"enable_pg_native_login":       types.BoolType,
 			"history_retention_duration":   timetypes.GoDuration{}.Type(ctx),
 			"owner":                        types.StringType,
 			"pg_version":                   types.Int64Type,
+			"project_id":                   types.StringType,
 			"synthetic_storage_size_bytes": types.Int64Type,
 		},
 	}
@@ -4864,6 +5906,7 @@ func (m *RequestedClaims) SetResources(ctx context.Context, v []RequestedResourc
 }
 
 type RequestedResource struct {
+	// The full Unity Catalog table name.
 	TableName types.String `tfsdk:"table_name"`
 
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
@@ -5196,13 +6239,27 @@ type RoleRoleSpec struct {
 	// The desired API-exposed Postgres role attribute to associate with the
 	// role. Optional.
 	Attributes types.Object `tfsdk:"attributes"`
+	// Controls how the Postgres role authenticates when a client opens a
+	// database connection. Supported values:
+	//
+	// * LAKEBASE_OAUTH_V1: the role authenticates by presenting a Databricks
+	// OAuth access token derived from the backing managed identity (the
+	// Databricks user, service principal, or group named by the role's
+	// `postgres_role`). No static password exists for roles using this method.
+	// * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
+	// password verified server-side using the SCRAM-SHA-256 mechanism. Lakebase
+	// generates a password for the role. * NO_LOGIN: the role cannot open a
+	// Postgres session at all. Useful for roles that exist only to own objects
+	// or to aggregate privileges that are then granted to other, loginable
+	// roles.
+	//
 	// If auth_method is left unspecified, a meaningful authentication method is
 	// derived from the identity_type: * For the managed identities, OAUTH is
 	// used. * For the regular postgres roles, authentication based on postgres
 	// passwords is used.
 	//
-	// NOTE: this is ignored for the Databricks identity type GROUP, and
-	// NO_LOGIN is implicitly assumed instead for the GROUP identity type.
+	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
+	// default auth method (group can login as well).
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of role. When specifying a managed-identity, the chosen role_id
 	// must be a valid:
@@ -5378,6 +6435,16 @@ type RoleRoleStatus struct {
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
+	// The short identifier of the role, suitable for showing to the users. For
+	// a role with name `projects/my-project/branches/my-branch/roles/my-role`,
+	// the role_id is `my-role`.
+	//
+	// Use this field when building UI components that display roles to users
+	// (e.g., a drop-down selector). Prefer showing `role_id` instead of the
+	// full resource name from `Role.name`, which follows the
+	// `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format and
+	// is not user-friendly.
+	RoleId types.String `tfsdk:"role_id"`
 }
 
 func (to *RoleRoleStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RoleRoleStatus) {
@@ -5421,6 +6488,7 @@ func (m RoleRoleStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
+	attrs["role_id"] = attrs["role_id"].SetComputed()
 
 	return attrs
 }
@@ -5451,6 +6519,7 @@ func (m RoleRoleStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"identity_type":    m.IdentityType,
 			"membership_roles": m.MembershipRoles,
 			"postgres_role":    m.PostgresRole,
+			"role_id":          m.RoleId,
 		})
 }
 
@@ -5465,6 +6534,7 @@ func (m RoleRoleStatus) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"postgres_role": types.StringType,
+			"role_id":       types.StringType,
 		},
 	}
 }
@@ -5518,6 +6588,834 @@ func (m *RoleRoleStatus) SetMembershipRoles(ctx context.Context, v []types.Strin
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["membership_roles"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.MembershipRoles = types.ListValueMust(t, vs)
+}
+
+type SyncedTable struct {
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Output only. The Full resource name of the synced table in Postgres where
+	// (catalog, schema, table) are the UC entity names.
+	//
+	// Format "synced_tables/{catalog}.{schema}.{table}"
+	//
+	// For the corresponding source table in the Unity catalog look for the
+	// "source_table_full_name" attribute.
+	Name types.String `tfsdk:"name"`
+	// Configuration details of the synced table, such as the source table,
+	// scheduling policy, etc. This attribute is specified at creation time and
+	// most fields are returned as is on subsequent queries.
+	Spec types.Object `tfsdk:"spec"`
+	// Synced Table data synchronization status.
+	Status types.Object `tfsdk:"status"`
+	// The Unity Catalog table ID for this synced table.
+	Uid types.String `tfsdk:"uid"`
+}
+
+func (to *SyncedTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTable) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (to *SyncedTable) SyncFieldsDuringRead(ctx context.Context, from SyncedTable) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (m SyncedTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["uid"] = attrs["uid"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spec":   reflect.TypeOf(SyncedTableSyncedTableSpec{}),
+		"status": reflect.TypeOf(SyncedTableSyncedTableStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTable
+// only implements ToObjectValue() and Type().
+func (m SyncedTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"name":        m.Name,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"uid":         m.Uid,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTable) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"spec":        SyncedTableSyncedTableSpec{}.Type(ctx),
+			"status":      SyncedTableSyncedTableStatus{}.Type(ctx),
+			"uid":         types.StringType,
+		},
+	}
+}
+
+// GetSpec returns the value of the Spec field in SyncedTable as
+// a SyncedTableSyncedTableSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTable) GetSpec(ctx context.Context) (SyncedTableSyncedTableSpec, bool) {
+	var e SyncedTableSyncedTableSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v SyncedTableSyncedTableSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in SyncedTable.
+func (m *SyncedTable) SetSpec(ctx context.Context, v SyncedTableSyncedTableSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// GetStatus returns the value of the Status field in SyncedTable as
+// a SyncedTableSyncedTableStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTable) GetStatus(ctx context.Context) (SyncedTableSyncedTableStatus, bool) {
+	var e SyncedTableSyncedTableStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v SyncedTableSyncedTableStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in SyncedTable.
+func (m *SyncedTable) SetStatus(ctx context.Context, v SyncedTableSyncedTableStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+// Metadata for SyncedTable long-running operations.
+type SyncedTableOperationMetadata struct {
+}
+
+func (to *SyncedTableOperationMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableOperationMetadata) {
+}
+
+func (to *SyncedTableOperationMetadata) SyncFieldsDuringRead(ctx context.Context, from SyncedTableOperationMetadata) {
+}
+
+func (m SyncedTableOperationMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTableOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTableOperationMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTableOperationMetadata
+// only implements ToObjectValue() and Type().
+func (m SyncedTableOperationMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTableOperationMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Progress information of the Synced Table data synchronization pipeline.
+type SyncedTablePipelineProgress struct {
+	// The estimated time remaining to complete this update in seconds.
+	EstimatedCompletionTimeSeconds types.Float64 `tfsdk:"estimated_completion_time_seconds"`
+	// The source table Delta version that was last processed by the pipeline.
+	// The pipeline may not have completely processed this version yet.
+	LatestVersionCurrentlyProcessing types.Int64 `tfsdk:"latest_version_currently_processing"`
+	// The completion ratio of this update. This is a number between 0 and 1.
+	SyncProgressCompletion types.Float64 `tfsdk:"sync_progress_completion"`
+	// The number of rows that have been synced in this update.
+	SyncedRowCount types.Int64 `tfsdk:"synced_row_count"`
+	// The total number of rows that need to be synced in this update. This
+	// number may be an estimate.
+	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
+}
+
+func (to *SyncedTablePipelineProgress) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTablePipelineProgress) {
+}
+
+func (to *SyncedTablePipelineProgress) SyncFieldsDuringRead(ctx context.Context, from SyncedTablePipelineProgress) {
+}
+
+func (m SyncedTablePipelineProgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["estimated_completion_time_seconds"] = attrs["estimated_completion_time_seconds"].SetComputed()
+	attrs["latest_version_currently_processing"] = attrs["latest_version_currently_processing"].SetComputed()
+	attrs["sync_progress_completion"] = attrs["sync_progress_completion"].SetComputed()
+	attrs["synced_row_count"] = attrs["synced_row_count"].SetComputed()
+	attrs["total_row_count"] = attrs["total_row_count"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTablePipelineProgress.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTablePipelineProgress) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTablePipelineProgress
+// only implements ToObjectValue() and Type().
+func (m SyncedTablePipelineProgress) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"estimated_completion_time_seconds":   m.EstimatedCompletionTimeSeconds,
+			"latest_version_currently_processing": m.LatestVersionCurrentlyProcessing,
+			"sync_progress_completion":            m.SyncProgressCompletion,
+			"synced_row_count":                    m.SyncedRowCount,
+			"total_row_count":                     m.TotalRowCount,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTablePipelineProgress) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"estimated_completion_time_seconds":   types.Float64Type,
+			"latest_version_currently_processing": types.Int64Type,
+			"sync_progress_completion":            types.Float64Type,
+			"synced_row_count":                    types.Int64Type,
+			"total_row_count":                     types.Int64Type,
+		},
+	}
+}
+
+type SyncedTablePosition struct {
+	DeltaTableSyncInfo types.Object `tfsdk:"delta_table_sync_info"`
+	// The end timestamp of the most recent successful synchronization. This is
+	// the time when the data is available in the synced table.
+	SyncEndTime timetypes.RFC3339 `tfsdk:"sync_end_time"`
+	// The starting timestamp of the most recent successful synchronization from
+	// the source table to the destination (synced) table. Note this is the
+	// starting timestamp of the sync operation, not the end time. E.g., for a
+	// batch, this is the time when the sync operation started.
+	SyncStartTime timetypes.RFC3339 `tfsdk:"sync_start_time"`
+}
+
+func (to *SyncedTablePosition) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTablePosition) {
+	if !from.DeltaTableSyncInfo.IsNull() && !from.DeltaTableSyncInfo.IsUnknown() {
+		if toDeltaTableSyncInfo, ok := to.GetDeltaTableSyncInfo(ctx); ok {
+			if fromDeltaTableSyncInfo, ok := from.GetDeltaTableSyncInfo(ctx); ok {
+				// Recursively sync the fields of DeltaTableSyncInfo
+				toDeltaTableSyncInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTableSyncInfo)
+				to.SetDeltaTableSyncInfo(ctx, toDeltaTableSyncInfo)
+			}
+		}
+	}
+}
+
+func (to *SyncedTablePosition) SyncFieldsDuringRead(ctx context.Context, from SyncedTablePosition) {
+	if !from.DeltaTableSyncInfo.IsNull() && !from.DeltaTableSyncInfo.IsUnknown() {
+		if toDeltaTableSyncInfo, ok := to.GetDeltaTableSyncInfo(ctx); ok {
+			if fromDeltaTableSyncInfo, ok := from.GetDeltaTableSyncInfo(ctx); ok {
+				toDeltaTableSyncInfo.SyncFieldsDuringRead(ctx, fromDeltaTableSyncInfo)
+				to.SetDeltaTableSyncInfo(ctx, toDeltaTableSyncInfo)
+			}
+		}
+	}
+}
+
+func (m SyncedTablePosition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table_sync_info"] = attrs["delta_table_sync_info"].SetComputed()
+	attrs["sync_end_time"] = attrs["sync_end_time"].SetComputed()
+	attrs["sync_start_time"] = attrs["sync_start_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTablePosition.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTablePosition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"delta_table_sync_info": reflect.TypeOf(DeltaTableSyncInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTablePosition
+// only implements ToObjectValue() and Type().
+func (m SyncedTablePosition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delta_table_sync_info": m.DeltaTableSyncInfo,
+			"sync_end_time":         m.SyncEndTime,
+			"sync_start_time":       m.SyncStartTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTablePosition) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delta_table_sync_info": DeltaTableSyncInfo{}.Type(ctx),
+			"sync_end_time":         timetypes.RFC3339{}.Type(ctx),
+			"sync_start_time":       timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetDeltaTableSyncInfo returns the value of the DeltaTableSyncInfo field in SyncedTablePosition as
+// a DeltaTableSyncInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTablePosition) GetDeltaTableSyncInfo(ctx context.Context) (DeltaTableSyncInfo, bool) {
+	var e DeltaTableSyncInfo
+	if m.DeltaTableSyncInfo.IsNull() || m.DeltaTableSyncInfo.IsUnknown() {
+		return e, false
+	}
+	var v DeltaTableSyncInfo
+	d := m.DeltaTableSyncInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaTableSyncInfo sets the value of the DeltaTableSyncInfo field in SyncedTablePosition.
+func (m *SyncedTablePosition) SetDeltaTableSyncInfo(ctx context.Context, v DeltaTableSyncInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.DeltaTableSyncInfo = vs
+}
+
+type SyncedTableSyncedTableSpec struct {
+	// The full resource name the branch associated with the table.
+	//
+	// Format: "projects/{project_id}/branches/{branch_id}".
+	Branch types.String `tfsdk:"branch"`
+	// If true, the synced table's logical database and schema resources in PG
+	// will be created if they do not already exist. The request will fail if
+	// this is false and the database/schema do not exist.
+	//
+	// Defaults to true if omitted.
+	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
+	// ID of an existing pipeline to bin-pack this synced table into. At most
+	// one of existing_pipeline_id and new_pipeline_spec should be defined.
+	//
+	// The pipeline used for the synced table is returned via the top level
+	// pipeline_id attribute.
+	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
+	// Specification for creating a new pipeline. At most one of
+	// existing_pipeline_id and new_pipeline_spec should be defined.
+	//
+	// The pipeline used for the synced table is returned via the top level
+	// pipeline_id attribute.
+	NewPipelineSpec types.Object `tfsdk:"new_pipeline_spec"`
+	// The Postgres database name where the synced table will be created in.
+	//
+	// If this synced table is created inside a Lakebase Catalog, this attribute
+	// can be omitted on creation and is inferred from the postgres_database
+	// associated with the Lakebase Catalog. If specified when inside a Lakebase
+	// Catalog, the value must match.
+	//
+	// A value must be specified when creating a synced table inside a Standard
+	// Catalog.
+	PostgresDatabase types.String `tfsdk:"postgres_database"`
+	// Primary Key columns to be used for data insert/update in the destination.
+	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
+	// Scheduling policy of the underlying pipeline.
+	SchedulingPolicy types.String `tfsdk:"scheduling_policy"`
+	// Three-part (catalog, schema, table) name of the source Delta table.
+	//
+	// For the corresponding destination table, use any of the two:
+	//
+	// * synced_table_id used at the creation of the SyncedTable * "name"
+	// consisting of "synced_tables/" prefix and the full name of the
+	// destination table.
+	SourceTableFullName types.String `tfsdk:"source_table_full_name"`
+	// Time series key to deduplicate (tie-break) rows with the same primary
+	// key.
+	TimeseriesKey types.String `tfsdk:"timeseries_key"`
+}
+
+func (to *SyncedTableSyncedTableSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableSpec) {
+	if !from.NewPipelineSpec.IsNull() && !from.NewPipelineSpec.IsUnknown() {
+		if toNewPipelineSpec, ok := to.GetNewPipelineSpec(ctx); ok {
+			if fromNewPipelineSpec, ok := from.GetNewPipelineSpec(ctx); ok {
+				// Recursively sync the fields of NewPipelineSpec
+				toNewPipelineSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromNewPipelineSpec)
+				to.SetNewPipelineSpec(ctx, toNewPipelineSpec)
+			}
+		}
+	}
+	if !from.PrimaryKeyColumns.IsNull() && !from.PrimaryKeyColumns.IsUnknown() && to.PrimaryKeyColumns.IsNull() && len(from.PrimaryKeyColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PrimaryKeyColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PrimaryKeyColumns = from.PrimaryKeyColumns
+	}
+}
+
+func (to *SyncedTableSyncedTableSpec) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableSpec) {
+	if !from.NewPipelineSpec.IsNull() && !from.NewPipelineSpec.IsUnknown() {
+		if toNewPipelineSpec, ok := to.GetNewPipelineSpec(ctx); ok {
+			if fromNewPipelineSpec, ok := from.GetNewPipelineSpec(ctx); ok {
+				toNewPipelineSpec.SyncFieldsDuringRead(ctx, fromNewPipelineSpec)
+				to.SetNewPipelineSpec(ctx, toNewPipelineSpec)
+			}
+		}
+	}
+	if !from.PrimaryKeyColumns.IsNull() && !from.PrimaryKeyColumns.IsUnknown() && to.PrimaryKeyColumns.IsNull() && len(from.PrimaryKeyColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PrimaryKeyColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PrimaryKeyColumns = from.PrimaryKeyColumns
+	}
+}
+
+func (m SyncedTableSyncedTableSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetOptional()
+	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
+	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetOptional()
+	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
+	attrs["primary_key_columns"] = attrs["primary_key_columns"].SetOptional()
+	attrs["scheduling_policy"] = attrs["scheduling_policy"].SetOptional()
+	attrs["source_table_full_name"] = attrs["source_table_full_name"].SetOptional()
+	attrs["timeseries_key"] = attrs["timeseries_key"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTableSyncedTableSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTableSyncedTableSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"new_pipeline_spec":   reflect.TypeOf(NewPipelineSpec{}),
+		"primary_key_columns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTableSyncedTableSpec
+// only implements ToObjectValue() and Type().
+func (m SyncedTableSyncedTableSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"branch":                             m.Branch,
+			"create_database_objects_if_missing": m.CreateDatabaseObjectsIfMissing,
+			"existing_pipeline_id":               m.ExistingPipelineId,
+			"new_pipeline_spec":                  m.NewPipelineSpec,
+			"postgres_database":                  m.PostgresDatabase,
+			"primary_key_columns":                m.PrimaryKeyColumns,
+			"scheduling_policy":                  m.SchedulingPolicy,
+			"source_table_full_name":             m.SourceTableFullName,
+			"timeseries_key":                     m.TimeseriesKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTableSyncedTableSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"branch":                             types.StringType,
+			"create_database_objects_if_missing": types.BoolType,
+			"existing_pipeline_id":               types.StringType,
+			"new_pipeline_spec":                  NewPipelineSpec{}.Type(ctx),
+			"postgres_database":                  types.StringType,
+			"primary_key_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"scheduling_policy":      types.StringType,
+			"source_table_full_name": types.StringType,
+			"timeseries_key":         types.StringType,
+		},
+	}
+}
+
+// GetNewPipelineSpec returns the value of the NewPipelineSpec field in SyncedTableSyncedTableSpec as
+// a NewPipelineSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableSpec) GetNewPipelineSpec(ctx context.Context) (NewPipelineSpec, bool) {
+	var e NewPipelineSpec
+	if m.NewPipelineSpec.IsNull() || m.NewPipelineSpec.IsUnknown() {
+		return e, false
+	}
+	var v NewPipelineSpec
+	d := m.NewPipelineSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNewPipelineSpec sets the value of the NewPipelineSpec field in SyncedTableSyncedTableSpec.
+func (m *SyncedTableSyncedTableSpec) SetNewPipelineSpec(ctx context.Context, v NewPipelineSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.NewPipelineSpec = vs
+}
+
+// GetPrimaryKeyColumns returns the value of the PrimaryKeyColumns field in SyncedTableSyncedTableSpec as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableSpec) GetPrimaryKeyColumns(ctx context.Context) ([]types.String, bool) {
+	if m.PrimaryKeyColumns.IsNull() || m.PrimaryKeyColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.PrimaryKeyColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrimaryKeyColumns sets the value of the PrimaryKeyColumns field in SyncedTableSyncedTableSpec.
+func (m *SyncedTableSyncedTableSpec) SetPrimaryKeyColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_key_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PrimaryKeyColumns = types.ListValueMust(t, vs)
+}
+
+type SyncedTableSyncedTableStatus struct {
+	// The state of the synced table.
+	DetailedState types.String `tfsdk:"detailed_state"`
+	// The last source table Delta version that was successfully synced to the
+	// synced table.
+	LastProcessedCommitVersion types.Int64 `tfsdk:"last_processed_commit_version"`
+	// Summary of the last successful synchronization from source to
+	// destination.
+	LastSync types.Object `tfsdk:"last_sync"`
+	// The end timestamp of the last time any data was synchronized from the
+	// source table to the synced table. This is when the data is available in
+	// the synced table.
+	LastSyncTime timetypes.RFC3339 `tfsdk:"last_sync_time"`
+	// A text description of the current state of the synced table.
+	Message types.String `tfsdk:"message"`
+
+	OngoingSyncProgress types.Object `tfsdk:"ongoing_sync_progress"`
+	// ID of the associated pipeline.
+	PipelineId types.String `tfsdk:"pipeline_id"`
+	// The full resource name of the project associated with the table.
+	//
+	// Format: "projects/{project_id}".
+	Project types.String `tfsdk:"project"`
+	// The current phase of the data synchronization pipeline.
+	ProvisioningPhase types.String `tfsdk:"provisioning_phase"`
+	// The provisioning state of the synced table entity in Unity Catalog.
+	UnityCatalogProvisioningState types.String `tfsdk:"unity_catalog_provisioning_state"`
+}
+
+func (to *SyncedTableSyncedTableStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableStatus) {
+	if !from.LastSync.IsNull() && !from.LastSync.IsUnknown() {
+		if toLastSync, ok := to.GetLastSync(ctx); ok {
+			if fromLastSync, ok := from.GetLastSync(ctx); ok {
+				// Recursively sync the fields of LastSync
+				toLastSync.SyncFieldsDuringCreateOrUpdate(ctx, fromLastSync)
+				to.SetLastSync(ctx, toLastSync)
+			}
+		}
+	}
+	if !from.OngoingSyncProgress.IsNull() && !from.OngoingSyncProgress.IsUnknown() {
+		if toOngoingSyncProgress, ok := to.GetOngoingSyncProgress(ctx); ok {
+			if fromOngoingSyncProgress, ok := from.GetOngoingSyncProgress(ctx); ok {
+				// Recursively sync the fields of OngoingSyncProgress
+				toOngoingSyncProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromOngoingSyncProgress)
+				to.SetOngoingSyncProgress(ctx, toOngoingSyncProgress)
+			}
+		}
+	}
+}
+
+func (to *SyncedTableSyncedTableStatus) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableStatus) {
+	if !from.LastSync.IsNull() && !from.LastSync.IsUnknown() {
+		if toLastSync, ok := to.GetLastSync(ctx); ok {
+			if fromLastSync, ok := from.GetLastSync(ctx); ok {
+				toLastSync.SyncFieldsDuringRead(ctx, fromLastSync)
+				to.SetLastSync(ctx, toLastSync)
+			}
+		}
+	}
+	if !from.OngoingSyncProgress.IsNull() && !from.OngoingSyncProgress.IsUnknown() {
+		if toOngoingSyncProgress, ok := to.GetOngoingSyncProgress(ctx); ok {
+			if fromOngoingSyncProgress, ok := from.GetOngoingSyncProgress(ctx); ok {
+				toOngoingSyncProgress.SyncFieldsDuringRead(ctx, fromOngoingSyncProgress)
+				to.SetOngoingSyncProgress(ctx, toOngoingSyncProgress)
+			}
+		}
+	}
+}
+
+func (m SyncedTableSyncedTableStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detailed_state"] = attrs["detailed_state"].SetComputed()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetComputed()
+	attrs["last_sync"] = attrs["last_sync"].SetComputed()
+	attrs["last_sync_time"] = attrs["last_sync_time"].SetComputed()
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["ongoing_sync_progress"] = attrs["ongoing_sync_progress"].SetComputed()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
+	attrs["project"] = attrs["project"].SetComputed()
+	attrs["provisioning_phase"] = attrs["provisioning_phase"].SetComputed()
+	attrs["unity_catalog_provisioning_state"] = attrs["unity_catalog_provisioning_state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTableSyncedTableStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTableSyncedTableStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"last_sync":             reflect.TypeOf(SyncedTablePosition{}),
+		"ongoing_sync_progress": reflect.TypeOf(SyncedTablePipelineProgress{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTableSyncedTableStatus
+// only implements ToObjectValue() and Type().
+func (m SyncedTableSyncedTableStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"detailed_state":                   m.DetailedState,
+			"last_processed_commit_version":    m.LastProcessedCommitVersion,
+			"last_sync":                        m.LastSync,
+			"last_sync_time":                   m.LastSyncTime,
+			"message":                          m.Message,
+			"ongoing_sync_progress":            m.OngoingSyncProgress,
+			"pipeline_id":                      m.PipelineId,
+			"project":                          m.Project,
+			"provisioning_phase":               m.ProvisioningPhase,
+			"unity_catalog_provisioning_state": m.UnityCatalogProvisioningState,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTableSyncedTableStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"detailed_state":                   types.StringType,
+			"last_processed_commit_version":    types.Int64Type,
+			"last_sync":                        SyncedTablePosition{}.Type(ctx),
+			"last_sync_time":                   timetypes.RFC3339{}.Type(ctx),
+			"message":                          types.StringType,
+			"ongoing_sync_progress":            SyncedTablePipelineProgress{}.Type(ctx),
+			"pipeline_id":                      types.StringType,
+			"project":                          types.StringType,
+			"provisioning_phase":               types.StringType,
+			"unity_catalog_provisioning_state": types.StringType,
+		},
+	}
+}
+
+// GetLastSync returns the value of the LastSync field in SyncedTableSyncedTableStatus as
+// a SyncedTablePosition value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableStatus) GetLastSync(ctx context.Context) (SyncedTablePosition, bool) {
+	var e SyncedTablePosition
+	if m.LastSync.IsNull() || m.LastSync.IsUnknown() {
+		return e, false
+	}
+	var v SyncedTablePosition
+	d := m.LastSync.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLastSync sets the value of the LastSync field in SyncedTableSyncedTableStatus.
+func (m *SyncedTableSyncedTableStatus) SetLastSync(ctx context.Context, v SyncedTablePosition) {
+	vs := v.ToObjectValue(ctx)
+	m.LastSync = vs
+}
+
+// GetOngoingSyncProgress returns the value of the OngoingSyncProgress field in SyncedTableSyncedTableStatus as
+// a SyncedTablePipelineProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableStatus) GetOngoingSyncProgress(ctx context.Context) (SyncedTablePipelineProgress, bool) {
+	var e SyncedTablePipelineProgress
+	if m.OngoingSyncProgress.IsNull() || m.OngoingSyncProgress.IsUnknown() {
+		return e, false
+	}
+	var v SyncedTablePipelineProgress
+	d := m.OngoingSyncProgress.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOngoingSyncProgress sets the value of the OngoingSyncProgress field in SyncedTableSyncedTableStatus.
+func (m *SyncedTableSyncedTableStatus) SetOngoingSyncProgress(ctx context.Context, v SyncedTablePipelineProgress) {
+	vs := v.ToObjectValue(ctx)
+	m.OngoingSyncProgress = vs
+}
+
+// Request to restore a soft-deleted project within its retention period.
+type UndeleteProjectRequest struct {
+	// The full resource path of the project to undelete. Format:
+	// projects/{project_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UndeleteProjectRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteProjectRequest) {
+}
+
+func (to *UndeleteProjectRequest) SyncFieldsDuringRead(ctx context.Context, from UndeleteProjectRequest) {
+}
+
+func (m UndeleteProjectRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteProjectRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndeleteProjectRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteProjectRequest
+// only implements ToObjectValue() and Type().
+func (m UndeleteProjectRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndeleteProjectRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
 type UpdateBranchRequest struct {

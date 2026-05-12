@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_workspace_base_environments Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 This data source retrieves the list of all Workspace Base Environments in the workspace.
 The list can be accessed via the data object's `workspace_base_environments` field.
@@ -10,10 +10,10 @@ The list can be accessed via the data object's `workspace_base_environments` fie
 
 ## Example Usage
 ```hcl
-data "databricks_workspace_base_environments" "all" {}
+data "databricks_environments_workspace_base_environments" "all" {}
 
 output "all_environments" {
-  value = data.databricks_workspace_base_environments.all.workspace_base_environments
+  value = data.databricks_environments_workspace_base_environments.all.workspace_base_environments
 }
 ```
 
@@ -25,7 +25,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

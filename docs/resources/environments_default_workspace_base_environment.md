@@ -2,7 +2,7 @@
 subcategory: "Environments"
 ---
 # databricks_environments_default_workspace_base_environment Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 The Default Workspace Base Environment is a singleton resource that configures which workspace base environments are applied by default to new notebooks in the workspace. Defaults can be set separately for CPU and GPU compute.
 
@@ -22,40 +22,35 @@ Only workspace admins can configure the default workspace base environment.
 ### Set Default for CPU Compute
 
 ```hcl
-resource "databricks_workspace_base_environment" "cpu_env" {
-  display_name = "my-cpu-environment"
-  filepath     = "/Volumes/catalog/schema/volume/cpu-environment.yaml"
-}
-
-resource "databricks_default_workspace_base_environment" "this" {
-  cpu_workspace_base_environment = databricks_workspace_base_environment.cpu_env.name
+resource "databricks_environments_default_workspace_base_environment" "this" {
+  cpu_workspace_base_environment = "workspace-base-environments/my-base-env-12345"
 }
 ```
 
 ### Set Defaults for Both CPU and GPU Compute
 
 ```hcl
-resource "databricks_workspace_base_environment" "cpu_env" {
+resource "databricks_environments_workspace_base_environment" "cpu_env" {
   display_name = "my-cpu-environment"
   filepath     = "/Volumes/catalog/schema/volume/cpu-environment.yaml"
 }
 
-resource "databricks_workspace_base_environment" "gpu_env" {
+resource "databricks_environments_workspace_base_environment" "gpu_env" {
   display_name          = "my-gpu-environment"
   filepath              = "/Volumes/catalog/schema/volume/gpu-environment.yaml"
-  base_environment_type = "GPU_LARGE"
+  base_environment_type = "GPU"
 }
 
-resource "databricks_default_workspace_base_environment" "this" {
-  cpu_workspace_base_environment = databricks_workspace_base_environment.cpu_env.name
-  gpu_workspace_base_environment = databricks_workspace_base_environment.gpu_env.name
+resource "databricks_environments_default_workspace_base_environment" "this" {
+  cpu_workspace_base_environment = databricks_environments_workspace_base_environment.cpu_env.name
+  gpu_workspace_base_environment = databricks_environments_workspace_base_environment.gpu_env.name
 }
 ```
 
 ### Unset Both Defaults
 
 ```hcl
-resource "databricks_default_workspace_base_environment" "this" {}
+resource "databricks_environments_default_workspace_base_environment" "this" {}
 ```
 
 
@@ -68,7 +63,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

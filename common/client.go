@@ -112,7 +112,7 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
 	// The provider can be configured at account level or workspace level.
-	if c.Config.HostType() != config.WorkspaceHost {
+	if c.HostTypeForTerraform() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
 	}
 	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
@@ -124,11 +124,14 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// Workspace ID must be set in a workspace level resource if
-	// the provider is configured at account level.
-	// TODO: Link to the documentation once migration guide is published
+	// If workspace_id is not provided in provider_config, use the provider-level
+	// workspace_id from SDK config as fallback
 	if workspaceID == "" {
-		return nil, fmt.Errorf("workspace_id is not set, please set the workspace_id in the provider_config")
+		workspaceID = c.Config.WorkspaceID
+	}
+	if workspaceID == "" {
+		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
 	}
 
 	// Parse the workspace ID to int.
@@ -185,6 +188,23 @@ func parseWorkspaceID(workspaceID string) (int64, error) {
 
 	}
 	return workspaceIDInt, nil
+}
+
+// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
+// It uses the cached value if available, otherwise makes an API call to resolve it.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.cachedWorkspaceID != 0 {
+		return c.cachedWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	err = c.setCachedWorkspaceID(ctx, w)
+	if err != nil {
+		return 0, err
+	}
+	return c.cachedWorkspaceID, nil
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
@@ -326,6 +346,28 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cachedAccountClient = a
+}
+
+// SetCachedWorkspaceID sets the cached workspace ID directly.
+// This is used by test infrastructure to pre-populate the cache and prevent
+// lazy CurrentWorkspaceID API calls during unit tests.
+func (c *DatabricksClient) SetCachedWorkspaceID(id int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceID = id
+}
+
+// GetProviderWorkspaceID returns the provider-level workspace_id from Config.
+// Satisfies the tfschema.UnifiedProviderClient interface.
+func (c *DatabricksClient) GetProviderWorkspaceID() string {
+	return c.Config.WorkspaceID
+}
+
+// ValidateWorkspaceAccess validates that the workspace client for the given
+// workspace_id is reachable. Satisfies the tfschema.UnifiedProviderClient interface.
+func (c *DatabricksClient) ValidateWorkspaceAccess(ctx context.Context, workspaceID string) diag.Diagnostics {
+	_, diags := c.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	return diags
 }
 
 func (c *DatabricksClient) setAccountId(accountId string) error {
@@ -489,18 +531,43 @@ func GetApiLevel(d *schema.ResourceData) string {
 	return ""
 }
 
-// IsAccountLevel determines whether a resource should use account-level APIs.
-// It checks the `api` field first. If set, it takes precedence. Otherwise, it
-// falls back to the provider's host type.
-func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
-	switch GetApiLevel(d) {
+// GetApiLevelFromDiff returns the planned (new) value of the `api` field from
+// a resource diff, or empty string if not set. This mirrors GetApiLevel but
+// works with ResourceDiff (used in CustomizeDiff hooks).
+func GetApiLevelFromDiff(d *schema.ResourceDiff) string {
+	if v, ok := d.GetOk("api"); ok {
+		level := v.(string)
+		if level == ApiLevelAccount || level == ApiLevelWorkspace {
+			return level
+		}
+	}
+	return ""
+}
+
+// IsAccountLevelFromDiff determines whether a resource should use account-level APIs.
+// This mirrors IsAccountLevel but works with ResourceDiff (used in CustomizeDiff).
+func IsAccountLevelFromDiff(d *schema.ResourceDiff, c *DatabricksClient) bool {
+	return isAccountLevelFromApiLevel(GetApiLevelFromDiff(d), c)
+}
+
+// isAccountLevelFromApiLevel determines whether a resource should use account-level APIs
+// based on the api level string and the client's host type.
+func isAccountLevelFromApiLevel(apiLevel string, c *DatabricksClient) bool {
+	switch apiLevel {
 	case ApiLevelAccount:
 		return true
 	case ApiLevelWorkspace:
 		return false
 	default:
-		return c.Config.HostType() == config.AccountHost
+		return c.HostTypeForTerraform() == config.AccountHost
 	}
+}
+
+// IsAccountLevel determines whether a resource should use account-level APIs.
+// It checks the `api` field first. If set, it takes precedence. Otherwise, it
+// falls back to the provider's host type.
+func IsAccountLevel(d *schema.ResourceData, c *DatabricksClient) bool {
+	return isAccountLevelFromApiLevel(GetApiLevel(d), c)
 }
 
 type ApiVersion string
@@ -534,7 +601,7 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 			// Explicit api field takes precedence over host-based inference
 			isAccount = apiLevel == ApiLevelAccount
 		} else {
-			isAccount = c.Config.HostType() == config.AccountHost
+			isAccount = c.HostTypeForTerraform() == config.AccountHost
 		}
 		if isAccount {
 			// until `/preview` is there for workspace scim,

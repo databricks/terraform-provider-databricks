@@ -71,16 +71,21 @@ func DataSourceUser() common.Resource {
 			Computed: true,
 		},
 	}
+	common.AddApiField(s)
 	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
+		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
+				return err
+			}
+			newClient, err := m.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, newClient, "")
+			usersAPI := NewUsersAPI(ctx, newClient, common.GetApiLevel(d))
 			user, err := getUser(usersAPI, d.Get("user_id").(string), d.Get("user_name").(string))
 			if err != nil {
 				return err

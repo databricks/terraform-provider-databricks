@@ -20,7 +20,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AppResource
 * `name` (string, required) - Name of the App Resource
@@ -35,6 +35,10 @@ The following arguments are supported:
 * `serving_endpoint` (AppResourceServingEndpoint, optional)
 * `sql_warehouse` (AppResourceSqlWarehouse, optional)
 * `uc_securable` (AppResourceUcSecurable, optional)
+
+### AppResourceApp
+* `name` (string, optional)
+* `permission` (string, optional) - Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
 * `database_name` (string, required)

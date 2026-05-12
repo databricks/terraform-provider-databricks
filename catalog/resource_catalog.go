@@ -237,6 +237,13 @@ func ResourceCatalog() common.Resource {
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			// Catalogs are metastore-scoped: they live in a metastore, not in a
+			// specific workspace. When the effective workspace_id changes, switch
+			// API routing to the new workspace and persist the new value to state
+			// without recreating the catalog.
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
 			// The only scenario in which we can update options is for the `authorized_paths` key. Any
 			// other changes to the options field will result in an error.
 			if d.HasChange("options") {

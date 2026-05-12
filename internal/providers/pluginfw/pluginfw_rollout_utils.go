@@ -118,7 +118,8 @@ func (o *configCustomizer) Apply(options *pluginFrameworkOptions) {
 	options.configCustomizer = o.configCustomizer
 }
 
-// WithConfigCustomizer allows the caller to customize the SDK config after config resolution.
+// WithConfigCustomizer allows the caller to customize the SDK config before config resolution,
+// so customizer-set fields (e.g. Host) participate in resolveHostMetadata and auth.
 func WithConfigCustomizer(customizer func(*config.Config) error) PluginFrameworkOption {
 	return &configCustomizer{configCustomizer: customizer}
 }

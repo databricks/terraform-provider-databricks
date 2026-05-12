@@ -24,6 +24,108 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type CreateExampleRequest_SdkV2 struct {
+	// The example to create under the parent Knowledge Assistant.
+	Example types.List `tfsdk:"example"`
+	// Parent resource where this example will be created. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (to *CreateExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (m CreateExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["example"] = attrs["example"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example": m.Example,
+			"parent":  m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"parent": types.StringType,
+		},
+	}
+}
+
+// GetExample returns the value of the Example field in CreateExampleRequest_SdkV2 as
+// a Example_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExampleRequest_SdkV2) GetExample(ctx context.Context) (Example_SdkV2, bool) {
+	var e Example_SdkV2
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v []Example_SdkV2
+	d := m.Example.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExample sets the value of the Example field in CreateExampleRequest_SdkV2.
+func (m *CreateExampleRequest_SdkV2) SetExample(ctx context.Context, v Example_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["example"]
+	m.Example = types.ListValueMust(t, vs)
+}
+
 type CreateKnowledgeAssistantRequest_SdkV2 struct {
 	// The Knowledge Assistant to create.
 	KnowledgeAssistant types.List `tfsdk:"knowledge_assistant"`
@@ -221,6 +323,55 @@ func (m *CreateKnowledgeSourceRequest_SdkV2) SetKnowledgeSource(ctx context.Cont
 	m.KnowledgeSource = types.ListValueMust(t, vs)
 }
 
+type DeleteExampleRequest_SdkV2 struct {
+	// The resource name of the example to delete. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteExampleRequest_SdkV2) {
+}
+
+func (to *DeleteExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteExampleRequest_SdkV2) {
+}
+
+func (m DeleteExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteKnowledgeAssistantRequest_SdkV2 struct {
 	// The resource name of the knowledge assistant to be deleted. Format:
 	// knowledge-assistants/{knowledge_assistant_id}
@@ -317,6 +468,126 @@ func (m DeleteKnowledgeSourceRequest_SdkV2) Type(ctx context.Context) attr.Type 
 			"name": types.StringType,
 		},
 	}
+}
+
+// An example associated with a Knowledge Assistant. Contains a question and
+// guidelines for how the assistant should respond.
+type Example_SdkV2 struct {
+	// Timestamp when this example was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The universally unique identifier (UUID) of the example.
+	ExampleId types.String `tfsdk:"example_id"`
+	// Guidelines for answering the question. Optional — examples may be
+	// created with just a question; the front-end form does not require
+	// guidelines.
+	Guidelines types.List `tfsdk:"guidelines"`
+	// Full resource name:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"name"`
+	// The example question.
+	Question types.String `tfsdk:"question"`
+	// Timestamp when this example was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Example_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Example_SdkV2) {
+	if !from.Guidelines.IsNull() && !from.Guidelines.IsUnknown() && to.Guidelines.IsNull() && len(from.Guidelines.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Guidelines, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Guidelines = from.Guidelines
+	}
+}
+
+func (to *Example_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Example_SdkV2) {
+	if !from.Guidelines.IsNull() && !from.Guidelines.IsUnknown() && to.Guidelines.IsNull() && len(from.Guidelines.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Guidelines, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Guidelines = from.Guidelines
+	}
+}
+
+func (m Example_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["example_id"] = attrs["example_id"].SetComputed()
+	attrs["guidelines"] = attrs["guidelines"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["question"] = attrs["question"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Example.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Example_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"guidelines": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Example_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Example_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"example_id":  m.ExampleId,
+			"guidelines":  m.Guidelines,
+			"name":        m.Name,
+			"question":    m.Question,
+			"update_time": m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Example_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"example_id":  types.StringType,
+			"guidelines": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"name":        types.StringType,
+			"question":    types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetGuidelines returns the value of the Guidelines field in Example_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Example_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
+	if m.Guidelines.IsNull() || m.Guidelines.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Guidelines.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGuidelines sets the value of the Guidelines field in Example_SdkV2.
+func (m *Example_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Guidelines = types.ListValueMust(t, vs)
 }
 
 // FileTableSpec specifies a file table source configuration.
@@ -419,6 +690,241 @@ func (m FilesSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
+		},
+	}
+}
+
+type GetExampleRequest_SdkV2 struct {
+	// The resource name of the example. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExampleRequest_SdkV2) {
+}
+
+func (to *GetExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetExampleRequest_SdkV2) {
+}
+
+func (m GetExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetKnowledgeAssistantPermissionLevelsRequest_SdkV2 struct {
+	// The knowledge assistant for which to get or manage permissions.
+	KnowledgeAssistantId types.String `tfsdk:"-"`
+}
+
+func (to *GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) {
+}
+
+func (to *GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) {
+}
+
+func (m GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["knowledge_assistant_id"] = attrs["knowledge_assistant_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetKnowledgeAssistantPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetKnowledgeAssistantPermissionLevelsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"knowledge_assistant_id": m.KnowledgeAssistantId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetKnowledgeAssistantPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"knowledge_assistant_id": types.StringType,
+		},
+	}
+}
+
+type GetKnowledgeAssistantPermissionLevelsResponse_SdkV2 struct {
+	// Specific permission levels
+	PermissionLevels types.List `tfsdk:"permission_levels"`
+}
+
+func (to *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
+}
+
+func (to *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
+}
+
+func (m GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetKnowledgeAssistantPermissionLevelsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"permission_levels": reflect.TypeOf(KnowledgeAssistantPermissionsDescription_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetKnowledgeAssistantPermissionLevelsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission_levels": m.PermissionLevels,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission_levels": basetypes.ListType{
+				ElemType: KnowledgeAssistantPermissionsDescription_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetKnowledgeAssistantPermissionLevelsResponse_SdkV2 as
+// a slice of KnowledgeAssistantPermissionsDescription_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) GetPermissionLevels(ctx context.Context) ([]KnowledgeAssistantPermissionsDescription_SdkV2, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []KnowledgeAssistantPermissionsDescription_SdkV2
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetKnowledgeAssistantPermissionLevelsResponse_SdkV2.
+func (m *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Context, v []KnowledgeAssistantPermissionsDescription_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PermissionLevels = types.ListValueMust(t, vs)
+}
+
+type GetKnowledgeAssistantPermissionsRequest_SdkV2 struct {
+	// The knowledge assistant for which to get or manage permissions.
+	KnowledgeAssistantId types.String `tfsdk:"-"`
+}
+
+func (to *GetKnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetKnowledgeAssistantPermissionsRequest_SdkV2) {
+}
+
+func (to *GetKnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetKnowledgeAssistantPermissionsRequest_SdkV2) {
+}
+
+func (m GetKnowledgeAssistantPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["knowledge_assistant_id"] = attrs["knowledge_assistant_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetKnowledgeAssistantPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetKnowledgeAssistantPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetKnowledgeAssistantPermissionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetKnowledgeAssistantPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"knowledge_assistant_id": m.KnowledgeAssistantId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetKnowledgeAssistantPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"knowledge_assistant_id": types.StringType,
 		},
 	}
 }
@@ -690,6 +1196,523 @@ func (m KnowledgeAssistant_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type KnowledgeAssistantAccessControlRequest_SdkV2 struct {
+	// name of the group
+	GroupName types.String `tfsdk:"group_name"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+	// application ID of a service principal
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// name of the user
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (to *KnowledgeAssistantAccessControlRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantAccessControlRequest_SdkV2) {
+}
+
+func (to *KnowledgeAssistantAccessControlRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantAccessControlRequest_SdkV2) {
+}
+
+func (m KnowledgeAssistantAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantAccessControlRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantAccessControlRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantAccessControlRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantAccessControlRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
+}
+
+type KnowledgeAssistantAccessControlResponse_SdkV2 struct {
+	// All permissions.
+	AllPermissions types.List `tfsdk:"all_permissions"`
+	// Display name of the user or service principal.
+	DisplayName types.String `tfsdk:"display_name"`
+	// name of the group
+	GroupName types.String `tfsdk:"group_name"`
+	// Name of the service principal.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// name of the user
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (to *KnowledgeAssistantAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantAccessControlResponse_SdkV2) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
+}
+
+func (to *KnowledgeAssistantAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantAccessControlResponse_SdkV2) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
+}
+
+func (m KnowledgeAssistantAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantAccessControlResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantAccessControlResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"all_permissions": reflect.TypeOf(KnowledgeAssistantPermission_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantAccessControlResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantAccessControlResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"all_permissions": basetypes.ListType{
+				ElemType: KnowledgeAssistantPermission_SdkV2{}.Type(ctx),
+			},
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in KnowledgeAssistantAccessControlResponse_SdkV2 as
+// a slice of KnowledgeAssistantPermission_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KnowledgeAssistantAccessControlResponse_SdkV2) GetAllPermissions(ctx context.Context) ([]KnowledgeAssistantPermission_SdkV2, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []KnowledgeAssistantPermission_SdkV2
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in KnowledgeAssistantAccessControlResponse_SdkV2.
+func (m *KnowledgeAssistantAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v []KnowledgeAssistantPermission_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AllPermissions = types.ListValueMust(t, vs)
+}
+
+type KnowledgeAssistantPermission_SdkV2 struct {
+	Inherited types.Bool `tfsdk:"inherited"`
+
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+}
+
+func (to *KnowledgeAssistantPermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantPermission_SdkV2) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
+}
+
+func (to *KnowledgeAssistantPermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermission_SdkV2) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
+}
+
+func (m KnowledgeAssistantPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantPermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantPermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"inherited_from_object": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantPermission_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantPermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantPermission_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"permission_level": types.StringType,
+		},
+	}
+}
+
+// GetInheritedFromObject returns the value of the InheritedFromObject field in KnowledgeAssistantPermission_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KnowledgeAssistantPermission_SdkV2) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in KnowledgeAssistantPermission_SdkV2.
+func (m *KnowledgeAssistantPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
+type KnowledgeAssistantPermissions_SdkV2 struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+
+	ObjectId types.String `tfsdk:"object_id"`
+
+	ObjectType types.String `tfsdk:"object_type"`
+}
+
+func (to *KnowledgeAssistantPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantPermissions_SdkV2) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *KnowledgeAssistantPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissions_SdkV2) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (m KnowledgeAssistantPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantPermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(KnowledgeAssistantAccessControlResponse_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantPermissions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantPermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantPermissions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: KnowledgeAssistantAccessControlResponse_SdkV2{}.Type(ctx),
+			},
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in KnowledgeAssistantPermissions_SdkV2 as
+// a slice of KnowledgeAssistantAccessControlResponse_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KnowledgeAssistantPermissions_SdkV2) GetAccessControlList(ctx context.Context) ([]KnowledgeAssistantAccessControlResponse_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []KnowledgeAssistantAccessControlResponse_SdkV2
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in KnowledgeAssistantPermissions_SdkV2.
+func (m *KnowledgeAssistantPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []KnowledgeAssistantAccessControlResponse_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AccessControlList = types.ListValueMust(t, vs)
+}
+
+type KnowledgeAssistantPermissionsDescription_SdkV2 struct {
+	Description types.String `tfsdk:"description"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+}
+
+func (to *KnowledgeAssistantPermissionsDescription_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantPermissionsDescription_SdkV2) {
+}
+
+func (to *KnowledgeAssistantPermissionsDescription_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissionsDescription_SdkV2) {
+}
+
+func (m KnowledgeAssistantPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantPermissionsDescription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantPermissionsDescription_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantPermissionsDescription_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantPermissionsDescription_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":      types.StringType,
+			"permission_level": types.StringType,
+		},
+	}
+}
+
+type KnowledgeAssistantPermissionsRequest_SdkV2 struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The knowledge assistant for which to get or manage permissions.
+	KnowledgeAssistantId types.String `tfsdk:"-"`
+}
+
+func (to *KnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KnowledgeAssistantPermissionsRequest_SdkV2) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *KnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissionsRequest_SdkV2) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (m KnowledgeAssistantPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["knowledge_assistant_id"] = attrs["knowledge_assistant_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KnowledgeAssistantPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KnowledgeAssistantPermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(KnowledgeAssistantAccessControlRequest_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KnowledgeAssistantPermissionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KnowledgeAssistantPermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list":    m.AccessControlList,
+			"knowledge_assistant_id": m.KnowledgeAssistantId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KnowledgeAssistantPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: KnowledgeAssistantAccessControlRequest_SdkV2{}.Type(ctx),
+			},
+			"knowledge_assistant_id": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in KnowledgeAssistantPermissionsRequest_SdkV2 as
+// a slice of KnowledgeAssistantAccessControlRequest_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KnowledgeAssistantPermissionsRequest_SdkV2) GetAccessControlList(ctx context.Context) ([]KnowledgeAssistantAccessControlRequest_SdkV2, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []KnowledgeAssistantAccessControlRequest_SdkV2
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in KnowledgeAssistantPermissionsRequest_SdkV2.
+func (m *KnowledgeAssistantPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, v []KnowledgeAssistantAccessControlRequest_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AccessControlList = types.ListValueMust(t, vs)
+}
+
 // KnowledgeSource represents a source of knowledge for the KnowledgeAssistant.
 // Used in create/update requests and returned in Get/List responses. Note:
 // REQUIRED annotations below represent create-time requirements. For updates,
@@ -940,6 +1963,164 @@ func (m *KnowledgeSource_SdkV2) SetIndex(ctx context.Context, v IndexSpec_SdkV2)
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["index"]
 	m.Index = types.ListValueMust(t, vs)
+}
+
+type ListExamplesRequest_SdkV2 struct {
+	// The maximum number of examples to return. If unspecified, at most 100
+	// examples will be returned. The maximum value is 100; values above 100
+	// will be coerced to 100.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous `ListExamples` call. Provide this
+	// to retrieve the subsequent page. If unspecified, the first page will be
+	// returned.
+	PageToken types.String `tfsdk:"-"`
+	// Parent resource to list from. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListExamplesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesRequest_SdkV2) {
+}
+
+func (to *ListExamplesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExamplesRequest_SdkV2) {
+}
+
+func (m ListExamplesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListExamplesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// A list of Knowledge Assistant examples.
+type ListExamplesResponse_SdkV2 struct {
+	Examples types.List `tfsdk:"examples"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListExamplesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesResponse_SdkV2) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+}
+
+func (to *ListExamplesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExamplesResponse_SdkV2) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+}
+
+func (m ListExamplesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["examples"] = attrs["examples"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"examples": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListExamplesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"examples":        m.Examples,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"examples": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetExamples returns the value of the Examples field in ListExamplesResponse_SdkV2 as
+// a slice of Example_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListExamplesResponse_SdkV2) GetExamples(ctx context.Context) ([]Example_SdkV2, bool) {
+	if m.Examples.IsNull() || m.Examples.IsUnknown() {
+		return nil, false
+	}
+	var v []Example_SdkV2
+	d := m.Examples.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExamples sets the value of the Examples field in ListExamplesResponse_SdkV2.
+func (m *ListExamplesResponse_SdkV2) SetExamples(ctx context.Context, v []Example_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["examples"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Examples = types.ListValueMust(t, vs)
 }
 
 type ListKnowledgeAssistantsRequest_SdkV2 struct {
@@ -1294,6 +2475,113 @@ func (m SyncKnowledgeSourcesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+type UpdateExampleRequest_SdkV2 struct {
+	Example types.List `tfsdk:"example"`
+	// The resource name of the example to update. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+	// Comma-delimited list of fields to update on the example. Allowed values:
+	// `question`, `guidelines`. Examples: - `question` - `question,guidelines`
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (to *UpdateExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (m UpdateExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["example"] = attrs["example"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example":     m.Example,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetExample returns the value of the Example field in UpdateExampleRequest_SdkV2 as
+// a Example_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateExampleRequest_SdkV2) GetExample(ctx context.Context) (Example_SdkV2, bool) {
+	var e Example_SdkV2
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v []Example_SdkV2
+	d := m.Example.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExample sets the value of the Example field in UpdateExampleRequest_SdkV2.
+func (m *UpdateExampleRequest_SdkV2) SetExample(ctx context.Context, v Example_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["example"]
+	m.Example = types.ListValueMust(t, vs)
 }
 
 type UpdateKnowledgeAssistantRequest_SdkV2 struct {

@@ -85,7 +85,7 @@ func ResourceTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
 				return err
 			}
 			if d.Get("table_type") != "EXTERNAL" {

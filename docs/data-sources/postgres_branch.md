@@ -28,7 +28,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -46,18 +46,27 @@ The following attributes are exported:
 * `update_time` (string) - A timestamp indicating when the branch was last updated
 
 ### BranchSpec
-* `expire_time` (string) - Absolute expiration timestamp. When set, the branch will expire at this time
+* `expire_time` (string) - Absolute expiration timestamp. When set, the branch will expire at this time.
+  Mutually exclusive with `ttl` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
 * `is_protected` (boolean) - When set to true, protects the branch from deletion and reset. Associated compute endpoints and the project cannot be deleted while the branch is protected
 * `no_expiry` (boolean) - Explicitly disable expiration. When set to true, the branch will not expire.
-  If set to false, the request is invalid; provide either ttl or expire_time instead
+  If set to false, the request is invalid; provide either ttl or expire_time instead.
+  Mutually exclusive with `expire_time` and `ttl`. When updating, use `spec.expiration` in the update_mask
 * `source_branch` (string) - The name of the source branch from which this branch was created (data lineage for point-in-time recovery).
   If not specified, defaults to the project's default branch.
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string) - The point in time on the source branch from which this branch was created
-* `ttl` (string) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl
+* `ttl` (string) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl.
+  Mutually exclusive with `expire_time` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
 
 ### BranchStatus
+* `branch_id` (string) - The short identifier of the branch, suitable for showing to the users.
+  For a branch with name `projects/my-project/branches/my-branch`, the branch_id is `my-branch`.
+  
+  Use this field when building UI components that display branches to users (e.g., a drop-down
+  selector). Prefer showing `branch_id` instead of the full resource name from `Branch.name`,
+  which follows the `projects/{project_id}/branches/{branch_id}` format and is not user-friendly
 * `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
 * `default` (boolean) - Whether the branch is the project's default branch
 * `expire_time` (string) - Absolute expiration time for the branch. Empty if expiration is disabled

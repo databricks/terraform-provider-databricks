@@ -15,7 +15,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -36,8 +36,10 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 * `uc_service_credential_name` (string) - Name of the Unity Catalog service credential. This value will be set under the option databricks.serviceCredential
 
 ### BackfillSource
-* `delta_table_source` (DeltaTableSource) - The Delta table source containing the historic data to backfill.
-  Only the delta table name is used for backfill, the entity columns and timeseries column are ignored as they are defined by the associated KafkaSource
+* `delta_table_name` (string) - The full three-part name (catalog, schema, name) of the Delta table containing the historical data to backfill
+* `delta_table_source` (DeltaTableSource, deprecated) - Deprecated: Use delta_table_name instead. Kept for backwards compatibility.
+  The Delta table source containing the historical data to backfill.
+  Only the delta table name is used for backfill, other fields are ignored
 
 ### DeltaTableSource
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).

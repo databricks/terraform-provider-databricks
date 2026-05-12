@@ -103,6 +103,7 @@ func TestTagPolicyExport(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -948,6 +949,7 @@ func TestImportExternalLocationGrants(t *testing.T) {
 
 func TestListMetastores(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
 		metastores := []sdk_uc.MetastoreInfo{
 			{
 				Name:        "test",

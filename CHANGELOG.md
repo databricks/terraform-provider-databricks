@@ -1,5 +1,66 @@
 # Version changelog
 
+## Release v1.115.0 (2026-05-11)
+
+### Bug Fixes
+
+* Fix `databricks_library`, `databricks_share`, and `databricks_quality_monitor` failing to decode prior state with `Error decoding ... from prior state: missing expected {` after upgrading from v1.113.0 to v1.114.0 ([#5669](https://github.com/databricks/terraform-provider-databricks/issues/5669)). Reverts [#5582](https://github.com/databricks/terraform-provider-databricks/pull/5582).
+
+  > **Note for users upgrading from v1.114.0**: any state written by v1.114.0 for `databricks_library`, `databricks_share`, or `databricks_quality_monitor` encodes `provider_config` as a single object instead of a list, and `terraform plan` against the upgraded provider will fail to decode it. Mitigate with a one-time edit of each affected resource instance in your state file: change the `provider_config` value from the object form to either the list form or null.
+  >
+  >   - If you set `provider_config` explicitly in HCL: change `"provider_config": {"workspace_id": "X"}` to `"provider_config": [{"workspace_id": "X"}]` (wrap the existing object in a single-element list).
+  >   - If you did NOT set `provider_config` in HCL: change `"provider_config": {"workspace_id": "X"}` to `"provider_config": null`. This avoids a one-time replacement plan on `databricks_library` (where the block-level plan modifier forces replacement on any provider_config diff).
+  >
+  > Users on v1.113.0 are unaffected — their state already matches the restored schema.
+
+* Fix `databricks_service_principal` data source failing on account-level provider with `cannot populate provider_config for service principal: failed to resolve workspace_id` ([#5664](https://github.com/databricks/terraform-provider-databricks/issues/5664)). The data source now supports the `api` field and skips workspace-tracking when used at account level.
+* Fix `databricks_service_principals` data source failing on account-level provider with the same `cannot populate provider_config for service principals: failed to resolve workspace_id` regression ([#5664](https://github.com/databricks/terraform-provider-databricks/issues/5664)). The data source now supports the `api` field and skips workspace-tracking when used at account level.
+* Fix `databricks_mws_workspaces` and `databricks_mws_credentials` data sources failing on account-level provider with `cannot populate provider_config for mws workspaces: failed to resolve workspace_id` ([#5672](https://github.com/databricks/terraform-provider-databricks/issues/5672)). These account-only data sources are now exempted from the post-Read workspace-tracking hook, and `provider_config` (which had no effect on them) is now deprecated and will be removed in a future major release.
+* Fix `databricks_disable_legacy_features_setting` failing on account-level provider with `cannot populate provider_config for disable legacy features setting: failed to resolve workspace_id: ... Unable to load OAuth Config`. This account-only setting is now exempted from the post-Read workspace-tracking hook, and the auto-injected `provider_config` block is deprecated. The fix is applied at the generic-setting builder level (`makeSettingResource` in `settings/generic_setting.go`), so any future `accountSetting`-based resource inherits the opt-out automatically.
+
+
+## Release v1.114.0 (2026-04-29)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_disaster_recovery_failover_group`.
+* Add resource and data sources for `databricks_disaster_recovery_stable_url`.
+* Add resource and data sources for `databricks_supervisor_agent`.
+* Add resource and data sources for `databricks_supervisor_agent_tool`.
+* Add resource and data sources for `databricks_secret_uc`.
+* Support adopting pre-existing `databricks_postgres_branch` and `databricks_postgres_endpoint` resources via `replace_existing = true` argument.
+
+### Internal Changes
+
+* Update Go SDK to v0.128.0.
+* Bump minimum Go toolchain from 1.24.0 to 1.25.7 to pick up the `crypto/tls` TLS 1.3 session-resumption fix.
+* Fail at plan time with "please set api to account or workspace" for dual workspace/account resources when the provider is configured against a unified host and the resource's `api` field is not set.
+
+
+## Release v1.113.0 (2026-04-16)
+
+### New Features and Improvements
+* Add resource and data source for `databricks_postgres_catalog`.
+* Add resource and data source for `databricks_postgres_synced_table`.
+* Add resource and data sources for `databricks_environments_workspace_base_environment`.
+* Add resource and data source for `databricks_environments_default_workspace_base_environment`.
+
+* Added optional `cloud` argument to `databricks_current_config` data source to explicitly set the cloud type (`aws`, `azure`, `gcp`) instead of relying on host-based detection.
+
+* Added `api` field to dual account/workspace resources (`databricks_user`, `databricks_service_principal`, `databricks_group`, `databricks_group_role`, `databricks_group_member`, `databricks_user_role`, `databricks_service_principal_role`, `databricks_user_instance_profile`, `databricks_group_instance_profile`, `databricks_metastore`, `databricks_metastore_assignment`, `databricks_metastore_data_access`, `databricks_storage_credential`, `databricks_service_principal_secret`, `databricks_access_control_rule_set`) to explicitly control whether account-level or workspace-level APIs are used. This enables support for unified hosts like `api.databricks.com` where the API level cannot be inferred from the host ([#5483](https://github.com/databricks/terraform-provider-databricks/pull/5483)).
+
+### Bug Fixes
+
+* Fixed import inconsistency for `force_destroy` and other schema-only fields causing "Provider produced inconsistent final plan" errors ([#5487](https://github.com/databricks/terraform-provider-databricks/pull/5487)).
+* Fixed `databricks_grant` and `databricks_grants` to honor `provider_config` when using account-level providers ([#5557](https://github.com/databricks/terraform-provider-databricks/pull/5557)).
+
+  Fixes [#5530](https://github.com/databricks/terraform-provider-databricks/issues/5530).
+
+### Internal Changes
+
+* Update Go SDK to v0.127.0.
+* Use account host check instead of account ID check in `databricks_access_control_rule_set` to determine client type ([#5484](https://github.com/databricks/terraform-provider-databricks/pull/5484)).
+
+
 ## Release v1.112.0 (2026-03-18)
 
 ### New Features and Improvements

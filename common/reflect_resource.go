@@ -288,8 +288,8 @@ func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
 		return true
 	}
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
 		if tag == "optional" {
 			return true
 		}
@@ -306,8 +306,8 @@ func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
 }
 
 func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
 		if tag == "computed" {
 			schema.Computed = true
 			schema.Required = false
@@ -317,8 +317,8 @@ func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
 }
 
 func handleForceNew(typeField reflect.StructField, schema *schema.Schema) {
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
 		if tag == "force_new" {
 			schema.ForceNew = true
 			break
@@ -327,8 +327,8 @@ func handleForceNew(typeField reflect.StructField, schema *schema.Schema) {
 }
 
 func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
 		if tag == "sensitive" {
 			schema.Sensitive = true
 			break
@@ -337,8 +337,8 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 }
 
 func handleSuppressDiff(typeField reflect.StructField, fieldName string, v *schema.Schema) {
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
 		if tag == "suppress_diff" {
 			v.DiffSuppressFunc = diffSuppressor(fieldName, v)
 			break
@@ -347,10 +347,10 @@ func handleSuppressDiff(typeField reflect.StructField, fieldName string, v *sche
 }
 
 func getAlias(typeField reflect.StructField) string {
-	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
-	for _, tag := range tfTags {
-		if strings.HasPrefix(tag, "alias:") {
-			return strings.TrimPrefix(tag, "alias:")
+	tfTags := strings.SplitSeq(typeField.Tag.Get("tf"), ",")
+	for tag := range tfTags {
+		if after, ok := strings.CutPrefix(tag, "alias:"); ok {
+			return after
 		}
 	}
 	return ""
@@ -413,7 +413,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trac
 			continue
 		}
 		scm[fieldName] = &schema.Schema{}
-		for _, token := range strings.Split(tfTag, ",") {
+		for token := range strings.SplitSeq(tfTag, ",") {
 			colonSplit := strings.Split(token, ":")
 			if len(colonSplit) == 2 {
 				tfKey := colonSplit[0]

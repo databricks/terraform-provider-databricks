@@ -89,7 +89,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var users []iam.User
 	var err error
 
-	isAccount := d.Client.Config.HostType() == config.AccountHost
+	isAccount := d.Client.HostTypeForTerraform() == config.AccountHost
 	if !usersInfo.Api.IsNull() && !usersInfo.Api.IsUnknown() {
 		apiLevel := usersInfo.Api.ValueString()
 		if apiLevel != "account" && apiLevel != "workspace" {

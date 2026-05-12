@@ -402,6 +402,7 @@ func TestCreateAccountMetastore(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
@@ -446,6 +447,7 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
@@ -497,6 +499,7 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
@@ -518,6 +521,7 @@ func TestDeleteAccountMetastore(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "abc",
 		HCL: `
@@ -541,6 +545,7 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -586,6 +591,7 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -643,6 +649,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -694,6 +701,7 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -727,6 +735,7 @@ func TestReadAccountMetastore(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "abc",
 		Read:      true,
 		New:       true,
@@ -748,6 +757,7 @@ func TestReadAccountMetastore_Error(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "abc",
 		Read:      true,
 	}.ExpectError(t, "resource is not expected to be removed")

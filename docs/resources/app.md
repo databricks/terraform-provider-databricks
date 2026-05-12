@@ -47,7 +47,7 @@ The following arguments are required:
 * `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `usage_policy_id` - (Optional) The Usage Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
-* `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
+* `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.  See [REST API docs](https://docs.databricks.com/api/workspace/api/scopes) for full list of supported scopes.
 * `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
 * `git_repository` - (Optional) Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit).
 * `telemetry_export_destinations` - (Optional) A list of destinations to which the app's telemetry (logs, metrics, traces) is exported (see [below](#telemetry_export_destinations-configuration-attribute)).

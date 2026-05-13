@@ -28,9 +28,9 @@ func TestAccCluster_ListNodeTypesAWS(t *testing.T) {
 	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for AWS workspace")
 }
 
-// TestAccCluster_ListNodeTypesAWSUcws validates that an AWS workspace's ListNodeTypes
+// TestUcAccCluster_ListNodeTypesAWSUcws validates that an AWS workspace's ListNodeTypes
 // response is detected as AWS and not Azure or GCP.
-func TestAccCluster_ListNodeTypesAWSUcws(t *testing.T) {
+func TestUcAccCluster_ListNodeTypesAWSUcws(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	if !acceptance.IsAws(t) {
 		t.Skip("Skipping test because it requires AWS")
@@ -62,9 +62,9 @@ func TestAccClusterAPI_ListNodeTypesAzure(t *testing.T) {
 	assert.False(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be false for Azure workspace")
 }
 
-// TestAccClusterAPI_ListNodeTypesAzureUcws validates that an Azure workspace's ListNodeTypes
+// TestUcAccClusterAPI_ListNodeTypesAzureUcws validates that an Azure workspace's ListNodeTypes
 // response is detected as Azure and not AWS or GCP.
-func TestAccClusterAPI_ListNodeTypesAzureUcws(t *testing.T) {
+func TestUcAccClusterAPI_ListNodeTypesAzureUcws(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	if !acceptance.IsAzure(t) {
 		t.Skip("Skipping test because it requires Azure")
@@ -96,9 +96,9 @@ func TestAccClusterAPI_ListNodeTypesGcp(t *testing.T) {
 	assert.True(t, clusters.IsGcp(nodeTypes), "expected IsGcp to be true for GCP workspace")
 }
 
-// TestAccClusterAPI_ListNodeTypesGcpUcws validates that a GCP workspace's ListNodeTypes
+// TestUcAccClusterAPI_ListNodeTypesGcpUcws validates that a GCP workspace's ListNodeTypes
 // response is detected as GCP and not AWS or Azure.
-func TestAccClusterAPI_ListNodeTypesGcpUcws(t *testing.T) {
+func TestUcAccClusterAPI_ListNodeTypesGcpUcws(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	if !acceptance.IsGcp(t) {
 		t.Skip("Skipping test because it requires GCP")

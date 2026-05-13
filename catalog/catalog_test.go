@@ -260,7 +260,7 @@ func catalogProviderConfigTemplate(catalogName string, providerConfig string) st
 `, catalogName, providerConfig)
 }
 
-func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
@@ -272,7 +272,7 @@ func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
@@ -284,7 +284,7 @@ func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Mismatched(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
 			provider_config {
@@ -295,7 +295,7 @@ func TestAccCatalog_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_Match(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
@@ -319,7 +319,7 @@ func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
@@ -351,7 +351,7 @@ func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 	})
 }
 
-func TestAccCatalog_ProviderConfig_Remove(t *testing.T) {
+func TestUcAccCatalog_ProviderConfig_Remove(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())

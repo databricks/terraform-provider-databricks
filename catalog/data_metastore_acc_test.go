@@ -9,7 +9,7 @@ import (
 )
 
 func TestUcAccDataSourceMetastore(t *testing.T) {
-	acceptance.AccountLevel(t, acceptance.Step{
+	acceptance.UnityAccountLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_metastore" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"

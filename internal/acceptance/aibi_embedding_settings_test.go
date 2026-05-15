@@ -5,6 +5,12 @@ import (
 )
 
 func TestAccAiBiEmbeddings(t *testing.T) {
+	if IsGcp(t) {
+		t.Skip("Skipping on GCP: workspace-settings estore ramp-up introduces " +
+			"~2min eventual-consistency staleness, so GET-after-PATCH returns the " +
+			"stale prior value and the post-apply refresh plan is non-empty. " +
+			"Re-enable once estore staleness is reduced.")
+	}
 	WorkspaceLevel(t, Step{
 		Template: `
 resource "databricks_aibi_dashboard_embedding_access_policy_setting" "this" {

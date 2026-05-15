@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,10 +24,21 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 		Template: template,
 		Check: acceptance.ResourceCheckWithState("databricks_disable_legacy_dbfs_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
+				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+				w, err := client.WorkspaceClient()
+				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				// TODO: re-enable value assertion once workspace-settings estore staleness
-				// (up to ~2min) is reduced. GET after PATCH may return stale value.
+				res, err := w.Settings.DisableLegacyDbfs().Get(ctx, settings.GetDisableLegacyDbfsRequest{
+					Etag: etag,
+				})
+				require.NoError(t, err)
+				// Check that the resource has been created and that it has the correct value.
+				// TODO: re-enable on GCP once workspace-settings estore staleness (~2min)
+				// is reduced — GET-after-PATCH may return the stale prior value there.
+				if !acceptance.IsGcp(t) {
+					assert.Equal(t, res.DisableLegacyDbfs.Value, true)
+				}
 				return nil
 			}),
 	},
@@ -37,8 +49,9 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()
 				require.NoError(t, err)
-				// Reset the setting to its default so the workspace is left clean for the next run.
-				_, err = w.Settings.DisableLegacyDbfs().Update(ctx, settings.UpdateDisableLegacyDbfsRequest{
+				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
+				// We are making an update call to get the current eTag in the response.
+				updateResp, err := w.Settings.DisableLegacyDbfs().Update(ctx, settings.UpdateDisableLegacyDbfsRequest{
 					AllowMissing: true,
 					Setting: settings.DisableLegacyDbfs{
 						DisableLegacyDbfs: settings.BooleanMessage{
@@ -48,8 +61,16 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 					FieldMask: "disable_legacy_dbfs.value",
 				})
 				require.NoError(t, err)
-				// TODO: re-enable post-reset value assertion once workspace-settings
-				// estore staleness (up to ~2min) is reduced.
+				res, err := w.Settings.DisableLegacyDbfs().Get(ctx, settings.GetDisableLegacyDbfsRequest{
+					Etag: updateResp.Etag,
+				})
+				// we should not be getting any error
+				assert.NoError(t, err)
+				// setting should go back to default
+				// TODO: re-enable on GCP once workspace-settings estore staleness (~2min) is reduced.
+				if !acceptance.IsGcp(t) {
+					assert.Equal(t, res.DisableLegacyDbfs.Value, false)
+				}
 				return nil
 			}),
 		},

@@ -13,6 +13,10 @@ import (
 )
 
 func TestAccDisableLegacyDbfsSetting(t *testing.T) {
+	// TODO: Enable once API is fixed.
+	if acceptance.IsGcp(t) {
+		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	}
 	template := `
  	resource "databricks_disable_legacy_dbfs_setting" "this" {
  		disable_legacy_dbfs {
@@ -34,9 +38,7 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 				})
 				require.NoError(t, err)
 				// Check that the resource has been created and that it has the correct value.
-				if !acceptance.IsGcp(t) {
-					assert.Equal(t, res.DisableLegacyDbfs.Value, true)
-				}
+				assert.Equal(t, res.DisableLegacyDbfs.Value, true)
 				return nil
 			}),
 	},
@@ -65,9 +67,7 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 				// we should not be getting any error
 				assert.NoError(t, err)
 				// setting should go back to default
-				if !acceptance.IsGcp(t) {
-					assert.Equal(t, res.DisableLegacyDbfs.Value, false)
-				}
+				assert.Equal(t, res.DisableLegacyDbfs.Value, false)
 				return nil
 			}),
 		},

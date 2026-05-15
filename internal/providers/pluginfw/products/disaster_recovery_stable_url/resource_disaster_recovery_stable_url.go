@@ -140,6 +140,7 @@ func (m StableUrl) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["url"] = attrs["url"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["stable_url_id"] = attrs["stable_url_id"].SetRequired()
 	attrs["stable_url_id"] = attrs["stable_url_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["stable_url_id"] = attrs["stable_url_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["stable_url_id"] = attrs["stable_url_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)

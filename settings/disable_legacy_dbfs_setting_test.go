@@ -34,8 +34,6 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 				})
 				require.NoError(t, err)
 				// Check that the resource has been created and that it has the correct value.
-				// TODO: re-enable on GCP once workspace-settings estore staleness (~2min)
-				// is reduced — GET-after-PATCH may return the stale prior value there.
 				if !acceptance.IsGcp(t) {
 					assert.Equal(t, res.DisableLegacyDbfs.Value, true)
 				}
@@ -67,7 +65,6 @@ func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 				// we should not be getting any error
 				assert.NoError(t, err)
 				// setting should go back to default
-				// TODO: re-enable on GCP once workspace-settings estore staleness (~2min) is reduced.
 				if !acceptance.IsGcp(t) {
 					assert.Equal(t, res.DisableLegacyDbfs.Value, false)
 				}

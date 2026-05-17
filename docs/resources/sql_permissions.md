@@ -51,7 +51,16 @@ resource "databricks_sql_permissions" "foo_table" {
 
 ## Argument Reference
 
-* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate data security mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a TACL-enabled cluster with the name `terraform-table-acl` is automatically created.
+* `warehouse_id` - (Optional) Id of a [databricks_sql_endpoint](sql_endpoint.md) (SQL warehouse) where `GRANT`/`REVOKE`/`SHOW GRANT` commands are executed. Conflicts with `cluster_id`. When specified, no cluster is provisioned.
+
+* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate data security mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). Conflicts with `warehouse_id`. If neither `cluster_id` nor `warehouse_id` is specified, a TACL-enabled cluster with the name `terraform-table-acl` is automatically created.
+
+```hcl
+resource "databricks_sql_permissions" "foo_table" {
+  warehouse_id = databricks_sql_endpoint.this.id
+  #...
+}
+```
 
 ```hcl
 resource "databricks_sql_permissions" "foo_table" {

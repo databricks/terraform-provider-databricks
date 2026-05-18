@@ -344,7 +344,7 @@ func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["tool_id"] = attrs["tool_id"].SetRequired()
 	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["tool_type"] = attrs["tool_type"].SetRequired()
 	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
 	attrs["uc_function"] = attrs["uc_function"].SetOptional()

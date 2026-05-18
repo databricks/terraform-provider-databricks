@@ -15,6 +15,7 @@ import (
 
 type LibraryResource struct {
 	compute.Library
+	common.Namespace
 }
 
 func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -28,6 +29,7 @@ func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSch
 const EggDeprecationWarning = "The `egg` library type is deprecated. Please use `whl` or `pypi` instead."
 
 func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("egg").SetDeprecated(EggDeprecationWarning)
 	return s
 }
@@ -43,6 +45,9 @@ func ResourceLibrary() common.Resource {
 	}
 	return common.Resource{
 		Schema: libraySdkSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

@@ -5,6 +5,10 @@ import (
 )
 
 func TestAccAiBiEmbeddings(t *testing.T) {
+	// TODO: Enable once API is fixed.
+	if IsGcp(t) {
+		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	}
 	WorkspaceLevel(t, Step{
 		Template: `
 resource "databricks_aibi_dashboard_embedding_access_policy_setting" "this" {

@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -77,11 +78,13 @@ type LibraryExtended struct {
 	compute_tf.Library_SdkV2
 	ClusterId types.String `tfsdk:"cluster_id"`
 	ID        types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	tfschema.Namespace
+	tfschema.Namespace_SdkV2
 }
 
 func (l LibraryExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return tfschema.AddProviderConfigType(l.Library_SdkV2.GetComplexFieldTypes(ctx))
+	attrs := l.Library_SdkV2.GetComplexFieldTypes(ctx)
+	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return attrs
 }
 
 type LibraryResource struct {
@@ -113,9 +116,9 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		c.SetOptional("id")
 		c.SetComputed("id")
 		c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
-	tfschema.ConfigureProviderConfig(attrs)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Library",
 		Attributes:  attrs,
@@ -130,19 +133,24 @@ func (r *LibraryResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *LibraryResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan LibraryExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -153,7 +161,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -203,14 +211,6 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	installedLib.ID = types.StringValue(libGoSDK.String())
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	// Populate provider_config in state after Create.
-	// If the user set provider_config.workspace_id, it's already copied above.
-	// If the user relies on the provider-level workspace_id, this resolves the
-	// unknown value to the effective workspace ID.
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, libraryTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -221,7 +221,7 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -258,13 +258,6 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	// Populate provider_config in state after Read.
-	// During normal refresh, provider_config is in prior state and was copied above.
-	// During import (no prior state), this resolves the effective workspace ID.
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, libraryTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -279,7 +272,7 @@ func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

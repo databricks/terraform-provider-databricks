@@ -2,12 +2,13 @@ package acceptance
 
 import (
 	"testing"
+	"time"
 )
 
 func TestAccAiBiEmbeddings(t *testing.T) {
 	// TODO: Enable once API is fixed.
-	if IsGcp(t) || IsAzure(t) {
-		t.Skip("Skipping on GCP/Azure. The API is eventually consistent so Get after Update may return stale values.")
+	if time.Now().Before(time.Date(2026, 6, 3, 0, 0, 0, 0, time.UTC)) {
+		t.Skip("temporarily skipped until 2026-06-03: workspace-settings API is eventually consistent so Get after Update may return stale values.")
 	}
 	WorkspaceLevel(t, Step{
 		Template: `

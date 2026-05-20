@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
@@ -1731,6 +1732,7 @@ func (m *CommentObject) SetAvailableActions(ctx context.Context, v []types.Strin
 	m.AvailableActions = types.ListValueMust(t, vs)
 }
 
+// Deprecated: use RollingWindow with `delay` instead.
 type ContinuousWindow struct {
 	// The offset of the continuous window (must be non-positive).
 	Offset types.String `tfsdk:"offset"`
@@ -7190,6 +7192,12 @@ func (m ExperimentTag) Type(ctx context.Context) attr.Type {
 }
 
 type Feature struct {
+	// Name of parent catalog.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// Time at which this feature was created.
+	CreatedAt timetypes.RFC3339 `tfsdk:"created_at"`
+	// Username of the feature creator.
+	CreatedBy types.String `tfsdk:"created_by"`
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
@@ -7199,7 +7207,9 @@ type Feature struct {
 	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature.
+	// The full three-part name (catalog, schema, name) of the feature. This is
+	// the feature's resource identifier; the catalog_name, schema_name, and
+	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
@@ -7214,6 +7224,11 @@ type Feature struct {
 	// This field will be set by feature-engineering client and should be left
 	// unset by SDK and terraform users.
 	LineageContext types.Object `tfsdk:"lineage_context"`
+	// Name of the feature, extracted from the full three-part name
+	// (catalog.schema.name).
+	Name types.String `tfsdk:"name"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
 	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
@@ -7341,6 +7356,9 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 }
 
 func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetComputed()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["entities"] = attrs["entities"].SetOptional()
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
@@ -7351,6 +7369,8 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["inputs"] = attrs["inputs"].SetOptional()
 	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["time_window"] = attrs["time_window"].SetOptional()
@@ -7386,6 +7406,9 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_name":      m.CatalogName,
+			"created_at":        m.CreatedAt,
+			"created_by":        m.CreatedBy,
 			"description":       m.Description,
 			"entities":          m.Entities,
 			"filter_condition":  m.FilterCondition,
@@ -7393,6 +7416,8 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"function":          m.Function,
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
+			"name":              m.Name,
+			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
 			"timeseries_column": m.TimeseriesColumn,
@@ -7403,7 +7428,10 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Feature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
+			"catalog_name": types.StringType,
+			"created_at":   timetypes.RFC3339{}.Type(ctx),
+			"created_by":   types.StringType,
+			"description":  types.StringType,
 			"entities": basetypes.ListType{
 				ElemType: EntityColumn{}.Type(ctx),
 			},
@@ -7414,6 +7442,8 @@ func (m Feature) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"lineage_context":   LineageContext{}.Type(ctx),
+			"name":              types.StringType,
+			"schema_name":       types.StringType,
 			"source":            DataSource{}.Type(ctx),
 			"time_window":       TimeWindow{}.Type(ctx),
 			"timeseries_column": TimeseriesColumn{}.Type(ctx),
@@ -12349,10 +12379,14 @@ func (m *ListFeatureTagsResponse) SetFeatureTags(ctx context.Context, v []Featur
 }
 
 type ListFeaturesRequest struct {
+	// Name of parent catalog for features of interest.
+	CatalogName types.String `tfsdk:"-"`
 	// The maximum number of results to return.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Pagination token to go to the next page based on a previous query.
 	PageToken types.String `tfsdk:"-"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"-"`
 }
 
 func (to *ListFeaturesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListFeaturesRequest) {
@@ -12364,6 +12398,8 @@ func (to *ListFeaturesRequest) SyncFieldsDuringRead(ctx context.Context, from Li
 func (m ListFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 
 	return attrs
 }
@@ -12386,8 +12422,10 @@ func (m ListFeaturesRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
+			"catalog_name": m.CatalogName,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"schema_name":  m.SchemaName,
 		})
 }
 
@@ -12395,8 +12433,10 @@ func (m ListFeaturesRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m ListFeaturesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"catalog_name": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"schema_name":  types.StringType,
 		},
 	}
 }
@@ -18292,6 +18332,64 @@ func (m RestoreRunsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A rolling time window with an optional delay. This is the SQL-spec-aligned
+// replacement for ContinuousWindow: `delay` is the non-negative counterpart of
+// the legacy non-positive `ContinuousWindow.offset`.
+type RollingWindow struct {
+	// The delay applied to the end of the rolling window (must be
+	// non-negative). For example, delay=1d shifts the window end 1 day before
+	// the evaluation time.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// The duration of the rolling window (must be positive).
+	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
+}
+
+func (to *RollingWindow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RollingWindow) {
+}
+
+func (to *RollingWindow) SyncFieldsDuringRead(ctx context.Context, from RollingWindow) {
+}
+
+func (m RollingWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RollingWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RollingWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RollingWindow
+// only implements ToObjectValue() and Type().
+func (m RollingWindow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delay":           m.Delay,
+			"window_duration": m.WindowDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RollingWindow) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"window_duration": timetypes.GoDuration{}.Type(ctx),
+		},
+	}
+}
+
 // A single run.
 type Run struct {
 	// Run data.
@@ -21027,6 +21125,7 @@ func (m StddevSampFunction) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated: Use KafkaSubscriptionMode instead.
 type SubscriptionMode struct {
 	// A JSON string that contains the specific topic-partitions to consume
 	// from. For example, for '{"topicA":[0,1],"topicB":[2,4]}', topicA's 0'th
@@ -21254,6 +21353,8 @@ func (m TestRegistryWebhookResponse) Type(ctx context.Context) attr.Type {
 type TimeWindow struct {
 	Continuous types.Object `tfsdk:"continuous"`
 
+	Rolling types.Object `tfsdk:"rolling"`
+
 	Sliding types.Object `tfsdk:"sliding"`
 
 	Tumbling types.Object `tfsdk:"tumbling"`
@@ -21266,6 +21367,15 @@ func (to *TimeWindow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from T
 				// Recursively sync the fields of Continuous
 				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
 				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
+		if toRolling, ok := to.GetRolling(ctx); ok {
+			if fromRolling, ok := from.GetRolling(ctx); ok {
+				// Recursively sync the fields of Rolling
+				toRolling.SyncFieldsDuringCreateOrUpdate(ctx, fromRolling)
+				to.SetRolling(ctx, toRolling)
 			}
 		}
 	}
@@ -21298,6 +21408,14 @@ func (to *TimeWindow) SyncFieldsDuringRead(ctx context.Context, from TimeWindow)
 			}
 		}
 	}
+	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
+		if toRolling, ok := to.GetRolling(ctx); ok {
+			if fromRolling, ok := from.GetRolling(ctx); ok {
+				toRolling.SyncFieldsDuringRead(ctx, fromRolling)
+				to.SetRolling(ctx, toRolling)
+			}
+		}
+	}
 	if !from.Sliding.IsNull() && !from.Sliding.IsUnknown() {
 		if toSliding, ok := to.GetSliding(ctx); ok {
 			if fromSliding, ok := from.GetSliding(ctx); ok {
@@ -21318,6 +21436,7 @@ func (to *TimeWindow) SyncFieldsDuringRead(ctx context.Context, from TimeWindow)
 
 func (m TimeWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["rolling"] = attrs["rolling"].SetOptional()
 	attrs["sliding"] = attrs["sliding"].SetOptional()
 	attrs["tumbling"] = attrs["tumbling"].SetOptional()
 
@@ -21334,6 +21453,7 @@ func (m TimeWindow) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 func (m TimeWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous": reflect.TypeOf(ContinuousWindow{}),
+		"rolling":    reflect.TypeOf(RollingWindow{}),
 		"sliding":    reflect.TypeOf(SlidingWindow{}),
 		"tumbling":   reflect.TypeOf(TumblingWindow{}),
 	}
@@ -21347,6 +21467,7 @@ func (m TimeWindow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"continuous": m.Continuous,
+			"rolling":    m.Rolling,
 			"sliding":    m.Sliding,
 			"tumbling":   m.Tumbling,
 		})
@@ -21357,6 +21478,7 @@ func (m TimeWindow) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"continuous": ContinuousWindow{}.Type(ctx),
+			"rolling":    RollingWindow{}.Type(ctx),
 			"sliding":    SlidingWindow{}.Type(ctx),
 			"tumbling":   TumblingWindow{}.Type(ctx),
 		},
@@ -21386,6 +21508,31 @@ func (m *TimeWindow) GetContinuous(ctx context.Context) (ContinuousWindow, bool)
 func (m *TimeWindow) SetContinuous(ctx context.Context, v ContinuousWindow) {
 	vs := v.ToObjectValue(ctx)
 	m.Continuous = vs
+}
+
+// GetRolling returns the value of the Rolling field in TimeWindow as
+// a RollingWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow) GetRolling(ctx context.Context) (RollingWindow, bool) {
+	var e RollingWindow
+	if m.Rolling.IsNull() || m.Rolling.IsUnknown() {
+		return e, false
+	}
+	var v RollingWindow
+	d := m.Rolling.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRolling sets the value of the Rolling field in TimeWindow.
+func (m *TimeWindow) SetRolling(ctx context.Context, v RollingWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.Rolling = vs
 }
 
 // GetSliding returns the value of the Sliding field in TimeWindow as
@@ -22079,7 +22226,9 @@ func (m UpdateExperimentResponse) Type(ctx context.Context) attr.Type {
 type UpdateFeatureRequest struct {
 	// Feature to update.
 	Feature types.Object `tfsdk:"feature"`
-	// The full three-part name (catalog, schema, name) of the feature.
+	// The full three-part name (catalog, schema, name) of the feature. This is
+	// the feature's resource identifier; the catalog_name, schema_name, and
+	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"-"`
 	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`

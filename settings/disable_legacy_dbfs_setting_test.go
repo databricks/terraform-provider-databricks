@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccDisableLegacyDbfsSetting(t *testing.T) {
+	// Please see ES-1928456 for details.
 	if time.Now().Before(time.Date(2026, 6, 3, 0, 0, 0, 0, time.UTC)) {
 		t.Skip("temporarily skipped until 2026-06-03: workspace-settings API is eventually consistent so Get after Update may return stale values.")
 	}

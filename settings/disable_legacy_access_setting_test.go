@@ -3,6 +3,7 @@ package settings_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -13,9 +14,8 @@ import (
 )
 
 func TestAccDisableLegacyAccessSetting(t *testing.T) {
-	// TODO: Enable once API is fixed.
-	if acceptance.IsGcp(t) {
-		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	if time.Now().Before(time.Date(2026, 6, 3, 0, 0, 0, 0, time.UTC)) {
+		t.Skip("temporarily skipped until 2026-06-03: workspace-settings API is eventually consistent so Get after Update may return stale values. Please see ES-1928456 for details.")
 	}
 	template := `
  	resource "databricks_disable_legacy_access_setting" "this" {

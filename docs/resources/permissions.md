@@ -950,7 +950,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "app_usage" {
+resource "databricks_permissions" "db_instance_usage" {
   database_instance_name = "my_database"
 
   access_control {

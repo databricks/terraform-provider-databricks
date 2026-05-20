@@ -10721,6 +10721,10 @@ type GcpAttributes struct {
 	Availability types.String `tfsdk:"availability"`
 	// Boot disk size in GB
 	BootDiskSize types.Int64 `tfsdk:"boot_disk_size"`
+	// The confidential computing technology for this cluster's instances.
+	// Currently only SEV_SNP is supported, and only on N2D instance types. When
+	// not set, no confidential computing is applied.
+	ConfidentialComputeType types.String `tfsdk:"confidential_compute_type"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -10767,6 +10771,7 @@ func (to *GcpAttributes) SyncFieldsDuringRead(ctx context.Context, from GcpAttri
 func (m GcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
 	attrs["boot_disk_size"] = attrs["boot_disk_size"].SetOptional()
+	attrs["confidential_compute_type"] = attrs["confidential_compute_type"].SetOptional()
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
@@ -10796,6 +10801,7 @@ func (m GcpAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		map[string]attr.Value{
 			"availability":              m.Availability,
 			"boot_disk_size":            m.BootDiskSize,
+			"confidential_compute_type": m.ConfidentialComputeType,
 			"first_on_demand":           m.FirstOnDemand,
 			"google_service_account":    m.GoogleServiceAccount,
 			"local_ssd_count":           m.LocalSsdCount,
@@ -10810,6 +10816,7 @@ func (m GcpAttributes) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"availability":              types.StringType,
 			"boot_disk_size":            types.Int64Type,
+			"confidential_compute_type": types.StringType,
 			"first_on_demand":           types.Int64Type,
 			"google_service_account":    types.StringType,
 			"local_ssd_count":           types.Int64Type,

@@ -212,7 +212,7 @@ func (to *SupervisorAgent) SyncFieldsDuringRead(ctx context.Context, from Superv
 func (m SupervisorAgent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetRequired()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
 	attrs["experiment_id"] = attrs["experiment_id"].SetComputed()

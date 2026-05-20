@@ -11,8 +11,8 @@ subcategory: "Agent Bricks"
 
 ## Arguments
 The following arguments are supported:
-* `description` (string, required) - Description of what this agent can do (user-facing)
 * `display_name` (string, required) - The display name of the Supervisor Agent, unique at workspace level
+* `description` (string, optional) - Description of what this agent can do (user-facing)
 * `instructions` (string, optional) - Optional natural-language instructions for the supervisor agent
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

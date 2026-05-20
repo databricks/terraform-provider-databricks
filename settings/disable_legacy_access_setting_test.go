@@ -13,6 +13,10 @@ import (
 )
 
 func TestAccDisableLegacyAccessSetting(t *testing.T) {
+	// TODO: Enable once API is fixed.
+	if acceptance.IsGcp(t) {
+		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	}
 	template := `
  	resource "databricks_disable_legacy_access_setting" "this" {
  		disable_legacy_access {

@@ -104,8 +104,11 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type ProjectData struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// A timestamp indicating when the project was soft-deleted. Empty if the
+	// project is not deleted, otherwise set to a timestamp in the past.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the default branch for a newly created project. If omitted, the initial
+	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -114,6 +117,10 @@ type ProjectData struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// A timestamp indicating when the project is scheduled for permanent
+	// deletion. Empty if the project is not deleted, otherwise set to a
+	// timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -154,8 +161,10 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time":           m.CreateTime,
+			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -172,8 +181,10 @@ func (m ProjectData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"delete_time":           timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
+			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
 			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
 			"uid":                   types.StringType,
@@ -186,8 +197,10 @@ func (m ProjectData) Type(ctx context.Context) attr.Type {
 
 func (m ProjectData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()

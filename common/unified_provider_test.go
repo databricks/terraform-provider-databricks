@@ -849,6 +849,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 // (mirroring dual resources that call AddApiField) wired to CustomizeDiffDualResources.
 func newDualResourceForCustomizeDiff() *schema.Resource {
 	r := Resource{
+		IsDual: true,
 		Schema: AddApiField(map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -1212,7 +1213,7 @@ func testCustomizeDiffForceNew(t *testing.T, instanceState map[string]string, ne
 			if !ok {
 				return fmt.Errorf("expected *DatabricksClient, got %T", m)
 			}
-			return namespaceForceNew(ctx, d, dc)
+			return namespaceForceNew(ctx, d, dc, true)
 		},
 	}
 

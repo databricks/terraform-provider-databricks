@@ -15,7 +15,7 @@ import (
 
 func TestAccDisableLegacyAccessSetting(t *testing.T) {
 	if time.Now().Before(time.Date(2026, 6, 3, 0, 0, 0, 0, time.UTC)) {
-		t.Skip("temporarily skipped until 2026-06-03: workspace-settings API is eventually consistent so Get after Update may return stale values.") // Please see ES-1928456 for details.
+		t.Skip("temporarily skipped until 2026-06-03: workspace-settings API is eventually consistent so Get after Update may return stale values. Please see ES-1928456 for details.")
 	}
 	template := `
  	resource "databricks_disable_legacy_access_setting" "this" {

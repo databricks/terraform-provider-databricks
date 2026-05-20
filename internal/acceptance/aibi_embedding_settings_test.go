@@ -6,8 +6,8 @@ import (
 
 func TestAccAiBiEmbeddings(t *testing.T) {
 	// TODO: Enable once API is fixed.
-	if IsGcp(t) {
-		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	if IsGcp(t) || IsAzure(t) {
+		t.Skip("Skipping on GCP/Azure. The API is eventually consistent so Get after Update may return stale values.")
 	}
 	WorkspaceLevel(t, Step{
 		Template: `

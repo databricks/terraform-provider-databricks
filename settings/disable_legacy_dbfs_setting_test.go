@@ -14,8 +14,8 @@ import (
 
 func TestAccDisableLegacyDbfsSetting(t *testing.T) {
 	// TODO: Enable once API is fixed.
-	if acceptance.IsGcp(t) {
-		t.Skip("Skipping on GCP. The API is eventually consistent so Get after Update may return stale values.")
+	if acceptance.IsGcp(t) || acceptance.IsAzure(t) {
+		t.Skip("Skipping on GCP/Azure. The API is eventually consistent so Get after Update may return stale values.")
 	}
 	template := `
  	resource "databricks_disable_legacy_dbfs_setting" "this" {

@@ -33,7 +33,7 @@ The following attributes are exported:
 * `endpoint_name` (string) - The name of the knowledge assistant agent endpoint
 * `error_info` (string) - Error details when the Knowledge Assistant is in FAILED state
 * `experiment_id` (string) - The MLflow experiment ID
-* `id` (string) - The universally unique identifier (UUID) of the Knowledge Assistant
+* `id` (string, deprecated) - Deprecated: use knowledge_assistant_id instead
 * `instructions` (string) - Additional global instructions on how the agent should generate answers.
   Optional on create and update.
   When updating a Knowledge Assistant, include this field in update_mask to

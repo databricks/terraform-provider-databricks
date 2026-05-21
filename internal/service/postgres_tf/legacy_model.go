@@ -3525,8 +3525,8 @@ type GenerateDatabaseCredentialRequest_SdkV2 struct {
 	// The returned token will be scoped to UC tables with the specified
 	// permissions.
 	Claims types.List `tfsdk:"claims"`
-	// This field is not yet supported. The endpoint for which this credential
-	// will be generated. Format:
+	// The endpoint resource name for which this credential will be generated.
+	// Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Endpoint types.String `tfsdk:"endpoint"`
 }
@@ -5561,7 +5561,8 @@ type ProjectSpec_SdkV2 struct {
 	// recovery for all branches in this project. Value should be between
 	// 172800s (2 days) and 3024000s (35 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
-	// The major Postgres version number. Supported versions are 16 and 17.
+	// The major Postgres version number. The set of supported versions may
+	// vary; consult the API documentation for currently accepted values.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
 }
 
@@ -6017,8 +6018,6 @@ func (m *RequestedClaims_SdkV2) SetResources(ctx context.Context, v []RequestedR
 type RequestedResource_SdkV2 struct {
 	// The full Unity Catalog table name.
 	TableName types.String `tfsdk:"table_name"`
-
-	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
 }
 
 func (to *RequestedResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RequestedResource_SdkV2) {
@@ -6029,7 +6028,6 @@ func (to *RequestedResource_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m RequestedResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["table_name"] = attrs["table_name"].SetOptional()
-	attrs["unspecified_resource_name"] = attrs["unspecified_resource_name"].SetOptional()
 
 	return attrs
 }
@@ -6052,8 +6050,7 @@ func (m RequestedResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"table_name":                m.TableName,
-			"unspecified_resource_name": m.UnspecifiedResourceName,
+			"table_name": m.TableName,
 		})
 }
 
@@ -6061,8 +6058,7 @@ func (m RequestedResource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"table_name":                types.StringType,
-			"unspecified_resource_name": types.StringType,
+			"table_name": types.StringType,
 		},
 	}
 }

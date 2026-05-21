@@ -96,7 +96,7 @@ The following attributes are exported:
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
 * `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
-* `pg_version` (integer) - The major Postgres version number. Supported versions are 16 and 17
+* `pg_version` (integer) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
 
 ### ProjectStatus
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch

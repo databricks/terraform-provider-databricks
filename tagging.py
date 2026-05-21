@@ -443,6 +443,18 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     return TagInfo(package=package, version=version, content=latest_release)
 
 
+def _load_codegen_config() -> Dict:
+    """
+    Loads ``.codegen.json`` from the repo root. Returns an empty dict when
+    the file is missing.
+    """
+    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    if not os.path.exists(package_file_path):
+        return {}
+    with open(package_file_path, "r") as file:
+        return json.load(file)
+
+
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     """
     Extracts the changes from the "NEXT_CHANGELOG.md" file.
@@ -461,7 +473,11 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     # Ensure there is exactly one empty line before each section
     next_changelog = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", next_changelog)
 
-    if not re.search(r"###", next_changelog):
+    # By default, packages whose NEXT_CHANGELOG.md has no populated
+    # sections are skipped — there's nothing meaningful to release.
+    # Repos like sdk-js which are still in development can opt in
+    # by setting ``allow_empty_changelog: true`` in .codegen.json.
+    if not re.search(r"###", next_changelog) and not _load_codegen_config().get("allow_empty_changelog", False):
         print("All sections are empty. No changes will be made to the changelog.")
         return None
 
@@ -709,11 +725,11 @@ def generate_commit_message(tag_infos: List[TagInfo]) -> str:
             raise Exception("Multiple packages found in legacy mode")
         return f"[Release] Release v{info.version}\n\n{info.content}"
 
-    # Sort tag_infos by package name for consistency
+    # Sort tag_infos by package name for consistency.
     tag_infos.sort(key=lambda info: info.package.name)
-    return "Release\n\n" + "\n\n".join(
-        f"## {info.package.name}/v{info.version}\n\n{info.content}" for info in tag_infos
-    )
+    titles = ", ".join(f"{info.package.name}/v{info.version}" for info in tag_infos)
+    body = "\n\n".join(f"## {info.package.name}/v{info.version}\n\n{info.content}" for info in tag_infos)
+    return f"[Release] {titles}\n\n{body}"
 
 
 def push_changes(tag_infos: List[TagInfo]) -> None:
@@ -816,9 +832,81 @@ def preview_tag_infos(packages: List[Package]) -> List[TagInfo]:
     return [info for info in (get_next_tag_info(package) for package in packages) if info is not None]
 
 
+def order_tag_infos_by_dependency(tag_infos: List[TagInfo]) -> List[TagInfo]:
+    """
+    Returns ``tag_infos`` in topological order: every package appears
+    after every sibling it depends on.
+    """
+    if not tag_infos:
+        return list(tag_infos)
+
+    if any(not info.package.name for info in tag_infos) and len(tag_infos) > 1:
+        raise Exception("Multiple packages found in legacy mode")
+
+    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    with open(package_file_path, "r") as file:
+        codegen = json.load(file)
+
+    name_template = codegen.get("dependency_name_template", "")
+    dep_patterns = codegen.get("dependency_pattern", {})
+    if not name_template or not dep_patterns:
+        return list(tag_infos)
+
+    by_dep_name: Dict[str, TagInfo] = {
+        name_template.replace("$PACKAGE", info.package.name): info for info in tag_infos if info.package.name
+    }
+
+    # Adjacency: path -> set of paths it depends on (within tag_infos).
+    deps: Dict[str, set] = {info.package.path: set() for info in tag_infos}
+    for info in tag_infos:
+        for filename, pattern in dep_patterns.items():
+            loc = os.path.join(os.getcwd(), info.package.path, filename)
+            if not os.path.exists(loc):
+                continue
+            with open(loc, "r") as f:
+                content = f.read()
+            for dep_name, dep_info in by_dep_name.items():
+                if dep_info.package.path == info.package.path:
+                    continue
+                regex = (
+                    re.escape(pattern)
+                    .replace(re.escape("$DEPENDENCY"), re.escape(dep_name))
+                    .replace(re.escape("$VERSION"), Version.PATTERN)
+                )
+                if re.search(regex, content):
+                    deps[info.package.path].add(dep_info.package.path)
+
+    # Stable topological sort: at each step, emit every node whose deps
+    # are already emitted, alphabetically by package name. Ties broken
+    # alphabetically so the manifest is reproducible across runs.
+    emitted: set = set()
+    ordered: List[TagInfo] = []
+    while len(ordered) < len(tag_infos):
+        ready = sorted(
+            (
+                info
+                for info in tag_infos
+                if info.package.path not in emitted and deps[info.package.path].issubset(emitted)
+            ),
+            key=lambda info: info.package.name,
+        )
+        if not ready:
+            remaining = [info.package.name for info in tag_infos if info.package.path not in emitted]
+            raise Exception(f"Cyclic dependency detected among packages: {remaining}")
+        for info in ready:
+            ordered.append(info)
+            emitted.add(info.package.path)
+    return ordered
+
+
 def push_tags(tag_infos: List[TagInfo]) -> None:
     """
     Creates and pushes tags to the repository.
+
+    Tags are emitted in topological order — dependencies before
+    dependents — so downstream publishing pipelines reading
+    ``created_tags.json`` can walk it sequentially without re-deriving
+    the dependency graph. See ``order_tag_infos_by_dependency``.
 
     As a side effect, writes the names of successfully created tags to
     ``./created_tags.json`` so that workflows triggering this script can
@@ -833,6 +921,7 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     exception is re-raised, so recovery-mode runs still surface their
     output.
     """
+    tag_infos = order_tag_infos_by_dependency(tag_infos)
     created: List[str] = []
     try:
         for tag_info in tag_infos:

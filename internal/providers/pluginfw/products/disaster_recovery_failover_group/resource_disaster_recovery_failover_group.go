@@ -211,7 +211,7 @@ func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["workspace_sets"] = attrs["workspace_sets"].SetRequired()
 	attrs["failover_group_id"] = attrs["failover_group_id"].SetRequired()
 	attrs["failover_group_id"] = attrs["failover_group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["failover_group_id"] = attrs["failover_group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["failover_group_id"] = attrs["failover_group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 

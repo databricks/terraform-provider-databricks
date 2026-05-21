@@ -27,7 +27,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoError(t *testing.T) 
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/ServicePrincipals/abc",
+				Resource:        "/api/2.0/account/scim/v2/ServicePrincipals/abc",
 				ExpectedRequest: expectedServicePrincipalDisablePatchRequest,
 			},
 		},
@@ -48,7 +48,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_NoErrorEmptyParams(t *
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/ServicePrincipals/abc",
+				Resource:        "/api/2.0/account/scim/v2/ServicePrincipals/abc",
 				ExpectedRequest: expectedServicePrincipalDisablePatchRequest,
 			},
 		},
@@ -68,7 +68,7 @@ func TestResourceServicePrincipalDeleteAsDisableInAccount_HardDelete(t *testing.
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/account/scim/v2/ServicePrincipals/abc",
 			},
 		},
 		Resource: ResourceServicePrincipal(),

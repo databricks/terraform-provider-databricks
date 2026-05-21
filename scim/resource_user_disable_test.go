@@ -27,7 +27,7 @@ func TestResourceUserDeleteAsDisableInAccount_NoError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/Users/abc",
+				Resource:        "/api/2.0/account/scim/v2/Users/abc",
 				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
@@ -48,7 +48,7 @@ func TestResourceUserDeleteAsDisableInAccount_NoErrorEmptyParams(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/Users/abc",
+				Resource:        "/api/2.0/account/scim/v2/Users/abc",
 				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
@@ -68,7 +68,7 @@ func TestResourceUserDeleteAsDisableInAccount_HardDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/Users/abc",
+				Resource: "/api/2.0/account/scim/v2/Users/abc",
 			},
 		},
 		Resource: ResourceUser(),

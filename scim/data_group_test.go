@@ -100,7 +100,7 @@ func TestDataSourceGroup_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: `/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
+				Resource: `/api/2.0/account/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
 				Response: GroupList{
 					Resources: []Group{
 						{
@@ -112,7 +112,7 @@ func TestDataSourceGroup_ApiFieldAccount(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Resource: "/api/2.0/account/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "ds",
 					ID:          "eerste",
@@ -169,7 +169,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: `/api/2.0/accounts/1234567890/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
+				Resource: `/api/2.0/account/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
 				Response: GroupList{
 					Resources: []Group{
 						{
@@ -181,7 +181,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Resource: "/api/2.0/account/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "ds",
 					ID:          "eerste",
@@ -208,7 +208,7 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
 					DisplayName: "product",
 					ID:          "abc",

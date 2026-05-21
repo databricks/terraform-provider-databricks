@@ -50,7 +50,7 @@ func TestDataSourceUser_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22ds%22",
+				Resource: "/api/2.0/account/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22ds%22",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -116,7 +116,7 @@ func TestDataSourceUser_ApiFieldAccount_ById(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc?attributes=userName,displayName,externalId,applicationId,active",
+				Resource: "/api/2.0/account/scim/v2/Users/abc?attributes=userName,displayName,externalId,applicationId,active",
 				Response: User{
 					ID:          "abc",
 					UserName:    "acct@example.com",

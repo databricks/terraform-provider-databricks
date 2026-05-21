@@ -11,14 +11,14 @@ func TestResourceServicePrincipalCreate_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/ServicePrincipals",
+				Resource: "/api/2.0/account/scim/v2/ServicePrincipals",
 				Response: User{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/account/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName:   "Example SP",
 					Active:        true,
@@ -76,7 +76,7 @@ func TestResourceServicePrincipalRead_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/account/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					ID:            "abc",
 					ApplicationID: "bcd",
@@ -106,7 +106,7 @@ func TestResourceServicePrincipalDelete_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/account/scim/v2/ServicePrincipals/abc",
 			},
 		},
 		Resource:  ResourceServicePrincipal(),

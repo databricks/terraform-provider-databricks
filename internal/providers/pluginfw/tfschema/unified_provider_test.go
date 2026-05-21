@@ -338,7 +338,7 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 		case "/.well-known/databricks-config":
 			rw.WriteHeader(404)
 		case "/api/2.0/preview/scim/v2/Me":
-			rw.Header().Set("X-Databricks-Org-Id", "999")
+			rw.Header().Set("X-Databricks-Workspace-Id", "999")
 			rw.WriteHeader(200)
 			rw.Write([]byte("{}"))
 		default:

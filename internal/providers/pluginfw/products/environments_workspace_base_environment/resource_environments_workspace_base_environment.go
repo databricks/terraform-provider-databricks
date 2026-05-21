@@ -248,7 +248,7 @@ func (m WorkspaceBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].SetComputed()
 	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].SetOptional()
 	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

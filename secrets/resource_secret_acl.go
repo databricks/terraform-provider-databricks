@@ -90,7 +90,7 @@ func ResourceSecretACL() common.Resource {
 			// This prevents users from accidentally locking themselves out of managing the secret scope.
 			permission := d.Get("permission").(string)
 			if permission == string(workspace.AclPermissionManage) {
-				me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
+				me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 				if err != nil {
 					return err
 				}

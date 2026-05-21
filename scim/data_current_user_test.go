@@ -14,7 +14,7 @@ func TestDataSourceCurrentUser(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me?",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: User{
 					ID:       "123",
 					UserName: userName,
@@ -41,7 +41,7 @@ func TestDataSourceCurrentUserAsSP(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me?",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: User{
 					ID:       "123",
 					UserName: spId,

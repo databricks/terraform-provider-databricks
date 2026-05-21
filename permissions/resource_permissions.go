@@ -61,7 +61,7 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	me, err := w.CurrentUser.Me(a.context)
+	me, err := w.CurrentUser.Me(a.context, iam.MeRequest{})
 	if err != nil {
 		return "", err
 	}

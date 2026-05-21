@@ -30,7 +30,7 @@ var (
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -77,7 +77,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -98,7 +98,7 @@ func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "fakeuuid123",
 				RequestObjectType: "registered-models",
@@ -134,7 +134,7 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "fakeuuid123",
@@ -191,7 +191,7 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "fakeuuid123",
@@ -253,7 +253,7 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "fakeuuid123",
@@ -294,7 +294,7 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -338,7 +338,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 func TestResourcePermissionsRead_Dashboard(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -376,7 +376,7 @@ func TestResourcePermissionsRead_Dashboard(t *testing.T) {
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -397,7 +397,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -428,7 +428,7 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 	mock := func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(nil, &apierr.APIError{
+		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(nil, &apierr.APIError{
 			ErrorCode: "INVALID_REQUEST",
 			Message:   "Internal error happened",
 		})
@@ -446,7 +446,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -464,7 +464,7 @@ func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
 func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
 				RequestObjectType: "clusters",
@@ -486,7 +486,7 @@ func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 func TestResourcePermissionsRead_EmptyListResultsInRemovalWith504Errors(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 
 			req := iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -516,7 +516,7 @@ func TestResourcePermissionsRead_EmptyListResultsInRemovalWith504Errors(t *testi
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -567,7 +567,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -655,7 +655,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Create:   true,
@@ -673,7 +673,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -740,7 +740,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "abc",
@@ -807,7 +807,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
@@ -872,7 +872,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
@@ -955,7 +955,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "abc",
@@ -1068,7 +1068,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Development/Init").Return(&workspace.ObjectInfo{
 				ObjectId:   988765,
 				ObjectType: workspace.ObjectTypeNotebook,
@@ -1136,7 +1136,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Development/Init").Return(&workspace.ObjectInfo{
 				ObjectId:   988765,
 				ObjectType: workspace.ObjectTypeFile,
@@ -1240,7 +1240,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, mock.Anything).Return(nil, &apierr.APIError{
 				ErrorCode:  "INVALID_REQUEST",
 				Message:    "i'm a teapot",
@@ -1261,7 +1261,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 func TestResourcePermissionsUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "9",
@@ -1340,7 +1340,7 @@ func getResourcePermissions(field, objectType string) resourcePermissions {
 
 func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "me"}, nil)
+		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "me"}, nil)
 		mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, iam.SetObjectPermissions{
 			RequestObjectId:   "tokens",
 			RequestObjectType: "authorization",
@@ -1497,7 +1497,7 @@ func TestDeleteMissing(t *testing.T) {
 func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Repos/Development/Init").Return(&workspace.ObjectInfo{
 				ObjectId:   988765,
 				ObjectType: workspace.ObjectTypeRepo,
@@ -1575,7 +1575,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "id111",
@@ -1633,7 +1633,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "id111",
@@ -1693,7 +1693,7 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/First").Return(&workspace.ObjectInfo{
 				ObjectId:   123456,
 				ObjectType: workspace.ObjectTypeDirectory,
@@ -1770,7 +1770,7 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 func TestResourcePermissionsPasswordUsage(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "passwords",
@@ -1817,7 +1817,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 func TestResourcePermissionsRootDirectory(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Get(mock.Anything, iam.GetPermissionRequest{
 				RequestObjectId:   "0",

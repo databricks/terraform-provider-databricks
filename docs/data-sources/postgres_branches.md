@@ -26,6 +26,9 @@ The following arguments are supported:
 * `parent` (string, required) - The Project that owns this collection of branches.
   Format: projects/{project_id}
 * `page_size` (integer, optional) - Upper bound for items returned. Cannot be negative
+* `show_deleted` (boolean, optional) - Whether to include soft-deleted branches in the response.
+  When true, deleted branches are included alongside active branches.
+  Purged branches are never returned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -69,12 +72,16 @@ This data source exports a single attribute, `branches`. It is a list of resourc
   Use this field when building UI components that display branches to users (e.g., a drop-down
   selector). Prefer showing `branch_id` instead of the full resource name from `Branch.name`,
   which follows the `projects/{project_id}/branches/{branch_id}` format and is not user-friendly
-* `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `DELETED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
 * `default` (boolean) - Whether the branch is the project's default branch
+* `delete_time` (string) - A timestamp indicating when the branch was deleted.
+  Empty if the branch is not deleted
 * `expire_time` (string) - Absolute expiration time for the branch. Empty if expiration is disabled
 * `is_protected` (boolean) - Whether the branch is protected
 * `logical_size_bytes` (integer) - The logical size of the branch
-* `pending_state` (string) - The pending state of the branch, if a state transition is in progress. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `pending_state` (string) - The pending state of the branch, if a state transition is in progress. Possible values are: `ARCHIVED`, `DELETED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `purge_time` (string) - A timestamp indicating when the branch is scheduled to be purged.
+  Empty if the branch is not deleted, otherwise set to a timestamp in the future
 * `source_branch` (string) - The name of the source branch from which this branch was created.
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created

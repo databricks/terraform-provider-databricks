@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -31,7 +32,7 @@ func TestAccSecretAclResource(t *testing.T) {
 			w := databricks.Must(databricks.NewWorkspaceClient())
 
 			ctx := context.Background()
-			me, err := w.CurrentUser.Me(ctx)
+			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
 			require.NoError(t, err)
 
 			scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID

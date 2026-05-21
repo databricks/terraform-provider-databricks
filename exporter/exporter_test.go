@@ -91,7 +91,7 @@ func TestImportingMounts(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me",
+				Resource: "/api/2.0/preview/scim/v2/Me?",
 				Response: scim.User{},
 			},
 			{
@@ -236,7 +236,7 @@ func TestImportingMounts(t *testing.T) {
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/preview/scim/v2/Me",
+	Resource:     "/api/2.0/preview/scim/v2/Me?",
 	Response: scim.User{
 		Groups: []scim.ComplexValue{
 			{
@@ -876,7 +876,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{},
 				},
@@ -1081,7 +1081,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?",
 				ReuseRequest: true,
 				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
@@ -3035,7 +3035,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{
@@ -3103,7 +3103,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{

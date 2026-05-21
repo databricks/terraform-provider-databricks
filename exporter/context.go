@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -469,7 +470,7 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
-		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context)
+		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context, iam.MeRequest{})
 		if err != nil {
 			return err
 		}

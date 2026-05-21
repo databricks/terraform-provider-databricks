@@ -188,7 +188,7 @@ func (to *DefaultWarehouseOverride) SyncFieldsDuringRead(ctx context.Context, fr
 func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["type"] = attrs["type"].SetRequired()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()

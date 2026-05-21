@@ -23,6 +23,6 @@ func DataSourceMwsCredentials() common.Resource {
 		return nil
 	})
 	r.SkipProviderConfigStatePopulation = true
-	deprecateProviderConfig(r.Schema)
+	common.DeprecateProviderConfigInSchema(r.Schema)
 	return r
 }

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -53,7 +54,7 @@ func DataSourceCurrentUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			me, err := w.CurrentUser.Me(ctx)
+			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
 			if err != nil {
 				return err
 			}

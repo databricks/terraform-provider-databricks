@@ -32,6 +32,7 @@ The following attributes are exported:
 * `network_policy_id` (string) - The unique identifier for the network policy
 
 ### CustomerFacingIngressNetworkPolicy
+* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess)
 * `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess) - The network policy restrictions for private access to the workspace.
   Configures how registered private endpoints are allowed or denied access
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess) - The network policy restrictions for public access to the workspace.
@@ -57,6 +58,21 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyAuthenticationIdentity
 * `principal_id` (integer)
 * `principal_type` (string) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin)
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin
+* `all_source_workspaces` (boolean) - Matches all source workspaces
+* `selected_workspaces` (CustomerFacingIngressNetworkPolicyWorkspaceIdList) - Specific source workspace IDs to match
 
 ### CustomerFacingIngressNetworkPolicyEndpoints
 * `endpoint_ids` (list of string)
@@ -114,6 +130,9 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
 * `scopes` (list of string)
+
+### CustomerFacingIngressNetworkPolicyWorkspaceIdList
+* `workspace_ids` (list of integer)
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceUiDestination
 * `all_destinations` (boolean) - Must be set to true

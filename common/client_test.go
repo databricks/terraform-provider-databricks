@@ -336,7 +336,7 @@ type mockInternalUserService struct {
 	count int
 }
 
-func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err error) {
+func (m *mockInternalUserService) Me(ctx context.Context, request iam.MeRequest) (user *iam.User, err error) {
 	m.count++
 	return &iam.User{
 		UserName: "test",
@@ -346,8 +346,8 @@ func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err e
 func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	mock := &mockInternalUserService{}
 	cm := newCachedMe(mock)
-	cm.Me(context.Background())
-	cm.Me(context.Background())
+	cm.Me(context.Background(), iam.MeRequest{})
+	cm.Me(context.Background(), iam.MeRequest{})
 	assert.Equal(t, 1, mock.count)
 }
 

@@ -54,7 +54,7 @@ func DataSourceCurrentUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
+			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
 			if err != nil {
 				return err
 			}

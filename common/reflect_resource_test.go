@@ -973,3 +973,45 @@ func TestStructToData_IndirectString(t *testing.T) {
 	}, scm, d)
 	assert.NoError(t, err)
 }
+
+func TestStructToData_OptionalComputedEmptyMapWrittenToState(t *testing.T) {
+	type Resource struct {
+		Name string            `json:"name"`
+		Tags map[string]string `json:"tags,omitempty"`
+	}
+	s := StructToSchema(Resource{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["tags"].Optional = true
+		s["tags"].Computed = true
+		return s
+	})
+	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
+	d.SetId("existing-resource")
+	err := StructToData(Resource{Name: "test", Tags: map[string]string{}}, s, d)
+	assert.NoError(t, err)
+	// Optional+Computed empty maps must reach state so ignore_changes and drift
+	// detection work correctly; without the !fieldSchema.Computed guard they
+	// were silently dropped, causing a perpetual "(known after apply)" diff.
+	tags := d.Get("tags")
+	assert.NotNil(t, tags)
+	tagsMap, ok := tags.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Empty(t, tagsMap)
+}
+
+func TestStructToData_OptionalOnlyEmptyMapNotWrittenToState(t *testing.T) {
+	type Resource struct {
+		Name string            `json:"name"`
+		Tags map[string]string `json:"tags,omitempty"`
+	}
+	s := StructToSchema(Resource{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
+	d.SetId("existing-resource")
+	err := StructToData(Resource{Name: "test", Tags: map[string]string{}}, s, d)
+	assert.NoError(t, err)
+	// Optional-only (non-Computed) empty maps are still filtered to avoid
+	// writing server defaults into state for unconfigured fields.
+	tags := d.Get("tags")
+	tagsMap, ok := tags.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Empty(t, tagsMap)
+}

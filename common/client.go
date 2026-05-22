@@ -22,24 +22,24 @@ import (
 )
 
 type cachedMe struct {
-	internalImpl iam.CurrentUserService
+	internalImpl iam.CurrentUserInterface
 	cachedUser   *iam.User
 	mu           sync.Mutex
 }
 
-func newCachedMe(inner iam.CurrentUserService) *cachedMe {
+func newCachedMe(inner iam.CurrentUserInterface) *cachedMe {
 	return &cachedMe{
 		internalImpl: inner,
 	}
 }
 
-func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
+func (a *cachedMe) Me(ctx context.Context, request iam.MeRequest) (*iam.User, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.cachedUser != nil {
 		return a.cachedUser, nil
 	}
-	user, err := a.internalImpl.Me(ctx)
+	user, err := a.internalImpl.Me(ctx, request)
 	if err != nil {
 		return user, err
 	}

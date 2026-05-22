@@ -29,8 +29,12 @@ func DataSourceFeatures() datasource.DataSource {
 // FeaturesData extends the main model with additional fields.
 type FeaturesData struct {
 	FeatureEngineering types.List `tfsdk:"features"`
+	// Name of parent catalog for features of interest.
+	CatalogName types.String `tfsdk:"catalog_name"`
 	// The maximum number of results to return.
-	PageSize           types.Int64  `tfsdk:"page_size"`
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName         types.String `tfsdk:"schema_name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -43,6 +47,8 @@ func (FeaturesData) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 
 func (m FeaturesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 
 	attrs["features"] = attrs["features"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

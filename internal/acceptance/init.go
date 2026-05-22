@@ -528,7 +528,7 @@ func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 
 func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
 	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
+	user, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 	if err != nil {
 		return false, err
 	}

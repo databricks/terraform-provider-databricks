@@ -470,7 +470,7 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
-		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context, iam.MeRequest{})
+		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context, iam.MeRequest{ExcludedAttributes: "entitlements"})
 		if err != nil {
 			return err
 		}

@@ -758,7 +758,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("owner") {
 				// if new owner is not specified, set it to the current user
 				if newti.Owner == "" {
-					currentUser, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
+					currentUser, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 					if err != nil {
 						return err
 					}

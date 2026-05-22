@@ -7,8 +7,52 @@ import (
 )
 
 func TestResourceGroupCreate_ApiFieldAccount(t *testing.T) {
+	// On a workspace-host provider, api = "account" routes to the
+	// workspace-proxied Account SCIM endpoint (/api/2.0/account/scim/v2/...),
+	// which honors the Group Manager role and does not require account admin.
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/account/scim/v2/Groups",
+				Response: Group{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: Group{
+					ID:          "abc",
+					DisplayName: "test-group",
+				},
+			},
+		},
+		Resource:  ResourceGroup(),
+		AccountID: "acc-123",
+		HCL: `
+			display_name = "test-group"
+			api = "account"
+		`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGroupCreate_ApiFieldAccount_AccountHost(t *testing.T) {
+	// On an account-host provider, api = "account" routes to the
+	// standard Account SCIM endpoint (/api/2.0/accounts/{account_id}/scim/v2/...),
+	// which requires account admin. Host inference is driven by the host
+	// metadata discovery — a 200 on /.well-known/databricks-config with
+	// host_type=ACCOUNT_HOST resolves the config to AccountHost, which is
+	// what a real accounts.* host would do.
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/.well-known/databricks-config",
+				Response:     map[string]string{"host_type": "account"},
+				ReuseRequest: true,
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups",
@@ -137,7 +181,7 @@ func TestResourceGroupRead_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					ID:          "abc",
 					DisplayName: "test-group",

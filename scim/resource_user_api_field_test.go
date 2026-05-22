@@ -11,14 +11,14 @@ func TestResourceUserCreate_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users",
+				Resource: "/api/2.0/account/scim/v2/Users",
 				Response: User{
 					ID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/account/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					UserName:    "me@example.com",
 					DisplayName: "me",
@@ -76,7 +76,7 @@ func TestResourceUserDelete_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc",
+				Resource: "/api/2.0/account/scim/v2/Users/abc",
 			},
 		},
 		Resource:  ResourceUser(),

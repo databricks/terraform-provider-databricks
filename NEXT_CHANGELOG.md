@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Route SCIM `api = "account"` calls to the workspace-proxied Account SCIM endpoint (`/api/2.0/account/scim/v2/...`) when the provider is configured against a workspace host. The previous behavior emitted `/api/2.0/accounts/{account_id}/scim/v2/...` against the workspace host, which returns 404 — no real production path exercised it. The new behavior honors the Group Manager role per [Databricks docs](https://docs.databricks.com/aws/en/admin/users-groups/manage-groups#manage-groups-using-the-api), letting non-account-admin service principals manage account-group membership from a workspace-scoped provider. The account-host branch is unchanged.
+
 ### Documentation
 
 ### Exporter

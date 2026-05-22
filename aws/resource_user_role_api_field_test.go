@@ -12,11 +12,11 @@ func TestResourceUserRoleCreate_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc",
+				Resource: "/api/2.0/account/scim/v2/Users/abc",
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc?attributes=roles",
+				Resource: "/api/2.0/account/scim/v2/Users/abc?attributes=roles",
 				Response: scim.User{
 					Roles: []scim.ComplexValue{{Value: "arn:aws:iam::999999999999:role/foo"}},
 				},
@@ -38,7 +38,7 @@ func TestResourceUserRoleRead_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users/abc?attributes=roles",
+				Resource: "/api/2.0/account/scim/v2/Users/abc?attributes=roles",
 				Response: scim.User{
 					Roles: []scim.ComplexValue{{Value: "arn:aws:iam::999999999999:role/foo"}},
 				},

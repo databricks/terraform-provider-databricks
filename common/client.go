@@ -514,7 +514,10 @@ func AddApiField(s map[string]*schema.Schema) map[string]*schema.Schema {
 		),
 		Description: "Specifies whether to use account-level or workspace-level API. " +
 			"Valid values are `account` and `workspace`. When not set, the API level " +
-			"is inferred from the provider host.",
+			"is inferred from the provider host. For SCIM resources, `account` on a " +
+			"workspace-host provider routes to the workspace-proxied Account SCIM " +
+			"endpoint (`/api/2.0/account/scim/v2/...`), which honors the Group Manager " +
+			"role and does not require account admin.",
 	}
 	return s
 }
@@ -594,6 +597,18 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 // scimVisitorForLevel returns a request visitor that rewrites SCIM URL paths
 // for account-level requests. The apiLevel parameter takes precedence over
 // host-based inference when non-empty.
+//
+// The rewrite is host-conditional. When the client is configured against an
+// account host (https://accounts.<...>), the path becomes
+// /api/2.0/accounts/{account_id}/scim/v2/... — the standard Account SCIM API,
+// which requires account admin. When the client is configured against a
+// workspace host, the path becomes /api/2.0/account/scim/v2/... (singular,
+// no account_id) — the workspace-proxied Account SCIM endpoint that honors
+// the Group Manager role and workspace admin role per
+// https://docs.databricks.com/aws/en/admin/users-groups/manage-groups#manage-groups-using-the-api.
+// The workspace host does not route the plural /accounts/{aid}/scim/v2/...
+// path (returns 404), so the singular variant is the only one that works
+// from a workspace-scoped client.
 func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Request) error {
 	return func(r *http.Request) error {
 		var isAccount bool
@@ -606,8 +621,12 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 		if isAccount {
 			// until `/preview` is there for workspace scim,
 			// `/api/2.0` is added by completeUrl visitor
-			r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
-				fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+			if c.HostTypeForTerraform() == config.AccountHost {
+				r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
+					fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+			} else {
+				r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview", "/api/2.0/account")
+			}
 		}
 		return nil
 	}

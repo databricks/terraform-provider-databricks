@@ -11,11 +11,11 @@ func TestResourceGroupMemberCreate_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc",
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=members",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc?attributes=members",
 				Response: Group{
 					Members: []ComplexValue{{Value: "def"}},
 				},
@@ -37,7 +37,7 @@ func TestResourceGroupMemberRead_ApiFieldAccount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=members",
+				Resource: "/api/2.0/account/scim/v2/Groups/abc?attributes=members",
 				Response: Group{
 					Members: []ComplexValue{{Value: "def"}},
 				},

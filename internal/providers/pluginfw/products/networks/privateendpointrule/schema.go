@@ -52,10 +52,6 @@ func resourceSchema() schema.Schema {
 			},
 			"account_id": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"endpoint_service": schema.StringAttribute{
 				Optional: true,
@@ -139,15 +135,12 @@ func resourceSchema() schema.Schema {
 			},
 			"deactivated": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 			},
 			"deactivated_at": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 			},
 			"error_message": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{

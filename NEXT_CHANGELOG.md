@@ -18,3 +18,4 @@
 
 * Add `internal/retrier` package for unified retry and backoff handling ([#5746](https://github.com/databricks/terraform-provider-databricks/pull/5746)).
 * Pass `excludedAttributes=entitlements` on SCIM `/Me` requests ([#5725](https://github.com/databricks/terraform-provider-databricks/pull/5725)).
+* Migrate `databricks_mws_ncc_private_endpoint_rule` to the Plugin Framework ([#XXXX](https://github.com/databricks/terraform-provider-databricks/pull/XXXX)). No HCL or state changes; the legacy SDKv2 implementation remains in the repo and can be re-selected per-resource via `USE_SDK_V2_RESOURCES=databricks_mws_ncc_private_endpoint_rule`.

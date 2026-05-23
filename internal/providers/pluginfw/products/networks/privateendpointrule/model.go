@@ -29,7 +29,7 @@ type model struct {
 	Deactivated                 types.Bool        `tfsdk:"deactivated"`
 	DeactivatedAt               types.Int64       `tfsdk:"deactivated_at"`
 	ErrorMessage                types.String      `tfsdk:"error_message"`
-	GcpEndpoint                 *gcpEndpointModel `tfsdk:"gcp_endpoint"`
+	GcpEndpoint                 []gcpEndpointModel `tfsdk:"gcp_endpoint"`
 }
 
 type gcpEndpointModel struct {
@@ -147,8 +147,9 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	m.ResourceNames = resourceList
 
 	if rule.GcpEndpoint != nil {
-		m.GcpEndpoint = &gcpEndpointModel{}
-		m.GcpEndpoint.fromAPI(rule.GcpEndpoint)
+		g := gcpEndpointModel{}
+		g.fromAPI(rule.GcpEndpoint)
+		m.GcpEndpoint = []gcpEndpointModel{g}
 	} else {
 		m.GcpEndpoint = nil
 	}

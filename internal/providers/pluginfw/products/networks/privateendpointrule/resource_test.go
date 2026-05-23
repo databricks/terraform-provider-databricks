@@ -45,20 +45,27 @@ func TestResource_SchemaPreserved(t *testing.T) {
 		assert.True(t, hasRequiresReplace, "%s must carry a RequiresReplace plan modifier", name)
 	}
 
-	computedOnly := []string{"id", "rule_id", "account_id", "endpoint_name", "vpc_endpoint_id", "connection_state", "creation_time", "updated_time", "deactivated", "deactivated_at", "error_message", "gcp_endpoint"}
-	for _, name := range computedOnly {
+	// Optional + Computed (round-trip from server or user-supplied).
+	for _, name := range []string{"id", "rule_id", "account_id", "endpoint_name", "vpc_endpoint_id", "connection_state", "creation_time", "updated_time", "deactivated", "deactivated_at", "error_message", "enabled"} {
 		attr, ok := s.Attributes[name]
 		require.True(t, ok, "%s attribute must exist", name)
 		assert.True(t, attr.IsComputed(), "%s must be Computed", name)
+		assert.True(t, attr.IsOptional(), "%s must be Optional", name)
 		assert.False(t, attr.IsRequired(), "%s must not be Required", name)
 	}
 
-	for _, name := range []string{"enabled", "domain_names", "resource_names"} {
+	// Optional only (user supplies; server echoes).
+	for _, name := range []string{"endpoint_service", "group_id", "resource_id", "domain_names", "resource_names"} {
 		attr, ok := s.Attributes[name]
 		require.True(t, ok, "%s attribute must exist", name)
 		assert.True(t, attr.IsOptional(), "%s must be Optional", name)
-		assert.True(t, attr.IsComputed(), "%s must be Computed", name)
+		assert.False(t, attr.IsComputed(), "%s must not be Computed", name)
 	}
+
+	// gcp_endpoint is a Block (not an Attribute) to preserve the SDKv2 schema
+	// shape so existing state files and HCL block syntax continue to work.
+	_, isBlock := s.Blocks["gcp_endpoint"]
+	assert.True(t, isBlock, "gcp_endpoint must be a Block")
 }
 
 func containsSubstring(haystack, needle string) bool {
@@ -218,9 +225,9 @@ func TestModel_FromAPI(t *testing.T) {
 	assert.Equal(t, "vpce-name", m.EndpointName.ValueString())
 	assert.Equal(t, int64(111), m.CreationTime.ValueInt64())
 	assert.Equal(t, int64(222), m.UpdatedTime.ValueInt64())
-	require.NotNil(t, m.GcpEndpoint)
-	assert.Equal(t, "uri", m.GcpEndpoint.PscEndpointUri.ValueString())
-	assert.Equal(t, "attach", m.GcpEndpoint.ServiceAttachment.ValueString())
+	require.Len(t, m.GcpEndpoint, 1)
+	assert.Equal(t, "uri", m.GcpEndpoint[0].PscEndpointUri.ValueString())
+	assert.Equal(t, "attach", m.GcpEndpoint[0].ServiceAttachment.ValueString())
 
 	var domainNames []string
 	d := m.DomainNames.ElementsAs(ctx, &domainNames, false)

@@ -45,8 +45,9 @@ func TestResource_SchemaPreserved(t *testing.T) {
 		assert.True(t, hasRequiresReplace, "%s must carry a RequiresReplace plan modifier", name)
 	}
 
-	// Optional + Computed (round-trip from server or user-supplied).
-	for _, name := range []string{"id", "rule_id", "account_id", "endpoint_name", "vpc_endpoint_id", "connection_state", "creation_time", "updated_time", "deactivated", "deactivated_at", "error_message", "enabled"} {
+	// Optional + Computed (SDKv2 customisation calls SetComputed; the auto-generator's
+	// default Optional carries through).
+	for _, name := range []string{"id", "rule_id", "endpoint_name", "vpc_endpoint_id", "connection_state", "creation_time", "updated_time", "enabled"} {
 		attr, ok := s.Attributes[name]
 		require.True(t, ok, "%s attribute must exist", name)
 		assert.True(t, attr.IsComputed(), "%s must be Computed", name)
@@ -54,8 +55,9 @@ func TestResource_SchemaPreserved(t *testing.T) {
 		assert.False(t, attr.IsRequired(), "%s must not be Required", name)
 	}
 
-	// Optional only (user supplies; server echoes).
-	for _, name := range []string{"endpoint_service", "group_id", "resource_id", "domain_names", "resource_names"} {
+	// Optional only (user supplies; server echoes, or auto-defaulted with no
+	// SetComputed customisation in SDKv2).
+	for _, name := range []string{"endpoint_service", "group_id", "resource_id", "domain_names", "resource_names", "account_id", "deactivated", "deactivated_at", "error_message"} {
 		attr, ok := s.Attributes[name]
 		require.True(t, ok, "%s attribute must exist", name)
 		assert.True(t, attr.IsOptional(), "%s must be Optional", name)

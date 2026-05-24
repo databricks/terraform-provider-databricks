@@ -5,104 +5,167 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/databricks/terraform-provider-databricks/common"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/telemetry"
+	"github.com/databricks/terraform-provider-databricks/internal/retrier"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const (
-	resourceName                            = "mws_ncc_private_endpoint_rule"
-	defaultPrivateEndpointRuleCreateTimeout = 30 * time.Minute
-)
+const resourceName = "mws_ncc_private_endpoint_rule"
 
 func ResourcePrivateEndpointRule() resource.Resource {
 	return &resourcePrivateEndpointRule{}
 }
 
+// api names exactly the SDK calls this resource depends on. Defining it
+// locally (rather than importing settings.NetworkConnectivityInterface) follows
+// Go's "interfaces belong to the consumer" idiom: future additions to the SDK
+// can't leak into this resource's contract, and the fake in tests needs to
+// implement only what's actually used.
+type apiClient interface {
+	CreatePrivateEndpointRule(ctx context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
+	GetPrivateEndpointRule(ctx context.Context, req settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
+	UpdatePrivateEndpointRule(ctx context.Context, req settings.UpdateNccPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
+	DeletePrivateEndpointRule(ctx context.Context, req settings.DeletePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
+}
+
 type resourcePrivateEndpointRule struct {
-	client *common.DatabricksClient
+	api apiClient
+
+	// backoff is the retry backoff policy for the resource.
+	// It is exposed as a field to ease in-package testing.
+	backoff retrier.BackoffPolicy
 }
 
 var (
+	_ resource.Resource                = &resourcePrivateEndpointRule{}
 	_ resource.ResourceWithConfigure   = &resourcePrivateEndpointRule{}
 	_ resource.ResourceWithImportState = &resourcePrivateEndpointRule{}
 )
 
-func (r *resourcePrivateEndpointRule) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+func (r *resourcePrivateEndpointRule) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "databricks_" + resourceName
 }
 
-func (r *resourcePrivateEndpointRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourcePrivateEndpointRule) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resourceSchema()
 }
 
-func (r *resourcePrivateEndpointRule) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if r.client == nil {
-		r.client = pluginfwcommon.ConfigureResource(req, resp)
+// Configure resolves the account client from the provider data. PF may call
+// this more than once on the same resource value if the underlying provider
+// data is updated; we re-resolve on every call so we never serve a stale
+// client.
+func (r *resourcePrivateEndpointRule) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ac, d := provider.AccountClient(req.ProviderData)
+	resp.Diagnostics.Append(d...)
+	if ac == nil {
+		// ProviderData not yet wired (pre-Configure phase) or a real error
+		// already appended above. Either way, bail.
+		return
 	}
+	r.api = ac.NetworkConnectivity
 }
 
+// createTimeout caps how long Create waits for the rule to leave CREATING.
+// Plugin Framework gives a request ctx with no deadline (unlike SDKv2, which
+// defaulted CRUD operations to 20 minutes), so without this ceiling a stalled
+// reconciler would make `terraform apply` hang until SIGINT. 30 minutes is
+// generous against observed transitions from CREATING to PENDING, which are
+// typically under a few minutes.
+var createTimeout = 30 * time.Minute
+
 func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+	ctx = telemetry.WithResource(ctx, resourceName)
+
+	// Bound the operation; without this the polling loop below could hang
+	// indefinitely (PF's request ctx carries no deadline). The rule is
+	// persisted to state before polling starts, so a deadline hit still
+	// leaves a destroyable resource behind.
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
+
 	var plan model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createReq, d := plan.toCreateRequest(ctx)
+	apiReq, d := plan.toCreateRequest(ctx)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	acc, err := r.client.AccountClient()
-	if err != nil {
-		resp.Diagnostics.AddError("failed to get account client", err.Error())
-		return
-	}
-
-	rule, err := acc.NetworkConnectivity.CreatePrivateEndpointRule(ctx, *createReq)
+	// CreatePrivateEndpointRule is not idempotent; retrying on transient errors
+	// would create duplicate rules. Let the SDK's transport-level retry handle
+	// connection-level flakes; surface anything else as a hard failure.
+	pendingRule, err := r.api.CreatePrivateEndpointRule(ctx, *apiReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create private endpoint rule", err.Error())
 		return
 	}
 
-	// Pack the ID and persist the initial state before polling so that a
-	// polling failure or context cancellation still leaves a Read-able
-	// resource that `terraform destroy` can clean up.
-	resp.Diagnostics.Append(plan.fromAPI(ctx, rule)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	plan.NetworkConnectivityConfigId = types.StringValue(createReq.NetworkConnectivityConfigId)
-	plan.ID = types.StringValue(packID(createReq.NetworkConnectivityConfigId, rule.RuleId))
+	// Persist the created rule before polling so a polling failure still leaves
+	// a readable resource that `terraform destroy` can clean up.
+	plan.NetworkConnectivityConfigId = types.StringValue(apiReq.NetworkConnectivityConfigId)
+	plan.ID = types.StringValue(packID(apiReq.NetworkConnectivityConfigId, pendingRule.RuleId))
+	resp.Diagnostics.Append(plan.fromAPI(ctx, pendingRule)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	final, err := waitForPrivateEndpointRuleCreate(ctx, acc, createReq.NetworkConnectivityConfigId, rule.RuleId, defaultPrivateEndpointRuleCreateTimeout)
+	// Poll until the rule leaves CREATING. PENDING is the success terminal
+	// for the server's side of the handshake; the transition to ESTABLISHED
+	// needs the customer to approve the connection in their cloud console
+	// (out of band; usually wired via the aws/azurerm/google provider in
+	// the same config), so the loop intentionally does not wait for it.
+	// The post-loop switch classifies the terminal state.
+	rule, err := retrier.Run(ctx, retrier.RetryIf(r.backoff, isStillCreating), func(ctx context.Context) (*settings.NccPrivateEndpointRule, error) {
+		return r.api.GetPrivateEndpointRule(ctx, settings.GetPrivateEndpointRuleRequest{
+			NetworkConnectivityConfigId: apiReq.NetworkConnectivityConfigId,
+			PrivateEndpointRuleId:       pendingRule.RuleId,
+		})
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", err.Error())
 		return
 	}
-	resp.Diagnostics.Append(plan.fromAPI(ctx, final)...)
-	if resp.Diagnostics.HasError() {
+	switch rule.ConnectionState {
+	case settings.NccPrivateEndpointRulePrivateLinkConnectionStatePending,
+		settings.NccPrivateEndpointRulePrivateLinkConnectionStateEstablished:
+		// Server-side handshake done; rule is usable (ESTABLISHED) or
+		// waiting on customer approval (PENDING). Fall through to persist.
+	case settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreateFailed:
+		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", rule.ErrorMessage)
+		return
+	default:
+		// REJECTED, DISCONNECTED, EXPIRED, or any future enum value: the
+		// rule exists server-side but is not usable. Surfacing this beats
+		// a silent green apply on a broken resource.
+		resp.Diagnostics.AddError(
+			"private endpoint rule reached unexpected state",
+			fmt.Sprintf("expected PENDING or ESTABLISHED, got %q", rule.ConnectionState),
+		)
 		return
 	}
+	resp.Diagnostics.Append(plan.fromAPI(ctx, rule)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
+// isStillCreating is the retrier predicate: retry only while the rule is in
+// the single transient state CREATING. Any error from Get halts the retry,
+// transport-level errors are meant to be handled by the SDK.
+func isStillCreating(rule *settings.NccPrivateEndpointRule, err error) bool {
+	return err == nil && rule.ConnectionState == settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreating
+}
+
 func (r *resourcePrivateEndpointRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+	ctx = telemetry.WithResource(ctx, resourceName)
+
 	var state model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -115,13 +178,10 @@ func (r *resourcePrivateEndpointRule) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	acc, err := r.client.AccountClient()
-	if err != nil {
-		resp.Diagnostics.AddError("failed to get account client", err.Error())
-		return
-	}
-
-	rule, err := acc.NetworkConnectivity.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(ctx, nccId, ruleId)
+	rule, err := r.api.GetPrivateEndpointRule(ctx, settings.GetPrivateEndpointRuleRequest{
+		NetworkConnectivityConfigId: nccId,
+		PrivateEndpointRuleId:       ruleId,
+	})
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
@@ -131,53 +191,36 @@ func (r *resourcePrivateEndpointRule) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	resp.Diagnostics.Append(state.fromAPI(ctx, rule)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	state.NetworkConnectivityConfigId = types.StringValue(nccId)
 	state.ID = types.StringValue(packID(nccId, ruleId))
+	resp.Diagnostics.Append(state.fromAPI(ctx, rule)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourcePrivateEndpointRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-	var plan model
+	ctx = telemetry.WithResource(ctx, resourceName)
+
+	var plan, state model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var state model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	updateReq, mask, d := plan.toUpdateRequest(ctx, state)
+	apiReq, d := plan.toUpdateRequest(ctx, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	acc, err := r.client.AccountClient()
-	if err != nil {
-		resp.Diagnostics.AddError("failed to get account client", err.Error())
-		return
-	}
-
-	// No update_mask means no updatable field actually changed; nothing to do.
-	// The server's update handler does not touch connection_state, so no
-	// polling is needed regardless of which fields were changed.
-	if len(mask) > 0 {
-		updated, err := acc.NetworkConnectivity.UpdatePrivateEndpointRule(ctx, *updateReq)
+	// Empty update_mask means no updatable field changed; skip the API call.
+	if apiReq.UpdateMask != "" {
+		updated, err := r.api.UpdatePrivateEndpointRule(ctx, *apiReq)
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update private endpoint rule", err.Error())
 			return
 		}
 		resp.Diagnostics.Append(plan.fromAPI(ctx, updated)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
 	}
 	plan.NetworkConnectivityConfigId = state.NetworkConnectivityConfigId
 	plan.ID = state.ID
@@ -185,7 +228,8 @@ func (r *resourcePrivateEndpointRule) Update(ctx context.Context, req resource.U
 }
 
 func (r *resourcePrivateEndpointRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+	ctx = telemetry.WithResource(ctx, resourceName)
+
 	var state model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -198,16 +242,12 @@ func (r *resourcePrivateEndpointRule) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	acc, err := r.client.AccountClient()
-	if err != nil {
-		resp.Diagnostics.AddError("failed to get account client", err.Error())
-		return
-	}
-
-	_, err = acc.NetworkConnectivity.DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(ctx, nccId, ruleId)
+	_, err = r.api.DeletePrivateEndpointRule(ctx, settings.DeletePrivateEndpointRuleRequest{
+		NetworkConnectivityConfigId: nccId,
+		PrivateEndpointRuleId:       ruleId,
+	})
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete private endpoint rule", err.Error())
-		return
 	}
 }
 
@@ -217,49 +257,12 @@ func (r *resourcePrivateEndpointRule) ImportState(ctx context.Context, req resou
 		resp.Diagnostics.AddError("invalid import id", err.Error())
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), packID(nccId, ruleId))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("network_connectivity_config_id"), nccId)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_id"), ruleId)...)
-}
-
-// shouldRetry mirrors the helper in app/resource_app.go: continue while the
-// retrier's wrapped error is non-halt.
-func shouldRetry(err error) bool {
-	if err == nil {
-		return false
-	}
-	e, ok := err.(*retries.Err)
-	if !ok || e == nil {
-		return false
-	}
-	return !e.Halt
-}
-
-// waitForPrivateEndpointRuleCreate polls Get until the rule leaves the CREATING
-// state. PENDING and ESTABLISHED are success terminal states; at that point
-// vpc_endpoint_id (AWS) / endpoint_name (Azure) / gcp_endpoint (GCP) are
-// populated. CREATE_FAILED is terminal failure and surfaces ErrorMessage.
-// REJECTED / DISCONNECTED / EXPIRED are not expected on a fresh Create but are
-// treated as terminal failures defensively.
-func waitForPrivateEndpointRuleCreate(ctx context.Context, acc *databricks.AccountClient, nccId, ruleId string, timeout time.Duration) (*settings.NccPrivateEndpointRule, error) {
-	retrier := retries.New[settings.NccPrivateEndpointRule](retries.WithTimeout(timeout), retries.WithRetryFunc(shouldRetry))
-	return retrier.Run(ctx, func(ctx context.Context) (*settings.NccPrivateEndpointRule, error) {
-		rule, err := acc.NetworkConnectivity.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(ctx, nccId, ruleId)
-		if err != nil {
-			return nil, retries.Halt(err)
-		}
-		switch rule.ConnectionState {
-		case settings.NccPrivateEndpointRulePrivateLinkConnectionStatePending,
-			settings.NccPrivateEndpointRulePrivateLinkConnectionStateEstablished:
-			return rule, nil
-		case settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreateFailed:
-			return nil, retries.Halt(fmt.Errorf("private endpoint rule %s creation failed: %s", ruleId, rule.ErrorMessage))
-		case settings.NccPrivateEndpointRulePrivateLinkConnectionStateRejected,
-			settings.NccPrivateEndpointRulePrivateLinkConnectionStateDisconnected,
-			settings.NccPrivateEndpointRulePrivateLinkConnectionStateExpired:
-			return nil, retries.Halt(fmt.Errorf("private endpoint rule %s reached unexpected terminal state %s", ruleId, rule.ConnectionState))
-		default:
-			return nil, retries.Continues(fmt.Sprintf("state %s", rule.ConnectionState))
-		}
-	})
+	// Set just enough state for the post-import Read to take over. Other
+	// scalar fields default to their null PF value; list-typed fields need
+	// their element type explicitly via emptyModel().
+	m := emptyModel()
+	m.ID = types.StringValue(packID(nccId, ruleId))
+	m.NetworkConnectivityConfigId = types.StringValue(nccId)
+	m.RuleId = types.StringValue(ruleId)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &m)...)
 }

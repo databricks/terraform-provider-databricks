@@ -19,9 +19,17 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}
 
-		for _, p := range []string{"rule_id", "endpoint_name", "connection_state", "creation_time", "updated_time", "vpc_endpoint_id"} {
-			common.CustomizeSchemaPath(m, p).SetComputed()
+		// Fields the API never reads from Create or Update bodies: either
+		// never extracted (rule_id, account_id, endpoint_name, vpc_endpoint_id,
+		// connection_state, creation_time, updated_time, deactivated,
+		// deactivated_at, error_message) or unconditionally overwritten on
+		// Read from the cloud-platform truth (psc_endpoint_uri). Strict
+		// read-only annotation rejects HCL writes at plan time rather than
+		// silently overwriting on the next refresh.
+		for _, p := range []string{"rule_id", "endpoint_name", "connection_state", "creation_time", "updated_time", "vpc_endpoint_id", "account_id", "deactivated", "deactivated_at", "error_message"} {
+			common.CustomizeSchemaPath(m, p).SetReadOnly()
 		}
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "psc_endpoint_uri").SetReadOnly()
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
 		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()

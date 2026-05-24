@@ -1,10 +1,22 @@
 package pluginfw
 
 // This file contains all of the utils for controlling the plugin framework rollout.
-// For migrated resources and data sources, we can add them to the two maps below to have them registered with the plugin framework.
-// Users can manually specify resources and data sources to use SDK V2 instead of the plugin framework by setting the USE_SDK_V2_RESOURCES and USE_SDK_V2_DATA_SOURCES environment variables.
 //
-// Example: USE_SDK_V2_RESOURCES="databricks_library" would force the library resource to use SDK V2 instead of the plugin framework.
+// Resources and data sources move through two rollout lists:
+//
+//   - migratedResources / migratedDataSources: served by the plugin framework
+//     by default. Users can fall back to SDK V2 per-resource via the
+//     USE_SDK_V2_RESOURCES / USE_SDK_V2_DATA_SOURCES environment variables.
+//     Example: USE_SDK_V2_RESOURCES="databricks_library"
+//
+//   - pluginFwOptInResources / pluginFwOptInDataSources: served by SDK V2 by
+//     default. Users opt into the plugin framework implementation per-resource
+//     via the DATABRICKS_TF_ENABLED_PF_RESOURCES /
+//     DATABRICKS_TF_ENABLED_PF_DATA_SOURCES environment variables.
+//     Example: DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"
+//
+// The two env vars operate on disjoint sets: a name is consulted only in the
+// list it appears in.
 
 import (
 	"context"
@@ -34,7 +46,6 @@ import (
 // Keep this list sorted.
 var migratedResources = []func() resource.Resource{
 	library.ResourceLibrary,
-	privateendpointrule.ResourcePrivateEndpointRule,
 	qualitymonitor.ResourceQualityMonitor,
 	sharing.ResourceShare,
 }
@@ -46,6 +57,20 @@ var migratedDataSources = []func() datasource.DataSource{
 	sharing.DataSourceShares,
 	volume.DataSourceVolumes,
 }
+
+// List of resources whose plugin framework implementation is available but
+// gated behind the DATABRICKS_TF_ENABLED_PF_RESOURCES env var. The SDK V2
+// implementation remains the default. Promote to migratedResources once the
+// opt-in implementation has been validated by users.
+// Keep this list sorted.
+var pluginFwOptInResources = []func() resource.Resource{
+	privateendpointrule.ResourcePrivateEndpointRule,
+}
+
+// List of data sources gated behind DATABRICKS_TF_ENABLED_PF_DATA_SOURCES,
+// the data source equivalent of pluginFwOptInResources.
+// Keep this list sorted.
+var pluginFwOptInDataSources = []func() datasource.DataSource{}
 
 // List of resources that have been onboarded to the plugin framework - not migrated from sdkv2.
 // Keep this list sorted.
@@ -78,6 +103,8 @@ var pluginFwOnlyDataSources = append(
 type pluginFrameworkOptions struct {
 	resourceFallbacks   []string
 	dataSourceFallbacks []string
+	resourceOptIns      []string
+	dataSourceOptIns    []string
 	configCustomizer    func(*config.Config) error
 }
 
@@ -110,6 +137,35 @@ func (o *sdkv2DataSourceFallback) Apply(options *pluginFrameworkOptions) {
 // WithSdkV2DataSourceFallbacks is a helper function to specify data sources to fallback to SDK V2
 func WithSdkV2DataSourceFallbacks(fallbacks []string) PluginFrameworkOption {
 	return &sdkv2DataSourceFallback{dataSourceFallbacks: fallbacks}
+}
+
+type pluginFrameworkResourceOptIn struct {
+	resources []string
+}
+
+func (o *pluginFrameworkResourceOptIn) Apply(options *pluginFrameworkOptions) {
+	options.resourceOptIns = o.resources
+}
+
+// WithPluginFrameworkResources force-enables opt-in plugin framework resources
+// regardless of the DATABRICKS_TF_ENABLED_PF_RESOURCES env var. Used by
+// acceptance tests to exercise the PF implementation deterministically.
+func WithPluginFrameworkResources(resources []string) PluginFrameworkOption {
+	return &pluginFrameworkResourceOptIn{resources: resources}
+}
+
+type pluginFrameworkDataSourceOptIn struct {
+	dataSources []string
+}
+
+func (o *pluginFrameworkDataSourceOptIn) Apply(options *pluginFrameworkOptions) {
+	options.dataSourceOptIns = o.dataSources
+}
+
+// WithPluginFrameworkDataSources is the data source counterpart of
+// WithPluginFrameworkResources.
+func WithPluginFrameworkDataSources(dataSources []string) PluginFrameworkOption {
+	return &pluginFrameworkDataSourceOptIn{dataSources: dataSources}
 }
 
 type configCustomizer struct {
@@ -156,11 +212,48 @@ func shouldUseSdkV2DataSource(dataSourceName string) bool {
 	return slices.Contains(sdkV2DataSources, dataSourceName)
 }
 
-// getPluginFrameworkResourcesToRegister is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
-func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() resource.Resource {
+// getEnabledPluginFrameworkResources returns the names of opt-in plugin
+// framework resources that the user has enabled via the
+// DATABRICKS_TF_ENABLED_PF_RESOURCES environment variable.
+func getEnabledPluginFrameworkResources() []string {
+	enabled := os.Getenv("DATABRICKS_TF_ENABLED_PF_RESOURCES")
+	if enabled == "" {
+		return []string{}
+	}
+	return strings.Split(enabled, ",")
+}
+
+// getEnabledPluginFrameworkDataSources is the data source counterpart of
+// getEnabledPluginFrameworkResources.
+func getEnabledPluginFrameworkDataSources() []string {
+	enabled := os.Getenv("DATABRICKS_TF_ENABLED_PF_DATA_SOURCES")
+	if enabled == "" {
+		return []string{}
+	}
+	return strings.Split(enabled, ",")
+}
+
+// shouldUsePluginFrameworkResource reports whether the user has opted into the
+// plugin framework implementation of a resource from pluginFwOptInResources.
+func shouldUsePluginFrameworkResource(resourceName string) bool {
+	return slices.Contains(getEnabledPluginFrameworkResources(), resourceName)
+}
+
+// shouldUsePluginFrameworkDataSource is the data source counterpart of
+// shouldUsePluginFrameworkResource.
+func shouldUsePluginFrameworkDataSource(dataSourceName string) bool {
+	return slices.Contains(getEnabledPluginFrameworkDataSources(), dataSourceName)
+}
+
+// getPluginFrameworkResourcesToRegister returns the resources that the plugin
+// framework provider should register. resourceFallbacks force-excludes a
+// migrated resource (used by acceptance tests); pluginFrameworkOptIns
+// force-includes an opt-in resource (also used by acceptance tests, mirroring
+// DATABRICKS_TF_ENABLED_PF_RESOURCES).
+func getPluginFrameworkResourcesToRegister(resourceFallbacks, pluginFrameworkOptIns []string) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	// Loop through the map and add resources if they're not specifically marked to use the SDK V2
+	// migratedResources are PF by default; users / tests can opt out.
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
 		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
@@ -168,17 +261,32 @@ func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() 
 		}
 	}
 
+	// pluginFwOptInResources are SDK V2 by default; users / tests can opt in.
+	for _, resourceFunc := range pluginFwOptInResources {
+		name := getResourceName(resourceFunc)
+		if shouldUsePluginFrameworkResource(name) || slices.Contains(pluginFrameworkOptIns, name) {
+			resources = append(resources, resourceFunc)
+		}
+	}
+
 	return append(resources, pluginFwOnlyResources...)
 }
 
-// getPluginFrameworkDataSourcesToRegister is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
-func getPluginFrameworkDataSourcesToRegister(dataSourceFallbacks []string) []func() datasource.DataSource {
+// getPluginFrameworkDataSourcesToRegister is the data source counterpart of
+// getPluginFrameworkResourcesToRegister.
+func getPluginFrameworkDataSourcesToRegister(dataSourceFallbacks, pluginFrameworkOptIns []string) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	// Loop through the map and add data sources if they're not specifically marked to use the SDK V2
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
 		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
+			dataSources = append(dataSources, dataSourceFunc)
+		}
+	}
+
+	for _, dataSourceFunc := range pluginFwOptInDataSources {
+		name := getDataSourceName(dataSourceFunc)
+		if shouldUsePluginFrameworkDataSource(name) || slices.Contains(pluginFrameworkOptIns, name) {
 			dataSources = append(dataSources, dataSourceFunc)
 		}
 	}
@@ -198,8 +306,33 @@ func getDataSourceName(dataSourceFunc func() datasource.DataSource) string {
 	return resp.TypeName
 }
 
-// GetSdkV2ResourcesToRemove is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2ResourcesToRemove(resourceFallbacks []string) []string {
+// PluginFrameworkOptInResourceNames returns the resource type names of all
+// opt-in plugin framework resources. Exposed for cross-package invariant
+// tests; production code should not need this.
+func PluginFrameworkOptInResourceNames() []string {
+	names := make([]string, 0, len(pluginFwOptInResources))
+	for _, f := range pluginFwOptInResources {
+		names = append(names, getResourceName(f))
+	}
+	return names
+}
+
+// PluginFrameworkOptInDataSourceNames is the data source counterpart of
+// PluginFrameworkOptInResourceNames.
+func PluginFrameworkOptInDataSourceNames() []string {
+	names := make([]string, 0, len(pluginFwOptInDataSources))
+	for _, f := range pluginFwOptInDataSources {
+		names = append(names, getDataSourceName(f))
+	}
+	return names
+}
+
+// GetSdkV2ResourcesToRemove returns the resources the SDK V2 provider should
+// drop from its resource map so they don't collide with the plugin framework
+// registrations. This is the inverse of getPluginFrameworkResourcesToRegister:
+// migrated resources that haven't been opted out, plus opt-in resources that
+// the user has enabled.
+func GetSdkV2ResourcesToRemove(resourceFallbacks, pluginFrameworkOptIns []string) []string {
 	resourcesToRemove := []string{}
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
@@ -207,15 +340,28 @@ func GetSdkV2ResourcesToRemove(resourceFallbacks []string) []string {
 			resourcesToRemove = append(resourcesToRemove, name)
 		}
 	}
+	for _, resourceFunc := range pluginFwOptInResources {
+		name := getResourceName(resourceFunc)
+		if shouldUsePluginFrameworkResource(name) || slices.Contains(pluginFrameworkOptIns, name) {
+			resourcesToRemove = append(resourcesToRemove, name)
+		}
+	}
 	return resourcesToRemove
 }
 
-// GetSdkV2DataSourcesToRemove is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2DataSourcesToRemove(dataSourceFallbacks []string) []string {
+// GetSdkV2DataSourcesToRemove is the data source counterpart of
+// GetSdkV2ResourcesToRemove.
+func GetSdkV2DataSourcesToRemove(dataSourceFallbacks, pluginFrameworkOptIns []string) []string {
 	dataSourcesToRemove := []string{}
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
 		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
+			dataSourcesToRemove = append(dataSourcesToRemove, name)
+		}
+	}
+	for _, dataSourceFunc := range pluginFwOptInDataSources {
+		name := getDataSourceName(dataSourceFunc)
+		if shouldUsePluginFrameworkDataSource(name) || slices.Contains(pluginFrameworkOptIns, name) {
 			dataSourcesToRemove = append(dataSourcesToRemove, name)
 		}
 	}

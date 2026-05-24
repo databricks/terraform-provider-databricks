@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -16,17 +17,6 @@ import (
 // databricks_mws_ncc_private_endpoint_rule. The attribute set matches the
 // SDKv2 implementation in mws/resource_mws_ncc_private_endpoint_rule.go
 // one-to-one; parity is enforced by `make diff-schema`.
-//
-// Notes on parity choices:
-//   - Fields the SDK auto-generator marks Optional (because the Go field has
-//     `omitempty`) and that the SDKv2 customisation does not override stay
-//     Optional in the PF schema. For fields the SDKv2 calls `SetComputed()`
-//     on, the PF schema is Optional+Computed (matching what the auto-generator
-//     plus SetComputed produces in SDKv2).
-//   - `gcp_endpoint` is rendered as a `ListNestedBlock` rather than a
-//     `SingleNestedAttribute` so the serialised registry schema reproduces
-//     the SDKv2 `Block` shape (existing HCL and state files continue to
-//     parse without a state upgrader).
 func resourceSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -44,14 +34,16 @@ func resourceSchema() schema.Schema {
 				},
 			},
 			"rule_id": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"account_id": schema.StringAttribute{
-				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"endpoint_service": schema.StringAttribute{
 				Optional: true,
@@ -105,52 +97,77 @@ func resourceSchema() schema.Schema {
 				},
 			},
 			"endpoint_name": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"vpc_endpoint_id": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"connection_state": schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"creation_time": schema.Int64Attribute{
-				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"updated_time": schema.Int64Attribute{
-				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"deactivated": schema.BoolAttribute{
-				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"deactivated_at": schema.Int64Attribute{
-				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"error_message": schema.StringAttribute{
-				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
+			// The API models `gcp_endpoint` as a single object (a `oneof`
+			// field in the proto), so a `SingleNestedBlock` would be the
+			// natural shape. We use `ListNestedBlock` + `SizeAtMost(1)`
+			// instead to reproduce the SDKv2 block shape (`TypeList` +
+			// `MaxItems: 1`) byte-for-byte. Switching shapes would change
+			// the on-disk state JSON, requiring a `SchemaVersion` bump and
+			// a state upgrader. Terraform has no state downgrader, so any
+			// customer who rolls back to a pre-migration provider version
+			// would hit "schema version newer than provider" errors on
+			// plan/apply. The list-of-one keeps rollback safe.
 			"gcp_endpoint": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"psc_endpoint_uri":   schema.StringAttribute{Optional: true},
+						"psc_endpoint_uri": schema.StringAttribute{
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
 						"service_attachment": schema.StringAttribute{Optional: true},
 					},
 				},

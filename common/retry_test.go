@@ -19,10 +19,28 @@ func TestRetryOnTimeout(t *testing.T) {
 		wantErr   error
 		wantCalls int
 	}{
-		{name: "success on first call", callErrs: []error{nil}, wantCalls: 1},
-		{name: "timeout then succeed", callErrs: []error{timeoutErr, nil}, wantCalls: 2},
-		{name: "non-timeout halts", callErrs: []error{otherErr}, wantErr: otherErr, wantCalls: 1},
-		{name: "timeout then non-timeout halts", callErrs: []error{timeoutErr, otherErr}, wantErr: otherErr, wantCalls: 2},
+		{
+			name:      "success on first call",
+			callErrs:  []error{nil},
+			wantCalls: 1,
+		},
+		{
+			name:      "timeout then succeed",
+			callErrs:  []error{timeoutErr, nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "non-timeout halts",
+			callErrs:  []error{otherErr},
+			wantErr:   otherErr,
+			wantCalls: 1,
+		},
+		{
+			name:      "timeout then non-timeout halts",
+			callErrs:  []error{timeoutErr, otherErr},
+			wantErr:   otherErr,
+			wantCalls: 2,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -52,11 +70,33 @@ func TestRetryOn504(t *testing.T) {
 		wantErr   error
 		wantCalls int
 	}{
-		{name: "success on first call", callErrs: []error{nil}, wantCalls: 1},
-		{name: "504 then succeed", callErrs: []error{apierr.ErrDeadlineExceeded, nil}, wantCalls: 2},
-		{name: "wrapped 504 then succeed", callErrs: []error{fmt.Errorf("got 504: %w", apierr.ErrDeadlineExceeded), nil}, wantCalls: 2},
-		{name: "non-504 halts", callErrs: []error{otherErr}, wantErr: otherErr, wantCalls: 1},
-		{name: "504 then non-504 halts", callErrs: []error{apierr.ErrDeadlineExceeded, otherErr}, wantErr: otherErr, wantCalls: 2},
+		{
+			name:      "success on first call",
+			callErrs:  []error{nil},
+			wantCalls: 1,
+		},
+		{
+			name:      "504 then succeed",
+			callErrs:  []error{apierr.ErrDeadlineExceeded, nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "wrapped 504 then succeed",
+			callErrs:  []error{fmt.Errorf("got 504: %w", apierr.ErrDeadlineExceeded), nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "non-504 halts",
+			callErrs:  []error{otherErr},
+			wantErr:   otherErr,
+			wantCalls: 1,
+		},
+		{
+			name:      "504 then non-504 halts",
+			callErrs:  []error{apierr.ErrDeadlineExceeded, otherErr},
+			wantErr:   otherErr,
+			wantCalls: 2,
+		},
 	}
 
 	for _, tc := range testCases {

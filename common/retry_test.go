@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -53,6 +54,7 @@ func TestRetryOn504(t *testing.T) {
 	}{
 		{name: "success on first call", callErrs: []error{nil}, wantCalls: 1},
 		{name: "504 then succeed", callErrs: []error{apierr.ErrDeadlineExceeded, nil}, wantCalls: 2},
+		{name: "wrapped 504 then succeed", callErrs: []error{fmt.Errorf("got 504: %w", apierr.ErrDeadlineExceeded), nil}, wantCalls: 2},
 		{name: "non-504 halts", callErrs: []error{otherErr}, wantErr: otherErr, wantCalls: 1},
 		{name: "504 then non-504 halts", callErrs: []error{apierr.ErrDeadlineExceeded, otherErr}, wantErr: otherErr, wantCalls: 2},
 	}

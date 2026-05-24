@@ -13,43 +13,30 @@ import (
 
 var timeoutRegex = regexp.MustCompile(`request timed out after .* of inactivity`)
 
-// transientErrorBackoff is the backoff used by both helpers below. Transient
-// errors typically resolve in a few seconds, so we start fast and cap quickly
-// rather than using the retrier package defaults of 10s/5m.
-var transientErrorBackoff = retrier.BackoffPolicy{
-	Initial: 1 * time.Second,
-	Maximum: 30 * time.Second,
-	Factor:  2,
+// transientBackoff returns a fresh backoff tuned for transient errors:
+// start fast, cap quickly.
+func transientBackoff() retrier.BackoffPolicy {
+	return retrier.BackoffPolicy{Initial: time.Second, Maximum: 30 * time.Second}
 }
 
-// RetryOnTimeout retries f while it returns an error whose message matches
-// the SDK's "request timed out after ... of inactivity" pattern. Any other
-// error, or a successful call, halts.
+// RetryOnTimeout retries f while it returns an SDK inactivity-timeout error.
 func RetryOnTimeout[T any](ctx context.Context, f func(context.Context) (*T, error)) (*T, error) {
 	return retrier.Run(ctx,
-		retrier.RetryIf(transientErrorBackoff, func(_ *T, err error) bool {
-			if err == nil {
+		retrier.RetryIf(transientBackoff(), func(_ *T, err error) bool {
+			if err == nil || !timeoutRegex.MatchString(err.Error()) {
 				return false
 			}
-			isTimeout := timeoutRegex.MatchString(err.Error())
-			if isTimeout {
-				logger.Debugf(ctx, "Retrying due to timeout: %s", err.Error())
-			}
-			return isTimeout
+			logger.Debugf(ctx, "Retrying due to timeout: %s", err.Error())
+			return true
 		}),
 		f,
 	)
 }
 
-// RetryOn504 retries f while it returns an error wrapping
-// [apierr.ErrDeadlineExceeded] (HTTP 504). Any other error, or a successful
-// call, halts.
+// RetryOn504 retries f while it returns an error wrapping [apierr.ErrDeadlineExceeded].
 func RetryOn504[T any](ctx context.Context, f func(context.Context) (*T, error)) (*T, error) {
 	return retrier.Run(ctx,
-		retrier.RetryIf(transientErrorBackoff, func(_ *T, err error) bool {
-			if err == nil {
-				return false
-			}
+		retrier.RetryIf(transientBackoff(), func(_ *T, err error) bool {
 			if !errors.Is(err, apierr.ErrDeadlineExceeded) {
 				return false
 			}

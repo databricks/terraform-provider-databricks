@@ -146,16 +146,11 @@ func resourceSchema() schema.Schema {
 			},
 		},
 		Blocks: map[string]schema.Block{
-			// The API models `gcp_endpoint` as a single object (a `oneof`
-			// field in the proto), so a `SingleNestedBlock` would be the
-			// natural shape. We use `ListNestedBlock` + `SizeAtMost(1)`
-			// instead to reproduce the SDKv2 block shape (`TypeList` +
-			// `MaxItems: 1`) byte-for-byte. Switching shapes would change
-			// the on-disk state JSON, requiring a `SchemaVersion` bump and
-			// a state upgrader. Terraform has no state downgrader, so any
-			// customer who rolls back to a pre-migration provider version
-			// would hit "schema version newer than provider" errors on
-			// plan/apply. The list-of-one keeps rollback safe.
+			// gcp_endpoint is logically a single object, but we use
+			// ListNestedBlock + SizeAtMost(1) for backward compatibility
+			// with SDKv2. Changing the on-disk JSON shape would need a
+			// state upgrader, and Terraform can't downgrade state if a
+			// customer rolls back to an older provider.
 			"gcp_endpoint": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),

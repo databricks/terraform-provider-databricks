@@ -1,7 +1,5 @@
-// Package provider exposes the configured-state of the Databricks provider
-// to resources and data sources, hiding the underlying common.DatabricksClient
-// type behind dependency-getter functions. A resource that only needs the
-// account client calls provider.AccountClient and never imports common.
+// Package provider gives resources and data sources access to the
+// configured Databricks API clients.
 package provider
 
 import (
@@ -14,10 +12,9 @@ import (
 
 const reportMessage = "please report this to the provider developers"
 
-// providerConfig is an interface that provides the account and workspace clients
-// for the provider. The interface should be such that it is implemented by the
-// common.DatabricksClient type. This is used to ease testing by building a mock
-// implementation of the interface.
+// providerConfig is the minimum surface the resolvers need from a configured
+// provider. *common.DatabricksClient implements it (asserted below); tests
+// substitute a fake.
 type providerConfig interface {
 	AccountClient() (*databricks.AccountClient, error)
 	WorkspaceClient() (*databricks.WorkspaceClient, error)
@@ -25,19 +22,16 @@ type providerConfig interface {
 
 var _ providerConfig = (*common.DatabricksClient)(nil)
 
-// AccountClient resolves the account-level SDK client from the ProviderData
-// passed to a Resource or DataSource Configure method.
+// AccountClient resolves the account-level SDK client from ProviderData.
 //
-// The contract:
-//
-//   - (client, nil-diags) on success.
-//   - (nil, nil-diags) when providerData is nil. PF may call a resource or
-//     data source Configure before the provider's own Configure has populated
-//     ProviderData (during terraform validate, schema generation, and other
-//     pre-wire phases). Callers should treat this as a no-op and return
-//     without setting state.
-//   - (nil, diags-with-error) on a real failure (wrong ProviderData type, or
-//     the SDK client could not resolve account credentials).
+// Returns:
+//   - (client, nil) on success.
+//   - (nil, nil) when providerData is nil. The framework can call a resource's
+//     Configure before the provider's own Configure has set ProviderData (during
+//     terraform validate, schema generation, etc.). Callers treat this as a
+//     no-op and return without setting state.
+//   - (nil, error diagnostics) when ProviderData is the wrong type or the SDK
+//     can't resolve account credentials.
 func AccountClient(providerData any) (*databricks.AccountClient, diag.Diagnostics) {
 	if providerData == nil {
 		return nil, nil
@@ -60,19 +54,16 @@ func AccountClient(providerData any) (*databricks.AccountClient, diag.Diagnostic
 	return acc, nil
 }
 
-// WorkspaceClient resolves the workspace-level SDK client from the ProviderData
-// passed to a Resource or DataSource Configure method.
+// WorkspaceClient resolves the workspace-level SDK client from ProviderData.
 //
-// The contract:
-//
-//   - (client, nil-diags) on success.
-//   - (nil, nil-diags) when providerData is nil. PF may call a resource or
-//     data source Configure before the provider's own Configure has populated
-//     ProviderData (during terraform validate, schema generation, and other
-//     pre-wire phases). Callers should treat this as a no-op and return
-//     without setting state.
-//   - (nil, diags-with-error) on a real failure (wrong ProviderData type, or
-//     the SDK client could not resolve workspace credentials).
+// Returns:
+//   - (client, nil) on success.
+//   - (nil, nil) when providerData is nil. The framework can call a resource's
+//     Configure before the provider's own Configure has set ProviderData (during
+//     terraform validate, schema generation, etc.). Callers treat this as a
+//     no-op and return without setting state.
+//   - (nil, error diagnostics) when ProviderData is the wrong type or the SDK
+//     can't resolve workspace credentials.
 func WorkspaceClient(providerData any) (*databricks.WorkspaceClient, diag.Diagnostics) {
 	if providerData == nil {
 		return nil, nil

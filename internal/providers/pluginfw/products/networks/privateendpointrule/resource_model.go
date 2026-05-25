@@ -10,10 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// model is the Terraform-side representation of an NCC private endpoint rule.
-// It is intentionally distinct from the SDK's NccPrivateEndpointRule: the
-// translation layer below is the anti-corruption boundary between Terraform's
-// Null/Unknown-aware types and the SDK's native Go types.
+// model is the Terraform-side representation. It uses Terraform's
+// Null/Unknown-aware types; the translation functions below convert to and
+// from the SDK's plain Go types.
 type model struct {
 	ID                          types.String       `tfsdk:"id"`
 	NetworkConnectivityConfigId types.String       `tfsdk:"network_connectivity_config_id"`
@@ -41,13 +40,10 @@ type gcpEndpointModel struct {
 	ServiceAttachment types.String `tfsdk:"service_attachment"`
 }
 
-// emptyModel returns a model with collection-typed fields initialized to
-// their typed null value. PF's reflection requires lists to declare their
-// element type at conversion time; the zero types.List has DynamicPseudoType
-// and fails the round-trip through tfsdk.State.Set / tfsdk.Plan.Set. Code
-// paths that construct a model from scratch (rather than reading it from
-// req.Plan or req.State, which populate all fields from the schema) must
-// start here.
+// emptyModel returns a model with list fields set to typed-null. The
+// framework rejects a list that has no element type, so code paths that
+// build a model by hand (rather than via req.Plan or req.State) must start
+// from here.
 func emptyModel() model {
 	return model{
 		DomainNames:   types.ListNull(types.StringType),
@@ -67,10 +63,9 @@ func unpackID(composite string) (nccId, ruleId string, err error) {
 	return parts[0], parts[1], nil
 }
 
-// stringsFromList decodes a Plugin Framework list of strings into a Go slice.
-// Null and Unknown lists become a nil slice; the SDK treats nil and an empty
-// list identically (omitted from the JSON body) so callers don't need to
-// distinguish.
+// stringsFromList decodes a list-of-strings attribute into a Go slice.
+// Null/unknown become nil, which the SDK serializes the same as an empty
+// list.
 func stringsFromList(ctx context.Context, list types.List) ([]string, diag.Diagnostics) {
 	if list.IsNull() || list.IsUnknown() {
 		return nil, nil
@@ -80,9 +75,9 @@ func stringsFromList(ctx context.Context, list types.List) ([]string, diag.Diagn
 	return out, d
 }
 
-// toCreateRequest builds the SDK create request from the plan model. Only
-// user-settable fields are included; computed fields (rule_id, vpc_endpoint_id,
-// connection_state, ...) are populated by the server and applied in fromAPI.
+// toCreateRequest builds the SDK create body. Only user-settable fields go
+// in; server-set fields (rule_id, vpc_endpoint_id, etc.) come back via
+// fromAPI.
 func (m *model) toCreateRequest(ctx context.Context) (*settings.CreatePrivateEndpointRuleRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	domains, d := stringsFromList(ctx, m.DomainNames)
@@ -102,10 +97,8 @@ func (m *model) toCreateRequest(ctx context.Context) (*settings.CreatePrivateEnd
 	}, diags
 }
 
-// gcpEndpointToAPI is the inverse of gcpEndpointFromAPI: it converts the
-// size-0-or-1 slice the schema exposes back into the SDK's pointer-to-struct.
-// The schema enforces SizeAtMost(1), so callers never see more than one
-// element.
+// gcpEndpointToAPI converts the size-0-or-1 slice (schema enforces
+// SizeAtMost(1)) back to the SDK's pointer-to-struct.
 func gcpEndpointToAPI(gcp []gcpEndpointModel) *settings.GcpEndpoint {
 	if len(gcp) == 0 {
 		return nil
@@ -152,9 +145,9 @@ func (m *model) toUpdateRequest(ctx context.Context, prev model) (*settings.Upda
 	}, diags
 }
 
-// fromAPI populates the model from an SDK NccPrivateEndpointRule response.
-// network_connectivity_config_id is a path parameter, not on the response
-// struct; the caller is expected to set it.
+// fromAPI copies server-returned fields into m. The caller separately sets
+// NetworkConnectivityConfigId from the URL path; we don't trust it from the
+// response so the value stays consistent with how the resource was addressed.
 func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRule) diag.Diagnostics {
 	var diags diag.Diagnostics
 	m.RuleId = types.StringValue(rule.RuleId)
@@ -185,9 +178,8 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 }
 
 // gcpEndpointFromAPI converts the SDK's pointer-to-struct into the
-// size-0-or-1 slice the schema expects. Nil here causes the framework to omit
-// the block from state, matching how the SDKv2 implementation treated the
-// field.
+// size-0-or-1 slice the schema expects. Returning nil omits the block from
+// state.
 func gcpEndpointFromAPI(gcp *settings.GcpEndpoint) []gcpEndpointModel {
 	if gcp == nil {
 		return nil

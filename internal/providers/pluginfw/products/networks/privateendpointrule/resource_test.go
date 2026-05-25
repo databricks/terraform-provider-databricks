@@ -23,10 +23,9 @@ var tightBackoff = retrier.BackoffPolicy{
 	Factor:  1,
 }
 
-// fakeAPI satisfies the package's api interface with closure fields. Each
-// test wires only the methods it exercises; nil fields panic loudly if the
-// resource calls them unexpectedly, which is more diagnostic than a "call
-// was not expected" message from a mock framework.
+// fakeAPI satisfies apiClient with closure fields. Tests wire only the
+// methods they exercise; nil closures panic if called unexpectedly, which
+// pinpoints the unexpected call more directly than a mock framework would.
 type fakeAPI struct {
 	create func(ctx context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
 	get    func(ctx context.Context, req settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
@@ -50,10 +49,9 @@ func (f *fakeAPI) DeletePrivateEndpointRule(ctx context.Context, req settings.De
 	return f.del(ctx, req)
 }
 
-// fillListDefaults backfills list-typed fields left at their zero value from
-// emptyModel(). PF's reflection requires lists to declare an element type at
-// conversion time; tests pass terse model literals and the harness handles
-// the framework's ceremony via the same factory production uses.
+// fillListDefaults sets list fields left as zero-value types.List from
+// emptyModel(). The framework rejects a list without an element type; this
+// lets tests use terse model literals.
 func fillListDefaults(m *model) {
 	base := emptyModel()
 	if m.DomainNames.ElementType(context.Background()) == nil {
@@ -122,7 +120,13 @@ func TestCreate_PollsUntilNotCreating_ThenPersistsFinalState(t *testing.T) {
 			if req.NetworkConnectivityConfigId != "ncc-1" || req.PrivateEndpointRule.EndpointService != "com.amazonaws.example" {
 				t.Errorf("create request body: %+v", req)
 			}
-			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "CREATING"}, nil
+			// Echo the NCC ID like real servers do, so Create's polling Get
+			// can address the new rule via pendingRule.NetworkConnectivityConfigId.
+			return &settings.NccPrivateEndpointRule{
+				RuleId:                      "rule-1",
+				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
+				ConnectionState:             "CREATING",
+			}, nil
 		},
 		get: func(_ context.Context, req settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
 			if req.NetworkConnectivityConfigId != "ncc-1" || req.PrivateEndpointRuleId != "rule-1" {
@@ -167,8 +171,12 @@ func TestCreate_PollsUntilNotCreating_ThenPersistsFinalState(t *testing.T) {
 func TestCreate_CreateFailedSurfacesServerErrorMessage(t *testing.T) {
 	ctx := context.Background()
 	api := &fakeAPI{
-		create: func(context.Context, settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
-			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "CREATING"}, nil
+		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{
+				RuleId:                      "rule-1",
+				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
+				ConnectionState:             "CREATING",
+			}, nil
 		},
 		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
 			return &settings.NccPrivateEndpointRule{
@@ -200,8 +208,12 @@ func TestCreate_CreateFailedSurfacesServerErrorMessage(t *testing.T) {
 func TestCreate_PersistsStateBeforePolling(t *testing.T) {
 	ctx := context.Background()
 	api := &fakeAPI{
-		create: func(context.Context, settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
-			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "CREATING"}, nil
+		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{
+				RuleId:                      "rule-1",
+				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
+				ConnectionState:             "CREATING",
+			}, nil
 		},
 		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
 			return nil, errors.New("network unreachable")
@@ -233,7 +245,11 @@ func TestCreate_SendsGcpEndpoint(t *testing.T) {
 	api := &fakeAPI{
 		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
 			sentReq = &req
-			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "PENDING"}, nil
+			return &settings.NccPrivateEndpointRule{
+				RuleId:                      "rule-1",
+				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
+				ConnectionState:             "PENDING",
+			}, nil
 		},
 		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
 			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "PENDING"}, nil

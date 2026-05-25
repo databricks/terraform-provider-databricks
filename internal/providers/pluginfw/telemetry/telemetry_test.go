@@ -8,9 +8,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/useragent"
 )
 
-// The SDK formats each (key, value) pair as "key/value" in the user-agent
-// string; both tests assert on token substrings rather than the full string
-// so adding fixed SDK dimensions (go version, os, etc.) doesn't break them.
+// The SDK serializes user-agent pairs as "key/value". Tests assert on token
+// substrings, not the full string, so adding fixed dimensions (go version,
+// os, etc.) doesn't break them.
 
 func TestWithResource(t *testing.T) {
 	tests := []struct {

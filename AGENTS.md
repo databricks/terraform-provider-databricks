@@ -151,8 +151,6 @@ Within each section, maintain alphabetical order.
 All user-facing changes must be documented in `NEXT_CHANGELOG.md` with format:
 ```
 * <Summary of change> ([#<PR number>](<PR link>)).
-
-  <Optional additional information>
 ```
 
 ### Migration Verification

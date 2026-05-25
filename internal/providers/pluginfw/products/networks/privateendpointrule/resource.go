@@ -20,11 +20,9 @@ func ResourcePrivateEndpointRule() resource.Resource {
 	return &resourcePrivateEndpointRule{}
 }
 
-// api names exactly the SDK calls this resource depends on. Defining it
-// locally (rather than importing settings.NetworkConnectivityInterface) follows
-// Go's "interfaces belong to the consumer" idiom: future additions to the SDK
-// can't leak into this resource's contract, and the fake in tests needs to
-// implement only what's actually used.
+// apiClient lists the SDK methods this resource actually uses. Defined
+// locally so tests can fake exactly what's needed and new SDK methods
+// don't widen the contract.
 type apiClient interface {
 	CreatePrivateEndpointRule(ctx context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
 	GetPrivateEndpointRule(ctx context.Context, req settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error)
@@ -35,8 +33,8 @@ type apiClient interface {
 type resourcePrivateEndpointRule struct {
 	api apiClient
 
-	// backoff is the retry backoff policy for the resource.
-	// It is exposed as a field to ease in-package testing.
+	// backoff controls the Create polling loop. It is wxposed as a field
+	// so in-package tests can override it.
 	backoff retrier.BackoffPolicy
 }
 
@@ -54,36 +52,26 @@ func (r *resourcePrivateEndpointRule) Schema(_ context.Context, _ resource.Schem
 	resp.Schema = resourceSchema()
 }
 
-// Configure resolves the account client from the provider data. PF may call
-// this more than once on the same resource value if the underlying provider
-// data is updated; we re-resolve on every call so we never serve a stale
-// client.
+// Configure resolves the account client from the provider data. The
+// framework can call Configure more than once; we re-resolve every time to
+// avoid serving a stale client.
 func (r *resourcePrivateEndpointRule) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ac, d := provider.AccountClient(req.ProviderData)
 	resp.Diagnostics.Append(d...)
-	if ac == nil {
-		// ProviderData not yet wired (pre-Configure phase) or a real error
-		// already appended above. Either way, bail.
+	if ac == nil || d.HasError() {
 		return
 	}
 	r.api = ac.NetworkConnectivity
 }
 
 // createTimeout caps how long Create waits for the rule to leave CREATING.
-// Plugin Framework gives a request ctx with no deadline (unlike SDKv2, which
-// defaulted CRUD operations to 20 minutes), so without this ceiling a stalled
-// reconciler would make `terraform apply` hang until SIGINT. 30 minutes is
-// generous against observed transitions from CREATING to PENDING, which are
-// typically under a few minutes.
+// Without it, a stuck server-side provisioning would make `terraform apply`
+// hang. 30 minutes is well above typical transitions (a few minutes).
 var createTimeout = 30 * time.Minute
 
 func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = telemetry.WithResource(ctx, resourceName)
 
-	// Bound the operation; without this the polling loop below could hang
-	// indefinitely (PF's request ctx carries no deadline). The rule is
-	// persisted to state before polling starts, so a deadline hit still
-	// leaves a destroyable resource behind.
 	ctx, cancel := context.WithTimeout(ctx, createTimeout)
 	defer cancel()
 
@@ -98,10 +86,6 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// CreatePrivateEndpointRule is not idempotent; retrying on transient errors
-	// would create duplicate rules. Let the SDK's transport-level retry handle
-	// connection-level flakes; surface anything else as a hard failure.
 	pendingRule, err := r.api.CreatePrivateEndpointRule(ctx, *apiReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create private endpoint rule", err.Error())
@@ -118,15 +102,13 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	// Poll until the rule leaves CREATING. PENDING is the success terminal
-	// for the server's side of the handshake; the transition to ESTABLISHED
-	// needs the customer to approve the connection in their cloud console
-	// (out of band; usually wired via the aws/azurerm/google provider in
-	// the same config), so the loop intentionally does not wait for it.
-	// The post-loop switch classifies the terminal state.
+	// Poll until the rule leaves CREATING. PENDING counts as success: the
+	// customer still has to approve the connection in their cloud console
+	// (typically via the aws/azurerm/google provider in the same config),
+	// so we don't wait for ESTABLISHED. The switch below handles the rest.
 	rule, err := retrier.Run(ctx, retrier.RetryIf(r.backoff, isStillCreating), func(ctx context.Context) (*settings.NccPrivateEndpointRule, error) {
 		return r.api.GetPrivateEndpointRule(ctx, settings.GetPrivateEndpointRuleRequest{
-			NetworkConnectivityConfigId: apiReq.NetworkConnectivityConfigId,
+			NetworkConnectivityConfigId: pendingRule.NetworkConnectivityConfigId,
 			PrivateEndpointRuleId:       pendingRule.RuleId,
 		})
 	})
@@ -134,31 +116,32 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", err.Error())
 		return
 	}
+
 	switch rule.ConnectionState {
-	case settings.NccPrivateEndpointRulePrivateLinkConnectionStatePending,
-		settings.NccPrivateEndpointRulePrivateLinkConnectionStateEstablished:
-		// Server-side handshake done; rule is usable (ESTABLISHED) or
-		// waiting on customer approval (PENDING). Fall through to persist.
+	case settings.NccPrivateEndpointRulePrivateLinkConnectionStatePending, settings.NccPrivateEndpointRulePrivateLinkConnectionStateEstablished:
+		// Success case: the rule is usable or awaiting customer approval.
+		resp.Diagnostics.Append(plan.fromAPI(ctx, rule)...)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		return
 	case settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreateFailed:
+		// Failure case: surface the error message.
 		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", rule.ErrorMessage)
 		return
 	default:
-		// REJECTED, DISCONNECTED, EXPIRED, or any future enum value: the
-		// rule exists server-side but is not usable. Surfacing this beats
-		// a silent green apply on a broken resource.
+		// Unexpected case: REJECTED, DISCONNECTED, EXPIRED, or a future enum
+		// value: the rule exists but is not usable. Surface it instead of
+		// pretending apply succeeded.
 		resp.Diagnostics.AddError(
 			"private endpoint rule reached unexpected state",
 			fmt.Sprintf("expected PENDING or ESTABLISHED, got %q", rule.ConnectionState),
 		)
 		return
 	}
-	resp.Diagnostics.Append(plan.fromAPI(ctx, rule)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// isStillCreating is the retrier predicate: retry only while the rule is in
-// the single transient state CREATING. Any error from Get halts the retry,
-// transport-level errors are meant to be handled by the SDK.
+// isStillCreating is the retrier predicate: keep polling only while the
+// rule is in CREATING. Any error halts the loop; the SDK already retries
+// transient network errors.
 func isStillCreating(rule *settings.NccPrivateEndpointRule, err error) bool {
 	return err == nil && rule.ConnectionState == settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreating
 }
@@ -257,9 +240,9 @@ func (r *resourcePrivateEndpointRule) ImportState(ctx context.Context, req resou
 		resp.Diagnostics.AddError("invalid import id", err.Error())
 		return
 	}
-	// Set just enough state for the post-import Read to take over. Other
-	// scalar fields default to their null PF value; list-typed fields need
-	// their element type explicitly via emptyModel().
+	// Seed just the ID fields; the framework calls Read next to fill in
+	// the rest. List fields need their element type set up front, which
+	// is what emptyModel handles.
 	m := emptyModel()
 	m.ID = types.StringValue(packID(nccId, ruleId))
 	m.NetworkConnectivityConfigId = types.StringValue(nccId)

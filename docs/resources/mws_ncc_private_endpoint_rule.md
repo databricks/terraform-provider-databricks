@@ -9,6 +9,10 @@ Allows you to create a private endpoint in a [Network Connectivity Config](mws_n
 
 -> This feature is available on Azure, and in Public Preview on AWS.
 
+## Plugin Framework Opt-In
+
+A Plugin Framework implementation of this resource is available. The default remains the SDK V2 implementation; to opt in, set the environment variable `export DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"`. Once opted in, `terraform apply` waits for the rule to leave `CREATING` before returning, so a `CREATE_FAILED` from the server surfaces at apply time instead of on the next plan.
+
 ## Example Usage
 
 Create private endpoints to an Azure storage account and an Azure standard load balancer.

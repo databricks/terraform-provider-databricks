@@ -243,14 +243,7 @@ In addition to the above arguments, the following attributes are exported:
 * `update_time` (string)
 
 ### RoleRoleStatus
-* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
-  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-  the role_id is `my-role`.
-  
-  Use this field when building UI components that display roles to users (e.g., a drop-down
-  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
-  and is not user-friendly
+* `role_id` (string) - Part of the resource name
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

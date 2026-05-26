@@ -8,7 +8,9 @@
 
 ### Bug Fixes
 
+* Fixed `lifecycle { ignore_changes }` not working for `Optional+Computed` fields whose API returns empty values. The shared `StructToData` gate in `common/reflect_resource.go` was silently dropping empty/nil values for all `Optional` fields, including `Computed` ones, causing perpetual `(known after apply)` diffs and preventing `ignore_changes` from preserving externally-set values.
 * Fix `databricks_metastore` so that updating `external_access_enabled` from `true` to `false` is sent in the PATCH request. Previously the field was silently dropped from the request body, so the change never reached the API.
+||||||| parent of 7a333420 ([Fix] StructToData gate: allow empty values through for Optional+Computed fields)
 
 ### Documentation
 

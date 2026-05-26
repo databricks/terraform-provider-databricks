@@ -705,7 +705,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			return nil
 		}
 		fieldPath := strings.Join(path, ".")
-		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+		if fieldSchema.Optional && !fieldSchema.Computed && isValueNilOrEmpty(valueField, fieldPath) {
 			return nil
 		}
 		// For optional boolean fields, always set them even if not configured to enable drift detection.

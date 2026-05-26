@@ -33,6 +33,7 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 * `value_schema` (SchemaConfig) - Schema configuration for extracting message values from topics. At least one of key_schema and value_schema must be provided
 
 ### AuthConfig
+* `mtls_config` (MtlsConfig) - Mutual-TLS authentication. See MtlsConfig
 * `uc_service_credential_name` (string) - Name of the Unity Catalog service credential. This value will be set under the option databricks.serviceCredential
 
 ### BackfillSource
@@ -55,8 +56,33 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
+### MtlsConfig
+* `disable_hostname_verification` (boolean) - Set to true only when the broker certificate's SAN intentionally does not match
+  the connection endpoint — for example when reaching the cluster through a
+  PrivateLink endpoint whose DNS name is not in the broker certificate. Skipping
+  the hostname check removes a defense against man-in-the-middle attacks; do not
+  enable casually. mTLS client authentication is unaffected by this option.
+  
+  See the Apache Kafka SSL security guide for background on this check:
+  https://kafka.apache.org/42/security/encryption-and-authentication-using-ssl/#host-name-verification
+* `key_password_ref` (SecretScopeReference) - Secret-scope reference for the private key password. Often the same value as the
+  keystore password (keytool's default), but provided as a separate field because
+  Apache Kafka requires it as a distinct option (kafka.ssl.key.password)
+* `keystore_location` (string) - Unity Catalog volume path to the JKS keystore file containing the client certificate
+  and private key. e.g. "/Volumes/<catalog>/<schema>/<volume>/client.jks". The
+  materialization compute must have read permission on this volume
+* `keystore_password_ref` (SecretScopeReference) - Secret-scope reference for the JKS keystore password
+* `truststore_location` (string) - Unity Catalog volume path to the JKS truststore file containing the CA certificate(s)
+  trusted to verify the Kafka broker's server certificate.
+  e.g. "/Volumes/<catalog>/<schema>/<volume>/truststore.jks"
+* `truststore_password_ref` (SecretScopeReference) - Secret-scope reference for the JKS truststore password
+
 ### SchemaConfig
 * `json_schema` (string) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)
+
+### SecretScopeReference
+* `key` (string) - The key within the scope
+* `scope` (string) - The Databricks secret scope name
 
 ### SubscriptionMode
 * `assign` (string) - A JSON string that contains the specific topic-partitions to consume from.

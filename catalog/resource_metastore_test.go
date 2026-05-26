@@ -369,6 +369,126 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateMetastore_ExternalAccessEnabledDisable(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: false,
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+				ForceSendFields: []string{"ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: false,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: false,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = false
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_ExternalAccessEnabledEnable(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: true,
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+				ForceSendFields: []string{"ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: true,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: true,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "false",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = true
+		`,
+	}.ApplyNoError(t)
+}
+
+// When the user removes external_access_enabled from HCL while state still
+// records it as true, Terraform should send `false` (the zero value for an
+// Optional-only bool).
+func TestUpdateMetastore_ExternalAccessEnabledRemovedFromHCL(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: false,
+				DeltaSharingScope:     "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds", "ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+			"delta_sharing_scope":     "INTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateAccountMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
@@ -718,6 +838,53 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		owner = "admin"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
+// Regression test for ES-1903219, account-level provider path.
+func TestUpdateAccountMetastore_ExternalAccessEnabledDisable(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockAccountMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
+				MetastoreId: "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
+					ExternalAccessEnabled:                       false,
+					DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+					ForceSendFields:                             []string{"ExternalAccessEnabled"},
+				},
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					Name:                  "abc",
+					ExternalAccessEnabled: false,
+				},
+			}, nil)
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					StorageRoot:           "s3://b/abc",
+					Name:                  "abc",
+					ExternalAccessEnabled: false,
+				},
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = false
 		`,
 	}.ApplyNoError(t)
 }

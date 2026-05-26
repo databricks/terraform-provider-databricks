@@ -272,7 +272,7 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["role_id"] = attrs["role_id"].SetOptional()
 	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
